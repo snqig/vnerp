@@ -86,7 +86,7 @@ async function stressTestEndpoint(
 }
 
 async function runStressTests() {
-  console.log('=== VNERP 压力测试 ===\n');
+  console.log('=== Print MIS 压力测试 ===\n');
   console.log(`目标: ${BASE_URL}\n`);
 
   const results: StressTestResult[] = [];

@@ -747,7 +747,7 @@
     "loginFailed": "使用者名稱或密碼錯誤",
     "sessionExpired": "工作階段已過期，請重新登入",
     "firstLogin": "首次登入，請修改密碼",
-    "welcome": "歡迎使用 VNERP"
+    "welcome": "歡迎使用 印刷生產經營信息管理系統 Print MIS"
   },
   "Dashboard": {
     "title": "儀表板",

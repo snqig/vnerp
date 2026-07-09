@@ -1,10 +1,10 @@
 # API Documentation
 
-Generated: 2026-06-30T04:09:03.000Z
+Generated: 2026-07-08T08:19:38.966Z
 
 ## Overview
 
-Total API Routes: 314
+Total API Routes: 317
 
 ## API Endpoints
 
@@ -14,7 +14,7 @@ Total API Routes: 314
 
 **Methods:** 
 
-**Description:** 审计日志API路由   功能：提供操作日志、登录日志、库存流水、财务流水的查询接口
+**Description:** 审计日志API路由   功能：提供操作日志、登录日志、库存流水、财务流水的查询接口
 
 **File:** `src\app\api\audit\logs\route.ts`
 
@@ -24,7 +24,7 @@ Total API Routes: 314
 
 **Methods:** 
 
-**Description:** 审计报告API路由   功能：生成审计报告、导出审计数据
+**Description:** 审计报告API路由   功能：生成审计报告、导出审计数据
 
 **File:** `src\app\api\audit\report\route.ts`
 
@@ -488,18 +488,6 @@ params: {
 
 ---
 
-### Debug Module
-
-#### `/api/debug/schema`
-
-**Methods:** 
-
-**Description:** No description
-
-**File:** `src\app\api\debug\schema\route.ts`
-
----
-
 ### Delivery Module
 
 #### `/api/delivery/vehicles`
@@ -521,7 +509,7 @@ params: { status: string | null; keyword: string | null }
 
 #### `/api/diagnose/all-tables`
 
-**Methods:** GET
+**Methods:** 
 
 **Description:** No description
 
@@ -531,7 +519,7 @@ params: { status: string | null; keyword: string | null }
 
 #### `/api/diagnose/column-types`
 
-**Methods:** GET
+**Methods:** 
 
 **Description:** No description
 
@@ -541,7 +529,7 @@ params: { status: string | null; keyword: string | null }
 
 #### `/api/diagnose/final-inspection-schema`
 
-**Methods:** GET
+**Methods:** 
 
 **Description:** No description
 
@@ -551,7 +539,7 @@ params: { status: string | null; keyword: string | null }
 
 #### `/api/diagnose/inbound`
 
-**Methods:** GET
+**Methods:** 
 
 **Description:** No description
 
@@ -561,7 +549,7 @@ params: { status: string | null; keyword: string | null }
 
 #### `/api/diagnose/insert-test`
 
-**Methods:** POST
+**Methods:** 
 
 **Description:** No description
 
@@ -571,7 +559,7 @@ params: { status: string | null; keyword: string | null }
 
 #### `/api/diagnose/inventory-schema`
 
-**Methods:** GET
+**Methods:** 
 
 **Description:** No description
 
@@ -581,7 +569,7 @@ params: { status: string | null; keyword: string | null }
 
 #### `/api/diagnose/label-status`
 
-**Methods:** GET
+**Methods:** 
 
 **Description:** No description
 
@@ -591,7 +579,7 @@ params: { status: string | null; keyword: string | null }
 
 #### `/api/diagnose/material`
 
-**Methods:** GET
+**Methods:** 
 
 **Description:** No description
 
@@ -611,7 +599,7 @@ params: { status: string | null; keyword: string | null }
 
 #### `/api/diagnose/table-schema`
 
-**Methods:** GET
+**Methods:** 
 
 **Description:** No description
 
@@ -679,9 +667,19 @@ params: { status: string | null; keyword: string | null }
 
 **Methods:** 
 
-**Description:** No description
+**Description:** 设备维保记录管理 API     GET    /api/equipment/maintenance               — 分页查询维保记录   GET    /api/equipment/maintenance?id=N          — 查询单条维保记录   GET    /api/equipment/maintenance?equipment_id=N— 按设备查询维保记录   POST   /api/equipment/maintenance               — 创建维保记录（同时更新设备 last_maintenance_date）   PUT    /api/equipment/maintenance               — 更新维保记录   DELETE /api/equipment/maintenance?id=N          — 删除维保记录
 
 **File:** `src\app\api\equipment\maintenance\route.ts`
+
+---
+
+#### `/api/equipment/plan`
+
+**Methods:** 
+
+**Description:** 设备维保计划管理 API     GET    /api/equipment/plan                       — 分页查询维保计划   GET    /api/equipment/plan?id=N                  — 查询单条维保计划   GET    /api/equipment/plan?action=due-soon       — 查询即将到期的维保计划（lead_days 提醒窗口）   GET    /api/equipment/plan?equipment_id=N        — 按设备查询维保计划   POST   /api/equipment/plan                       — 创建维保计划（自动计算 next_execute_date）   PUT    /api/equipment/plan                       — 更新维保计划   DELETE /api/equipment/plan?id=N                  — 删除维保计划（软删除）
+
+**File:** `src\app\api\equipment\plan\route.ts`
 
 ---
 
@@ -699,7 +697,7 @@ params: { status: string | null; keyword: string | null }
 
 **Methods:** 
 
-**Description:** No description
+**Description:** 设备台账管理 API     GET    /api/equipment          — 分页查询设备列表（支持筛选）   GET    /api/equipment?id=N     — 查询单个设备详情   POST   /api/equipment          — 创建设备   PUT    /api/equipment          — 更新设备   DELETE /api/equipment?id=N     — 删除设备（软删除）
 
 **File:** `src\app\api\equipment\route.ts`
 
@@ -1455,6 +1453,18 @@ params: { status: string | null; keyword: string | null }
 
 ---
 
+### Openapi.json Module
+
+#### `/api/openapi.json`
+
+**Methods:** GET
+
+**Description:** 动态返回 OpenAPI 3.0 规范     数据源：docs/10-接口文档/openapi.json   由 scripts/generate-api-docs.js 生成   可通过 pnpm docs:api 重新生成
+
+**File:** `src\app\api\openapi.json\route.ts`
+
+---
+
 ### Orders Module
 
 #### `/api/orders/bom/expand`
@@ -1471,7 +1481,7 @@ params: { status: string | null; keyword: string | null }
 
 **Methods:** 
 
-**Description:** 获取物料列表   GET /api/orders/bom/materials
+**Description:** 获取物料列表   GET /api/orders/bom/materials
 
 **File:** `src\app\api\orders\bom\materials\route.ts`
 
@@ -1481,7 +1491,7 @@ params: { status: string | null; keyword: string | null }
 
 **Methods:** 
 
-**Description:** 获取BOM列表   GET /api/orders/bom
+**Description:** 获取BOM列表   GET /api/orders/bom
 
 **File:** `src\app\api\orders\bom\route.ts`
 
@@ -1491,7 +1501,7 @@ params: { status: string | null; keyword: string | null }
 
 **Methods:** 
 
-**Description:** 获取BOM详情   GET /api/orders/bom/{id}
+**Description:** 获取BOM详情   GET /api/orders/bom/{id}
 
 **File:** `src\app\api\orders\bom\[id]\route.ts`
 
@@ -2028,6 +2038,16 @@ params: { keyword: string; status: string | null }
 
 ---
 
+#### `/api/purchase/reconciliation`
+
+**Methods:** 
+
+**Description:** No description
+
+**File:** `src\app\api\purchase\reconciliation\route.ts`
+
+---
+
 #### `/api/purchase/request`
 
 **Methods:** 
@@ -2258,7 +2278,7 @@ params: { keyword: string; status: string | null }
 
 **Methods:** 
 
-**Description:** 订单交付率报表   按月/客户统计订单准时交付率
+**Description:** 订单交付率报表   按月/客户统计订单准时交付率
 
 **File:** `src\app\api\reports\delivery-rate\route.ts`
 
@@ -2268,7 +2288,7 @@ params: { keyword: string; status: string | null }
 
 **Methods:** 
 
-**Description:** 库存周转率报表   按品类/仓库统计库存周转情况
+**Description:** 库存周转率报表   按品类/仓库统计库存周转情况
 
 **File:** `src\app\api\reports\inventory-turnover\route.ts`
 
@@ -2278,7 +2298,7 @@ params: { keyword: string; status: string | null }
 
 **Methods:** 
 
-**Description:** 生产成本汇总报表   标准成本 vs 实际成本对比
+**Description:** 生产成本汇总报表   标准成本 vs 实际成本对比
 
 **File:** `src\app\api\reports\production-cost\route.ts`
 
@@ -2684,9 +2704,19 @@ params: { keyword: string; status: string | null }
 
 ---
 
-#### `/api/system/init`
+#### `/api/system/health/infrastructure`
 
 **Methods:** GET
+
+**Description:** 基础设施健康检查端点     不加鉴权：供 K8s/Nginx 负载均衡器探活使用。   仅返回状态与延迟，不暴露敏感数据。     HTTP 状态码：   - 200: healthy 或 degraded（服务可用但部分降级）   - 503: unhealthy（关键组件不可用）
+
+**File:** `src\app\api\system\health\infrastructure\route.ts`
+
+---
+
+#### `/api/system/init`
+
+**Methods:** 
 
 **Description:** No description
 
@@ -2806,7 +2836,7 @@ params: { keyword: string; status: string | null }
 
 #### `/api/system/user/fix-names`
 
-**Methods:** POST
+**Methods:** 
 
 **Description:** No description
 
@@ -2826,7 +2856,7 @@ params: { keyword: string; status: string | null }
 
 #### `/api/system/user/sync-names`
 
-**Methods:** POST
+**Methods:** 
 
 **Description:** No description
 
@@ -2841,18 +2871,6 @@ params: { keyword: string; status: string | null }
 **Description:** No description
 
 **File:** `src\app\api\system\workflow\route.ts`
-
----
-
-### Test Module
-
-#### `/api/test`
-
-**Methods:** 
-
-**Description:** No description
-
-**File:** `src\app\api\test\route.ts`
 
 ---
 
@@ -2907,6 +2925,16 @@ params: { keyword: string; status: string | null }
 **Description:** 批次/序列号管理 API      支持按批次管理物料，实现保质期预警、序列号追溯
 
 **File:** `src\app\api\warehouse\batch\route.ts`
+
+---
+
+#### `/api/warehouse/batch/trace`
+
+**Methods:** 
+
+**Description:** No description
+
+**File:** `src\app\api\warehouse\batch\trace\route.ts`
 
 ---
 
@@ -3303,21 +3331,4 @@ params: {
 **File:** `src\app\api\workorders\route.ts`
 
 ---
-
-## 文档说明
-
-- 本文档由 `scripts/generate-api-docs.js` 自动扫描 `src/app/api/**/route.ts` 生成。
-- 重新生成命令：`node scripts/generate-api-docs.js`（同时输出 `openapi.json`）。
-- **Methods** 字段为空表示该路由未导出标准 `GET/POST/PUT/PATCH/DELETE` 函数（可能为动态处理或自定义导出）。
-- **Description** 取自路由文件首个 JSDoc 注释块；无注释时显示 `No description`。
-- 路由按模块（URL 第二段）分组，模块名首字母大写。
-- 路径中带 `[id]`、`[work_order_id]` 等的为动态路由参数。
-
-## 相关文档
-
-- [openapi.json](./openapi.json) - OpenAPI 3.0 规范
-- [03-技术规范/API设计规范.md](../03-技术规范/API设计规范.md) - API 设计规范
-- [11-开发指南/API开发.md](../11-开发指南/API开发.md) - API 开发指南
-
-> 最后更新：2026-06-30
 

@@ -1,10 +1,51 @@
-﻿import { NextRequest } from 'next/server';
-import { query, execute } from '@/lib/db';
+import { NextRequest } from 'next/server';
+import { query, execute, transaction } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { autoSchedule, getCapacityLoad, type SchedulingResult } from '@/lib/production-scheduling';
 
 export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
+
+  // 自动排产：基于优先级评分 + 物料可用性 + 日期冲突检测，生成排产建议
+  if (searchParams.get('action') === 'auto-schedule') {
+    const workOrderIds = searchParams
+      .get('work_order_ids')
+      ?.split(',')
+      .map(Number)
+      .filter((n) => Number.isFinite(n) && n > 0);
+    const warehouseId = Number(searchParams.get('warehouse_id') || 0);
+    const startDate = searchParams.get('start_date') || undefined;
+
+    const results = await autoSchedule({
+      workOrderIds: workOrderIds?.length ? workOrderIds : undefined,
+      warehouseId: warehouseId || undefined,
+      startDate,
+    });
+
+    return successResponse({
+      scheduled_count: results.length,
+      ready_count: results.filter((r) => r.material_ready).length,
+      shortage_count: results.filter((r) => !r.material_ready).length,
+      results,
+    });
+  }
+
+  // 产能负荷：按日期范围查询各工作日的排产负荷
+  if (searchParams.get('action') === 'capacity-load') {
+    const startDate = searchParams.get('start_date') || new Date().toISOString().slice(0, 10);
+    const endDate =
+      searchParams.get('end_date') ||
+      new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+
+    const results = await getCapacityLoad({ startDate, endDate });
+    return successResponse({
+      date_range: { start: startDate, end: endDate },
+      total_working_days: results.length,
+      overloaded_days: results.filter((r) => r.loadPercentage > 100).length,
+      results,
+    });
+  }
 
   if (searchParams.get('action') === 'stats') {
     const statsRows: any = await query(
@@ -49,112 +90,153 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const {
-    order_id,
-    order_no,
-    product_id,
-    product_code,
-    product_name,
-    workshop,
-    planned_qty,
-    planned_start,
-    planned_end,
-    priority,
-    scheduler,
-    remark,
-  } = body;
+export const POST = withPermission(
+  async (request: NextRequest, userInfo) => {
+    const body = await request.json();
 
-  if (!product_name) return errorResponse('产品名称不能为空', 400, 400);
+    // 应用排产建议：将 autoSchedule 的结果写回工单的计划日期
+    if (body.action === 'apply-schedule') {
+      const { scheduling_results } = body as {
+        action: string;
+        scheduling_results: SchedulingResult[];
+      };
 
-  if (planned_start && planned_end && workshop) {
-    const conflicts: any = await query(
-      `SELECT id, schedule_no, product_name, planned_start, planned_end 
+      if (!Array.isArray(scheduling_results) || scheduling_results.length === 0) {
+        return errorResponse('排产结果不能为空', 400, 400);
+      }
+
+      const updated = await transaction(async (connection) => {
+        let count = 0;
+        for (const result of scheduling_results) {
+          await connection.execute(
+            `UPDATE prod_work_order
+           SET plan_start_date = ?, plan_end_date = ?, update_time = NOW()
+           WHERE id = ? AND deleted = 0 AND status IN ('pending', 'confirmed')`,
+            [result.suggested_start_date, result.suggested_end_date, result.work_order_id]
+          );
+          count++;
+        }
+        return count;
+      });
+
+      return successResponse(
+        { updated_count: updated },
+        `排产结果应用成功，共更新 ${updated} 个工单`
+      );
+    }
+
+    const {
+      order_id,
+      order_no,
+      product_id,
+      product_code,
+      product_name,
+      workshop,
+      planned_qty,
+      planned_start,
+      planned_end,
+      priority,
+      scheduler,
+      remark,
+    } = body;
+
+    if (!product_name) return errorResponse('产品名称不能为空', 400, 400);
+
+    if (planned_start && planned_end && workshop) {
+      const conflicts: any = await query(
+        `SELECT id, schedule_no, product_name, planned_start, planned_end 
        FROM prd_schedule 
        WHERE workshop = ? AND deleted = 0 AND status IN (1, 2, 3)
        AND planned_start < ? AND planned_end > ?`,
-      [workshop, planned_end, planned_start]
+        [workshop, planned_end, planned_start]
+      );
+      if (conflicts.length > 0) {
+        return errorResponse(
+          `排产冲突: 车间 ${workshop} 在 ${planned_start} ~ ${planned_end} 已有 ${conflicts.length} 个排产计划`,
+          409,
+          409
+        );
+      }
+    }
+
+    const now = new Date();
+    const scheduleNo =
+      'PS' +
+      now.getFullYear() +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      String(now.getDate()).padStart(2, '0') +
+      String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+
+    const result: any = await execute(
+      `INSERT INTO prd_schedule (schedule_no, order_id, order_no, product_id, product_code, product_name, workshop, planned_qty, planned_start, planned_end, priority, scheduler, remark)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        scheduleNo,
+        order_id || null,
+        order_no || null,
+        product_id || null,
+        product_code || null,
+        product_name,
+        workshop || 'die_cut',
+        planned_qty || 0,
+        planned_start || null,
+        planned_end || null,
+        priority || 2,
+        scheduler || null,
+        remark || null,
+      ]
     );
-    if (conflicts.length > 0) {
-      return errorResponse(
-        `排产冲突: 车间 ${workshop} 在 ${planned_start} ~ ${planned_end} 已有 ${conflicts.length} 个排产计划`,
-        409,
-        409
+
+    return successResponse({ id: result.insertId, schedule_no: scheduleNo }, '排产计划创建成功');
+  },
+  { logTitle: '创建排产计划', logType: 'business' }
+);
+
+export const PUT = withPermission(
+  async (request: NextRequest, userInfo) => {
+    const body = await request.json();
+    const { id, ...fields } = body;
+    if (!id) return errorResponse('ID不能为空', 400, 400);
+
+    const updateFields: string[] = [];
+    const updateValues: any[] = [];
+    const allowedFields = [
+      'workshop',
+      'planned_qty',
+      'completed_qty',
+      'planned_start',
+      'planned_end',
+      'actual_start',
+      'actual_end',
+      'priority',
+      'status',
+      'scheduler',
+      'remark',
+    ];
+    for (const field of allowedFields) {
+      if (fields[field] !== undefined) {
+        updateFields.push(`${field} = ?`);
+        updateValues.push(fields[field]);
+      }
+    }
+    if (updateFields.length > 0) {
+      await execute(
+        `UPDATE prd_schedule SET ${updateFields.join(', ')} WHERE id = ? AND deleted = 0`,
+        [...updateValues, id]
       );
     }
-  }
+    return successResponse(null, '更新成功');
+  },
+  { logTitle: '更新排产计划', logType: 'business' }
+);
 
-  const now = new Date();
-  const scheduleNo =
-    'PS' +
-    now.getFullYear() +
-    String(now.getMonth() + 1).padStart(2, '0') +
-    String(now.getDate()).padStart(2, '0') +
-    String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-
-  const result: any = await execute(
-    `INSERT INTO prd_schedule (schedule_no, order_id, order_no, product_id, product_code, product_name, workshop, planned_qty, planned_start, planned_end, priority, scheduler, remark)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      scheduleNo,
-      order_id || null,
-      order_no || null,
-      product_id || null,
-      product_code || null,
-      product_name,
-      workshop || 'die_cut',
-      planned_qty || 0,
-      planned_start || null,
-      planned_end || null,
-      priority || 2,
-      scheduler || null,
-      remark || null,
-    ]
-  );
-
-  return successResponse({ id: result.insertId, schedule_no: scheduleNo }, '排产计划创建成功');
-}, { logTitle: '创建排产计划', logType: 'business' });
-
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { id, ...fields } = body;
-  if (!id) return errorResponse('ID不能为空', 400, 400);
-
-  const updateFields: string[] = [];
-  const updateValues: any[] = [];
-  const allowedFields = [
-    'workshop',
-    'planned_qty',
-    'completed_qty',
-    'planned_start',
-    'planned_end',
-    'actual_start',
-    'actual_end',
-    'priority',
-    'status',
-    'scheduler',
-    'remark',
-  ];
-  for (const field of allowedFields) {
-    if (fields[field] !== undefined) {
-      updateFields.push(`${field} = ?`);
-      updateValues.push(fields[field]);
-    }
-  }
-  if (updateFields.length > 0) {
-    await execute(
-      `UPDATE prd_schedule SET ${updateFields.join(', ')} WHERE id = ? AND deleted = 0`,
-      [...updateValues, id]
-    );
-  }
-  return successResponse(null, '更新成功');
-}, { logTitle: '更新排产计划', logType: 'business' });
-
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  if (!id) return errorResponse('ID不能为空', 400, 400);
-  await execute('UPDATE prd_schedule SET deleted = 1 WHERE id = ?', [id]);
-  return successResponse(null, '删除成功');
-}, { logTitle: '删除排产计划', logType: 'business' });
+export const DELETE = withPermission(
+  async (request: NextRequest, userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) return errorResponse('ID不能为空', 400, 400);
+    await execute('UPDATE prd_schedule SET deleted = 1 WHERE id = ?', [id]);
+    return successResponse(null, '删除成功');
+  },
+  { logTitle: '删除排产计划', logType: 'business' }
+);

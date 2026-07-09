@@ -166,12 +166,14 @@ jobs:
             git pull origin main
             docker compose -f docker-compose.prod.yml --env-file .env.production pull app
             docker compose -f docker-compose.prod.yml --env-file .env.production up -d --no-deps --force-recreate app
-            echo "等待 app 健康检查..."
-            sleep 15
-            if docker inspect --format='{{.State.Health.Status}}' vnerp-app-prod 2>/dev/null | grep -q healthy; then
-              echo "✅ 部署成功：app 已健康运行"
-              docker image prune -f
-            else
-              echo "⚠️ 警告：app 尚未通过健康检查，请手动检查日志"
-              docker compose -f docker-compose.prod.yml logs --tail=50 app
-            fi
+            echo "等待 app 健康检查（最多 60 秒）..."
+            for i in $(seq 1 30); do
+              if docker inspect --format='{{.State.Health.Status}}' vnerp-app-prod 2>/dev/null | grep -q healthy; then
+                echo "✅ 部署成功：app 已健康运行"
+                docker image prune -f
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "⚠️ 警告：app 未通过健康检查（60秒超时），请手动检查日志"
+            docker compose -f docker-compose.prod.yml logs --tail=50 app

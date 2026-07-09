@@ -119,7 +119,7 @@ function generateOpenAPI() {
   const spec = {
     openapi: '3.0.0',
     info: {
-      title: 'VNERP API',
+      title: 'Print MIS API',
       version: '1.0.0',
       description: 'ERP System API for Printing Industry',
     },
@@ -168,13 +168,13 @@ function main() {
   
   // 生成 Markdown 文档
   const md = generateMarkdown();
-  fs.writeFileSync(path.join(PROJECT_ROOT, 'docs', 'API.md'), md);
-  console.log('Generated: docs/API.md');
+  fs.writeFileSync(path.join(PROJECT_ROOT, 'docs', '10-接口文档', 'API.md'), md);
+  console.log('Generated: docs/10-接口文档/API.md');
   
   // 生成 OpenAPI 规范
   const openapi = generateOpenAPI();
-  fs.writeFileSync(path.join(PROJECT_ROOT, 'docs', 'openapi.json'), openapi);
-  console.log('Generated: docs/openapi.json');
+  fs.writeFileSync(path.join(PROJECT_ROOT, 'docs', '10-接口文档', 'openapi.json'), openapi);
+  console.log('Generated: docs/10-接口文档/openapi.json');
   
   // 输出摘要
   console.log('\n' + '='.repeat(80));

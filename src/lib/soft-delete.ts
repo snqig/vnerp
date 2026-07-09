@@ -82,7 +82,7 @@ export const CANCELLABLE_DOCUMENTS: Record<
     checkConditions: ['not_started'],
   },
   inbound_order: {
-    tableName: 'warehouse_inbound',
+    tableName: 'inv_inbound_order',
     module: '库存管理',
     statusField: 'status',
     cancelStatus: 'cancelled',
@@ -90,7 +90,7 @@ export const CANCELLABLE_DOCUMENTS: Record<
     checkConditions: ['not_settled'],
   },
   outbound_order: {
-    tableName: 'warehouse_outbound',
+    tableName: 'inv_outbound_order',
     module: '库存管理',
     statusField: 'status',
     cancelStatus: 'cancelled',
@@ -98,14 +98,14 @@ export const CANCELLABLE_DOCUMENTS: Record<
     checkConditions: ['not_settled'],
   },
   stocktaking: {
-    tableName: 'warehouse_stocktaking',
+    tableName: 'inv_stocktaking',
     module: '库存管理',
     statusField: 'status',
     cancelStatus: 'cancelled',
     noField: 'stocktaking_no',
   },
   transfer_order: {
-    tableName: 'warehouse_transfer',
+    tableName: 'inv_transfer_order',
     module: '库存管理',
     statusField: 'status',
     cancelStatus: 'cancelled',
@@ -377,12 +377,12 @@ async function checkBusinessCondition(
     case 'not_received': {
       // 检查采购单是否已收货
       const rows: any = await query(
-        `SELECT COUNT(*) as count FROM warehouse_inbound 
+        `SELECT COUNT(*) as count FROM inv_inbound_order
          WHERE source_type = 'purchase' AND source_id = ?`,
         [recordId]
       );
       if (rows[0]?.count > 0) {
-        return { passed: false, message: '采购单已存在入库记录，不可作废' };
+        return { passed: false, message: tc('text_eojxth') };
       }
       return { passed: true, message: '' };
     }
@@ -390,12 +390,12 @@ async function checkBusinessCondition(
     case 'not_shipped': {
       // 检查销售单是否已发货
       const rows: any = await query(
-        `SELECT COUNT(*) as count FROM warehouse_outbound 
+        `SELECT COUNT(*) as count FROM inv_outbound_order
          WHERE source_type = 'sales' AND source_id = ?`,
         [recordId]
       );
       if (rows[0]?.count > 0) {
-        return { passed: false, message: '销售单已存在出库记录，不可作废' };
+        return { passed: false, message: tc('text_2fnyrc') };
       }
       return { passed: true, message: '' };
     }
@@ -404,7 +404,7 @@ async function checkBusinessCondition(
       // 检查工单是否已开工
       const rows: any = await query(`SELECT status FROM prod_work_order WHERE id = ?`, [recordId]);
       if (rows[0]?.status === 'producing' || rows[0]?.status === 'completed') {
-        return { passed: false, message: '工单已开始生产，不可作废' };
+        return { passed: false, message: tc('text_m221k4') };
       }
       return { passed: true, message: '' };
     }
@@ -416,11 +416,11 @@ async function checkBusinessCondition(
 
     case 'not_completed': {
       // 检查调拨单是否已完成
-      const rows: any = await query(`SELECT status FROM warehouse_transfer WHERE id = ?`, [
+      const rows: any = await query(`SELECT status FROM inv_transfer_order WHERE id = ?`, [
         recordId,
       ]);
       if (rows[0]?.status === 'completed') {
-        return { passed: false, message: '调拨单已完成，不可作废' };
+        return { passed: false, message: tc('text_1fuvuz') };
       }
       return { passed: true, message: '' };
     }
@@ -431,7 +431,7 @@ async function checkBusinessCondition(
         recordId,
       ]);
       if (rows[0]?.paid_amount > 0) {
-        return { passed: false, message: '已存在收付款记录，不可作废' };
+        return { passed: false, message: tc('text_d91rwu') };
       }
       return { passed: true, message: '' };
     }
@@ -440,7 +440,7 @@ async function checkBusinessCondition(
       // 检查凭证是否已过账
       const rows: any = await query(`SELECT status FROM fin_voucher WHERE id = ?`, [recordId]);
       if (rows[0]?.status === 'posted') {
-        return { passed: false, message: '凭证已过账，不可作废' };
+        return { passed: false, message: tc('text_7696wk') };
       }
       return { passed: true, message: '' };
     }

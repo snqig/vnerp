@@ -15,8 +15,7 @@ import { CacheInvalidationHandler } from '@/application/handlers/CacheInvalidati
 import { InkCostHandler } from '@/application/handlers/InkCostHandler';
 import { ScreenPlateCostHandler } from '@/application/handlers/ScreenPlateCostHandler';
 import { PurchaseApprovedHandler } from '@/application/handlers/PurchaseApprovedHandler';
-import { PurchaseReceivedHandler } from '@/application/handlers/PurchaseReceivedHandler';
-import { PurchasePayableHandler } from '@/application/handlers/PurchasePayableHandler';
+import { PurchaseInboundSyncHandler } from '@/application/handlers/PurchaseInboundSyncHandler';
 import { PurchaseReturnCompletedHandler } from '@/application/handlers/PurchaseReturnCompletedHandler';
 import { PurchaseReconciliationWrittenOffHandler } from '@/application/handlers/PurchaseReconciliationWrittenOffHandler';
 import { WorkOrderMaterialIssuedHandler } from '@/application/handlers/WorkOrderMaterialIssuedHandler';
@@ -28,8 +27,9 @@ import { WorkOrderCompletedHandler } from '@/application/handlers/WorkOrderCompl
  * 合并自 src/infrastructure/config/EventRegistry.ts（已删除）。
  * 关键修正：
  * - sales.shipped 使用 SalesReceivableHandler（生成应收），不再误用 FinanceVoucherHandler
- * - purchase.received 使用 PurchaseReceivedHandler + PurchasePayableHandler，
- *   不再误用 InventorySyncHandler（PurchaseReceivedHandler 内部已做库存同步，重复订阅会导致双倍增加）
+ * - inbound.approved 统一使用 InventorySyncHandler（库存同步）+ FinanceVoucherHandler（生成应付），
+ *   purchase.received 路径已废弃（PurchaseReceivedHandler/PurchasePayableHandler 不再注册），
+ *   收货流程统一走入库单 DDD 路径
  * - workorder.material_issued 补齐 InventorySyncHandler（领料应扣减库存）
  * - workorder.completed 补齐 InkCostHandler + ScreenPlateCostHandler（油墨与网版成本归集）
  * - sales.approved 补齐 SalesToWorkOrderHandler（销售审批后自动生成工单）
@@ -48,6 +48,7 @@ export class EventRegistry {
     // 入库单事件
     eventBus.subscribe('inbound.approved', new IdempotentHandler(new InventorySyncHandler()));
     eventBus.subscribe('inbound.approved', new IdempotentHandler(new FinanceVoucherHandler()));
+    eventBus.subscribe('inbound.approved', new IdempotentHandler(new PurchaseInboundSyncHandler()));
     eventBus.subscribe('inbound.approved', new IdempotentHandler(new QrCodeGenerationHandler()));
     eventBus.subscribe('inbound.approved', new AuditLogHandler());
     eventBus.subscribe('inbound.approved', new CacheInvalidationHandler());
@@ -98,8 +99,6 @@ export class EventRegistry {
     eventBus.subscribe('purchase.approved', new AuditLogHandler());
     eventBus.subscribe('purchase.approved', new CacheInvalidationHandler());
 
-    eventBus.subscribe('purchase.received', new IdempotentHandler(new PurchaseReceivedHandler()));
-    eventBus.subscribe('purchase.received', new IdempotentHandler(new PurchasePayableHandler()));
     eventBus.subscribe('purchase.received', new AuditLogHandler());
 
     eventBus.subscribe('purchase.closed', new AuditLogHandler());
@@ -107,7 +106,10 @@ export class EventRegistry {
     // 采购退货事件
     eventBus.subscribe('purchase_return.created', new AuditLogHandler());
     eventBus.subscribe('purchase_return.approved', new AuditLogHandler());
-    eventBus.subscribe('purchase_return.completed', new IdempotentHandler(new PurchaseReturnCompletedHandler()));
+    eventBus.subscribe(
+      'purchase_return.completed',
+      new IdempotentHandler(new PurchaseReturnCompletedHandler())
+    );
     eventBus.subscribe('purchase_return.completed', new AuditLogHandler());
     eventBus.subscribe('purchase_return.completed', new CacheInvalidationHandler());
     eventBus.subscribe('purchase_return.cancelled', new AuditLogHandler());
@@ -116,7 +118,10 @@ export class EventRegistry {
     eventBus.subscribe('purchase_reconciliation.created', new AuditLogHandler());
     eventBus.subscribe('purchase_reconciliation.confirmed', new AuditLogHandler());
     eventBus.subscribe('purchase_reconciliation.partial_written_off', new AuditLogHandler());
-    eventBus.subscribe('purchase_reconciliation.written_off', new IdempotentHandler(new PurchaseReconciliationWrittenOffHandler()));
+    eventBus.subscribe(
+      'purchase_reconciliation.written_off',
+      new IdempotentHandler(new PurchaseReconciliationWrittenOffHandler())
+    );
     eventBus.subscribe('purchase_reconciliation.written_off', new AuditLogHandler());
     eventBus.subscribe('purchase_reconciliation.written_off', new CacheInvalidationHandler());
     eventBus.subscribe('purchase_reconciliation.closed', new AuditLogHandler());
@@ -168,10 +173,16 @@ export class EventRegistry {
     eventBus.subscribe('workorder.released', new AuditLogHandler());
     eventBus.subscribe('workorder.started', new AuditLogHandler());
 
-    eventBus.subscribe('workorder.material_issued', new IdempotentHandler(new WorkOrderMaterialIssuedHandler()));
+    eventBus.subscribe(
+      'workorder.material_issued',
+      new IdempotentHandler(new WorkOrderMaterialIssuedHandler())
+    );
     eventBus.subscribe('workorder.material_issued', new AuditLogHandler());
 
-    eventBus.subscribe('workorder.completed', new IdempotentHandler(new WorkOrderCompletedHandler()));
+    eventBus.subscribe(
+      'workorder.completed',
+      new IdempotentHandler(new WorkOrderCompletedHandler())
+    );
     eventBus.subscribe('workorder.completed', new IdempotentHandler(new FinanceVoucherHandler()));
     eventBus.subscribe('workorder.completed', new IdempotentHandler(new QrCodeGenerationHandler()));
     eventBus.subscribe('workorder.completed', new IdempotentHandler(new InkCostHandler()));
@@ -200,9 +211,13 @@ export class EventRegistry {
       returnOrderCompletedHandlers: eventBus.getHandlerCount('return_order.completed'),
       reconciliationWrittenOffHandlers: eventBus.getHandlerCount('reconciliation.written_off'),
       purchaseReturnCompletedHandlers: eventBus.getHandlerCount('purchase_return.completed'),
-      purchaseReconWrittenOffHandlers: eventBus.getHandlerCount('purchase_reconciliation.written_off'),
+      purchaseReconWrittenOffHandlers: eventBus.getHandlerCount(
+        'purchase_reconciliation.written_off'
+      ),
       workorderCompletedHandlers: eventBus.getHandlerCount('workorder.completed'),
-      qualityUnqualifiedCompletedHandlers: eventBus.getHandlerCount('quality.unqualified.completed'),
+      qualityUnqualifiedCompletedHandlers: eventBus.getHandlerCount(
+        'quality.unqualified.completed'
+      ),
     });
   }
 
@@ -214,8 +229,28 @@ export class EventRegistry {
 /**
  * 函数式注册入口（向后兼容）。
  * 调用类版 initialize 后返回全局 EventBus 单例，供 API 路由与 OutboxPoller 使用。
+ *
+ * 同时惰性启动 OutboxPoller + StreamConsumer（仅 EVENT_BUS_TYPE=db 时）。
+ * 采用 require() 延迟加载以规避 EventRegistry ↔ AppInitializer ↔ OutboxPoller 循环依赖。
+ * instrumentation.ts（Edge 打包）不再导入 AppInitializer，从而避免 crypto/stream 模块解析失败。
  */
+let applicationInitialized = false;
+
 export function registerEventHandlers(): EventBus {
   EventRegistry.initialize();
+
+  if (!applicationInitialized) {
+    applicationInitialized = true;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { initializeApplication } = require('./AppInitializer');
+      initializeApplication();
+    } catch (error) {
+      secureLog('error', 'Failed to auto-initialize application (OutboxPoller/StreamConsumer)', {
+        error: String(error),
+      });
+    }
+  }
+
   return getEventBus();
 }

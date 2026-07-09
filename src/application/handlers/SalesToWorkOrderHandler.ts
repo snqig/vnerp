@@ -81,13 +81,7 @@ export class SalesToWorkOrderHandler implements EventHandler<SalesOrderApprovedE
     requiredQty: number;
     unitPrice: number;
   }): Promise<WorkOrderCreationResult | null> {
-    const {
-      orderId,
-      orderNo,
-      materialId,
-      materialName,
-      requiredQty,
-    } = params;
+    const { orderId, orderNo, materialId, materialName, requiredQty } = params;
 
     const workOrderNo = this.generateWorkOrderNo();
     const today = new Date().toISOString().slice(0, 10);
@@ -155,7 +149,7 @@ export class SalesToWorkOrderHandler implements EventHandler<SalesOrderApprovedE
       `SELECT bd.material_id, m.material_code, m.material_name, bd.quantity, bd.unit
        FROM prd_bom_detail bd
        LEFT JOIN inv_material m ON m.id = bd.material_id
-       WHERE bd.bom_id IN (SELECT id FROM prd_bom WHERE material_id = ? AND status = 1)`,
+       WHERE bd.bom_id IN (SELECT id FROM prd_bom WHERE product_id = ? AND status = 1)`,
       [productId]
     )) as any[];
 

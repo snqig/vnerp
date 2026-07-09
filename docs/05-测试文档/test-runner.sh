@@ -1,5 +1,5 @@
 #!/bin/bash
-# VNERP 测试执行脚本
+# 印刷生产经营信息管理系统 Print MIS 测试执行脚本
 # 用法: ./test-runner.sh [unit|integration|e2e|all]
 
 set -e
@@ -11,7 +11,7 @@ REPORT_DIR="test-reports/$TIMESTAMP"
 mkdir -p $REPORT_DIR
 
 echo "========================================="
-echo " VNERP 测试执行器"
+echo " 印刷生产经营信息管理系统 Print MIS 测试执行器"
 echo " 模式: $ENV"
 echo " 时间: $TIMESTAMP"
 echo "========================================="

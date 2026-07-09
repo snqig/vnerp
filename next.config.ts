@@ -22,6 +22,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   output: 'standalone',
+  serverExternalPackages: ['ioredis', 'mysql2'],
   images: {
     remotePatterns: [
       {

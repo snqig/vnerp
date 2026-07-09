@@ -46,6 +46,9 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
       status: (DB_TO_DOMAIN_STATUS[order.status] || order.status) as any,
       warehouseId: order.warehouse_id,
       supplierName: order.supplier_name || '',
+      supplierId: order.supplier_id,
+      poId: order.po_id,
+      poNo: order.po_no,
       orderType: order.order_type,
       inboundDate: order.inbound_date,
       remark: order.remark,
@@ -76,9 +79,9 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
     pagination: Pagination,
     filters?: { keyword?: string; startDate?: string; endDate?: string }
   ): Promise<PaginatedResult<InboundOrder>> {
-    let sql = `SELECT o.id, o.order_no, o.inbound_date, o.supplier_name, o.warehouse_id,
-               o.order_type, o.total_quantity, o.total_amount, o.status, o.remark,
-               o.create_time, o.update_time
+    let sql = `SELECT o.id, o.order_no, o.inbound_date, o.supplier_name, o.supplier_id,
+               o.po_id, o.po_no, o.warehouse_id, o.order_type, o.total_quantity,
+               o.total_amount, o.status, o.remark, o.create_time, o.update_time
                FROM inv_inbound_order o WHERE o.deleted = 0`;
     let countSql = `SELECT COUNT(*) as total FROM inv_inbound_order o WHERE o.deleted = 0`;
     const params: any[] = [];
@@ -142,6 +145,9 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
           status: (DB_TO_DOMAIN_STATUS[o.status] || o.status) as any,
           warehouseId: o.warehouse_id,
           supplierName: o.supplier_name || '',
+          supplierId: o.supplier_id,
+          poId: o.po_id,
+          poNo: o.po_no,
           orderType: o.order_type,
           inboundDate: o.inbound_date,
           remark: o.remark,
@@ -175,13 +181,17 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
     return await transaction(async (conn) => {
       const [orderResult]: any = await conn.execute(
         `INSERT INTO inv_inbound_order
-         (order_no, order_type, warehouse_id, supplier_name, total_amount, total_quantity, status, inbound_date, remark, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+         (order_no, order_type, warehouse_id, supplier_id, supplier_name, po_id, po_no,
+          total_amount, total_quantity, status, inbound_date, remark, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           orderNo,
           order.orderType || 'purchase',
           order.warehouseId,
+          order.supplierId || null,
           order.supplierName || null,
+          order.poId || null,
+          order.poNo || null,
           order.totalAmount.amount,
           order.totalQuantity,
           DOMAIN_TO_DB_STATUS[order.status.value] || order.status.value,

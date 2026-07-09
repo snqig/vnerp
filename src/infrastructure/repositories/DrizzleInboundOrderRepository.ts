@@ -64,6 +64,9 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
       status: (DB_TO_DOMAIN_STATUS[order.status ?? 'pending'] ?? 'pending') as any,
       warehouseId: order.warehouseId,
       supplierName: order.supplierName ?? '',
+      supplierId: order.supplierId ?? undefined,
+      poId: order.poId ?? undefined,
+      poNo: order.poNo ?? undefined,
       orderType: order.orderType ?? 'purchase',
       inboundDate: order.inboundDate ? String(order.inboundDate) : undefined,
       remark: order.remark ?? undefined,
@@ -104,10 +107,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
     if (filters?.keyword) {
       const kw = `%${filters.keyword}%`;
       conditions.push(
-        or(
-          like(invInboundOrders.orderNo, kw),
-          like(invInboundOrders.supplierName, kw)
-        )!
+        or(like(invInboundOrders.orderNo, kw), like(invInboundOrders.supplierName, kw))!
       );
     }
 
@@ -126,10 +126,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
     const where = and(...conditions);
 
     // 总数
-    const totalRow = await drizzleDb
-      .select({ total: count() })
-      .from(invInboundOrders)
-      .where(where);
+    const totalRow = await drizzleDb.select({ total: count() }).from(invInboundOrders).where(where);
     const total = totalRow[0]?.total ?? 0;
 
     // 分页数据
@@ -173,6 +170,9 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
         status: (DB_TO_DOMAIN_STATUS[o.status ?? 'pending'] ?? 'pending') as any,
         warehouseId: o.warehouseId,
         supplierName: o.supplierName ?? '',
+        supplierId: o.supplierId ?? undefined,
+        poId: o.poId ?? undefined,
+        poNo: o.poNo ?? undefined,
         orderType: o.orderType ?? 'purchase',
         inboundDate: o.inboundDate ? String(o.inboundDate) : undefined,
         remark: o.remark ?? undefined,
@@ -220,13 +220,17 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
       // 主表插入
       const [orderResult]: any = await conn.execute(
         `INSERT INTO inv_inbound_order
-         (order_no, order_type, warehouse_id, supplier_name, total_amount, total_quantity, status, inbound_date, remark, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+         (order_no, order_type, warehouse_id, supplier_id, supplier_name, po_id, po_no,
+          total_amount, total_quantity, status, inbound_date, remark, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           orderNo,
           order.orderType || 'purchase',
           order.warehouseId,
+          order.supplierId || null,
           order.supplierName || null,
+          order.poId || null,
+          order.poNo || null,
           order.totalAmount.amount,
           order.totalQuantity,
           DOMAIN_TO_DB_STATUS[order.status.value] || order.status.value,
@@ -274,12 +278,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
     const result = await drizzleDb
       .update(invInboundOrders)
       .set({ status: dbStatus, updateTime: new Date() })
-      .where(
-        and(
-          eq(invInboundOrders.id, id),
-          eq(invInboundOrders.status, dbCurrentStatus)
-        )
-      );
+      .where(and(eq(invInboundOrders.id, id), eq(invInboundOrders.status, dbCurrentStatus)));
 
     // affectedRows 在 mysql2 ResultSetHeader 上
     return (result[0] as any)?.affectedRows > 0;

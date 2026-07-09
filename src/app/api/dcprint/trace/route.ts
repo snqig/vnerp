@@ -119,24 +119,25 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       traceType: item.trace_type,
       operatorName: item.operator_name,
       traceTime: item.trace_time,
-    }))
+    })),
   };
 
   return successResponse(result);
 });
 
 // POST - 执行追溯查询
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { cardNo, traceType = 'forward', operatorId, operatorName } = body;
+export const POST = withPermission(
+  async (request: NextRequest, userInfo) => {
+    const body = await request.json();
+    const { cardNo, traceType = 'forward', operatorId, operatorName } = body;
 
-  if (!cardNo) {
-    return errorResponse('流程卡号不能为空', 400, 400);
-  }
+    if (!cardNo) {
+      return errorResponse('流程卡号不能为空', 400, 400);
+    }
 
-  // 查询流程卡信息
-  const card = await queryOne<any>(
-    `SELECT
+    // 查询流程卡信息
+    const card = await queryOne<any>(
+      `SELECT
       c.id, c.card_no, c.work_order_no, c.product_code, c.product_name,
       c.main_label_id, c.main_label_no,
       l.material_code as main_material_code,
@@ -148,16 +149,16 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
     FROM prd_process_card c
     LEFT JOIN inv_material_label l ON c.main_label_id = l.id
     WHERE c.card_no = ? AND c.deleted = 0`,
-    [cardNo]
-  );
+      [cardNo]
+    );
 
-  if (!card) {
-    return errorResponse('流程卡不存在', 404, 404);
-  }
+    if (!card) {
+      return errorResponse('流程卡不存在', 404, 404);
+    }
 
-  // 查询流程卡关联的所有物料
-  const materials = await query<MaterialItem[]>(
-    `SELECT
+    // 查询流程卡关联的所有物料
+    const materials = await query<MaterialItem[]>(
+      `SELECT
       m.label_no as labelNo,
       m.material_type as materialType,
       m.material_code as materialCode,
@@ -175,36 +176,36 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
     LEFT JOIN inv_material_label l ON m.label_id = l.id
     WHERE m.card_id = ?
     ORDER BY m.material_type, m.create_time`,
-    [card.id]
-  );
+      [card.id]
+    );
 
-  // 生成追溯单号并记录
-  const traceNo = generateTraceNo();
+    // 生成追溯单号并记录
+    const traceNo = generateTraceNo();
 
-  await execute(
-    `INSERT INTO inv_trace_record (
+    await execute(
+      `INSERT INTO inv_trace_record (
       trace_no, card_id, card_no, work_order_no, product_code, main_label_id,
       trace_type, operator_id, operator_name, remark, deleted
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
-    [
-      traceNo,
-      card.id,
-      card.card_no,
-      card.work_order_no,
-      card.product_code,
-      card.main_label_id,
-      traceType,
-      operatorId,
-      operatorName,
-      `追溯查询: ${traceType === 'forward' ? '正向追溯' : '反向追溯'}`,
-    ]
-  );
+      [
+        traceNo,
+        card.id,
+        card.card_no,
+        card.work_order_no,
+        card.product_code,
+        card.main_label_id,
+        traceType,
+        operatorId,
+        operatorName,
+        `追溯查询: ${traceType === 'forward' ? '正向追溯' : '反向追溯'}`,
+      ]
+    );
 
-  // 添加追溯明细
-  // @ts-ignore
-  for (const material of materials || []) {
-    await execute(
-      `INSERT INTO inv_trace_detail (
+    // 添加追溯明细
+    // @ts-expect-error materials 可能为 undefined，|| [] 已兜底但 TS 未收窄
+    for (const material of materials || []) {
+      await execute(
+        `INSERT INTO inv_trace_detail (
         trace_id, label_id, label_no, material_code, material_name,
         specification, batch_no, supplier_name, receive_date, material_type, remark
       ) VALUES (
@@ -212,47 +213,49 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
         (SELECT id FROM inv_material_label WHERE label_no = ?),
         ?, ?, ?, ?, ?, ?, ?, ?, ?
       )`,
-      [
-        traceNo,
-        material.labelNo,
-        material.labelNo,
-        material.materialCode || '',
-        material.materialName || '',
-        material.specification || '',
-        material.batchNo || '',
-        material.supplierName || '',
-        material.receiveDate || '',
-        material.materialType,
-        material.remark || '',
-      ]
-    );
-  }
+        [
+          traceNo,
+          material.labelNo,
+          material.labelNo,
+          material.materialCode || '',
+          material.materialName || '',
+          material.specification || '',
+          material.batchNo || '',
+          material.supplierName || '',
+          material.receiveDate || '',
+          material.materialType,
+          material.remark || '',
+        ]
+      );
+    }
 
-  return successResponse(
-    {
-      traceNo,
-      card: {
-        cardNo: card.card_no,
-        workOrderNo: card.work_order_no,
-        productCode: card.product_code,
-        productName: card.product_name,
+    return successResponse(
+      {
+        traceNo,
+        card: {
+          cardNo: card.card_no,
+          workOrderNo: card.work_order_no,
+          productCode: card.product_code,
+          productName: card.product_name,
+        },
+        mainMaterial: {
+          labelNo: card.main_label_no,
+          materialCode: card.main_material_code,
+          materialName: card.main_material_name,
+          specification: card.main_specification,
+          batchNo: card.main_batch_no,
+          supplierName: card.main_supplier_name,
+          receiveDate: card.main_receive_date,
+        },
+        materials: materials || [],
+        mainMaterials: materials?.filter((m) => m.materialType === 'main') || [],
+        auxiliaryMaterials: materials?.filter((m) => m.materialType === 'auxiliary') || [],
       },
-      mainMaterial: {
-        labelNo: card.main_label_no,
-        materialCode: card.main_material_code,
-        materialName: card.main_material_name,
-        specification: card.main_specification,
-        batchNo: card.main_batch_no,
-        supplierName: card.main_supplier_name,
-        receiveDate: card.main_receive_date,
-      },
-      materials: materials || [],
-      mainMaterials: materials?.filter((m) => m.materialType === 'main') || [],
-      auxiliaryMaterials: materials?.filter((m) => m.materialType === 'auxiliary') || [],
-    },
-    '追溯查询成功'
-  );
-}, { logTitle: '追溯查询', logType: 'business' });
+      '追溯查询成功'
+    );
+  },
+  { logTitle: '追溯查询', logType: 'business' }
+);
 
 // GET /detail - 获取追溯详情
 export const detail = withPermission(async (request: NextRequest, userInfo) => {

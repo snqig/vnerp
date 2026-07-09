@@ -17,7 +17,8 @@ import { ZodError } from 'zod/v4';
 function getInboundService(): InboundApplicationService {
   registerEventHandlers();
   const orderRepo = RepositoryRegistry.getInboundOrderRepository();
-  return new InboundApplicationService(orderRepo);
+  const purchaseRepo = RepositoryRegistry.getPurchaseOrderRepository();
+  return new InboundApplicationService(orderRepo, purchaseRepo);
 }
 
 export const GET = withPermission(

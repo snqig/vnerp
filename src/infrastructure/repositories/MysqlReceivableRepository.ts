@@ -9,7 +9,6 @@ interface FinReceivableRow {
   id: number;
   receivable_no: string;
   source_type: number | null;
-  source_id: number | null;
   source_no: string | null;
   customer_id: number;
   amount: number | string;
@@ -22,7 +21,7 @@ interface FinReceivableRow {
   update_time: string | null;
 }
 
-const COLUMNS = `id, receivable_no, source_type, source_id, source_no, customer_id,
+const COLUMNS = `id, receivable_no, source_type, source_no, customer_id,
                  amount, received_amount, balance, due_date, status, remark,
                  create_time, update_time`;
 
@@ -73,19 +72,17 @@ export class MysqlReceivableRepository implements IReceivableRepository {
   }
 
   async save(receivable: Receivable): Promise<number> {
-    const receivableNo =
-      receivable.receivableNo || (await generateDocumentNo('receivable'));
+    const receivableNo = receivable.receivableNo || (await generateDocumentNo('receivable'));
 
     return transaction(async (conn) => {
       const [result] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO fin_receivable
-         (receivable_no, source_type, source_id, source_no, customer_id,
+         (receivable_no, source_type, source_no, customer_id,
           amount, received_amount, balance, due_date, status, remark)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           receivableNo,
           receivable.sourceType,
-          receivable.sourceId ?? null,
           receivable.sourceNo,
           receivable.customerId,
           receivable.amount.amount,
@@ -99,10 +96,9 @@ export class MysqlReceivableRepository implements IReceivableRepository {
 
       const newId = result.insertId;
       if (receivable.id) {
-        await conn.execute(
-          `UPDATE fin_receivable SET update_time = NOW() WHERE id = ?`,
-          [receivable.id]
-        );
+        await conn.execute(`UPDATE fin_receivable SET update_time = NOW() WHERE id = ?`, [
+          receivable.id,
+        ]);
         return receivable.id;
       }
       return newId;
@@ -124,17 +120,14 @@ export class MysqlReceivableRepository implements IReceivableRepository {
   }
 
   async updateStatus(id: number, status: number): Promise<void> {
-    await execute(
-      `UPDATE fin_receivable SET status = ?, update_time = NOW() WHERE id = ?`,
-      [status, id]
-    );
+    await execute(`UPDATE fin_receivable SET status = ?, update_time = NOW() WHERE id = ?`, [
+      status,
+      id,
+    ]);
   }
 
   async softDelete(id: number): Promise<void> {
-    // fin_receivable 表当前没有 deleted 列，使用状态标记实现逻辑删除。
-    // 状态 4 (BAD_DEBT) 已用于坏账；此处采用物理删除以避免状态语义冲突。
-    // TODO: 通过迁移添加 deleted 列后改为标准的 UPDATE SET deleted = 1。
-    await execute(`DELETE FROM fin_receivable WHERE id = ?`, [id]);
+    await execute(`UPDATE fin_receivable SET deleted = 1, update_time = NOW() WHERE id = ?`, [id]);
   }
 
   private mapToAggregate(row: FinReceivableRow): Receivable {
@@ -142,7 +135,6 @@ export class MysqlReceivableRepository implements IReceivableRepository {
       id: row.id,
       receivableNo: row.receivable_no,
       sourceType: row.source_type ?? undefined,
-      sourceId: row.source_id ?? undefined,
       sourceNo: row.source_no || '',
       customerId: row.customer_id,
       amount: Number(row.amount),

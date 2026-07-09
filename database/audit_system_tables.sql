@@ -1,5 +1,5 @@
 -- ============================================================
--- VNERP 系统可审计性核心表结构
+-- 印刷生产经营信息管理系统 Print MIS 系统可审计性核心表结构
 -- 文件名: audit_system_tables.sql
 -- 说明: 包含操作日志、登录日志、库存流水、财务流水四张核心审计表
 -- 原则: 所有操作留痕，所有修改留底，所有单据不可删，所有变动有据可查
@@ -398,7 +398,7 @@ ALTER TABLE `fin_payable`
 -- ============================================================
 -- 完成提示
 -- ============================================================
-SELECT 'VNERP 审计系统表创建完成' AS result;
+SELECT '印刷生产经营信息管理系统 Print MIS 审计系统表创建完成' AS result;
 SELECT CONCAT(
   '共创建 ', 
   (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'vnerpdacahng' AND table_name LIKE 'sys_%log%'),

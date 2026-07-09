@@ -738,7 +738,7 @@
     "loginFailed": "用户名或密码错误",
     "sessionExpired": "会话已过期，请重新登录",
     "firstLogin": "首次登录，请修改密码",
-    "welcome": "欢迎使用 VNERP"
+    "welcome": "欢迎使用 印刷生产经营信息管理系统 Print MIS"
   },
   "Dashboard": {
     "title": "仪表盘",

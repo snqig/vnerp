@@ -17,6 +17,9 @@ export interface InboundOrderProps {
   warehouseId: number;
   warehouseName?: string;
   supplierName: string;
+  supplierId?: number;
+  poId?: number;
+  poNo?: string;
   orderType?: string;
   inboundDate?: string;
   remark?: string;
@@ -40,6 +43,9 @@ export class InboundOrder {
     public readonly warehouseId: number,
     public readonly warehouseName: string,
     public readonly supplierName: string,
+    public readonly supplierId: number | undefined,
+    public readonly poId: number | undefined,
+    public readonly poNo: string,
     public readonly orderType: string,
     public readonly inboundDate: string,
     public readonly remark: string,
@@ -74,6 +80,9 @@ export class InboundOrder {
       props.warehouseId,
       props.warehouseName || '',
       props.supplierName || '',
+      props.supplierId,
+      props.poId,
+      props.poNo || '',
       props.orderType || 'purchase',
       props.inboundDate || new Date().toISOString().slice(0, 10),
       props.remark || '',
@@ -92,7 +101,9 @@ export class InboundOrder {
           inboundId: order.id,
           inboundNo: order.orderNo,
           warehouseId: order.warehouseId,
-          supplierId: 0, // We don't have supplierId here, use 0 as placeholder
+          supplierId: props.supplierId || 0,
+          poId: props.poId,
+          poNo: props.poNo,
         })
       );
     }
@@ -118,6 +129,9 @@ export class InboundOrder {
       props.warehouseId,
       props.warehouseName || '',
       props.supplierName || '',
+      props.supplierId,
+      props.poId,
+      props.poNo || '',
       props.orderType || 'purchase',
       props.inboundDate || '',
       props.remark || '',
@@ -162,7 +176,7 @@ export class InboundOrder {
         inboundId: this.id!,
         inboundNo: this.orderNo,
         warehouseId: this.warehouseId,
-        supplierId: 0,
+        supplierId: this.supplierId || 0,
         totalAmount: this._totalAmount.amount,
       })
     );
@@ -183,8 +197,10 @@ export class InboundOrder {
         inboundNo: this.orderNo,
         warehouseId: this.warehouseId,
         warehouseName,
-        supplierId: 0,
+        supplierId: this.supplierId || 0,
         supplierName: this.supplierName,
+        poId: this.poId,
+        poNo: this.poNo,
         items: this._items.map((item) => ({
           materialId: item.materialId,
           materialCode: item.materialCode,

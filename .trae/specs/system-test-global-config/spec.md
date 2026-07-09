@@ -22,7 +22,7 @@
 #### Scenario: 登录页面显示公司名称
 - **WHEN** 用户访问 `/login` 页面
 - **THEN** 显示从 `sys_config` 表 `company_name` 配置项读取的公司名称
-- **AND** 如果未配置，显示默认名称如"VNERP管理系统"
+- **AND** 如果未配置，显示默认名称如"Print MIS管理系统"
 
 ### Requirement: 全局 Header 公司名称
 系统 SHALL 在页面 Header 区域显示从系统设置读取的公司名称。

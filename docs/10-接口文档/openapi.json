@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "VNERP API",
+    "title": "Print MIS API",
     "version": "1.0.0",
     "description": "ERP System API for Printing Industry"
   },
@@ -277,222 +277,24 @@
     "/api/dcprint/scan": {},
     "/api/dcprint/screen-plate": {},
     "/api/dcprint/trace": {},
-    "/api/debug/schema": {},
     "/api/delivery/vehicles": {},
-    "/api/diagnose/all-tables": {
-      "get": {
-        "summary": "No description",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Server Error"
-          }
-        }
-      }
-    },
-    "/api/diagnose/column-types": {
-      "get": {
-        "summary": "No description",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Server Error"
-          }
-        }
-      }
-    },
-    "/api/diagnose/final-inspection-schema": {
-      "get": {
-        "summary": "No description",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Server Error"
-          }
-        }
-      }
-    },
-    "/api/diagnose/inbound": {
-      "get": {
-        "summary": "No description",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Server Error"
-          }
-        }
-      }
-    },
-    "/api/diagnose/insert-test": {
-      "post": {
-        "summary": "No description",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Server Error"
-          }
-        }
-      }
-    },
-    "/api/diagnose/inventory-schema": {
-      "get": {
-        "summary": "No description",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Server Error"
-          }
-        }
-      }
-    },
-    "/api/diagnose/label-status": {
-      "get": {
-        "summary": "No description",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Server Error"
-          }
-        }
-      }
-    },
-    "/api/diagnose/material": {
-      "get": {
-        "summary": "No description",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Server Error"
-          }
-        }
-      }
-    },
+    "/api/diagnose/all-tables": {},
+    "/api/diagnose/column-types": {},
+    "/api/diagnose/final-inspection-schema": {},
+    "/api/diagnose/inbound": {},
+    "/api/diagnose/insert-test": {},
+    "/api/diagnose/inventory-schema": {},
+    "/api/diagnose/label-status": {},
+    "/api/diagnose/material": {},
     "/api/diagnose/show-columns": {},
-    "/api/diagnose/table-schema": {
-      "get": {
-        "summary": "No description",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Server Error"
-          }
-        }
-      }
-    },
+    "/api/diagnose/table-schema": {},
     "/api/document-number": {},
     "/api/engineering/sample-to-mass": {},
     "/api/engineering/sop": {},
     "/api/engineering/standard-card": {},
     "/api/equipment/calibration": {},
     "/api/equipment/maintenance": {},
+    "/api/equipment/plan": {},
     "/api/equipment/repair": {},
     "/api/equipment": {},
     "/api/equipment/scrap": {},
@@ -786,6 +588,29 @@
     "/api/migrations/six-critical-fixes": {},
     "/api/migrations/views": {},
     "/api/monitoring": {},
+    "/api/openapi.json": {
+      "get": {
+        "summary": "动态返回 OpenAPI 3.0 规范     数据源：docs/10-接口文档/openapi.json   由 scripts/generate-api-docs.js 生成   可通过 pnpm docs:api 重新生成",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
     "/api/orders/bom/expand": {},
     "/api/orders/bom/materials": {},
     "/api/orders/bom": {},
@@ -950,6 +775,7 @@
     },
     "/api/purchase/convert-po": {},
     "/api/purchase/orders": {},
+    "/api/purchase/reconciliation": {},
     "/api/purchase/request": {},
     "/api/purchase/return": {},
     "/api/purchase/suppliers": {},
@@ -1165,9 +991,9 @@
     "/api/system/dict": {},
     "/api/system/dict-data": {},
     "/api/system/dict-type": {},
-    "/api/system/init": {
+    "/api/system/health/infrastructure": {
       "get": {
-        "summary": "No description",
+        "summary": "基础设施健康检查端点\r  \r   不加鉴权：供 K8s/Nginx 负载均衡器探活使用。\r   仅返回状态与延迟，不暴露敏感数据。\r  \r   HTTP 状态码：\r   - 200: healthy 或 degraded（服务可用但部分降级）\r   - 503: unhealthy（关键组件不可用）",
         "responses": {
           "200": {
             "description": "Success",
@@ -1188,6 +1014,7 @@
         }
       }
     },
+    "/api/system/init": {},
     "/api/system/log/export": {},
     "/api/system/login-log": {},
     "/api/system/monitor/deadlock": {},
@@ -1199,60 +1026,16 @@
     "/api/system/profile": {},
     "/api/system/roles": {},
     "/api/system/scheduler": {},
-    "/api/system/user/fix-names": {
-      "post": {
-        "summary": "No description",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Server Error"
-          }
-        }
-      }
-    },
+    "/api/system/user/fix-names": {},
     "/api/system/user": {},
-    "/api/system/user/sync-names": {
-      "post": {
-        "summary": "No description",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Server Error"
-          }
-        }
-      }
-    },
+    "/api/system/user/sync-names": {},
     "/api/system/workflow": {},
-    "/api/test": {},
     "/api/upload/contract": {},
     "/api/upload": {},
     "/api/upload/sop": {},
     "/api/warehouse/alert-push": {},
     "/api/warehouse/batch": {},
+    "/api/warehouse/batch/trace": {},
     "/api/warehouse/batch-inventory": {},
     "/api/warehouse/categories": {},
     "/api/warehouse/cost": {},

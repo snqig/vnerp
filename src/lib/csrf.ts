@@ -28,13 +28,26 @@ export function requiresCsrfValidation(request: NextRequest): boolean {
 }
 
 /**
+ * 常量时间字符串比较（防止时序攻击）
+ * Edge runtime 兼容（不依赖 Node.js crypto.timingSafeEqual）
+ */
+function timingSafeEqualStr(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+/**
  * 校验 Double Submit Cookie：X-CSRF-Token header 与 csrf_token cookie 必须一致
  */
 export function validateCsrfToken(request: NextRequest): boolean {
   const cookieToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
   const headerToken = request.headers.get(CSRF_HEADER_NAME);
   if (!cookieToken || !headerToken) return false;
-  return cookieToken === headerToken;
+  return timingSafeEqualStr(cookieToken, headerToken);
 }
 
 /**
@@ -43,7 +56,9 @@ export function validateCsrfToken(request: NextRequest): boolean {
 export function setCsrfCookie(response: NextResponse, token: string): void {
   response.cookies.set(CSRF_COOKIE_NAME, token, {
     httpOnly: false,
-    secure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : process.env.NODE_ENV === 'production',
+    secure: process.env.COOKIE_SECURE
+      ? process.env.COOKIE_SECURE === 'true'
+      : process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge: Number(process.env.CSRF_COOKIE_MAX_AGE || 60 * 60 * 24 * 7), // 7 天 default

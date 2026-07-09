@@ -747,7 +747,7 @@
     "loginFailed": "Sai tên đăng nhập hoặc mật khẩu",
     "sessionExpired": "Phiên làm việc hết hạn, vui lòng đăng nhập lại",
     "firstLogin": "Đăng nhập lần đầu, vui lòng đổi mật khẩu",
-    "welcome": "Chào mừng đến VNERP"
+    "welcome": "Chào mừng đến Print MIS"
   },
   "Dashboard": {
     "title": "Bảng điều khiển",

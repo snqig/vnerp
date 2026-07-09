@@ -1,135 +1,212 @@
-﻿import { NextRequest } from 'next/server';
-import { query, execute, queryOne, transaction } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  commonErrors,
-  validateRequestBody,
-} from '@/lib/api-response';
-
+import { NextRequest } from 'next/server';
+import { query, execute } from '@/lib/db';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-export const GET = withPermission(async (request: NextRequest) => {
-  const { searchParams } = new URL(request.url);
-  const keyword = searchParams.get('keyword') || '';
-  const equipment_type = searchParams.get('equipment_type');
-  const status = searchParams.get('status');
-  const page = parseInt(searchParams.get('page') || '1');
-  const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
-  let sql = `SELECT * FROM eqp_equipment WHERE deleted = 0`;
-  const values: any[] = [];
+/**
+ * 设备台账管理 API
+ *
+ * GET    /api/equipment          — 分页查询设备列表（支持筛选）
+ * GET    /api/equipment?id=N     — 查询单个设备详情
+ * POST   /api/equipment          — 创建设备
+ * PUT    /api/equipment          — 更新设备
+ * DELETE /api/equipment?id=N     — 删除设备（软删除）
+ */
+
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
+  const { searchParams } = new URL(request.url);
+
+  // 单个设备详情
+  const id = searchParams.get('id');
+  if (id) {
+    const rows: any = await query(
+      `SELECT e.*,
+              (SELECT COUNT(*) FROM eq_maintenance_record r WHERE r.equipment_id = e.id AND r.deleted = 0) as maintenance_count,
+              (SELECT MAX(maintenance_date) FROM eq_maintenance_record r WHERE r.equipment_id = e.id AND r.deleted = 0) as last_maintenance_date
+       FROM eq_equipment e
+       WHERE e.id = ? AND e.deleted = 0`,
+      [Number(id)]
+    );
+    if (!rows || rows.length === 0) {
+      return errorResponse('设备不存在', 404, 404);
+    }
+    return successResponse(rows[0]);
+  }
+
+  // 分页查询列表
+  const page = Number(searchParams.get('page') || 1);
+  const pageSize = Number(searchParams.get('pageSize') || 20);
+  const keyword = searchParams.get('keyword') || '';
+  const equipmentType = searchParams.get('equipment_type') || '';
+  const status = searchParams.get('status') || '';
+  const workshop = searchParams.get('workshop') || '';
+
+  let where = 'WHERE e.deleted = 0';
+  const params: any[] = [];
 
   if (keyword) {
-    sql += ' AND (equipment_code LIKE ? OR equipment_name LIKE ? OR brand LIKE ?)';
-    const like = `%${keyword}%`;
-    values.push(like, like, like);
+    where += ' AND (e.equipment_code LIKE ? OR e.equipment_name LIKE ? OR e.model LIKE ?)';
+    const kw = `%${keyword}%`;
+    params.push(kw, kw, kw);
   }
-  if (equipment_type) {
-    sql += ' AND equipment_type = ?';
-    values.push(parseInt(equipment_type));
+  if (equipmentType) {
+    where += ' AND e.equipment_type = ?';
+    params.push(equipmentType);
   }
   if (status) {
-    sql += ' AND status = ?';
-    values.push(parseInt(status));
+    where += ' AND e.status = ?';
+    params.push(Number(status));
+  }
+  if (workshop) {
+    where += ' AND e.workshop = ?';
+    params.push(workshop);
   }
 
-  sql += ' ORDER BY id ASC LIMIT ? OFFSET ?';
-  values.push(pageSize, (page - 1) * pageSize);
-
-  const list = await query(sql, values);
-
-  const countSql = `SELECT COUNT(*) as total FROM eqp_equipment WHERE deleted = 0`;
-  const countResult = (await queryOne(countSql)) as any;
-
-  const typeStats = (await query(
-    `SELECT equipment_type, COUNT(*) as count, AVG(oee) as avg_oee FROM eqp_equipment WHERE deleted = 0 GROUP BY equipment_type`
-  )) as any[];
-
-  return successResponse({ list, total: countResult?.total || 0, page, pageSize, typeStats });
-}, { errorMessage: '获取设备列表失败' });
-
-export const POST = withPermission(async (request: NextRequest) => {
-  const body = await request.json();
-  const validation = validateRequestBody(body, ['equipment_code', 'equipment_name']);
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
-
-  const existing = await queryOne(
-    'SELECT id FROM eqp_equipment WHERE equipment_code = ? AND deleted = 0',
-    [body.equipment_code]
+  const countRows: any = await query(
+    `SELECT COUNT(*) as total FROM eq_equipment e ${where}`,
+    params
   );
-  if (existing) {
-    return errorResponse('设备编码已存在', 409, 409);
-  }
+  const total = countRows[0]?.total || 0;
 
-  const result = await execute(
-    `INSERT INTO eqp_equipment (equipment_code, equipment_name, equipment_type, brand, model, serial_no, location, purchase_date, manufacturer, rated_capacity, oee, availability, performance, quality_rate, current_status, status, remark)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-    [
-      body.equipment_code,
-      body.equipment_name,
-      body.equipment_type || null,
-      body.brand || null,
-      body.model || null,
-      body.serial_no || null,
-      body.location || null,
-      body.purchase_date || null,
-      body.manufacturer || null,
-      body.rated_capacity || null,
-      body.oee || 0,
-      body.availability || 0,
-      body.performance || 0,
-      body.quality_rate || 0,
-      body.current_status || 1,
-      body.remark || null,
-    ]
+  const rows: any = await query(
+    `SELECT e.id, e.equipment_code, e.equipment_name, e.equipment_type, e.model,
+            e.manufacturer, e.workshop, e.location, e.status,
+            e.cumulative_run_hours, e.cumulative_print_count,
+            e.last_maintenance_date, e.next_maintenance_date
+     FROM eq_equipment e ${where}
+     ORDER BY e.id DESC
+     LIMIT ? OFFSET ?`,
+    [...params, pageSize, (page - 1) * pageSize]
   );
 
-  return successResponse({ id: result.insertId }, '设备创建成功');
-}, { errorMessage: '创建设备失败' });
+  return successResponse({ list: rows, total, page, pageSize });
+});
 
-export const PUT = withPermission(async (request: NextRequest) => {
-  const body = await request.json();
-  if (!body.id) {
-    return commonErrors.badRequest('设备ID不能为空');
-  }
+export const POST = withPermission(
+  async (request: NextRequest, userInfo) => {
+    const body = await request.json();
+    const {
+      equipment_code,
+      equipment_name,
+      equipment_type,
+      model,
+      manufacturer,
+      workshop,
+      location,
+      purchase_date,
+      install_date,
+      purchase_price,
+      expected_life_years,
+      remark,
+    } = body;
 
-  const existing = await queryOne('SELECT id FROM eqp_equipment WHERE id = ? AND deleted = 0', [
-    body.id,
-  ]);
-  if (!existing) {
-    return commonErrors.notFound('设备不存在');
-  }
+    if (!equipment_code || !equipment_name) {
+      return errorResponse('设备编号和名称不能为空', 400, 400);
+    }
 
-  await execute(
-    `UPDATE eqp_equipment SET equipment_name = ?, equipment_type = ?, brand = ?, model = ?, location = ?, rated_capacity = ?, oee = ?, availability = ?, performance = ?, quality_rate = ?, current_status = ?, status = ?, remark = ? WHERE id = ?`,
-    [
-      body.equipment_name,
-      body.equipment_type,
-      body.brand,
-      body.model,
-      body.location,
-      body.rated_capacity,
-      body.oee,
-      body.availability,
-      body.performance,
-      body.quality_rate,
-      body.current_status,
-      body.status,
-      body.remark,
-      body.id,
-    ]
-  );
+    // 检查编号唯一性
+    const existing: any = await query(
+      'SELECT id FROM eq_equipment WHERE equipment_code = ? AND deleted = 0',
+      [equipment_code]
+    );
+    if (existing && existing.length > 0) {
+      return errorResponse('设备编号已存在', 409, 409);
+    }
 
-  return successResponse(null, '设备更新成功');
-}, { errorMessage: '更新设备失败' });
+    const result: any = await execute(
+      `INSERT INTO eq_equipment
+       (equipment_code, equipment_name, equipment_type, model, manufacturer,
+        workshop, location, purchase_date, install_date, purchase_price,
+        expected_life_years, remark, create_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        equipment_code,
+        equipment_name,
+        equipment_type || 'other',
+        model || null,
+        manufacturer || null,
+        workshop || null,
+        location || null,
+        purchase_date || null,
+        install_date || null,
+        purchase_price || 0,
+        expected_life_years || 10,
+        remark || null,
+        userInfo?.userId || null,
+      ]
+    );
 
-export const DELETE = withPermission(async (request: NextRequest) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  if (!id) return commonErrors.badRequest('设备ID不能为空');
+    return successResponse({ id: result.insertId, equipment_code }, '设备创建成功');
+  },
+  { logTitle: '创建设备', logType: 'business' }
+);
 
-  await execute('UPDATE eqp_equipment SET deleted = 1 WHERE id = ?', [parseInt(id)]);
-  return successResponse(null, '设备删除成功');
-}, { errorMessage: '删除设备失败' });
+export const PUT = withPermission(
+  async (request: NextRequest, userInfo) => {
+    const body = await request.json();
+    const { id, ...fields } = body;
+
+    if (!id) return errorResponse('ID不能为空', 400, 400);
+
+    const allowedFields = [
+      'equipment_name',
+      'equipment_type',
+      'model',
+      'manufacturer',
+      'workshop',
+      'location',
+      'purchase_date',
+      'install_date',
+      'purchase_price',
+      'expected_life_years',
+      'status',
+      'cumulative_run_hours',
+      'cumulative_print_count',
+      'last_maintenance_date',
+      'next_maintenance_date',
+      'remark',
+    ];
+
+    const updateFields: string[] = [];
+    const updateValues: any[] = [];
+
+    for (const field of allowedFields) {
+      if (fields[field] !== undefined) {
+        updateFields.push(`${field} = ?`);
+        updateValues.push(fields[field]);
+      }
+    }
+
+    if (updateFields.length === 0) {
+      return errorResponse('没有可更新的字段', 400, 400);
+    }
+
+    updateFields.push('update_by = ?');
+    updateValues.push(userInfo?.userId || null);
+    updateValues.push(Number(id));
+
+    await execute(
+      `UPDATE eq_equipment SET ${updateFields.join(', ')} WHERE id = ? AND deleted = 0`,
+      updateValues
+    );
+
+    return successResponse(null, '更新成功');
+  },
+  { logTitle: '更新设备', logType: 'business' }
+);
+
+export const DELETE = withPermission(
+  async (request: NextRequest, userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) return errorResponse('ID不能为空', 400, 400);
+
+    await execute('UPDATE eq_equipment SET deleted = 1, update_by = ? WHERE id = ?', [
+      userInfo?.userId || null,
+      Number(id),
+    ]);
+
+    return successResponse(null, '删除成功');
+  },
+  { logTitle: '删除设备', logType: 'business' }
+);

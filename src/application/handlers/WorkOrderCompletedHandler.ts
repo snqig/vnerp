@@ -9,9 +9,7 @@ import { secureLog } from '@/lib/logger';
  * - inv_inventory_batch 创建新批次
  * - inv_inventory_transaction 记录入库流水
  */
-export class WorkOrderCompletedHandler
-  implements EventHandler<WorkOrderCompletedEvent>
-{
+export class WorkOrderCompletedHandler implements EventHandler<WorkOrderCompletedEvent> {
   async handle(event: WorkOrderCompletedEvent): Promise<void> {
     const { workOrderId, workOrderNo, productId, productName, completedQty, warehouseId } =
       event.payload;
@@ -62,9 +60,9 @@ export class WorkOrderCompletedHandler
 
       await conn.execute(
         `INSERT INTO inv_inventory_batch
-           (material_id, material_code, material_name, batch_no, quantity, available_qty, warehouse_id, inbound_date, status, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())`,
-        [productId, materialCode, productName, batchNo, completedQty, completedQty, warehouseId, today]
+           (material_id, material_name, batch_no, quantity, available_qty, warehouse_id, inbound_date, status, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW())`,
+        [productId, productName, batchNo, completedQty, completedQty, warehouseId, today]
       );
 
       const transNo = 'TRX' + Date.now() + String(productId).slice(-4);

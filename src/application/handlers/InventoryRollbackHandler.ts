@@ -12,7 +12,6 @@ interface InboundRow {
 /** 入库明细行类型 */
 interface InboundItemRow {
   material_id: number;
-  material_code: string;
   material_name: string;
   quantity: string | number;
   batch_no: string | null;
@@ -38,7 +37,7 @@ export class InventoryRollbackHandler implements EventHandler<InboundOrderUnappr
     await transaction(async (conn) => {
       // Fetch inbound order details from database
       const [inboundRows] = await conn.execute<RowDataPacket[]>(
-        'SELECT warehouse_id FROM inv_inbound WHERE id = ? AND deleted = 0 LIMIT 1',
+        'SELECT warehouse_id FROM inv_inbound_order WHERE id = ? AND deleted = 0 LIMIT 1',
         [inboundId]
       );
 
@@ -51,13 +50,12 @@ export class InventoryRollbackHandler implements EventHandler<InboundOrderUnappr
 
       // Fetch inbound items
       const [itemRows] = await conn.execute<RowDataPacket[]>(
-        'SELECT material_id, material_code, material_name, quantity, batch_no FROM inv_inbound_item WHERE inbound_id = ? AND deleted = 0',
+        'SELECT material_id, material_name, quantity, batch_no FROM inv_inbound_item WHERE order_id = ? AND deleted = 0',
         [inboundId]
       );
 
       const items = (itemRows as unknown[] as InboundItemRow[]).map((row) => ({
         materialId: row.material_id,
-        materialCode: row.material_code,
         materialName: row.material_name,
         quantity: Number(row.quantity),
         batchNo: row.batch_no,

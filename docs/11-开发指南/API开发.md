@@ -1,6 +1,6 @@
 # API 开发
 
-本文档说明 VNERP API 开发规范与流程，对应 `src/app/api/` 下的路由实现与 `src/lib/api-response.ts`、`src/lib/api-auth.ts` 工具。
+本文档说明 印刷生产经营信息管理系统 Print MIS API 开发规范与流程，对应 `src/app/api/` 下的路由实现与 `src/lib/api-response.ts`、`src/lib/api-auth.ts` 工具。
 
 ## 1. 路由组织
 

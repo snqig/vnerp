@@ -11,6 +11,8 @@ export class InboundOrderApprovedEvent implements DomainEvent {
       warehouseName: string;
       supplierId: number;
       supplierName: string;
+      poId?: number;
+      poNo?: string;
       items: Array<{
         materialId: number;
         materialCode: string;
@@ -33,6 +35,8 @@ export class InboundOrderCreatedEvent implements DomainEvent {
       inboundNo: string;
       warehouseId: number;
       supplierId: number;
+      poId?: number;
+      poNo?: string;
     }
   ) {}
 }

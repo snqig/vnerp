@@ -11,24 +11,24 @@ export class PurchasePayableHandler implements EventHandler<PurchaseOrderReceive
     if (totalReceivedAmount <= 0) return;
 
     await transaction(async (conn) => {
+      const periodCode = new Date().toISOString().slice(0, 7).replace('-', '');
+
       for (const item of receivedItems) {
         const totalItemAmount = item.quantity * item.unitPrice;
 
         const voucherNo = 'FV' + Date.now() + String(item.materialId).slice(-4);
         await conn.execute(
-          `INSERT INTO fin_voucher (voucher_no, voucher_date, source_type, source_id, source_no, debit_account, credit_account, amount, cost_price, quantity, batch_no, material_id, material_name, warehouse_id)
-           VALUES (?, CURDATE(), 'purchase', ?, ?, '原材料库存', '应付账款', ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO fin_voucher (voucher_no, period_code, voucher_date, voucher_type, source_type, source_id, source_no, total_debit, total_credit, total_amount, status, summary, create_time)
+           VALUES (?, ?, CURDATE(), 2, 'purchase', ?, ?, ?, ?, ?, 0, ?, NOW())`,
           [
             voucherNo,
+            periodCode,
             orderId,
             orderNo,
             totalItemAmount,
-            item.unitPrice,
-            item.quantity,
-            item.batchNo,
-            item.materialId,
-            item.materialName,
-            item.warehouseId,
+            totalItemAmount,
+            totalItemAmount,
+            `Purchase inbound ${orderNo} material ${item.materialName} qty ${item.quantity} batch ${item.batchNo}`,
           ]
         );
       }
@@ -41,16 +41,15 @@ export class PurchasePayableHandler implements EventHandler<PurchaseOrderReceive
 
       const payableNo = 'AP' + Date.now();
       await conn.execute(
-        `INSERT INTO fin_payable (payable_no, supplier_id, supplier_name, source_type, source_id, source_no, amount, paid_amount, status, due_date, remark, create_time)
-         VALUES (?, ?, ?, 'purchase', ?, ?, ?, 0, 1, DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, NOW())`,
+        `INSERT INTO fin_payable (payable_no, supplier_id, source_type, source_no, amount, paid_amount, balance, status, due_date, remark, create_time)
+         VALUES (?, ?, 1, ?, ?, 0, ?, 1, DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, NOW())`,
         [
           payableNo,
           dbSupplierId,
-          supplierName,
-          orderId,
           orderNo,
           totalReceivedAmount,
-          `采购订单 ${orderNo} 入库自动生成`,
+          totalReceivedAmount,
+          `Purchase order ${orderNo} inbound auto-generated`,
         ]
       );
     });

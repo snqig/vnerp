@@ -6,10 +6,13 @@ services:
     container_name: vnerp-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-vnerp2026}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-vnerp-root-2026}
       MYSQL_DATABASE: ${DB_NAME:-vnerp}
+      MYSQL_USER: ${DB_USER:-vnerp_app}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-vnerp2026}
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
+    # dev only: expose MySQL port for debugging tools (remove in production)
     ports:
       - "${DB_PORT:-3306}:3306"
     volumes:
@@ -26,7 +29,7 @@ services:
       --slow-query-log-file=/var/log/mysql/slow.log
       --long-query-time=2
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD:-vnerp2026}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${DB_USER:-vnerp_app}", "-p${DB_PASSWORD:-vnerp2026}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,8 +41,8 @@ services:
     image: redis:7-alpine
     container_name: vnerp-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
@@ -68,7 +71,7 @@ services:
       NODE_ENV: development
       DB_HOST: mysql
       DB_PORT: 3306
-      DB_USER: root
+      DB_USER: ${DB_USER:-vnerp_app}
       DB_PASSWORD: ${DB_PASSWORD:-vnerp2026}
       DB_NAME: ${DB_NAME:-vnerp}
       JWT_SECRET: ${JWT_SECRET:-vnerp-dev-secret-key-change-in-production}

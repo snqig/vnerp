@@ -6,9 +6,7 @@ import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutb
 import { transaction } from '@/lib/db';
 
 export class PurchaseApplicationService {
-  constructor(
-    private readonly orderRepo: IPurchaseOrderRepository
-  ) {}
+  constructor(private readonly orderRepo: IPurchaseOrderRepository) {}
 
   async getOrderById(id: number): Promise<PurchaseOrder> {
     const order = await this.orderRepo.findById(id);
@@ -78,38 +76,18 @@ export class PurchaseApplicationService {
     return { id, status: 'approved' };
   }
 
+  /**
+   * @deprecated 收货功能已迁移至入库单模块。
+   * 请使用 POST /api/warehouse/inbound/from-po 从采购单创建入库单，
+   * 再通过 PUT /api/warehouse/inbound?action=approve 审核入库单完成收货。
+   */
   async receiveGoods(
     id: number,
     lineReceives: Array<{ lineNo: number; quantity: number; batchNo: string; warehouseId: number }>
   ): Promise<{ id: number; status: string }> {
-    const order = await this.getOrderById(id);
-
-    const previousStatus = order.status.value;
-    order.receive(lineReceives);
-
-    await transaction(async (conn) => {
-      const [result]: any = await conn.execute(
-        'UPDATE pur_purchase_order SET status = ?, update_time = NOW() WHERE id = ? AND status = ?',
-        [order.status.toDbCode(), id, PurchaseOrderStatus.from(previousStatus).toDbCode()]
-      );
-      if (result.affectedRows === 0) {
-        throw new VersionConflictError();
-      }
-
-      for (const line of order.lines) {
-        await conn.execute(
-          'UPDATE pur_purchase_order_line SET received_qty = ?, update_time = NOW() WHERE po_id = ? AND line_no = ?',
-          [line.receivedQty, id, line.lineNo]
-        );
-      }
-
-      const events = order.getDomainEvents();
-      await getDomainEventOutbox().saveEvents(conn, 'PurchaseOrder', id, events);
-    });
-
-    order.clearDomainEvents();
-
-    return { id, status: order.status.value };
+    throw new DomainError(
+      '收货功能已迁移至入库单流程，请使用 POST /api/warehouse/inbound/from-po 创建入库单'
+    );
   }
 
   async closeOrder(id: number): Promise<{ id: number; status: string }> {

@@ -16,6 +16,21 @@ if (!SECRET_KEY) {
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = Number(process.env.LOGIN_LOCKOUT_MINUTES || 15);
 
+const ACCESS_TOKEN_TTL = process.env.JWT_ACCESS_TOKEN_TTL || '24h';
+const REFRESH_TOKEN_TTL_SECONDS = Number(
+  process.env.JWT_REFRESH_COOKIE_MAX_AGE || 7 * 24 * 60 * 60
+);
+
+function parseTtlToSeconds(ttl: string): number {
+  const match = ttl.match(/^(\d+)([smhd])$/);
+  if (!match) return 24 * 60 * 60;
+  const value = parseInt(match[1], 10);
+  const multipliers: Record<string, number> = { s: 1, m: 60, h: 3600, d: 86400 };
+  return value * (multipliers[match[2]] || 3600);
+}
+
+const ACCESS_COOKIE_MAX_AGE = parseTtlToSeconds(ACCESS_TOKEN_TTL);
+
 interface LoginUserRow {
   id: number;
   username: string;
@@ -269,8 +284,7 @@ export async function POST(request: NextRequest) {
         if (deptResult.length > 0) {
           departmentName = deptResult[0].dept_name;
         }
-      } catch (e) {
-      }
+      } catch (e) {}
     }
 
     let permissions: string[] = [];
@@ -296,7 +310,7 @@ export async function POST(request: NextRequest) {
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime(process.env.JWT_ACCESS_TOKEN_TTL || '24h')
+      .setExpirationTime(ACCESS_TOKEN_TTL)
       .sign(new TextEncoder().encode(SECRET_KEY));
 
     const userInfo = {
@@ -357,7 +371,7 @@ export async function POST(request: NextRequest) {
 
     // 生成 refresh token
     const refreshToken = crypto.randomUUID();
-    const refreshExpiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7天
+    const refreshExpiresAt = Date.now() + REFRESH_TOKEN_TTL_SECONDS * 1000;
     await storeRefreshToken(refreshToken, user.id, refreshExpiresAt);
 
     const response = NextResponse.json({
@@ -375,17 +389,21 @@ export async function POST(request: NextRequest) {
     // 保留 JSON 返回的 token：客户端仍需要它做 Authorization header。
     response.cookies.set('access_token', token, {
       httpOnly: true,
-      secure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : process.env.NODE_ENV === 'production',
+      secure: process.env.COOKIE_SECURE
+        ? process.env.COOKIE_SECURE === 'true'
+        : process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 24 * 60 * 60, // 24h，与 JWT 过期一致
+      maxAge: ACCESS_COOKIE_MAX_AGE,
     });
     response.cookies.set('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : process.env.NODE_ENV === 'production',
+      secure: process.env.COOKIE_SECURE
+        ? process.env.COOKIE_SECURE === 'true'
+        : process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: Number(process.env.JWT_REFRESH_COOKIE_MAX_AGE || 7 * 24 * 60 * 60), // 7d default
+      maxAge: REFRESH_TOKEN_TTL_SECONDS,
     });
 
     // 登录成功后下发 CSRF token cookie
@@ -413,8 +431,7 @@ async function logLogin(username: string, request: NextRequest, success: boolean
        VALUES (?, ?, ?, ?, ?)`,
       [username, ip, userAgent, success ? 1 : 0, success ? '' : message]
     );
-  } catch (e) {
-  }
+  } catch (e) {}
 }
 
 function parseBrowser(ua: string): string {

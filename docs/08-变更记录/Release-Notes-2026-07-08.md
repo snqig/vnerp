@@ -9,7 +9,7 @@
 
 ## 概述
 
-本次迭代为 VNERP（越南达昌科技 ERP）系统的综合性工程治理版本，围绕 **安全加固、数据库统一、容器化部署、CI/CD 自动化、监控告警、文档完善、代码重构与项目清理** 八大主题展开。完成了从开发到部署运维的完整 DevOps 闭环建设，建立了生产级 Docker 部署 + GitHub Actions 自动发布流水线 + Prometheus/Grafana 监控告警体系。
+本次迭代为 印刷生产经营信息管理系统 Print MIS系统的综合性工程治理版本，围绕 **安全加固、数据库统一、容器化部署、CI/CD 自动化、监控告警、文档完善、代码重构与项目清理** 八大主题展开。完成了从开发到部署运维的完整 DevOps 闭环建设，建立了生产级 Docker 部署 + GitHub Actions 自动发布流水线 + Prometheus/Grafana 监控告警体系。
 
 ---
 
@@ -370,7 +370,7 @@ deploy (SSH → git pull → docker compose pull → up -d → 健康检查)
 
 ## 贡献者
 
-- VNERP 开发团队
+- 印刷生产经营信息管理系统 Print MIS 开发团队
 
 ---
 

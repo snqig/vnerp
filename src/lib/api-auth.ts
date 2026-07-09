@@ -67,7 +67,7 @@ function checkFirstLogin(request: NextRequest, userInfo: UserInfo): NextResponse
         {
           code: 403,
           success: false,
-          message: '首次登录需修改密码后才能访问系统功能',
+          message: tc('text_r1wt8y'),
           data: null,
           passwordExpired: true,
         },
@@ -97,7 +97,11 @@ function checkFirstLogin(request: NextRequest, userInfo: UserInfo): NextResponse
  * @returns 包装后的 Next.js API 路由处理函数
  */
 export function withAuth(
-  handler: (request: NextRequest, userInfo: UserInfo, context?: RouteHandlerContext) => Promise<NextResponse>,
+  handler: (
+    request: NextRequest,
+    userInfo: UserInfo,
+    context?: RouteHandlerContext
+  ) => Promise<NextResponse>,
   options?: {
     permission?: string;
     resourceType?: 'order' | 'workorder' | 'inbound' | 'outbound';
@@ -165,9 +169,7 @@ export function withAuth(
  * 带认证和错误处理的 API 路由包装器
  *
  * 在 `withAuth` 的基础上增加了 try/catch 全局错误捕获，是 `withPermission` 的底层依赖。
- * 执行流程与 `withAuth` 相同（Token 验证 → 黑名单检查 → 用户级撤销 → 用户信息获取 →
- * 首次登录拦截 → 权限检查 → 资源访问控制），但任何步骤抛出的异常都会被捕获并返回
- * 统一的 500 错误响应。
+ * 通过委托 `withAuth` 完成认证流程，避免逻辑重复（DRY）。
  *
  * 适用于需要认证且希望自动处理运行时异常的 API 路由。
  *
@@ -180,7 +182,11 @@ export function withAuth(
  * @returns 包装后的 Next.js API 路由处理函数，内部包含 try/catch 错误捕获
  */
 export function withAuthAndErrorHandler(
-  handler: (request: NextRequest, userInfo: UserInfo, context?: RouteHandlerContext) => Promise<NextResponse>,
+  handler: (
+    request: NextRequest,
+    userInfo: UserInfo,
+    context?: RouteHandlerContext
+  ) => Promise<NextResponse>,
   options?: {
     permission?: string;
     resourceType?: 'order' | 'workorder' | 'inbound' | 'outbound';
@@ -188,65 +194,10 @@ export function withAuthAndErrorHandler(
     errorMessage?: string;
   }
 ) {
+  const authedHandler = withAuth(handler, options);
   return async (request: NextRequest, context?: RouteHandlerContext): Promise<NextResponse> => {
     try {
-      // 1. 提取Token
-      const token = extractToken(request);
-      if (!token) {
-        return errorResponse('未提供认证令牌', 401);
-      }
-
-      // 2. 验证Token
-      const tokenPayload = await verifyToken(token);
-      if (!tokenPayload) {
-        return errorResponse('认证令牌无效或已过期', 401);
-      }
-
-      // 2.5 检查Token是否已被撤销（黑名单）
-      const tokenKey = `token:${tokenPayload.userId}:${token.slice(-20)}`;
-      if (await isTokenRevoked(tokenKey)) {
-        return errorResponse('认证令牌已失效，请重新登录', 401);
-      }
-
-      // 2.6 检查用户级 token 撤销
-      if (tokenPayload.iat && (await isUserTokensRevoked(tokenPayload.userId, tokenPayload.iat))) {
-        return errorResponse('登录状态已失效（账号已变更），请重新登录', 401);
-      }
-
-      // 3. 获取用户完整信息
-    const userInfo = await getUserInfo(tokenPayload.userId);
-    if (!userInfo) {
-      return errorResponse('用户不存在或已被禁用', 401);
-    }
-
-    // 3.5 首次登录强制改密检查
-    const firstLoginResponse = checkFirstLogin(request, userInfo);
-    if (firstLoginResponse) return firstLoginResponse;
-
-    // 4. 检查权限
-      if (options?.permission && !hasPermission(userInfo, options.permission)) {
-        return errorResponse('没有权限执行此操作', 403);
-      }
-
-      // 5. 检查资源访问权限（防止横向越权）
-      if (options?.resourceType && options?.resourceIdParam) {
-        const { searchParams } = new URL(request.url);
-        const resourceId = searchParams.get(options.resourceIdParam);
-
-        if (resourceId) {
-          const hasAccess = await validateResourceAccess(
-            userInfo,
-            options.resourceType,
-            resourceId
-          );
-          if (!hasAccess) {
-            return errorResponse('没有权限访问此资源', 403);
-          }
-        }
-      }
-
-      // 6. 执行处理器
-      return await handler(request, userInfo, context);
+      return await authedHandler(request, context);
     } catch (error) {
       console.error(`[API Error] ${options?.errorMessage || '请求处理失败'}:`, error);
       return errorResponse(options?.errorMessage || '服务器内部错误', 500);

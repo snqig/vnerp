@@ -747,7 +747,7 @@
     "loginFailed": "Invalid username or password",
     "sessionExpired": "Session expired, please login again",
     "firstLogin": "First login, please change your password",
-    "welcome": "Welcome to VNERP"
+    "welcome": "Welcome to Print MIS"
   },
   "Dashboard": {
     "title": "Dashboard",

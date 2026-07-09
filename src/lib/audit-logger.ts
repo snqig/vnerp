@@ -5,6 +5,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { query, execute, type SqlValue } from '@/lib/db';
 import { maskSensitiveData } from '@/lib/logger';
 
@@ -107,14 +108,17 @@ export interface DocumentCancelEntry {
 
 // ============================================================
 // 当前用户上下文（在API路由中设置）
+// 使用 AsyncLocalStorage 实现请求级隔离，避免并发竞态
 // ============================================================
 
-let currentUserContext: {
+interface AuditUserContext {
   userId?: number;
   username?: string;
   ip?: string;
   userAgent?: string;
-} = {};
+}
+
+const auditContextStorage = new AsyncLocalStorage<AuditUserContext>();
 
 export function setAuditUserContext(
   userId?: number,
@@ -122,15 +126,15 @@ export function setAuditUserContext(
   ip?: string,
   userAgent?: string
 ) {
-  currentUserContext = { userId, username, ip, userAgent };
+  auditContextStorage.enterWith({ userId, username, ip, userAgent });
 }
 
 export function clearAuditUserContext() {
-  currentUserContext = {};
+  auditContextStorage.enterWith({});
 }
 
-export function getAuditUserContext() {
-  return { ...currentUserContext };
+export function getAuditUserContext(): AuditUserContext {
+  return { ...auditContextStorage.getStore() };
 }
 
 // ============================================================
@@ -138,7 +142,7 @@ export function getAuditUserContext() {
 // ============================================================
 
 function getClientIp(request?: NextRequest): string {
-  if (!request) return currentUserContext.ip || 'unknown';
+  if (!request) return getAuditUserContext().ip || 'unknown';
 
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) return forwarded.split(',')[0].trim();
@@ -150,7 +154,7 @@ function getClientIp(request?: NextRequest): string {
 }
 
 function getUserAgent(request?: NextRequest): string {
-  if (!request) return currentUserContext.userAgent || 'unknown';
+  if (!request) return getAuditUserContext().userAgent || 'unknown';
   return request.headers.get('user-agent') || 'unknown';
 }
 
@@ -158,7 +162,8 @@ function safeJsonStringify(data: unknown): string | null {
   if (data === null || data === undefined) return null;
   try {
     return JSON.stringify(maskSensitiveData(data));
-  } catch {
+  } catch (error) {
+    console.error('[audit-logger] safeJsonStringify failed:', error);
     return null;
   }
 }
@@ -213,7 +218,8 @@ export async function logOperation(entry: AuditLogEntry, request?: NextRequest):
         entry.durationMs || 0,
       ]
     );
-  } catch {
+  } catch (error) {
+    console.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -263,7 +269,8 @@ export async function logLogin(
     if (status === 0) {
       await checkAbnormalLogin(username, ip, errorMsg || '登录失败');
     }
-  } catch {
+  } catch (error) {
+    console.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -319,7 +326,8 @@ async function checkAbnormalLogin(
         [username, ip, 'location_change', 1, `异地登录: 上次IP ${lastLogin[0].ip}, 本次IP ${ip}`]
       );
     }
-  } catch {
+  } catch (error) {
+    console.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -364,7 +372,8 @@ export async function logStockFlow(entry: StockFlowEntry): Promise<void> {
         entry.remark || '',
       ]
     );
-  } catch {
+  } catch (error) {
+    console.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -409,7 +418,8 @@ export async function logFinanceFlow(entry: FinanceFlowEntry): Promise<void> {
         entry.remark || '',
       ]
     );
-  } catch {
+  } catch (error) {
+    console.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -441,7 +451,8 @@ export async function logDataChange(entry: DataChangeEntry): Promise<void> {
         entry.ip || user.ip || '',
       ]
     );
-  } catch {
+  } catch (error) {
+    console.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -481,7 +492,8 @@ export async function logDocumentCancel(entry: DocumentCancelEntry): Promise<voi
       beforeData: entry.snapshotData,
       status: 1,
     });
-  } catch {
+  } catch (error) {
+    console.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -626,7 +638,8 @@ export async function logInventoryChange(params: {
       createById: user.userId || params.operatorId || 0,
       remark: `${params.operationType}: ${params.quantity}`,
     });
-  } catch {
+  } catch (error) {
+    console.error('[audit-logger] logging failed:', error);
   }
 }
 

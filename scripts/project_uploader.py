@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-VNERP 项目上传工具（带界面 + 实时日志版）
+Print MIS 项目上传工具（带界面 + 实时日志版）
 - 有图形界面
 - 实时日志输出框
 - 所有提示在界面内显示（无弹窗）
@@ -22,7 +22,7 @@ class UploaderUI:
     def __init__(self, project_root: str):
         self.project_root = Path(project_root).resolve()
         self.root = tk.Tk()
-        self.root.title("VNERP 项目上传工具 - 实时日志版")
+        self.root.title("Print MIS 项目上传工具 - 实时日志版")
         self.root.geometry("1250x820")
         self.root.minsize(1100, 720)
 
@@ -262,6 +262,6 @@ if __name__ == '__main__':
     script_dir = Path(__file__).parent
     project_root = script_dir.parent
 
-    print(f"启动 VNERP 上传工具 - 项目路径: {project_root}")
+    print(f"启动 Print MIS 上传工具 - 项目路径: {project_root}")
     app = UploaderUI(project_root)
     app.run()

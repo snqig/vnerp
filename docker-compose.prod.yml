@@ -30,7 +30,6 @@ services:
     command: >
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
-      --default-authentication-plugin=mysql_native_password
       --max-connections=500
       --innodb-buffer-pool-size=1G
       --innodb-log-file-size=256M

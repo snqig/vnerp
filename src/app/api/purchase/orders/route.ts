@@ -21,76 +21,74 @@ function getPurchaseService(): PurchaseApplicationService {
   return new PurchaseApplicationService(orderRepo);
 }
 
-export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
-    const { searchParams } = new URL(request.url);
-    const keyword = searchParams.get('keyword') || '';
-    const status = searchParams.get('status') || '';
-    const supplierId = searchParams.get('supplierId');
-    const startDate = searchParams.get('startDate') || '';
-    const endDate = searchParams.get('endDate') || '';
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '10');
+export const GET = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
+  const { searchParams } = new URL(request.url);
+  const keyword = searchParams.get('keyword') || '';
+  const status = searchParams.get('status') || '';
+  const supplierId = searchParams.get('supplierId');
+  const startDate = searchParams.get('startDate') || '';
+  const endDate = searchParams.get('endDate') || '';
+  const page = parseInt(searchParams.get('page') || '1');
+  const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
-    const service = getPurchaseService();
-    const result = await service.listOrders(status, page, pageSize, {
-      keyword: keyword || undefined,
-      supplierId: supplierId ? parseInt(supplierId) : undefined,
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-    });
+  const service = getPurchaseService();
+  const result = await service.listOrders(status, page, pageSize, {
+    keyword: keyword || undefined,
+    supplierId: supplierId ? parseInt(supplierId) : undefined,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+  });
 
-    const serializedData = result.data.map((order) => ({
-      id: order.id,
-      po_no: order.orderNo,
-      supplier_id: order.supplierId,
-      supplier_name: order.supplierName,
-      supplier_code: order.supplierCode,
-      order_date: order.orderDate,
-      delivery_date: order.deliveryDate,
-      currency: order.currency,
-      exchange_rate: order.exchangeRate,
-      total_amount: order.totalAmount,
-      total_quantity: order.totalQuantity,
-      tax_rate: order.taxRate,
-      tax_amount: order.taxAmount,
-      grand_total: order.grandTotal,
-      status: order.status.toDbCode(),
-      status_label: order.status.label(),
-      over_receipt_tolerance: order.overReceiptTolerance,
-      payment_terms: order.paymentTerms,
-      remark: order.remark,
-      create_by: order.createBy,
-      audit_by: order.auditBy,
-      audit_time: order.auditTime,
-      total_received_qty: order.totalReceivedQty,
-      is_fully_received: order.isFullyReceived,
-      create_time: order.createTime,
-      update_time: order.updateTime,
-      lines: order.lines.map((line) => ({
-        id: line.id,
-        line_no: line.lineNo,
-        material_id: line.materialId,
-        material_code: line.materialCode,
-        material_name: line.materialName,
-        material_spec: line.materialSpec,
-        unit: line.unit,
-        order_qty: line.orderQty,
-        received_qty: line.receivedQty,
-        remaining_qty: line.remainingQty,
-        unit_price: line.unitPrice,
-        amount: line.amount,
-        tax_rate: line.taxRate,
-        tax_amount: line.taxAmount,
-        line_total: line.lineTotal,
-        require_date: line.requireDate,
-        is_fully_received: line.isFullyReceived,
-      })),
-    }));
+  const serializedData = result.data.map((order) => ({
+    id: order.id,
+    po_no: order.orderNo,
+    supplier_id: order.supplierId,
+    supplier_name: order.supplierName,
+    supplier_code: order.supplierCode,
+    order_date: order.orderDate,
+    delivery_date: order.deliveryDate,
+    currency: order.currency,
+    exchange_rate: order.exchangeRate,
+    total_amount: order.totalAmount,
+    total_quantity: order.totalQuantity,
+    tax_rate: order.taxRate,
+    tax_amount: order.taxAmount,
+    grand_total: order.grandTotal,
+    status: order.status.toDbCode(),
+    status_label: order.status.label(),
+    over_receipt_tolerance: order.overReceiptTolerance,
+    payment_terms: order.paymentTerms,
+    remark: order.remark,
+    create_by: order.createBy,
+    audit_by: order.auditBy,
+    audit_time: order.auditTime,
+    total_received_qty: order.totalReceivedQty,
+    is_fully_received: order.isFullyReceived,
+    create_time: order.createTime,
+    update_time: order.updateTime,
+    lines: order.lines.map((line) => ({
+      id: line.id,
+      line_no: line.lineNo,
+      material_id: line.materialId,
+      material_code: line.materialCode,
+      material_name: line.materialName,
+      material_spec: line.materialSpec,
+      unit: line.unit,
+      order_qty: line.orderQty,
+      received_qty: line.receivedQty,
+      remaining_qty: line.remainingQty,
+      unit_price: line.unitPrice,
+      amount: line.amount,
+      tax_rate: line.taxRate,
+      tax_amount: line.taxAmount,
+      line_total: line.lineTotal,
+      require_date: line.requireDate,
+      is_fully_received: line.isFullyReceived,
+    })),
+  }));
 
-    return paginatedResponse(serializedData, result.pagination);
-  }
-);
+  return paginatedResponse(serializedData, result.pagination);
+});
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
@@ -182,12 +180,11 @@ export const PUT = withPermission(
       }
 
       if (action === 'receive') {
-        const { lineReceives } = body;
-        if (!lineReceives || !Array.isArray(lineReceives) || lineReceives.length === 0) {
-          return errorResponse('入库明细不能为空', 400, 400);
-        }
-        const result = await service.receiveGoods(id, lineReceives);
-        return successResponse(result, '采购入库成功');
+        return errorResponse(
+          '收货功能已迁移至入库模块，请使用 POST /api/warehouse/inbound/from-po',
+          410,
+          410
+        );
       }
 
       return errorResponse('未知操作', 400, 400);

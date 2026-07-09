@@ -1,6 +1,6 @@
 # Docker 部署指南
 
-VNERP 系统基于 Docker / Docker Compose 容器化部署，采用 Next.js standalone 模式 + Nginx 反向代理架构。
+印刷生产经营信息管理系统 Print MIS 系统基于 Docker / Docker Compose 容器化部署，采用 Next.js standalone 模式 + Nginx 反向代理架构。
 
 ## 目录
 

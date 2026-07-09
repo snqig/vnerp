@@ -352,7 +352,7 @@ BACKUP_RETENTION_DAYS=7
 
 function showHelp() {
   console.log(`
-VNERP 项目一键初始化脚本
+Print MIS 项目一键初始化脚本
 
 用法:
   node scripts/init-project.js [选项]

@@ -63,12 +63,11 @@ export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEv
           );
         } else {
           await conn.execute(
-            `INSERT INTO inv_inventory_batch (batch_no, material_id, material_code, material_name, warehouse_id, available_qty, quantity, unit_price, inbound_date, status, produce_date, create_time)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
+            `INSERT INTO inv_inventory_batch (batch_no, material_id, material_name, warehouse_id, available_qty, quantity, unit_price, inbound_date, status, produce_date, create_time)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
             [
               item.batchNo,
               item.materialId,
-              item.materialCode || null,
               item.materialName,
               warehouseId,
               item.quantity,
@@ -82,6 +81,9 @@ export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEv
       }
     });
 
-    secureLog('info', 'Inventory synced for inbound order', { orderNo: inboundNo, itemCount: items.length });
+    secureLog('info', 'Inventory synced for inbound order', {
+      orderNo: inboundNo,
+      itemCount: items.length,
+    });
   }
 }
