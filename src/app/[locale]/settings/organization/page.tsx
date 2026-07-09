@@ -153,32 +153,47 @@ export default function OrganizationPage() {
         // 检查是否需要从 list 中取第一个
         if (Array.isArray(companyData) && companyData.length > 0) {
           companyData = companyData[0];
-        } else if (companyData && companyData.list && Array.isArray(companyData.list) && companyData.list.length > 0) {
+        } else if (
+          companyData &&
+          companyData.list &&
+          Array.isArray(companyData.list) &&
+          companyData.list.length > 0
+        ) {
           companyData = companyData.list[0];
-        } else if (companyData && companyData.records && Array.isArray(companyData.records) && companyData.records.length > 0) {
+        } else if (
+          companyData &&
+          companyData.records &&
+          Array.isArray(companyData.records) &&
+          companyData.records.length > 0
+        ) {
           companyData = companyData.records[0];
-        } else if (companyData && companyData.items && Array.isArray(companyData.items) && companyData.items.length > 0) {
+        } else if (
+          companyData &&
+          companyData.items &&
+          Array.isArray(companyData.items) &&
+          companyData.items.length > 0
+        ) {
           companyData = companyData.items[0];
         }
         if (companyData) {
           setCompany(companyData);
         } else {
           // 使用模拟数据
-          useMockCompany();
+          loadMockCompany();
         }
       } else {
         // 使用模拟数据
-        useMockCompany();
+        loadMockCompany();
       }
-    } catch (error) {
-      useMockCompany();
+    } catch {
+      loadMockCompany();
     } finally {
       setCompanyLoading(false);
     }
   }, []);
 
   // 模拟企业数据
-  const useMockCompany = () => {
+  const loadMockCompany = () => {
     setCompany({
       id: 1,
       full_name: '越南达昌丝网印刷有限公司',
@@ -194,7 +209,8 @@ export default function OrganizationPage() {
       website: 'www.dachang.com',
       fax: '0123456780',
       postcode: '100000',
-      description: '越南达昌丝网印刷有限公司是一家专业从事丝网印刷的现代化企业，提供高品质印刷服务。',
+      description:
+        '越南达昌丝网印刷有限公司是一家专业从事丝网印刷的现代化企业，提供高品质印刷服务。',
     });
   };
 
@@ -213,7 +229,7 @@ export default function OrganizationPage() {
       } else {
         toast.error(result.message || '保存失败');
       }
-    } catch (error) {
+    } catch {
       toast.error('保存企业信息失败');
     } finally {
       setCompanySaving(false);
@@ -226,12 +242,12 @@ export default function OrganizationPage() {
     try {
       const response = await authFetch('/api/organization/department');
       if (!response.ok) {
-        useMockDepartments();
+        loadMockDepartments();
         return;
       }
       const result = await response.json();
       if (result.success || result.code === 200) {
-        let deptData = result.data;
+        const deptData = result.data;
         let deptList: any[] = [];
         if (Array.isArray(deptData)) {
           deptList = deptData;
@@ -239,31 +255,103 @@ export default function OrganizationPage() {
           deptList = deptData.list || deptData.records || deptData.items || [];
         }
         if (deptList.length === 0) {
-          useMockDepartments();
+          loadMockDepartments();
           return;
         }
         setDepartments(deptList);
       } else {
-        useMockDepartments();
+        loadMockDepartments();
       }
-    } catch (error) {
-      useMockDepartments();
+    } catch {
+      loadMockDepartments();
     } finally {
       setDeptLoading(false);
     }
   }, []);
 
   // 模拟部门数据
-  const useMockDepartments = () => {
+  const loadMockDepartments = () => {
     setDepartments([
-      { id: 1, dept_code: 'DEPT001', dept_name: '管理部', parent_id: 0, leader_name: '张伟', sort_order: 1, status: 1, description: '公司高层管理部门' },
-      { id: 2, dept_code: 'DEPT002', dept_name: '业务部', parent_id: 0, leader_name: '李娜', sort_order: 2, status: 1, description: '负责业务拓展和客户关系' },
-      { id: 3, dept_code: 'DEPT003', dept_name: '工程技术部', parent_id: 0, leader_name: '王强', sort_order: 3, status: 1, description: '负责技术研发和工程设计' },
-      { id: 4, dept_code: 'DEPT004', dept_name: '生产部', parent_id: 0, leader_name: '刘洋', sort_order: 4, status: 1, description: '负责产品生产和制造' },
-      { id: 5, dept_code: 'DEPT005', dept_name: '仓库管理部', parent_id: 0, leader_name: '赵磊', sort_order: 5, status: 1, description: '负责仓库和物料管理' },
-      { id: 6, dept_code: 'DEPT006', dept_name: '采购部', parent_id: 0, leader_name: '孙丽', sort_order: 6, status: 1, description: '负责原材料和设备采购' },
-      { id: 7, dept_code: 'DEPT007', dept_name: '品质部', parent_id: 0, leader_name: '周杰', sort_order: 7, status: 1, description: '负责质量检查和品质控制' },
-      { id: 8, dept_code: 'DEPT008', dept_name: '财务行政部', parent_id: 0, leader_name: '吴芳', sort_order: 8, status: 1, description: '负责财务管理和行政事务' },
+      {
+        id: 1,
+        dept_code: 'DEPT001',
+        dept_name: '管理部',
+        parent_id: 0,
+        leader_name: '张伟',
+        sort_order: 1,
+        status: 1,
+        description: '公司高层管理部门',
+      },
+      {
+        id: 2,
+        dept_code: 'DEPT002',
+        dept_name: '业务部',
+        parent_id: 0,
+        leader_name: '李娜',
+        sort_order: 2,
+        status: 1,
+        description: '负责业务拓展和客户关系',
+      },
+      {
+        id: 3,
+        dept_code: 'DEPT003',
+        dept_name: '工程技术部',
+        parent_id: 0,
+        leader_name: '王强',
+        sort_order: 3,
+        status: 1,
+        description: '负责技术研发和工程设计',
+      },
+      {
+        id: 4,
+        dept_code: 'DEPT004',
+        dept_name: '生产部',
+        parent_id: 0,
+        leader_name: '刘洋',
+        sort_order: 4,
+        status: 1,
+        description: '负责产品生产和制造',
+      },
+      {
+        id: 5,
+        dept_code: 'DEPT005',
+        dept_name: '仓库管理部',
+        parent_id: 0,
+        leader_name: '赵磊',
+        sort_order: 5,
+        status: 1,
+        description: '负责仓库和物料管理',
+      },
+      {
+        id: 6,
+        dept_code: 'DEPT006',
+        dept_name: '采购部',
+        parent_id: 0,
+        leader_name: '孙丽',
+        sort_order: 6,
+        status: 1,
+        description: '负责原材料和设备采购',
+      },
+      {
+        id: 7,
+        dept_code: 'DEPT007',
+        dept_name: '品质部',
+        parent_id: 0,
+        leader_name: '周杰',
+        sort_order: 7,
+        status: 1,
+        description: '负责质量检查和品质控制',
+      },
+      {
+        id: 8,
+        dept_code: 'DEPT008',
+        dept_name: '财务行政部',
+        parent_id: 0,
+        leader_name: '吴芳',
+        sort_order: 8,
+        status: 1,
+        description: '负责财务管理和行政事务',
+      },
     ]);
   };
 
@@ -283,7 +371,7 @@ export default function OrganizationPage() {
       } else {
         toast.error(result.message || tc('error'));
       }
-    } catch (error) {
+    } catch {
       toast.error('保存部门失败');
     }
   };
@@ -302,7 +390,7 @@ export default function OrganizationPage() {
       } else {
         toast.error(result.message || '删除失败');
       }
-    } catch (error) {
+    } catch {
       toast.error('删除部门失败');
     }
   };
@@ -313,12 +401,12 @@ export default function OrganizationPage() {
     try {
       const response = await authFetch('/api/organization/role');
       if (!response.ok) {
-        useMockRoles();
+        loadMockRoles();
         return;
       }
       const result = await response.json();
       if (result.success || result.code === 200) {
-        let roleData = result.data;
+        const roleData = result.data;
         let roleList: any[] = [];
         if (Array.isArray(roleData)) {
           roleList = roleData;
@@ -326,33 +414,133 @@ export default function OrganizationPage() {
           roleList = roleData.list || roleData.records || roleData.items || [];
         }
         if (roleList.length === 0) {
-          useMockRoles();
+          loadMockRoles();
           return;
         }
         setRoles(roleList);
       } else {
-        useMockRoles();
+        loadMockRoles();
       }
-    } catch (error) {
-      useMockRoles();
+    } catch {
+      loadMockRoles();
     } finally {
       setRoleLoading(false);
     }
   }, []);
 
   // 模拟角色数据
-  const useMockRoles = () => {
+  const loadMockRoles = () => {
     setRoles([
-      { id: 1, code: 'SUPER_ADMIN', name: '超级管理员', role_type: 1, description: '拥有系统全部权限', permissions: [], data_scope: 1, sort_order: 1, status: 1 },
-      { id: 2, code: 'BUSINESS_MANAGER', name: '业务经理', role_type: 2, description: '负责业务部门管理权限', permissions: [], data_scope: 2, sort_order: 2, status: 1 },
-      { id: 3, code: 'SALES', name: '业务员', role_type: 2, description: '负责销售业务操作', permissions: [], data_scope: 3, sort_order: 3, status: 1 },
-      { id: 4, code: 'ENGINEER', name: '工程师', role_type: 2, description: '负责技术研发工作', permissions: [], data_scope: 2, sort_order: 4, status: 1 },
-      { id: 5, code: 'PRODUCTION_MANAGER', name: '生产主管', role_type: 2, description: '负责生产部门管理', permissions: [], data_scope: 2, sort_order: 5, status: 1 },
-      { id: 6, code: 'WAREHOUSE_MANAGER', name: '仓库主管', role_type: 2, description: '负责仓库管理工作', permissions: [], data_scope: 2, sort_order: 6, status: 1 },
-      { id: 7, code: 'WAREHOUSE_KEEPER', name: '仓管员', role_type: 2, description: '负责仓库日常操作', permissions: [], data_scope: 2, sort_order: 7, status: 1 },
-      { id: 8, code: 'PURCHASER', name: '采购员', role_type: 2, description: '负责采购业务', permissions: [], data_scope: 3, sort_order: 8, status: 1 },
-      { id: 9, code: 'QC_INSPECTOR', name: '品质检验员', role_type: 2, description: '负责品质检验工作', permissions: [], data_scope: 3, sort_order: 9, status: 1 },
-      { id: 10, code: 'ACCOUNTANT', name: '财务', role_type: 2, description: '负责财务相关工作', permissions: [], data_scope: 2, sort_order: 10, status: 1 },
+      {
+        id: 1,
+        code: 'SUPER_ADMIN',
+        name: '超级管理员',
+        role_type: 1,
+        description: '拥有系统全部权限',
+        permissions: [],
+        data_scope: 1,
+        sort_order: 1,
+        status: 1,
+      },
+      {
+        id: 2,
+        code: 'BUSINESS_MANAGER',
+        name: '业务经理',
+        role_type: 2,
+        description: '负责业务部门管理权限',
+        permissions: [],
+        data_scope: 2,
+        sort_order: 2,
+        status: 1,
+      },
+      {
+        id: 3,
+        code: 'SALES',
+        name: '业务员',
+        role_type: 2,
+        description: '负责销售业务操作',
+        permissions: [],
+        data_scope: 3,
+        sort_order: 3,
+        status: 1,
+      },
+      {
+        id: 4,
+        code: 'ENGINEER',
+        name: '工程师',
+        role_type: 2,
+        description: '负责技术研发工作',
+        permissions: [],
+        data_scope: 2,
+        sort_order: 4,
+        status: 1,
+      },
+      {
+        id: 5,
+        code: 'PRODUCTION_MANAGER',
+        name: '生产主管',
+        role_type: 2,
+        description: '负责生产部门管理',
+        permissions: [],
+        data_scope: 2,
+        sort_order: 5,
+        status: 1,
+      },
+      {
+        id: 6,
+        code: 'WAREHOUSE_MANAGER',
+        name: '仓库主管',
+        role_type: 2,
+        description: '负责仓库管理工作',
+        permissions: [],
+        data_scope: 2,
+        sort_order: 6,
+        status: 1,
+      },
+      {
+        id: 7,
+        code: 'WAREHOUSE_KEEPER',
+        name: '仓管员',
+        role_type: 2,
+        description: '负责仓库日常操作',
+        permissions: [],
+        data_scope: 2,
+        sort_order: 7,
+        status: 1,
+      },
+      {
+        id: 8,
+        code: 'PURCHASER',
+        name: '采购员',
+        role_type: 2,
+        description: '负责采购业务',
+        permissions: [],
+        data_scope: 3,
+        sort_order: 8,
+        status: 1,
+      },
+      {
+        id: 9,
+        code: 'QC_INSPECTOR',
+        name: '品质检验员',
+        role_type: 2,
+        description: '负责品质检验工作',
+        permissions: [],
+        data_scope: 3,
+        sort_order: 9,
+        status: 1,
+      },
+      {
+        id: 10,
+        code: 'ACCOUNTANT',
+        name: '财务',
+        role_type: 2,
+        description: '负责财务相关工作',
+        permissions: [],
+        data_scope: 2,
+        sort_order: 10,
+        status: 1,
+      },
     ]);
   };
 
@@ -397,7 +585,7 @@ export default function OrganizationPage() {
       } else {
         toast.error(result.message || tc('error'));
       }
-    } catch (error) {
+    } catch {
       toast.error('保存角色失败');
     }
   };
@@ -416,7 +604,7 @@ export default function OrganizationPage() {
       } else {
         toast.error(result.message || '删除失败');
       }
-    } catch (error) {
+    } catch {
       toast.error('删除角色失败');
     }
   };
@@ -452,18 +640,18 @@ export default function OrganizationPage() {
   // 角色类型标签
   const getRoleTypeBadge = (type: number) => {
     return type === 1 ? (
-      <Badge className="bg-blue-100 text-blue-800">系统角色</Badge>
+      <Badge className="bg-blue-100 text-blue-800">{tc('text_gaqqlg')}</Badge>
     ) : (
-      <Badge className="bg-purple-100 text-purple-800">自定义</Badge>
+      <Badge className="bg-purple-100 text-purple-800">{tc('text_jh1ll')}</Badge>
     );
   };
 
   // 菜单项配置
   const menuItems = [
-    { key: 'company', label: tc("companyInfo"), icon: Building2 },
-    { key: 'department', label: tc("deptManagement"), icon: Users },
-    { key: 'role', label: tc("rolePermission"), icon: Shield },
-    { key: 'warehouse', label: tc("warehouseCategory"), icon: Warehouse },
+    { key: 'company', label: tc('companyInfo'), icon: Building2 },
+    { key: 'department', label: tc('deptManagement'), icon: Users },
+    { key: 'role', label: tc('rolePermission'), icon: Shield },
+    { key: 'warehouse', label: tc('warehouseCategory'), icon: Warehouse },
   ];
 
   return (
@@ -502,9 +690,9 @@ export default function OrganizationPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="w-5 h-5" />
-                  {tc("companyBasicInfo")}
+                  {tc('companyBasicInfo')}
                 </CardTitle>
-                <CardDescription>{tc("companyBasicInfoDesc")}</CardDescription>
+                <CardDescription>{tc('companyBasicInfoDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {companyLoading ? (
@@ -515,127 +703,127 @@ export default function OrganizationPage() {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>{tc("companyFullName")}</Label>
+                        <Label>{tc('companyFullName')}</Label>
                         <Input
                           value={company.full_name || ''}
                           onChange={(e) => setCompany({ ...company, full_name: e.target.value })}
-                          placeholder={tc("enterCompanyFullName")}
+                          placeholder={tc('enterCompanyFullName')}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>{tc("companyShortName")}</Label>
+                        <Label>{tc('companyShortName')}</Label>
                         <Input
                           value={company.short_name || ''}
                           onChange={(e) => setCompany({ ...company, short_name: e.target.value })}
-                          placeholder={tc("enterCompanyShortName")}
+                          placeholder={tc('enterCompanyShortName')}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>{tc("companyCode")}</Label>
+                        <Label>{tc('companyCode')}</Label>
                         <Input
                           value={company.code || ''}
                           onChange={(e) => setCompany({ ...company, code: e.target.value })}
-                          placeholder={tc("enterCompanyCode")}
+                          placeholder={tc('enterCompanyCode')}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>{tc("legalPerson")}</Label>
+                        <Label>{tc('legalPerson')}</Label>
                         <Input
                           value={company.legal_person || ''}
                           onChange={(e) => setCompany({ ...company, legal_person: e.target.value })}
-                          placeholder={tc("enterLegalPerson")}
+                          placeholder={tc('enterLegalPerson')}
                         />
                       </div>
                       <div className="space-y-2 md:col-span-2">
-                        <Label>{tc("regAddress")}</Label>
+                        <Label>{tc('regAddress')}</Label>
                         <Input
                           value={company.reg_address || ''}
                           onChange={(e) => setCompany({ ...company, reg_address: e.target.value })}
-                          placeholder={tc("enterRegAddress")}
+                          placeholder={tc('enterRegAddress')}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>{tc("phone")}</Label>
+                        <Label>{tc('phone')}</Label>
                         <Input
                           value={company.contact_phone || ''}
                           onChange={(e) =>
                             setCompany({ ...company, contact_phone: e.target.value })
                           }
-                          placeholder={tc("enterPhone")}
+                          placeholder={tc('enterPhone')}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>{tc("companyEmail")}</Label>
+                        <Label>{tc('companyEmail')}</Label>
                         <Input
                           value={company.email || ''}
                           onChange={(e) => setCompany({ ...company, email: e.target.value })}
-                          placeholder={tc("enterCompanyEmail")}
+                          placeholder={tc('enterCompanyEmail')}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>企业官网</Label>
+                        <Label>{tc('text_aam9iq')}</Label>
                         <Input
                           value={company.website || ''}
                           onChange={(e) => setCompany({ ...company, website: e.target.value })}
-                          placeholder={tc("enterCompanyWebsite")}
+                          placeholder={tc('enterCompanyWebsite')}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>传真</Label>
+                        <Label>{tc('text_e41r')}</Label>
                         <Input
                           value={company.fax || ''}
                           onChange={(e) => setCompany({ ...company, fax: e.target.value })}
-                          placeholder={tc("enterFax")}
+                          placeholder={tc('enterFax')}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>邮编</Label>
+                        <Label>{tc('text_pb1k')}</Label>
                         <Input
                           value={company.postcode || ''}
                           onChange={(e) => setCompany({ ...company, postcode: e.target.value })}
-                          placeholder={tc("enterPostalCode")}
+                          placeholder={tc('enterPostalCode')}
                         />
                       </div>
                     </div>
 
                     <div className="border-t pt-6">
-                      <h3 className="text-lg font-semibold mb-4">税务银行信息</h3>
+                      <h3 className="text-lg font-semibold mb-4">{tc('text_70dlhz')}</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>纳税人识别号</Label>
+                          <Label>{tc('text_4yz4qb')}</Label>
                           <Input
                             value={company.tax_no || ''}
                             onChange={(e) => setCompany({ ...company, tax_no: e.target.value })}
-                            placeholder={tc("enterTaxId")}
+                            placeholder={tc('enterTaxId')}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>开户银行</Label>
+                          <Label>{tc('text_cegvwt')}</Label>
                           <Input
                             value={company.bank_name || ''}
                             onChange={(e) => setCompany({ ...company, bank_name: e.target.value })}
-                            placeholder={tc("enterBankName")}
+                            placeholder={tc('enterBankName')}
                           />
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                          <Label>银行账号</Label>
+                          <Label>{tc('text_jd0njb')}</Label>
                           <Input
                             value={company.bank_account || ''}
                             onChange={(e) =>
                               setCompany({ ...company, bank_account: e.target.value })
                             }
-                            placeholder={tc("enterBankAccount")}
+                            placeholder={tc('enterBankAccount')}
                           />
                         </div>
                       </div>
                     </div>
 
                     <div className="border-t pt-6">
-                      <h3 className="text-lg font-semibold mb-4">企业简介</h3>
+                      <h3 className="text-lg font-semibold mb-4">{tc('text_aarfb8')}</h3>
                       <Textarea
                         value={company.description || ''}
                         onChange={(e) => setCompany({ ...company, description: e.target.value })}
-                        placeholder={tc("enterCompanyIntro")}
+                        placeholder={tc('enterCompanyIntro')}
                         rows={4}
                       />
                     </div>
@@ -652,7 +840,7 @@ export default function OrganizationPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">暂无企业信息</div>
+                  <div className="text-center py-8 text-muted-foreground">{tc('text_n2lby3')}</div>
                 )}
               </CardContent>
             </Card>
@@ -665,9 +853,9 @@ export default function OrganizationPage() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="w-5 h-5" />
-                    部门管理
+                    {tc('text_iwitmt')}
                   </CardTitle>
-                  <CardDescription>管理企业组织架构和部门信息，支持多级部门结构</CardDescription>
+                  <CardDescription>{tc('text_p2iek1')}</CardDescription>
                 </div>
                 <Button
                   onClick={() => {
@@ -678,7 +866,7 @@ export default function OrganizationPage() {
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  新增一级部门
+                  {tc('text_w74baj')}
                 </Button>
               </CardHeader>
               <CardContent>
@@ -713,9 +901,9 @@ export default function OrganizationPage() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="w-5 h-5" />
-                    角色权限
+                    {tc('text_hxen9p')}
                   </CardTitle>
-                  <CardDescription>管理系统角色和权限配置</CardDescription>
+                  <CardDescription>{tc('text_t05ypd')}</CardDescription>
                 </div>
                 <Button
                   onClick={() => {
@@ -734,7 +922,7 @@ export default function OrganizationPage() {
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  新增角色
+                  {tc('text_d7di6m')}
                 </Button>
               </CardHeader>
               <CardContent>
@@ -746,14 +934,14 @@ export default function OrganizationPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[60px]">{tc("serialNo")}</TableHead>
-                        <TableHead>角色编码</TableHead>
-                        <TableHead>角色名称</TableHead>
-                        <TableHead>{tc("type")}</TableHead>
-                        <TableHead>{tc("description")}</TableHead>
-                        <TableHead>{tc("sortOrder")}</TableHead>
-                        <TableHead>{tc("status")}</TableHead>
-                        <TableHead className="text-right">{tc("actions")}</TableHead>
+                        <TableHead className="w-[60px]">{tc('serialNo')}</TableHead>
+                        <TableHead>{tc('text_hxij63')}</TableHead>
+                        <TableHead>{tc('text_hxb80z')}</TableHead>
+                        <TableHead>{tc('type')}</TableHead>
+                        <TableHead>{tc('description')}</TableHead>
+                        <TableHead>{tc('sortOrder')}</TableHead>
+                        <TableHead>{tc('status')}</TableHead>
+                        <TableHead className="text-right">{tc('actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -814,7 +1002,8 @@ export default function OrganizationPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
-                  部门编码 <span className="text-red-500">*</span>
+                  {tc('text_iwjfl7')}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={deptForm.dept_code || ''}
@@ -824,26 +1013,27 @@ export default function OrganizationPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  部门名称 <span className="text-red-500">*</span>
+                  {tc('text_iwc4g3')}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={deptForm.dept_name || ''}
                   onChange={(e) => setDeptForm({ ...deptForm, dept_name: e.target.value })}
-                  placeholder={tc("enterDepartmentName")}
+                  placeholder={tc('enterDepartmentName')}
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>上级部门</Label>
+              <Label>{tc('text_adlqxp')}</Label>
               <Select
                 value={String(deptForm.parent_id ?? 0)}
                 onValueChange={(value) => setDeptForm({ ...deptForm, parent_id: parseInt(value) })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={tc("selectParentDepartment")} />
+                  <SelectValue placeholder={tc('selectParentDepartment')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">无（一级部门）</SelectItem>
+                  <SelectItem value="0">{tc('text_bbmwiu')}</SelectItem>
                   {departments
                     .filter((d) => d.id !== deptForm.id) // 排除自己，避免循环引用
                     .map((dept) => (
@@ -856,7 +1046,7 @@ export default function OrganizationPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>部门负责人</Label>
+                <Label>{tc('text_hu00nq')}</Label>
                 <Input
                   value={deptForm.leader_name || ''}
                   onChange={(e) => setDeptForm({ ...deptForm, leader_name: e.target.value })}
@@ -864,7 +1054,7 @@ export default function OrganizationPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>排序号</Label>
+                <Label>{tc('text_f1kre')}</Label>
                 <Input
                   type="number"
                   value={deptForm.sort_order || 0}
@@ -876,36 +1066,36 @@ export default function OrganizationPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>{tc("status")}</Label>
+              <Label>{tc('status')}</Label>
               <Select
                 value={String(deptForm.status ?? 1)}
                 onValueChange={(value) => setDeptForm({ ...deptForm, status: parseInt(value) })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={tc("selectStatus")} />
+                  <SelectValue placeholder={tc('selectStatus')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">{tc("enable")}</SelectItem>
-                  <SelectItem value="0">停用</SelectItem>
+                  <SelectItem value="1">{tc('enable')}</SelectItem>
+                  <SelectItem value="0">{tc('text_eb7w')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>部门描述</Label>
+              <Label>{tc('text_iwexa9')}</Label>
               <Textarea
                 value={deptForm.description || ''}
                 onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })}
-                placeholder={tc("enterDepartmentDesc")}
+                placeholder={tc('enterDepartmentDesc')}
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeptDialogOpen(false)}>
-              取消
+              {tc('text_ev02')}
             </Button>
             <Button onClick={saveDepartment} className="bg-blue-600 hover:bg-blue-700">
-              保存
+              {tc('text_e32z')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -923,7 +1113,8 @@ export default function OrganizationPage() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>
-                角色编码 <span className="text-red-500">*</span>
+                {tc('text_hxij63')}
+                <span className="text-red-500">*</span>
               </Label>
               <div className="flex gap-2">
                 <Input
@@ -939,7 +1130,7 @@ export default function OrganizationPage() {
                       setCodeError('');
                     }
                   }}
-                  placeholder={tc("enterRoleCode")}
+                  placeholder={tc('enterRoleCode')}
                   className={codeError ? 'border-red-500' : ''}
                 />
                 {!roleEditing && (
@@ -952,7 +1143,7 @@ export default function OrganizationPage() {
                       setCodeError('');
                     }}
                   >
-                    自动生成
+                    {tc('text_gqkcpb')}
                   </Button>
                 )}
               </div>
@@ -960,84 +1151,85 @@ export default function OrganizationPage() {
             </div>
             <div className="space-y-2">
               <Label>
-                角色名称 <span className="text-red-500">*</span>
+                {tc('text_hxb80z')}
+                <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={roleForm.name || ''}
                 onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value })}
-                placeholder={tc("enterRoleName")}
+                placeholder={tc('enterRoleName')}
               />
             </div>
             <div className="space-y-2">
-              <Label>角色类型</Label>
+              <Label>{tc('text_hxhwsw')}</Label>
               <Select
                 value={String(roleForm.role_type ?? 2)}
                 onValueChange={(value) => setRoleForm({ ...roleForm, role_type: parseInt(value) })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={tc("selectRoleType")} />
+                  <SelectValue placeholder={tc('selectRoleType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">系统角色</SelectItem>
-                  <SelectItem value="2">自定义角色</SelectItem>
+                  <SelectItem value="1">{tc('text_gaqqlg')}</SelectItem>
+                  <SelectItem value="2">{tc('text_mmvh15')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>数据范围</Label>
+              <Label>{tc('text_d7s98v')}</Label>
               <Select
                 value={String(roleForm.data_scope ?? 1)}
                 onValueChange={(value) => setRoleForm({ ...roleForm, data_scope: parseInt(value) })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={tc("selectDataScope")} />
+                  <SelectValue placeholder={tc('selectDataScope')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">全部数据</SelectItem>
-                  <SelectItem value="2">本部门数据</SelectItem>
-                  <SelectItem value="3">本人数据</SelectItem>
+                  <SelectItem value="1">{tc('text_avcqke')}</SelectItem>
+                  <SelectItem value="2">{tc('text_3vvdg6')}</SelectItem>
+                  <SelectItem value="3">{tc('text_dchmrw')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>排序号</Label>
+              <Label>{tc('text_f1kre')}</Label>
               <Input
                 type="number"
                 value={roleForm.sort_order || 0}
                 onChange={(e) =>
                   setRoleForm({ ...roleForm, sort_order: parseInt(e.target.value) || 0 })
                 }
-                placeholder={tc("enterSortOrder")}
+                placeholder={tc('enterSortOrder')}
               />
             </div>
             <div className="space-y-2">
-              <Label>{tc("status")}</Label>
+              <Label>{tc('status')}</Label>
               <Select
                 value={String(roleForm.status ?? 1)}
                 onValueChange={(value) => setRoleForm({ ...roleForm, status: parseInt(value) })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={tc("selectStatus")} />
+                  <SelectValue placeholder={tc('selectStatus')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">{tc("enable")}</SelectItem>
-                  <SelectItem value="0">停用</SelectItem>
+                  <SelectItem value="1">{tc('enable')}</SelectItem>
+                  <SelectItem value="0">{tc('text_eb7w')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>角色描述</Label>
+              <Label>{tc('text_hxe0v5')}</Label>
               <Textarea
                 value={roleForm.description || ''}
                 onChange={(e) => setRoleForm({ ...roleForm, description: e.target.value })}
-                placeholder={tc("enterRoleDesc")}
+                placeholder={tc('enterRoleDesc')}
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRoleDialogOpen(false)} type="button">
-              取消
+              {tc('text_ev02')}
             </Button>
             <Button
               onClick={(e) => {
@@ -1048,7 +1240,7 @@ export default function OrganizationPage() {
               className="bg-blue-600 hover:bg-blue-700"
               type="button"
             >
-              保存
+              {tc('text_e32z')}
             </Button>
           </DialogFooter>
         </DialogContent>

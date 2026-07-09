@@ -115,6 +115,7 @@ interface InspectRecord {
   id: number;
   inspectNo: string;
   inspectType: string;
+  // eslint-disable-next-line i18n/no-chinese-hardcode
   result: '合格' | '不合格';
   inspector: string;
   inspectTime: string;
@@ -139,23 +140,23 @@ const mockQualityProcesses: QualityProcess[] = [
     qr_code: 'DCERP:PC:SC20240318001',
     work_order_no: 'WO202403001',
     product_code: 'PROD-A001',
-    product_name: '透明包装膜A款',
-    material_spec: 'PET透明膜 0.1mm',
+    product_name: tc('text_u8v7s6'),
+    material_spec: tc('text_hxff67'),
     work_order_date: '2024-03-18',
     plan_qty: 5000,
     main_label_no: 'LBL202403001',
     burdening_status: 2,
-    create_user_name: '张三',
+    create_user_name: tc('text_glwp'),
     create_time: '2024-03-18 08:00:00',
     update_time: '2024-03-18 10:00:00',
-    customer_name: '深圳科技有限公司',
+    customer_name: tc('text_4ncmjg'),
     customer_code: 'CUST20240001',
-    process_flow1: '切料-磨切-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-    print_type: '丝网印刷',
+    process_flow1: tc('text_kdl3cd'),
+    process_flow2: tc('text_bedugq'),
+    print_type: tc('text_adqjyz'),
     finished_size: '100mm x 50mm',
     tolerance: '±0.5mm',
-    quality_manager: '质量主管A',
+    quality_manager: tc('text_2e8oqc'),
   },
   {
     id: 2,
@@ -163,23 +164,23 @@ const mockQualityProcesses: QualityProcess[] = [
     qr_code: 'DCERP:PC:SC20240319002',
     work_order_no: 'WO202403002',
     product_code: 'PROD-B002',
-    product_name: '防静电膜B款',
-    material_spec: '防静电膜 0.08mm',
+    product_name: tc('text_b1mljq'),
+    material_spec: tc('text_10xsuw'),
     work_order_date: '2024-03-19',
     plan_qty: 3000,
     main_label_no: 'LBL202403002',
     burdening_status: 2,
-    create_user_name: '李四',
+    create_user_name: tc('text_i1ql'),
     create_time: '2024-03-19 08:00:00',
     update_time: '2024-03-19 10:00:00',
-    customer_name: '广州贸易发展有限公司',
+    customer_name: tc('text_l725gx'),
     customer_code: 'CUST20240002',
-    process_flow1: '切料-磨切-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-    print_type: '胶印',
+    process_flow1: tc('text_kdl3cd'),
+    process_flow2: tc('text_bedugq'),
+    print_type: tc('text_me62'),
     finished_size: '80mm x 40mm',
     tolerance: '±0.3mm',
-    quality_manager: '质量主管B',
+    quality_manager: tc('text_2e8oqd'),
   },
   {
     id: 3,
@@ -187,23 +188,23 @@ const mockQualityProcesses: QualityProcess[] = [
     qr_code: 'DCERP:PC:SC20240320003',
     work_order_no: 'WO202403003',
     product_code: 'PROD-C003',
-    product_name: '标签贴纸C款',
-    material_spec: '不干胶纸 80g',
+    product_name: tc('text_ugj16y'),
+    material_spec: tc('text_16bxue'),
     work_order_date: '2024-03-20',
     plan_qty: 8000,
     main_label_no: 'LBL202403003',
     burdening_status: 1,
-    create_user_name: '王五',
+    create_user_name: tc('text_k31l'),
     create_time: '2024-03-20 08:00:00',
     update_time: '2024-03-20 08:00:00',
-    customer_name: '东莞制造有限公司',
+    customer_name: tc('text_b0el29'),
     customer_code: 'CUST20240003',
-    process_flow1: '切料-印刷-模切',
-    process_flow2: '检验-包装',
-    print_type: '数码印刷',
+    process_flow1: tc('text_wbrqgh'),
+    process_flow2: tc('text_2w0xkx'),
+    print_type: tc('text_dakmjc'),
     finished_size: '60mm x 30mm',
     tolerance: '±0.2mm',
-    quality_manager: '质量主管A',
+    quality_manager: tc('text_2e8oqc'),
   },
   {
     id: 4,
@@ -211,23 +212,23 @@ const mockQualityProcesses: QualityProcess[] = [
     qr_code: 'DCERP:PC:SC20240317004',
     work_order_no: 'WO202403004',
     product_code: 'PROD-D004',
-    product_name: '彩印膜D款',
-    material_spec: 'BOPP彩印膜 0.12mm',
+    product_name: tc('text_sy5h1r'),
+    material_spec: tc('text_16bl3d'),
     work_order_date: '2024-03-17',
     plan_qty: 6000,
     main_label_no: 'LBL202403004',
     burdening_status: 3,
-    create_user_name: '赵六',
+    create_user_name: tc('text_oiag'),
     create_time: '2024-03-17 08:00:00',
     update_time: '2024-03-17 16:00:00',
-    customer_name: '佛山实业集团有限公司',
+    customer_name: tc('text_xrk5s1'),
     customer_code: 'CUST20240004',
-    process_flow1: '切料-磨切-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-    print_type: '凹印',
+    process_flow1: tc('text_kdl3cd'),
+    process_flow2: tc('text_bedugq'),
+    print_type: tc('text_eefr'),
     finished_size: '120mm x 60mm',
     tolerance: '±0.5mm',
-    quality_manager: '质量主管C',
+    quality_manager: tc('text_2e8oqe'),
   },
   {
     id: 5,
@@ -235,23 +236,23 @@ const mockQualityProcesses: QualityProcess[] = [
     qr_code: 'DCERP:PC:SC20240321005',
     work_order_no: 'WO202403005',
     product_code: 'PROD-E005',
-    product_name: '热收缩膜E款',
-    material_spec: 'POF热收缩膜 0.15mm',
+    product_name: tc('text_z73ga3'),
+    material_spec: tc('text_731pjz'),
     work_order_date: '2024-03-21',
     plan_qty: 4500,
     main_label_no: 'LBL202403005',
     burdening_status: 1,
-    create_user_name: '孙七',
+    create_user_name: tc('text_fyru'),
     create_time: '2024-03-21 08:00:00',
     update_time: '2024-03-21 08:00:00',
-    customer_name: '中山电子科技有限公司',
+    customer_name: tc('text_q59j1b'),
     customer_code: 'CUST20240005',
-    process_flow1: '切料-磨切-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-    print_type: '柔印',
+    process_flow1: tc('text_kdl3cd'),
+    process_flow2: tc('text_bedugq'),
+    print_type: tc('text_i49o'),
     finished_size: '90mm x 45mm',
     tolerance: '±0.4mm',
-    quality_manager: '质量主管B',
+    quality_manager: tc('text_2e8oqd'),
   },
   {
     id: 6,
@@ -259,23 +260,23 @@ const mockQualityProcesses: QualityProcess[] = [
     qr_code: 'DCERP:PC:SC20240322006',
     work_order_no: 'WO202403006',
     product_code: 'PROD-F006',
-    product_name: '保护膜F款',
-    material_spec: 'PE保护膜 0.05mm',
+    product_name: tc('text_tx6jjn'),
+    material_spec: tc('text_1ell6l'),
     work_order_date: '2024-03-22',
     plan_qty: 3500,
     main_label_no: 'LBL202403006',
     burdening_status: 3,
-    create_user_name: '周八',
+    create_user_name: tc('text_esxv'),
     create_time: '2024-03-22 08:00:00',
     update_time: '2024-03-22 08:00:00',
-    customer_name: '惠州包装材料有限公司',
+    customer_name: tc('text_9vnn6u'),
     customer_code: 'CUST20240006',
-    process_flow1: '切料-印刷-模切',
-    process_flow2: '检验-包装',
-    print_type: '丝网印刷',
+    process_flow1: tc('text_wbrqgh'),
+    process_flow2: tc('text_2w0xkx'),
+    print_type: tc('text_adqjyz'),
     finished_size: '70mm x 35mm',
     tolerance: '±0.3mm',
-    quality_manager: '质量主管A',
+    quality_manager: tc('text_2e8oqc'),
   },
   {
     id: 7,
@@ -283,23 +284,23 @@ const mockQualityProcesses: QualityProcess[] = [
     qr_code: 'DCERP:PC:SC20240323007',
     work_order_no: 'WO202403007',
     product_code: 'PROD-G007',
-    product_name: '复合膜G款',
-    material_spec: '复合膜材料 0.2mm',
+    product_name: tc('text_45ph4o'),
+    material_spec: tc('text_q8bp0e'),
     work_order_date: '2024-03-23',
     plan_qty: 5500,
     main_label_no: 'LBL202403007',
     burdening_status: 2,
-    create_user_name: '吴九',
+    create_user_name: tc('text_er3d'),
     create_time: '2024-03-23 08:00:00',
     update_time: '2024-03-23 08:00:00',
-    customer_name: '珠海进出口贸易有限公司',
+    customer_name: tc('text_45019h'),
     customer_code: 'CUST20240007',
-    process_flow1: '切料-复合-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-    print_type: '胶印',
+    process_flow1: tc('text_baxqjt'),
+    process_flow2: tc('text_bedugq'),
+    print_type: tc('text_me62'),
     finished_size: '110mm x 55mm',
     tolerance: '±0.5mm',
-    quality_manager: '质量主管C',
+    quality_manager: tc('text_2e8oqe'),
   },
   {
     id: 8,
@@ -307,23 +308,23 @@ const mockQualityProcesses: QualityProcess[] = [
     qr_code: 'DCERP:PC:SC20240324008',
     work_order_no: 'WO202403008',
     product_code: 'PROD-H008',
-    product_name: '印刷膜H款',
-    material_spec: '印刷专用膜 0.1mm',
+    product_name: tc('text_i0nset'),
+    material_spec: tc('text_gcasvh'),
     work_order_date: '2024-03-24',
     plan_qty: 4000,
     main_label_no: 'LBL202403008',
     burdening_status: 1,
-    create_user_name: '郑十',
+    create_user_name: tc('text_p380'),
     create_time: '2024-03-24 08:00:00',
     update_time: '2024-03-24 08:00:00',
-    customer_name: '江门印刷包装有限公司',
+    customer_name: tc('text_f6japp'),
     customer_code: 'CUST20240008',
-    process_flow1: '切料-磨切-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-    print_type: '数码印刷',
+    process_flow1: tc('text_kdl3cd'),
+    process_flow2: tc('text_bedugq'),
+    print_type: tc('text_dakmjc'),
     finished_size: '85mm x 42mm',
     tolerance: '±0.3mm',
-    quality_manager: '质量主管A',
+    quality_manager: tc('text_2e8oqc'),
   },
   {
     id: 9,
@@ -331,23 +332,23 @@ const mockQualityProcesses: QualityProcess[] = [
     qr_code: 'DCERP:PC:SC20240325009',
     work_order_no: 'WO202403009',
     product_code: 'PROD-I009',
-    product_name: '新材料I款',
-    material_spec: '生物降解膜 0.1mm',
+    product_name: tc('text_f583ea'),
+    material_spec: tc('text_gu4b5b'),
     work_order_date: '2024-03-25',
     plan_qty: 2500,
     main_label_no: 'LBL202403009',
     burdening_status: 3,
-    create_user_name: '钱十一',
+    create_user_name: tc('text_m6mvk'),
     create_time: '2024-03-25 08:00:00',
     update_time: '2024-03-25 08:00:00',
-    customer_name: '肇庆新材料科技有限公司',
+    customer_name: tc('text_q9dxac'),
     customer_code: 'CUST20240009',
-    process_flow1: '切料-磨切-印刷',
-    process_flow2: '模切-检验-包装',
-    print_type: '柔印',
+    process_flow1: tc('text_yage7a'),
+    process_flow2: tc('text_bedugq'),
+    print_type: tc('text_i49o'),
     finished_size: '75mm x 38mm',
     tolerance: '±0.2mm',
-    quality_manager: '质量主管B',
+    quality_manager: tc('text_2e8oqd'),
   },
   {
     id: 10,
@@ -355,23 +356,23 @@ const mockQualityProcesses: QualityProcess[] = [
     qr_code: 'DCERP:PC:SC20240326010',
     work_order_no: 'WO202403010',
     product_code: 'PROD-J010',
-    product_name: '塑料膜J款',
-    material_spec: 'PVC塑料膜 0.12mm',
+    product_name: tc('text_3i3lns'),
+    material_spec: tc('text_3hjec8'),
     work_order_date: '2024-03-26',
     plan_qty: 6000,
     main_label_no: 'LBL202403010',
     burdening_status: 2,
-    create_user_name: '冯十二',
+    create_user_name: tc('text_cdb2y'),
     create_time: '2024-03-26 08:00:00',
     update_time: '2024-03-26 08:00:00',
-    customer_name: '汕头塑料制品有限公司',
+    customer_name: tc('text_9dmqaj'),
     customer_code: 'CUST20240010',
-    process_flow1: '切料-磨切-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-    print_type: '凹印',
+    process_flow1: tc('text_kdl3cd'),
+    process_flow2: tc('text_bedugq'),
+    print_type: tc('text_eefr'),
     finished_size: '95mm x 48mm',
     tolerance: '±0.4mm',
-    quality_manager: '质量主管C',
+    quality_manager: tc('text_2e8oqe'),
   },
 ];
 
@@ -447,7 +448,7 @@ export default function QualityProcessPage() {
       const data = await res.json();
       if (data.success) {
         const rawData = data.data;
-        const rawList = Array.isArray(rawData) ? rawData : (rawData?.list || []);
+        const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
         const list = rawList.map((item: any) => ({
           id: item.id,
           card_no: item.cardNo || item.card_no,
@@ -480,10 +481,14 @@ export default function QualityProcessPage() {
           today: list.length,
           week: list.length,
         });
-        logger.info({ module: 'Quality', action: 'fetchProcesses' }, '品质过程检验数据获取成功', { count: list.length });
+        logger.info({ module: 'Quality', action: 'fetchProcesses' }, '品质过程检验数据获取成功', {
+          count: list.length,
+        });
       }
     } catch (error) {
-      logger.error({ module: 'Quality', action: 'fetchProcesses' }, '获取品质过程检验数据失败', { error: (error as Error).message });
+      logger.error({ module: 'Quality', action: 'fetchProcesses' }, '获取品质过程检验数据失败', {
+        error: (error as Error).message,
+      });
     } finally {
       setLoading(false);
     }
@@ -608,7 +613,7 @@ export default function QualityProcessPage() {
 
       setIsInspectOpen(false);
       alert('检验提交成功');
-    } catch (error) {
+    } catch {
       alert('提交失败');
     } finally {
       setLoading(false);
@@ -639,8 +644,7 @@ export default function QualityProcessPage() {
       });
       setQrCodeDataUrl(dataUrl);
       setIsQRCodeOpen(true);
-    } catch (error) {
-    }
+    } catch {}
   };
 
   // 查看检验记录
@@ -784,17 +788,26 @@ export default function QualityProcessPage() {
                     { key: 'product_code', label: tc('productCode'), width: 15 },
                     { key: 'material_spec', label: tc('specification'), width: 15 },
                     { key: 'plan_qty', label: tc('quantity'), width: 10 },
-                    { key: 'burdening_status', label: tc('status'), width: 12, formatter: (v) => {
-                      const m: Record<number, string> = {
-                        0: t('pendingProduction'),
-                        1: t('pendingInspection'),
-                        2: t('inspecting'),
-                        3: t('inspected'),
-                      };
-                      return m[v] || tc('unknown');
-                    } },
+                    {
+                      key: 'burdening_status',
+                      label: tc('status'),
+                      width: 12,
+                      formatter: (v) => {
+                        const m: Record<number, string> = {
+                          0: t('pendingProduction'),
+                          1: t('pendingInspection'),
+                          2: t('inspecting'),
+                          3: t('inspected'),
+                        };
+                        return m[v] || tc('unknown');
+                      },
+                    },
                   ]}
-                  data={selectedIds.length > 0 ? filteredProcesses.filter((p) => selectedIds.includes(p.id)) : filteredProcesses}
+                  data={
+                    selectedIds.length > 0
+                      ? filteredProcesses.filter((p) => selectedIds.includes(p.id))
+                      : filteredProcesses
+                  }
                 />
               </div>
             </div>
@@ -804,10 +817,18 @@ export default function QualityProcessPage() {
         {/* 检验列表 */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="all">{tc('all')} ({processes.length})</TabsTrigger>
-            <TabsTrigger value="pending">{t('pendingInspection')} ({stats.pending})</TabsTrigger>
-            <TabsTrigger value="inspecting">{t('inspecting')} ({stats.inspecting})</TabsTrigger>
-            <TabsTrigger value="passed">{t('inspected')} ({stats.passed})</TabsTrigger>
+            <TabsTrigger value="all">
+              {tc('all')} ({processes.length})
+            </TabsTrigger>
+            <TabsTrigger value="pending">
+              {t('pendingInspection')} ({stats.pending})
+            </TabsTrigger>
+            <TabsTrigger value="inspecting">
+              {t('inspecting')} ({stats.inspecting})
+            </TabsTrigger>
+            <TabsTrigger value="passed">
+              {t('inspected')} ({stats.passed})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-4">
@@ -831,7 +852,7 @@ export default function QualityProcessPage() {
                           }}
                         />
                       </TableHead>
-                      <TableHead className="w-12 text-center">{tc("serialNo")}</TableHead>
+                      <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
                       <SortableTableHeader
                         field="card_no"
                         sortField={sortField}
@@ -848,9 +869,9 @@ export default function QualityProcessPage() {
                       >
                         {t('productInfo')}
                       </SortableTableHeader>
-                      <TableHead>{tc("customer")}</TableHead>
+                      <TableHead>{tc('customer')}</TableHead>
                       <TableHead>{t('specificationRequirement')}</TableHead>
-                      <TableHead>{tc("quantity")}</TableHead>
+                      <TableHead>{tc('quantity')}</TableHead>
                       <TableHead>{t('qualityManager')}</TableHead>
                       <SortableTableHeader
                         field="status"
@@ -860,7 +881,7 @@ export default function QualityProcessPage() {
                       >
                         {tc('status')}
                       </SortableTableHeader>
-                      <TableHead>{tc("actions")}</TableHead>
+                      <TableHead>{tc('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -910,8 +931,12 @@ export default function QualityProcessPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col text-sm">
-                            <span>{t('size')}: {process.finished_size}</span>
-                            <span>{t('tolerance')}: {process.tolerance}</span>
+                            <span>
+                              {t('size')}: {process.finished_size}
+                            </span>
+                            <span>
+                              {t('tolerance')}: {process.tolerance}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -984,7 +1009,9 @@ export default function QualityProcessPage() {
                   {/* 基本信息 */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('processInfo')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('processInfo')}
+                      </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <span className="text-muted-foreground">{t('cardNo')}:</span>
                         <span>{selectedProcess.card_no}</span>
@@ -998,7 +1025,9 @@ export default function QualityProcessPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('productInfo')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('productInfo')}
+                      </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <span className="text-muted-foreground">{tc('productName')}:</span>
                         <span>{selectedProcess.product_name}</span>
@@ -1014,7 +1043,9 @@ export default function QualityProcessPage() {
 
                   {/* 规格要求 */}
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">{t('specificationRequirement')}</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">
+                      {t('specificationRequirement')}
+                    </h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="space-y-2">
                         <span className="text-muted-foreground">{t('finishedSize')}:</span>
@@ -1033,7 +1064,9 @@ export default function QualityProcessPage() {
 
                   {/* 工艺流程 */}
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">{t('processFlow')}</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">
+                      {t('processFlow')}
+                    </h4>
                     <div className="flex items-center gap-2 flex-wrap">
                       {selectedProcess.process_flow1?.split('-').map((step, index, arr) => (
                         <div key={index} className="flex items-center">
@@ -1241,7 +1274,7 @@ export default function QualityProcessPage() {
 
                   {/* 备注 */}
                   <div className="space-y-3">
-                    <Label>{tc("remark")}</Label>
+                    <Label>{tc('remark')}</Label>
                     <Textarea
                       placeholder={t('enterInspectionRemark')}
                       value={inspectForm.remark}
@@ -1327,10 +1360,10 @@ export default function QualityProcessPage() {
                     <TableRow>
                       <TableHead>{t('cardNo')}</TableHead>
                       <TableHead>{tc('productName')}</TableHead>
-                      <TableHead>{tc("customer")}</TableHead>
-                      <TableHead>{tc("specification")}</TableHead>
-                      <TableHead>{tc("quantity")}</TableHead>
-                      <TableHead>{tc("status")}</TableHead>
+                      <TableHead>{tc('customer')}</TableHead>
+                      <TableHead>{tc('specification')}</TableHead>
+                      <TableHead>{tc('quantity')}</TableHead>
+                      <TableHead>{tc('status')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1355,7 +1388,9 @@ export default function QualityProcessPage() {
                 </div>
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>
-                  <div className="text-sm text-muted-foreground">{t('qualityManagerSignature')}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {t('qualityManagerSignature')}
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>
@@ -1462,7 +1497,7 @@ export default function QualityProcessPage() {
                     <TableHead>{t('inspectionResult')}</TableHead>
                     <TableHead>{t('inspector')}</TableHead>
                     <TableHead>{t('inspectionTime')}</TableHead>
-                    <TableHead>{tc("remark")}</TableHead>
+                    <TableHead>{tc('remark')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1519,7 +1554,9 @@ export default function QualityProcessPage() {
                       <div className="text-2xl font-bold text-blue-600">
                         {inspectRecords.length}
                       </div>
-                      <div className="text-sm text-muted-foreground">{t('totalInspectionItems')}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {t('totalInspectionItems')}
+                      </div>
                     </div>
                   </div>
                 </div>

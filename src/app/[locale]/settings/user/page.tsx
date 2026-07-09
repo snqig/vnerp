@@ -103,17 +103,17 @@ export default function UserManagementPage() {
       const res = await authFetch('/api/system/user?' + params);
       if (!res.ok) {
         // 使用模拟数据
-        useMockData();
+        loadMockData();
         return;
       }
       const result = await res.json();
-      
+
       // 支持多种数据响应格式
       if (result.success || result.code === 200 || result.code === 0) {
-        let rawData = result.data || result;
+        const rawData = result.data || result;
         let rawList: any[] = [];
         let totalCount = 0;
-        
+
         if (Array.isArray(rawData)) {
           rawList = rawData;
           totalCount = rawData.length;
@@ -122,30 +122,30 @@ export default function UserManagementPage() {
           if (!Array.isArray(rawList)) {
             rawList = [];
           }
-          totalCount = rawData.total || rawData.totalCount || rawData.totalRecords || rawList.length;
+          totalCount =
+            rawData.total || rawData.totalCount || rawData.totalRecords || rawList.length;
         }
-        
+
         // 如果数据为空，使用模拟数据
         if (rawList.length === 0) {
-          useMockData();
+          loadMockData();
           return;
         }
-        
-        
+
         setList(rawList);
         setTotal(totalCount);
       } else {
         // API没有返回成功标志，使用模拟数据
-        useMockData();
+        loadMockData();
       }
-    } catch (e) {
+    } catch {
       // 出错时使用模拟数据
-      useMockData();
+      loadMockData();
     }
   };
 
   // 模拟数据函数
-  const useMockData = () => {
+  const loadMockData = () => {
     const mockUsers = [
       {
         id: 1,
@@ -157,9 +157,7 @@ export default function UserManagementPage() {
         dept_name: '管理部',
         status: 1,
         first_login: 0,
-        roles: [
-          { id: 1, role_name: '超级管理员', role_code: 'super_admin' }
-        ]
+        roles: [{ id: 1, role_name: '超级管理员', role_code: 'super_admin' }],
       },
       {
         id: 2,
@@ -171,9 +169,7 @@ export default function UserManagementPage() {
         dept_name: '业务部',
         status: 1,
         first_login: 0,
-        roles: [
-          { id: 2, role_name: '业务经理', role_code: 'business_manager' }
-        ]
+        roles: [{ id: 2, role_name: '业务经理', role_code: 'business_manager' }],
       },
       {
         id: 3,
@@ -185,9 +181,7 @@ export default function UserManagementPage() {
         dept_name: '业务部',
         status: 1,
         first_login: 0,
-        roles: [
-          { id: 3, role_name: '业务员', role_code: 'sales' }
-        ]
+        roles: [{ id: 3, role_name: '业务员', role_code: 'sales' }],
       },
       {
         id: 4,
@@ -199,9 +193,7 @@ export default function UserManagementPage() {
         dept_name: '工程技术部',
         status: 1,
         first_login: 0,
-        roles: [
-          { id: 4, role_name: '工程师', role_code: 'engineer' }
-        ]
+        roles: [{ id: 4, role_name: '工程师', role_code: 'engineer' }],
       },
       {
         id: 5,
@@ -213,9 +205,7 @@ export default function UserManagementPage() {
         dept_name: '生产部',
         status: 1,
         first_login: 0,
-        roles: [
-          { id: 5, role_name: '生产主管', role_code: 'production_manager' }
-        ]
+        roles: [{ id: 5, role_name: '生产主管', role_code: 'production_manager' }],
       },
       {
         id: 6,
@@ -227,9 +217,7 @@ export default function UserManagementPage() {
         dept_name: '仓库管理部',
         status: 1,
         first_login: 0,
-        roles: [
-          { id: 7, role_name: '仓管员', role_code: 'warehouse_keeper' }
-        ]
+        roles: [{ id: 7, role_name: '仓管员', role_code: 'warehouse_keeper' }],
       },
       {
         id: 7,
@@ -241,9 +229,7 @@ export default function UserManagementPage() {
         dept_name: '仓库管理部',
         status: 1,
         first_login: 0,
-        roles: [
-          { id: 6, role_name: '仓库主管', role_code: 'warehouse_manager' }
-        ]
+        roles: [{ id: 6, role_name: '仓库主管', role_code: 'warehouse_manager' }],
       },
       {
         id: 8,
@@ -255,9 +241,7 @@ export default function UserManagementPage() {
         dept_name: '采购部',
         status: 1,
         first_login: 0,
-        roles: [
-          { id: 8, role_name: '采购员', role_code: 'purchaser' }
-        ]
+        roles: [{ id: 8, role_name: '采购员', role_code: 'purchaser' }],
       },
       {
         id: 9,
@@ -269,9 +253,7 @@ export default function UserManagementPage() {
         dept_name: '品质部',
         status: 1,
         first_login: 0,
-        roles: [
-          { id: 9, role_name: '品质检验员', role_code: 'qc_inspector' }
-        ]
+        roles: [{ id: 9, role_name: '品质检验员', role_code: 'qc_inspector' }],
       },
       {
         id: 10,
@@ -283,12 +265,10 @@ export default function UserManagementPage() {
         dept_name: '财务行政部',
         status: 1,
         first_login: 0,
-        roles: [
-          { id: 10, role_name: '财务', role_code: 'accountant' }
-        ]
-      }
+        roles: [{ id: 10, role_name: '财务', role_code: 'accountant' }],
+      },
     ];
-    
+
     setList(mockUsers);
     setTotal(mockUsers.length);
   };
@@ -297,11 +277,11 @@ export default function UserManagementPage() {
     try {
       const res = await authFetch('/api/system/roles');
       if (!res.ok) {
-        useMockRoles();
+        loadMockRoles();
         return;
       }
       const result = await res.json();
-      
+
       if (result.success || result.code === 200 || result.code === 0) {
         const rawData = result.data || result;
         let rawList: any[] = [];
@@ -314,19 +294,19 @@ export default function UserManagementPage() {
           }
         }
         if (rawList.length === 0) {
-          useMockRoles();
+          loadMockRoles();
           return;
         }
         setRoles(rawList);
       } else {
-        useMockRoles();
+        loadMockRoles();
       }
-    } catch (e) {
-      useMockRoles();
+    } catch {
+      loadMockRoles();
     }
   };
 
-  const useMockRoles = () => {
+  const loadMockRoles = () => {
     const mockRoles = [
       { id: 1, role_name: '超级管理员', role_code: 'super_admin' },
       { id: 2, role_name: '业务经理', role_code: 'business_manager' },
@@ -337,7 +317,7 @@ export default function UserManagementPage() {
       { id: 7, role_name: '仓管员', role_code: 'warehouse_keeper' },
       { id: 8, role_name: '采购员', role_code: 'purchaser' },
       { id: 9, role_name: '品质检验员', role_code: 'qc_inspector' },
-      { id: 10, role_name: '财务', role_code: 'accountant' }
+      { id: 10, role_name: '财务', role_code: 'accountant' },
     ];
     setRoles(mockRoles);
   };
@@ -346,11 +326,11 @@ export default function UserManagementPage() {
     try {
       const res = await authFetch('/api/organization/department');
       if (!res.ok) {
-        useMockDepartments();
+        loadMockDepartments();
         return;
       }
       const result = await res.json();
-      
+
       if (result.success || result.code === 200 || result.code === 0) {
         const rawData = result.data || result;
         let rawList: any[] = [];
@@ -363,19 +343,19 @@ export default function UserManagementPage() {
           }
         }
         if (rawList.length === 0) {
-          useMockDepartments();
+          loadMockDepartments();
           return;
         }
         setDepartments(rawList);
       } else {
-        useMockDepartments();
+        loadMockDepartments();
       }
-    } catch (e) {
-      useMockDepartments();
+    } catch {
+      loadMockDepartments();
     }
   };
 
-  const useMockDepartments = () => {
+  const loadMockDepartments = () => {
     const mockDepartments = [
       { id: 1, dept_name: '管理部' },
       { id: 2, dept_name: '业务部' },
@@ -384,7 +364,7 @@ export default function UserManagementPage() {
       { id: 5, dept_name: '仓库管理部' },
       { id: 6, dept_name: '采购部' },
       { id: 7, dept_name: '品质部' },
-      { id: 8, dept_name: '财务行政部' }
+      { id: 8, dept_name: '财务行政部' },
     ];
     setDepartments(mockDepartments);
   };
@@ -393,11 +373,11 @@ export default function UserManagementPage() {
     try {
       const res = await authFetch('/api/organization/employee?pageSize=9999');
       if (!res.ok) {
-        useMockEmployees();
+        loadMockEmployees();
         return;
       }
       const result = await res.json();
-      
+
       if (result.success || result.code === 200 || result.code === 0) {
         const rawData = result.data || result;
         let rawList: any[] = [];
@@ -410,19 +390,19 @@ export default function UserManagementPage() {
           }
         }
         if (rawList.length === 0) {
-          useMockEmployees();
+          loadMockEmployees();
           return;
         }
         setEmployees(rawList);
       } else {
-        useMockEmployees();
+        loadMockEmployees();
       }
-    } catch (e) {
-      useMockEmployees();
+    } catch {
+      loadMockEmployees();
     }
   };
 
-  const useMockEmployees = () => {
+  const loadMockEmployees = () => {
     const mockEmployees = [
       { id: 1, name: '超级管理员', employee_no: 'E001' },
       { id: 2, name: '张伟', employee_no: 'E002' },
@@ -433,7 +413,7 @@ export default function UserManagementPage() {
       { id: 7, name: '赵磊', employee_no: 'E007' },
       { id: 8, name: '孙丽', employee_no: 'E008' },
       { id: 9, name: '周杰', employee_no: 'E009' },
-      { id: 10, name: '吴芳', employee_no: 'E010' }
+      { id: 10, name: '吴芳', employee_no: 'E010' },
     ];
     setEmployees(mockEmployees);
   };
@@ -500,11 +480,15 @@ export default function UserManagementPage() {
         fetchData();
         try {
           await authFetch('/api/auth/cache/clear', { method: 'POST' });
-        } catch (e) {}
+        } catch {}
       } else {
-        toast({ title: tc('operationFailed'), description: result.message, variant: 'destructive' });
+        toast({
+          title: tc('operationFailed'),
+          description: result.message,
+          variant: 'destructive',
+        });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('saveFailed'), variant: 'destructive' });
     }
   };
@@ -518,7 +502,7 @@ export default function UserManagementPage() {
         toast({ title: tc('deleteSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('operationFailed'), variant: 'destructive' });
     }
   };
@@ -543,11 +527,11 @@ export default function UserManagementPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t("userManagement")}</h1>
+          <h1 className="text-2xl font-bold">{t('userManagement')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder={tc("searchUsername")}
+                placeholder={tc('searchUsername')}
                 value={searchUser}
                 onChange={(e) => setSearchUser(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -558,7 +542,7 @@ export default function UserManagementPage() {
             </div>
             <Button size="sm" onClick={openAddDialog}>
               <Plus className="h-3 w-3 mr-1" />
-              {t("addUser")}
+              {t('addUser')}
             </Button>
           </div>
         </div>
@@ -567,15 +551,15 @@ export default function UserManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">{tc("username")}</TableHead>
-                  <TableHead className="text-xs">{tc("name")}</TableHead>
-                  <TableHead className="text-xs">{tc("email")}</TableHead>
-                  <TableHead className="text-xs">{tc("phone")}</TableHead>
-                  <TableHead className="text-xs">{tc("department")}</TableHead>
-                  <TableHead className="text-xs">{tc("role")}</TableHead>
-                  <TableHead className="text-xs">{tc("status")}</TableHead>
-                  <TableHead className="text-xs">{tc("firstLogin")}</TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs">{tc('username')}</TableHead>
+                  <TableHead className="text-xs">{tc('name')}</TableHead>
+                  <TableHead className="text-xs">{tc('email')}</TableHead>
+                  <TableHead className="text-xs">{tc('phone')}</TableHead>
+                  <TableHead className="text-xs">{tc('department')}</TableHead>
+                  <TableHead className="text-xs">{tc('role')}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('firstLogin')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -630,7 +614,7 @@ export default function UserManagementPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                      暂无记录
+                      {tc('text_dd1mmb')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -639,7 +623,11 @@ export default function UserManagementPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">
+            {tc('text_g35')}
+            {total}
+            {tc('text_kf5')}
+          </span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -647,7 +635,7 @@ export default function UserManagementPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('text_btlof')}
             </Button>
             <Button
               size="sm"
@@ -655,7 +643,7 @@ export default function UserManagementPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('text_btmf4')}
             </Button>
           </div>
         </div>
@@ -674,17 +662,21 @@ export default function UserManagementPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>
-                  用户名 <span className="text-red-500">*</span>
+                  {tc('text_hmxge')}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={editItem.username || ''}
                   onChange={(e) => setEditItem({ ...editItem, username: e.target.value })}
                   disabled={!!editItem.id}
-                  placeholder={tc("enterUsername")}
+                  placeholder={tc('enterUsername')}
                 />
               </div>
               <div>
-                <Label>密码 {!editItem.id && <span className="text-red-500">*</span>}</Label>
+                <Label>
+                  {tc('text_g9ob')}
+                  {!editItem.id && <span className="text-red-500">*</span>}
+                </Label>
                 <Input
                   type="password"
                   value={editItem.password || ''}
@@ -694,7 +686,8 @@ export default function UserManagementPage() {
               </div>
               <div>
                 <Label>
-                  姓名 <span className="text-red-500">*</span>
+                  {tc('text_fqmy')}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={editItem.real_name || ''}
@@ -711,23 +704,23 @@ export default function UserManagementPage() {
                 {nameWarning && <p className="text-xs text-amber-600 mt-1">{nameWarning}</p>}
               </div>
               <div>
-                <Label>{tc("email")}</Label>
+                <Label>{tc('email')}</Label>
                 <Input
                   value={editItem.email || ''}
                   onChange={(e) => setEditItem({ ...editItem, email: e.target.value })}
-                  placeholder={tc("enterEmail")}
+                  placeholder={tc('enterEmail')}
                 />
               </div>
               <div>
-                <Label>手机</Label>
+                <Label>{tc('text_haa7')}</Label>
                 <Input
                   value={editItem.phone || ''}
                   onChange={(e) => setEditItem({ ...editItem, phone: e.target.value })}
-                  placeholder={tc("enterPhone")}
+                  placeholder={tc('enterPhone')}
                 />
               </div>
               <div>
-                <Label>{tc("department")}</Label>
+                <Label>{tc('department')}</Label>
                 <Select
                   value={editItem.department_id ? String(editItem.department_id) : ''}
                   onValueChange={(v) =>
@@ -747,7 +740,7 @@ export default function UserManagementPage() {
                 </Select>
               </div>
               <div>
-                <Label>{tc("status")}</Label>
+                <Label>{tc('status')}</Label>
                 <Select
                   value={String(editItem.status ?? 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, status: Number(v) })}
@@ -756,19 +749,19 @@ export default function UserManagementPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">{tc("enable")}</SelectItem>
-                    <SelectItem value="0">{tc("disable")}</SelectItem>
+                    <SelectItem value="1">{tc('enable')}</SelectItem>
+                    <SelectItem value="0">{tc('disable')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="mt-4">
               <div className="flex items-center justify-between mb-2">
-                <Label>角色分配</Label>
+                <Label>{tc('text_hxb087')}</Label>
                 {roles.length > 0 && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="h-7 text-xs"
                     onClick={() => {
                       const allSelected = roles.length === (editItem.role_ids || []).length;
@@ -783,10 +776,10 @@ export default function UserManagementPage() {
                 )}
               </div>
               <div className="max-h-60 overflow-y-auto border rounded-md p-3 space-y-2 bg-muted/30">
-                {roles.length === 0 && <p className="text-sm text-gray-400">暂无角色，请先创建角色</p>}
+                {roles.length === 0 && <p className="text-sm text-gray-400">{tc('text_t59mle')}</p>}
                 {roles.map((role) => (
-                  <label 
-                    key={role.id} 
+                  <label
+                    key={role.id}
                     className="flex items-center gap-3 cursor-pointer p-2 rounded-md hover:bg-accent/50 transition-colors"
                   >
                     <Checkbox
@@ -809,9 +802,7 @@ export default function UserManagementPage() {
                   </label>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                可同时为用户分配多个角色，权限会自动合并
-              </p>
+              <p className="text-xs text-muted-foreground mt-2">{tc('text_6xlyt0')}</p>
             </div>
             <DialogFooter>
               <Button
@@ -821,9 +812,9 @@ export default function UserManagementPage() {
                   setNameWarning('');
                 }}
               >
-                取消
+                {tc('text_ev02')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

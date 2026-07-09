@@ -51,6 +51,7 @@ interface CategoryData {
   grouped: Record<string, ConfigItem[]>;
 }
 
+/* eslint-disable i18n/no-chinese-hardcode */
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   单据编码规则: <Settings className="w-4 h-4" />,
   '刀模/网版寿命管理': <Clock className="w-4 h-4" />,
@@ -70,6 +71,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   生产报工规则: 'bg-red-50 border-red-200',
   参数修改审批规则: 'bg-indigo-50 border-indigo-200',
 };
+/* eslint-enable i18n/no-chinese-hardcode */
 
 export default function SystemConfigPage() {
   // 翻译钩子
@@ -97,7 +99,7 @@ export default function SystemConfigPage() {
         setData(result.data);
         setActiveCategory(result.data.categories[0] || '单据编码规则');
       }
-    } catch (e) {
+    } catch {
       toast({ title: '加载配置失败', variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -142,7 +144,7 @@ export default function SystemConfigPage() {
       } else {
         toast({ title: '保存失败', description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '保存失败', variant: 'destructive' });
     } finally {
       setSaving(false);
@@ -163,8 +165,8 @@ export default function SystemConfigPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="true">{tc("yes")}</SelectItem>
-              <SelectItem value="false">{tc("no")}</SelectItem>
+              <SelectItem value="true">{tc('yes')}</SelectItem>
+              <SelectItem value="false">{tc('no')}</SelectItem>
             </SelectContent>
           </Select>
         );
@@ -196,7 +198,7 @@ export default function SystemConfigPage() {
         <div className="p-6 flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2 text-muted-foreground" />
-            <p className="text-muted-foreground">正在加载系统配置...</p>
+            <p className="text-muted-foreground">{tc('text_z3ekhz')}</p>
           </div>
         </div>
       </MainLayout>
@@ -207,7 +209,7 @@ export default function SystemConfigPage() {
     return (
       <MainLayout>
         <div className="p-6 flex items-center justify-center min-h-[400px]">
-          <p className="text-muted-foreground">无法加载配置数据</p>
+          <p className="text-muted-foreground">{tc('text_2eq39t')}</p>
         </div>
       </MainLayout>
     );
@@ -220,15 +222,13 @@ export default function SystemConfigPage() {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">全局系统配置</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              系统核心参数配置中心，修改需审批后生效
-            </p>
+            <h1 className="text-2xl font-bold">{tc('text_fql599')}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{tc('text_qh7dj2')}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={fetchConfig}>
               <RefreshCw className="w-4 h-4 mr-1" />
-              刷新
+              {tc('text_ejix')}
             </Button>
             <Button onClick={handleSave} disabled={!hasChanges || saving}>
               <Save className="w-4 h-4 mr-1" />
@@ -244,10 +244,12 @@ export default function SystemConfigPage() {
                 <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
                 <div className="flex-1">
                   <p className="font-medium text-yellow-800">
-                    您有 {Object.keys(modifiedConfigs).length} 项配置待保存
+                    {tc('text_h081')}
+                    {Object.keys(modifiedConfigs).length}
+                    {tc('text_tey3om')}
                   </p>
                   <div className="mt-2">
-                    <Label className="text-xs text-yellow-700">修改说明（可选）</Label>
+                    <Label className="text-xs text-yellow-700">{tc('text_ugwf9w')}</Label>
                     <Input
                       value={remark}
                       onChange={(e) => setRemark(e.target.value)}
@@ -279,7 +281,8 @@ export default function SystemConfigPage() {
                     {CATEGORY_ICONS[category]}
                     {category}
                     <Badge variant="secondary" className="ml-auto">
-                      {data.grouped[category]?.length || 0} 项
+                      {data.grouped[category]?.length || 0}
+                      {tc('text_u49')}
                     </Badge>
                   </CardTitle>
                 </CardHeader>
@@ -302,7 +305,7 @@ export default function SystemConfigPage() {
                                 variant="outline"
                                 className="text-xs text-red-600 border-red-200"
                               >
-                                必填
+                                {tc('text_grwm')}
                               </Badge>
                             )}
                             {item.approval_required && (
@@ -310,7 +313,7 @@ export default function SystemConfigPage() {
                                 variant="outline"
                                 className="text-xs text-orange-600 border-orange-200"
                               >
-                                需审批
+                                {tc('text_mkcfs')}
                               </Badge>
                             )}
                           </div>
@@ -322,7 +325,7 @@ export default function SystemConfigPage() {
                           {renderConfigInput(item)}
                           {modifiedConfigs[item.config_key] !== undefined && (
                             <Badge variant="default" className="bg-blue-600">
-                              已修改
+                              {tc('text_e5it9')}
                             </Badge>
                           )}
                         </div>
