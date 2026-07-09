@@ -5,7 +5,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { WorkflowEngine } from '@/application/workflow/WorkflowEngine';
 
-const _workflowEngine = new WorkflowEngine();
+const workflowEngine = new WorkflowEngine();
 
 // 获取所有审批流程配置
 export const GET = withPermission(async (request: NextRequest) => {

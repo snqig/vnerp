@@ -38,13 +38,17 @@ import {
   Search,
   RefreshCw,
   AlertTriangle,
+  Shield,
   Lock,
   Unlock,
   Eye,
   Edit,
   Trash2,
   Wrench,
+  QrCode,
   Activity,
+  BarChart3,
+  Clock,
   WrenchIcon,
   RotateCcw,
   ArrowUpDown,
@@ -53,7 +57,15 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  TableExportToolbar,
+  printTable,
+  exportTableToPDF,
+  exportTableToXLS,
+  exportTableToWORD,
+} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { useTranslations } from 'next-intl';
 
 interface DieTemplate {
@@ -347,7 +359,7 @@ export default function DieTemplatePage() {
     else setSelectedIds(new Set(sortedList.map((s) => s.id)));
   };
 
-  const _exportColumns = [
+  const exportColumns = [
     { key: 'template_code', header: td('code') },
     { key: 'template_name', header: tc('name') },
     { key: 'asset_type_label', header: td('assetType') },
@@ -358,7 +370,7 @@ export default function DieTemplatePage() {
     { key: 'storage_location', header: td('storageLocation') },
   ];
 
-  const _getExportData = () =>
+  const getExportData = () =>
     sortedList.map((item) => ({
       template_code: item.template_code,
       template_name: item.template_name,

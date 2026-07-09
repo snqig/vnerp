@@ -13,7 +13,7 @@
  *   默认 REPOSITORY_IMPL=mysql 时走 MysqlPurchaseOrderRepository。
  */
 
-import { eq, and, like, or, gte, lte, desc, inArray, count } from 'drizzle-orm';
+import { eq, and, like, or, gte, lte, desc, inArray, sql, count } from 'drizzle-orm';
 import { drizzleDb } from '@/lib/db';
 import { purPurchaseOrder, purPurchaseOrderLine } from '@/lib/db/schema';
 import { transaction } from '@/lib/db';

@@ -4,7 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
 import QRCode from 'qrcode';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -40,7 +41,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  TableExportToolbar,
+  exportTableToXLS,
+  exportTableToPDF,
+  exportTableToWORD,
+  printTable,
+} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import {
   Search,
@@ -58,8 +67,10 @@ import {
   Clock,
   Shield,
   Award,
+  AlertCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
 import { USE_MOCK } from '@/lib/mock-data';

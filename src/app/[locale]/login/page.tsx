@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Loader2, Eye, EyeOff, KeyRound } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Sparkles, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompanyName } from '@/hooks/useCompanyName';

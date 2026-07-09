@@ -10,7 +10,29 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Shield, Users, Save, Settings, UserCog } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Shield,
+  Users,
+  Save,
+  Plus,
+  Edit,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Eye,
+  FileEdit,
+  Trash,
+  Settings,
+  UserCog,
+} from 'lucide-react';
 
 // 权限模块定义
 const permissionModules = [
@@ -274,7 +296,7 @@ export default function PermissionsSettingsPage() {
 
   // 保存权限
   const savePermissions = () => {
-    const _enabledPermissions = Object.entries(rolePermissions)
+    const enabledPermissions = Object.entries(rolePermissions)
       .filter(([, enabled]) => enabled)
       .map(([id]) => id);
     alert(`已保存 ${selectedRole.name} 的权限设置`);

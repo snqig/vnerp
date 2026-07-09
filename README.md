@@ -234,7 +234,7 @@ docker-compose -f docker-compose.prod.yml up -d
 
 完整项目文档位于 [docs/](docs/)，入口索引见 [docs/README.md](docs/README.md)。
 
-## 微信交流群
+## 个人微信
 
 扫码加入微信交流群，获取最新动态与技术支持：
 
