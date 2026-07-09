@@ -65,7 +65,6 @@ interface TraceRecord {
 
 export default function TracePage() {
   // 翻译钩子
-  const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
 
   const [qrCode, setQrCode] = useState('');

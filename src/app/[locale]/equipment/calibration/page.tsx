@@ -51,7 +51,6 @@ const statusMap: Record<
 
 export default function EquipmentCalibrationPage() {
   // 翻译钩子
-  const t = useTranslations('Equipment');
   const tc = useTranslations('Common');
 
   const { toast } = useToast();

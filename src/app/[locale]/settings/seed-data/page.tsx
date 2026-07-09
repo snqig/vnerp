@@ -7,7 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Database, RefreshCw, CheckCircle, XCircle, AlertTriangle, Package, Users, ClipboardList } from 'lucide-react';
+import {
+  Database,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Package,
+  Users,
+  ClipboardList,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface SeedStats {
@@ -15,10 +24,7 @@ interface SeedStats {
 }
 
 export default function SeedDataPage() {
-
   // 翻译钩子
-  const t = useTranslations('Common');
-  const tc = useTranslations('Common');
 
   const [systemLoading, setSystemLoading] = useState(false);
   const [businessLoading, setBusinessLoading] = useState(false);
@@ -154,7 +160,10 @@ export default function SeedDataPage() {
                     <h4 className="font-medium text-green-800">系统数据初始化成功</h4>
                     <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
                       {Object.entries(systemStats).map(([key, value]) => (
-                        <div key={key} className="flex items-center justify-between p-2 bg-white rounded">
+                        <div
+                          key={key}
+                          className="flex items-center justify-between p-2 bg-white rounded"
+                        >
                           <span className="text-sm text-gray-600">{key}</span>
                           <Badge variant="secondary">{value} 条</Badge>
                         </div>
@@ -220,7 +229,10 @@ export default function SeedDataPage() {
                     <h4 className="font-medium text-green-800">业务数据初始化成功</h4>
                     <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
                       {Object.entries(businessStats).map(([key, value]) => (
-                        <div key={key} className="flex items-center justify-between p-2 bg-white rounded">
+                        <div
+                          key={key}
+                          className="flex items-center justify-between p-2 bg-white rounded"
+                        >
                           <span className="text-sm text-gray-600">{key}</span>
                           <Badge variant="secondary">{value} 条</Badge>
                         </div>
@@ -291,12 +303,17 @@ export default function SeedDataPage() {
                 { username: 'wangqiang', role: '工程师', password: 'admin123' },
                 { username: 'liuyang', role: '生产主管', password: 'admin123' },
               ].map((user) => (
-                <div key={user.username} className="flex items-center justify-between p-3 border rounded-lg">
+                <div
+                  key={user.username}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
                   <div className="flex items-center gap-3">
                     <Badge variant="outline">{user.role}</Badge>
                     <span className="font-mono">{user.username}</span>
                   </div>
-                  <Badge variant="secondary" className="font-mono">{user.password}</Badge>
+                  <Badge variant="secondary" className="font-mono">
+                    {user.password}
+                  </Badge>
                 </div>
               ))}
               <p className="text-sm text-gray-500 mt-4">提示：首次登录后建议修改密码</p>
@@ -317,7 +334,10 @@ export default function SeedDataPage() {
               <Button variant="outline" onClick={() => window.open('/settings/user', '_blank')}>
                 用户管理
               </Button>
-              <Button variant="outline" onClick={() => window.open('/settings/organization', '_blank')}>
+              <Button
+                variant="outline"
+                onClick={() => window.open('/settings/organization', '_blank')}
+              >
                 组织设置
               </Button>
               <Button variant="outline" onClick={() => window.open('/warehouse/inbound', '_blank')}>
@@ -332,10 +352,16 @@ export default function SeedDataPage() {
               <Button variant="outline" onClick={() => window.open('/orders/sales', '_blank')}>
                 销售订单
               </Button>
-              <Button variant="outline" onClick={() => window.open('/production/work-orders', '_blank')}>
+              <Button
+                variant="outline"
+                onClick={() => window.open('/production/work-orders', '_blank')}
+              >
                 生产工单
               </Button>
-              <Button variant="outline" onClick={() => window.open('/warehouse/inventory', '_blank')}>
+              <Button
+                variant="outline"
+                onClick={() => window.open('/warehouse/inventory', '_blank')}
+              >
                 库存管理
               </Button>
             </div>

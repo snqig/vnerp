@@ -96,7 +96,6 @@ interface Role {
 
 export default function OrganizationPage() {
   // 翻译钩子
-  const t = useTranslations('Common');
   const tc = useTranslations('Common');
 
   const [activeTab, setActiveTab] = useState('company');

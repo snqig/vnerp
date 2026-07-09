@@ -77,7 +77,7 @@ export const POST = withPermission(
       for (const table of dropTables) {
         try {
           await conn.execute(`DROP TABLE IF EXISTS ${table}`);
-        } catch (e: any) {}
+        } catch (_e: any) {}
       }
       await conn.execute(`SET FOREIGN_KEY_CHECKS = 1`);
       results.push('已清理旧表');

@@ -51,7 +51,6 @@ interface DashboardData {
 
 export default function ReportsPage() {
   // 翻译钩子
-  const t = useTranslations('Common');
   const tc = useTranslations('Common');
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);

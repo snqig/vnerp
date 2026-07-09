@@ -81,7 +81,6 @@ const sampleTypeColors: Record<string, string> = {
 
 export default function SampleOrderDetailPage() {
   // 翻译钩子
-  const t = useTranslations('Orders');
   const tc = useTranslations('Common');
 
   const router = useRouter();

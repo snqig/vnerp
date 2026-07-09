@@ -1,128 +1,110 @@
-#!/usr/bin/env node
 /**
- * 批量修复 no-unused-vars 警告：
- * 1. catch (e/error/err) 未使用 → catch（移除绑定）
- * 2. withPermission 回调的 userInfo 未使用 → _userInfo
- * 3. 函数参数 request 未使用 → _request
- *
- * 基于 eslint_full_report.json 的精确行号定位，仅修改 eslint 标记的行。
+ * Fix unused variable warnings:
+ * 1. Remove unused `const t = useTranslations(...)` lines (created by tc() reversion)
+ * 2. Rename unused catch (e) to catch (_e)
+ * 3. Remove unused `useTranslations` imports when no longer referenced
  */
 import { readFileSync, writeFileSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
+import { resolve } from 'path';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const projectRoot = resolve(__dirname, '..');
-const reportPath = resolve(projectRoot, 'eslint_full_report.json');
+const projectRoot = resolve('.');
 
-const rawContent = readFileSync(reportPath, 'utf8').replace(/^\uFEFF/, '');
-const report = JSON.parse(rawContent);
-
-const CATCH_VARS = new Set(['e', 'error', 'err', 'ex', 'exception']);
-const PARAM_RENAME = { userInfo: '_userInfo', request: '_request' };
-
-let stats = {
-  catchFixed: 0,
-  paramRenamed: 0,
-  skipped: 0,
-  filesModified: 0,
-};
-
-// Collect warnings grouped by file
-const fileWarnings = new Map();
-
-for (const file of report) {
-  if (!file.messages) continue;
-  const filePath = file.filePath;
-  const warnings = file.messages.filter(
-    m => m.ruleId === '@typescript-eslint/no-unused-vars' && m.severity === 1
-  );
-  if (warnings.length === 0) continue;
-  fileWarnings.set(filePath, warnings);
+// Get eslint warnings
+let eslintJson;
+try {
+  eslintJson = execSync('npx eslint src/ -f json', {
+    cwd: projectRoot, encoding: 'utf8', timeout: 600000,
+    maxBuffer: 50 * 1024 * 1024, stdio: ['pipe', 'pipe', 'pipe'],
+  });
+} catch (err) {
+  eslintJson = err.stdout || '';
 }
 
-for (const [filePath, warnings] of fileWarnings) {
-  let content = readFileSync(filePath, 'utf8');
+const data = JSON.parse(eslintJson);
+
+let totalFixed = 0;
+const filesFixed = new Set();
+
+for (const file of data) {
+  const filePath = file.filePath;
+  if (!file.messages.length) continue;
+
+  let content;
+  try {
+    content = readFileSync(filePath, 'utf8');
+  } catch {
+    continue;
+  }
+
   const lines = content.split('\n');
   let modified = false;
+  const linesToRemove = new Set();
 
-  // Sort warnings by line descending so we modify from bottom to top
-  // (avoids line number shifting)
-  const sorted = [...warnings].sort((a, b) => b.line - a.line);
+  // Collect unused vars for this file
+  const unusedVars = file.messages.filter(
+    m => m.ruleId === '@typescript-eslint/no-unused-vars'
+  );
 
-  for (const w of sorted) {
-    const match = w.message.match(/'([^']+)'/);
-    if (!match) { stats.skipped++; continue; }
-    const varName = match[1];
-    const lineIdx = w.line - 1;
-    if (lineIdx < 0 || lineIdx >= lines.length) { stats.skipped++; continue; }
+  for (const msg of unusedVars) {
+    const lineIdx = msg.line - 1;
     const line = lines[lineIdx];
+    if (!line) continue;
 
-    // Case 1: catch block variable
-    if (CATCH_VARS.has(varName)) {
-      // Match: catch (varName) or catch(varName)
-      const catchRegex = new RegExp(`catch\\s*\\(\\s*${varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\)`);
-      if (catchRegex.test(line)) {
-        lines[lineIdx] = line.replace(catchRegex, 'catch');
-        modified = true;
-        stats.catchFixed++;
-        continue;
-      }
-      // Maybe the catch is on a different line — skip
-      stats.skipped++;
+    // Pattern 1: const t = useTranslations(...); — t is unused
+    // Remove the entire line
+    if (/^\s*const\s+t\s*=\s*useTranslations\(/.test(line) &&
+        msg.message.includes("'t' is assigned a value but never used")) {
+      linesToRemove.add(lineIdx);
+      modified = true;
+      totalFixed++;
       continue;
     }
 
-    // Case 2: function param rename (userInfo, request)
-    if (varName in PARAM_RENAME) {
-      const newName = PARAM_RENAME[varName];
-      // Only rename if it's a parameter (not an import or local var)
-      // Pattern: (request: NextRequest, userInfo) or (request: NextRequest, userInfo: SomeType)
-      // We need to be precise: only rename the parameter, not any usage in the body
-      // Since eslint says it's unused, renaming in the signature is safe
-      const paramRegex = new RegExp(
-        `(\\(|,\\s*)${varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s*[,):])`
-      );
-      if (paramRegex.test(line)) {
-        lines[lineIdx] = line.replace(
-          new RegExp(`(^|\\(|,\\s*)${varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s*[,):])`),
-          `$1${newName}$2`
-        );
-        modified = true;
-        stats.paramRenamed++;
-        continue;
-      }
-      // Try: the variable might be on this line as a standalone param
-      // e.g., "async (request: NextRequest, userInfo) =>"
-      const simpleRegex = new RegExp(`\\b${varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
-      if (simpleRegex.test(line) && !line.includes('import')) {
-        // Check if it looks like a function parameter
-        if (line.includes('async') || line.includes('=>') || line.includes('function')) {
-          lines[lineIdx] = line.replace(
-            new RegExp(`\\b${varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`),
-            newName
-          );
-          modified = true;
-          stats.paramRenamed++;
-          continue;
-        }
-      }
-      stats.skipped++;
+    // Pattern 2: catch (e) { — e is unused, rename to catch (_e)
+    if (/catch\s*\(\s*e\s*\)/.test(line) &&
+        msg.message.includes("'e' is defined but never used")) {
+      lines[lineIdx] = line.replace(/catch\s*\(\s*e\s*\)/, 'catch (_e)');
+      modified = true;
+      totalFixed++;
       continue;
     }
 
-    stats.skipped++;
+    // Pattern 3: catch (e: SomeType) { — rename to catch (_e: SomeType)
+    if (/catch\s*\(\s*e\s*:/.test(line) &&
+        msg.message.includes("'e' is defined but never used")) {
+      lines[lineIdx] = line.replace(/catch\s*\(\s*e\s*:/, 'catch (_e:');
+      modified = true;
+      totalFixed++;
+      continue;
+    }
   }
 
-  if (modified) {
-    writeFileSync(filePath, lines.join('\n'));
-    stats.filesModified++;
+  if (!modified) continue;
+
+  // Remove marked lines
+  const newLines = lines.filter((_, i) => !linesToRemove.has(i));
+
+  // Check if useTranslations import is still used after removing t assignments
+  const newContent = newLines.join('\n');
+  let finalContent = newContent;
+
+  // If useTranslations is imported but no longer used, remove it from imports
+  // Check if useTranslations appears anywhere besides the import
+  const useTranslationsUsage = newContent.replace(/import\s*{[^}]*useTranslations[^}]*}\s*from\s*['"]next-intl['"]/, '');
+  if (useTranslationsUsage.includes('useTranslations') === false) {
+    // useTranslations is only in the import, remove it
+    finalContent = newContent
+      // Pattern: import { useTranslations, X } from 'next-intl'
+      .replace(/import\s*\{\s*useTranslations\s*,\s*/g, 'import { ')
+      // Pattern: import { X, useTranslations } from 'next-intl'
+      .replace(/,\s*useTranslations\s*\}/g, ' }')
+      // Pattern: import { useTranslations } from 'next-intl' (only import)
+      .replace(/import\s*\{\s*useTranslations\s*\}\s*from\s*['"]next-intl['"]\s*;?\n/g, '');
   }
+
+  writeFileSync(filePath, finalContent, 'utf8');
+  filesFixed.add(filePath);
 }
 
-console.log('=== no-unused-vars 批量修复结果 ===');
-console.log(`catch 绑定移除:  ${stats.catchFixed}`);
-console.log(`参数重命名:      ${stats.paramRenamed}`);
-console.log(`跳过（需手动）:  ${stats.skipped}`);
-console.log(`修改文件数:      ${stats.filesModified}`);
-console.log(`总计修复:        ${stats.catchFixed + stats.paramRenamed}`);
+console.log(`Fixed ${totalFixed} unused variables in ${filesFixed.size} files`);

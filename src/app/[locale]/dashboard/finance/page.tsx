@@ -47,7 +47,6 @@ function DonutChart({
   size?: number;
 }) {
   const t = useTranslations('Dashboard');
-  const tc = useTranslations('Common');
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percentage / 100) * circumference;

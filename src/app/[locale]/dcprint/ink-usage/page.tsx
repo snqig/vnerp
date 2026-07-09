@@ -60,7 +60,6 @@ interface Ink {
 
 export default function InkUsagePage() {
   // 翻译钩子
-  const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
 
   const { toast } = useToast();

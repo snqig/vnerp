@@ -62,7 +62,6 @@ const stats = [
 
 export default function DCPrintPage() {
   // 翻译钩子
-  const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
 
   return (

@@ -518,7 +518,7 @@ export const GET = withPermission(async (request: NextRequest) => {
           WHERE a.emp_id IS NULL
         `);
         results.push(`Backfilled emp_id from sys_employee: ${res.affectedRows} rows`);
-      } catch (e: any) {
+      } catch (_e: any) {
         try {
           const res = await execute(`
             UPDATE hr_attendance a

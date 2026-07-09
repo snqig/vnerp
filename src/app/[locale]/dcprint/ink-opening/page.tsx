@@ -111,7 +111,6 @@ const EXPIRE_HOURS_OPTIONS = [
 
 export default function InkOpeningPage() {
   // 翻译钩子
-  const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
 
   const { toast } = useToast();

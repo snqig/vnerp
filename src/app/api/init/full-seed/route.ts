@@ -72,7 +72,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       try {
         await conn.execute(`DELETE FROM ${table}`);
         await conn.execute(`ALTER TABLE ${table} AUTO_INCREMENT = 1`);
-      } catch (e: any) {}
+      } catch (_e: any) {}
     }
 
     const warehouses = [

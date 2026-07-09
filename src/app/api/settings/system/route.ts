@@ -786,7 +786,7 @@ async function ensureConfigTableColumns(): Promise<void> {
     if (!existingColumns.has(colName)) {
       try {
         await execute(`ALTER TABLE sys_config ADD COLUMN ${colName} ${colDef}`);
-      } catch (e: any) {}
+      } catch (_e: any) {}
     }
   }
 }

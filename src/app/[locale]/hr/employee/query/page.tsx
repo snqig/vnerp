@@ -38,7 +38,6 @@ interface Employee {
 }
 
 function EmployeeQueryContent() {
-  const t = useTranslations('Hr');
   const tc = useTranslations('Common');
 
   const searchParams = useSearchParams();

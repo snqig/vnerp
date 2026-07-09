@@ -47,7 +47,6 @@ interface DbRelations {
 
 export default function DbRelationsPage() {
   // 翻译钩子
-  const t = useTranslations('Common');
   const tc = useTranslations('Common');
 
   const moduleColors: Record<string, string> = {

@@ -41,7 +41,7 @@ export async function fixAttendanceEmpId(): Promise<FixResult> {
       affectedRows: res.affectedRows,
       detail: `修复考勤emp_id: ${res.affectedRows}行`,
     };
-  } catch (e: any) {
+  } catch (_e: any) {
     try {
       const [res]: any = await execute(`
         UPDATE hr_attendance a

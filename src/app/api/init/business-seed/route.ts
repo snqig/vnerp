@@ -10,7 +10,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const safeDelete = async (tableName: string) => {
       try {
         await conn.execute(`DELETE FROM ${tableName} WHERE deleted = 0 OR deleted IS NULL`);
-      } catch (e: any) {}
+      } catch (_e: any) {}
     };
 
     await safeDelete('inv_inbound_item');
@@ -32,7 +32,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     // 清理可能存在的重复库存数据
     try {
       await conn.execute('DELETE FROM inv_inventory');
-    } catch (e: any) {}
+    } catch (_e: any) {}
 
     const customers = [
       {

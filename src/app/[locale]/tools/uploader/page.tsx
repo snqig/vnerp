@@ -71,7 +71,6 @@ const typeColors: Record<string, string> = {
 
 export default function ProjectUploaderPage() {
   // 翻译钩子
-  const t = useTranslations('Common');
   const tc = useTranslations('Common');
 
   const [files, setFiles] = useState<FileInfo[]>([]);

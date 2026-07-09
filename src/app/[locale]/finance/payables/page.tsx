@@ -42,7 +42,6 @@ interface Payable {
 
 export default function PayablesPage() {
   // 翻译钩子
-  const t = useTranslations('Finance');
   const tc = useTranslations('Common');
 
   const [payables, setPayables] = useState<Payable[]>([]);

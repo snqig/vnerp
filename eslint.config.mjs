@@ -73,6 +73,14 @@ const eslintConfig = defineConfig([
       // 禁止显式 any 类型（警告级别，逐步清理）
       '@typescript-eslint/no-explicit-any': 'warn',
 
+      // 未使用变量：允许下划线前缀（约定为有意未使用）
+      '@typescript-eslint/no-unused-vars': ['warn', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+        destructuredArrayIgnorePattern: '^_',
+      }],
+
       // ban-ts-comment：允许 @ts-nocheck（dcprint/trace/route.ts 有未修复的 TS 错误）
       '@typescript-eslint/ban-ts-comment': ['error', {
         'ts-expect-error': 'allow-with-description',

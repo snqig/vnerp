@@ -70,7 +70,7 @@ export default function CuttingRecordsPage() {
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const [records, setRecords] = useState<CuttingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');

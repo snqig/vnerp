@@ -3,7 +3,7 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -128,7 +128,6 @@ const PAYMENT_METHODS: Record<string, string> = {
 
 export default function FinancePage() {
   // 翻译钩子
-  const t = useTranslations('Finance');
   const tc = useTranslations('Common');
 
   const [activeTab, setActiveTab] = useState('receivable');
@@ -200,7 +199,7 @@ export default function FinancePage() {
           setSummary((prev) => ({ ...prev, receivable: data.data.summary }));
         }
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('获取应收列表失败');
     } finally {
       setLoading(false);
@@ -222,7 +221,7 @@ export default function FinancePage() {
           setSummary((prev) => ({ ...prev, payable: data.data.summary }));
         }
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('获取应付列表失败');
     } finally {
       setLoading(false);
@@ -237,7 +236,7 @@ export default function FinancePage() {
       if (data.success) {
         setReceipts(data.data?.list || []);
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('获取收款记录失败');
     } finally {
       setLoading(false);
@@ -252,7 +251,7 @@ export default function FinancePage() {
       if (data.success) {
         setPayments(data.data?.list || []);
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('获取付款记录失败');
     } finally {
       setLoading(false);
@@ -266,7 +265,7 @@ export default function FinancePage() {
       if (data.success) {
         setCustomers(data.data?.list || data.data || []);
       }
-    } catch (e) {}
+    } catch (_e) {}
   };
 
   const fetchSuppliers = async () => {
@@ -276,7 +275,7 @@ export default function FinancePage() {
       if (data.success) {
         setSuppliers(data.data?.list || data.data || []);
       }
-    } catch (e) {}
+    } catch (_e) {}
   };
 
   useEffect(() => {
@@ -317,7 +316,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '创建失败');
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('创建应收单失败');
     }
   };
@@ -348,7 +347,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '创建失败');
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('创建应付单失败');
     }
   };
@@ -386,7 +385,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '创建失败');
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('创建收款记录失败');
     }
   };
@@ -424,7 +423,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '创建失败');
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('创建付款记录失败');
     }
   };
@@ -440,7 +439,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '删除失败');
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('删除失败');
     }
   };
@@ -456,7 +455,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '删除失败');
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('删除失败');
     }
   };
@@ -474,7 +473,7 @@ export default function FinancePage() {
         setDetailType(type);
         setDetailDialogOpen(true);
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('获取详情失败');
     }
   };

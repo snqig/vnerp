@@ -65,7 +65,6 @@ interface SystemConfigResponse {
 
 export default function BasicsSettingsPage() {
   // 翻译钩子
-  const t = useTranslations('Common');
   const tc = useTranslations('Common');
 
   const { hasRole, isAuthenticated } = useAuth();

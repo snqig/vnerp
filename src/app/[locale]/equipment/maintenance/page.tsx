@@ -124,7 +124,6 @@ const PLAN_STATUS: Record<number, { label: string; color: string }> = {
 };
 export default function EquipmentMaintenancePage() {
   // 翻译钩子
-  const t = useTranslations('Equipment');
   const tc = useTranslations('Common');
 
   const RECORD_RESULT: Record<number, { label: string; color: string }> = {

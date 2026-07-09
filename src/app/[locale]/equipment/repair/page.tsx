@@ -54,7 +54,6 @@ const typeMap: Record<number, string> = {
 
 export default function EquipmentRepairPage() {
   // 翻译钩子
-  const t = useTranslations('Equipment');
   const tc = useTranslations('Common');
 
   const statusMap: Record<

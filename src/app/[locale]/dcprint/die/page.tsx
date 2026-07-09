@@ -64,7 +64,6 @@ const statusMap: Record<
 
 export default function DieManagementPage() {
   // 翻译钩子
-  const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
 
   const { toast } = useToast();

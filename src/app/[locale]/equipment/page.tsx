@@ -84,7 +84,6 @@ const CURRENT_STATUS: Record<number, { label: string; color: string }> = {
 
 export default function EquipmentPage() {
   // 翻译钩子
-  const t = useTranslations('Equipment');
   const tc = useTranslations('Common');
 
   const [list, setList] = useState<Equipment[]>([]);

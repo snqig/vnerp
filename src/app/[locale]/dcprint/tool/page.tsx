@@ -44,7 +44,6 @@ import {
   Activity,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useTranslations } from 'next-intl';
 
 interface Tool {
   id: number;
@@ -104,7 +103,6 @@ const STATUS_MAP: Record<
 const TYPE_MAP: Record<number, string> = { 1: '刀模', 2: '网版' };
 
 export default function ToolManagementPage() {
-  const t = useTranslations();
   const { toast } = useToast();
 
   const [tools, setTools] = useState<Tool[]>([]);

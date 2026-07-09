@@ -12,26 +12,26 @@ export const POST = withPermission(
         await conn.execute(
           `ALTER TABLE inv_warehouse ADD COLUMN category_id INT UNSIGNED DEFAULT NULL COMMENT '仓库分类ID' AFTER id`
         );
-      } catch (e: any) {}
+      } catch (_e: any) {}
       try {
         await conn.execute(`ALTER TABLE inv_warehouse ADD KEY idx_category_id (category_id)`);
-      } catch (e: any) {}
+      } catch (_e: any) {}
 
       try {
         await conn.execute(
           `ALTER TABLE inv_inventory ADD COLUMN locked_qty DECIMAL(12,4) DEFAULT 0 COMMENT '锁定数量' AFTER quantity`
         );
-      } catch (e: any) {}
+      } catch (_e: any) {}
       try {
         await conn.execute(
           `ALTER TABLE inv_inventory ADD COLUMN available_qty DECIMAL(12,4) DEFAULT 0 COMMENT '可用数量' AFTER locked_qty`
         );
-      } catch (e: any) {}
+      } catch (_e: any) {}
       try {
         await conn.execute(
           `ALTER TABLE inv_inventory ADD COLUMN batch_no VARCHAR(100) DEFAULT NULL COMMENT '批次号' AFTER available_qty`
         );
-      } catch (e: any) {}
+      } catch (_e: any) {}
 
       await conn.execute('DELETE FROM inv_inventory');
       await conn.execute('ALTER TABLE inv_inventory AUTO_INCREMENT = 1');

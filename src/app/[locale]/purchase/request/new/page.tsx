@@ -75,7 +75,6 @@ const initialForm: RequestForm = {
 
 export default function NewPurchaseRequestPage() {
   // 翻译钩子
-  const t = useTranslations('Purchase');
   const tc = useTranslations('Common');
 
   const router = useRouter();

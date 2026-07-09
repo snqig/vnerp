@@ -75,7 +75,6 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export default function SystemConfigPage() {
   // 翻译钩子
-  const t = useTranslations('System');
   const tc = useTranslations('Common');
 
   const { toast } = useToast();

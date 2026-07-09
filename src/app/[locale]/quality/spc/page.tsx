@@ -124,7 +124,6 @@ const capabilityLabel = (value: number): string => {
 
 export default function SPCPage() {
   // 翻译钩子
-  const t = useTranslations('Quality');
   const tc = useTranslations('Common');
 
   const [activeTab, setActiveTab] = useState('xbar-r');

@@ -83,7 +83,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     for (const table of deleteTables) {
       try {
         await conn.execute(`DELETE FROM ${table}`);
-      } catch (e: any) {}
+      } catch (_e: any) {}
     }
 
     await conn.execute('SET FOREIGN_KEY_CHECKS=0');

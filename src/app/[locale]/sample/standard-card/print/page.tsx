@@ -463,20 +463,26 @@ function PrintPageContent() {
           boxSizing: 'border-box',
         }}
       >
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
           table { height: 100%; width: 100%; border-collapse: collapse; font-size: 12px; font-family: Arial, sans-serif; }
           table td { padding: 2px 4px !important; vertical-align: middle; text-align: center; border: 1px solid #333 !important; font-size: 12px !important; font-weight: normal !important; line-height: 1.4 !important; }
           .dark table td { border-color: rgba(255,255,255,0.2) !important; color: #e2e8f0 !important; }
           .border-none { border: none !important; }
           .border-bottom { border: none !important; border-bottom: 1px solid #000 !important; }
           .dark .border-bottom { border-bottom-color: rgba(255,255,255,0.3) !important; }
-        `}} />
+        `,
+          }}
+        />
 
         <table className="w-full border-collapse text-xs flex-1" style={{ tableLayout: 'fixed' }}>
           <tbody>
             <tr>
               <td colSpan={16} className="text-center border-none">
-                <h1 className="text-2xl font-bold text-[#1a3c7a] dark:text-blue-300">{companyName}</h1>
+                <h1 className="text-2xl font-bold text-[#1a3c7a] dark:text-blue-300">
+                  {companyName}
+                </h1>
               </td>
               <td colSpan={3} className="py-1 border-none">
                 <div className="flex items-center w-full h-full">
@@ -494,16 +500,18 @@ function PrintPageContent() {
                 {d.customer}
               </td>
               <td className="font-bold px-2 border-none">版次:</td>
-              <td className="font-bold border-none">
-                {d.version}
-              </td>
+              <td className="font-bold border-none">{d.version}</td>
               <td colSpan={4} className="text-center text-xl font-bold border-none">
                 标准卡（流程卡）
               </td>
               <td colSpan={4} className="text-center border-none">
-                <span className="bg-[#1a3c7a] dark:bg-blue-700 text-white px-3 py-1 rounded font-bold">HSF</span>
+                <span className="bg-[#1a3c7a] dark:bg-blue-700 text-white px-3 py-1 rounded font-bold">
+                  HSF
+                </span>
               </td>
-              <td colSpan={2} className="font-bold text-right px-2 border-none">日期：</td>
+              <td colSpan={2} className="font-bold text-right px-2 border-none">
+                日期：
+              </td>
               <td colSpan={2} className="font-bold border-none">
                 <div className="border-b border-black dark:border-gray-400">{d.date}</div>
               </td>
@@ -518,16 +526,22 @@ function PrintPageContent() {
               <td colSpan={4} className="border font-bold">
                 <InputCell value={d.productName} />
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center w-[8%]">客户料号</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center w-[8%]">
+                客户料号
+              </td>
               <td colSpan={3} className="border">
                 <InputCell value={d.customerCode} />
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center w-[8%]">成品尺寸</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center w-[8%]">
+                成品尺寸
+              </td>
               <td colSpan={4} className="border">
                 <InputCell value={d.finishedSize} />
               </td>
               <td className="border w-[4%]">m/m</td>
-              <td colSpan={2} className="border font-bold">公差+</td>
+              <td colSpan={2} className="border font-bold">
+                公差+
+              </td>
               <td className="border">
                 <InputCell value={d.tolerance} />
               </td>
@@ -535,28 +549,43 @@ function PrintPageContent() {
             </tr>
 
             <tr>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">材料名称</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                材料名称
+              </td>
               <td colSpan={4} className="border font-bold">
                 <InputCell value={d.materialName} />
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">排版方式</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                排版方式
+              </td>
               <td className="border">
                 <InputCell value={d.layoutType} />
               </td>
-              <td rowSpan={2} className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">间距</td>
+              <td
+                rowSpan={2}
+                className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center"
+              >
+                间距
+              </td>
               <td className="border">
                 <InputCell value={d.spacing} />
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">片料规格</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                片料规格
+              </td>
               <td className="border">
                 <InputCell value={d.sheetSpecs.width} />
               </td>
-              <td colSpan={2} className="border">m/m宽x</td>
+              <td colSpan={2} className="border">
+                m/m宽x
+              </td>
               <td className="border">
                 <InputCell value={d.sheetSpecs.length} />
               </td>
               <td className="border">m/m长</td>
-              <td colSpan={2} className="border font-bold">标准用量</td>
+              <td colSpan={2} className="border font-bold">
+                标准用量
+              </td>
               <td className="border">
                 <InputCell value={d.standardUsage} />
               </td>
@@ -564,7 +593,9 @@ function PrintPageContent() {
             </tr>
 
             <tr>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">纸芯类型</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                纸芯类型
+              </td>
               <td colSpan={4} className="border font-bold">
                 <div className="flex justify-center gap-3">
                   {['3#', '2#', '1#'].map((num) => (
@@ -580,14 +611,18 @@ function PrintPageContent() {
                   ))}
                 </div>
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">出纸方向</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                出纸方向
+              </td>
               <td className="border">
                 <InputCell value={d.paperDirection} />
               </td>
               <td className="border">
                 <InputCell value={d.spacingValue} />
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">卷料宽度</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                卷料宽度
+              </td>
               <td className="border">
                 <InputCell value={d.rollWidth} />
               </td>
@@ -597,7 +632,9 @@ function PrintPageContent() {
                 <InputCell value={d.paperEdge} />
               </td>
               <td className="border">mm</td>
-              <td colSpan={2} className="border font-bold">跳距</td>
+              <td colSpan={2} className="border font-bold">
+                跳距
+              </td>
               <td className="border">
                 <InputCell value={d.jumpDistance} />
               </td>
@@ -605,7 +642,14 @@ function PrintPageContent() {
             </tr>
 
             <tr>
-              <td rowSpan={2} className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{tc("craft")}<br/>{tc("process")}</td>
+              <td
+                rowSpan={2}
+                className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center"
+              >
+                {tc('craft')}
+                <br />
+                {tc('process')}
+              </td>
               <td colSpan={18} className="border">
                 <InputCell value={d.processFlow1} />
               </td>
@@ -617,7 +661,9 @@ function PrintPageContent() {
             </tr>
 
             <tr>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">印刷方式</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                印刷方式
+              </td>
               <td colSpan={6} className="border">
                 <div className="flex justify-center gap-3">
                   {['胶印', '卷料丝印', '片料丝印', '轮转印'].map((type) => (
@@ -633,30 +679,61 @@ function PrintPageContent() {
                   ))}
                 </div>
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">第一跳距</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                第一跳距
+              </td>
               <td className="border">
                 <InputCell value={d.firstJumpDistance} />
               </td>
-              <td colSpan={2} className="border font-bold text-center">覆 膜</td>
-              <td colSpan={4} className="border font-bold text-center">成 型</td>
-              <td colSpan={4} className="border font-bold text-center">MYLAR</td>
+              <td colSpan={2} className="border font-bold text-center">
+                覆 膜
+              </td>
+              <td colSpan={4} className="border font-bold text-center">
+                成 型
+              </td>
+              <td colSpan={4} className="border font-bold text-center">
+                MYLAR
+              </td>
             </tr>
 
             <tr>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">印序</td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">印色</td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">油墨编号</td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">菲林编号</td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">存放位置</td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">印版编号</td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">网目</td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">存放位置</td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">印面</td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">种类</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                印序
+              </td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                印色
+              </td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                油墨编号
+              </td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                菲林编号
+              </td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                存放位置
+              </td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                印版编号
+              </td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                网目
+              </td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                存放位置
+              </td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                印面
+              </td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                种类
+              </td>
               <td className="border">
                 <InputCell value={d.moldType} />
               </td>
-              <td colSpan={4} className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+              <td
+                colSpan={4}
+                className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center"
+              >
                 <div className="flex justify-center gap-3">
                   {['模切', '冲压'].map((type) => (
                     <label key={type} className="flex items-center gap-1">
@@ -671,7 +748,9 @@ function PrintPageContent() {
                   ))}
                 </div>
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">材料</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                材料
+              </td>
               <td colSpan={3} className="border">
                 <InputCell value={d.materialType} />
               </td>
@@ -710,11 +789,13 @@ function PrintPageContent() {
                     <td className="border">
                       <InputCell value={d.filmManufacturer} />
                     </td>
-                    <td colSpan={2} className="border">冲压方法</td>
+                    <td colSpan={2} className="border">
+                      冲压方法
+                    </td>
                     <td colSpan={2} className="border">
                       <InputCell value={d.stampingMethod} />
                     </td>
-                    <td className="border">{tc("specification")}</td>
+                    <td className="border">{tc('specification')}</td>
                     <td colSpan={2} className="border">
                       <InputCell value={d.mylarSpecs} />
                     </td>
@@ -726,7 +807,9 @@ function PrintPageContent() {
                     <td className="border">
                       <InputCell value={d.moldCode} />
                     </td>
-                    <td colSpan={2} className="border">模具编号</td>
+                    <td colSpan={2} className="border">
+                      模具编号
+                    </td>
                     <td colSpan={2} className="border">
                       <InputCell value={d.backMoldCode} />
                     </td>
@@ -737,11 +820,13 @@ function PrintPageContent() {
                   </>
                 ) : index === 2 ? (
                   <>
-                    <td className="border">{tc("size")}</td>
+                    <td className="border">{tc('size')}</td>
                     <td className="border">
                       <InputCell value={d.adhesiveSize} />
                     </td>
-                    <td colSpan={2} className="border">排模方法</td>
+                    <td colSpan={2} className="border">
+                      排模方法
+                    </td>
                     <td colSpan={2} className="border">
                       <InputCell value={d.backMylarMold} />
                     </td>
@@ -753,19 +838,37 @@ function PrintPageContent() {
                   </>
                 ) : index === 3 ? (
                   <>
-                    <td colSpan={2} className="border">背胶</td>
-                    <td colSpan={2} className="border">加虚线刀</td>
+                    <td colSpan={2} className="border">
+                      背胶
+                    </td>
+                    <td colSpan={2} className="border">
+                      加虚线刀
+                    </td>
                     <td colSpan={2} className="border">
                       <div className="flex justify-center gap-4">
                         <label className="flex items-center gap-1 text-xs">
-                          <input type="radio" checked={d.dashedKnife === true} readOnly className="w-3 h-3" /> 是
+                          <input
+                            type="radio"
+                            checked={d.dashedKnife === true}
+                            readOnly
+                            className="w-3 h-3"
+                          />{' '}
+                          是
                         </label>
                         <label className="flex items-center gap-1 text-xs">
-                          <input type="radio" checked={d.dashedKnife === false} readOnly className="w-3 h-3" /> 否
+                          <input
+                            type="radio"
+                            checked={d.dashedKnife === false}
+                            readOnly
+                            className="w-3 h-3"
+                          />{' '}
+                          否
                         </label>
                       </div>
                     </td>
-                    <td colSpan={4} className="border">包装</td>
+                    <td colSpan={4} className="border">
+                      包装
+                    </td>
                   </>
                 ) : index === 4 ? (
                   <>
@@ -773,7 +876,9 @@ function PrintPageContent() {
                     <td className="border">
                       <InputCell value={d.adhesiveType} />
                     </td>
-                    <td rowSpan={3} colSpan={2} className="border font-bold">切片方式</td>
+                    <td rowSpan={3} colSpan={2} className="border font-bold">
+                      切片方式
+                    </td>
                     <td className="border">
                       <InputCell value={d.slicePerRow} />
                     </td>
@@ -781,7 +886,9 @@ function PrintPageContent() {
                     <td colSpan={2} className="border">
                       <InputCell value={d.slicePerRoll} />
                     </td>
-                    <td colSpan={2} className="border">PCS/卷</td>
+                    <td colSpan={2} className="border">
+                      PCS/卷
+                    </td>
                   </>
                 ) : index === 5 ? (
                   <>
@@ -796,11 +903,13 @@ function PrintPageContent() {
                     <td colSpan={2} className="border">
                       <InputCell value={d.slicePerBag} />
                     </td>
-                    <td colSpan={2} className="border">PCS/扎</td>
+                    <td colSpan={2} className="border">
+                      PCS/扎
+                    </td>
                   </>
                 ) : (
                   <>
-                    <td className="border">{tc("specification")}</td>
+                    <td className="border">{tc('specification')}</td>
                     <td className="border">
                       <InputCell value={d.adhesiveSpecs} />
                     </td>
@@ -811,7 +920,9 @@ function PrintPageContent() {
                     <td colSpan={2} className="border">
                       <InputCell value={d.packingQty} />
                     </td>
-                    <td colSpan={2} className="border">PCS/袋</td>
+                    <td colSpan={2} className="border">
+                      PCS/袋
+                    </td>
                   </>
                 )}
               </tr>
@@ -820,7 +931,9 @@ function PrintPageContent() {
             {[8, 9, 10, 11, 12].map((rowNum) => (
               <tr key={`extra-${rowNum}`}>
                 {rowNum === 8 ? (
-                  <td rowSpan={3} className="border text-center font-bold">专色配比</td>
+                  <td rowSpan={3} className="border text-center font-bold">
+                    专色配比
+                  </td>
                 ) : rowNum === 9 || rowNum === 10 ? null : rowNum === 11 ? (
                   <td colSpan={3} className="border">
                     <InputCell value="电脑图档存储路径" />
@@ -844,15 +957,19 @@ function PrintPageContent() {
                 {rowNum === 8 || rowNum === 9 || rowNum === 10 ? (
                   <>
                     {rowNum === 8 ? (
-                      <td colSpan={2} className="border">离型纸</td>
+                      <td colSpan={2} className="border">
+                        离型纸
+                      </td>
                     ) : rowNum === 9 ? (
                       <td className="border">种类</td>
                     ) : (
-                      <td className="border">{tc("specification")}</td>
+                      <td className="border">{tc('specification')}</td>
                     )}
                     {rowNum === 8 ? null : (
                       <td className="border">
-                        <InputCell value={rowNum === 9 ? d.releasePaperType : d.releasePaperSpecs} />
+                        <InputCell
+                          value={rowNum === 9 ? d.releasePaperType : d.releasePaperSpecs}
+                        />
                       </td>
                     )}
                     <td colSpan={2} className="border">
@@ -861,11 +978,7 @@ function PrintPageContent() {
                     <td colSpan={2} className="border">
                       <InputCell
                         value={
-                          rowNum === 8
-                            ? d.backKnifeMold
-                            : rowNum === 9
-                              ? d.etchMold
-                              : d.extraField
+                          rowNum === 8 ? d.backKnifeMold : rowNum === 9 ? d.etchMold : d.extraField
                         }
                       />
                     </td>
@@ -879,14 +992,12 @@ function PrintPageContent() {
                       </td>
                     )}
                     {rowNum === 8 ? (
-                      <td colSpan={2} className="border">PCS/箱</td>
+                      <td colSpan={2} className="border">
+                        PCS/箱
+                      </td>
                     ) : (
                       <td colSpan={2} className="border">
-                        <InputCell
-                          value={
-                            rowNum === 9 ? d.paddingMaterial : d.packingMaterial
-                          }
-                        />
+                        <InputCell value={rowNum === 9 ? d.paddingMaterial : d.packingMaterial} />
                       </td>
                     )}
                   </>
@@ -903,27 +1014,39 @@ function PrintPageContent() {
             ))}
 
             <tr>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">制表</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                制表
+              </td>
               <td colSpan={2} className="border font-bold text-center">
                 <InputCell value={d.creator} />
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{tc("review")}</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                {tc('review')}
+              </td>
               <td className="border">
                 <InputCell value={d.reviewer} />
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">厂务</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                厂务
+              </td>
               <td colSpan={2} className="border font-bold text-center">
                 <InputCell value={d.factoryManager} />
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">品管</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                品管
+              </td>
               <td colSpan={2} className="border font-bold text-center">
                 <InputCell value={d.qualityManager} />
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">业务</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                业务
+              </td>
               <td colSpan={3} className="border font-bold text-center">
                 <InputCell value={d.sales} />
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">核准</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
+                核准
+              </td>
               <td colSpan={3} className="border font-bold text-center">
                 <InputCell value={d.approver} />
               </td>
@@ -956,8 +1079,6 @@ function Loading() {
 
 export default function PrintPage() {
   // 翻译钩子
-  const t = useTranslations('Common');
-  const tc = useTranslations('Common');
 
   return (
     <Suspense fallback={<Loading />}>

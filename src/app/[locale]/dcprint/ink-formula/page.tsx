@@ -45,7 +45,6 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useTranslations } from 'next-intl';
 
 // ===== 类型定义 =====
 interface InkColor {
@@ -123,7 +122,6 @@ const COST_STATUS_MAP: Record<number, { label: string; color: string }> = {
 };
 
 export default function InkFormulaVersionPage() {
-  const t = useTranslations('Common');
   const { toast } = useToast();
 
   // 色号管理状态

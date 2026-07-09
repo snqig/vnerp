@@ -108,7 +108,6 @@ const actionMap: Record<string, string> = {
 
 export default function ScreenPlatePage() {
   // 翻译钩子
-  const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
 
   const { toast } = useToast();

@@ -102,8 +102,7 @@ export async function batchConvertRequestToPurchaseOrder(
     try {
       const result = await convertRequestToPurchaseOrder(id);
       results.push(result);
-    } catch (e: any) {
-    }
+    } catch (_e: any) {}
   }
   return results;
 }

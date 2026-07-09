@@ -55,7 +55,6 @@ interface RequestItem {
 
 export default function PurchaseRequestDetailPage() {
   // 翻译钩子
-  const t = useTranslations('Purchase');
   const tc = useTranslations('Common');
 
   const statusMap: Record<number, { label: string; color: string }> = {
