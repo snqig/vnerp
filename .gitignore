@@ -10,7 +10,6 @@
 # 保留工程治理相关配置（需纳入版本控制）
 !.github/
 !.husky/
-!.trae/
 
 # 明确排除 IDE/工具/Agent 相关目录（与项目无关，不同步）
 .agentic-tools-mcp/
