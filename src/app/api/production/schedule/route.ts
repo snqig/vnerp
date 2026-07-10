@@ -113,7 +113,7 @@ export const POST = withPermission(
         for (const result of scheduling_results) {
           await connection.execute(
             `UPDATE prod_work_order
-           SET plan_start_date = ?, plan_end_date = ?, update_time = NOW()
+           SET plan_start_date = ?, plan_end_date = ?, status = 'released', update_time = NOW()
            WHERE id = ? AND deleted = 0 AND status IN ('pending', 'confirmed')`,
             [result.suggested_start_date, result.suggested_end_date, result.work_order_id]
           );
@@ -190,7 +190,25 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId, schedule_no: scheduleNo }, '排产计划创建成功');
+    const scheduleId = result.insertId;
+
+    // 如果指定了工单ID，同步更新工单状态和计划日期
+    const workOrderId = body.work_order_id;
+    if (workOrderId && scheduleId) {
+      await execute(
+        `UPDATE prod_work_order
+         SET status = 'released', plan_start_date = ?, plan_end_date = ?, update_time = NOW()
+         WHERE id = ? AND deleted = 0 AND status = 'pending'`,
+        [planned_start || null, planned_end || null, workOrderId]
+      );
+      // 更新排产记录的工单关联
+      await execute('UPDATE prd_schedule SET work_order_id = ? WHERE id = ?', [
+        workOrderId,
+        scheduleId,
+      ]);
+    }
+
+    return successResponse({ id: scheduleId, schedule_no: scheduleNo }, '排产计划创建成功');
   },
   { logTitle: '创建排产计划', logType: 'business' }
 );
@@ -238,6 +256,23 @@ export const DELETE = withPermission(
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) return errorResponse('ID不能为空', 400, 400);
+
+    // 查询排产记录，判断是否需要回退工单状态
+    const schedule: Loose = await query(
+      'SELECT work_order_id, status FROM prd_schedule WHERE id = ? AND deleted = 0',
+      [id]
+    );
+
+    if (schedule.length > 0 && schedule[0].work_order_id && schedule[0].status === 2) {
+      // 状态为2（已排产）的排产被删除时，回退工单状态为 pending
+      await execute(
+        `UPDATE prod_work_order
+         SET status = 'pending', plan_start_date = NULL, plan_end_date = NULL, update_time = NOW()
+         WHERE id = ? AND deleted = 0 AND status = 'released'`,
+        [schedule[0].work_order_id]
+      );
+    }
+
     await execute('UPDATE prd_schedule SET deleted = 1 WHERE id = ?', [id]);
     return successResponse(null, '删除成功');
   },

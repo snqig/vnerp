@@ -710,23 +710,35 @@ export const prdWorkOrder = mysqlTable(
 
 // ==================== 正式生产工单（prod_work_order 系列） ====================
 
-// 正式生产工单主表
+// 正式生产工单主表 — 与 DB schema.sql L2716 对齐
 export const prodWorkOrder = mysqlTable(
   'prod_work_order',
   {
     id: serial('id').primaryKey(),
     workOrderNo: varchar('work_order_no', { length: 50 }).notNull(),
+    orderId: bigint('order_id', { mode: 'number', unsigned: true }),
     orderNo: varchar('order_no', { length: 50 }),
     bomId: bigint('bom_id', { mode: 'number', unsigned: true }),
-    customerName: varchar('customer_name', { length: 100 }),
+    customerName: varchar('customer_name', { length: 200 }),
     productName: varchar('product_name', { length: 200 }),
-    quantity: decimal('quantity', { precision: 18, scale: 4 }).notNull(),
-    unit: varchar('unit', { length: 20 }).default('pcs'),
-    status: tinyint('status').default(1),
+    quantity: decimal('quantity', { precision: 15, scale: 2 }).default('0.00'),
+    unit: varchar('unit', { length: 20 }),
+    status: varchar('status', { length: 20 }).default('pending'),
     priority: varchar('priority', { length: 20 }).default('normal'),
     planStartDate: date('plan_start_date'),
     planEndDate: date('plan_end_date'),
+    actualStartDate: date('actual_start_date'),
+    actualEndDate: date('actual_end_date'),
+    remark: text('remark'),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: tinyint('deleted').default(0),
+    pickedQty: decimal('picked_qty', { precision: 10, scale: 2 }).default('0.00'),
+    finishedQty: decimal('finished_qty', { precision: 10, scale: 2 }).default('0.00'),
+    returnedQty: decimal('returned_qty', { precision: 10, scale: 2 }).default('0.00'),
+    totalMaterialCost: decimal('total_material_cost', { precision: 12, scale: 2 }).default('0.00'),
   },
   (table) => ({
     workOrderNoIdx: uniqueIndex('uk_prod_work_order_no').on(table.workOrderNo),
@@ -924,6 +936,69 @@ export const sampleProcessTemplateStep = mysqlTable(
   })
 );
 
+// ==================== 生产排产 ====================
+
+export const prdSchedule = mysqlTable(
+  'prd_schedule',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    scheduleNo: varchar('schedule_no', { length: 50 }).notNull(),
+    workOrderId: bigint('work_order_id', { mode: 'number', unsigned: true }),
+    orderId: bigint('order_id', { mode: 'number', unsigned: true }),
+    orderNo: varchar('order_no', { length: 50 }),
+    productId: bigint('product_id', { mode: 'number', unsigned: true }),
+    productCode: varchar('product_code', { length: 50 }),
+    productName: varchar('product_name', { length: 100 }),
+    workshop: varchar('workshop', { length: 30 }),
+    plannedQty: decimal('planned_qty', { precision: 12, scale: 3 }),
+    completedQty: decimal('completed_qty', { precision: 12, scale: 3 }).default('0'),
+    plannedStart: datetime('planned_start'),
+    plannedEnd: datetime('planned_end'),
+    actualStart: datetime('actual_start'),
+    actualEnd: datetime('actual_end'),
+    priority: tinyint('priority').default(2),
+    status: tinyint('status').default(1),
+    scheduler: varchar('scheduler', { length: 50 }),
+    remark: text('remark'),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    scheduleNoIdx: uniqueIndex('uk_schedule_no').on(table.scheduleNo),
+    workOrderIdIdx: index('idx_schedule_work_order').on(table.workOrderId),
+    workshopIdx: index('idx_schedule_workshop').on(table.workshop),
+    statusIdx: index('idx_schedule_status').on(table.status),
+    plannedStartIdx: index('idx_schedule_planned_start').on(table.plannedStart),
+  })
+);
+
+export const prdScheduleDetail = mysqlTable(
+  'prd_schedule_detail',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    scheduleId: bigint('schedule_id', { mode: 'number', unsigned: true }),
+    workOrderId: bigint('work_order_id', { mode: 'number', unsigned: true }),
+    colorSeqNo: int('color_seq_no'),
+    colorName: varchar('color_name', { length: 50 }),
+    equipmentId: bigint('equipment_id', { mode: 'number', unsigned: true }),
+    equipmentName: varchar('equipment_name', { length: 100 }),
+    plannedStart: datetime('planned_start'),
+    plannedEnd: datetime('planned_end'),
+    actualStart: datetime('actual_start'),
+    actualEnd: datetime('actual_end'),
+    durationHours: decimal('duration_hours', { precision: 8, scale: 2 }),
+    status: tinyint('status').default(1),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    scheduleIdIdx: index('idx_detail_schedule').on(table.scheduleId),
+    workOrderIdIdx: index('idx_detail_work_order').on(table.workOrderId),
+  })
+);
+
 // ==================== 类型导出 ====================
 
 // 仓库入库
@@ -958,6 +1033,10 @@ export type PrdWorkOrder = typeof prdWorkOrder.$inferSelect;
 export type ProdWorkOrder = typeof prodWorkOrder.$inferSelect;
 export type ProdWorkOrderItem = typeof prodWorkOrderItem.$inferSelect;
 export type ProdWorkOrderMaterialReq = typeof prodWorkOrderMaterialReq.$inferSelect;
+
+// 生产排产
+export type PrdSchedule = typeof prdSchedule.$inferSelect;
+export type PrdScheduleDetail = typeof prdScheduleDetail.$inferSelect;
 
 // 报价单
 export type SalQuote = typeof salQuote.$inferSelect;
