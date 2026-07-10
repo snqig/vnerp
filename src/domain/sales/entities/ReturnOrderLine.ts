@@ -14,6 +14,7 @@ export interface ReturnOrderLineProps {
   amount?: number;
   batchNo?: string;
   remark?: string;
+  deliveredQty?: number;
 }
 
 export class ReturnOrderLine {
@@ -60,6 +61,13 @@ export class ReturnOrderLine {
     }
     if (!props.lineNo || props.lineNo <= 0) {
       throw new Error('行号不能为空');
+    }
+    if (props.deliveredQty !== undefined && props.deliveredQty !== null) {
+      if (props.quantity > props.deliveredQty) {
+        throw new Error(
+          `退货数量不能超过已发货数量: 退货${props.quantity}, 已发${props.deliveredQty}`
+        );
+      }
     }
     return new ReturnOrderLine(props);
   }
