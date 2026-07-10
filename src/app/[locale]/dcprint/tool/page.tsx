@@ -62,6 +62,24 @@ interface Tool {
   status: number;
   manufacture_date: string | null;
   warehouse_location: string | null;
+  // 体系B 字段
+  asset_type: string | null;
+  layout_type: string | null;
+  pieces_per_impression: number | null;
+  material: string | null;
+  qr_code: string | null;
+  supplier_id: number | null;
+  maintenance_interval: number | null;
+  maintenance_count: number | null;
+  last_used_date: string | null;
+  // 体系C 字段
+  mesh_count: string | null;
+  mesh_material: string | null;
+  size: string | null;
+  tension_value: number | null;
+  frame_type: string | null;
+  customer_id: number | null;
+  reclaim_count: number | null;
   remark: string | null;
 }
 
@@ -134,6 +152,21 @@ export default function ToolManagementPage() {
     original_cost: 0,
     manufacture_date: '',
     warehouse_location: '',
+    // 体系B 字段 (刀模)
+    asset_type: '',
+    layout_type: '',
+    pieces_per_impression: 0,
+    material: '',
+    qr_code: '',
+    supplier_id: 0,
+    maintenance_interval: 0,
+    // 体系C 字段 (网版)
+    mesh_count: '',
+    mesh_material: '',
+    size: '',
+    tension_value: 0,
+    frame_type: '',
+    customer_id: 0,
     remark: '',
   });
   const [usageForm, setUsageForm] = useState({
@@ -204,6 +237,19 @@ export default function ToolManagementPage() {
       original_cost: 0,
       manufacture_date: '',
       warehouse_location: '',
+      asset_type: '',
+      layout_type: '',
+      pieces_per_impression: 0,
+      material: '',
+      qr_code: '',
+      supplier_id: 0,
+      maintenance_interval: 0,
+      mesh_count: '',
+      mesh_material: '',
+      size: '',
+      tension_value: 0,
+      frame_type: '',
+      customer_id: 0,
       remark: '',
     });
     setCreateOpen(true);
@@ -221,6 +267,19 @@ export default function ToolManagementPage() {
       original_cost: Number(tool.original_cost),
       manufacture_date: tool.manufacture_date || '',
       warehouse_location: tool.warehouse_location || '',
+      asset_type: tool.asset_type || '',
+      layout_type: tool.layout_type || '',
+      pieces_per_impression: tool.pieces_per_impression || 0,
+      material: tool.material || '',
+      qr_code: tool.qr_code || '',
+      supplier_id: tool.supplier_id || 0,
+      maintenance_interval: tool.maintenance_interval || 0,
+      mesh_count: tool.mesh_count || '',
+      mesh_material: tool.mesh_material || '',
+      size: tool.size || '',
+      tension_value: tool.tension_value || 0,
+      frame_type: tool.frame_type || '',
+      customer_id: tool.customer_id || 0,
       remark: tool.remark || '',
     });
     setCreateOpen(true);
@@ -229,16 +288,36 @@ export default function ToolManagementPage() {
   const submitForm = async () => {
     const method = editTool ? 'PUT' : 'POST';
     const url = editTool ? `/api/dcprint/tool/${editTool.id}` : '/api/dcprint/tool';
+    const commonFields = {
+      toolName: formData.tool_name,
+      spec: formData.spec,
+      totalLife: formData.total_life,
+      warningThreshold: formData.warning_threshold,
+      warehouseLocation: formData.warehouse_location,
+      assetType: formData.asset_type || undefined,
+      layoutType: formData.layout_type || undefined,
+      piecesPerImpression: formData.pieces_per_impression || undefined,
+      material: formData.material || undefined,
+      qrCode: formData.qr_code || undefined,
+      supplierId: formData.supplier_id || undefined,
+      maintenanceInterval: formData.maintenance_interval || undefined,
+      meshCount: formData.mesh_count || undefined,
+      meshMaterial: formData.mesh_material || undefined,
+      size: formData.size || undefined,
+      tensionValue: formData.tension_value || undefined,
+      frameType: formData.frame_type || undefined,
+      customerId: formData.customer_id || undefined,
+      remark: formData.remark,
+    };
     const body = editTool
-      ? {
-          tool_name: formData.tool_name,
-          spec: formData.spec,
-          total_life: formData.total_life,
-          warning_threshold: formData.warning_threshold,
-          warehouse_location: formData.warehouse_location,
-          remark: formData.remark,
-        }
-      : formData;
+      ? commonFields
+      : {
+          toolType: formData.tool_type,
+          toolCode: formData.tool_code,
+          originalCost: formData.original_cost,
+          manufactureDate: formData.manufacture_date,
+          ...commonFields,
+        };
     const res = await authFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
@@ -421,16 +500,13 @@ export default function ToolManagementPage() {
 
         {/* Filter */}
         <div className="flex gap-4 items-center">
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="全部类型" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">全部类型</SelectItem>
-              <SelectItem value="1">刀模</SelectItem>
-              <SelectItem value="2">网版</SelectItem>
-            </SelectContent>
-          </Select>
+          <Tabs value={filterType} onValueChange={setFilterType}>
+            <TabsList>
+              <TabsTrigger value="">全部</TabsTrigger>
+              <TabsTrigger value="1">刀模</TabsTrigger>
+              <TabsTrigger value="2">网版</TabsTrigger>
+            </TabsList>
+          </Tabs>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-32">
               <SelectValue placeholder="全部状态" />
@@ -465,7 +541,7 @@ export default function ToolManagementPage() {
                   <TableHead>类型</TableHead>
                   <TableHead>编码</TableHead>
                   <TableHead>名称</TableHead>
-                  <TableHead>{'类型'}</TableHead>
+                  <TableHead>{'使用寿命'}</TableHead>
                   <TableHead>净值</TableHead>
                   <TableHead>状态</TableHead>
                   <TableHead>操作</TableHead>
@@ -588,7 +664,7 @@ export default function ToolManagementPage() {
               {!editTool && (
                 <>
                   <div>
-                    <Label>{'刀具编码'}</Label>
+                    <Label>{'工装类型'}</Label>
                     <Select
                       value={String(formData.tool_type)}
                       onValueChange={(v) => setFormData({ ...formData, tool_type: Number(v) })}
@@ -603,7 +679,7 @@ export default function ToolManagementPage() {
                     </Select>
                   </div>
                   <div>
-                    <Label>{'刀具名称'}</Label>
+                    <Label>{'工装编码'}</Label>
                     <Input
                       value={formData.tool_code}
                       onChange={(e) => setFormData({ ...formData, tool_code: e.target.value })}
@@ -612,7 +688,7 @@ export default function ToolManagementPage() {
                 </>
               )}
               <div className="col-span-2">
-                <Label>{'规格型号'}</Label>
+                <Label>{'工装名称'}</Label>
                 <Input
                   value={formData.tool_name}
                   onChange={(e) => setFormData({ ...formData, tool_name: e.target.value })}
@@ -626,7 +702,7 @@ export default function ToolManagementPage() {
                 />
               </div>
               <div>
-                <Label>{'品牌'}</Label>
+                <Label>{'总寿命(次)'}</Label>
                 <Input
                   type="number"
                   value={formData.total_life}
@@ -634,7 +710,7 @@ export default function ToolManagementPage() {
                 />
               </div>
               <div>
-                <Label>{'原值'}</Label>
+                <Label>{'预警阈值(次)'}</Label>
                 <Input
                   type="number"
                   value={formData.warning_threshold}
@@ -645,7 +721,7 @@ export default function ToolManagementPage() {
               </div>
               {!editTool && (
                 <div>
-                  <Label>{'使用寿命'}</Label>
+                  <Label>{'原值(成本)'}</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -664,13 +740,103 @@ export default function ToolManagementPage() {
                 />
               </div>
               <div>
-                <Label>{'预警阈值'}</Label>
+                <Label>{'生产日期'}</Label>
                 <Input
                   type="date"
                   value={formData.manufacture_date}
                   onChange={(e) => setFormData({ ...formData, manufacture_date: e.target.value })}
                 />
               </div>
+              {/* 体系B 字段 — 仅刀模显示 */}
+              {formData.tool_type === 1 && (
+                <>
+                  <div>
+                    <Label>{'资产类型'}</Label>
+                    <Input
+                      value={formData.asset_type}
+                      onChange={(e) => setFormData({ ...formData, asset_type: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>{'版面类型'}</Label>
+                    <Input
+                      value={formData.layout_type}
+                      onChange={(e) => setFormData({ ...formData, layout_type: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>{'每版印张数'}</Label>
+                    <Input
+                      type="number"
+                      value={formData.pieces_per_impression}
+                      onChange={(e) =>
+                        setFormData({ ...formData, pieces_per_impression: Number(e.target.value) })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>{'材质'}</Label>
+                    <Input
+                      value={formData.material}
+                      onChange={(e) => setFormData({ ...formData, material: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>{'保养间隔(印数)'}</Label>
+                    <Input
+                      type="number"
+                      value={formData.maintenance_interval}
+                      onChange={(e) =>
+                        setFormData({ ...formData, maintenance_interval: Number(e.target.value) })
+                      }
+                    />
+                  </div>
+                </>
+              )}
+              {/* 体系C 字段 — 仅网版显示 */}
+              {formData.tool_type === 2 && (
+                <>
+                  <div>
+                    <Label>{'目数'}</Label>
+                    <Input
+                      value={formData.mesh_count}
+                      onChange={(e) => setFormData({ ...formData, mesh_count: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>{'丝网材质'}</Label>
+                    <Input
+                      value={formData.mesh_material}
+                      onChange={(e) => setFormData({ ...formData, mesh_material: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>{'尺寸'}</Label>
+                    <Input
+                      value={formData.size}
+                      onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>{'张力值'}</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={formData.tension_value}
+                      onChange={(e) =>
+                        setFormData({ ...formData, tension_value: Number(e.target.value) })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>{'网框类型'}</Label>
+                    <Input
+                      value={formData.frame_type}
+                      onChange={(e) => setFormData({ ...formData, frame_type: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
               <div className="col-span-2">
                 <Label>备注</Label>
                 <Textarea

@@ -201,6 +201,10 @@ export default function DeliveryPage() {
   const [detailData, setDetailData] = useState<Shipment | null>(null);
   const [detailItems, setDetailItems] = useState<ShipmentItem[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [salesOrders, setSalesOrders] = useState<
+    Array<{ id: number; order_no: string; customer_id: number; customer_name: string }>
+  >([]);
+  const [warehouses, setWarehouses] = useState<Array<{ id: number; name: string }>>([]);
   const [total, setTotal] = useState(0);
   const [shipForm, setShipForm] = useState<{
     // 扫码发货表单
@@ -277,10 +281,40 @@ export default function DeliveryPage() {
     }
   }, []);
 
+  const fetchSalesOrders = useCallback(async () => {
+    try {
+      const res = await authFetch('/api/orders/sales?status=2&pageSize=200');
+      const result = await res.json();
+      if (result.success) {
+        setSalesOrders(result.data?.list || result.data || []);
+      }
+    } catch (e) {
+      logger.error({ module: 'Sales', action: 'fetchSalesOrders' }, '获取销售订单列表失败', {
+        error: (e as Error).message,
+      });
+    }
+  }, []);
+
+  const fetchWarehouses = useCallback(async () => {
+    try {
+      const res = await authFetch('/api/inventory/warehouses');
+      const result = await res.json();
+      if (result.success) {
+        setWarehouses(result.data?.list || result.data || []);
+      }
+    } catch (e) {
+      logger.error({ module: 'Sales', action: 'fetchWarehouses' }, '获取仓库列表失败', {
+        error: (e as Error).message,
+      });
+    }
+  }, []);
+
   useEffect(() => {
     fetchData();
     fetchCustomers();
-  }, [fetchData, fetchCustomers]);
+    fetchSalesOrders();
+    fetchWarehouses();
+  }, [fetchData, fetchCustomers, fetchSalesOrders, fetchWarehouses]);
 
   const addItem = () => {
     setForm((prev) => ({
@@ -770,20 +804,55 @@ export default function DeliveryPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{tc('text_ir1eao')}</Label>
-                <Input
-                  type="date"
-                  value={form.delivery_date || ''}
-                  onChange={(e) => setForm((prev) => ({ ...prev, delivery_date: e.target.value }))}
-                />
+                <Label>
+                  关联销售订单
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={String(form.sales_order_id || '')}
+                  onValueChange={(v) => {
+                    const order = salesOrders.find((o) => o.id === parseInt(v));
+                    setForm((prev) => ({
+                      ...prev,
+                      sales_order_id: parseInt(v),
+                      order_no: order?.order_no || '',
+                      customer_id: order?.customer_id || prev.customer_id,
+                      customer_name: order?.customer_name || prev.customer_name,
+                    }));
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择销售订单" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {salesOrders.map((o) => (
+                      <SelectItem key={o.id} value={String(o.id)}>
+                        {o.order_no} - {o.customer_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label>关联订单号</Label>
-                <Input
-                  value={form.order_no || ''}
-                  onChange={(e) => setForm((prev) => ({ ...prev, order_no: e.target.value }))}
-                  placeholder="销售订单号"
-                />
+                <Label>
+                  仓库
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={String(form.warehouse_id || '')}
+                  onValueChange={(v) => setForm((prev) => ({ ...prev, warehouse_id: parseInt(v) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择仓库" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {warehouses.map((w) => (
+                      <SelectItem key={w.id} value={String(w.id)}>
+                        {w.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">

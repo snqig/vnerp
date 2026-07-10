@@ -236,11 +236,11 @@ export default function ReturnPage() {
     }
   };
 
-  const updateStatus = async (id: number, status: number) => {
+  const updateStatus = async (id: number, action: 'approve' | 'complete' | 'cancel') => {
     try {
       const res = await authFetch('/api/sales/return', {
         method: 'PUT',
-        body: JSON.stringify({ id, status }),
+        body: JSON.stringify({ id, action }),
       });
       const result = await res.json();
       if (result.success) {
@@ -438,7 +438,7 @@ export default function ReturnPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => updateStatus(r.id, 2)}
+                              onClick={() => updateStatus(r.id, 'approve')}
                               title={t('approve')}
                             >
                               <Badge className="bg-blue-100 text-blue-800 text-xs">
@@ -450,7 +450,7 @@ export default function ReturnPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => updateStatus(r.id, 3)}
+                              onClick={() => updateStatus(r.id, 'complete')}
                               title={t('confirmReturn')}
                             >
                               <Badge className="bg-green-100 text-green-800 text-xs">

@@ -33,6 +33,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
+import {
   Plus,
   Trash2,
   Save,
@@ -71,6 +81,9 @@ interface Tool {
   tool_code: string;
   tool_name: string;
   tool_type: number;
+  status: number;
+  total_life: number;
+  remain_life: number;
 }
 interface ProcessStep {
   id: number;
@@ -100,6 +113,13 @@ export default function SampleCardInputV2Page() {
   const [tools, setTools] = useState<Tool[]>([]);
   const [processSteps, setProcessSteps] = useState<ProcessStep[]>([]);
   const [materialSearch, setMaterialSearch] = useState<Record<number, string>>({});
+  const [pendingTool, setPendingTool] = useState<{
+    field: 'die_tool_id' | 'screen_plate_id';
+    toolId: number;
+    toolName: string;
+    remainLife: number;
+    totalLife: number;
+  } | null>(null);
 
   const { toast } = useToast();
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
@@ -250,8 +270,38 @@ export default function SampleCardInputV2Page() {
     }
   };
 
-  const dieTools = tools.filter((t) => t.tool_type === 1);
-  const screenTools = tools.filter((t) => t.tool_type === 2);
+  const dieTools = tools.filter((t) => t.tool_type === 1 && [2, 4].includes(t.status));
+  const screenTools = tools.filter((t) => t.tool_type === 2 && [2, 4].includes(t.status));
+
+  const isRedWarning = (t: Tool) =>
+    t.status === 4 && t.total_life > 0 && t.remain_life <= t.total_life * 0.05;
+
+  const handleToolSelect = (field: 'die_tool_id' | 'screen_plate_id', toolId: number) => {
+    const tool = tools.find((t) => t.id === toolId);
+    if (!tool) return;
+    if (isRedWarning(tool)) {
+      setPendingTool({
+        field,
+        toolId,
+        toolName: `${tool.tool_code} - ${tool.tool_name}`,
+        remainLife: tool.remain_life,
+        totalLife: tool.total_life,
+      });
+      return;
+    }
+    form.updateField(field, toolId);
+  };
+
+  const confirmPendingTool = () => {
+    if (!pendingTool) return;
+    form.updateField(pendingTool.field, pendingTool.toolId);
+    toast({
+      title: '已引用红色预警工装',
+      description: `${pendingTool.toolName}（剩余寿命 ${pendingTool.remainLife}/${pendingTool.totalLife}）`,
+      variant: 'destructive',
+    });
+    setPendingTool(null);
+  };
   const filteredMaterials = (keyword: string) =>
     !keyword
       ? materials.slice(0, 10)
@@ -273,8 +323,7 @@ export default function SampleCardInputV2Page() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-xl font-bold">
-            {cardId ? '编辑工艺卡' : '新建工艺卡'}
-            {'查看工艺卡'}
+            {isReadonly ? '查看工艺卡' : cardId ? '编辑工艺卡' : '新建工艺卡'}
           </h1>
           {form.formData.sample_no && <Badge variant="outline">{form.formData.sample_no}</Badge>}
           {form.formData.status && STATUS_MAP[form.formData.status] && (
@@ -364,7 +413,7 @@ export default function SampleCardInputV2Page() {
                 />
               </div>
               <div className="space-y-1">
-                <Label>{'产品名称'}</Label>
+                <Label>基材</Label>
                 <Select
                   value={
                     form.formData.substrate_material_id
@@ -395,7 +444,7 @@ export default function SampleCardInputV2Page() {
                 />
               </div>
               <div className="space-y-1">
-                <Label>{'客户名称'}</Label>
+                <Label>印刷颜色</Label>
                 <Input
                   value={form.formData.print_color || ''}
                   onChange={(e) => form.updateField('print_color', e.target.value)}
@@ -403,7 +452,7 @@ export default function SampleCardInputV2Page() {
                 />
               </div>
               <div className="space-y-1">
-                <Label>{'基材'}</Label>
+                <Label>油墨色号</Label>
                 <Select
                   value={form.formData.ink_color_id ? String(form.formData.ink_color_id) : ''}
                   onValueChange={(v) => form.updateField('ink_color_id', Number(v))}
@@ -422,10 +471,10 @@ export default function SampleCardInputV2Page() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label>{'印刷颜色'}</Label>
+                <Label>刀模</Label>
                 <Select
                   value={form.formData.die_tool_id ? String(form.formData.die_tool_id) : ''}
-                  onValueChange={(v) => form.updateField('die_tool_id', Number(v))}
+                  onValueChange={(v) => handleToolSelect('die_tool_id', Number(v))}
                   disabled={isReadonly}
                 >
                   <SelectTrigger>
@@ -435,16 +484,26 @@ export default function SampleCardInputV2Page() {
                     {dieTools.map((t) => (
                       <SelectItem key={t.id} value={String(t.id)}>
                         {t.tool_code} - {t.tool_name}
+                        {t.status === 4 && (
+                          <span
+                            className={
+                              isRedWarning(t) ? 'text-red-600 font-bold' : 'text-yellow-600'
+                            }
+                          >
+                            {isRedWarning(t) ? ' 红色预警' : ' 预警'}（剩余 {t.remain_life}/
+                            {t.total_life}）
+                          </span>
+                        )}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label>{'模切'}</Label>
+                <Label>网版</Label>
                 <Select
                   value={form.formData.screen_plate_id ? String(form.formData.screen_plate_id) : ''}
-                  onValueChange={(v) => form.updateField('screen_plate_id', Number(v))}
+                  onValueChange={(v) => handleToolSelect('screen_plate_id', Number(v))}
                   disabled={isReadonly}
                 >
                   <SelectTrigger>
@@ -454,6 +513,16 @@ export default function SampleCardInputV2Page() {
                     {screenTools.map((t) => (
                       <SelectItem key={t.id} value={String(t.id)}>
                         {t.tool_code} - {t.tool_name}
+                        {t.status === 4 && (
+                          <span
+                            className={
+                              isRedWarning(t) ? 'text-red-600 font-bold' : 'text-yellow-600'
+                            }
+                          >
+                            {isRedWarning(t) ? ' 红色预警' : ' 预警'}（剩余 {t.remain_life}/
+                            {t.total_life}）
+                          </span>
+                        )}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -812,7 +881,7 @@ export default function SampleCardInputV2Page() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 flex items-center gap-1">
                     <Package className="h-4 w-4" />
-                    {'物料清单'}
+                    物料成本
                   </span>
                   <span className="font-mono">¥{form.cost.materialCost.toFixed(2)}</span>
                 </div>
@@ -826,7 +895,7 @@ export default function SampleCardInputV2Page() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 flex items-center gap-1">
                     <Wrench className="h-4 w-4" />
-                    {'工序清单'}
+                    工装成本
                   </span>
                   <span className="font-mono">¥{form.cost.toolCost.toFixed(2)}</span>
                 </div>
@@ -897,6 +966,33 @@ export default function SampleCardInputV2Page() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={pendingTool !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingTool(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>红色预警工装引用确认</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingTool && (
+                <>
+                  工装 <strong>{pendingTool.toolName}</strong> 已进入红色预警状态， 剩余寿命仅{' '}
+                  {pendingTool.remainLife} / {pendingTool.totalLife} 次。
+                  <br />
+                  继续引用可能导致生产中断或质量风险，请确认是否仍要引用此工装。
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingTool(null)}>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPendingTool}>确认引用</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 }

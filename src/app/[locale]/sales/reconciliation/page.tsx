@@ -204,10 +204,10 @@ export default function ReconciliationPage() {
   const viewDetail = async (rc: Reconciliation) => {
     setDetailData(rc);
     try {
-      const res = await fetch(`/api/sales/reconciliation?id=${rc.id}`);
+      const res = await authFetch(`/api/sales/reconciliation?id=${rc.id}`);
       const result = await res.json();
       if (result.success) {
-        setDetailItems(result.data?.details || []);
+        setDetailItems(result.data?.lines || []);
       }
     } catch {
       setDetailItems([]);
