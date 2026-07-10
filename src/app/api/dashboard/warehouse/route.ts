@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function GET(_request: NextRequest) {
   try {
@@ -24,7 +25,11 @@ export async function GET(_request: NextRequest) {
         overview.lowStock = Number(rows[0].low_stock || 0);
         overview.totalValue = Number(rows[0].total_value || 0);
       }
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'warehouse' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     try {
       const inRows: Loose = await query(
@@ -37,7 +42,11 @@ export async function GET(_request: NextRequest) {
         overview.todayInbound = Number(inRows[0].total || 0);
       if (Array.isArray(outRows) && outRows.length > 0)
         overview.todayOutbound = Number(outRows[0].total || 0);
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'warehouse' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let categoryDistribution: Loose[] = [];
     try {
@@ -49,7 +58,11 @@ export async function GET(_request: NextRequest) {
         WHERE m.deleted = 0 AND m.status = 1 GROUP BY m.material_type ORDER BY count DESC
       `);
       categoryDistribution = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'warehouse' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let lowStockItems: Loose[] = [];
     try {
@@ -62,7 +75,11 @@ export async function GET(_request: NextRequest) {
         ORDER BY (COALESCE(i.quantity, 0) / NULLIF(m.safety_stock, 0)) ASC LIMIT 10
       `);
       lowStockItems = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'warehouse' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let recentTransactions: Loose[] = [];
     try {
@@ -74,7 +91,11 @@ export async function GET(_request: NextRequest) {
         ORDER BY t.create_time DESC LIMIT 10
       `);
       recentTransactions = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'warehouse' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let warehouseOccupancy: Loose[] = [];
     try {
@@ -86,7 +107,11 @@ export async function GET(_request: NextRequest) {
         WHERE w.deleted = 0 GROUP BY w.id, w.warehouse_name
       `);
       warehouseOccupancy = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'warehouse' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     return NextResponse.json({
       success: true,

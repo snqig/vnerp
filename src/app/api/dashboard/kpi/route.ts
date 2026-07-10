@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { logger } from '@/lib/logger';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -55,7 +56,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       otd.rate =
         otd.totalOrders > 0 ? Math.round((otd.onTimeOrders / otd.totalOrders) * 10000) / 100 : 0;
     }
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   // ========================================
   // 2. 库存周转率 (Inventory Turnover)
@@ -88,7 +93,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         : 0;
     inventoryTurnover.daysOnHand =
       inventoryTurnover.rate > 0 ? Math.round(365 / inventoryTurnover.rate) : 0;
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   // ========================================
   // 3. OEE (Overall Equipment Effectiveness) 设备综合效率
@@ -141,7 +150,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       oee.overall =
         Math.round(((oee.availability * oee.performance * oee.quality) / 10000) * 100) / 100;
     }
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   // ========================================
   // 4. 质量合格率 (Quality Pass Rate)
@@ -177,7 +190,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       qualityRate.incomingTotal > 0
         ? Math.round((qualityRate.incomingPassed / qualityRate.incomingTotal) * 10000) / 100
         : 0;
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   try {
     const processRows: Loose = await query(
@@ -196,7 +213,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       qualityRate.processTotal > 0
         ? Math.round((qualityRate.processPassed / qualityRate.processTotal) * 10000) / 100
         : 0;
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   try {
     const finalRows: Loose = await query(
@@ -215,7 +236,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       qualityRate.finalTotal > 0
         ? Math.round((qualityRate.finalPassed / qualityRate.finalTotal) * 10000) / 100
         : 0;
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   const totalInspections =
     qualityRate.incomingTotal + qualityRate.processTotal + qualityRate.finalTotal;
@@ -261,7 +286,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         };
       });
     }
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   // ========================================
   // 6. 客户信用额度使用率
@@ -292,7 +321,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         usageRate: Number(c.usage_rate),
       }));
     }
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   // ========================================
   // 7. FIFO合规率
@@ -335,7 +368,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       fifoCompliance.totalOutbound > 0
         ? Math.round((fifoCompliance.fifoFollowed / fifoCompliance.totalOutbound) * 10000) / 100
         : 100;
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   // ========================================
   // 8. 部门协作效率
@@ -362,7 +399,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     departmentEfficiency.reviewCount = Number(reviewRows[0]?.total || 0);
     departmentEfficiency.contractReviewAvgDays =
       Math.round(Number(reviewRows[0]?.avg_days || 0) * 100) / 100;
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   try {
     const conversionRows: Loose = await query(
@@ -379,7 +420,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     departmentEfficiency.conversionCount = Number(conversionRows[0]?.total || 0);
     departmentEfficiency.sampleToMassAvgDays =
       Math.round(Number(conversionRows[0]?.avg_days || 0) * 100) / 100;
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   // ========================================
   // 9. 墨耗率 (Ink Consumption Rate)
@@ -416,7 +461,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
           (1 - inkConsumptionRate.theoreticalUsage / inkConsumptionRate.actualUsage) * 10000
         ) / 100;
     }
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   try {
     const inkByWO: Loose = await query(
@@ -437,7 +486,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params
     );
     inkConsumptionRate.byWorkOrder = Array.isArray(inkByWO) ? inkByWO : [];
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   // ========================================
   // 10. 纸张利用率 (Paper Utilization Rate)
@@ -473,7 +526,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       paperUtilizationRate.rate =
         Math.round((paperUtilizationRate.outputQty / paperUtilizationRate.inputQty) * 10000) / 100;
     }
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   try {
     const paperByProcess: Loose = await query(
@@ -494,7 +551,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params
     );
     paperUtilizationRate.byProcess = Array.isArray(paperByProcess) ? paperByProcess : [];
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   // ========================================
   // 11. 余墨再利用率 (Surplus Ink Reuse Rate)
@@ -532,7 +593,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         Math.round((surplusInkReuseRate.totalReused / surplusInkReuseRate.totalReturned) * 10000) /
         100;
     }
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   // ========================================
   // 12. 换版时间 (Setup/Changeover Time)
@@ -589,7 +654,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
           ? Math.round((setupTime.totalMinutes / setupTime.totalSetups) * 100) / 100
           : 0;
     }
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   // ========================================
   // 13. 首次通过率 FTQ (First Time Quality)
@@ -616,7 +685,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       ftq.totalFirstPiece > 0
         ? Math.round((ftq.passedFirstPiece / ftq.totalFirstPiece) * 10000) / 100
         : 0;
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   // ========================================
   // 14. 呆滞库存率 (Stale Inventory Rate)
@@ -654,7 +727,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
             (staleInventoryRate.staleValue / staleInventoryRate.totalInventoryValue) * 10000
           ) / 100
         : 0;
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   // ========================================
   // 15. OEE 六大损失分类
@@ -685,7 +762,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     oeeLossAnalysis.breakdownLoss = Number(lossRows[0]?.breakdown_count || 0);
     oeeLossAnalysis.setupLoss = Number(lossRows[0]?.setup_count || 0);
     oeeLossAnalysis.idleLoss = Number(lossRows[0]?.idle_count || 0);
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   return successResponse({
     otd,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getConfig } from '@/lib/global-config';
+import { logger } from '@/lib/logger';
 
 export async function GET(_request: NextRequest) {
   try {
@@ -28,7 +29,11 @@ export async function GET(_request: NextRequest) {
         overview.pendingDelivery = Number(rows[0].pending || 0);
         overview.completedOrders = Number(rows[0].completed || 0);
       }
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'sales' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     try {
       const rows: Loose = await query(`
@@ -37,7 +42,11 @@ export async function GET(_request: NextRequest) {
       `);
       if (Array.isArray(rows) && rows.length > 0)
         overview.monthRevenue = Number(rows[0].total || 0);
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'sales' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let orderTrend: Loose[] = [];
     try {
@@ -47,7 +56,11 @@ export async function GET(_request: NextRequest) {
         GROUP BY DATE(create_time) ORDER BY date
       `);
       orderTrend = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'sales' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let topCustomers: Loose[] = [];
     try {
@@ -58,7 +71,11 @@ export async function GET(_request: NextRequest) {
         WHERE o.deleted = 0 GROUP BY c.customer_name ORDER BY total_amount DESC LIMIT 5
       `);
       topCustomers = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'sales' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let topProducts: Loose[] = [];
     try {
@@ -67,7 +84,11 @@ export async function GET(_request: NextRequest) {
         FROM sal_order_item WHERE deleted = 0 GROUP BY product_name ORDER BY total_amount DESC LIMIT 5
       `);
       topProducts = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'sales' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let recentOrders: Loose[] = [];
     try {
@@ -78,7 +99,11 @@ export async function GET(_request: NextRequest) {
         WHERE o.deleted = 0 ORDER BY o.create_time DESC LIMIT 10
       `);
       recentOrders = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'sales' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let statusDistribution: Loose[] = [];
     try {
@@ -86,7 +111,11 @@ export async function GET(_request: NextRequest) {
         SELECT status, COUNT(*) as count FROM sal_order WHERE deleted = 0 GROUP BY status
       `);
       statusDistribution = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'sales' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     return NextResponse.json({
       success: true,

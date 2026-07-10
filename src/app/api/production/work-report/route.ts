@@ -8,6 +8,9 @@ import {
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { getWrPrefix, generateDocNo } from '@/lib/global-config';
+import { secureLog } from '@/lib/logger';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
+import { WorkReportedEvent } from '@/domain/production/events/WorkOrderEvents';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -67,8 +70,8 @@ export const POST = withPermission(
       const scrapQty = parseFloat(body.scrap_qty) || 0;
 
       await conn.execute(
-        `INSERT INTO prd_work_report (report_no, work_order_id, work_order_no, process_name, process_seq, equipment_id, operator_id, operator_name, plan_qty, completed_qty, qualified_qty, defective_qty, scrap_qty, start_time, end_time, work_hours, is_first_piece, first_piece_status, first_piece_inspector, remark)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO prd_work_report (report_no, work_order_id, work_order_no, process_name, process_seq, equipment_id, operator_id, operator_name, plan_qty, completed_qty, qualified_qty, defective_qty, scrap_qty, start_time, end_time, work_hours, is_first_piece, first_piece_status, first_piece_inspector, remark, tool_id, screen_plate_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           reportNo,
           body.work_order_id,
@@ -90,6 +93,8 @@ export const POST = withPermission(
           body.first_piece_status || null,
           body.first_piece_inspector || null,
           body.remark || null,
+          body.tool_id || null,
+          body.screen_plate_id || null,
         ]
       );
 
@@ -159,6 +164,30 @@ export const POST = withPermission(
             ]
           );
         }
+      }
+
+      const toolIds = [body.tool_id, body.screen_plate_id]
+        .map((v: unknown) => Number(v))
+        .filter((v: number) => Number.isFinite(v) && v > 0);
+      if (toolIds.length > 0) {
+        await getDomainEventOutbox().saveEvents(conn, 'WorkReport', reportId, [
+          new WorkReportedEvent({
+            workOrderId: Number(body.work_order_id),
+            workOrderNo: body.work_order_no || String(body.work_order_id),
+            reportId,
+            completedQty,
+            toolIds,
+            processName: body.process_name || '',
+            operatorId: body.operator_id ? Number(body.operator_id) : undefined,
+            operatorName: body.operator_name || undefined,
+          }),
+        ]);
+        secureLog('info', '[work-report] WorkReportedEvent published', {
+          reportId,
+          workOrderId: body.work_order_id,
+          toolIds,
+          completedQty,
+        });
       }
 
       return { id: reportId, report_no: reportNo };

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getConfig } from '@/lib/global-config';
+import { logger } from '@/lib/logger';
 
 export async function GET(_request: NextRequest) {
   try {
@@ -30,7 +31,11 @@ export async function GET(_request: NextRequest) {
       if (Array.isArray(payRows) && payRows.length > 0)
         overview.totalPayable = Number(payRows[0].total || 0);
       overview.netProfit = overview.totalReceivable - overview.totalPayable;
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'finance' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     try {
       const revRows: Loose = await query(
@@ -43,7 +48,11 @@ export async function GET(_request: NextRequest) {
         overview.monthRevenue = Number(revRows[0].total || 0);
       if (Array.isArray(expRows) && expRows.length > 0)
         overview.monthExpense = Number(expRows[0].total || 0);
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'finance' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let revenueTrend: Loose[] = [];
     try {
@@ -53,7 +62,11 @@ export async function GET(_request: NextRequest) {
         GROUP BY DATE(receipt_date) ORDER BY date
       `);
       revenueTrend = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'finance' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let expenseTrend: Loose[] = [];
     try {
@@ -63,7 +76,11 @@ export async function GET(_request: NextRequest) {
         GROUP BY DATE(payment_date) ORDER BY date
       `);
       expenseTrend = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'finance' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let receivableAging: Loose[] = [];
     try {
@@ -80,7 +97,11 @@ export async function GET(_request: NextRequest) {
         FROM fin_receivable WHERE deleted = 0 AND status = 1 GROUP BY aging
       `);
       receivableAging = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'finance' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let recentTransactions: Loose[] = [];
     try {
@@ -95,7 +116,11 @@ export async function GET(_request: NextRequest) {
       recentTransactions = [...receipts, ...payments]
         .sort((a: Loose, b: Loose) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 10);
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'finance' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let topPayables: Loose[] = [];
     try {
@@ -106,7 +131,11 @@ export async function GET(_request: NextRequest) {
         WHERE p.deleted = 0 AND p.status = 1 GROUP BY s.supplier_name ORDER BY total DESC LIMIT 5
       `);
       topPayables = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'finance' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     return NextResponse.json({
       success: true,

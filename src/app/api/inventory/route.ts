@@ -1,4 +1,4 @@
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { query, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
@@ -315,7 +315,7 @@ export const POST = withPermission(
             const newQuantity = parseFloat(batch.quantity) - quantity;
 
             const [updateResult]: Loose = await conn.execute(
-              'UPDATE inv_inventory_batch SET available_qty = ?, quantity = ?, version = version + 1, update_time = NOW() WHERE id = ? AND version = ?',
+              'UPDATE inv_inventory_batch SET available_qty = ?, quantity = ?, version = version + 1, update_time = NOW() WHERE id = ? AND version = ? AND deleted = 0',
               [newAvailableQty, newQuantity, batch.id, batch.version]
             );
 
@@ -557,7 +557,7 @@ export const POST = withPermission(
           const fromWarehouseName = batch.warehouse_name;
 
           const [updateResult]: Loose = await conn.execute(
-            'UPDATE inv_inventory_batch SET warehouse_id = ?, warehouse_name = ?, version = version + 1, update_time = NOW() WHERE id = ? AND version = ?',
+            'UPDATE inv_inventory_batch SET warehouse_id = ?, warehouse_name = ?, version = version + 1, update_time = NOW() WHERE id = ? AND version = ? AND deleted = 0',
             [warehouseId, targetWarehouse.warehouse_name, batch.id, batch.version]
           );
 

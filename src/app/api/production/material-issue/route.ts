@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-import { allocateFIFO, executeFIFODeductionWithRetry } from '@/lib/fifo-allocation';
+import { PickOrderApprovedEvent } from '@/domain/production/events/PickOrderEvents';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -225,7 +226,7 @@ export const PUT = withPermission(
     if (action === 'post') {
       const result = await transaction(async (conn) => {
         const [issueRows]: Loose = await conn.execute(
-          'SELECT id, issue_no, work_order_id, work_order_no, warehouse_id, status FROM prd_material_issue WHERE id = ? AND deleted = 0 FOR UPDATE',
+          'SELECT id, issue_no, work_order_id, work_order_no, warehouse_id, operator_name, status FROM prd_material_issue WHERE id = ? AND deleted = 0 FOR UPDATE',
           [id]
         );
 
@@ -244,129 +245,43 @@ export const PUT = withPermission(
           [id]
         );
 
+        // 库存充足性只读预校验（不锁行，提前发现缺料给用户友好错误；
+        // 实际扣减由 PickOrderInventoryHandler 在事件处理时 FOR UPDATE + FIFO 完成）
         for (const item of itemRows) {
           const [invRows]: Loose = await conn.execute(
-            'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
+            'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0',
             [item.material_id, issue.warehouse_id]
           );
-
           if (invRows.length === 0) {
             throw new Error(`物料 ${item.material_name} 库存记录不存在`);
           }
-
-          const inv = invRows[0];
-          if (Number(inv.quantity) < Number(item.issued_qty)) {
+          if (Number(invRows[0].quantity) < Number(item.issued_qty)) {
             throw new Error(
-              `物料 ${item.material_name} 库存不足: 可用 ${inv.quantity}, 需发 ${item.issued_qty}`
+              `物料 ${item.material_name} 库存不足: 可用 ${invRows[0].quantity}, 需发 ${item.issued_qty}`
             );
           }
-
-          await conn.execute(
-            'UPDATE inv_inventory SET quantity = quantity - ?, update_time = NOW() WHERE id = ?',
-            [item.issued_qty, inv.id]
-          );
-
-          const allocation = await allocateFIFO(
-            conn,
-            item.material_id,
-            issue.warehouse_id,
-            Number(item.issued_qty)
-          );
-
-          if (allocation.shortage > 0) {
-            throw new Error(
-              `物料 ${item.material_name} 批次库存不足: 需要 ${item.issued_qty}, 可用 ${allocation.total_available}, 缺少 ${allocation.shortage}`
-            );
-          }
-
-          const fifoRecommended =
-            allocation.allocations.length > 0 ? allocation.allocations[0].batch_no : null;
-          const usedBatch = item.batch_no || null;
-
-          if (usedBatch && fifoRecommended && usedBatch !== fifoRecommended) {
-            try {
-              await conn.execute(
-                `INSERT INTO inv_fifo_override_log (source_type, source_id, source_no, material_id, material_name, recommended_batch, actual_batch, reason, operator_id, operator_name, approval_status)
-               VALUES ('material_issue', ?, ?, ?, ?, ?, ?, '手动指定批次', NULL, ?, 0)`,
-                [
-                  id,
-                  issue.issue_no,
-                  item.material_id,
-                  item.material_name || '',
-                  fifoRecommended,
-                  usedBatch,
-                  issue.operator_name || '',
-                ]
-              );
-            } catch {}
-          }
-
-          const { deductionDetails, totalCost } = await executeFIFODeductionWithRetry(
-            conn,
-            allocation,
-            {
-              sourceType: 'material_issue',
-              sourceId: id,
-              sourceNo: issue.issue_no,
-              warehouseId: issue.warehouse_id,
-              warehouseCode: '',
-              operatorId: null,
-              operatorName: issue.operator_name || null,
-            }
-          );
-
-          const transNo = 'TRX' + Date.now() + String(item.id).slice(-4);
-          const [matRows]: Loose = await conn.execute(
-            'SELECT material_code FROM inv_material WHERE id = ?',
-            [item.material_id]
-          );
-          const matCode = matRows.length > 0 ? matRows[0].material_code : '';
-          const avgCost = Number(item.issued_qty) > 0 ? totalCost / Number(item.issued_qty) : 0;
-
-          await conn.execute(
-            'INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, source_id, material_id, material_code, batch_no, warehouse_id, quantity, unit_price, total_amount, account_dr, account_cr, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
-            [
-              transNo,
-              'out',
-              'material_issue',
-              id,
-              item.material_id,
-              matCode,
-              item.batch_no || '',
-              issue.warehouse_id,
-              -item.issued_qty,
-              avgCost,
-              totalCost,
-              '生产成本',
-              '原材料库存',
-            ]
-          );
-
-          try {
-            const voucherNo = 'FV' + Date.now() + String(item.id).slice(-4);
-            await conn.execute(
-              `INSERT INTO fin_voucher (voucher_no, voucher_date, source_type, source_id, source_no, debit_account, credit_account, amount, cost_price, quantity, batch_no, material_id, material_name, warehouse_id)
-             VALUES (?, CURDATE(), 'material_issue', ?, ?, '生产成本', '原材料库存', ?, ?, ?, ?, ?, ?, ?)`,
-              [
-                voucherNo,
-                id,
-                issue.issue_no,
-                totalCost,
-                avgCost,
-                item.issued_qty,
-                item.batch_no || '',
-                item.material_id,
-                item.material_name || '',
-                issue.warehouse_id,
-              ]
-            );
-          } catch {}
         }
 
         await conn.execute(
           'UPDATE prd_material_issue SET status = 3, update_time = NOW() WHERE id = ?',
           [id]
         );
+
+        // 发布领料审核通过事件 — 库存扣减由 PickOrderInventoryHandler 订阅处理（事件驱动解耦）
+        await getDomainEventOutbox().saveEvents(conn, 'MaterialIssue', id, [
+          new PickOrderApprovedEvent({
+            pickOrderId: id,
+            pickNo: issue.issue_no,
+            workOrderId: issue.work_order_id || 0,
+            items: itemRows.map((item: Loose) => ({
+              materialId: item.material_id,
+              quantity: Number(item.issued_qty),
+              batchNo: item.batch_no || '',
+              warehouseId: issue.warehouse_id,
+            })),
+            userId: 0,
+          }),
+        ]);
 
         return { id, status: 3 };
       });

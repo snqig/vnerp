@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { logger } from '@/lib/logger';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -53,7 +54,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     `,
       params
     );
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dcprint', action: 'ink-consumption' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   let inkTypeSummary: Loose[] = [];
   try {
@@ -75,7 +80,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     `,
       params
     );
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dcprint', action: 'ink-consumption' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   let topWasteItems: Loose[] = [];
   try {
@@ -100,7 +109,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     `,
       params
     );
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dcprint', action: 'ink-consumption' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   let dailyTrend: Loose[] = [];
   try {
@@ -119,7 +132,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     `,
       params
     );
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dcprint', action: 'ink-consumption' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   const summary: Loose = {
     total_dispatch: 0,
@@ -162,7 +179,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
           ? Math.round((summary.total_consumed / Number(s.dispatch_count)) * 100) / 100
           : 0;
     }
-  } catch {}
+  } catch (e) {
+    logger.error({ module: 'dcprint', action: 'ink-consumption' }, 'Dashboard query failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   return successResponse({
     summary,

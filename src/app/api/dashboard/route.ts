@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function GET(_request: NextRequest) {
   try {
@@ -28,14 +29,22 @@ export async function GET(_request: NextRequest) {
         producingOrders = Number(rows[0].producing || 0);
         completedToday = Number(rows[0].completed_today || 0);
       }
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'overview' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     try {
       const rows: Loose = await query(
         `SELECT COUNT(*) as total FROM crm_customer WHERE deleted = 0`
       );
       if (Array.isArray(rows) && rows.length > 0) totalCustomers = Number(rows[0].total || 0);
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'overview' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let inventoryAlert = 0;
     try {
@@ -45,7 +54,11 @@ export async function GET(_request: NextRequest) {
         WHERE i.deleted = 0 AND m.status = 1 AND i.quantity <= COALESCE(m.safety_stock, 0)
       `);
       if (Array.isArray(rows) && rows.length > 0) inventoryAlert = Number(rows[0].total || 0);
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'overview' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let totalEmployees = 0;
     try {
@@ -53,7 +66,11 @@ export async function GET(_request: NextRequest) {
         `SELECT COUNT(*) as total FROM sys_user WHERE deleted = 0 AND status = 1`
       );
       if (Array.isArray(rows) && rows.length > 0) totalEmployees = Number(rows[0].total || 0);
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'overview' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let recentOrders: Loose[] = [];
     try {
@@ -65,7 +82,11 @@ export async function GET(_request: NextRequest) {
         WHERE pc.deleted = 0 ORDER BY pc.update_time DESC LIMIT 8
       `);
       recentOrders = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'overview' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     const alerts: Loose[] = [];
     try {
@@ -102,7 +123,11 @@ export async function GET(_request: NextRequest) {
           severity: 'high',
           time: '刚刚',
         });
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'overview' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let orderStats: Loose[] = [];
     try {
@@ -112,7 +137,11 @@ export async function GET(_request: NextRequest) {
         GROUP BY DATE(create_time) ORDER BY date
       `);
       orderStats = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'overview' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     return NextResponse.json({
       success: true,

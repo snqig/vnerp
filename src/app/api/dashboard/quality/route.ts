@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getConfig } from '@/lib/global-config';
+import { logger } from '@/lib/logger';
 
 export async function GET(_request: NextRequest) {
   try {
@@ -22,7 +23,11 @@ export async function GET(_request: NextRequest) {
       );
       if (Array.isArray(rows) && rows.length > 0)
         overview.totalInspections = Number(rows[0].total || 0);
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'quality' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     try {
       const rows: Loose = await query(`
@@ -43,7 +48,11 @@ export async function GET(_request: NextRequest) {
             ? Math.round((overview.failedInspections / overview.totalInspections) * 1000) / 10
             : 0;
       }
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'quality' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let byType: Loose[] = [];
     try {
@@ -53,7 +62,11 @@ export async function GET(_request: NextRequest) {
         FROM qc_inspection WHERE deleted = 0 GROUP BY inspection_type
       `);
       byType = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'quality' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let defectTrend: Loose[] = [];
     try {
@@ -64,7 +77,11 @@ export async function GET(_request: NextRequest) {
         GROUP BY DATE(inspection_date) ORDER BY date
       `);
       defectTrend = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'quality' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let topDefects: Loose[] = [];
     try {
@@ -73,7 +90,11 @@ export async function GET(_request: NextRequest) {
         GROUP BY defect_type ORDER BY count DESC LIMIT 5
       `);
       topDefects = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'quality' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let recentInspections: Loose[] = [];
     try {
@@ -82,7 +103,11 @@ export async function GET(_request: NextRequest) {
         FROM qc_inspection WHERE deleted = 0 ORDER BY inspection_date DESC LIMIT 10
       `);
       recentInspections = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'quality' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let processQuality: Loose[] = [];
     try {
@@ -95,7 +120,11 @@ export async function GET(_request: NextRequest) {
         WHERE pc.deleted = 0 GROUP BY pc.id ORDER BY pc.update_time DESC LIMIT 10
       `);
       processQuality = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'quality' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     return NextResponse.json({
       success: true,

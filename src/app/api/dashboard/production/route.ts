@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function GET(_request: NextRequest) {
   try {
@@ -13,7 +14,11 @@ export async function GET(_request: NextRequest) {
         FROM prd_process_card WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) orderStats = rows[0];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'production' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let equipStats: Loose = { total: 0, running: 0, idle: 0, maintenance: 0, error_count: 0 };
     try {
@@ -27,7 +32,11 @@ export async function GET(_request: NextRequest) {
         FROM eqp_equipment WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) equipStats = rows[0];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'production' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let equipmentList: Loose[] = [];
     try {
@@ -38,7 +47,11 @@ export async function GET(_request: NextRequest) {
         FROM eqp_equipment WHERE deleted = 0 AND status = 1 ORDER BY equipment_code
       `);
       equipmentList = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'production' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let qualityRate = 96.8;
     try {
@@ -53,7 +66,11 @@ export async function GET(_request: NextRequest) {
         const passedInspect = Number(rows[0].passed || 0);
         if (totalInspect > 0) qualityRate = Math.round((passedInspect / totalInspect) * 1000) / 10;
       }
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'production' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let recentOrders: Loose[] = [];
     try {
@@ -68,7 +85,11 @@ export async function GET(_request: NextRequest) {
         ORDER BY pc.update_time DESC LIMIT 10
       `);
       recentOrders = Array.isArray(rows) ? rows : [];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'production' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     let inkStats: Loose = { total_opened: 0, in_use: 0, expired: 0, expiring_soon: 0 };
     try {
@@ -81,7 +102,11 @@ export async function GET(_request: NextRequest) {
         FROM ink_opening_record WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) inkStats = rows[0];
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'production' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     const dieStats: Loose = { total: 0, normal: 0, warning: 0, locked: 0, scrapped: 0 };
     try {
@@ -100,7 +125,11 @@ export async function GET(_request: NextRequest) {
         dieStats.scrapped = rows[0].scrapped || 0;
         dieStats.normal = dieStats.total - dieStats.warning - dieStats.locked - dieStats.scrapped;
       }
-    } catch {}
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'production' }, 'Dashboard query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     const totalEquip = Number(equipStats?.total || 0);
     const runningEquip = Number(equipStats?.running || 0);
