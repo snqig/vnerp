@@ -41,8 +41,8 @@ export const invInboundOrders = mysqlTable(
     poId: int('po_id'),
     poNo: varchar('po_no', { length: 50 }),
     inboundDate: datetime('inbound_date'),
-    totalQuantity: decimal('total_quantity', { precision: 15, scale: 3 }).default('0'),
-    totalAmount: decimal('total_amount', { precision: 15, scale: 2 }),
+    totalQuantity: decimal('total_quantity', { precision: 18, scale: 4 }).default('0'),
+    totalAmount: decimal('total_amount', { precision: 18, scale: 4 }),
     status: varchar('status', { length: 20 }).default('pending'),
     qcStatus: varchar('qc_status', { length: 20 }).default('pending'),
     remark: varchar('remark', { length: 500 }),
@@ -68,7 +68,7 @@ export const invInboundItems = mysqlTable(
     materialName: varchar('material_name', { length: 200 }),
     materialSpec: varchar('material_spec', { length: 200 }),
     batchNo: varchar('batch_no', { length: 50 }),
-    quantity: decimal('quantity', { precision: 15, scale: 3 }),
+    quantity: decimal('quantity', { precision: 18, scale: 4 }),
     unit: varchar('unit', { length: 20 }),
     unitPrice: decimal('unit_price', { precision: 15, scale: 4 }),
     totalPrice: decimal('total_price', { precision: 15, scale: 4 }),
@@ -539,26 +539,26 @@ export const purPurchaseReturn = mysqlTable(
     id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
     returnNo: varchar('return_no', { length: 32 }).notNull(),
     status: tinyint('status').notNull().default(1),
-    orderId: bigint('order_id', { mode: 'number' }).notNull(),
+    orderId: bigint('order_id', { mode: 'number', unsigned: true }).notNull(),
     orderNo: varchar('order_no', { length: 32 }).notNull().default(''),
-    supplierId: bigint('supplier_id', { mode: 'number' }).notNull(),
+    supplierId: bigint('supplier_id', { mode: 'number', unsigned: true }).notNull(),
     supplierName: varchar('supplier_name', { length: 128 }).notNull().default(''),
-    warehouseId: bigint('warehouse_id', { mode: 'number' }).notNull(),
-    receiptId: bigint('receipt_id', { mode: 'number' }),
+    warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }).notNull(),
+    receiptId: bigint('receipt_id', { mode: 'number', unsigned: true }),
     receiptNo: varchar('receipt_no', { length: 32 }).notNull().default(''),
     reason: varchar('reason', { length: 512 }).notNull(),
     returnDate: date('return_date').notNull(),
-    totalAmount: decimal('total_amount', { precision: 14, scale: 2 }).notNull().default('0.00'),
-    approveBy: bigint('approve_by', { mode: 'number' }),
+    totalAmount: decimal('total_amount', { precision: 18, scale: 4 }).notNull().default('0.00'),
+    approveBy: bigint('approve_by', { mode: 'number', unsigned: true }),
     approveTime: datetime('approve_time'),
-    completeBy: bigint('complete_by', { mode: 'number' }),
+    completeBy: bigint('complete_by', { mode: 'number', unsigned: true }),
     completeTime: datetime('complete_time'),
-    outboundOrderId: bigint('outbound_order_id', { mode: 'number' }),
+    outboundOrderId: bigint('outbound_order_id', { mode: 'number', unsigned: true }),
     outboundOrderNo: varchar('outbound_order_no', { length: 32 }),
-    payableId: bigint('payable_id', { mode: 'number' }),
+    payableId: bigint('payable_id', { mode: 'number', unsigned: true }),
     payableNo: varchar('payable_no', { length: 32 }),
     remark: varchar('remark', { length: 512 }).notNull().default(''),
-    createBy: bigint('create_by', { mode: 'number' }),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
     deleted: boolean('deleted').default(false),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
@@ -579,23 +579,23 @@ export const purPurchaseReconciliation = mysqlTable(
     id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
     reconciliationNo: varchar('reconciliation_no', { length: 32 }).notNull(),
     status: tinyint('status').notNull().default(1),
-    supplierId: bigint('supplier_id', { mode: 'number' }).notNull(),
+    supplierId: bigint('supplier_id', { mode: 'number', unsigned: true }).notNull(),
     supplierName: varchar('supplier_name', { length: 128 }).notNull().default(''),
     periodStart: date('period_start').notNull(),
     periodEnd: date('period_end').notNull(),
-    receiptAmount: decimal('receipt_amount', { precision: 14, scale: 2 }).notNull().default('0.00'),
-    returnAmount: decimal('return_amount', { precision: 14, scale: 2 }).notNull().default('0.00'),
-    netAmount: decimal('net_amount', { precision: 14, scale: 2 }).notNull().default('0.00'),
-    discountAmount: decimal('discount_amount', { precision: 14, scale: 2 })
+    receiptAmount: decimal('receipt_amount', { precision: 18, scale: 4 }).notNull().default('0.00'),
+    returnAmount: decimal('return_amount', { precision: 18, scale: 4 }).notNull().default('0.00'),
+    netAmount: decimal('net_amount', { precision: 18, scale: 4 }).notNull().default('0.00'),
+    discountAmount: decimal('discount_amount', { precision: 18, scale: 4 })
       .notNull()
       .default('0.00'),
-    paidAmount: decimal('paid_amount', { precision: 14, scale: 2 }).notNull().default('0.00'),
-    balanceAmount: decimal('balance_amount', { precision: 14, scale: 2 }).notNull().default('0.00'),
+    paidAmount: decimal('paid_amount', { precision: 18, scale: 4 }).notNull().default('0.00'),
+    balanceAmount: decimal('balance_amount', { precision: 18, scale: 4 }).notNull().default('0.00'),
     remark: varchar('remark', { length: 512 }).notNull().default(''),
-    createBy: bigint('create_by', { mode: 'number' }),
-    confirmBy: bigint('confirm_by', { mode: 'number' }),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    confirmBy: bigint('confirm_by', { mode: 'number', unsigned: true }),
     confirmTime: datetime('confirm_time'),
-    closeBy: bigint('close_by', { mode: 'number' }),
+    closeBy: bigint('close_by', { mode: 'number', unsigned: true }),
     closeTime: datetime('close_time'),
     deleted: boolean('deleted').default(false),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
@@ -721,7 +721,7 @@ export const prodWorkOrder = mysqlTable(
     bomId: bigint('bom_id', { mode: 'number', unsigned: true }),
     customerName: varchar('customer_name', { length: 200 }),
     productName: varchar('product_name', { length: 200 }),
-    quantity: decimal('quantity', { precision: 15, scale: 2 }).default('0.00'),
+    quantity: decimal('quantity', { precision: 18, scale: 4 }).default('0.00'),
     unit: varchar('unit', { length: 20 }),
     status: varchar('status', { length: 20 }).default('pending'),
     priority: varchar('priority', { length: 20 }).default('normal'),
@@ -735,10 +735,10 @@ export const prodWorkOrder = mysqlTable(
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
     deleted: tinyint('deleted').default(0),
-    pickedQty: decimal('picked_qty', { precision: 10, scale: 2 }).default('0.00'),
-    finishedQty: decimal('finished_qty', { precision: 10, scale: 2 }).default('0.00'),
-    returnedQty: decimal('returned_qty', { precision: 10, scale: 2 }).default('0.00'),
-    totalMaterialCost: decimal('total_material_cost', { precision: 12, scale: 2 }).default('0.00'),
+    pickedQty: decimal('picked_qty', { precision: 18, scale: 4 }).default('0.00'),
+    finishedQty: decimal('finished_qty', { precision: 18, scale: 4 }).default('0.00'),
+    returnedQty: decimal('returned_qty', { precision: 18, scale: 4 }).default('0.00'),
+    totalMaterialCost: decimal('total_material_cost', { precision: 18, scale: 4 }).default('0.00'),
   },
   (table) => ({
     workOrderNoIdx: uniqueIndex('uk_prod_work_order_no').on(table.workOrderNo),
@@ -757,8 +757,8 @@ export const prodWorkOrderItem = mysqlTable(
     materialName: varchar('material_name', { length: 200 }),
     quantity: decimal('quantity', { precision: 18, scale: 4 }).notNull(),
     unit: varchar('unit', { length: 20 }).default('pcs'),
-    unitPrice: decimal('unit_price', { precision: 12, scale: 4 }).default('0.0000'),
-    totalPrice: decimal('total_price', { precision: 12, scale: 4 }).default('0.0000'),
+    unitPrice: decimal('unit_price', { precision: 18, scale: 4 }).default('0.0000'),
+    totalPrice: decimal('total_price', { precision: 18, scale: 4 }).default('0.0000'),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
@@ -800,12 +800,12 @@ export const salQuote = mysqlTable(
     productName: varchar('product_name', { length: 200 }),
     quantity: int('quantity').notNull().default(1),
     unit: varchar('unit', { length: 20 }).default('pcs'),
-    materialCost: decimal('material_cost', { precision: 12, scale: 4 }).default('0.0000'),
-    laborCost: decimal('labor_cost', { precision: 12, scale: 4 }).default('0.0000'),
-    toolCost: decimal('tool_cost', { precision: 12, scale: 4 }).default('0.0000'),
-    totalCost: decimal('total_cost', { precision: 12, scale: 4 }).default('0.0000'),
+    materialCost: decimal('material_cost', { precision: 18, scale: 4 }).default('0.0000'),
+    laborCost: decimal('labor_cost', { precision: 18, scale: 4 }).default('0.0000'),
+    toolCost: decimal('tool_cost', { precision: 18, scale: 4 }).default('0.0000'),
+    totalCost: decimal('total_cost', { precision: 18, scale: 4 }).default('0.0000'),
     markupRate: decimal('markup_rate', { precision: 5, scale: 2 }).default('30.00'),
-    quotedPrice: decimal('quoted_price', { precision: 12, scale: 4 }).default('0.0000'),
+    quotedPrice: decimal('quoted_price', { precision: 18, scale: 4 }).default('0.0000'),
     currency: varchar('currency', { length: 10 }).default('CNY'),
     status: tinyint('status').default(1),
     validUntil: date('valid_until'),
@@ -831,11 +831,11 @@ export const salQuoteItem = mysqlTable(
     quoteId: bigint('quote_id', { mode: 'number', unsigned: true }).notNull(),
     lineNo: int('line_no').notNull().default(1),
     itemName: varchar('item_name', { length: 200 }).notNull(),
-    quantity: decimal('quantity', { precision: 10, scale: 4 }).notNull().default('1.0000'),
+    quantity: decimal('quantity', { precision: 18, scale: 4 }).notNull().default('1.0000'),
     unit: varchar('unit', { length: 20 }).default('pcs'),
-    unitCost: decimal('unit_cost', { precision: 12, scale: 4 }).default('0.0000'),
-    unitPrice: decimal('unit_price', { precision: 12, scale: 4 }).default('0.0000'),
-    totalPrice: decimal('total_price', { precision: 12, scale: 4 }).default('0.0000'),
+    unitCost: decimal('unit_cost', { precision: 18, scale: 4 }).default('0.0000'),
+    unitPrice: decimal('unit_price', { precision: 18, scale: 4 }).default('0.0000'),
+    totalPrice: decimal('total_price', { precision: 18, scale: 4 }).default('0.0000'),
     remark: varchar('remark', { length: 255 }),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
   },
@@ -903,10 +903,10 @@ export const sampleProcessTemplateItem = mysqlTable(
     materialCode: varchar('material_code', { length: 50 }).notNull(),
     materialName: varchar('material_name', { length: 100 }).notNull(),
     specification: varchar('specification', { length: 255 }),
-    unitDosage: decimal('unit_dosage', { precision: 10, scale: 4 }).notNull(),
+    unitDosage: decimal('unit_dosage', { precision: 18, scale: 4 }).notNull(),
     unit: varchar('unit', { length: 20 }),
-    unitCost: decimal('unit_cost', { precision: 12, scale: 4 }).default('0.0000'),
-    lineCost: decimal('line_cost', { precision: 12, scale: 4 }).default('0.0000'),
+    unitCost: decimal('unit_cost', { precision: 18, scale: 4 }).default('0.0000'),
+    lineCost: decimal('line_cost', { precision: 18, scale: 4 }).default('0.0000'),
     remark: varchar('remark', { length: 255 }),
     sort: int('sort').notNull().default(0),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
@@ -1105,18 +1105,42 @@ export const dcprintTool = mysqlTable(
     warningThreshold: int('warning_threshold').notNull(),
     usedCount: int('used_count').default(0),
     remainLife: int('remain_life').notNull(),
-    originalCost: decimal('original_cost', { precision: 10, scale: 2 }).notNull(),
-    accumulatedCost: decimal('accumulated_cost', { precision: 10, scale: 2 }).default('0'),
-    netValue: decimal('net_value', { precision: 10, scale: 2 }).notNull(),
-    unitCost: decimal('unit_cost', { precision: 10, scale: 4 }).notNull(),
+    originalCost: decimal('original_cost', { precision: 18, scale: 4 }).notNull(),
+    accumulatedCost: decimal('accumulated_cost', { precision: 18, scale: 4 }).default('0'),
+    netValue: decimal('net_value', { precision: 18, scale: 4 }).notNull(),
+    unitCost: decimal('unit_cost', { precision: 18, scale: 4 }).notNull(),
     status: tinyint('status').default(1), // 1=待用 2=在用 3=维修中 4=预警 5=已报废
     manufactureDate: date('manufacture_date'),
     warehouseLocation: varchar('warehouse_location', { length: 100 }),
+    // 体系B 字段 (刀模)
+    assetType: varchar('asset_type', { length: 50 }), // 资产类型
+    layoutType: varchar('layout_type', { length: 50 }), // 版面类型
+    piecesPerImpression: int('pieces_per_impression'), // 每版印张数
+    material: varchar('material', { length: 100 }), // 材质
+    qrCode: varchar('qr_code', { length: 255 }), // 二维码
+    supplierId: bigint('supplier_id', { mode: 'number', unsigned: true }), // 供应商
+    maintenanceInterval: int('maintenance_interval'), // 保养间隔(印数)
+    maintenanceCount: int('maintenance_count').default(0), // 保养次数
+    lastMaintenanceDate: date('last_maintenance_date'), // 上次保养日期
+    lastMaintenanceImpressions: int('last_maintenance_impressions'), // 上次保养印数
+    lastUsedDate: date('last_used_date'), // 上次使用日期
+    // 体系C 字段 (网版)
+    meshCount: varchar('mesh_count', { length: 20 }), // 目数
+    meshMaterial: varchar('mesh_material', { length: 50 }), // 丝网材质
+    size: varchar('size', { length: 50 }), // 尺寸
+    tensionValue: decimal('tension_value', { precision: 5, scale: 1 }), // 张力值
+    frameType: varchar('frame_type', { length: 50 }), // 网框类型
+    customerId: bigint('customer_id', { mode: 'number', unsigned: true }), // 客户
+    reclaimCount: int('reclaim_count').default(0), // 回用次数
+    exposureDate: date('exposure_date'), // 曝光日期
+    lastCleanDate: date('last_clean_date'), // 上次清洗日期
+    lastReclaimDate: date('last_reclaim_date'), // 上次回用日期
+    tensionDate: date('tension_date'), // 张力检测日期
     scrapReason: text('scrap_reason'),
     scrapTime: datetime('scrap_time'),
     scrapBy: bigint('scrap_by', { mode: 'number', unsigned: true }),
     remark: text('remark'),
-    isDeleted: tinyint('is_deleted').default(0),
+    isDeleted: tinyint('deleted').default(0),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
   },
@@ -1177,6 +1201,155 @@ export const dcprintToolMaintenance = mysqlTable(
   })
 );
 
+// ==================== 生产核心流程表（prd_ 系列，migration 054） ====================
+
+// 生产领料单主表
+export const prdPickOrder = mysqlTable(
+  'prd_pick_order',
+  {
+    id: serial('id').primaryKey(),
+    pickNo: varchar('pick_no', { length: 50 }).notNull(),
+    workOrderId: bigint('work_order_id', { mode: 'number', unsigned: true }).notNull(),
+    warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }),
+    pickerName: varchar('picker_name', { length: 100 }),
+    totalQty: decimal('total_qty', { precision: 18, scale: 4 }).default('0'),
+    status: tinyint('status').default(1),
+    remark: text('remark'),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    pickNoIdx: uniqueIndex('uk_pick_no').on(table.pickNo),
+    workOrderIdx: index('idx_pick_work_order').on(table.workOrderId),
+    statusIdx: index('idx_pick_status').on(table.status),
+  })
+);
+
+// 生产领料单明细
+export const prdPickOrderItem = mysqlTable(
+  'prd_pick_order_item',
+  {
+    id: serial('id').primaryKey(),
+    pickOrderId: bigint('pick_order_id', { mode: 'number', unsigned: true }).notNull(),
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }),
+    materialName: varchar('material_name', { length: 200 }),
+    materialSpec: varchar('material_spec', { length: 200 }),
+    requiredQty: decimal('required_qty', { precision: 18, scale: 4 }).default('0'),
+    actualQty: decimal('actual_qty', { precision: 18, scale: 4 }).default('0'),
+    batchNo: varchar('batch_no', { length: 50 }),
+    unitCost: decimal('unit_cost', { precision: 18, scale: 4 }).default('0'),
+    lineAmount: decimal('line_amount', { precision: 18, scale: 4 }).default('0'),
+    unit: varchar('unit', { length: 20 }).default('pcs'),
+    remark: text('remark'),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    pickOrderIdx: index('idx_pick_item_order').on(table.pickOrderId),
+    materialIdx: index('idx_pick_item_material').on(table.materialId),
+  })
+);
+
+// 生产退料单主表
+export const prdReturnOrder = mysqlTable(
+  'prd_return_order',
+  {
+    id: serial('id').primaryKey(),
+    returnNo: varchar('return_no', { length: 50 }).notNull(),
+    workOrderId: bigint('work_order_id', { mode: 'number', unsigned: true }).notNull(),
+    pickOrderId: bigint('pick_order_id', { mode: 'number', unsigned: true }),
+    warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }),
+    returnReason: varchar('return_reason', { length: 500 }),
+    totalQty: decimal('total_qty', { precision: 18, scale: 4 }).default('0'),
+    status: tinyint('status').default(1),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    returnNoIdx: uniqueIndex('uk_return_no').on(table.returnNo),
+    workOrderIdx: index('idx_return_work_order').on(table.workOrderId),
+    statusIdx: index('idx_return_status').on(table.status),
+  })
+);
+
+// 生产退料单明细
+export const prdReturnOrderItem = mysqlTable(
+  'prd_return_order_item',
+  {
+    id: serial('id').primaryKey(),
+    returnOrderId: bigint('return_order_id', { mode: 'number', unsigned: true }).notNull(),
+    pickOrderItemId: bigint('pick_order_item_id', { mode: 'number', unsigned: true }),
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }),
+    materialName: varchar('material_name', { length: 200 }),
+    quantity: decimal('quantity', { precision: 18, scale: 4 }).default('0'),
+    batchNo: varchar('batch_no', { length: 50 }),
+    unitCost: decimal('unit_cost', { precision: 18, scale: 4 }).default('0'),
+    lineAmount: decimal('line_amount', { precision: 18, scale: 4 }).default('0'),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    returnOrderIdx: index('idx_return_item_order').on(table.returnOrderId),
+    materialIdx: index('idx_return_item_material').on(table.materialId),
+  })
+);
+
+// 工序报工单
+export const prdWorkReport = mysqlTable(
+  'prd_work_report',
+  {
+    id: serial('id').primaryKey(),
+    reportNo: varchar('report_no', { length: 50 }).notNull(),
+    workOrderId: bigint('work_order_id', { mode: 'number', unsigned: true }).notNull(),
+    processName: varchar('process_name', { length: 100 }),
+    equipmentId: bigint('equipment_id', { mode: 'number', unsigned: true }),
+    equipmentName: varchar('equipment_name', { length: 100 }),
+    shift: varchar('shift', { length: 20 }),
+    operatorName: varchar('operator_name', { length: 100 }),
+    qualifiedQty: decimal('qualified_qty', { precision: 18, scale: 4 }).default('0'),
+    defectiveQty: decimal('defective_qty', { precision: 18, scale: 4 }).default('0'),
+    defectReason: varchar('defect_reason', { length: 500 }),
+    workHours: decimal('work_hours', { precision: 10, scale: 2 }).default('0'),
+    reportDate: date('report_date'),
+    status: tinyint('status').default(1),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    reportNoIdx: uniqueIndex('uk_report_no').on(table.reportNo),
+    workOrderIdx: index('idx_report_work_order').on(table.workOrderId),
+    statusIdx: index('idx_report_status').on(table.status),
+    reportDateIdx: index('idx_report_date').on(table.reportDate),
+  })
+);
+
+// 完工入库单
+export const prdFinishOrder = mysqlTable(
+  'prd_finish_order',
+  {
+    id: serial('id').primaryKey(),
+    finishNo: varchar('finish_no', { length: 50 }).notNull(),
+    workOrderId: bigint('work_order_id', { mode: 'number', unsigned: true }).notNull(),
+    warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }),
+    qualifiedQty: decimal('qualified_qty', { precision: 18, scale: 4 }).default('0'),
+    defectiveQty: decimal('defective_qty', { precision: 18, scale: 4 }).default('0'),
+    status: tinyint('status').default(1),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    finishNoIdx: uniqueIndex('uk_finish_no').on(table.finishNo),
+    workOrderIdx: index('idx_finish_work_order').on(table.workOrderId),
+    statusIdx: index('idx_finish_status').on(table.status),
+  })
+);
+
 // ==================== 类型导出 ====================
 
 // 仓库入库
@@ -1211,6 +1384,14 @@ export type PrdWorkOrder = typeof prdWorkOrder.$inferSelect;
 export type ProdWorkOrder = typeof prodWorkOrder.$inferSelect;
 export type ProdWorkOrderItem = typeof prodWorkOrderItem.$inferSelect;
 export type ProdWorkOrderMaterialReq = typeof prodWorkOrderMaterialReq.$inferSelect;
+
+// 生产核心流程
+export type PrdPickOrder = typeof prdPickOrder.$inferSelect;
+export type PrdPickOrderItem = typeof prdPickOrderItem.$inferSelect;
+export type PrdReturnOrder = typeof prdReturnOrder.$inferSelect;
+export type PrdReturnOrderItem = typeof prdReturnOrderItem.$inferSelect;
+export type PrdWorkReport = typeof prdWorkReport.$inferSelect;
+export type PrdFinishOrder = typeof prdFinishOrder.$inferSelect;
 
 // 生产排产
 export type PrdSchedule = typeof prdSchedule.$inferSelect;
