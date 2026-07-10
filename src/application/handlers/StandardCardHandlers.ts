@@ -31,8 +31,7 @@ export class StandardCardNotificationHandler implements EventHandler {
     }
   }
 
-  private async handleCreated(event: DomainEvent): Promise<void> {
-  }
+  private async handleCreated(event: DomainEvent): Promise<void> {}
 
   private async handleSubmitted(event: DomainEvent): Promise<void> {
     const { standardCardId, code, version, userId } = event.payload as {
@@ -199,15 +198,17 @@ export class StandardCardWorkOrderLinkHandler implements EventHandler {
   ): Promise<void> {
     const pendingWorkOrders = await db.query<{ id: number }>(
       `SELECT id FROM prd_work_order
-          WHERE material_id = ${materialId}
+          WHERE material_id = ?
           AND status IN ('created', 'scheduled')
           AND standard_card_id IS NULL
-          LIMIT 100`
+          LIMIT 100`,
+      [materialId]
     );
 
     for (const wo of pendingWorkOrders) {
       await db.execute(
-        `UPDATE prd_work_order SET standard_card_id = ${standardCardId}, update_time = NOW() WHERE id = ${wo.id}`
+        `UPDATE prd_work_order SET standard_card_id = ?, update_time = NOW() WHERE id = ?`,
+        [standardCardId, wo.id]
       );
     }
 

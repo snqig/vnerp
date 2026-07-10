@@ -342,12 +342,13 @@ export class MaterialLifecycleService {
         END as batch_status,
         DATEDIFF(b.expire_date, CURDATE()) as days_until_expiry
       FROM inv_inventory_batch b
-      WHERE b.material_id = ${materialId} AND b.deleted = 0
+      WHERE b.material_id = ? AND b.deleted = 0
       ORDER BY
         CASE WHEN b.opened_at IS NOT NULL THEN b.opened_at ELSE b.inbound_date END ASC,
         b.expire_date ASC,
         b.inbound_date ASC,
-        b.id ASC`
+        b.id ASC`,
+      [materialId]
     );
 
     return rows.map((row) => ({
@@ -396,18 +397,20 @@ export class MaterialLifecycleService {
 
     await db.execute(
       `UPDATE inv_material
-      SET stock_qty = stock_qty - ${params.consumeQty},
+      SET stock_qty = stock_qty - ?,
           update_time = NOW()
-      WHERE id = ${params.materialId}`
+      WHERE id = ?`,
+      [params.consumeQty, params.materialId]
     );
 
     if (params.batchId) {
       await db.execute(
         `UPDATE inv_inventory_batch
-        SET quantity = quantity - ${params.consumeQty},
-            available_qty = available_qty - ${params.consumeQty},
+        SET quantity = quantity - ?,
+            available_qty = available_qty - ?,
             update_time = NOW()
-        WHERE id = ${params.batchId}`
+        WHERE id = ?`,
+        [params.consumeQty, params.consumeQty, params.batchId]
       );
     }
 
@@ -425,7 +428,8 @@ export class MaterialLifecycleService {
     operatorId: number;
   }): Promise<number> {
     const material = await db.query<{ stock_qty: number }>(
-      `SELECT stock_qty FROM inv_material WHERE id = ${params.materialId}`
+      `SELECT stock_qty FROM inv_material WHERE id = ?`,
+      [params.materialId]
     );
     const beforeQty = Number(material[0]?.stock_qty || 0);
     const adjustmentQty = params.afterQty - beforeQty;
@@ -452,21 +456,24 @@ export class MaterialLifecycleService {
   async approveAdjustment(adjustmentId: number, approveUserId: number): Promise<void> {
     await db.execute(
       `UPDATE inv_material_adjustment
-      SET approve_user = ${approveUserId},
+      SET approve_user = ?,
           approve_status = 'approved'
-      WHERE id = ${adjustmentId}`
+      WHERE id = ?`,
+      [approveUserId, adjustmentId]
     );
 
     const adjustment = await db.query<{ material_id: number; after_qty: number }>(
-      `SELECT material_id, after_qty FROM inv_material_adjustment WHERE id = ${adjustmentId}`
+      `SELECT material_id, after_qty FROM inv_material_adjustment WHERE id = ?`,
+      [adjustmentId]
     );
 
     if (adjustment.length > 0) {
       await db.execute(
         `UPDATE inv_material
-        SET stock_qty = ${adjustment[0].after_qty},
+        SET stock_qty = ?,
             update_time = NOW()
-        WHERE id = ${adjustment[0].material_id}`
+        WHERE id = ?`,
+        [adjustment[0].after_qty, adjustment[0].material_id]
       );
     }
 
@@ -611,10 +618,7 @@ export class MaterialLifecycleService {
       );
 
       if (daysUntilExpiry <= 0) {
-        await db.execute(
-          `UPDATE inv_material SET status = 'expired' WHERE id = ?`,
-          [row.id]
-        );
+        await db.execute(`UPDATE inv_material SET status = 'expired' WHERE id = ?`, [row.id]);
         expired++;
       } else if (daysUntilExpiry <= row.warning_days) {
         const existing = await db.query<{ 1: number }>(

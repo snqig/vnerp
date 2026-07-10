@@ -12,6 +12,12 @@ export class CacheInvalidationHandler implements EventHandler<DomainEvent> {
       'outbound.confirmed': ['dashboard:overview', 'dashboard:inventory'],
       'quality.inspection.completed': ['dashboard:quality'],
       'production.schedule.created': ['dashboard:production'],
+      'tool.created': ['tool:dashboard', 'tool:list'],
+      'tool.activated': ['tool:dashboard', 'tool:list'],
+      'tool.maintenance_started': ['tool:dashboard', 'tool:detail:*'],
+      'tool.maintenance_completed': ['tool:dashboard', 'tool:detail:*'],
+      'tool.warning_triggered': ['tool:dashboard', 'tool:list'],
+      'tool.scrapped': ['tool:dashboard', 'tool:list'],
       StandardCardConfirmed: ['bom:expansion:*'],
       StandardCardObsoleted: ['bom:expansion:*'],
     };

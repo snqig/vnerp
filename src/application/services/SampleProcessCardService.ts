@@ -98,7 +98,7 @@ async function fetchToolCosts(
   const ids = [dieToolId, screenPlateId].filter(Boolean) as number[];
   const placeholders = ids.map(() => '?').join(',');
   const rows: Loose = await query(
-    `SELECT COALESCE(SUM(unit_cost), 0) AS total FROM dcprint_tool WHERE id IN (${placeholders}) AND is_deleted = 0`,
+    `SELECT COALESCE(SUM(unit_cost), 0) AS total FROM dcprint_tool WHERE id IN (${placeholders}) AND deleted = 0`,
     ids
   );
   return Number(rows[0]?.total || 0);

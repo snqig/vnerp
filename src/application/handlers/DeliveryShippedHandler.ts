@@ -1,16 +1,17 @@
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { DeliveryShippedEvent } from '@/domain/sales/events/DeliveryEvents';
 import { transaction } from '@/lib/db';
-import { secureLog } from '@/lib/logger';
+import { logger, secureLog } from '@/lib/logger';
+import type { RowDataPacket } from 'mysql2';
 
 /**
- * 处理 DeliveryShippedEvent：发货出库时扣减库存和批次可用量，记录库存交易流水。
- * 与 SalesShippedHandler 的区别：Delivery 聚合的 warehouseId 在事件顶层（非逐行），
- * source_type 使用 'sales_delivery' 以区分销售订单直接出库和送货单出库。
+ * 处理 DeliveryShippedEvent：发货出库时扣减库存和批次可用量，记录库存交易流水，
+ * 并更新销售订单状态（已审核→部分发货→全部发货）。
  */
 export class DeliveryShippedHandler implements EventHandler<DeliveryShippedEvent> {
   async handle(event: DeliveryShippedEvent): Promise<void> {
     const { deliveryId, deliveryNo, orderId, warehouseId, shippedItems } = event.payload;
+    const ctx = { module: 'delivery-shipped', action: 'inventory', deliveryId, deliveryNo };
 
     await transaction(async (conn) => {
       for (const item of shippedItems) {
@@ -75,6 +76,49 @@ export class DeliveryShippedHandler implements EventHandler<DeliveryShippedEvent
             `UPDATE sal_order_detail SET delivered_qty = delivered_qty + ? WHERE id = ?`,
             [item.quantity, item.orderDetailId]
           );
+        }
+      }
+
+      if (orderId) {
+        const [orderStatusRows] = await conn.execute<RowDataPacket[]>(
+          'SELECT id, status FROM sal_order WHERE id = ?',
+          [orderId]
+        );
+
+        if (orderStatusRows && orderStatusRows.length > 0) {
+          const currentStatus = orderStatusRows[0].status;
+          if (currentStatus === 2) {
+            await conn.execute(
+              'UPDATE sal_order SET status = 3, update_time = NOW() WHERE id = ?',
+              [orderId]
+            );
+            logger.info(ctx, '订单状态更新为部分发货', { orderId });
+          }
+
+          const [totalDelivered] = await conn.execute<RowDataPacket[]>(
+            `SELECT SUM(delivered_qty) as total_delivered
+             FROM sal_order_detail
+             WHERE order_id = ? AND deleted = 0`,
+            [orderId]
+          );
+
+          const [orderTotal] = await conn.execute<RowDataPacket[]>(
+            `SELECT SUM(quantity) as order_total
+             FROM sal_order_detail
+             WHERE order_id = ? AND deleted = 0`,
+            [orderId]
+          );
+
+          const deliveredQty = Number(totalDelivered[0]?.total_delivered || 0);
+          const orderTotalQty = Number(orderTotal[0]?.order_total || 0);
+
+          if (deliveredQty >= orderTotalQty && orderTotalQty > 0) {
+            await conn.execute(
+              'UPDATE sal_order SET status = 4, update_time = NOW() WHERE id = ?',
+              [orderId]
+            );
+            logger.info(ctx, '订单状态更新为全部发货', { orderId });
+          }
         }
       }
     });

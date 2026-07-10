@@ -6,6 +6,12 @@ import { SalesToWorkOrderHandler } from '@/application/handlers/SalesToWorkOrder
 import { SalesShippedHandler } from '@/application/handlers/SalesShippedHandler';
 import { SalesReceivableHandler } from '@/application/handlers/SalesReceivableHandler';
 import { DeliveryShippedHandler } from '@/application/handlers/DeliveryShippedHandler';
+import { DeliveryReceivableHandler } from '@/application/handlers/DeliveryReceivableHandler';
+import { DeliveryCancelledHandler } from '@/application/handlers/DeliveryCancelledHandler';
+import { ReconciliationWriteOffHandler } from '@/application/handlers/ReconciliationWriteOffHandler';
+import { ReturnOrderInventoryHandler } from '@/application/handlers/ReturnOrderInventoryHandler';
+import { FormulaVersionActivatedHandler } from '@/application/handlers/FormulaVersionEventHandler';
+import { FormulaVersionCancelledHandler } from '@/application/handlers/FormulaVersionEventHandler';
 import { InventorySyncHandler } from '@/application/handlers/InventorySyncHandler';
 import { InventoryRollbackHandler } from '@/application/handlers/InventoryRollbackHandler';
 import { FinanceVoucherHandler } from '@/application/handlers/FinanceVoucherHandler';
@@ -20,9 +26,13 @@ import { PurchaseReturnCompletedHandler } from '@/application/handlers/PurchaseR
 import { PurchaseReconciliationWrittenOffHandler } from '@/application/handlers/PurchaseReconciliationWrittenOffHandler';
 import { WorkOrderMaterialIssuedHandler } from '@/application/handlers/WorkOrderMaterialIssuedHandler';
 import { WorkOrderCompletedHandler } from '@/application/handlers/WorkOrderCompletedHandler';
+import { PickOrderInventoryHandler } from '@/application/handlers/PickOrderInventoryHandler';
+import { FinishOrderInventoryHandler } from '@/application/handlers/FinishOrderInventoryHandler';
+import { ProductionFinanceHandler } from '@/application/handlers/ProductionFinanceHandler';
+import { SampleOrderInventoryHandler } from '@/application/handlers/SampleOrderInventoryHandler';
+import { SampleOrderConversionHandler } from '@/application/handlers/SampleOrderConversionHandler';
 import { ToolUsageSyncHandler } from '@/application/handlers/ToolUsageSyncHandler';
 import { ToolCostHandler } from '@/application/handlers/ToolCostHandler';
-import { PickOrderInventoryHandler } from '@/application/handlers/PickOrderInventoryHandler';
 import { OutboundInventoryHandler } from '@/application/handlers/OutboundInventoryHandler';
 import { OutboundReceivableHandler } from '@/application/handlers/OutboundReceivableHandler';
 import { MaterialReturnInventoryHandler } from '@/application/handlers/MaterialReturnInventoryHandler';
@@ -153,16 +163,22 @@ export class EventRegistry {
     // 送货单（Delivery）事件
     eventBus.subscribe('delivery.created', new AuditLogHandler());
     eventBus.subscribe('delivery.shipped', new IdempotentHandler(new DeliveryShippedHandler()));
+    eventBus.subscribe('delivery.shipped', new IdempotentHandler(new DeliveryReceivableHandler()));
     eventBus.subscribe('delivery.shipped', new AuditLogHandler());
     eventBus.subscribe('delivery.shipped', new CacheInvalidationHandler());
     eventBus.subscribe('delivery.signed', new AuditLogHandler());
     eventBus.subscribe('delivery.signed', new CacheInvalidationHandler());
+    eventBus.subscribe('delivery.cancelled', new IdempotentHandler(new DeliveryCancelledHandler()));
     eventBus.subscribe('delivery.cancelled', new AuditLogHandler());
     eventBus.subscribe('delivery.cancelled', new CacheInvalidationHandler());
 
     // 退货单（ReturnOrder）事件
     eventBus.subscribe('return_order.created', new AuditLogHandler());
     eventBus.subscribe('return_order.approved', new AuditLogHandler());
+    eventBus.subscribe(
+      'return_order.completed',
+      new IdempotentHandler(new ReturnOrderInventoryHandler())
+    );
     eventBus.subscribe('return_order.completed', new AuditLogHandler());
     eventBus.subscribe('return_order.completed', new CacheInvalidationHandler());
     eventBus.subscribe('return_order.cancelled', new AuditLogHandler());
@@ -171,6 +187,10 @@ export class EventRegistry {
     eventBus.subscribe('reconciliation.created', new AuditLogHandler());
     eventBus.subscribe('reconciliation.confirmed', new AuditLogHandler());
     eventBus.subscribe('reconciliation.partial_written_off', new AuditLogHandler());
+    eventBus.subscribe(
+      'reconciliation.written_off',
+      new IdempotentHandler(new ReconciliationWriteOffHandler())
+    );
     eventBus.subscribe('reconciliation.written_off', new AuditLogHandler());
     eventBus.subscribe('reconciliation.written_off', new CacheInvalidationHandler());
     eventBus.subscribe('reconciliation.closed', new AuditLogHandler());
@@ -215,7 +235,47 @@ export class EventRegistry {
     eventBus.subscribe('workorder.completed', new AuditLogHandler());
     eventBus.subscribe('workorder.completed', new CacheInvalidationHandler());
 
+    eventBus.subscribe('workorder.closed', new IdempotentHandler(new ProductionFinanceHandler()));
     eventBus.subscribe('workorder.closed', new AuditLogHandler());
+
+    // 生产领料单事件
+    eventBus.subscribe('prod.pick.created', new AuditLogHandler());
+    eventBus.subscribe(
+      'prod.pick.approved',
+      new IdempotentHandler(new PickOrderInventoryHandler())
+    );
+    eventBus.subscribe('prod.pick.approved', new AuditLogHandler());
+    eventBus.subscribe('prod.pick.approved', new CacheInvalidationHandler());
+    eventBus.subscribe('prod.pick.cancelled', new AuditLogHandler());
+
+    // 生产退料单事件
+    eventBus.subscribe('prod.return.created', new AuditLogHandler());
+    eventBus.subscribe(
+      'prod.return.approved',
+      new IdempotentHandler(new ReturnOrderInventoryHandler())
+    );
+    eventBus.subscribe('prod.return.approved', new AuditLogHandler());
+    eventBus.subscribe('prod.return.approved', new CacheInvalidationHandler());
+    eventBus.subscribe('prod.return.cancelled', new AuditLogHandler());
+
+    // 生产报工单事件
+    eventBus.subscribe('prod.report.created', new AuditLogHandler());
+    eventBus.subscribe(
+      'prod.report.approved',
+      new IdempotentHandler(new WorkOrderMaterialIssuedHandler())
+    );
+    eventBus.subscribe('prod.report.approved', new AuditLogHandler());
+    eventBus.subscribe('prod.report.cancelled', new AuditLogHandler());
+
+    // 完工入库单事件
+    eventBus.subscribe('prod.finish.created', new AuditLogHandler());
+    eventBus.subscribe(
+      'prod.finish.approved',
+      new IdempotentHandler(new FinishOrderInventoryHandler())
+    );
+    eventBus.subscribe('prod.finish.approved', new AuditLogHandler());
+    eventBus.subscribe('prod.finish.approved', new CacheInvalidationHandler());
+    eventBus.subscribe('prod.finish.cancelled', new AuditLogHandler());
 
     // 质量不合格品事件
     eventBus.subscribe('quality.unqualified.created', new AuditLogHandler());
@@ -230,10 +290,43 @@ export class EventRegistry {
     eventBus.subscribe('inkFormulaVersion.cancelled', new CacheInvalidationHandler());
 
     // 工装（刀模/网版）寿命事件
+    eventBus.subscribe('tool.created', new AuditLogHandler());
+    eventBus.subscribe('tool.created', new CacheInvalidationHandler());
+    eventBus.subscribe('tool.activated', new AuditLogHandler());
+    eventBus.subscribe('tool.activated', new CacheInvalidationHandler());
+    eventBus.subscribe('tool.maintenance_started', new AuditLogHandler());
+    eventBus.subscribe('tool.maintenance_started', new CacheInvalidationHandler());
+    eventBus.subscribe('tool.maintenance_completed', new AuditLogHandler());
+    eventBus.subscribe('tool.maintenance_completed', new CacheInvalidationHandler());
     eventBus.subscribe('tool.warning_triggered', new AuditLogHandler());
     eventBus.subscribe('tool.warning_triggered', new CacheInvalidationHandler());
     eventBus.subscribe('tool.scrapped', new AuditLogHandler());
     eventBus.subscribe('tool.scrapped', new CacheInvalidationHandler());
+
+    // 油墨配方版本事件
+    eventBus.subscribe(
+      'inkFormulaVersion.activated',
+      new IdempotentHandler(new FormulaVersionActivatedHandler())
+    );
+    eventBus.subscribe('inkFormulaVersion.activated', new AuditLogHandler());
+    eventBus.subscribe(
+      'inkFormulaVersion.cancelled',
+      new IdempotentHandler(new FormulaVersionCancelledHandler())
+    );
+    eventBus.subscribe('inkFormulaVersion.cancelled', new AuditLogHandler());
+
+    // 打样单事件
+    eventBus.subscribe('SampleOrderCompleted', new SampleOrderInventoryHandler());
+    eventBus.subscribe('SampleOrderCompleted', new AuditLogHandler());
+    eventBus.subscribe(
+      'SampleOrderConverted',
+      new IdempotentHandler(new SampleOrderConversionHandler())
+    );
+    eventBus.subscribe('SampleOrderConverted', new AuditLogHandler());
+    eventBus.subscribe('SampleOrderSubmitted', new AuditLogHandler());
+    eventBus.subscribe('SampleOrderStarted', new AuditLogHandler());
+    eventBus.subscribe('SampleOrderConfirmed', new AuditLogHandler());
+    eventBus.subscribe('SampleOrderCancelled', new AuditLogHandler());
 
     // 标准卡事件 — BOM 展开缓存失效
     eventBus.subscribe('StandardCardConfirmed', new CacheInvalidationHandler());

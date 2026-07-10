@@ -10,6 +10,12 @@ export class AuditLogHandler implements EventHandler<DomainEvent> {
       'inbound.cancelled': { title: '入库单取消', operType: '取消' },
       'inbound.created': { title: '入库单创建', operType: '创建' },
       'inbound.submitted': { title: '入库单提交', operType: '提交' },
+      'tool.created': { title: '工装创建', operType: '创建' },
+      'tool.activated': { title: '工装激活', operType: '激活' },
+      'tool.maintenance_started': { title: '工装维修开始', operType: '维修' },
+      'tool.maintenance_completed': { title: '工装维修完成', operType: '维修' },
+      'tool.warning_triggered': { title: '工装预警', operType: '预警' },
+      'tool.scrapped': { title: '工装报废', operType: '报废' },
     };
 
     const operation = operationMap[event.eventType];

@@ -3,7 +3,14 @@ import { logger, secureLog } from '@/lib/logger';
 import { Tool } from '@/domain/dcprint/aggregates/Tool';
 import { ToolStatus } from '@/domain/dcprint/value-objects/ToolStatus';
 import { IToolRepository } from '@/domain/dcprint/repositories/IToolRepository';
-import { ToolWarningTriggeredEvent, ToolScrappedEvent } from '@/domain/dcprint/events/ToolEvents';
+import {
+  ToolWarningTriggeredEvent,
+  ToolScrappedEvent,
+  ToolCreatedEvent,
+  ToolActivatedEvent,
+  ToolMaintenanceStartedEvent,
+  ToolMaintenanceCompletedEvent,
+} from '@/domain/dcprint/events/ToolEvents';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 
 export interface ToolListItem {
@@ -24,6 +31,30 @@ export interface ToolListItem {
   status: number;
   manufacture_date: string | null;
   warehouse_location: string | null;
+  // 体系B 字段
+  asset_type: string | null;
+  layout_type: string | null;
+  pieces_per_impression: number | null;
+  material: string | null;
+  qr_code: string | null;
+  supplier_id: number | null;
+  maintenance_interval: number | null;
+  maintenance_count: number | null;
+  last_maintenance_date: string | null;
+  last_maintenance_impressions: number | null;
+  last_used_date: string | null;
+  // 体系C 字段
+  mesh_count: string | null;
+  mesh_material: string | null;
+  size: string | null;
+  tension_value: number | null;
+  frame_type: string | null;
+  customer_id: number | null;
+  reclaim_count: number | null;
+  exposure_date: string | null;
+  last_clean_date: string | null;
+  last_reclaim_date: string | null;
+  tension_date: string | null;
   remark: string | null;
   create_time: string;
   update_time: string;
@@ -76,6 +107,28 @@ function toolToRow(tool: Tool): ToolListItem {
     status: tool.status,
     manufacture_date: tool.manufactureDate ?? null,
     warehouse_location: tool.warehouseLocation ?? null,
+    asset_type: tool.assetType ?? null,
+    layout_type: tool.layoutType ?? null,
+    pieces_per_impression: tool.piecesPerImpression ?? null,
+    material: tool.material ?? null,
+    qr_code: tool.qrCode ?? null,
+    supplier_id: tool.supplierId ?? null,
+    maintenance_interval: tool.maintenanceInterval ?? null,
+    maintenance_count: tool.maintenanceCount ?? null,
+    last_maintenance_date: tool.lastMaintenanceDate ?? null,
+    last_maintenance_impressions: tool.lastMaintenanceImpressions ?? null,
+    last_used_date: tool.lastUsedDate ?? null,
+    mesh_count: tool.meshCount ?? null,
+    mesh_material: tool.meshMaterial ?? null,
+    size: tool.size ?? null,
+    tension_value: tool.tensionValue ?? null,
+    frame_type: tool.frameType ?? null,
+    customer_id: tool.customerId ?? null,
+    reclaim_count: tool.reclaimCount ?? null,
+    exposure_date: tool.exposureDate ?? null,
+    last_clean_date: tool.lastCleanDate ?? null,
+    last_reclaim_date: tool.lastReclaimDate ?? null,
+    tension_date: tool.tensionDate ?? null,
     remark: tool.remark ?? null,
     create_time: tool.createTime ?? '',
     update_time: tool.updateTime ?? '',
@@ -115,6 +168,19 @@ export class ToolManagementService {
     originalCost: number;
     manufactureDate?: string;
     warehouseLocation?: string;
+    assetType?: string;
+    layoutType?: string;
+    piecesPerImpression?: number;
+    material?: string;
+    qrCode?: string;
+    supplierId?: number;
+    maintenanceInterval?: number;
+    meshCount?: string;
+    meshMaterial?: string;
+    size?: string;
+    tensionValue?: number;
+    frameType?: string;
+    customerId?: number;
     remark?: string;
   }): Promise<number> {
     const exists = await this.toolRepo.existsByCode(input.toolCode);
@@ -123,7 +189,22 @@ export class ToolManagementService {
     }
 
     const tool = Tool.create(input);
-    return this.toolRepo.save(tool);
+    const toolId = await this.toolRepo.save(tool);
+
+    await transaction(async (conn) => {
+      await getDomainEventOutbox().saveEvents(conn, 'Tool', toolId, [
+        new ToolCreatedEvent({
+          toolId,
+          toolCode: input.toolCode,
+          toolType: input.toolType,
+          toolName: input.toolName,
+          totalLife: input.totalLife,
+          originalCost: input.originalCost,
+        }),
+      ]);
+    });
+
+    return toolId;
   }
 
   async updateTool(
@@ -136,6 +217,19 @@ export class ToolManagementService {
       warningThreshold: number;
       manufactureDate: string;
       warehouseLocation: string;
+      assetType: string;
+      layoutType: string;
+      piecesPerImpression: number;
+      material: string;
+      qrCode: string;
+      supplierId: number;
+      maintenanceInterval: number;
+      meshCount: string;
+      meshMaterial: string;
+      size: string;
+      tensionValue: number;
+      frameType: string;
+      customerId: number;
       remark: string;
     }>
   ): Promise<void> {
@@ -151,6 +245,18 @@ export class ToolManagementService {
     if (!tool) throw new Error('Tool not found');
     tool.activate();
     await this.toolRepo.update(tool);
+
+    await transaction(async (conn) => {
+      await getDomainEventOutbox().saveEvents(conn, 'Tool', id, [
+        new ToolActivatedEvent({
+          toolId: id,
+          toolCode: tool.toolCode,
+          toolType: tool.toolType,
+          toolName: tool.toolName,
+          totalLife: tool.totalLife,
+        }),
+      ]);
+    });
   }
 
   async recordUsage(input: {
@@ -171,7 +277,7 @@ export class ToolManagementService {
       await transaction(async (conn) => {
         phase = 'load_tool';
         const rows = await conn.execute(
-          'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
+          'SELECT * FROM dcprint_tool WHERE id = ? AND deleted = 0 FOR UPDATE',
           [input.toolId]
         );
         const toolRows = (rows as unknown[])[0] as Record<string, unknown>[];
@@ -290,7 +396,7 @@ export class ToolManagementService {
       return await transaction(async (conn) => {
         phase = 'load_tool';
         const rows = await conn.execute(
-          'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
+          'SELECT * FROM dcprint_tool WHERE id = ? AND deleted = 0 FOR UPDATE',
           [input.toolId]
         );
         const toolRows = (rows as unknown[])[0] as Record<string, unknown>[];
@@ -321,12 +427,24 @@ export class ToolManagementService {
             input.operatorName || null,
             input.remark || null,
           ]
-        )) as unknown as { insertId: number };
+        )) as unknown as [{ insertId: number }, unknown];
 
         logger.info(ctx, `维修记录已创建`, {
           maintenanceId: result.insertId,
           lifeBefore: tool.remainLife,
         });
+
+        await getDomainEventOutbox().saveEvents(conn, 'Tool', input.toolId, [
+          new ToolMaintenanceStartedEvent({
+            toolId: input.toolId,
+            toolCode: tool.toolCode,
+            toolType: tool.toolType,
+            maintenanceId: result.insertId,
+            maintenanceType: input.maintenanceType || 1,
+            remainLife: tool.remainLife,
+          }),
+        ]);
+
         return result.insertId;
       });
     } catch (err) {
@@ -368,8 +486,8 @@ export class ToolManagementService {
 
         phase = 'load_tool';
         const tRows = await conn.execute(
-          'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
-          [m.tool_id]
+          'SELECT * FROM dcprint_tool WHERE id = ? AND deleted = 0 FOR UPDATE',
+          [m.tool_id as number]
         );
         const toolRows = (tRows as unknown[])[0] as Record<string, unknown>[];
         if (toolRows.length === 0) {
@@ -397,7 +515,14 @@ export class ToolManagementService {
           `UPDATE dcprint_tool
            SET remain_life = ?, net_value = ?, original_cost = ?, unit_cost = ?, status = ?
            WHERE id = ?`,
-          [tool.remainLife, tool.netValue, tool.originalCost, tool.unitCost, tool.status, m.tool_id]
+          [
+            tool.remainLife,
+            tool.netValue,
+            tool.originalCost,
+            tool.unitCost,
+            tool.status,
+            m.tool_id as number,
+          ]
         );
 
         phase = 'persist_maintenance';
@@ -431,6 +556,19 @@ export class ToolManagementService {
             warningThreshold: tool.warningThreshold,
           });
         }
+
+        await getDomainEventOutbox().saveEvents(conn, 'Tool', m.tool_id as number, [
+          new ToolMaintenanceCompletedEvent({
+            toolId: m.tool_id as number,
+            toolCode: tool.toolCode,
+            toolType: tool.toolType,
+            maintenanceId: input.maintenanceId,
+            maintenanceCost: input.maintenanceCost,
+            lifeAdjustment,
+            newRemainLife: tool.remainLife,
+            newStatus: tool.status,
+          }),
+        ]);
       });
     } catch (err) {
       logger.error(ctx, `completeMaintenance 失败 [phase=${phase}]`, {
@@ -448,7 +586,7 @@ export class ToolManagementService {
       await transaction(async (conn) => {
         phase = 'load_tool';
         const rows = await conn.execute(
-          'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
+          'SELECT * FROM dcprint_tool WHERE id = ? AND deleted = 0 FOR UPDATE',
           [input.toolId]
         );
         const toolRows = (rows as unknown[])[0] as Record<string, unknown>[];
@@ -510,7 +648,7 @@ export class ToolManagementService {
       'SELECT * FROM dcprint_tool_usage WHERE tool_id = ? ORDER BY use_time DESC LIMIT 100',
       [toolId]
     );
-    return (rows as unknown[])[0] as ToolUsageRecord[];
+    return rows as unknown as ToolUsageRecord[];
   }
 
   async listMaintenanceRecords(toolId: number): Promise<ToolMaintenanceRecord[]> {
@@ -518,7 +656,7 @@ export class ToolManagementService {
       'SELECT * FROM dcprint_tool_maintenance WHERE tool_id = ? ORDER BY create_time DESC LIMIT 50',
       [toolId]
     );
-    return (rows as unknown[])[0] as ToolMaintenanceRecord[];
+    return rows as unknown as ToolMaintenanceRecord[];
   }
 
   async getDashboard(): Promise<{
