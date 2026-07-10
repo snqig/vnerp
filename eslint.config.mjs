@@ -4,17 +4,23 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 
 // 导入自定义规则
 import noChineseHardcode from './eslint-rules/no-chinese-hardcode.js';
+import dddLayerDependencies from './eslint-rules/ddd-layer-dependencies.js';
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  
+
   // 注册自定义规则
   {
     plugins: {
       'i18n': {
         rules: {
           'no-chinese-hardcode': noChineseHardcode,
+        },
+      },
+      'ddd': {
+        rules: {
+          'layer-dependencies': dddLayerDependencies,
         },
       },
     },
@@ -53,6 +59,20 @@ const eslintConfig = defineConfig([
           'dist/',
           'build/',
         ],
+      }],
+
+      // DDD 分层依赖约束（警告级别，项目有历史债务需逐步清理）
+      // 违规样本：src/domain/production/repositories/IScheduleRepository.ts 导入 @/lib/db/schema
+      // 违规样本：src/domain/warehouse/value-objects/WarehouseStateMachine.ts 导入 @/lib/logger
+      'ddd/layer-dependencies': ['warn', {
+        // 领域层额外允许的导入（历史债务过渡期白名单）
+        allowPatterns: {
+          domain: [
+            '@/lib/logger',       // 暂时允许，应迁移为领域异常或纯函数
+            '@/lib/decimal-utils', // 纯数学工具，允许
+            '@/lib/money',        // 金额值对象，允许
+          ],
+        },
       }],
 
       // 限制 console 使用：允许 error/warn，禁止 log/debug/info

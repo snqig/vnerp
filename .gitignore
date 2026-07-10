@@ -22,10 +22,10 @@
 .continue/
 .cursor/
 .iflow/
-.ro0/
+.roo/
 .superdesign/
 .venv/
-.VS/
+.vs/
 .agency-agents/
 agency-agents
 -github/
@@ -142,3 +142,6 @@ scripts/temp/
 # AI 智能体实验目录（与 ERP 核心业务无关）
 /agency-agents/
 agency-agents
+
+# 并发测试运行产物（带时间戳，自动生成）
+tests/concurrency/reports/
