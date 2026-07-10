@@ -5,7 +5,7 @@
  * 本文件包含被 Drizzle ORM 构建器实际消费的表定义。
  * 新增 ORM 消费表时，从 SQL DDL 对应翻译并在此追加。
  *
- * 覆盖范围：32 张核心业务表（仓库 8 + 销售 5 + 采购 4 + 财务 2 + 生产 1 + 正式工单 3 + 报价 2 + 工艺模板 3 + 打样 1 + 印前油墨 3）
+ * 覆盖范围：35 张核心业务表（仓库 8 + 销售 5 + 采购 4 + 财务 2 + 生产 1 + 正式工单 3 + 报价 2 + 工艺模板 3 + 打样 1 + 印前油墨 3 + 工装 3）
  * drizzle-kit 迁移路径已废弃（drizzle/ 目录已清理），ORM 查询构建器活跃使用中。
  */
 
@@ -1089,6 +1089,94 @@ export const dcprintInkFormulaItem = mysqlTable(
   })
 );
 
+// ==================== 刀模/网版寿命追踪（ORM 消费） ====================
+
+// 工装主表（统一管理刀模+网版）
+export const dcprintTool = mysqlTable(
+  'dcprint_tool',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    toolType: tinyint('tool_type').notNull(), // 1=刀模 2=网版
+    toolCode: varchar('tool_code', { length: 50 }),
+    toolName: varchar('tool_name', { length: 100 }).notNull(),
+    spec: varchar('spec', { length: 255 }),
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }),
+    totalLife: int('total_life').notNull(),
+    warningThreshold: int('warning_threshold').notNull(),
+    usedCount: int('used_count').default(0),
+    remainLife: int('remain_life').notNull(),
+    originalCost: decimal('original_cost', { precision: 10, scale: 2 }).notNull(),
+    accumulatedCost: decimal('accumulated_cost', { precision: 10, scale: 2 }).default('0'),
+    netValue: decimal('net_value', { precision: 10, scale: 2 }).notNull(),
+    unitCost: decimal('unit_cost', { precision: 10, scale: 4 }).notNull(),
+    status: tinyint('status').default(1), // 1=待用 2=在用 3=维修中 4=预警 5=已报废
+    manufactureDate: date('manufacture_date'),
+    warehouseLocation: varchar('warehouse_location', { length: 100 }),
+    scrapReason: text('scrap_reason'),
+    scrapTime: datetime('scrap_time'),
+    scrapBy: bigint('scrap_by', { mode: 'number', unsigned: true }),
+    remark: text('remark'),
+    isDeleted: tinyint('is_deleted').default(0),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    toolCodeIdx: uniqueIndex('uk_tool_code').on(table.toolCode),
+    toolTypeIdx: index('idx_tool_type').on(table.toolType),
+    statusIdx: index('idx_tool_status').on(table.status),
+  })
+);
+
+// 工装使用记录表
+export const dcprintToolUsage = mysqlTable(
+  'dcprint_tool_usage',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    toolId: bigint('tool_id', { mode: 'number', unsigned: true }).notNull(),
+    workOrderId: bigint('work_order_id', { mode: 'number', unsigned: true }),
+    workOrderNo: varchar('work_order_no', { length: 50 }),
+    processId: bigint('process_id', { mode: 'number', unsigned: true }),
+    processName: varchar('process_name', { length: 100 }),
+    useCount: int('use_count').default(1),
+    operatorId: bigint('operator_id', { mode: 'number', unsigned: true }),
+    operatorName: varchar('operator_name', { length: 100 }),
+    amortizedCost: decimal('amortized_cost', { precision: 10, scale: 4 }).default('0'),
+    useTime: datetime('use_time').notNull(),
+    remark: text('remark'),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    toolIdIdx: index('idx_usage_tool').on(table.toolId),
+    workOrderIdIdx: index('idx_usage_work_order').on(table.workOrderId),
+  })
+);
+
+// 工装维修记录表
+export const dcprintToolMaintenance = mysqlTable(
+  'dcprint_tool_maintenance',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    toolId: bigint('tool_id', { mode: 'number', unsigned: true }).notNull(),
+    maintenanceType: tinyint('maintenance_type').default(1), // 1=维修 2=保养
+    maintenanceCost: decimal('maintenance_cost', { precision: 10, scale: 2 }).default('0'),
+    description: text('description'),
+    lifeBefore: int('life_before').notNull(),
+    lifeAfter: int('life_after').notNull(),
+    lifeAdjustment: int('life_adjustment').default(0),
+    status: tinyint('status').default(1), // 1=进行中 2=已完成
+    startTime: datetime('start_time').notNull(),
+    endTime: datetime('end_time'),
+    operatorId: bigint('operator_id', { mode: 'number', unsigned: true }),
+    operatorName: varchar('operator_name', { length: 100 }),
+    remark: text('remark'),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    toolIdIdx: index('idx_maintenance_tool').on(table.toolId),
+    statusIdx: index('idx_maintenance_status').on(table.status),
+  })
+);
+
 // ==================== 类型导出 ====================
 
 // 仓库入库
@@ -1141,3 +1229,8 @@ export type SampleProcessTemplateStep = typeof sampleProcessTemplateStep.$inferS
 export type DcprintInkColor = typeof dcprintInkColor.$inferSelect;
 export type DcprintInkFormulaVersion = typeof dcprintInkFormulaVersion.$inferSelect;
 export type DcprintInkFormulaItem = typeof dcprintInkFormulaItem.$inferSelect;
+
+// 刀模/网版寿命追踪
+export type DcprintTool = typeof dcprintTool.$inferSelect;
+export type DcprintToolUsage = typeof dcprintToolUsage.$inferSelect;
+export type DcprintToolMaintenance = typeof dcprintToolMaintenance.$inferSelect;

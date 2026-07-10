@@ -1,5 +1,10 @@
-import { query, execute, transaction } from '@/lib/db';
-import { secureLog } from '@/lib/logger';
+import { execute, transaction } from '@/lib/db';
+import { logger, secureLog } from '@/lib/logger';
+import { Tool } from '@/domain/dcprint/aggregates/Tool';
+import { ToolStatus } from '@/domain/dcprint/value-objects/ToolStatus';
+import { IToolRepository } from '@/domain/dcprint/repositories/IToolRepository';
+import { ToolWarningTriggeredEvent, ToolScrappedEvent } from '@/domain/dcprint/events/ToolEvents';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 
 export interface ToolListItem {
   id: number;
@@ -52,7 +57,34 @@ export interface ToolMaintenanceRecord {
   remark: string | null;
 }
 
+function toolToRow(tool: Tool): ToolListItem {
+  return {
+    id: tool.id!,
+    tool_type: tool.toolType,
+    tool_code: tool.toolCode,
+    tool_name: tool.toolName,
+    spec: tool.spec ?? null,
+    material_id: tool.materialId ?? null,
+    total_life: tool.totalLife,
+    warning_threshold: tool.warningThreshold,
+    used_count: tool.usedCount,
+    remain_life: tool.remainLife,
+    original_cost: String(tool.originalCost),
+    accumulated_cost: String(tool.accumulatedCost),
+    net_value: String(tool.netValue),
+    unit_cost: String(tool.unitCost),
+    status: tool.status,
+    manufacture_date: tool.manufactureDate ?? null,
+    warehouse_location: tool.warehouseLocation ?? null,
+    remark: tool.remark ?? null,
+    create_time: tool.createTime ?? '',
+    update_time: tool.updateTime ?? '',
+  };
+}
+
 export class ToolManagementService {
+  constructor(private readonly toolRepo: IToolRepository) {}
+
   async listTools(params: {
     toolType?: number;
     status?: number;
@@ -60,43 +92,16 @@ export class ToolManagementService {
     page: number;
     pageSize: number;
   }): Promise<{ list: ToolListItem[]; total: number }> {
-    const { toolType, status, keyword, page, pageSize } = params;
-    let where = 'WHERE is_deleted = 0';
-    const args: Loose[] = [];
-    if (toolType) {
-      where += ' AND tool_type = ?';
-      args.push(toolType);
-    }
-    if (status) {
-      where += ' AND status = ?';
-      args.push(status);
-    }
-    if (keyword) {
-      where += ' AND (tool_code LIKE ? OR tool_name LIKE ?)';
-      args.push('%' + keyword + '%', '%' + keyword + '%');
-    }
-
-    const countRows = await query<Loose>(
-      `SELECT COUNT(*) as total FROM dcprint_tool ${where}`,
-      args
-    );
-    const total = countRows[0]?.total || 0;
-
-    const offset = (page - 1) * pageSize;
-    const list = await query<ToolListItem>(
-      `SELECT * FROM dcprint_tool ${where} ORDER BY create_time DESC LIMIT ? OFFSET ?`,
-      [...args, pageSize, offset]
-    );
-
-    return { list, total };
+    const result = await this.toolRepo.findList(params);
+    return {
+      list: result.list.map(toolToRow),
+      total: result.total,
+    };
   }
 
   async getToolDetail(id: number): Promise<ToolListItem | null> {
-    const rows = await query<ToolListItem>(
-      'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0',
-      [id]
-    );
-    return rows.length > 0 ? rows[0] : null;
+    const tool = await this.toolRepo.findById(id);
+    return tool ? toolToRow(tool) : null;
   }
 
   async createTool(input: {
@@ -112,41 +117,13 @@ export class ToolManagementService {
     warehouseLocation?: string;
     remark?: string;
   }): Promise<number> {
-    const unitCost = input.originalCost / input.totalLife;
-    return transaction(async (conn) => {
-      const [dup]: Loose = await conn.execute(
-        'SELECT id FROM dcprint_tool WHERE tool_code = ? AND is_deleted = 0',
-        [input.toolCode]
-      );
-      if (dup.length > 0) {
-        throw new Error(`Tool code ${input.toolCode} already exists`);
-      }
+    const exists = await this.toolRepo.existsByCode(input.toolCode);
+    if (exists) {
+      throw new Error(`Tool code ${input.toolCode} already exists`);
+    }
 
-      const [result]: Loose = await conn.execute(
-        `INSERT INTO dcprint_tool
-         (tool_type, tool_code, tool_name, spec, material_id, total_life, warning_threshold,
-          used_count, remain_life, original_cost, accumulated_cost, net_value, unit_cost,
-          status, manufacture_date, warehouse_location, remark, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, 0, ?, ?, 1, ?, ?, ?, NOW())`,
-        [
-          input.toolType,
-          input.toolCode,
-          input.toolName,
-          input.spec || null,
-          input.materialId || null,
-          input.totalLife,
-          input.warningThreshold,
-          input.totalLife,
-          input.originalCost,
-          input.originalCost,
-          unitCost,
-          input.manufactureDate || null,
-          input.warehouseLocation || null,
-          input.remark || null,
-        ]
-      );
-      return result.insertId;
-    });
+    const tool = Tool.create(input);
+    return this.toolRepo.save(tool);
   }
 
   async updateTool(
@@ -162,58 +139,18 @@ export class ToolManagementService {
       remark: string;
     }>
   ): Promise<void> {
-    const allowed = [
-      'toolName',
-      'spec',
-      'materialId',
-      'totalLife',
-      'warningThreshold',
-      'manufactureDate',
-      'warehouseLocation',
-      'remark',
-    ];
-    const colMap: Record<string, string> = {
-      toolName: 'tool_name',
-      spec: 'spec',
-      materialId: 'material_id',
-      totalLife: 'total_life',
-      warningThreshold: 'warning_threshold',
-      manufactureDate: 'manufacture_date',
-      warehouseLocation: 'warehouse_location',
-      remark: 'remark',
-    };
-
-    const sets: string[] = [];
-    const args: Loose[] = [];
-    for (const key of allowed) {
-      if (input[key as keyof typeof input] !== undefined) {
-        sets.push(`${colMap[key]} = ?`);
-        args.push(input[key as keyof typeof input]);
-      }
-    }
-    if (sets.length === 0) return;
-
-    args.push(id);
-    await execute(
-      `UPDATE dcprint_tool SET ${sets.join(', ')} WHERE id = ? AND is_deleted = 0`,
-      args
-    );
+    await this.toolRepo.updateBasicInfo(id, input);
   }
 
   async deleteTool(id: number): Promise<void> {
-    await execute('UPDATE dcprint_tool SET is_deleted = 1 WHERE id = ? AND status IN (1, 5)', [id]);
+    await this.toolRepo.softDelete(id);
   }
 
   async activateTool(id: number): Promise<void> {
-    const rows = await query<Loose>(
-      'SELECT status FROM dcprint_tool WHERE id = ? AND is_deleted = 0',
-      [id]
-    );
-    if (rows.length === 0) throw new Error('Tool not found');
-    if (rows[0].status !== 1) {
-      throw new Error('Only tools in standby (status=1) can be activated');
-    }
-    await execute('UPDATE dcprint_tool SET status = 2 WHERE id = ?', [id]);
+    const tool = await this.toolRepo.findById(id);
+    if (!tool) throw new Error('Tool not found');
+    tool.activate();
+    await this.toolRepo.update(tool);
   }
 
   async recordUsage(input: {
@@ -228,70 +165,115 @@ export class ToolManagementService {
     useTime?: string;
     remark?: string;
   }): Promise<void> {
-    await transaction(async (conn) => {
-      const [rows]: Loose = await conn.execute(
-        'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
-        [input.toolId]
-      );
-      if (rows.length === 0) throw new Error('Tool not found');
-      const tool = rows[0];
-
-      if (![2, 4].includes(tool.status)) {
-        throw new Error(
-          `Tool in status ${tool.status} cannot be used (only active/warning allowed)`
+    const ctx = { module: 'tool', action: 'recordUsage', toolId: input.toolId };
+    let phase = 'init';
+    try {
+      await transaction(async (conn) => {
+        phase = 'load_tool';
+        const rows = await conn.execute(
+          'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
+          [input.toolId]
         );
-      }
-      if (input.useCount > tool.remain_life) {
-        throw new Error(`Use count ${input.useCount} exceeds remaining life ${tool.remain_life}`);
-      }
+        const toolRows = (rows as unknown[])[0] as Record<string, unknown>[];
+        if (toolRows.length === 0) {
+          logger.warn(ctx, `Tool not found`, { toolId: input.toolId });
+          throw new Error('Tool not found');
+        }
+        const tool = Tool.fromRow(toolRows[0]);
 
-      const newUsedCount = tool.used_count + input.useCount;
-      const newRemainLife = tool.total_life - newUsedCount;
-      const amortizedCost = Number(tool.unit_cost) * input.useCount;
-      const newAccumulatedCost = Number(tool.accumulated_cost) + amortizedCost;
-      const newNetValue = Number(tool.original_cost) - newAccumulatedCost;
+        phase = 'record_usage';
+        const usageResult = tool.recordUsage(input.useCount);
 
-      let newStatus = tool.status;
-      if (newRemainLife <= 0) {
-        newStatus = 5;
-      } else if (newUsedCount >= tool.warning_threshold) {
-        newStatus = 4;
-      }
-
-      await conn.execute(
-        `UPDATE dcprint_tool
-         SET used_count = ?, remain_life = ?, accumulated_cost = ?, net_value = ?, status = ?
-         WHERE id = ?`,
-        [newUsedCount, newRemainLife, newAccumulatedCost, newNetValue, newStatus, input.toolId]
-      );
-
-      await conn.execute(
-        `INSERT INTO dcprint_tool_usage
-         (tool_id, work_order_id, work_order_no, process_id, process_name, use_count,
-          operator_id, operator_name, amortized_cost, use_time, remark)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          input.toolId,
-          input.workOrderId || null,
-          input.workOrderNo || null,
-          input.processId || null,
-          input.processName || null,
-          input.useCount,
-          input.operatorId || null,
-          input.operatorName || null,
-          amortizedCost,
-          input.useTime || new Date(),
-          input.remark || null,
-        ]
-      );
-
-      if (newStatus === 5) {
-        secureLog('warn', 'Tool reached end of life, auto-scrapped', {
-          toolId: input.toolId,
-          usedCount: newUsedCount,
+        logger.info(ctx, `寿命与成本计算`, {
+          toolType: tool.toolType,
+          toolCode: tool.toolCode,
+          delta: { useCount: input.useCount, amortizedCost: usageResult.amortizedCost },
+          result: usageResult,
         });
-      }
-    });
+
+        phase = 'persist_tool';
+        await conn.execute(
+          `UPDATE dcprint_tool
+           SET used_count = ?, remain_life = ?, accumulated_cost = ?, net_value = ?, status = ?
+           WHERE id = ?`,
+          [
+            usageResult.newUsedCount,
+            usageResult.newRemainLife,
+            usageResult.newAccumulatedCost,
+            usageResult.newNetValue,
+            usageResult.newStatus,
+            input.toolId,
+          ]
+        );
+
+        phase = 'persist_usage';
+        await conn.execute(
+          `INSERT INTO dcprint_tool_usage
+           (tool_id, work_order_id, work_order_no, process_id, process_name, use_count,
+            operator_id, operator_name, amortized_cost, use_time, remark)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            input.toolId,
+            input.workOrderId || null,
+            input.workOrderNo || null,
+            input.processId || null,
+            input.processName || null,
+            input.useCount,
+            input.operatorId || null,
+            input.operatorName || null,
+            usageResult.amortizedCost,
+            input.useTime || new Date(),
+            input.remark || null,
+          ]
+        );
+
+        logger.info(ctx, `报工记录已写入`, {
+          toolType: tool.toolType,
+          workOrderNo: input.workOrderNo,
+          amortizedCost: usageResult.amortizedCost,
+          newStatus: usageResult.newStatus,
+        });
+
+        phase = 'emit_events';
+        if (usageResult.shouldWarn) {
+          await getDomainEventOutbox().saveEvents(conn, 'Tool', input.toolId, [
+            new ToolWarningTriggeredEvent({
+              toolId: input.toolId,
+              toolCode: tool.toolCode,
+              toolType: tool.toolType,
+              usedCount: usageResult.newUsedCount,
+              warningThreshold: tool.warningThreshold,
+              totalLife: tool.totalLife,
+              remainLife: usageResult.newRemainLife,
+            }),
+          ]);
+        }
+
+        if (usageResult.isEndOfLife) {
+          await getDomainEventOutbox().saveEvents(conn, 'Tool', input.toolId, [
+            new ToolScrappedEvent({
+              toolId: input.toolId,
+              toolCode: tool.toolCode,
+              toolType: tool.toolType,
+              usedCount: usageResult.newUsedCount,
+              remainLife: usageResult.newRemainLife,
+              netValue: usageResult.newNetValue,
+              scrapReason: '寿命耗尽自动报废',
+            }),
+          ]);
+          secureLog('warn', 'Tool reached end of life, auto-scrapped', {
+            toolId: input.toolId,
+            usedCount: usageResult.newUsedCount,
+          });
+        }
+      });
+    } catch (err) {
+      logger.error(ctx, `recordUsage 失败 [phase=${phase}]`, {
+        error: err instanceof Error ? err.message : String(err),
+        input,
+      });
+      throw err;
+    }
   }
 
   async startMaintenance(input: {
@@ -302,36 +284,58 @@ export class ToolManagementService {
     operatorName?: string;
     remark?: string;
   }): Promise<number> {
-    return transaction(async (conn) => {
-      const [rows]: Loose = await conn.execute(
-        'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
-        [input.toolId]
-      );
-      if (rows.length === 0) throw new Error('Tool not found');
-      const tool = rows[0];
-      if (![2, 4].includes(tool.status)) {
-        throw new Error('Only active/warning tools can enter maintenance');
-      }
+    const ctx = { module: 'tool', action: 'startMaintenance', toolId: input.toolId };
+    let phase = 'init';
+    try {
+      return await transaction(async (conn) => {
+        phase = 'load_tool';
+        const rows = await conn.execute(
+          'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
+          [input.toolId]
+        );
+        const toolRows = (rows as unknown[])[0] as Record<string, unknown>[];
+        if (toolRows.length === 0) {
+          logger.warn(ctx, `Tool not found`, { toolId: input.toolId });
+          throw new Error('Tool not found');
+        }
+        const tool = Tool.fromRow(toolRows[0]);
 
-      await conn.execute('UPDATE dcprint_tool SET status = 3 WHERE id = ?', [input.toolId]);
+        phase = 'validate_status';
+        tool.startMaintenance();
 
-      const [result]: Loose = await conn.execute(
-        `INSERT INTO dcprint_tool_maintenance
-         (tool_id, maintenance_type, maintenance_cost, description, life_before, life_after,
-          life_adjustment, status, start_time, operator_id, operator_name, remark)
-         VALUES (?, ?, 0, ?, ?, 0, 0, 1, NOW(), ?, ?, ?)`,
-        [
-          input.toolId,
-          input.maintenanceType || 1,
-          input.description || null,
-          tool.remain_life,
-          input.operatorId || null,
-          input.operatorName || null,
-          input.remark || null,
-        ]
-      );
-      return result.insertId;
-    });
+        phase = 'persist_status';
+        await conn.execute('UPDATE dcprint_tool SET status = 3 WHERE id = ?', [input.toolId]);
+
+        phase = 'persist_maintenance';
+        const [result] = (await conn.execute(
+          `INSERT INTO dcprint_tool_maintenance
+           (tool_id, maintenance_type, maintenance_cost, description, life_before, life_after,
+            life_adjustment, status, start_time, operator_id, operator_name, remark)
+           VALUES (?, ?, 0, ?, ?, 0, 0, 1, NOW(), ?, ?, ?)`,
+          [
+            input.toolId,
+            input.maintenanceType || 1,
+            input.description || null,
+            tool.remainLife,
+            input.operatorId || null,
+            input.operatorName || null,
+            input.remark || null,
+          ]
+        )) as unknown as { insertId: number };
+
+        logger.info(ctx, `维修记录已创建`, {
+          maintenanceId: result.insertId,
+          lifeBefore: tool.remainLife,
+        });
+        return result.insertId;
+      });
+    } catch (err) {
+      logger.error(ctx, `startMaintenance 失败 [phase=${phase}]`, {
+        error: err instanceof Error ? err.message : String(err),
+        input,
+      });
+      throw err;
+    }
   }
 
   async completeMaintenance(input: {
@@ -340,83 +344,181 @@ export class ToolManagementService {
     lifeAfter: number;
     description?: string;
   }): Promise<void> {
-    await transaction(async (conn) => {
-      const [mRows]: Loose = await conn.execute(
-        'SELECT * FROM dcprint_tool_maintenance WHERE id = ? AND status = 1 FOR UPDATE',
-        [input.maintenanceId]
-      );
-      if (mRows.length === 0) throw new Error('Maintenance record not found or already completed');
-      const m = mRows[0];
+    const ctx = {
+      module: 'tool',
+      action: 'completeMaintenance',
+      maintenanceId: input.maintenanceId,
+    };
+    let phase = 'init';
+    try {
+      await transaction(async (conn) => {
+        phase = 'load_maintenance';
+        const mRows = await conn.execute(
+          'SELECT * FROM dcprint_tool_maintenance WHERE id = ? AND status = 1 FOR UPDATE',
+          [input.maintenanceId]
+        );
+        const maintenanceRows = (mRows as unknown[])[0] as Record<string, unknown>[];
+        if (maintenanceRows.length === 0) {
+          logger.warn(ctx, `Maintenance record not found or already completed`, {
+            maintenanceId: input.maintenanceId,
+          });
+          throw new Error('Maintenance record not found or already completed');
+        }
+        const m = maintenanceRows[0];
 
-      const [tRows]: Loose = await conn.execute(
-        'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
-        [m.tool_id]
-      );
-      if (tRows.length === 0) throw new Error('Tool not found');
-      const tool = tRows[0];
+        phase = 'load_tool';
+        const tRows = await conn.execute(
+          'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
+          [m.tool_id]
+        );
+        const toolRows = (tRows as unknown[])[0] as Record<string, unknown>[];
+        if (toolRows.length === 0) {
+          logger.warn(ctx, `Tool not found during maintenance completion`, {
+            toolId: m.tool_id,
+          });
+          throw new Error('Tool not found');
+        }
+        const tool = Tool.fromRow(toolRows[0]);
 
-      const lifeAdjustment = input.lifeAfter - m.life_before;
-      const newNetValue = Number(tool.net_value) + input.maintenanceCost;
-      const newOriginalCost = Number(tool.original_cost) + input.maintenanceCost;
-      const newUnitCost = input.lifeAfter > 0 ? newNetValue / input.lifeAfter : 0;
+        phase = 'compute_cost';
+        const lifeAdjustment = input.lifeAfter - (m.life_before as number);
+        tool.completeMaintenance(input.maintenanceCost, input.lifeAfter);
 
-      let newStatus = 2;
-      if (tool.used_count >= tool.warning_threshold) {
-        newStatus = 4;
-      }
-
-      await conn.execute(
-        `UPDATE dcprint_tool
-         SET remain_life = ?, net_value = ?, original_cost = ?, unit_cost = ?, status = ?
-         WHERE id = ?`,
-        [input.lifeAfter, newNetValue, newOriginalCost, newUnitCost, newStatus, m.tool_id]
-      );
-
-      await conn.execute(
-        `UPDATE dcprint_tool_maintenance
-         SET maintenance_cost = ?, life_after = ?, life_adjustment = ?, description = COALESCE(?, description),
-             status = 2, end_time = NOW()
-         WHERE id = ?`,
-        [
-          input.maintenanceCost,
-          input.lifeAfter,
+        logger.info(ctx, `维修后成本重算`, {
+          toolId: m.tool_id,
+          toolType: tool.toolType,
+          toolCode: tool.toolCode,
           lifeAdjustment,
-          input.description || null,
-          input.maintenanceId,
-        ]
-      );
-    });
+          maintenanceCost: input.maintenanceCost,
+        });
+
+        phase = 'persist_tool';
+        await conn.execute(
+          `UPDATE dcprint_tool
+           SET remain_life = ?, net_value = ?, original_cost = ?, unit_cost = ?, status = ?
+           WHERE id = ?`,
+          [tool.remainLife, tool.netValue, tool.originalCost, tool.unitCost, tool.status, m.tool_id]
+        );
+
+        phase = 'persist_maintenance';
+        await conn.execute(
+          `UPDATE dcprint_tool_maintenance
+           SET maintenance_cost = ?, life_after = ?, life_adjustment = ?,
+               description = COALESCE(?, description),
+               status = 2, end_time = NOW()
+           WHERE id = ?`,
+          [
+            input.maintenanceCost,
+            input.lifeAfter,
+            lifeAdjustment,
+            input.description || null,
+            input.maintenanceId,
+          ]
+        );
+
+        logger.info(ctx, `维修完成`, {
+          toolId: m.tool_id,
+          toolType: tool.toolType,
+          newStatus: tool.status,
+          lifeAdjustment,
+        });
+
+        if (tool.status === ToolStatus.WARNING) {
+          logger.info(ctx, `维修后仍达预警阈值 → status=4`, {
+            toolId: m.tool_id,
+            toolCode: tool.toolCode,
+            usedCount: tool.usedCount,
+            warningThreshold: tool.warningThreshold,
+          });
+        }
+      });
+    } catch (err) {
+      logger.error(ctx, `completeMaintenance 失败 [phase=${phase}]`, {
+        error: err instanceof Error ? err.message : String(err),
+        input,
+      });
+      throw err;
+    }
   }
 
   async scrapTool(input: { toolId: number; scrapReason: string; scrapBy: number }): Promise<void> {
-    await transaction(async (conn) => {
-      const [rows]: Loose = await conn.execute(
-        'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
-        [input.toolId]
-      );
-      if (rows.length === 0) throw new Error('Tool not found');
-      const tool = rows[0];
-      if (tool.status === 5) throw new Error('Tool already scrapped');
+    const ctx = { module: 'tool', action: 'scrapTool', toolId: input.toolId };
+    let phase = 'init';
+    try {
+      await transaction(async (conn) => {
+        phase = 'load_tool';
+        const rows = await conn.execute(
+          'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
+          [input.toolId]
+        );
+        const toolRows = (rows as unknown[])[0] as Record<string, unknown>[];
+        if (toolRows.length === 0) {
+          logger.warn(ctx, `Tool not found`, { toolId: input.toolId });
+          throw new Error('Tool not found');
+        }
+        const tool = Tool.fromRow(toolRows[0]);
 
-      await conn.execute(
-        `UPDATE dcprint_tool SET status = 5, scrap_reason = ?, scrap_time = NOW(), scrap_by = ? WHERE id = ?`,
-        [input.scrapReason, input.scrapBy, input.toolId]
-      );
-    });
+        phase = 'validate_status';
+        tool.scrap(input.scrapReason, input.scrapBy);
+
+        logger.info(ctx, `手动报废`, {
+          toolType: tool.toolType,
+          toolCode: tool.toolCode,
+          scrapReason: input.scrapReason,
+        });
+
+        phase = 'persist';
+        await conn.execute(
+          `UPDATE dcprint_tool
+           SET status = 5, scrap_reason = ?, scrap_time = NOW(), scrap_by = ?
+           WHERE id = ?`,
+          [input.scrapReason, input.scrapBy, input.toolId]
+        );
+
+        phase = 'emit_events';
+        await getDomainEventOutbox().saveEvents(conn, 'Tool', input.toolId, [
+          new ToolScrappedEvent({
+            toolId: input.toolId,
+            toolCode: tool.toolCode,
+            toolType: tool.toolType,
+            usedCount: tool.usedCount,
+            remainLife: tool.remainLife,
+            netValue: tool.netValue,
+            scrapReason: input.scrapReason,
+            scrapBy: input.scrapBy,
+          }),
+        ]);
+
+        secureLog('warn', 'Tool manually scrapped', {
+          toolId: input.toolId,
+          toolCode: tool.toolCode,
+          scrapReason: input.scrapReason,
+          scrapBy: input.scrapBy,
+        });
+      });
+    } catch (err) {
+      logger.error(ctx, `scrapTool 失败 [phase=${phase}]`, {
+        error: err instanceof Error ? err.message : String(err),
+        input,
+      });
+      throw err;
+    }
   }
 
   async listUsageRecords(toolId: number): Promise<ToolUsageRecord[]> {
-    return query<ToolUsageRecord>(
+    const rows = await execute(
       'SELECT * FROM dcprint_tool_usage WHERE tool_id = ? ORDER BY use_time DESC LIMIT 100',
       [toolId]
     );
+    return (rows as unknown[])[0] as ToolUsageRecord[];
   }
 
   async listMaintenanceRecords(toolId: number): Promise<ToolMaintenanceRecord[]> {
-    return query<ToolMaintenanceRecord>(
+    const rows = await execute(
       'SELECT * FROM dcprint_tool_maintenance WHERE tool_id = ? ORDER BY create_time DESC LIMIT 50',
       [toolId]
     );
+    return (rows as unknown[])[0] as ToolMaintenanceRecord[];
   }
 
   async getDashboard(): Promise<{
@@ -427,23 +529,14 @@ export class ToolManagementService {
     scrappedTools: number;
     totalNetValue: number;
   }> {
-    const rows = await query<Loose>(
-      `SELECT
-         COUNT(*) as total_tools,
-         SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as active_tools,
-         SUM(CASE WHEN status = 4 THEN 1 ELSE 0 END) as warning_tools,
-         SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as maintenance_tools,
-         SUM(CASE WHEN status = 5 THEN 1 ELSE 0 END) as scrapped_tools,
-         COALESCE(SUM(net_value), 0) as total_net_value
-       FROM dcprint_tool WHERE is_deleted = 0`
-    );
+    const stats = await this.toolRepo.countByStatus();
     return {
-      totalTools: rows[0]?.total_tools || 0,
-      activeTools: rows[0]?.active_tools || 0,
-      warningTools: rows[0]?.warning_tools || 0,
-      maintenanceTools: rows[0]?.maintenance_tools || 0,
-      scrappedTools: rows[0]?.scrapped_tools || 0,
-      totalNetValue: Number(rows[0]?.total_net_value || 0),
+      totalTools: stats.total,
+      activeTools: stats.active,
+      warningTools: stats.warning,
+      maintenanceTools: stats.maintenance,
+      scrappedTools: stats.scrapped,
+      totalNetValue: stats.totalNetValue,
     };
   }
 }

@@ -2,8 +2,9 @@ import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { ToolManagementService } from '@/application/services/ToolManagementService';
+import { MysqlToolRepository } from '@/infrastructure/repositories/MysqlToolRepository';
 
-const service = new ToolManagementService();
+const service = new ToolManagementService(new MysqlToolRepository());
 
 export const POST = withPermission(
   async (

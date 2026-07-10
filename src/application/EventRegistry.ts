@@ -229,6 +229,12 @@ export class EventRegistry {
     eventBus.subscribe('inkFormulaVersion.cancelled', new AuditLogHandler());
     eventBus.subscribe('inkFormulaVersion.cancelled', new CacheInvalidationHandler());
 
+    // 工装（刀模/网版）寿命事件
+    eventBus.subscribe('tool.warning_triggered', new AuditLogHandler());
+    eventBus.subscribe('tool.warning_triggered', new CacheInvalidationHandler());
+    eventBus.subscribe('tool.scrapped', new AuditLogHandler());
+    eventBus.subscribe('tool.scrapped', new CacheInvalidationHandler());
+
     // 标准卡事件 — BOM 展开缓存失效
     eventBus.subscribe('StandardCardConfirmed', new CacheInvalidationHandler());
     eventBus.subscribe('StandardCardObsoleted', new CacheInvalidationHandler());
