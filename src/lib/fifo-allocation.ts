@@ -119,7 +119,7 @@ export async function allocateFIFO(
   }
 
   if (excludeBatchIds.length > 0) {
-    sql += ` AND id NOT IN (${excludeBatchIds.join(',')})`;
+    sql += ` AND id NOT IN (${excludeBatchIds.map(() => '?').join(',')})`;
   }
 
   // 排序策略：已开封批次优先（opened_at），否则按入库时间；再按过期日期优先消耗即将过期批次
@@ -130,7 +130,7 @@ export async function allocateFIFO(
       id ASC
     FOR UPDATE`;
 
-  const [batches]: Loose = await conn.query(sql, [materialId, warehouseId]);
+  const [batches]: Loose = await conn.query(sql, [materialId, warehouseId, ...excludeBatchIds]);
 
   const result: FIFOAllocationResult = {
     material_id: materialId,
