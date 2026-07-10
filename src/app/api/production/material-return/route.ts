@@ -1,8 +1,10 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { query, execute } from '@/lib/db';
-import { successResponse } from '@/lib/api-response';
+import { query, execute, transaction } from '@/lib/db';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { getMrPrefix, generateDocNo } from '@/lib/global-config';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
+import { MaterialReturnApprovedEvent } from '@/domain/production/events/PickOrderEvents';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -88,7 +90,58 @@ export const POST = withPermission(
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
     const body = await request.json();
-    const { id, status, remark } = body;
+    const { id, status, remark, action } = body;
+
+    if (action === 'confirm' && id) {
+      const returnOrder: Loose = await query(
+        'SELECT * FROM prd_material_return WHERE id = ? AND deleted = 0',
+        [id]
+      );
+      if (!returnOrder || returnOrder.length === 0) {
+        return errorResponse('退料单不存在', 404, 404);
+      }
+      const order = returnOrder[0];
+      if (order.status !== 1) {
+        return errorResponse('退料单状态不允许确认', 400, 400);
+      }
+
+      const itemRows: Loose = await query(
+        'SELECT * FROM prd_material_return_item WHERE return_id = ? AND deleted = 0',
+        [id]
+      );
+      if (!itemRows || itemRows.length === 0) {
+        return errorResponse('退料单无明细', 400, 400);
+      }
+
+      await transaction(async (conn) => {
+        await conn.execute(
+          'UPDATE prd_material_return SET status = 2, update_time = NOW() WHERE id = ?',
+          [id]
+        );
+
+        await getDomainEventOutbox().saveEvents(conn, 'MaterialReturn', id, [
+          new MaterialReturnApprovedEvent({
+            returnId: id,
+            returnNo: order.return_no,
+            workOrderId: order.work_order_id || null,
+            workOrderNo: order.work_order_no || null,
+            warehouseId: order.warehouse_id,
+            operatorName: order.operator_name || null,
+            items: itemRows.map((item: Loose) => ({
+              materialId: item.material_id,
+              materialCode: item.material_code || null,
+              materialName: item.material_name || null,
+              quantity: Number(item.return_qty),
+              unit: item.unit || null,
+              batchNo: item.batch_no || null,
+            })),
+          }),
+        ]);
+      });
+
+      return successResponse(null, '退料单确认成功，库存已增加');
+    }
+
     if (status !== undefined)
       await execute('UPDATE prd_material_return SET status = ? WHERE id = ? AND deleted = 0', [
         status,

@@ -25,6 +25,7 @@ import { ToolCostHandler } from '@/application/handlers/ToolCostHandler';
 import { PickOrderInventoryHandler } from '@/application/handlers/PickOrderInventoryHandler';
 import { OutboundInventoryHandler } from '@/application/handlers/OutboundInventoryHandler';
 import { OutboundReceivableHandler } from '@/application/handlers/OutboundReceivableHandler';
+import { MaterialReturnInventoryHandler } from '@/application/handlers/MaterialReturnInventoryHandler';
 
 /**
  * 统一事件处理器注册中心
@@ -194,6 +195,13 @@ export class EventRegistry {
       new IdempotentHandler(new PickOrderInventoryHandler())
     );
     eventBus.subscribe('prod.pick.approved', new AuditLogHandler());
+
+    // 生产退料单事件 — 库存增加（事件驱动）
+    eventBus.subscribe(
+      'prod.return.approved',
+      new IdempotentHandler(new MaterialReturnInventoryHandler())
+    );
+    eventBus.subscribe('prod.return.approved', new AuditLogHandler());
 
     eventBus.subscribe(
       'workorder.completed',
