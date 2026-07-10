@@ -19,12 +19,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import { authFetch } from '@/lib/auth-fetch';
 
-import type { InboundItem, PrintLabel, ScanResult, InboundFormData } from './types';
+import type { InboundItem, PrintLabel, ScanResult, InboundFormData, InboundRecord } from './types';
 import { statusConfig, INITIAL_FORM_DATA, isCuttableMaterial } from './types';
 
 import { InboundToolbar } from './components/InboundToolbar';
@@ -97,6 +107,10 @@ export default function InboundManagementPage() {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [qrCodeLabelId, setQrCodeLabelId] = useState<string>('');
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+
+  // 删除确认对话框状态
+  const [deleteTarget, setDeleteTarget] = useState<InboundRecord | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const { cuttingForm, setCuttingForm, handleCutting } = useCutting({
     currentLabel,
@@ -177,6 +191,47 @@ export default function InboundManagementPage() {
     { value: 'week', label: tc('thisWeek') },
     { value: 'month', label: tc('thisMonth') },
   ];
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    const targetId = deleteTarget.id;
+    try {
+      const response = await authFetch(`/api/warehouse/inbound?id=${targetId}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+      if (result.success) {
+        toast.success(t('deletedWithUndo'), {
+          duration: 5000,
+          action: {
+            label: t('undo'),
+            onClick: async () => {
+              try {
+                const restoreResp = await authFetch(`/api/warehouse/inbound?id=${targetId}`, {
+                  method: 'PATCH',
+                });
+                const restoreResult = await restoreResp.json();
+                if (restoreResult.success) {
+                  toast.success(t('restoreSuccess'));
+                  await fetchInboundRecords();
+                } else {
+                  toast.error(restoreResult.message || t('restoreFailed'));
+                }
+              } catch {
+                toast.error(t('restoreFailed'));
+              }
+            },
+          },
+        });
+        await fetchInboundRecords();
+      } else {
+        toast.error(result.message || t('deleteFailed'));
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('deleteFailed'));
+    }
+    setDeleteTarget(null);
+  };
 
   return (
     <MainLayout title={t('inboundManagement')}>
@@ -386,25 +441,9 @@ export default function InboundManagementPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={async () => {
-                              if (!confirm(t('confirmDeleteInbound'))) return;
-                              try {
-                                const response = await authFetch(
-                                  `/api/warehouse/inbound?id=${record.id}`,
-                                  {
-                                    method: 'DELETE',
-                                  }
-                                );
-                                const result = await response.json();
-                                if (result.success) {
-                                  toast.success(t('deleteSuccess'));
-                                  await fetchInboundRecords();
-                                } else {
-                                  toast.error(result.message || t('deleteFailed'));
-                                }
-                              } catch {
-                                toast.error(t('deleteFailed'));
-                              }
+                            onClick={() => {
+                              setDeleteTarget(record);
+                              setIsDeleteDialogOpen(true);
                             }}
                           >
                             <Trash2 className="w-3 h-3 mr-1" />
@@ -632,6 +671,29 @@ export default function InboundManagementPage() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* 删除确认对话框 */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('deleteConfirmTitle')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {deleteTarget?.status === 'approved' || deleteTarget?.status === 'completed'
+                  ? t('deleteWarningMessage')
+                  : t('confirmDeleteInbound')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{tc('cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={handleConfirmDelete}
+              >
+                {tc('delete')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* 对话框组件 */}
         <InboundDialogs

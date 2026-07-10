@@ -210,3 +210,36 @@ export const DELETE = withPermission(
   },
   { errorMessage: '操作失败' }
 );
+
+export const PATCH = withPermission(
+  async (request: NextRequest, _userInfo: UserInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return errorResponse('入库单ID不能为空', 400, 400);
+    }
+
+    const { execute, query } = await import('@/lib/db');
+
+    try {
+      const [rows]: Loose = await query(
+        'SELECT id FROM inv_inbound_order WHERE id = ? AND deleted = 1',
+        [parseInt(id)]
+      );
+
+      if (!rows || rows.length === 0) {
+        return errorResponse('入库单不存在或未被删除', 404, 404);
+      }
+
+      await execute('UPDATE inv_inbound_order SET deleted = 0, update_time = NOW() WHERE id = ?', [
+        parseInt(id),
+      ]);
+
+      return successResponse(null, '入库单已恢复');
+    } catch (error) {
+      return errorResponse(error instanceof Error ? error.message : '恢复失败', 500, 500);
+    }
+  },
+  { errorMessage: '恢复失败' }
+);
