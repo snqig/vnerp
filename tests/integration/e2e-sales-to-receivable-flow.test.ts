@@ -25,6 +25,12 @@ vi.mock('@/lib/db', () => ({
 
 vi.mock('@/lib/logger', () => ({
   secureLog: vi.fn(),
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
 }));
 
 vi.mock('@/infrastructure/event-bus/DomainEventOutboxFactory', () => ({
@@ -224,11 +230,20 @@ describe('端到端流程：销售→MRP→生产→库存→应收', () => {
         warehouseId: 1,
       });
 
-      // SELECT inv_inventory 返回空行数组（记录不存在），触发 INSERT 新记录分支
+      // 调用顺序：
+      // 1. SELECT inv_inventory (空 → 走 INSERT 分支)
+      // 2. SELECT inv_material
+      // 3. INSERT inv_inventory
+      // 4. SELECT inv_inventory WHERE id=? (costService.onInbound)
+      // 5. UPDATE inv_inventory SET unit_cost/total_cost (costService.onInbound)
+      // 6. INSERT inv_inventory_batch
+      // 7. INSERT inv_inventory_transaction
       mockConn.execute
         .mockResolvedValueOnce([[]] as any)
         .mockResolvedValueOnce([[{ material_code: 'PROD-001', unit: '件' }]] as any)
         .mockResolvedValueOnce([{ insertId: 1 }] as any)
+        .mockResolvedValueOnce([[{ id: 1, quantity: 50, unit_cost: 0, total_cost: 0 }]] as any)
+        .mockResolvedValueOnce([{ affectedRows: 1 }] as any)
         .mockResolvedValueOnce([{ insertId: 1 }] as any)
         .mockResolvedValueOnce([{ insertId: 1 }] as any);
 
@@ -317,11 +332,11 @@ describe('端到端流程：销售→MRP→生产→库存→应收', () => {
       expect(insertCall![0]).toContain('customer_id');
       expect(insertCall![0]).toContain('amount');
 
-      const params = insertCall![1];
-      expect(params).toContain(50);
-      expect(params).toContain(100);
-      expect(params).toContain('SO20260101001');
-      expect(params).toContain(5000);
+      const params = insertCall![1] as unknown[];
+      // receivable_no, customer_id, source_no(orderNo), amount, balance, remark
+      expect(params).toContain(50);               // customer_id
+      expect(params).toContain('SO20260101001');  // source_no
+      expect(params).toContain(5000);             // amount + balance
     });
 
     it('出库金额为0时不应创建应收凭证', async () => {

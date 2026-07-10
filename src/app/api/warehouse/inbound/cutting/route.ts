@@ -369,7 +369,6 @@ export const POST = withPermission(
             `余料: ${remainWidth}mm`,
             sourceLabel.warehouse_id,
             sourceLabel.location_id,
-            sourceLabel.is_main_material,
             sourceLabel.id,
           ]
         );

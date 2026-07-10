@@ -239,7 +239,7 @@ export class ScreenPlateCostHandler implements EventHandler<WorkOrderCompletedEv
       await execute(
         `INSERT INTO screen_plate_history (
           screen_plate_id, action, life_increment, operator_id, operator_name, created_at
-        ) VALUES (?, 'workorder_used', ?, ?, ?, ?, NOW())`,
+        ) VALUES (?, 'workorder_used', ?, ?, ?, NOW())`,
         [usage.plateId, usage.usageCount, null, 'system']
       );
     }

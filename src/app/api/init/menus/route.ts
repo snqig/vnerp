@@ -1243,6 +1243,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
                 menu.component,
                 menu.permission,
                 menu.sort_order,
+                1,
               ]
             );
             results.push(`${menu.menu_code}: 创建成功`);

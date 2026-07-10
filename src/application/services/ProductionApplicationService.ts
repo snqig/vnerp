@@ -12,9 +12,7 @@ interface InventoryRow {
 }
 
 export class ProductionApplicationService {
-  constructor(
-    private readonly workOrderRepo: IWorkOrderRepository
-  ) {}
+  constructor(private readonly workOrderRepo: IWorkOrderRepository) {}
 
   async getWorkOrderById(id: number): Promise<WorkOrder> {
     const wo = await this.workOrderRepo.findById(id);
@@ -115,7 +113,7 @@ export class ProductionApplicationService {
         const transNo = 'TRX' + Date.now() + String(issue.materialId).slice(-4);
         await conn.execute(
           `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, source_id, material_id, batch_no, warehouse_id, quantity, create_time)
-           VALUES (?, 'out', 'workorder', ?, ?, ?, ?, ?, ?, NOW())`,
+           VALUES (?, 'out', 'workorder', ?, ?, ?, ?, ?, NOW())`,
           [transNo, id, issue.materialId, issue.batchNo, issue.warehouseId, issue.quantity]
         );
       }

@@ -40,7 +40,7 @@ export class PurchaseReceivedHandler implements EventHandler<PurchaseOrderReceiv
         } else {
           await conn.execute(
             `INSERT INTO inv_inventory_batch (batch_no, material_id, material_name, warehouse_id, available_qty, quantity, unit_price, inbound_date, status, create_time)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), 1, NOW())`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE(), 1, NOW())`,
             [
               item.batchNo,
               item.materialId,

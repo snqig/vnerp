@@ -200,7 +200,7 @@ export class SampleProcessTemplateService {
           substrate_material_id, substrate_material_name, spec, print_color, ink_color_id, screen_plate_id, die_tool_id,
           material_loss_rate, estimated_hour, diagram_url, total_material_cost, total_labor_cost, total_tool_cost, total_cost, remark,
           status, create_by, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
         [
           templateNo,
           templateName,

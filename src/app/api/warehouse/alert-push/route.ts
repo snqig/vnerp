@@ -124,9 +124,10 @@ export const POST = withPermission(
       if (!notification_ids || !Array.isArray(notification_ids)) {
         return errorResponse('通知ID列表不能为空', 400, 400);
       }
-      await execute(`UPDATE sys_notification SET is_read = 1, read_time = NOW() WHERE id IN (?)`, [
-        notification_ids.join(','),
-      ]);
+      await execute(
+        `UPDATE sys_notification SET is_read = 1, read_time = NOW() WHERE id IN (${notification_ids.map(() => '?').join(',')})`,
+        notification_ids
+      );
       return successResponse(null, '已标记为已读');
     }
 
