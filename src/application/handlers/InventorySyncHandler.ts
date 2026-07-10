@@ -2,6 +2,7 @@ import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { InboundOrderApprovedEvent } from '@/domain/warehouse/events/InboundOrderEvents';
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { InventoryCostService } from '@/application/services/InventoryCostService';
 import type { RowDataPacket } from 'mysql2';
 
 /** 库存行类型 */
@@ -15,6 +16,8 @@ interface InventoryBatchRow {
   id: number;
   available_qty: string | number;
 }
+
+const costService = new InventoryCostService();
 
 export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEvent> {
   async handle(event: InboundOrderApprovedEvent): Promise<void> {
@@ -35,8 +38,11 @@ export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEv
             'UPDATE inv_inventory SET quantity = quantity + ?, available_qty = available_qty + ?, update_time = NOW() WHERE id = ?',
             [item.quantity, item.quantity, invRow.id]
           );
+          if (item.unitPrice && item.unitPrice > 0) {
+            await costService.onInbound(conn, invRow.id, item.quantity, item.unitPrice);
+          }
         } else {
-          await conn.execute(
+          const [newInv] = await conn.execute<RowDataPacket[]>(
             `INSERT INTO inv_inventory (material_id, material_code, material_name, warehouse_id, quantity, available_qty, unit, create_time)
              VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
             [
@@ -49,6 +55,10 @@ export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEv
               '件',
             ]
           );
+          const newInvId = (newInv as unknown as { insertId: number }).insertId;
+          if (item.unitPrice && item.unitPrice > 0) {
+            await costService.onInbound(conn, newInvId, item.quantity, item.unitPrice);
+          }
         }
 
         const [existingBatch] = await conn.execute<RowDataPacket[]>(

@@ -2,6 +2,9 @@ import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { WorkOrderCompletedEvent } from '@/domain/production/events/WorkOrderEvents';
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { InventoryCostService } from '@/application/services/InventoryCostService';
+
+const costService = new InventoryCostService();
 
 /**
  * 处理工单完工事件：成品入库（增加库存）
@@ -50,12 +53,14 @@ export class WorkOrderCompletedHandler implements EventHandler<WorkOrderComplete
         );
         unit = inv.unit || unit;
       } else {
-        await conn.execute(
+        const [newInv] = await conn.execute(
           `INSERT INTO inv_inventory
              (material_id, material_code, material_name, warehouse_id, quantity, available_qty, unit, create_time)
            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
           [productId, materialCode, productName, warehouseId, completedQty, completedQty, unit]
         );
+        const newInvId = (newInv as unknown as { insertId: number }).insertId;
+        await costService.onInbound(conn, newInvId, completedQty, 0);
       }
 
       await conn.execute(

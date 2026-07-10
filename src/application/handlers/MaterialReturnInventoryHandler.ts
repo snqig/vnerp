@@ -2,6 +2,9 @@ import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { MaterialReturnApprovedEvent } from '@/domain/production/events/PickOrderEvents';
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { InventoryCostService } from '@/application/services/InventoryCostService';
+
+const costService = new InventoryCostService();
 
 export class MaterialReturnInventoryHandler implements EventHandler<MaterialReturnApprovedEvent> {
   async handle(event: MaterialReturnApprovedEvent): Promise<void> {
@@ -15,12 +18,16 @@ export class MaterialReturnInventoryHandler implements EventHandler<MaterialRetu
         );
 
         if (existingInv.length > 0) {
+          const invRow = existingInv[0] as { id: number };
           await conn.execute(
             'UPDATE inv_inventory SET quantity = quantity + ?, available_qty = available_qty + ?, update_time = NOW() WHERE id = ?',
-            [item.quantity, item.quantity, existingInv[0].id]
+            [item.quantity, item.quantity, invRow.id]
           );
+          if (item.unitPrice && item.unitPrice > 0) {
+            await costService.onInbound(conn, invRow.id, item.quantity, item.unitPrice);
+          }
         } else {
-          await conn.execute(
+          const [newInv] = await conn.execute(
             `INSERT INTO inv_inventory (material_id, material_code, material_name, warehouse_id, quantity, available_qty, unit, create_time)
              VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
             [
@@ -33,6 +40,10 @@ export class MaterialReturnInventoryHandler implements EventHandler<MaterialRetu
               item.unit || '件',
             ]
           );
+          const newInvId = (newInv as unknown as { insertId: number }).insertId;
+          if (item.unitPrice && item.unitPrice > 0) {
+            await costService.onInbound(conn, newInvId, item.quantity, item.unitPrice);
+          }
         }
 
         if (item.batchNo) {

@@ -2,7 +2,10 @@ import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { InboundOrderUnapprovedEvent } from '@/domain/warehouse/events/InboundOrderEvents';
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { InventoryCostService } from '@/application/services/InventoryCostService';
 import type { RowDataPacket } from 'mysql2';
+
+const costService = new InventoryCostService();
 
 /** 入库单行类型 */
 interface InboundRow {
@@ -15,6 +18,7 @@ interface InboundItemRow {
   material_name: string;
   quantity: string | number;
   batch_no: string | null;
+  unit_price: string | number;
 }
 
 /** 库存行类型 */
@@ -50,7 +54,7 @@ export class InventoryRollbackHandler implements EventHandler<InboundOrderUnappr
 
       // Fetch inbound items
       const [itemRows] = await conn.execute<RowDataPacket[]>(
-        'SELECT material_id, material_name, quantity, batch_no FROM inv_inbound_item WHERE order_id = ? AND deleted = 0',
+        'SELECT material_id, material_name, quantity, batch_no, unit_price FROM inv_inbound_item WHERE order_id = ? AND deleted = 0',
         [inboundId]
       );
 
@@ -59,6 +63,7 @@ export class InventoryRollbackHandler implements EventHandler<InboundOrderUnappr
         materialName: row.material_name,
         quantity: Number(row.quantity),
         batchNo: row.batch_no,
+        unitPrice: Number(row.unit_price) || 0,
       }));
 
       const sortedItems = [...items].sort((a, b) => a.materialId - b.materialId);
@@ -82,6 +87,9 @@ export class InventoryRollbackHandler implements EventHandler<InboundOrderUnappr
               'UPDATE inv_inventory SET quantity = quantity - ?, update_time = NOW() WHERE id = ?',
               [item.quantity, invRow.id]
             );
+          }
+          if (item.unitPrice > 0) {
+            await costService.onInboundRollback(conn, invRow.id, item.quantity, item.unitPrice);
           }
         }
 

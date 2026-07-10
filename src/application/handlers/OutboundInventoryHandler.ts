@@ -2,6 +2,9 @@ import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { OutboundOrderApprovedEvent } from '@/domain/warehouse/events/OutboundOrderEvents';
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { InventoryCostService } from '@/application/services/InventoryCostService';
+
+const costService = new InventoryCostService();
 
 export class OutboundInventoryHandler implements EventHandler<OutboundOrderApprovedEvent> {
   async handle(event: OutboundOrderApprovedEvent): Promise<void> {
@@ -49,6 +52,18 @@ export class OutboundInventoryHandler implements EventHandler<OutboundOrderAppro
         }
 
         const transNo = 'TRX' + Date.now() + String(item.materialId).slice(-4);
+
+        let unitCost = item.unitPrice || 0;
+        let totalCost = item.quantity * unitCost;
+        if (existingInv.length > 0) {
+          const invRow = existingInv[0] as { id: number };
+          const costResult = await costService.getOutboundCost(conn, invRow.id, item.quantity);
+          if (costResult) {
+            unitCost = costResult.unitCost;
+            totalCost = costResult.totalCost;
+          }
+        }
+
         await conn.execute(
           `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, source_id, material_id, material_code, batch_no, warehouse_id, quantity, unit_price, total_amount, create_time)
            VALUES (?, 'out', 'outbound', ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
@@ -60,8 +75,8 @@ export class OutboundInventoryHandler implements EventHandler<OutboundOrderAppro
             item.batchNo,
             warehouseId,
             item.quantity,
-            item.unitPrice,
-            item.quantity * item.unitPrice,
+            unitCost,
+            totalCost,
           ]
         );
       }
