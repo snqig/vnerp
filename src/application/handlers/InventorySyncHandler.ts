@@ -32,18 +32,19 @@ export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEv
         if (existingInv.length > 0) {
           const invRow = existingInv[0] as unknown as InventoryRow;
           await conn.execute(
-            'UPDATE inv_inventory SET quantity = quantity + ?, update_time = NOW() WHERE id = ?',
-            [item.quantity, invRow.id]
+            'UPDATE inv_inventory SET quantity = quantity + ?, available_qty = available_qty + ?, update_time = NOW() WHERE id = ?',
+            [item.quantity, item.quantity, invRow.id]
           );
         } else {
           await conn.execute(
-            `INSERT INTO inv_inventory (material_id, material_code, material_name, warehouse_id, quantity, unit, create_time)
-             VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+            `INSERT INTO inv_inventory (material_id, material_code, material_name, warehouse_id, quantity, available_qty, unit, create_time)
+             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
             [
               item.materialId,
               item.materialCode || null,
               item.materialName,
               warehouseId,
+              item.quantity,
               item.quantity,
               '件',
             ]
