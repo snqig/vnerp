@@ -14,24 +14,26 @@ export class WorkOrderCreatedEvent implements DomainEvent {
   ) {}
 }
 
-export class WorkOrderReleasedEvent implements DomainEvent {
-  readonly eventType = 'workorder.released';
+export class WorkOrderApprovedEvent implements DomainEvent {
+  readonly eventType = 'workorder.approved';
   readonly occurredAt = new Date();
   constructor(
     public readonly payload: {
       workOrderId: number;
       workOrderNo: string;
-      materialRequirements: Array<{
-        materialId: number;
-        materialCode: string;
-        requiredQty: number;
-      }>;
+      userId: number;
     }
   ) {}
 }
 
 export class WorkOrderStartedEvent implements DomainEvent {
   readonly eventType = 'workorder.started';
+  readonly occurredAt = new Date();
+  constructor(public readonly payload: { workOrderId: number; workOrderNo: string }) {}
+}
+
+export class WorkOrderPickingEvent implements DomainEvent {
+  readonly eventType = 'workorder.picking';
   readonly occurredAt = new Date();
   constructor(public readonly payload: { workOrderId: number; workOrderNo: string }) {}
 }
@@ -74,4 +76,34 @@ export class WorkOrderClosedEvent implements DomainEvent {
   readonly eventType = 'workorder.closed';
   readonly occurredAt = new Date();
   constructor(public readonly payload: { workOrderId: number; workOrderNo: string }) {}
+}
+
+export class WorkOrderCancelledEvent implements DomainEvent {
+  readonly eventType = 'workorder.cancelled';
+  readonly occurredAt = new Date();
+  constructor(
+    public readonly payload: {
+      workOrderId: number;
+      workOrderNo: string;
+      reason: string;
+      userId: number;
+    }
+  ) {}
+}
+
+export class WorkReportedEvent implements DomainEvent {
+  readonly eventType = 'workorder.reported';
+  readonly occurredAt = new Date();
+  constructor(
+    public readonly payload: {
+      workOrderId: number;
+      workOrderNo: string;
+      reportId: number;
+      completedQty: number;
+      toolIds: number[];
+      processName: string;
+      operatorId?: number;
+      operatorName?: string;
+    }
+  ) {}
 }

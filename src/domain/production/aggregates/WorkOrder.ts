@@ -3,11 +3,13 @@ import { WorkOrderStatusVO, WorkOrderStatus } from '../value-objects/WorkOrderSt
 import { MaterialRequirement, MaterialRequirementProps } from '../entities/MaterialRequirement';
 import {
   WorkOrderCreatedEvent,
-  WorkOrderReleasedEvent,
+  WorkOrderApprovedEvent,
   WorkOrderStartedEvent,
+  WorkOrderPickingEvent,
   WorkOrderMaterialIssuedEvent,
   WorkOrderCompletedEvent,
   WorkOrderClosedEvent,
+  WorkOrderCancelledEvent,
 } from '../events/WorkOrderEvents';
 
 export interface WorkOrderProps {
@@ -19,6 +21,7 @@ export interface WorkOrderProps {
   productCode?: string;
   plannedQty: number;
   completedQty: number;
+  orderType?: number;
   processId?: number;
   processName?: string;
   warehouseId?: number;
@@ -45,6 +48,7 @@ export class WorkOrder {
     public readonly productCode: string,
     private _plannedQty: number,
     private _completedQty: number,
+    public readonly orderType: number,
     public readonly processId: number | undefined,
     public readonly processName: string | undefined,
     public readonly warehouseId: number,
@@ -76,6 +80,7 @@ export class WorkOrder {
       props.productCode || '',
       props.plannedQty,
       props.completedQty || 0,
+      props.orderType || 0,
       props.processId,
       props.processName,
       props.warehouseId || 1,
@@ -117,6 +122,7 @@ export class WorkOrder {
       props.productCode || '',
       props.plannedQty,
       props.completedQty || 0,
+      props.orderType || 0,
       props.processId,
       props.processName,
       props.warehouseId || 1,
@@ -151,19 +157,15 @@ export class WorkOrder {
     return [...this._materialRequirements];
   }
 
-  release(): void {
-    if (!this._status.canRelease())
-      throw new DomainError(`当前状态"${this._status.label()}"不允许下达`);
-    this._status = this._status.transitionTo('released');
+  approve(userId: number): void {
+    if (!this._status.canApprove())
+      throw new DomainError(`当前状态"${this._status.label()}"不允许审核`);
+    this._status = this._status.transitionTo('approved');
     this._domainEvents.push(
-      new WorkOrderReleasedEvent({
+      new WorkOrderApprovedEvent({
         workOrderId: this.id!,
         workOrderNo: this.workOrderNo,
-        materialRequirements: this._materialRequirements.map((mr) => ({
-          materialId: mr.materialId,
-          materialCode: mr.materialCode,
-          requiredQty: mr.requiredQty,
-        })),
+        userId,
       })
     );
   }
@@ -181,21 +183,25 @@ export class WorkOrder {
     );
   }
 
-  pause(): void {
-    if (!this._status.canPause()) throw new DomainError(`当前状态不允许暂停`);
-    this._status = this._status.transitionTo('paused');
-  }
-
-  resume(): void {
-    if (!this._status.canResume()) throw new DomainError(`当前状态不允许恢复`);
-    this._status = this._status.transitionTo('in_progress');
+  markPicking(): void {
+    this._status = this._status.transitionTo('picking');
+    this._domainEvents.push(
+      new WorkOrderPickingEvent({
+        workOrderId: this.id!,
+        workOrderNo: this.workOrderNo,
+      })
+    );
   }
 
   issueMaterials(
     issues: Array<{ materialId: number; quantity: number; batchNo: string; warehouseId: number }>
   ): void {
-    if (this._status.value !== 'released' && this._status.value !== 'in_progress') {
-      throw new DomainError('只有已下达或生产中的工单才能领料');
+    if (
+      this._status.value !== 'approved' &&
+      this._status.value !== 'picking' &&
+      this._status.value !== 'in_progress'
+    ) {
+      throw new DomainError('只有已审核、领料中或生产中的工单才能领料');
     }
 
     const issuedItems: Array<{
@@ -255,9 +261,25 @@ export class WorkOrder {
   }
 
   close(): void {
+    if (!this._status.canClose())
+      throw new DomainError(`当前状态"${this._status.label()}"不允许结案`);
     this._status = this._status.transitionTo('closed');
     this._domainEvents.push(
       new WorkOrderClosedEvent({ workOrderId: this.id!, workOrderNo: this.workOrderNo })
+    );
+  }
+
+  cancel(reason: string, userId: number): void {
+    if (!this._status.canCancel())
+      throw new DomainError(`当前状态"${this._status.label()}"不允许作废`);
+    this._status = this._status.transitionTo('cancelled');
+    this._domainEvents.push(
+      new WorkOrderCancelledEvent({
+        workOrderId: this.id!,
+        workOrderNo: this.workOrderNo,
+        reason,
+        userId,
+      })
     );
   }
 
