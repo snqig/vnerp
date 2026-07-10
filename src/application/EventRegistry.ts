@@ -20,6 +20,11 @@ import { PurchaseReturnCompletedHandler } from '@/application/handlers/PurchaseR
 import { PurchaseReconciliationWrittenOffHandler } from '@/application/handlers/PurchaseReconciliationWrittenOffHandler';
 import { WorkOrderMaterialIssuedHandler } from '@/application/handlers/WorkOrderMaterialIssuedHandler';
 import { WorkOrderCompletedHandler } from '@/application/handlers/WorkOrderCompletedHandler';
+import { ToolUsageSyncHandler } from '@/application/handlers/ToolUsageSyncHandler';
+import { ToolCostHandler } from '@/application/handlers/ToolCostHandler';
+import { PickOrderInventoryHandler } from '@/application/handlers/PickOrderInventoryHandler';
+import { OutboundInventoryHandler } from '@/application/handlers/OutboundInventoryHandler';
+import { OutboundReceivableHandler } from '@/application/handlers/OutboundReceivableHandler';
 
 /**
  * 统一事件处理器注册中心
@@ -66,6 +71,8 @@ export class EventRegistry {
     // 出库单事件
     eventBus.subscribe('outbound.created', new AuditLogHandler());
     eventBus.subscribe('outbound.submitted', new AuditLogHandler());
+    eventBus.subscribe('outbound.approved', new IdempotentHandler(new OutboundInventoryHandler()));
+    eventBus.subscribe('outbound.approved', new IdempotentHandler(new OutboundReceivableHandler()));
     eventBus.subscribe('outbound.approved', new AuditLogHandler());
     eventBus.subscribe('outbound.approved', new CacheInvalidationHandler());
     eventBus.subscribe('outbound.cancelled', new AuditLogHandler());
@@ -173,11 +180,20 @@ export class EventRegistry {
     eventBus.subscribe('workorder.released', new AuditLogHandler());
     eventBus.subscribe('workorder.started', new AuditLogHandler());
 
+    eventBus.subscribe('workorder.reported', new IdempotentHandler(new ToolUsageSyncHandler()));
+
     eventBus.subscribe(
       'workorder.material_issued',
       new IdempotentHandler(new WorkOrderMaterialIssuedHandler())
     );
     eventBus.subscribe('workorder.material_issued', new AuditLogHandler());
+
+    // 生产领料单事件 — 库存扣减（事件驱动，替代原 route 内直接调用 FIFO）
+    eventBus.subscribe(
+      'prod.pick.approved',
+      new IdempotentHandler(new PickOrderInventoryHandler())
+    );
+    eventBus.subscribe('prod.pick.approved', new AuditLogHandler());
 
     eventBus.subscribe(
       'workorder.completed',
@@ -187,6 +203,7 @@ export class EventRegistry {
     eventBus.subscribe('workorder.completed', new IdempotentHandler(new QrCodeGenerationHandler()));
     eventBus.subscribe('workorder.completed', new IdempotentHandler(new InkCostHandler()));
     eventBus.subscribe('workorder.completed', new IdempotentHandler(new ScreenPlateCostHandler()));
+    eventBus.subscribe('workorder.completed', new IdempotentHandler(new ToolCostHandler()));
     eventBus.subscribe('workorder.completed', new AuditLogHandler());
     eventBus.subscribe('workorder.completed', new CacheInvalidationHandler());
 
