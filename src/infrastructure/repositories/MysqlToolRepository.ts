@@ -1,11 +1,11 @@
-import { query, execute, transaction } from '@/lib/db';
+import { query, execute, transaction, type SqlValue } from '@/lib/db';
 import { IToolRepository } from '@/domain/dcprint/repositories/IToolRepository';
 import { Tool } from '@/domain/dcprint/aggregates/Tool';
 
 export class MysqlToolRepository implements IToolRepository {
   async findById(id: number): Promise<Tool | null> {
     const rows = await query<Record<string, unknown>>(
-      'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0',
+      'SELECT * FROM dcprint_tool WHERE id = ? AND deleted = 0',
       [id]
     );
     return rows.length > 0 ? Tool.fromRow(rows[0]) : null;
@@ -13,7 +13,7 @@ export class MysqlToolRepository implements IToolRepository {
 
   async findByIdForUpdate(id: number): Promise<Tool | null> {
     const rows = await query<Record<string, unknown>>(
-      'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
+      'SELECT * FROM dcprint_tool WHERE id = ? AND deleted = 0 FOR UPDATE',
       [id]
     );
     return rows.length > 0 ? Tool.fromRow(rows[0]) : null;
@@ -21,7 +21,7 @@ export class MysqlToolRepository implements IToolRepository {
 
   async findByCode(toolCode: string): Promise<Tool | null> {
     const rows = await query<Record<string, unknown>>(
-      'SELECT * FROM dcprint_tool WHERE tool_code = ? AND is_deleted = 0',
+      'SELECT * FROM dcprint_tool WHERE tool_code = ? AND deleted = 0',
       [toolCode]
     );
     return rows.length > 0 ? Tool.fromRow(rows[0]) : null;
@@ -35,8 +35,8 @@ export class MysqlToolRepository implements IToolRepository {
     pageSize: number;
   }): Promise<{ list: Tool[]; total: number }> {
     const { toolType, status, keyword, page, pageSize } = params;
-    let where = 'WHERE is_deleted = 0';
-    const args: unknown[] = [];
+    let where = 'WHERE deleted = 0';
+    const args: SqlValue[] = [];
     if (toolType) {
       where += ' AND tool_type = ?';
       args.push(toolType);
@@ -66,13 +66,19 @@ export class MysqlToolRepository implements IToolRepository {
   }
 
   async save(tool: Tool): Promise<number> {
-    const row = tool.toRow();
-    const [result]: Record<string, unknown>[] = await execute(
+    const row = tool.toRow() as Record<string, SqlValue>;
+    const result = await execute(
       `INSERT INTO dcprint_tool
        (tool_type, tool_code, tool_name, spec, material_id, total_life, warning_threshold,
         used_count, remain_life, original_cost, accumulated_cost, net_value, unit_cost,
-        status, manufacture_date, warehouse_location, remark, is_deleted, create_time)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
+        status, manufacture_date, warehouse_location,
+        asset_type, layout_type, pieces_per_impression, material, qr_code, supplier_id,
+        maintenance_interval, maintenance_count, mesh_count, mesh_material, size,
+        tension_value, frame_type, customer_id, reclaim_count,
+        remark, deleted, create_time)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+               ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+               ?, 0, NOW())`,
       [
         row.tool_type,
         row.tool_code,
@@ -90,6 +96,21 @@ export class MysqlToolRepository implements IToolRepository {
         row.status,
         row.manufacture_date,
         row.warehouse_location,
+        row.asset_type,
+        row.layout_type,
+        row.pieces_per_impression,
+        row.material,
+        row.qr_code,
+        row.supplier_id,
+        row.maintenance_interval,
+        row.maintenance_count,
+        row.mesh_count,
+        row.mesh_material,
+        row.size,
+        row.tension_value,
+        row.frame_type,
+        row.customer_id,
+        row.reclaim_count,
         row.remark,
       ]
     );
@@ -97,7 +118,7 @@ export class MysqlToolRepository implements IToolRepository {
   }
 
   async update(tool: Tool): Promise<void> {
-    const row = tool.toRow();
+    const row = tool.toRow() as Record<string, SqlValue>;
     await execute(
       `UPDATE dcprint_tool
        SET used_count = ?, remain_life = ?, accumulated_cost = ?, net_value = ?, unit_cost = ?,
@@ -128,6 +149,19 @@ export class MysqlToolRepository implements IToolRepository {
       warningThreshold: number;
       manufactureDate: string;
       warehouseLocation: string;
+      assetType: string;
+      layoutType: string;
+      piecesPerImpression: number;
+      material: string;
+      qrCode: string;
+      supplierId: number;
+      maintenanceInterval: number;
+      meshCount: string;
+      meshMaterial: string;
+      size: string;
+      tensionValue: number;
+      frameType: string;
+      customerId: number;
       remark: string;
     }>
   ): Promise<void> {
@@ -139,11 +173,24 @@ export class MysqlToolRepository implements IToolRepository {
       warningThreshold: 'warning_threshold',
       manufactureDate: 'manufacture_date',
       warehouseLocation: 'warehouse_location',
+      assetType: 'asset_type',
+      layoutType: 'layout_type',
+      piecesPerImpression: 'pieces_per_impression',
+      material: 'material',
+      qrCode: 'qr_code',
+      supplierId: 'supplier_id',
+      maintenanceInterval: 'maintenance_interval',
+      meshCount: 'mesh_count',
+      meshMaterial: 'mesh_material',
+      size: 'size',
+      tensionValue: 'tension_value',
+      frameType: 'frame_type',
+      customerId: 'customer_id',
       remark: 'remark',
     };
 
     const sets: string[] = [];
-    const args: unknown[] = [];
+    const args: SqlValue[] = [];
     for (const [key, col] of Object.entries(colMap)) {
       if (data[key as keyof typeof data] !== undefined) {
         sets.push(`${col} = ?`);
@@ -154,23 +201,23 @@ export class MysqlToolRepository implements IToolRepository {
 
     args.push(id);
     await execute(
-      `UPDATE dcprint_tool SET ${sets.join(', ')}, update_time = NOW() WHERE id = ? AND is_deleted = 0`,
+      `UPDATE dcprint_tool SET ${sets.join(', ')}, update_time = NOW() WHERE id = ? AND deleted = 0`,
       args
     );
   }
 
   async softDelete(id: number): Promise<void> {
-    await execute('UPDATE dcprint_tool SET is_deleted = 1 WHERE id = ? AND status IN (1, 5)', [id]);
+    await execute('UPDATE dcprint_tool SET deleted = 1 WHERE id = ? AND status IN (1, 5)', [id]);
   }
 
   async existsByCode(toolCode: string, excludeId?: number): Promise<boolean> {
-    let sql = 'SELECT 1 FROM dcprint_tool WHERE tool_code = ? AND is_deleted = 0';
-    const args: unknown[] = [toolCode];
+    let sql = 'SELECT 1 FROM dcprint_tool WHERE tool_code = ? AND deleted = 0';
+    const args: SqlValue[] = [toolCode];
     if (excludeId) {
       sql += ' AND id != ?';
       args.push(excludeId);
     }
-    const rows = await query<unknown>(sql + ' LIMIT 1', args);
+    const rows = await query<Record<string, unknown>>(sql + ' LIMIT 1', args);
     return rows.length > 0;
   }
 
@@ -190,7 +237,7 @@ export class MysqlToolRepository implements IToolRepository {
          SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as maintenance,
          SUM(CASE WHEN status = 5 THEN 1 ELSE 0 END) as scrapped,
          COALESCE(SUM(net_value), 0) as total_net_value
-       FROM dcprint_tool WHERE is_deleted = 0`
+       FROM dcprint_tool WHERE deleted = 0`
     );
     return {
       total: Number(rows[0]?.total || 0),

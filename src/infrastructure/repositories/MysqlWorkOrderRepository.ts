@@ -21,6 +21,22 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
     return WorkOrder.reconstitute(this.mapToProps(order, materials));
   }
 
+  async findByWorkOrderNo(workOrderNo: string): Promise<WorkOrder | null> {
+    const orders = await query<Loose>(
+      'SELECT * FROM prod_work_order WHERE work_order_no = ? AND deleted = 0',
+      [workOrderNo]
+    );
+    if (!orders || orders.length === 0) return null;
+
+    const order = orders[0];
+    const materials = await query<Loose>(
+      'SELECT * FROM prod_work_order_material WHERE work_order_id = ? AND deleted = 0 ORDER BY id ASC',
+      [order.id]
+    );
+
+    return WorkOrder.reconstitute(this.mapToProps(order, materials));
+  }
+
   async findByStatus(
     status: string,
     pagination: { page: number; pageSize: number },
@@ -64,8 +80,8 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
     return await transaction(async (conn) => {
       const [result]: Loose = await conn.execute(
         `INSERT INTO prod_work_order (work_order_no, product_id, product_name, product_code, planned_qty, completed_qty,
-          process_id, process_name, warehouse_id, planned_start_date, planned_end_date, status, remark, create_by, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          order_type, process_id, process_name, warehouse_id, planned_start_date, planned_end_date, status, remark, create_by, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           workOrderNo,
           order.productId,
@@ -73,6 +89,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
           order.productCode,
           order.plannedQty,
           order.completedQty,
+          order.orderType || 0,
           order.processId || null,
           order.processName || null,
           order.warehouseId,
@@ -129,6 +146,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
       productId: order.product_id,
       productName: order.product_name || '',
       productCode: order.product_code || '',
+      orderType: order.order_type || 0,
       plannedQty: order.planned_qty,
       completedQty: order.completed_qty || 0,
       processId: order.process_id,
