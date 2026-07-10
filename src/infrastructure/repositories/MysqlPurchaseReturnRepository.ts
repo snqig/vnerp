@@ -1,5 +1,9 @@
 import mysql from 'mysql2/promise';
-import { IPurchaseReturnRepository, Pagination, PaginatedResult } from '@/domain/purchase/repositories/IPurchaseReturnRepository';
+import {
+  IPurchaseReturnRepository,
+  Pagination,
+  PaginatedResult,
+} from '@/domain/purchase/repositories/IPurchaseReturnRepository';
 import { PurchaseReturn, PurchaseReturnProps } from '@/domain/purchase/aggregates/PurchaseReturn';
 import { PurchaseReturnLineProps } from '@/domain/purchase/entities/PurchaseReturnLine';
 import { PurchaseReturnStatusValue } from '@/domain/purchase/value-objects/PurchaseReturnStatus';
@@ -102,8 +106,8 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
     if (!rows || rows.length === 0) return [];
     const returnIds = rows.map((r) => r.id);
     const allLines = await query<PurPurchaseReturnLineRow>(
-      `SELECT ${LINE_COLUMNS} FROM pur_purchase_return_line WHERE return_id IN (?) ORDER BY return_id, line_no`,
-      [returnIds]
+      `SELECT ${LINE_COLUMNS} FROM pur_purchase_return_line WHERE return_id IN (${returnIds.map(() => '?').join(',')}) ORDER BY return_id, line_no`,
+      returnIds
     );
     return rows.map((r) => {
       const lines = allLines.filter((l) => l.return_id === r.id);
@@ -163,8 +167,8 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
 
     const returnIds = rows.map((r) => r.id);
     const allLines = await query<PurPurchaseReturnLineRow>(
-      `SELECT ${LINE_COLUMNS} FROM pur_purchase_return_line WHERE return_id IN (?) ORDER BY return_id, line_no`,
-      [returnIds]
+      `SELECT ${LINE_COLUMNS} FROM pur_purchase_return_line WHERE return_id IN (${returnIds.map(() => '?').join(',')}) ORDER BY return_id, line_no`,
+      returnIds
     );
 
     const data = rows.map((r) => {
@@ -244,10 +248,10 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
   }
 
   async updateStatus(id: number, status: number): Promise<void> {
-    await execute(
-      `UPDATE pur_purchase_return SET status = ?, update_time = NOW() WHERE id = ?`,
-      [status, id]
-    );
+    await execute(`UPDATE pur_purchase_return SET status = ?, update_time = NOW() WHERE id = ?`, [
+      status,
+      id,
+    ]);
   }
 
   async updateApproveInfo(id: number, approveBy: number, approveTime: string): Promise<void> {
@@ -279,13 +283,15 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
   }
 
   async softDelete(id: number): Promise<void> {
-    await execute(
-      `UPDATE pur_purchase_return SET deleted = 1, update_time = NOW() WHERE id = ?`,
-      [id]
-    );
+    await execute(`UPDATE pur_purchase_return SET deleted = 1, update_time = NOW() WHERE id = ?`, [
+      id,
+    ]);
   }
 
-  private mapToAggregate(row: PurPurchaseReturnRow, lines: PurPurchaseReturnLineRow[]): PurchaseReturn {
+  private mapToAggregate(
+    row: PurPurchaseReturnRow,
+    lines: PurPurchaseReturnLineRow[]
+  ): PurchaseReturn {
     const lineProps: PurchaseReturnLineProps[] = (lines || []).map((l) => ({
       id: l.id,
       returnId: l.return_id,

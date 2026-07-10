@@ -89,8 +89,8 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
       await conn.query(
         `UPDATE domain_event_outbox
          SET status = 'dispatching', claimed_at = NOW()
-         WHERE id IN (?)`,
-        [ids]
+         WHERE id IN (${ids.map(() => '?').join(',')})`,
+        ids
       );
 
       await conn.commit();

@@ -494,8 +494,8 @@ export class WorkflowEngine {
     const rows = await query<{ id: number; name: string }>(
       `SELECT u.id, u.real_name as name FROM sys_user u
        LEFT JOIN sys_user_role ur ON u.id = ur.user_id
-       WHERE ur.role_id IN (?) AND u.status = 1 LIMIT 5`,
-      [roleIds]
+       WHERE ur.role_id IN (${roleIds.map(() => '?').join(',')}) AND u.status = 1 LIMIT 5`,
+      roleIds
     );
 
     return rows;

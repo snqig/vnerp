@@ -100,8 +100,8 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
     const allWriteOffs = await query<PurPurchaseReconciliationWriteoffRow>(
       `SELECT id, reconciliation_id, payable_id, amount, write_off_date, remark, create_time
        FROM pur_purchase_reconciliation_writeoff
-       WHERE reconciliation_id IN (?) ORDER BY reconciliation_id, write_off_date DESC`,
-      [reconIds]
+       WHERE reconciliation_id IN (${reconIds.map(() => '?').join(',')}) ORDER BY reconciliation_id, write_off_date DESC`,
+      reconIds
     );
     return rows.map((r) => {
       const writeOffs = allWriteOffs.filter((w) => w.reconciliation_id === r.id);
@@ -164,8 +164,8 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
     const allWriteOffs = await query<PurPurchaseReconciliationWriteoffRow>(
       `SELECT id, reconciliation_id, payable_id, amount, write_off_date, remark, create_time
        FROM pur_purchase_reconciliation_writeoff
-       WHERE reconciliation_id IN (?) ORDER BY reconciliation_id, write_off_date DESC`,
-      [reconIds]
+       WHERE reconciliation_id IN (${reconIds.map(() => '?').join(',')}) ORDER BY reconciliation_id, write_off_date DESC`,
+      reconIds
     );
 
     const data = rows.map((r) => {

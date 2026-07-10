@@ -23,8 +23,8 @@ export class MaterialCostProvider implements IMaterialCostProvider {
     // 优先尝试从库存模块获取移动加权平均成本
     try {
       const invCosts: Loose = await query(
-        `SELECT id, weighted_avg_cost FROM inv_material WHERE id IN (?) AND is_deleted = 0 AND weighted_avg_cost IS NOT NULL AND weighted_avg_cost > 0`,
-        [materialIds]
+        `SELECT id, weighted_avg_cost FROM inv_material WHERE id IN (${materialIds.map(() => '?').join(',')}) AND deleted = 0 AND weighted_avg_cost IS NOT NULL AND weighted_avg_cost > 0`,
+        materialIds
       );
       for (const row of invCosts) {
         costMap.set(row.id, Number(row.weighted_avg_cost) || 0);
@@ -38,8 +38,8 @@ export class MaterialCostProvider implements IMaterialCostProvider {
     if (missingIds.length > 0) {
       try {
         const baseInkCosts: Loose = await query(
-          `SELECT id, unit_price FROM base_ink WHERE id IN (?)`,
-          [missingIds]
+          `SELECT id, unit_price FROM base_ink WHERE id IN (${missingIds.map(() => '?').join(',')})`,
+          missingIds
         );
         for (const row of baseInkCosts) {
           costMap.set(row.id, Number(row.unit_price) || 0);
