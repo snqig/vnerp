@@ -12,6 +12,32 @@ export interface IToolRepository {
   }): Promise<{ list: Tool[]; total: number }>;
   save(tool: Tool): Promise<number>;
   update(tool: Tool): Promise<void>;
+  updateBasicInfo(
+    id: number,
+    data: Partial<{
+      toolName: string;
+      spec: string;
+      materialId: number;
+      totalLife: number;
+      warningThreshold: number;
+      manufactureDate: string;
+      warehouseLocation: string;
+      assetType: string;
+      layoutType: string;
+      piecesPerImpression: number;
+      material: string;
+      qrCode: string;
+      supplierId: number;
+      maintenanceInterval: number;
+      meshCount: string;
+      meshMaterial: string;
+      size: string;
+      tensionValue: number;
+      frameType: string;
+      customerId: number;
+      remark: string;
+    }>
+  ): Promise<void>;
   softDelete(id: number): Promise<void>;
   existsByCode(toolCode: string, excludeId?: number): Promise<boolean>;
   countByStatus(): Promise<{

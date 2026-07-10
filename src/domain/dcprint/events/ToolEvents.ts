@@ -1,6 +1,103 @@
 import { DomainEvent } from '../../shared/DomainTypes';
 
 /**
+ * 工装创建事件
+ * 触发时机：新工装录入完成
+ */
+export class ToolCreatedEvent implements DomainEvent {
+  readonly eventType = 'tool.created';
+  readonly occurredAt = new Date();
+  readonly aggregateType = 'Tool';
+  public readonly aggregateId?: number;
+
+  constructor(
+    public readonly payload: {
+      toolId: number;
+      toolCode: string;
+      toolType: number;
+      toolName: string;
+      totalLife: number;
+      originalCost: number;
+    }
+  ) {
+    this.aggregateId = payload.toolId;
+  }
+}
+
+/**
+ * 工装激活事件
+ * 触发时机：工装从待激活变为可用状态
+ */
+export class ToolActivatedEvent implements DomainEvent {
+  readonly eventType = 'tool.activated';
+  readonly occurredAt = new Date();
+  readonly aggregateType = 'Tool';
+  public readonly aggregateId?: number;
+
+  constructor(
+    public readonly payload: {
+      toolId: number;
+      toolCode: string;
+      toolType: number;
+      toolName: string;
+      totalLife: number;
+    }
+  ) {
+    this.aggregateId = payload.toolId;
+  }
+}
+
+/**
+ * 工装维修开始事件
+ * 触发时机：工装进入维修状态
+ */
+export class ToolMaintenanceStartedEvent implements DomainEvent {
+  readonly eventType = 'tool.maintenance_started';
+  readonly occurredAt = new Date();
+  readonly aggregateType = 'Tool';
+  public readonly aggregateId?: number;
+
+  constructor(
+    public readonly payload: {
+      toolId: number;
+      toolCode: string;
+      toolType: number;
+      maintenanceId: number;
+      maintenanceType: number;
+      remainLife: number;
+    }
+  ) {
+    this.aggregateId = payload.toolId;
+  }
+}
+
+/**
+ * 工装维修完成事件
+ * 触发时机：工装维修完成，恢复可用状态
+ */
+export class ToolMaintenanceCompletedEvent implements DomainEvent {
+  readonly eventType = 'tool.maintenance_completed';
+  readonly occurredAt = new Date();
+  readonly aggregateType = 'Tool';
+  public readonly aggregateId?: number;
+
+  constructor(
+    public readonly payload: {
+      toolId: number;
+      toolCode: string;
+      toolType: number;
+      maintenanceId: number;
+      maintenanceCost: number;
+      lifeAdjustment: number;
+      newRemainLife: number;
+      newStatus: number;
+    }
+  ) {
+    this.aggregateId = payload.toolId;
+  }
+}
+
+/**
  * 工装预警触发事件
  * 触发时机：工装使用累计达到预警阈值
  */

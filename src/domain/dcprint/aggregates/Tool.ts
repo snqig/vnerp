@@ -19,6 +19,30 @@ export interface ToolProps {
   status: ToolStatus;
   manufactureDate?: string;
   warehouseLocation?: string;
+  // 体系B 字段 (刀模)
+  assetType?: string;
+  layoutType?: string;
+  piecesPerImpression?: number;
+  material?: string;
+  qrCode?: string;
+  supplierId?: number;
+  maintenanceInterval?: number;
+  maintenanceCount?: number;
+  lastMaintenanceDate?: string;
+  lastMaintenanceImpressions?: number;
+  lastUsedDate?: string;
+  // 体系C 字段 (网版)
+  meshCount?: string;
+  meshMaterial?: string;
+  size?: string;
+  tensionValue?: number;
+  frameType?: string;
+  customerId?: number;
+  reclaimCount?: number;
+  exposureDate?: string;
+  lastCleanDate?: string;
+  lastReclaimDate?: string;
+  tensionDate?: string;
   scrapReason?: string;
   scrapTime?: string;
   scrapBy?: number;
@@ -103,6 +127,94 @@ export class Tool {
     return this._props.warehouseLocation;
   }
 
+  get assetType(): string | undefined {
+    return this._props.assetType;
+  }
+
+  get layoutType(): string | undefined {
+    return this._props.layoutType;
+  }
+
+  get piecesPerImpression(): number | undefined {
+    return this._props.piecesPerImpression;
+  }
+
+  get material(): string | undefined {
+    return this._props.material;
+  }
+
+  get qrCode(): string | undefined {
+    return this._props.qrCode;
+  }
+
+  get supplierId(): number | undefined {
+    return this._props.supplierId;
+  }
+
+  get maintenanceInterval(): number | undefined {
+    return this._props.maintenanceInterval;
+  }
+
+  get maintenanceCount(): number | undefined {
+    return this._props.maintenanceCount;
+  }
+
+  get lastMaintenanceDate(): string | undefined {
+    return this._props.lastMaintenanceDate;
+  }
+
+  get lastMaintenanceImpressions(): number | undefined {
+    return this._props.lastMaintenanceImpressions;
+  }
+
+  get lastUsedDate(): string | undefined {
+    return this._props.lastUsedDate;
+  }
+
+  get meshCount(): string | undefined {
+    return this._props.meshCount;
+  }
+
+  get meshMaterial(): string | undefined {
+    return this._props.meshMaterial;
+  }
+
+  get size(): string | undefined {
+    return this._props.size;
+  }
+
+  get tensionValue(): number | undefined {
+    return this._props.tensionValue;
+  }
+
+  get frameType(): string | undefined {
+    return this._props.frameType;
+  }
+
+  get customerId(): number | undefined {
+    return this._props.customerId;
+  }
+
+  get reclaimCount(): number | undefined {
+    return this._props.reclaimCount;
+  }
+
+  get exposureDate(): string | undefined {
+    return this._props.exposureDate;
+  }
+
+  get lastCleanDate(): string | undefined {
+    return this._props.lastCleanDate;
+  }
+
+  get lastReclaimDate(): string | undefined {
+    return this._props.lastReclaimDate;
+  }
+
+  get tensionDate(): string | undefined {
+    return this._props.tensionDate;
+  }
+
   get scrapReason(): string | undefined {
     return this._props.scrapReason;
   }
@@ -162,6 +274,19 @@ export class Tool {
     originalCost: number;
     manufactureDate?: string;
     warehouseLocation?: string;
+    assetType?: string;
+    layoutType?: string;
+    piecesPerImpression?: number;
+    material?: string;
+    qrCode?: string;
+    supplierId?: number;
+    maintenanceInterval?: number;
+    meshCount?: string;
+    meshMaterial?: string;
+    size?: string;
+    tensionValue?: number;
+    frameType?: string;
+    customerId?: number;
     remark?: string;
   }): Tool {
     if (input.totalLife <= 0) {
@@ -193,6 +318,21 @@ export class Tool {
       status: ToolStatus.STANDBY,
       manufactureDate: input.manufactureDate,
       warehouseLocation: input.warehouseLocation,
+      assetType: input.assetType,
+      layoutType: input.layoutType,
+      piecesPerImpression: input.piecesPerImpression,
+      material: input.material,
+      qrCode: input.qrCode,
+      supplierId: input.supplierId,
+      maintenanceInterval: input.maintenanceInterval,
+      maintenanceCount: 0,
+      meshCount: input.meshCount,
+      meshMaterial: input.meshMaterial,
+      size: input.size,
+      tensionValue: input.tensionValue,
+      frameType: input.frameType,
+      customerId: input.customerId,
+      reclaimCount: 0,
       remark: input.remark,
       isDeleted: 0,
     });
@@ -217,11 +357,33 @@ export class Tool {
       status: row.status as ToolStatus,
       manufactureDate: row.manufacture_date as string | undefined,
       warehouseLocation: row.warehouse_location as string | undefined,
+      assetType: row.asset_type as string | undefined,
+      layoutType: row.layout_type as string | undefined,
+      piecesPerImpression: row.pieces_per_impression as number | undefined,
+      material: row.material as string | undefined,
+      qrCode: row.qr_code as string | undefined,
+      supplierId: row.supplier_id as number | undefined,
+      maintenanceInterval: row.maintenance_interval as number | undefined,
+      maintenanceCount: row.maintenance_count as number | undefined,
+      lastMaintenanceDate: row.last_maintenance_date as string | undefined,
+      lastMaintenanceImpressions: row.last_maintenance_impressions as number | undefined,
+      lastUsedDate: row.last_used_date as string | undefined,
+      meshCount: row.mesh_count as string | undefined,
+      meshMaterial: row.mesh_material as string | undefined,
+      size: row.size as string | undefined,
+      tensionValue: row.tension_value as number | undefined,
+      frameType: row.frame_type as string | undefined,
+      customerId: row.customer_id as number | undefined,
+      reclaimCount: row.reclaim_count as number | undefined,
+      exposureDate: row.exposure_date as string | undefined,
+      lastCleanDate: row.last_clean_date as string | undefined,
+      lastReclaimDate: row.last_reclaim_date as string | undefined,
+      tensionDate: row.tension_date as string | undefined,
       scrapReason: row.scrap_reason as string | undefined,
       scrapTime: row.scrap_time as string | undefined,
       scrapBy: row.scrap_by as number | undefined,
       remark: row.remark as string | undefined,
-      isDeleted: row.is_deleted as number,
+      isDeleted: row.deleted as number,
       createTime: row.create_time as string | undefined,
       updateTime: row.update_time as string | undefined,
     });
@@ -296,7 +458,6 @@ export class Tool {
   }
 
   completeMaintenance(maintenanceCost: number, lifeAfter: number): void {
-    const lifeAdjustment = lifeAfter - this._props.remainLife;
     const newNetValue = this._props.netValue + maintenanceCost;
     const newOriginalCost = this._props.originalCost + maintenanceCost;
     const newUnitCost = lifeAfter > 0 ? newNetValue / lifeAfter : 0;
@@ -311,8 +472,6 @@ export class Tool {
     } else {
       this._props.status = ToolStatus.ACTIVE;
     }
-
-    return lifeAdjustment;
   }
 
   scrap(reason: string, operatorId: number): void {
@@ -344,11 +503,33 @@ export class Tool {
       status: this._props.status,
       manufacture_date: this._props.manufactureDate,
       warehouse_location: this._props.warehouseLocation,
+      asset_type: this._props.assetType,
+      layout_type: this._props.layoutType,
+      pieces_per_impression: this._props.piecesPerImpression,
+      material: this._props.material,
+      qr_code: this._props.qrCode,
+      supplier_id: this._props.supplierId,
+      maintenance_interval: this._props.maintenanceInterval,
+      maintenance_count: this._props.maintenanceCount,
+      last_maintenance_date: this._props.lastMaintenanceDate,
+      last_maintenance_impressions: this._props.lastMaintenanceImpressions,
+      last_used_date: this._props.lastUsedDate,
+      mesh_count: this._props.meshCount,
+      mesh_material: this._props.meshMaterial,
+      size: this._props.size,
+      tension_value: this._props.tensionValue,
+      frame_type: this._props.frameType,
+      customer_id: this._props.customerId,
+      reclaim_count: this._props.reclaimCount,
+      exposure_date: this._props.exposureDate,
+      last_clean_date: this._props.lastCleanDate,
+      last_reclaim_date: this._props.lastReclaimDate,
+      tension_date: this._props.tensionDate,
       scrap_reason: this._props.scrapReason,
       scrap_time: this._props.scrapTime,
       scrap_by: this._props.scrapBy,
       remark: this._props.remark,
-      is_deleted: this._props.isDeleted,
+      deleted: this._props.isDeleted,
     };
   }
 }
