@@ -188,7 +188,7 @@ describe('alert-push POST mark_read — 回归保护', () => {
     vi.clearAllMocks();
   });
 
-  it('修复前 Bug 模式验证：join(',') 不会产生多占位符', async () => {
+  it(`修复前 Bug 模式验证：join(',') 不会产生多占位符`, async () => {
     const ids = [1, 2, 3];
     mocks.execute.mockResolvedValueOnce({ affectedRows: 3 } as any);
 

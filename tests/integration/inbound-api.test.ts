@@ -71,9 +71,9 @@ vi.mock('@/lib/api-auth', () => ({
   },
 }));
 
-import { GET, POST, PUT, DELETE } from '@/app/api/warehouse/inbound/route';
+import { GET, POST, PUT, DELETE, PATCH } from '@/app/api/warehouse/inbound/route';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
-import { execute } from '@/lib/db';
+import { execute, query } from '@/lib/db';
 
 function makeRequest(method: string, body?: any, query?: string) {
   const url = `http://localhost/api/warehouse/inbound${query ? `?${query}` : ''}`;
@@ -470,6 +470,86 @@ describe('入库 API 集成测试', () => {
 
       // parseInt('abc') === NaN，仍会调用 service
       expect(mockInboundService.deleteOrder).toHaveBeenCalled();
+    });
+  });
+
+  describe('PATCH /api/warehouse/inbound - 恢复已删除入库单（软删除撤销）', () => {
+    it('正常流程：恢复已删除的入库单', async () => {
+      vi.mocked(query).mockResolvedValueOnce([[{ id: 1 }]] as any);
+      vi.mocked(execute).mockResolvedValueOnce({ affectedRows: 1 } as any);
+
+      const req = makeRequest('PATCH', undefined, 'id=1');
+      const { status, data } = await parseResponse(await PATCH(req as any, {} as any));
+
+      expect(status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(data.message).toBe('入库单已恢复');
+      expect(query).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT id FROM inv_inbound_order'),
+        expect.arrayContaining([1])
+      );
+      expect(execute).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE inv_inbound_order SET deleted = 0'),
+        expect.arrayContaining([1])
+      );
+    });
+
+    it('参数异常：缺少 id 返回 400', async () => {
+      const req = makeRequest('PATCH');
+      const { status, data } = await parseResponse(await PATCH(req as any, {} as any));
+
+      expect(status).toBe(400);
+      expect(data.success).toBe(false);
+      expect(data.message).toBe('入库单ID不能为空');
+      expect(query).not.toHaveBeenCalled();
+      expect(execute).not.toHaveBeenCalled();
+    });
+
+    it('记录不存在：未找到已删除记录返回 404', async () => {
+      vi.mocked(query).mockResolvedValueOnce([[]] as any);
+
+      const req = makeRequest('PATCH', undefined, 'id=999');
+      const { status, data } = await parseResponse(await PATCH(req as any, {} as any));
+
+      expect(status).toBe(404);
+      expect(data.success).toBe(false);
+      expect(data.message).toBe('入库单不存在或未被删除');
+      expect(execute).not.toHaveBeenCalled();
+    });
+
+    it('DB 查询错误返回 500', async () => {
+      vi.mocked(query).mockRejectedValueOnce(new Error('数据库连接失败'));
+
+      const req = makeRequest('PATCH', undefined, 'id=1');
+      const { status, data } = await parseResponse(await PATCH(req as any, {} as any));
+
+      expect(status).toBe(500);
+      expect(data.success).toBe(false);
+      expect(data.message).toBe('数据库连接失败');
+      expect(execute).not.toHaveBeenCalled();
+    });
+
+    it('DB 更新错误返回 500', async () => {
+      vi.mocked(query).mockResolvedValueOnce([[{ id: 1 }]] as any);
+      vi.mocked(execute).mockRejectedValueOnce(new Error('更新失败'));
+
+      const req = makeRequest('PATCH', undefined, 'id=1');
+      const { status, data } = await parseResponse(await PATCH(req as any, {} as any));
+
+      expect(status).toBe(500);
+      expect(data.success).toBe(false);
+      expect(data.message).toBe('更新失败');
+    });
+
+    it('非数字 id 正常处理为 parseInt', async () => {
+      vi.mocked(query).mockResolvedValueOnce([[{ id: 1 }]] as any);
+      vi.mocked(execute).mockResolvedValueOnce({ affectedRows: 1 } as any);
+
+      const req = makeRequest('PATCH', undefined, 'id=abc');
+      await parseResponse(await PATCH(req as any, {} as any));
+
+      // parseInt('abc') === NaN，但仍传入 SQL（与 DELETE 行为一致）
+      expect(query).toHaveBeenCalledWith(expect.any(String), expect.arrayContaining([NaN]));
     });
   });
 });

@@ -29,6 +29,13 @@ vi.mock('@/infrastructure/event-bus/OutboxPoller', () => ({
   },
 }));
 
+// Mock EventRegistry（避免真实事件订阅耗时）
+vi.mock('@/application/EventRegistry', () => ({
+  EventRegistry: {
+    initialize: vi.fn(),
+  },
+}));
+
 // Mock logger
 vi.mock('@/lib/logger', () => ({
   secureLog: vi.fn(),
