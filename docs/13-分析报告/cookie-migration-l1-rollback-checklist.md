@@ -1,5 +1,7 @@
 # L1 回滚验证 Checklist — Cookie 模式 → Header 模式
 
+> 📌 历史快照（生成于 2026-07-08），内容反映当时状态，未随代码更新。仅作归档参考。
+
 > **用途**: Cookie 迁移 Phase 2 上线后如发现异常，按本 Checklist 执行 L1 回滚（Feature Flag 切换）并逐项验证。
 >
 > **执行人**: 运维 / 值班开发 | **预计耗时**: 10 分钟 | **回滚方式**: 改 env + rebuild + restart
