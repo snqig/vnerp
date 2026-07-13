@@ -4138,6 +4138,22 @@
     "completed": "Completed",
     "producing": "Producing",
     "markDelivered": "Mark as Delivered",
-    "markSigned": "Mark as Signed"
+    "markSigned": "Mark as Signed",
+    "draft": "Draft",
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "confirmed": "Confirmed",
+    "converted": "Converted",
+    "cancelled": "Cancelled",
+    "submit": "Submit",
+    "startProduction": "Start Production",
+    "complete": "Complete",
+    "confirm": "Confirm",
+    "basicInfo": "Basic Info",
+    "specInfo": "Specifications",
+    "dateInfo": "Dates",
+    "orderDate": "Order Date",
+    "deliveryDate": "Delivery Date",
+    "specification": "Specification"
   }
 }

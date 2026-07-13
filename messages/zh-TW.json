@@ -4137,6 +4137,22 @@
     "completed": "已完成",
     "producing": "生產中",
     "markDelivered": "標記為已交付",
-    "markSigned": "標記為已簽收"
+    "markSigned": "標記為已簽收",
+    "draft": "草稿",
+    "pending": "待打樣",
+    "inProgress": "打樣中",
+    "confirmed": "已確認",
+    "converted": "已轉大貨",
+    "cancelled": "已作廢",
+    "submit": "提交",
+    "startProduction": "開始生產",
+    "complete": "完成生產",
+    "confirm": "確認合格",
+    "basicInfo": "基本資訊",
+    "specInfo": "規格資訊",
+    "dateInfo": "日期資訊",
+    "orderDate": "訂單日期",
+    "deliveryDate": "交付日期",
+    "specification": "規格型號"
   }
 }

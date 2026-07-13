@@ -4137,6 +4137,22 @@
     "completed": "Hoàn thành",
     "producing": "Đang sản xuất",
     "markDelivered": "Đánh dấu đã giao",
-    "markSigned": "Đánh dấu đã ký"
+    "markSigned": "Đánh dấu đã ký",
+    "draft": "Bản nháp",
+    "pending": "Chờ mẫu",
+    "inProgress": "Đang làm mẫu",
+    "confirmed": "Đã xác nhận",
+    "converted": "Đã chuyển đơn",
+    "cancelled": "Đã hủy",
+    "submit": "Gửi",
+    "startProduction": "Bắt đầu sản xuất",
+    "complete": "Hoàn thành",
+    "confirm": "Xác nhận",
+    "basicInfo": "Thông tin cơ bản",
+    "specInfo": "Thông số kỹ thuật",
+    "dateInfo": "Thông tin ngày",
+    "orderDate": "Ngày đặt hàng",
+    "deliveryDate": "Ngày giao hàng",
+    "specification": "Quy cách"
   }
 }

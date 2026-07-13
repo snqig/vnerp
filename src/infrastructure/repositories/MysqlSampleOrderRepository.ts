@@ -4,7 +4,7 @@ import {
 } from '@/domain/sample/repositories/ISampleOrderRepository';
 import { SampleOrder } from '@/domain/sample/aggregates/SampleOrder';
 import { SampleOrderStatus } from '@/domain/sample/value-objects/SampleOrderStatus';
-import { query, execute, queryPaginated } from '@/lib/db';
+import { query, execute, queryPaginated, transaction } from '@/lib/db';
 
 export class MysqlSampleOrderRepository implements ISampleOrderRepository {
   async findById(id: number): Promise<SampleOrder | null> {
@@ -45,10 +45,22 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
       params.push(filters.customerId);
     }
 
+    if (filters.customerName) {
+      sql += ' AND customer_name LIKE ?';
+      countSql += ' AND customer_name LIKE ?';
+      params.push(`%${filters.customerName}%`);
+    }
+
     if (filters.status) {
       sql += ' AND status = ?';
       countSql += ' AND status = ?';
       params.push(filters.status);
+    }
+
+    if (filters.deliveryStatus) {
+      sql += ' AND delivery_status = ?';
+      countSql += ' AND delivery_status = ?';
+      params.push(filters.deliveryStatus);
     }
 
     if (filters.dateFrom) {
@@ -88,8 +100,11 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
       `INSERT INTO sal_sample_order
        (order_no, notify_date, customer_id, customer_name, product_name, material_no, version,
         size_spec, material_spec, specification, quantity, order_date, customer_require_date,
-        delivery_date, actual_delivery_date, delivery_status, status, remark, create_by, create_time)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        delivery_date, actual_delivery_date, delivery_status, status, remark, create_by, create_time,
+        process_card_id, work_order_id, sales_order_id, sample_fee, fee_charged, fee_deductible,
+        fee_deducted, sample_version, parent_version_id, converted_at, converted_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(),
+               ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         p.orderNo,
         p.notifyDate || null,
@@ -110,6 +125,17 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
         p.status || 'draft',
         p.remark || null,
         p.createBy || null,
+        p.processCardId || null,
+        p.workOrderId || null,
+        p.salesOrderId || null,
+        p.sampleFee || 0,
+        p.feeCharged || 0,
+        p.feeDeductible || 0,
+        p.feeDeducted || 0,
+        p.sampleVersion || 1,
+        p.parentVersionId || null,
+        p.convertedAt || null,
+        p.convertedBy || null,
       ]
     );
     return result.insertId;
@@ -183,12 +209,24 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
     const d = String(today.getDate()).padStart(2, '0');
     const prefix = `SP${y}${m}${d}`;
 
-    const rows = await query<Loose>(
-      'SELECT COUNT(*) as cnt FROM sal_sample_order WHERE order_no LIKE ? AND deleted = 0',
-      [`${prefix}%`]
-    );
-    const nextSeq = (rows?.[0]?.cnt || 0) + 1;
-    return `${prefix}${String(nextSeq).padStart(4, '0')}`;
+    return transaction(async (conn) => {
+      const [lockResult] = await conn.query('SELECT GET_LOCK(?, 10) AS acquired', [
+        'sample_order_seq',
+      ]);
+      if ((lockResult as Loose[])[0]?.acquired !== 1) {
+        throw new Error('获取打样单序号锁超时');
+      }
+      try {
+        const [rows] = await conn.query(
+          'SELECT COUNT(*) AS cnt FROM sal_sample_order WHERE order_no LIKE ? AND deleted = 0',
+          [`${prefix}%`]
+        );
+        const nextSeq = ((rows as Loose[])[0]?.cnt || 0) + 1;
+        return `${prefix}${String(nextSeq).padStart(4, '0')}`;
+      } finally {
+        await conn.query('SELECT RELEASE_LOCK(?)', ['sample_order_seq']);
+      }
+    });
   }
 
   private mapToProps(row: Loose) {

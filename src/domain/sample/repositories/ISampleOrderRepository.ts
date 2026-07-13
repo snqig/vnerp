@@ -7,8 +7,12 @@ export interface SampleOrderFilters {
   orderNo?: string;
   /** 客户ID */
   customerId?: number;
-  /** 状态筛选 */
+  /** 客户名称 (模糊匹配) */
+  customerName?: string;
+  /** 生命周期状态筛选 (draft/pending/in_progress/completed/confirmed/converted/cancelled) */
   status?: SampleOrderStatus;
+  /** 交付状态筛选 (pending/delivered/signed) */
+  deliveryStatus?: string;
   /** 创建日期起始 (含) */
   dateFrom?: Date;
   /** 创建日期截止 (含) */

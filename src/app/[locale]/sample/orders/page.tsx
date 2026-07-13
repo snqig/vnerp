@@ -37,7 +37,6 @@ import {
   Trash2,
   FileText,
   CheckCircle2,
-  Clock,
   Loader2,
   ArrowUpDown,
   ArrowUp,
@@ -64,18 +63,20 @@ interface SampleOrder {
   customer_require_date: string;
   actual_delivery_date: string | null;
   delivery_status: string;
+  status: string;
   remark: string;
   create_time: string;
   update_time: string;
 }
 
-const statusLabelMap: Record<string, string> = {
-  pending: 'pendingDelivery',
-  delivered: 'delivered',
-  signed: 'signed',
-  approved: 'approved',
-  completed: 'completed',
-  producing: 'producing',
+const lifecycleStatusMap: Record<string, { label: string; color: string }> = {
+  draft: { label: 'draft', color: 'bg-gray-100 text-gray-700' },
+  pending: { label: 'pending', color: 'bg-yellow-100 text-yellow-700' },
+  in_progress: { label: 'inProgress', color: 'bg-blue-100 text-blue-700' },
+  completed: { label: 'completed', color: 'bg-green-100 text-green-700' },
+  confirmed: { label: 'confirmed', color: 'bg-emerald-100 text-emerald-700' },
+  converted: { label: 'converted', color: 'bg-black text-white' },
+  cancelled: { label: 'cancelled', color: 'bg-red-100 text-red-700' },
 };
 
 export default function SampleOrdersPage() {
@@ -158,7 +159,7 @@ export default function SampleOrdersPage() {
         keyword: debouncedKeyword,
       });
       if (selectedStatus && selectedStatus !== 'all') {
-        params.append('deliveryStatus', selectedStatus);
+        params.append('status', selectedStatus);
       }
       if (selectedCustomer && selectedCustomer !== 'all') {
         params.append('customerName', selectedCustomer);
@@ -255,19 +256,37 @@ export default function SampleOrdersPage() {
     }
   };
 
-  const handleUpdateStatus = async (id: number, status: string) => {
+  const handleDeliveryAction = async (id: number, action: 'deliver' | 'sign') => {
     try {
-      const response = await authFetch('/api/sample/orders', {
+      const response = await authFetch('/api/sample/orders/linkage', {
         method: 'PUT',
         body: JSON.stringify({
-          id,
-          delivery_status: status,
+          sample_order_id: id,
+          action,
           actual_delivery_date: new Date().toISOString().split('T')[0],
         }),
       });
       const result = await response.json();
       if (result.success) {
-        toast({ title: t('statusUpdated', { status: t(statusLabelMap[status] || status) }) });
+        toast({ title: result.message || t('statusUpdated', { status: action }) });
+        fetchOrders();
+      } else {
+        toast({ title: result.message || t('statusUpdateFailed'), variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: t('statusUpdateFailed'), variant: 'destructive' });
+    }
+  };
+
+  const handleLifecycleAction = async (id: number, action: string) => {
+    try {
+      const response = await authFetch('/api/sample/orders/status', {
+        method: 'PUT',
+        body: JSON.stringify({ id, action }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        toast({ title: result.message || t('statusUpdated', { status: action }) });
         fetchOrders();
       } else {
         toast({ title: result.message || t('statusUpdateFailed'), variant: 'destructive' });
@@ -309,32 +328,10 @@ export default function SampleOrdersPage() {
     });
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'signed':
-        return (
-          <Badge className="bg-green-100 text-green-700">
-            <CheckCircle2 className="h-3 w-3 mr-1" />
-            {t('signed')}
-          </Badge>
-        );
-      case 'delivered':
-        return (
-          <Badge className="bg-blue-100 text-blue-700">
-            <FileText className="h-3 w-3 mr-1" />
-            {t('delivered')}
-          </Badge>
-        );
-      case 'pending':
-        return (
-          <Badge className="bg-yellow-100 text-yellow-700">
-            <Clock className="h-3 w-3 mr-1" />
-            {t('pendingDelivery')}
-          </Badge>
-        );
-      default:
-        return <Badge variant="secondary">{statusLabelMap[status] || status}</Badge>;
-    }
+  const getLifecycleStatusBadge = (status: string) => {
+    const config = lifecycleStatusMap[status];
+    if (!config) return <Badge variant="secondary">{status}</Badge>;
+    return <Badge className={config.color}>{t(config.label)}</Badge>;
   };
 
   const customers = Array.from(new Set(orders.map((o) => o.customer_name)));
@@ -363,7 +360,7 @@ export default function SampleOrdersPage() {
     { key: 'size_spec', header: tc('size') },
     { key: 'quantity', header: tc('quantity') },
     { key: 'customer_require_date', header: t('requireDate') },
-    { key: 'delivery_status', header: tc('status') },
+    { key: 'status', header: tc('status') },
   ];
   const _getExportData = () =>
     sortedOrders.map((s, i) => ({
@@ -376,7 +373,7 @@ export default function SampleOrdersPage() {
       [tc('size')]: s.size_spec,
       [tc('quantity')]: s.quantity,
       [t('requireDate')]: formatDate(s.customer_require_date),
-      [tc('status')]: t(statusLabelMap[s.delivery_status] || s.delivery_status),
+      [tc('status')]: t(lifecycleStatusMap[s.status]?.label || s.status),
     }));
 
   const handlePrint = () => {
@@ -406,7 +403,7 @@ export default function SampleOrdersPage() {
         <td>${i + 1}</td><td>${formatDate(o.notify_date)}</td><td>${o.customer_name}</td>
         <td>${o.product_name}</td><td>${o.material_no}</td><td>${o.version}</td>
         <td>${o.size_spec || '-'}</td><td>${o.quantity}</td><td>${formatDate(o.customer_require_date)}</td>
-        <td>${t(statusLabelMap[o.delivery_status] || o.delivery_status)}</td>
+        <td>${t(lifecycleStatusMap[o.status]?.label || o.status)}</td>
       </tr>`);
     });
     printWindow.document.write(`</tbody></table></body></html>`);
@@ -559,9 +556,13 @@ export default function SampleOrdersPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{tc('all')}</SelectItem>
-                    <SelectItem value="pending">{t('pendingDelivery')}</SelectItem>
-                    <SelectItem value="delivered">{t('delivered')}</SelectItem>
-                    <SelectItem value="signed">{t('signed')}</SelectItem>
+                    <SelectItem value="draft">{t('draft')}</SelectItem>
+                    <SelectItem value="pending">{t('pending')}</SelectItem>
+                    <SelectItem value="in_progress">{t('inProgress')}</SelectItem>
+                    <SelectItem value="completed">{t('completed')}</SelectItem>
+                    <SelectItem value="confirmed">{t('confirmed')}</SelectItem>
+                    <SelectItem value="converted">{t('converted')}</SelectItem>
+                    <SelectItem value="cancelled">{t('cancelled')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -589,10 +590,10 @@ export default function SampleOrdersPage() {
                       formatter: (v) => formatDate(v),
                     },
                     {
-                      key: 'delivery_status',
+                      key: 'status',
                       label: tc('status'),
                       width: 12,
-                      formatter: (v) => t(statusLabelMap[v] || v),
+                      formatter: (v) => t(lifecycleStatusMap[v]?.label || v),
                     },
                   ]}
                   data={
@@ -698,14 +699,14 @@ export default function SampleOrdersPage() {
                         </td>
                         <td className="p-4 font-mono text-sm">{order.order_no}</td>
                         <td className="p-4">{formatDate(order.notify_date)}</td>
-                        <td className="p-4">{getStatusBadge(order.delivery_status)}</td>
-                        <td className="p-4 font-medium">{order.product_name}</td>
+                        <td className="p-4 font-medium">{order.customer_name}</td>
+                        <td className="p-4">{order.product_name}</td>
                         <td className="p-4 font-mono text-xs">{order.material_no}</td>
                         <td className="p-4">{order.version}</td>
                         <td className="p-4 text-xs">{order.size_spec || '-'}</td>
                         <td className="p-4">{order.quantity}</td>
                         <td className="p-4">{formatDate(order.customer_require_date)}</td>
-                        <td className="p-4">{getStatusBadge(order.delivery_status)}</td>
+                        <td className="p-4">{getLifecycleStatusBadge(order.status)}</td>
                         <td className="p-4 text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -714,17 +715,50 @@ export default function SampleOrdersPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {order.delivery_status === 'pending' && (
+                              {order.status === 'draft' && (
                                 <DropdownMenuItem
-                                  onClick={() => handleUpdateStatus(order.id, 'delivered')}
+                                  onClick={() => handleLifecycleAction(order.id, 'submit')}
                                 >
                                   <FileText className="h-4 w-4 mr-2" />
-                                  {t('markDelivered')}
+                                  {t('submit')}
                                 </DropdownMenuItem>
                               )}
+                              {order.status === 'pending' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleLifecycleAction(order.id, 'startProduction')}
+                                >
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  {t('startProduction')}
+                                </DropdownMenuItem>
+                              )}
+                              {order.status === 'in_progress' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleLifecycleAction(order.id, 'complete')}
+                                >
+                                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                                  {t('complete')}
+                                </DropdownMenuItem>
+                              )}
+                              {order.status === 'completed' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleLifecycleAction(order.id, 'confirm')}
+                                >
+                                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                                  {t('confirm')}
+                                </DropdownMenuItem>
+                              )}
+                              {order.delivery_status === 'pending' &&
+                                order.status === 'completed' && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeliveryAction(order.id, 'deliver')}
+                                  >
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    {t('markDelivered')}
+                                  </DropdownMenuItem>
+                                )}
                               {order.delivery_status === 'delivered' && (
                                 <DropdownMenuItem
-                                  onClick={() => handleUpdateStatus(order.id, 'signed')}
+                                  onClick={() => handleDeliveryAction(order.id, 'sign')}
                                 >
                                   <CheckCircle2 className="h-4 w-4 mr-2" />
                                   {t('markSigned')}

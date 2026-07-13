@@ -9,62 +9,44 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Save, ArrowLeft, FlaskConical } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 
 export default function NewSampleOrderPage() {
-  // 翻译钩子
+  const t = useTranslations('SampleOrders');
   const tc = useTranslations('Common');
+  const { toast } = useToast();
 
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-    order_month: new Date().getMonth() + 1,
-    order_date: new Date().toISOString().split('T')[0],
-    sample_type: '',
+    notify_date: new Date().toISOString().split('T')[0],
     customer_name: '',
-    print_method: '卷料丝印',
-    color_sequence: '',
     product_name: '',
-    material_code: '',
+    material_no: '',
+    version: 'A',
     size_spec: '',
-    material_desc: '',
-    sample_order_no: '',
-    required_date: '',
-    progress_status: '',
-    is_confirmed: false,
-    is_urgent: false,
-    is_produce_together: false,
+    material_spec: '',
+    specification: '',
     quantity: '',
-    progress_detail: '',
-    sample_count: 1,
-    sample_reason: '',
-    order_tracker: '',
-    provided_material: '电子档',
-    receive_time: '',
-    mylar_info: '',
-    sample_stock: '',
-    customer_confirm: '',
+    order_date: new Date().toISOString().split('T')[0],
+    customer_require_date: '',
+    delivery_date: '',
     remark: '',
-    status: 0,
   });
 
-  const handleChange = (field: string, value: Loose) => {
+  const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
     if (!formData.customer_name) {
-      toast.error('请输入客户名称');
+      toast({ title: tc('customer') + tc('required') || '请输入客户名称', variant: 'destructive' });
+      return;
+    }
+    if (!formData.notify_date) {
+      toast({ title: t('notifyDate') + '必填' || '请选择通知日期', variant: 'destructive' });
       return;
     }
 
@@ -75,23 +57,19 @@ export default function NewSampleOrderPage() {
         body: JSON.stringify({
           ...formData,
           quantity: formData.quantity ? parseInt(formData.quantity) : 0,
-          sample_count: formData.sample_count || 1,
-          is_confirmed: formData.is_confirmed ? 1 : 0,
-          is_urgent: formData.is_urgent ? 1 : 0,
-          is_produce_together: formData.is_produce_together ? 1 : 0,
         }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        toast.success('打样单创建成功');
+        toast({ title: t('orderCreated', { orderNo: result.data.order_no }) });
         router.push('/sample/orders');
       } else {
-        toast.error(result.message || '创建失败');
+        toast({ title: result.message || tc('createFailed'), variant: 'destructive' });
       }
     } catch {
-      toast.error('创建失败');
+      toast({ title: tc('createFailed'), variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
@@ -100,7 +78,6 @@ export default function NewSampleOrderPage() {
   return (
     <MainLayout>
       <div className="container mx-auto py-6">
-        {/* 头部 */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <Button variant="outline" size="icon" onClick={() => router.push('/sample/orders')}>
@@ -109,332 +86,160 @@ export default function NewSampleOrderPage() {
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 <FlaskConical className="h-6 w-6 text-blue-500" />
-                新增打样单
+                {t('createSampleOrder')}
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">{tc('text_ro2pek')}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('fillSampleOrderInfo')}</p>
             </div>
           </div>
           <Button onClick={handleSave} disabled={isSaving}>
             <Save className="h-4 w-4 mr-2" />
-            {isSaving ? '保存中...' : tc('save')}
+            {isSaving ? tc('saving') || '保存中...' : tc('save')}
           </Button>
         </div>
 
         <div className="grid grid-cols-2 gap-6">
-          {/* 基本信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">基本信息</CardTitle>
+              <CardTitle className="text-base">{t('basicInfo') || '基本信息'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>月份</Label>
-                  <Input
-                    type="number"
-                    value={formData.order_month}
-                    onChange={(e) => handleChange('order_month', parseInt(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{tc('text_a72dxg')}</Label>
-                  <Input
-                    type="date"
-                    value={formData.order_date}
-                    onChange={(e) => handleChange('order_date', e.target.value)}
-                  />
-                </div>
-              </div>
-
               <div className="space-y-2">
-                <Label>客户名称 *</Label>
+                <Label>
+                  {t('notifyDate')} <span className="text-red-500">*</span>
+                </Label>
                 <Input
-                  placeholder={tc('enterCustomerName')}
+                  type="date"
+                  value={formData.notify_date}
+                  onChange={(e) => handleChange('notify_date', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>
+                  {tc('customer')} <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  placeholder={tc('customer')}
                   value={formData.customer_name}
                   onChange={(e) => handleChange('customer_name', e.target.value)}
                 />
               </div>
-
               <div className="space-y-2">
-                <Label>种类</Label>
-                <Select
-                  value={formData.sample_type}
-                  onValueChange={(v) => handleChange('sample_type', v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="请选择种类" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="设变">设变</SelectItem>
-                    <SelectItem value="测试">测试</SelectItem>
-                    <SelectItem value="新款">新款</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{tc('text_s8mbri')}</Label>
+                <Label>
+                  {t('productName')} <span className="text-red-500">*</span>
+                </Label>
                 <Input
-                  placeholder="如: DY-A047-05914"
-                  value={formData.sample_order_no}
-                  onChange={(e) => handleChange('sample_order_no', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>{tc('text_i8ru0k')}</Label>
-                <Input
-                  placeholder="请输入跟单人员"
-                  value={formData.order_tracker}
-                  onChange={(e) => handleChange('order_tracker', e.target.value)}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 产品信息 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">产品信息</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>品名</Label>
-                <Input
-                  placeholder="请输入品名"
+                  placeholder={t('productName')}
                   value={formData.product_name}
                   onChange={(e) => handleChange('product_name', e.target.value)}
                 />
               </div>
-
               <div className="space-y-2">
-                <Label>料号</Label>
+                <Label>
+                  {t('materialNo')} <span className="text-red-500">*</span>
+                </Label>
                 <Input
-                  placeholder="请输入料号"
-                  value={formData.material_code}
-                  onChange={(e) => handleChange('material_code', e.target.value)}
+                  placeholder={t('materialNo')}
+                  value={formData.material_no}
+                  onChange={(e) => handleChange('material_no', e.target.value)}
                 />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{tc('version')}</Label>
+                  <Input
+                    placeholder={tc('version')}
+                    value={formData.version}
+                    onChange={(e) => handleChange('version', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{tc('quantity')}</Label>
+                  <Input
+                    type="number"
+                    placeholder={tc('quantity')}
+                    value={formData.quantity}
+                    onChange={(e) => handleChange('quantity', e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">{t('specInfo') || '规格信息'}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>{tc('size')}</Label>
+                <Label>{t('sizeSpec')}</Label>
                 <Input
-                  placeholder="如: 296.3*96.8"
+                  placeholder={t('sizeSpec')}
                   value={formData.size_spec}
                   onChange={(e) => handleChange('size_spec', e.target.value)}
                 />
               </div>
-
               <div className="space-y-2">
-                <Label>{tc('text_dgh6oa')}</Label>
-                <Textarea
-                  placeholder="请输入材料描述"
-                  value={formData.material_desc}
-                  onChange={(e) => handleChange('material_desc', e.target.value)}
-                  rows={3}
+                <Label>{t('materialSpec')}</Label>
+                <Input
+                  placeholder={t('materialSpec')}
+                  value={formData.material_spec}
+                  onChange={(e) => handleChange('material_spec', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('specification') || '规格型号'}</Label>
+                <Input
+                  placeholder={t('specification') || '规格型号'}
+                  value={formData.specification}
+                  onChange={(e) => handleChange('specification', e.target.value)}
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* 印刷信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">印刷信息</CardTitle>
+              <CardTitle className="text-base">{t('dateInfo') || '日期信息'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>印刷方式</Label>
-                <Select
-                  value={formData.print_method}
-                  onValueChange={(v) => handleChange('print_method', v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="卷料丝印">卷料丝印</SelectItem>
-                    <SelectItem value="轮转印">轮转印</SelectItem>
-                    <SelectItem value="空白">空白</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{tc('text_mpgd')}</Label>
-                <Input
-                  placeholder="如: 4色"
-                  value={formData.color_sequence}
-                  onChange={(e) => handleChange('color_sequence', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>{tc('quantity')}</Label>
-                <Input
-                  type="number"
-                  placeholder={tc('enterQuantity')}
-                  value={formData.quantity}
-                  onChange={(e) => handleChange('quantity', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>需求日期</Label>
+                <Label>{t('orderDate') || '订单日期'}</Label>
                 <Input
                   type="date"
-                  value={formData.required_date}
-                  onChange={(e) => handleChange('required_date', e.target.value)}
+                  value={formData.order_date}
+                  onChange={(e) => handleChange('order_date', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('requireDate')}</Label>
+                <Input
+                  type="date"
+                  value={formData.customer_require_date}
+                  onChange={(e) => handleChange('customer_require_date', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('deliveryDate') || '交付日期'}</Label>
+                <Input
+                  type="date"
+                  value={formData.delivery_date}
+                  onChange={(e) => handleChange('delivery_date', e.target.value)}
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* 打样信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">打样信息</CardTitle>
+              <CardTitle className="text-base">{tc('remark') || '备注'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>{tc('text_ije4u1')}</Label>
-                <Select
-                  value={formData.progress_detail}
-                  onValueChange={(v) => handleChange('progress_detail', v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="请选择进展" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="产线拿">产线拿</SelectItem>
-                    <SelectItem value="等材料">等材料</SelectItem>
-                    <SelectItem value="冲压">冲压</SelectItem>
-                    <SelectItem value="印刷">印刷</SelectItem>
-                    <SelectItem value="切割">切割</SelectItem>
-                    <SelectItem value="UV">UV</SelectItem>
-                    <SelectItem value="嗮版">嗮版</SelectItem>
-                    <SelectItem value="出片">出片</SelectItem>
-                    <SelectItem value="检样">检样</SelectItem>
-                    <SelectItem value="做卡">做卡</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{tc('text_cu8lo3')}</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={formData.sample_count}
-                  onChange={(e) => handleChange('sample_count', parseInt(e.target.value))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>{tc('text_cu4iud')}</Label>
-                <Input
-                  placeholder="如: 变更内容及版本"
-                  value={formData.sample_reason}
-                  onChange={(e) => handleChange('sample_reason', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>{tc('text_cxjx7k')}</Label>
-                <Select
-                  value={formData.provided_material}
-                  onValueChange={(v) => handleChange('provided_material', v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="电子档">电子档</SelectItem>
-                    <SelectItem value="打样单">打样单</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{tc('text_cx5p1q')}</Label>
-                <Input
-                  type="time"
-                  value={formData.receive_time}
-                  onChange={(e) => handleChange('receive_time', e.target.value)}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 其他信息 */}
-          <Card className="col-span-2">
-            <CardHeader>
-              <CardTitle className="text-base">其他信息</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="space-y-2">
-                  <Label>{tc('text_kf81jl')}</Label>
-                  <Input
-                    placeholder="如: 内贴*2"
-                    value={formData.mylar_info}
-                    onChange={(e) => handleChange('mylar_info', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{tc('text_di2osv')}</Label>
-                  <Input
-                    value={formData.sample_stock}
-                    onChange={(e) => handleChange('sample_stock', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>客户确认</Label>
-                  <Input
-                    value={formData.customer_confirm}
-                    onChange={(e) => handleChange('customer_confirm', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-6 mb-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="is_confirmed"
-                    checked={formData.is_confirmed}
-                    onCheckedChange={(checked) => handleChange('is_confirmed', checked)}
-                  />
-                  <Label htmlFor="is_confirmed">{tc('text_d8w4jx')}</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="is_urgent"
-                    checked={formData.is_urgent}
-                    onCheckedChange={(checked) => handleChange('is_urgent', checked)}
-                  />
-                  <Label htmlFor="is_urgent" className="text-red-600">
-                    是否急件
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="is_produce_together"
-                    checked={formData.is_produce_together}
-                    onCheckedChange={(checked) => handleChange('is_produce_together', checked)}
-                  />
-                  <Label htmlFor="is_produce_together">{tc('text_b14hg2')}</Label>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{tc('remark')}</Label>
-                <Textarea
-                  placeholder="请输入备注信息"
-                  value={formData.remark}
-                  onChange={(e) => handleChange('remark', e.target.value)}
-                  rows={3}
-                />
-              </div>
+              <Textarea
+                placeholder={tc('remark')}
+                value={formData.remark}
+                onChange={(e) => handleChange('remark', e.target.value)}
+                rows={6}
+              />
             </CardContent>
           </Card>
         </div>

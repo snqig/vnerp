@@ -1,10 +1,7 @@
 import { DomainError } from '@/domain/shared/DomainTypes';
+import { SampleOrderStatus, canTransition } from '@/domain/sample/value-objects/SampleOrderStatus';
 import {
-  SampleOrderStatus,
-  canTransition,
-  getStatusLabel,
-} from '@/domain/sample/value-objects/SampleOrderStatus';
-import {
+  DomainEvent,
   SampleOrderCreatedEvent,
   SampleOrderSubmittedEvent,
   SampleOrderStartedEvent,
@@ -53,7 +50,7 @@ export interface SampleOrderProps {
 }
 
 export class SampleOrder {
-  private _domainEvents: any[] = [];
+  private _domainEvents: DomainEvent[] = [];
 
   private constructor(
     public readonly id: number | undefined,
@@ -78,18 +75,17 @@ export class SampleOrder {
     public readonly createBy: number | undefined,
     public readonly createTime: string | undefined,
     public readonly updateTime: string | undefined,
-    // 新增关联字段
-    public readonly processCardId: number | undefined,
-    public readonly workOrderId: number | undefined,
-    public readonly salesOrderId: number | undefined,
+    private _processCardId: number | undefined,
+    private _workOrderId: number | undefined,
+    private _salesOrderId: number | undefined,
     private _sampleFee: number,
     private _feeCharged: number,
     private _feeDeductible: number,
     private _feeDeducted: number,
     public readonly sampleVersion: number,
     public readonly parentVersionId: number | undefined,
-    public readonly convertedAt: string,
-    public readonly convertedBy: number | undefined
+    private _convertedAt: string,
+    private _convertedBy: number | undefined
   ) {}
 
   static create(props: SampleOrderProps): SampleOrder {
@@ -201,7 +197,22 @@ export class SampleOrder {
   get feeDeducted(): number {
     return this._feeDeducted;
   }
-  get domainEvents(): ReadonlyArray<any> {
+  get processCardId(): number | undefined {
+    return this._processCardId;
+  }
+  get workOrderId(): number | undefined {
+    return this._workOrderId;
+  }
+  get salesOrderId(): number | undefined {
+    return this._salesOrderId;
+  }
+  get convertedAt(): string {
+    return this._convertedAt;
+  }
+  get convertedBy(): number | undefined {
+    return this._convertedBy;
+  }
+  get domainEvents(): ReadonlyArray<DomainEvent> {
     return [...this._domainEvents];
   }
 
@@ -255,6 +266,13 @@ export class SampleOrder {
       throw new DomainError(`打样单[${this.orderNo}]当前状态不可转大货`);
     }
     this._status = SampleOrderStatus.CONVERTED;
+    this._salesOrderId = salesOrderId;
+    this._convertedAt = new Date().toISOString();
+    this._convertedBy = userId;
+    // 已收取且可抵扣的打样费，转大货时标记为已抵扣
+    if (this._feeCharged && this._feeDeductible) {
+      this._feeDeducted = 1;
+    }
     this._domainEvents.push(
       new SampleOrderConvertedEvent({
         sampleOrderId: this.id!,
@@ -267,10 +285,7 @@ export class SampleOrder {
 
   /** 作废 */
   cancel(reason: string, userId: number): void {
-    if (
-      this._status === SampleOrderStatus.CONVERTED ||
-      this._status === SampleOrderStatus.CANCELLED
-    ) {
+    if (!canTransition(this._status, SampleOrderStatus.CANCELLED)) {
       throw new DomainError(`打样单[${this.orderNo}]当前状态不可作废`);
     }
     this._status = SampleOrderStatus.CANCELLED;
@@ -286,12 +301,12 @@ export class SampleOrder {
 
   /** 设置工艺卡关联 */
   linkProcessCard(processCardId: number): void {
-    (this as any).processCardId = processCardId;
+    this._processCardId = processCardId;
   }
 
   /** 设置工单关联 */
   linkWorkOrder(workOrderId: number): void {
-    (this as any).workOrderId = workOrderId;
+    this._workOrderId = workOrderId;
   }
 
   /** 更新打样费 */

@@ -1,18 +1,16 @@
 import { NextRequest } from 'next/server';
-import {
-  successResponse,
-  errorResponse,
-  commonErrors,
-  validateRequestBody,
-} from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { SampleOrderApplicationService } from '@/application/services/SampleOrderApplicationService';
 import { MysqlSampleOrderRepository } from '@/infrastructure/repositories/MysqlSampleOrderRepository';
+import { logger, generateTraceId } from '@/lib/logger';
 
 const service = new SampleOrderApplicationService(new MysqlSampleOrderRepository());
 
 export const PUT = withPermission(
   async (request: NextRequest, userInfo: Loose) => {
+    const traceId = generateTraceId();
+    const ctx = { module: 'sample', action: 'PUT_status', traceId, userId: userInfo.id };
     const body = await request.json();
     const { id, action, reason, salesOrderId } = body;
 
@@ -21,6 +19,7 @@ export const PUT = withPermission(
     }
 
     const userId = userInfo.id;
+    logger.info(ctx, '状态变更请求', { id, action, reason, salesOrderId });
 
     try {
       switch (action) {
@@ -49,8 +48,10 @@ export const PUT = withPermission(
           return errorResponse(`不支持的操作: ${action}`, 400, 400);
       }
 
+      logger.info(ctx, '状态变更成功', { id, action });
       return successResponse({ id, action }, `操作成功`);
     } catch (err: Loose) {
+      logger.error(ctx, '状态变更失败', { id, action, error: err.message });
       return errorResponse(err.message || '操作失败', 400, 400);
     }
   },
