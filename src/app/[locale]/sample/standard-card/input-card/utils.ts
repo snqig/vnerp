@@ -1,0 +1,378 @@
+export interface PrintSequence {
+  id: number;
+  color: string;
+  inkCode: string;
+  linCode: string;
+  storageLocation: string;
+  plateCode: string;
+  mesh: string;
+  plateStorage: string;
+  printSide: string;
+}
+
+export interface CardData {
+  cardNo: string;
+  customer: string;
+  customerCode: string;
+  productName: string;
+  version: string;
+  date: string;
+  finishedSize: string;
+  tolerance: string;
+  materialName: string;
+  materialType: string;
+  layoutType: string;
+  printType: string;
+  processMethod: string;
+  glueType: string;
+  packingType: string;
+  spacing: string;
+  spacingValue: string;
+  sheetSpecs: { width: string; length: string };
+  coreType: string;
+  paperDirection: string;
+  rollWidth: string;
+  paperEdge: string;
+  standardUsage: string;
+  jumpDistance: string;
+  processFlow1: string;
+  processFlow2: string;
+  firstJumpDistance: string;
+  sequences: PrintSequence[];
+  filmManufacturer: string;
+  filmCode: string;
+  filmSize: string;
+  stampingMethod: string;
+  moldCode: string;
+  layoutMethod: string;
+  layoutWay: string;
+  jumpDistance2: string;
+  mylarMaterial: string;
+  mylarSpecs: string;
+  mylarLayout: string;
+  mylarJump: string;
+  adhesiveType: string;
+  adhesiveManufacturer: string;
+  adhesiveCode: string;
+  adhesiveSize: string;
+  adhesiveSpecs: string;
+  dashedKnife: boolean;
+  slicePerRow: string;
+  slicePerRoll: string;
+  slicePerBundle: string;
+  slicePerBag: string;
+  slicePerBox: string;
+  packingQty: string;
+  backKnifeMold: string;
+  backMoldCode: string;
+  backMylarMold: string;
+  releasePaperCode: string;
+  releasePaperType: string;
+  releasePaperCategory: string;
+  releasePaperSpecs: string;
+  paddingMaterial: string;
+  packingMaterial: string;
+  specialColor: string;
+  colorFormula: string;
+  filePath: string;
+  sampleInfo: string;
+  notes: string;
+  creator: string;
+  reviewer: string;
+  factoryManager: string;
+  qualityManager: string;
+  sales: string;
+  approver: string;
+  documentCode: string;
+  moldType: string;
+  etchMold: string;
+  storageLocation: string;
+  extraField: string;
+}
+
+export const createEmptySequence = (id: number): PrintSequence => ({
+  id,
+  color: '',
+  inkCode: '',
+  linCode: '',
+  storageLocation: '',
+  plateCode: '',
+  mesh: '',
+  plateStorage: '',
+  printSide: '',
+});
+
+export const createEmptyData = (): CardData => ({
+  cardNo: `SC${Date.now()}`,
+  customer: '',
+  customerCode: '',
+  productName: '',
+  version: 'V1.0',
+  date: new Date().toISOString().split('T')[0],
+  finishedSize: '',
+  tolerance: '',
+  materialName: '',
+  materialType: '',
+  layoutType: '',
+  printType: '',
+  processMethod: '',
+  glueType: '',
+  packingType: '',
+  spacing: '',
+  spacingValue: '',
+  sheetSpecs: { width: '', length: '' },
+  coreType: '',
+  paperDirection: '',
+  rollWidth: '',
+  paperEdge: '',
+  standardUsage: '',
+  jumpDistance: '',
+  processFlow1: '',
+  processFlow2: '',
+  firstJumpDistance: '',
+  sequences: Array.from({ length: 7 }, (_, i) => createEmptySequence(i + 1)),
+  filmManufacturer: '',
+  filmCode: '',
+  filmSize: '',
+  stampingMethod: '',
+  moldCode: '',
+  layoutMethod: '',
+  layoutWay: '',
+  jumpDistance2: '',
+  mylarMaterial: '',
+  mylarSpecs: '',
+  mylarLayout: '',
+  mylarJump: '',
+  adhesiveType: '',
+  adhesiveManufacturer: '',
+  adhesiveCode: '',
+  adhesiveSize: '',
+  adhesiveSpecs: '',
+  dashedKnife: false,
+  slicePerRow: '',
+  slicePerRoll: '',
+  slicePerBundle: '',
+  slicePerBag: '',
+  slicePerBox: '',
+  packingQty: '',
+  backKnifeMold: '',
+  backMoldCode: '',
+  backMylarMold: '',
+  releasePaperCode: '',
+  releasePaperType: '',
+  releasePaperCategory: '',
+  releasePaperSpecs: '',
+  paddingMaterial: '',
+  packingMaterial: '',
+  specialColor: '',
+  colorFormula: '',
+  filePath: '',
+  sampleInfo: '',
+  notes: '',
+  creator: '',
+  reviewer: '',
+  factoryManager: '',
+  qualityManager: '',
+  sales: '',
+  approver: '',
+  documentCode: '',
+  moldType: '',
+  etchMold: '',
+  storageLocation: '',
+  extraField: '',
+});
+
+export function toggleMultiValue(current: string, value: string): string {
+  const arr = current ? current.split(',').filter(Boolean) : [];
+  const idx = arr.indexOf(value);
+  if (idx >= 0) {
+    arr.splice(idx, 1);
+  } else {
+    arr.push(value);
+  }
+  return arr.join(',');
+}
+
+export function mapCardDataToApiPayload(
+  data: CardData,
+  isEditMode: boolean,
+  editId?: string
+): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    card_no: data.cardNo,
+    customer_name: data.customer,
+    customer_code: data.customerCode,
+    product_name: data.productName,
+    version: data.version,
+    date: data.date,
+    document_code: data.documentCode,
+    finished_size: data.finishedSize,
+    tolerance: data.tolerance,
+    material_name: data.materialName,
+    material_type: data.materialType,
+    layout_type: data.layoutType,
+    spacing: data.spacing,
+    spacing_value: data.spacingValue,
+    sheet_width: data.sheetSpecs.width,
+    sheet_length: data.sheetSpecs.length,
+    core_type: data.coreType,
+    paper_direction: data.paperDirection,
+    roll_width: data.rollWidth,
+    paper_edge: data.paperEdge,
+    standard_usage: data.standardUsage,
+    jump_distance: data.jumpDistance,
+    process_flow1: data.processFlow1,
+    process_flow2: data.processFlow2,
+    print_type: data.printType,
+    first_jump_distance: data.firstJumpDistance,
+    sequences: JSON.stringify(data.sequences),
+    film_manufacturer: data.filmManufacturer,
+    film_code: data.filmCode,
+    film_size: data.filmSize,
+    process_method: data.processMethod,
+    stamping_method: data.stampingMethod,
+    mold_code: data.moldCode,
+    layout_method: data.layoutMethod,
+    layout_way: data.layoutWay,
+    jump_distance2: data.jumpDistance2,
+    mylar_material: data.mylarMaterial,
+    mylar_specs: data.mylarSpecs,
+    mylar_layout: data.mylarLayout,
+    mylar_jump: data.mylarJump,
+    adhesive_type: data.adhesiveType,
+    adhesive_manufacturer: data.adhesiveManufacturer,
+    adhesive_code: data.adhesiveCode,
+    adhesive_size: data.adhesiveSize,
+    adhesive_specs: data.adhesiveSpecs,
+    dashed_knife: data.dashedKnife ? 1 : 0,
+    slice_per_row: data.slicePerRow,
+    slice_per_roll: data.slicePerRoll,
+    slice_per_bundle: data.slicePerBundle,
+    slice_per_bag: data.slicePerBag,
+    slice_per_box: data.slicePerBox,
+    packing_qty: data.packingQty,
+    back_knife_mold: data.backKnifeMold,
+    back_mold_code: data.backMoldCode,
+    back_mylar_mold: data.backMylarMold,
+    release_paper_code: data.releasePaperCode,
+    release_paper_type: data.releasePaperType,
+    release_paper_category: data.releasePaperCategory,
+    release_paper_specs: data.releasePaperSpecs,
+    padding_material: data.paddingMaterial,
+    packing_material: data.packingMaterial,
+    glue_type: data.glueType,
+    packing_type: data.packingType,
+    special_color: data.specialColor,
+    color_formula: data.colorFormula,
+    file_path: data.filePath,
+    sample_info: data.sampleInfo,
+    notes: data.notes,
+    creator: data.creator,
+    reviewer: data.reviewer,
+    factory_manager: data.factoryManager,
+    quality_manager: data.qualityManager,
+    sales: data.sales,
+    approver: data.approver,
+    mold_type: data.moldType,
+    etch_mold: data.etchMold,
+    storage_location: data.storageLocation,
+    extra_field: data.extraField,
+    status: 1,
+  };
+
+  if (isEditMode && editId) {
+    payload.id = parseInt(editId);
+  }
+
+  return payload;
+}
+
+export function mapApiDataToCardData(item: Loose): CardData {
+  return {
+    cardNo: (item.card_no as string) || '',
+    customer: (item.customer_name as string) || '',
+    customerCode: (item.customer_code as string) || '',
+    productName: (item.product_name as string) || '',
+    version: (item.version as string) || '',
+    date: item.date ? String(item.date).split('T')[0] : '',
+    finishedSize: (item.finished_size as string) || '',
+    tolerance: (item.tolerance as string) || '',
+    materialName: (item.material_name as string) || '',
+    materialType: (item.material_type as string) || '',
+    layoutType: (item.layout_type as string) || '',
+    printType: (item.print_type as string) || '',
+    processMethod: (item.process_method as string) || '',
+    glueType: (item.glue_type as string) || '',
+    packingType: (item.packing_type as string) || '',
+    spacing: (item.spacing as string) || '',
+    spacingValue: (item.spacing_value as string) || '',
+    sheetSpecs: {
+      width: (item.sheet_width as string) || '',
+      length: (item.sheet_length as string) || '',
+    },
+    coreType: (item.core_type as string) || '',
+    paperDirection: (item.paper_direction as string) || '',
+    rollWidth: (item.roll_width as string) || '',
+    paperEdge: (item.paper_edge as string) || '',
+    standardUsage: (item.standard_usage as string) || '',
+    jumpDistance: (item.jump_distance as string) || '',
+    processFlow1: (item.process_flow1 as string) || '',
+    processFlow2: (item.process_flow2 as string) || '',
+    firstJumpDistance: (item.first_jump_distance as string) || '',
+    sequences:
+      item.sequences && (Array.isArray(item.sequences) ? item.sequences.length > 0 : true)
+        ? typeof item.sequences === 'string'
+          ? (JSON.parse(item.sequences as string) as PrintSequence[])
+          : (item.sequences as PrintSequence[])
+        : Array.from({ length: 7 }, (_, i) => createEmptySequence(i + 1)),
+    filmManufacturer: (item.film_manufacturer as string) || '',
+    filmCode: (item.film_code as string) || '',
+    filmSize: (item.film_size as string) || '',
+    stampingMethod: (item.stamping_method as string) || '',
+    moldCode: (item.mold_code as string) || '',
+    layoutMethod: (item.layout_method as string) || '',
+    layoutWay: (item.layout_way as string) || '',
+    jumpDistance2: (item.jump_distance2 as string) || '',
+    mylarMaterial: (item.mylar_material as string) || '',
+    mylarSpecs: (item.mylar_specs as string) || '',
+    mylarLayout: (item.mylar_layout as string) || '',
+    mylarJump: (item.mylar_jump as string) || '',
+    adhesiveType: (item.adhesive_type as string) || '',
+    adhesiveManufacturer: (item.adhesive_manufacturer as string) || '',
+    adhesiveCode: (item.adhesive_code as string) || '',
+    adhesiveSize: (item.adhesive_size as string) || '',
+    adhesiveSpecs: (item.adhesive_specs as string) || '',
+    dashedKnife: item.dashed_knife === 1 || item.dashed_knife === true,
+    slicePerRow: (item.slice_per_row as string) || '',
+    slicePerRoll: (item.slice_per_roll as string) || '',
+    slicePerBundle: (item.slice_per_bundle as string) || '',
+    slicePerBag: (item.slice_per_bag as string) || '',
+    slicePerBox: (item.slice_per_box as string) || '',
+    packingQty: (item.packing_qty as string) || '',
+    backKnifeMold: (item.back_knife_mold as string) || '',
+    backMoldCode: (item.back_mold_code as string) || '',
+    backMylarMold: (item.back_mylar_mold as string) || '',
+    releasePaperCode: (item.release_paper_code as string) || '',
+    releasePaperType: (item.release_paper_type as string) || '',
+    releasePaperCategory: (item.release_paper_category as string) || '',
+    releasePaperSpecs: (item.release_paper_specs as string) || '',
+    paddingMaterial: (item.padding_material as string) || '',
+    packingMaterial: (item.packing_material as string) || '',
+    specialColor: (item.special_color as string) || '',
+    colorFormula: (item.color_formula as string) || '',
+    filePath: (item.file_path as string) || '',
+    sampleInfo: (item.sample_info as string) || '',
+    notes: (item.notes as string) || '',
+    creator: (item.creator as string) || '',
+    reviewer: (item.reviewer as string) || '',
+    factoryManager: (item.factory_manager as string) || '',
+    qualityManager: (item.quality_manager as string) || '',
+    sales: (item.sales as string) || '',
+    approver: (item.approver as string) || '',
+    documentCode: (item.document_code as string) || '',
+    moldType: (item.mold_type as string) || '',
+    etchMold: (item.etch_mold as string) || '',
+    storageLocation: (item.storage_location as string) || '',
+    extraField: (item.extra_field as string) || '',
+  };
+}
