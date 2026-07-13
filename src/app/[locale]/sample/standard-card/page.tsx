@@ -89,7 +89,8 @@ function StandardCardPageContent() {
       const response = await authFetch(url);
       const result = await response.json();
       if (result.success) {
-        setList(result.data || []);
+        const data = result.data;
+        setList(Array.isArray(data) ? data : []);
         const pag = result.pagination || {};
         setTotal(pag.total || 0);
         setTotalPages(pag.totalPages || 0);
@@ -208,7 +209,7 @@ function StandardCardPageContent() {
       const response = await authFetch(url);
       const result = await response.json();
       if (result.success) {
-        const data = result.data || [];
+        const data = Array.isArray(result.data) ? result.data : [];
         const jsonStr = JSON.stringify(data, null, 2);
         const blob = new Blob([jsonStr], { type: 'application/json' });
         const urlObj = URL.createObjectURL(blob);
