@@ -1,6 +1,13 @@
 #!/bin/bash
-# 印刷生产经营信息管理系统 Print MIS 测试执行脚本
-# 用法: ./test-runner.sh [unit|integration|e2e|all]
+# vnerp（印刷生产经营信息管理系统 Print MIS）测试执行脚本
+# 用法: ./test-runner.sh [unit|integration|e2e|typecheck|lint|all]
+#
+# 依赖：
+#   - pnpm（项目强制 only-allow pnpm）
+#   - 本地 .env 中配置 DB_PASSWORD / REDIS_URL（Vitest setup-env.ts 自动加载）
+#   - Playwright 浏览器：首次执行 `pnpm test:install`
+#
+# 退出码：任一阶段失败即非零退出（set -e）
 
 set -e
 
@@ -8,40 +15,31 @@ ENV=${1:-all}
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 REPORT_DIR="test-reports/$TIMESTAMP"
 
-mkdir -p $REPORT_DIR
+mkdir -p "$REPORT_DIR"
 
 echo "========================================="
-echo " 印刷生产经营信息管理系统 Print MIS 测试执行器"
+echo " vnerp 测试执行器"
 echo " 模式: $ENV"
 echo " 时间: $TIMESTAMP"
+echo " 报告目录: $REPORT_DIR"
 echo "========================================="
 
+# 单元 / 集成测试（Vitest，配置文件为 vitest.config.ts）
+# 集成测试默认走 tests/integration/**/*.test.ts，由 vitest.config.ts 的 include 规则匹配
 run_unit_tests() {
   echo ""
-  echo "--- 运行单元测试 ---"
+  echo "--- 运行单元 / 集成测试（Vitest） ---"
   pnpm test:unit:run 2>&1 | tee "$REPORT_DIR/unit-test.log"
-  echo "单元测试完成"
+  echo "单元 / 集成测试完成"
 }
 
-run_integration_tests() {
-  echo ""
-  echo "--- 运行集成测试 ---"
-  # 初始化测试数据库
-  mysql -u root -p"$DB_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS vnerp_test DEFAULT CHARSET utf8mb4;"
-  mysql -u root -p"$DB_PASSWORD" vnerp_test < docs/harness/fixtures/base-data.sql
-  mysql -u root -p"$DB_PASSWORD" vnerp_test < docs/harness/fixtures/production-data.sql
-  mysql -u root -p"$DB_PASSWORD" vnerp_test < docs/harness/fixtures/warehouse-data.sql
-
-  # 运行集成测试
-  pnpm vitest run --config vitest.integration.config.ts 2>&1 | tee "$REPORT_DIR/integration-test.log"
-  echo "集成测试完成"
-}
-
+# E2E 测试（Playwright，配置文件为 playwright.config.ts）
+# webServer 会自动启动 `pnpm run dev:webpack`（规避 Windows Turbopack nul 崩溃）
 run_e2e_tests() {
   echo ""
-  echo "--- 运行E2E测试 ---"
+  echo "--- 运行 E2E 测试（Playwright） ---"
   pnpm test 2>&1 | tee "$REPORT_DIR/e2e-test.log"
-  echo "E2E测试完成"
+  echo "E2E 测试完成"
 }
 
 run_type_check() {
@@ -63,7 +61,9 @@ case $ENV in
     run_unit_tests
     ;;
   integration)
-    run_integration_tests
+    # 与 unit 共用 vitest.config.ts；如需单独跑集成测试，可：
+    # pnpm vitest run tests/integration
+    run_unit_tests
     ;;
   e2e)
     run_e2e_tests
@@ -78,7 +78,6 @@ case $ENV in
     run_type_check
     run_lint
     run_unit_tests
-    run_integration_tests
     run_e2e_tests
     ;;
   *)
