@@ -32,20 +32,14 @@ import {
   Building2,
   ChevronDown,
 } from 'lucide-react';
+import {
+  type CardData,
+  type PrintSequence,
+  createEmptyData,
+  mapCardDataToApiPayload,
+  mapApiDataToCardData,
+} from './input-card/utils';
 
-interface PrintSequence {
-  id: number;
-  color: string;
-  inkCode: string;
-  linCode: string;
-  storageLocation: string;
-  plateCode: string;
-  mesh: string;
-  plateStorage: string;
-  printSide: string;
-}
-
-// 客户接口（来自 crm_customer 表）
 interface Customer {
   id: number;
   customerCode: string;
@@ -59,90 +53,6 @@ interface Customer {
   address: string;
 }
 
-interface FormData {
-  cardNo: string;
-  customer: string;
-  version: string;
-  date: string;
-  productName: string;
-  customerCode: string;
-  finishedSize: string;
-  tolerance: string;
-  materialName: string;
-  layoutType: string;
-  spacing: string;
-  spacingValue: string;
-  sheetSpecs: { width: string; length: string };
-  coreType: string;
-  paperDirection: string;
-  rollWidth: string;
-  paperEdge: string;
-  standardUsage: string;
-  jumpDistance: string;
-  processFlow1: string;
-  processFlow2: string;
-  printType: '胶印' | '卷料丝印' | '片料丝印' | '轮转印';
-  firstJumpDistance: string;
-  sequences: PrintSequence[];
-  filmManufacturer: string;
-  filmCode: string;
-  filmSize: string;
-  processMethod: '模切' | '冲压';
-  stampingMethod: string;
-  moldCode: string;
-  layoutMethod: string;
-  layoutWay: string;
-  jumpDistance2: string;
-  mylarMaterial: string;
-  mylarSpecs: string;
-  mylarLayout: string;
-  mylarJump: string;
-  adhesiveType: string;
-  adhesiveManufacturer: string;
-  adhesiveCode: string;
-  adhesiveSize: string;
-  dashedKnife: boolean;
-  slicePerRow: string;
-  slicePerRoll: string;
-  slicePerBundle: string;
-  slicePerBag: string;
-  slicePerBox: string;
-  backKnifeMold: string;
-  backMylarMold: string;
-  releasePaperCode: string;
-  releasePaperType: string;
-  releasePaperSpecs: string;
-  paddingMaterial: string;
-  packingMaterial: string;
-  specialColor: string;
-  colorFormula: string;
-  filePath: string;
-  sampleInfo: string;
-  notes: string;
-  creator: string;
-  reviewer: string;
-  factoryManager: string;
-  qualityManager: string;
-  sales: string;
-  approver: string;
-  documentCode: string;
-  glueType: '硬胶' | '软胶' | 'PU胶' | '其它胶';
-  packingType: '包装' | 'PCS/卷' | 'PCS/扎' | 'PCS/袋' | 'PCS/箱';
-  materialType: '硬胶' | '软胶';
-}
-
-const initialSequence: PrintSequence = {
-  id: 1,
-  color: '',
-  inkCode: '',
-  linCode: '',
-  storageLocation: '',
-  plateCode: '',
-  mesh: '',
-  plateStorage: '',
-  printSide: '',
-};
-
 // 现代化录入表单组件（不含 MainLayout/Suspense 包装，由父页面统一提供）
 export function InputV2Form() {
   const router = useRouter();
@@ -151,77 +61,7 @@ export function InputV2Form() {
   const editId = searchParams.get('id');
   const isEditMode = searchParams.get('edit') === 'true';
   const [activeTab, setActiveTab] = useState('basic');
-  const [formData, setFormData] = useState<FormData>({
-    cardNo: '',
-    customer: '',
-    version: '',
-    date: new Date().toISOString().split('T')[0],
-    productName: '',
-    customerCode: '',
-    finishedSize: '',
-    tolerance: '',
-    materialName: '',
-    layoutType: '',
-    spacing: '',
-    spacingValue: '',
-    sheetSpecs: { width: '', length: '' },
-    coreType: '',
-    paperDirection: '',
-    rollWidth: '',
-    paperEdge: '',
-    standardUsage: '',
-    jumpDistance: '',
-    processFlow1: '',
-    processFlow2: '',
-    printType: '卷料丝印',
-    firstJumpDistance: '',
-    sequences: Array.from({ length: 7 }, (_, i) => ({ ...initialSequence, id: i + 1 })),
-    filmManufacturer: '',
-    filmCode: '',
-    filmSize: '',
-    processMethod: '模切',
-    stampingMethod: '',
-    moldCode: '',
-    layoutMethod: '',
-    layoutWay: '',
-    jumpDistance2: '',
-    mylarMaterial: '',
-    mylarSpecs: '',
-    mylarLayout: '',
-    mylarJump: '',
-    adhesiveType: '',
-    adhesiveManufacturer: '',
-    adhesiveCode: '',
-    adhesiveSize: '',
-    dashedKnife: false,
-    slicePerRow: '',
-    slicePerRoll: '',
-    slicePerBundle: '',
-    slicePerBag: '',
-    slicePerBox: '',
-    backKnifeMold: '',
-    backMylarMold: '',
-    releasePaperCode: '',
-    releasePaperType: '',
-    releasePaperSpecs: '',
-    paddingMaterial: '',
-    packingMaterial: '',
-    specialColor: '',
-    colorFormula: '',
-    filePath: '',
-    sampleInfo: '',
-    notes: '',
-    creator: '',
-    reviewer: '',
-    factoryManager: '',
-    qualityManager: '',
-    sales: '',
-    approver: '',
-    documentCode: '',
-    glueType: '硬胶',
-    packingType: '包装',
-    materialType: '硬胶',
-  });
+  const [data, setData] = useState<CardData>(createEmptyData);
 
   const [isSaving, setIsSaving] = useState(false);
   const [savedCardId, setSavedCardId] = useState<number | null>(null);
@@ -247,39 +87,10 @@ export function InputV2Form() {
     try {
       const response = await authFetch(`/api/standard-cards?id=${id}`);
       const result = await response.json();
-      if (result.success && result.data) {
-        const card = result.data;
-        // 将加载的数据填充到表单
-        setFormData({
-          ...formData,
-          cardNo: card.card_no || '',
-          customer: card.customer_name || '',
-          version: card.version || '',
-          date: card.date ? card.date.split('T')[0] : new Date().toISOString().split('T')[0],
-          productName: card.product_name || '',
-          customerCode: card.customer_code || '',
-          finishedSize: card.finished_size || '',
-          tolerance: card.tolerance || '',
-          materialName: card.material_name || '',
-          materialType: card.material_type || '硬胶',
-          printType: card.print_type || '卷料丝印',
-          processMethod: card.process_method || '模切',
-          stampingMethod: card.stamping_method || '',
-          layoutMethod: card.layout_method || '',
-          layoutWay: card.layout_way || '',
-          filmManufacturer: card.film_manufacturer || '',
-          filmCode: card.film_code || '',
-          filmSize: card.film_size || '',
-          moldCode: card.mold_code || '',
-          glueType: card.glue_type || '硬胶',
-          creator: card.creator || '',
-          reviewer: card.reviewer || '',
-          factoryManager: card.factory_manager || '',
-          qualityManager: card.quality_manager || '',
-          sales: card.sales || '',
-          approver: card.approver || '',
-          documentCode: card.document_code || '',
-        });
+      const apiData = Array.isArray(result.data) ? result.data[0] : result.data;
+      if (result.success && apiData) {
+        // 使用 card 模式统一的映射函数，回填全部 78 个字段
+        setData(mapApiDataToCardData(apiData));
       } else {
         toast({ title: '加载标准卡数据失败', variant: 'destructive' });
       }
@@ -345,94 +156,16 @@ export function InputV2Form() {
     try {
       setIsSaving(true);
 
-      // 转换 formData 为 API 期望的字段格式
-      const saveData = {
-        card_no: formData.cardNo || `SC${Date.now()}`,
-        customer_name: formData.customer,
-        customer_code: formData.customerCode,
-        product_name: formData.productName,
-        version: formData.version,
-        date: formData.date,
-        document_code: formData.documentCode,
-        finished_size: formData.finishedSize,
-        tolerance: formData.tolerance,
-        material_name: formData.materialName,
-        material_type: formData.materialType,
-        layout_type: formData.layoutType,
-        spacing: formData.spacing,
-        spacing_value: formData.spacingValue,
-        sheet_width: formData.sheetSpecs.width,
-        sheet_length: formData.sheetSpecs.length,
-        core_type: formData.coreType,
-        paper_direction: formData.paperDirection,
-        roll_width: formData.rollWidth,
-        paper_edge: formData.paperEdge,
-        standard_usage: formData.standardUsage,
-        jump_distance: formData.jumpDistance,
-        process_flow1: formData.processFlow1,
-        process_flow2: formData.processFlow2,
-        print_type: formData.printType,
-        first_jump_distance: formData.firstJumpDistance,
-        sequences: JSON.stringify(formData.sequences),
-        film_manufacturer: formData.filmManufacturer,
-        film_code: formData.filmCode,
-        film_size: formData.filmSize,
-        process_method: formData.processMethod,
-        stamping_method: formData.stampingMethod,
-        mold_code: formData.moldCode,
-        layout_method: formData.layoutMethod,
-        layout_way: formData.layoutWay,
-        jump_distance2: formData.jumpDistance2,
-        mylar_material: formData.mylarMaterial,
-        mylar_specs: formData.mylarSpecs,
-        mylar_layout: formData.mylarLayout,
-        mylar_jump: formData.mylarJump,
-        adhesive_type: formData.adhesiveType,
-        adhesive_manufacturer: formData.adhesiveManufacturer,
-        adhesive_code: formData.adhesiveCode,
-        adhesive_size: formData.adhesiveSize,
-        dashed_knife: formData.dashedKnife ? 1 : 0,
-        slice_per_row: formData.slicePerRow,
-        slice_per_roll: formData.slicePerRoll,
-        slice_per_bundle: formData.slicePerBundle,
-        slice_per_bag: formData.slicePerBag,
-        slice_per_box: formData.slicePerBox,
-        back_knife_mold: formData.backKnifeMold,
-        back_mylar_mold: formData.backMylarMold,
-        release_paper_code: formData.releasePaperCode,
-        release_paper_type: formData.releasePaperType,
-        release_paper_specs: formData.releasePaperSpecs,
-        padding_material: formData.paddingMaterial,
-        packing_material: formData.packingMaterial,
-        glue_type: formData.glueType,
-        packing_type: formData.packingType,
-        special_color: formData.specialColor,
-        color_formula: formData.colorFormula,
-        file_path: formData.filePath,
-        sample_info: formData.sampleInfo,
-        notes: formData.notes,
-        creator: formData.creator,
-        reviewer: formData.reviewer,
-        factory_manager: formData.factoryManager,
-        quality_manager: formData.qualityManager,
-        sales: formData.sales,
-        approver: formData.approver,
-        status: 1,
-      };
+      // 使用 card 模式统一的映射函数，提交全部 78 个字段
+      const saveData = mapCardDataToApiPayload(data, isEditMode, editId || undefined);
 
       const url = '/api/standard-cards';
       const method = isEditMode && editId ? 'PUT' : 'POST';
-      const body =
-        isEditMode && editId
-          ? JSON.stringify({ ...saveData, id: parseInt(editId) })
-          : JSON.stringify(saveData);
 
       const response = await authFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(saveData),
       });
 
       const result = await response.json();
@@ -444,6 +177,12 @@ export function InputV2Form() {
 
       setSavedCardId(result.data?.id || parseInt(editId || '0'));
       toast({ title: isEditMode ? '标准卡更新成功！' : '标准卡保存成功！' });
+
+      // 新建成功后切换为编辑模式（保持 V2 页面）
+      if (!isEditMode && result.data?.id) {
+        router.push(`/sample/standard-card?id=${result.data.id}&edit=true&mode=v2`);
+      }
+
       return true;
     } catch (error) {
       console.error('保存失败:', error);
@@ -458,7 +197,7 @@ export function InputV2Form() {
     const success = await saveToDatabase();
     if (success) {
       // 同时保存到 sessionStorage 用于预览
-      sessionStorage.setItem('standardCardData', JSON.stringify(formData));
+      sessionStorage.setItem('standardCardData', JSON.stringify(data));
     }
   };
 
@@ -469,12 +208,12 @@ export function InputV2Form() {
     }
   };
 
-  const updateField = (field: keyof FormData, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const updateField = (field: keyof CardData, value: CardData[keyof CardData]) => {
+    setData((prev) => ({ ...prev, [field]: value }));
   };
 
   const updateSequence = (index: number, field: keyof PrintSequence, value: string) => {
-    setFormData((prev) => ({
+    setData((prev) => ({
       ...prev,
       sequences: prev.sequences.map((seq, i) => (i === index ? { ...seq, [field]: value } : seq)),
     }));
@@ -571,7 +310,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>标准卡编号</Label>
                   <Input
-                    value={formData.cardNo}
+                    value={data.cardNo}
                     onChange={(e) => updateField('cardNo', e.target.value)}
                     placeholder="自动生成或手动输入"
                   />
@@ -580,14 +319,14 @@ export function InputV2Form() {
                   <Label>日期</Label>
                   <Input
                     type="date"
-                    value={formData.date}
+                    value={data.date}
                     onChange={(e) => updateField('date', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>版本</Label>
                   <Input
-                    value={formData.version}
+                    value={data.version}
                     onChange={(e) => updateField('version', e.target.value)}
                     placeholder="如：A"
                   />
@@ -595,7 +334,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>文件编号</Label>
                   <Input
-                    value={formData.documentCode}
+                    value={data.documentCode}
                     onChange={(e) => updateField('documentCode', e.target.value)}
                     placeholder="如：DOC-001"
                   />
@@ -617,7 +356,7 @@ export function InputV2Form() {
                       <Label>客户名称</Label>
                       <div className="relative">
                         <Input
-                          value={formData.customer}
+                          value={data.customer}
                           onChange={(e) => {
                             updateField('customer', e.target.value);
                             setCustomerSearchTerm(e.target.value);
@@ -650,7 +389,7 @@ export function InputV2Form() {
                     <div className="space-y-2">
                       <Label>客户代码</Label>
                       <Input
-                        value={formData.customerCode}
+                        value={data.customerCode}
                         onChange={(e) => updateField('customerCode', e.target.value)}
                         placeholder="选择客户后自动填充"
                         readOnly
@@ -671,7 +410,7 @@ export function InputV2Form() {
                     <div className="space-y-2">
                       <Label>产品名称</Label>
                       <Input
-                        value={formData.productName}
+                        value={data.productName}
                         onChange={(e) => updateField('productName', e.target.value)}
                         placeholder="输入产品名称"
                       />
@@ -679,7 +418,7 @@ export function InputV2Form() {
                     <div className="space-y-2">
                       <Label>成品尺寸</Label>
                       <Input
-                        value={formData.finishedSize}
+                        value={data.finishedSize}
                         onChange={(e) => updateField('finishedSize', e.target.value)}
                         placeholder="如：100×150mm"
                       />
@@ -687,7 +426,7 @@ export function InputV2Form() {
                     <div className="space-y-2">
                       <Label>公差</Label>
                       <Input
-                        value={formData.tolerance}
+                        value={data.tolerance}
                         onChange={(e) => updateField('tolerance', e.target.value)}
                         placeholder="如：±0.1mm"
                       />
@@ -717,7 +456,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>材料名称</Label>
                   <Input
-                    value={formData.materialName}
+                    value={data.materialName}
                     onChange={(e) => updateField('materialName', e.target.value)}
                     placeholder="输入材料名称"
                   />
@@ -725,7 +464,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>材料类型</Label>
                   <Select
-                    value={formData.materialType}
+                    value={data.materialType}
                     onValueChange={(value) => updateField('materialType', value)}
                   >
                     <SelectTrigger>
@@ -740,7 +479,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>排版方式</Label>
                   <Input
-                    value={formData.layoutType}
+                    value={data.layoutType}
                     onChange={(e) => updateField('layoutType', e.target.value)}
                     placeholder="输入排版方式"
                   />
@@ -752,10 +491,10 @@ export function InputV2Form() {
                   <Label>片材规格</Label>
                   <div className="flex gap-2">
                     <Input
-                      value={formData.sheetSpecs.width}
+                      value={data.sheetSpecs.width}
                       onChange={(e) =>
                         updateField('sheetSpecs', {
-                          ...formData.sheetSpecs,
+                          ...data.sheetSpecs,
                           width: e.target.value,
                         })
                       }
@@ -763,10 +502,10 @@ export function InputV2Form() {
                     />
                     <span className="flex items-center">×</span>
                     <Input
-                      value={formData.sheetSpecs.length}
+                      value={data.sheetSpecs.length}
                       onChange={(e) =>
                         updateField('sheetSpecs', {
-                          ...formData.sheetSpecs,
+                          ...data.sheetSpecs,
                           length: e.target.value,
                         })
                       }
@@ -780,9 +519,9 @@ export function InputV2Form() {
                     {['3#', '2#', '1#'].map((num) => (
                       <Input
                         key={num}
-                        value={formData.coreType?.includes(num) ? num : ''}
+                        value={data.coreType?.includes(num) ? num : ''}
                         onChange={(e) => {
-                          const currentTypes = formData.coreType?.split(',').filter(Boolean) || [];
+                          const currentTypes = data.coreType?.split(',').filter(Boolean) || [];
                           let newTypes;
                           if (e.target.value) {
                             if (!currentTypes.includes(num)) {
@@ -807,7 +546,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>纸向</Label>
                   <Input
-                    value={formData.paperDirection}
+                    value={data.paperDirection}
                     onChange={(e) => updateField('paperDirection', e.target.value)}
                     placeholder="输入纸向"
                   />
@@ -815,7 +554,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>料宽</Label>
                   <Input
-                    value={formData.rollWidth}
+                    value={data.rollWidth}
                     onChange={(e) => updateField('rollWidth', e.target.value)}
                     placeholder="输入料宽"
                   />
@@ -823,7 +562,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>纸边</Label>
                   <Input
-                    value={formData.paperEdge}
+                    value={data.paperEdge}
                     onChange={(e) => updateField('paperEdge', e.target.value)}
                     placeholder="输入纸边"
                   />
@@ -854,7 +593,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>印刷类型</Label>
                   <Select
-                    value={formData.printType}
+                    value={data.printType?.split(',')[0] || ''}
                     onValueChange={(value) => updateField('printType', value)}
                   >
                     <SelectTrigger>
@@ -871,7 +610,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>首跳距</Label>
                   <Input
-                    value={formData.firstJumpDistance}
+                    value={data.firstJumpDistance}
                     onChange={(e) => updateField('firstJumpDistance', e.target.value)}
                     placeholder="输入首跳距"
                   />
@@ -879,7 +618,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>标准用量</Label>
                   <Input
-                    value={formData.standardUsage}
+                    value={data.standardUsage}
                     onChange={(e) => updateField('standardUsage', e.target.value)}
                     placeholder="输入标准用量"
                   />
@@ -892,7 +631,7 @@ export function InputV2Form() {
                 <Label className="mb-3 block">印序信息</Label>
                 <ScrollArea className="h-[300px] border rounded-lg">
                   <div className="p-4 space-y-3">
-                    {formData.sequences.map((seq, index) => (
+                    {data.sequences.map((seq, index) => (
                       <Card key={seq.id} className="bg-gray-50">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-2 mb-3">
@@ -951,7 +690,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>工艺流程1</Label>
                   <Input
-                    value={formData.processFlow1}
+                    value={data.processFlow1}
                     onChange={(e) => updateField('processFlow1', e.target.value)}
                     placeholder="输入工艺流程1"
                   />
@@ -959,7 +698,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>工艺流程2</Label>
                   <Input
-                    value={formData.processFlow2}
+                    value={data.processFlow2}
                     onChange={(e) => updateField('processFlow2', e.target.value)}
                     placeholder="输入工艺流程2"
                   />
@@ -970,7 +709,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>加工方式</Label>
                   <Select
-                    value={formData.processMethod}
+                    value={data.processMethod?.split(',')[0] || ''}
                     onValueChange={(value) => updateField('processMethod', value)}
                   >
                     <SelectTrigger>
@@ -985,7 +724,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>模具编号</Label>
                   <Input
-                    value={formData.moldCode}
+                    value={data.moldCode}
                     onChange={(e) => updateField('moldCode', e.target.value)}
                     placeholder="输入模具编号"
                   />
@@ -993,7 +732,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>滴胶类型</Label>
                   <Select
-                    value={formData.glueType}
+                    value={data.glueType}
                     onValueChange={(value) => updateField('glueType', value)}
                   >
                     <SelectTrigger>
@@ -1013,7 +752,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>包装类型</Label>
                   <Select
-                    value={formData.packingType}
+                    value={data.packingType}
                     onValueChange={(value) => updateField('packingType', value)}
                   >
                     <SelectTrigger>
@@ -1031,7 +770,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>每排片数</Label>
                   <Input
-                    value={formData.slicePerRow}
+                    value={data.slicePerRow}
                     onChange={(e) => updateField('slicePerRow', e.target.value)}
                     placeholder="输入每排片数"
                   />
@@ -1039,7 +778,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>每卷片数</Label>
                   <Input
-                    value={formData.slicePerRoll}
+                    value={data.slicePerRoll}
                     onChange={(e) => updateField('slicePerRoll', e.target.value)}
                     placeholder="输入每卷片数"
                   />
@@ -1047,7 +786,7 @@ export function InputV2Form() {
                 <div className="space-y-2">
                   <Label>每箱片数</Label>
                   <Input
-                    value={formData.slicePerBox}
+                    value={data.slicePerBox}
                     onChange={(e) => updateField('slicePerBox', e.target.value)}
                     placeholder="输入每箱片数"
                   />
@@ -1057,7 +796,7 @@ export function InputV2Form() {
               <div className="space-y-2">
                 <Label>备注</Label>
                 <Input
-                  value={formData.notes}
+                  value={data.notes}
                   onChange={(e) => updateField('notes', e.target.value)}
                   placeholder="输入备注信息"
                 />

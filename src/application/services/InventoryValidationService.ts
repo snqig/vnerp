@@ -1,5 +1,6 @@
 import { query, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { getSystemConfig, getSystemConfigBoolean } from '@/lib/system-config';
 import type { RowDataPacket } from 'mysql2';
 
 /** 库存行（仅查询所需字段） */
@@ -24,12 +25,20 @@ export class InventoryValidationService {
     warehouseId: number,
     requiredQty: number
   ): Promise<{ sufficient: boolean; available: number; message?: string }> {
+    // 库存策略：允许负库存 或 订单缺货处理=放行 时，跳过库存不足拦截
+    const allowNegative = await getSystemConfigBoolean('inventory.allow_negative', false);
+    const outOfStockAction = await getSystemConfig('order.out_of_stock_action', 'block');
+    const skipShortage = allowNegative || outOfStockAction === 'allow';
+
     const rows = await query<InventoryQtyRow>(
       'SELECT quantity, material_name FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0',
       [materialId, warehouseId]
     );
 
     if (!rows || rows.length === 0) {
+      if (skipShortage) {
+        return { sufficient: true, available: 0 };
+      }
       return {
         sufficient: false,
         available: 0,
@@ -41,6 +50,9 @@ export class InventoryValidationService {
     const materialName = rows[0].material_name || `物料${materialId}`;
 
     if (available < requiredQty) {
+      if (skipShortage) {
+        return { sufficient: true, available };
+      }
       return {
         sufficient: false,
         available,

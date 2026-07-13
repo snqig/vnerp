@@ -227,6 +227,11 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const [orderedMenus, setOrderedMenus] = useState<MenuItem[]>([]);
   const [activeParentCode, setActiveParentCode] = useState<string | null>(null);
+  // mounted 标记：确保 SSR 和首次 CSR 渲染一致，避免 hydration mismatch。
+  // SSR 时 mounted=false → 统一渲染 loading skeleton
+  // CSR mount 后 mounted=true → 渲染实际菜单内容
+  // 根因：SSR 的 initialAuth 取决于 access_token cookie，CSR hydrate 时可能不一致
+  const [mounted, setMounted] = useState(false);
   const { menus, isLoading, user, isAuthenticated, logout } = useAuth();
   const { companyName } = useCompanyName();
   const t = useTranslations('Auth');
@@ -263,6 +268,11 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   // 从 localStorage 加载排序
   // 用ref缓存menus的序列化值，避免引用变化但内容不变时触发重排序
   const menusSnapshotRef = useRef<string>('');
+
+  // mount 后才渲染实际菜单，确保 SSR/CSR 首帧一致
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     // 确保 menus 是数组
@@ -622,8 +632,8 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
           <>
             {/* 菜单区域 */}
             <ScrollArea className="flex-1 h-[calc(100vh-8rem)]">
-              <nav className="p-3">
-                {isLoading ? (
+              <nav className="p-3" suppressHydrationWarning>
+                {!mounted || isLoading ? (
                   collapsed ? (
                     <div className="space-y-1" aria-busy="true">
                       {[1, 2, 3, 4, 5, 6].map((i) => (

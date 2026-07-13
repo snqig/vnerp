@@ -27,7 +27,7 @@ export const GET = withPermission(
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
-    let where = 'WHERE 1=1';
+    let where = 'WHERE b.deleted = 0';
     const params: Loose[] = [];
 
     if (materialId) {
@@ -49,7 +49,7 @@ export const GET = withPermission(
     if (expiryWarning) {
       // 查询即将过期的批次（30天内）
       where +=
-        ' AND b.expiry_date IS NOT NULL AND b.expiry_date <= DATE_ADD(NOW(), INTERVAL 30 DAY) AND b.expiry_date > NOW() AND b.quantity > 0';
+        ' AND b.expire_date IS NOT NULL AND b.expire_date <= DATE_ADD(NOW(), INTERVAL 30 DAY) AND b.expire_date > NOW() AND b.quantity > 0';
     }
 
     const countRows: Loose = await query(
@@ -60,11 +60,11 @@ export const GET = withPermission(
     const totalPages = Math.ceil(total / pageSize);
 
     const rows: Loose = await query(
-      `SELECT b.*, m.material_name, m.material_code, m.material_spec, m.unit,
+      `SELECT b.*, m.material_name, m.material_code, m.specification, m.unit,
               w.warehouse_name
        FROM inv_inventory_batch b
-       LEFT JOIN materials m ON b.material_id = m.id
-       LEFT JOIN warehouses w ON b.warehouse_id = w.id
+       LEFT JOIN inv_material m ON b.material_id = m.id
+       LEFT JOIN inv_warehouse w ON b.warehouse_id = w.id
        ${where}
        ORDER BY b.id DESC
        LIMIT ? OFFSET ?`,
@@ -134,7 +134,7 @@ export const POST = withPermission(
     const result: Loose = await execute(
       `INSERT INTO inv_inventory_batch
        (material_id, warehouse_id, batch_no, serial_no, quantity, available_qty,
-        unit_price, cost_price, production_date, expiry_date,
+        unit_price, cost_price, produce_date, expire_date,
         supplier_id, supplier_name, remark, create_time, update_time)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
@@ -200,11 +200,11 @@ export const PUT = withPermission(
     const params: Loose[] = [];
 
     if (production_date !== undefined) {
-      updates.push('production_date = ?');
+      updates.push('produce_date = ?');
       params.push(production_date);
     }
     if (expiry_date !== undefined) {
-      updates.push('expiry_date = ?');
+      updates.push('expire_date = ?');
       params.push(expiry_date);
     }
     if (remark !== undefined) {

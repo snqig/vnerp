@@ -6,7 +6,7 @@ import { useRouter } from '@/i18n/navigation';
 import { authFetch } from '@/lib/auth-fetch';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Save, Eye } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/hooks/use-toast';
@@ -53,17 +53,19 @@ const EditableTextarea = ({
   onChange,
   placeholder = '',
   className = '',
+  rows = 2,
 }: {
   value: string;
   onChange: (val: string) => void;
   placeholder?: string;
   className?: string;
+  rows?: number;
 }) => (
   <textarea
     value={value}
     onChange={(e) => onChange(e.target.value)}
     placeholder={placeholder}
-    rows={2}
+    rows={rows}
     className={`w-full px-1 py-0.5 text-xs text-black dark:text-gray-200 bg-transparent border-none outline-none focus:bg-blue-50 dark:focus:bg-blue-900/30 focus:ring-1 focus:ring-blue-400 rounded-sm resize-none ${className}`}
   />
 );
@@ -312,29 +314,6 @@ function InputCardPageContent() {
   return (
     <MainLayout>
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
-        {/* 顶部操作栏 */}
-        <div className="mb-4 flex justify-between items-center bg-white dark:bg-gray-800 rounded-lg shadow p-3">
-          <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => router.push('/sample/standard-card')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              返回列表
-            </Button>
-            <span className="text-lg font-bold text-[#1a3c7a] dark:text-blue-300">
-              {isEditMode ? '编辑标准卡' : '新增标准卡'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button onClick={handleSave} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" />
-              {saving ? '保存中...' : '保存'}
-            </Button>
-            <Button variant="outline" onClick={handleSaveAndPreview} disabled={saving}>
-              <Eye className="h-4 w-4 mr-2" />
-              保存并预览
-            </Button>
-          </div>
-        </div>
-
         {/* A4 横向表格录入区 */}
         <div
           ref={printRef}
@@ -361,7 +340,10 @@ function InputCardPageContent() {
             }}
           />
 
-          <table className="w-full border-collapse text-xs" style={{ tableLayout: 'fixed' }}>
+          <table
+            className="w-full border-collapse text-xs"
+            style={{ tableLayout: 'fixed', height: 'calc(210mm - 6mm)' }}
+          >
             <tbody>
               {/* 标题行 */}
               <tr>
@@ -1099,6 +1081,7 @@ function InputCardPageContent() {
                       onChange={(v) => updateField('notes', v)}
                       placeholder="输入注意事项"
                       className="mt-1"
+                      rows={3}
                     />
                   </div>
                 </td>
@@ -1156,16 +1139,16 @@ function InputCardPageContent() {
               </tr>
             </tbody>
           </table>
+        </div>
 
-          {/* 底部编号 */}
-          <div className="mt-2 flex items-center">
-            <span className="font-bold text-sm mr-2">编号：</span>
-            <EditableCell
-              value={data.documentCode}
-              onChange={(v) => updateField('documentCode', v)}
-              className="flex-1 border-b border-black dark:border-gray-400 min-w-[200px]"
-            />
-          </div>
+        {/* 底部编号 — 移至页面最底部 */}
+        <div className="mt-2 flex items-center">
+          <span className="font-bold text-sm mr-2">编号：</span>
+          <EditableCell
+            value={data.documentCode}
+            onChange={(v) => updateField('documentCode', v)}
+            className="flex-1 border-b border-black dark:border-gray-400 min-w-[200px]"
+          />
         </div>
       </div>
     </MainLayout>

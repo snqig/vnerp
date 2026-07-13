@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Printer } from 'lucide-react';
 import { useCompanyName } from '@/hooks/useCompanyName';
@@ -133,10 +134,25 @@ function PrintPageContent() {
       try {
         const id = searchParams.get('id');
         if (id) {
-          const response = await fetch(`/api/standard-cards?id=${id}`);
+          const response = await authFetch(`/api/standard-cards?id=${id}`);
+          if (!response.ok) {
+            console.error('[Print:Load] response not ok, status=', response.status);
+            setError(`加载数据失败 (HTTP ${response.status})`);
+            setLoading(false);
+            return;
+          }
           const result = await response.json();
-          if (result.success && result.data) {
-            const item = result.data;
+          console.log('[Print:Load] result:', {
+            success: result.success,
+            hasData: !!result.data,
+            message: result.message,
+          });
+
+          // 如果API返回的是分页列表格式（data是数组），取第一条
+          const apiData = Array.isArray(result.data) ? result.data[0] : result.data;
+
+          if (result.success && apiData) {
+            const item = apiData;
             setData({
               cardNo: item.card_no || '',
               customer: item.customer_name || '',
@@ -220,6 +236,9 @@ function PrintPageContent() {
               storageLocation: item.storage_location || '',
               extraField: item.extra_field || '',
             });
+          } else {
+            console.error('[Print:Load] API returned no data:', result.message);
+            setError(result.message || '标准卡不存在');
           }
         } else {
           const savedData = sessionStorage.getItem('standardCardData');
@@ -258,7 +277,7 @@ function PrintPageContent() {
         <head>
           <title>标准卡打印</title>
           <style>
-            @page { size: A4 landscape; margin: 3mm; }
+            @page { size: A4 landscape; margin: 0; }
             body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: white; }
             table { width: 100%; border-collapse: collapse; font-size: 12px; }
             table td { padding: 2px 4px; vertical-align: middle; text-align: center; border: 1px solid #333; font-size: 12px; font-weight: normal; line-height: 1.4; color: #000; }
@@ -458,7 +477,7 @@ function PrintPageContent() {
         className="bg-white dark:bg-gray-800 mx-auto shadow-lg print:shadow-none flex flex-col"
         style={{
           width: '297mm',
-          height: '210mm',
+          minHeight: '210mm',
           padding: '3mm',
           boxSizing: 'border-box',
         }}
@@ -476,7 +495,10 @@ function PrintPageContent() {
           }}
         />
 
-        <table className="w-full border-collapse text-xs flex-1" style={{ tableLayout: 'fixed' }}>
+        <table
+          className="w-full border-collapse text-xs flex-1"
+          style={{ tableLayout: 'fixed', height: 'calc(210mm - 16mm)' }}
+        >
           <tbody>
             <tr>
               <td colSpan={16} className="text-center border-none">

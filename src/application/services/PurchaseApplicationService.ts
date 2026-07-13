@@ -3,7 +3,12 @@ import { PurchaseOrder, PurchaseOrderProps } from '@/domain/purchase/aggregates/
 import { PurchaseOrderStatus } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
-import { transaction } from '@/lib/db';
+import { query, transaction } from '@/lib/db';
+import {
+  getSystemConfig,
+  getSystemConfigBoolean,
+  getSystemConfigNumber,
+} from '@/lib/system-config';
 
 export class PurchaseApplicationService {
   constructor(private readonly orderRepo: IPurchaseOrderRepository) {}
@@ -26,14 +31,82 @@ export class PurchaseApplicationService {
   }
 
   async createOrder(props: PurchaseOrderProps): Promise<{ id: number; orderNo: string }> {
-    const order = PurchaseOrder.create(props);
+    // 采购允差比例：未指定时使用系统配置默认值
+    let effectiveProps = props;
+    if (!props.overReceiptTolerance) {
+      const tolerance = await getSystemConfigNumber('purchase.tolerance_ratio', 0);
+      if (tolerance > 0) {
+        effectiveProps = { ...props, overReceiptTolerance: tolerance };
+      }
+    }
+
+    // 财务默认税率/币种（未指定时使用系统配置）
+    if (!effectiveProps.taxRate) {
+      const taxRate = await getSystemConfigNumber('finance.tax_rate', 13);
+      effectiveProps = { ...effectiveProps, taxRate };
+    }
+    if (!effectiveProps.currency) {
+      const currency = await getSystemConfig('finance.default_currency', 'CNY');
+      if (currency) effectiveProps = { ...effectiveProps, currency };
+    }
+
+    // 明细行税率默认继承表头税率
+    effectiveProps = {
+      ...effectiveProps,
+      lines: effectiveProps.lines.map((l) => ({
+        ...l,
+        taxRate: l.taxRate ?? effectiveProps.taxRate,
+      })),
+    };
+
+    // 采购价格上限控制：单价超过该物料历史最高采购价时拦截
+    const priceControl = await getSystemConfigBoolean('purchase.price_control', false);
+    if (priceControl) {
+      for (const line of effectiveProps.lines) {
+        const maxPrice = await this.getHistoricalMaxPrice(line.materialId);
+        if (maxPrice !== null && (line.unitPrice || 0) > maxPrice) {
+          throw new DomainError(
+            `物料「${line.materialName || line.materialCode}」采购单价 ${line.unitPrice} 超过历史最高价 ${maxPrice}，已被价格上限控制拦截`
+          );
+        }
+      }
+    }
+
+    const order = PurchaseOrder.create(effectiveProps);
     const result = await this.orderRepo.save(order);
 
     if (result.id) {
+      // 采购审批金额阈值：订单总额超过阈值时自动提交进入审批流
+      const threshold = await getSystemConfigNumber('purchase.approval_threshold', 0);
+      if (threshold > 0 && order.totalAmount > threshold) {
+        order.submit();
+        const updated = await this.orderRepo.updateStatus(result.id, 'submitted', 'draft');
+        if (!updated) {
+          throw new VersionConflictError();
+        }
+      }
       await this.persistAndPublishEvents(result.id, order);
     }
 
     return result;
+  }
+
+  /**
+   * 查询某物料的历史最高采购单价，用于价格上限控制校验。
+   * 无历史记录或查询失败时返回 null（不拦截）。
+   */
+  private async getHistoricalMaxPrice(materialId: number): Promise<number | null> {
+    if (!materialId) return null;
+    try {
+      const rows: Loose = await query(
+        'SELECT MAX(unit_price) AS max_price FROM pur_purchase_order_line WHERE material_id = ?',
+        [materialId]
+      );
+      const max = rows[0]?.max_price;
+      return max === null || max === undefined ? null : Number(max);
+    } catch {
+      return null;
+    }
   }
 
   async submitOrder(id: number): Promise<{ id: number; status: string }> {

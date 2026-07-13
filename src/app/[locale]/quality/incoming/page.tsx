@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { useTranslations } from 'next-intl';
-import { logger } from '@/lib/logger';
-import { mockQualityIncoming, USE_MOCK } from '@/lib/mock-data';
+import { authFetch } from '@/lib/auth-fetch';
 import {
   Search,
   Plus,
@@ -85,135 +84,6 @@ const getInspectionItems = (t: (key: string) => string) => [
   { name: t('packagingCheck'), standard: t('packagingStandard') },
 ];
 
-const initialIncomingInspections: Loose[] = [
-  {
-    id: 'IQC20250303001',
-    date: '2025-03-03',
-    supplier: '恒翌达',
-    materialName: '厚0.3热缩套管',
-    specification: 'Ф32',
-    batchNo: 'B20250303001',
-    quantity: 1000,
-    unit: 'M',
-    inspectionType: '抽检',
-    result: 'pass',
-    inspector: '张三',
-    remark: '检验合格',
-    items: [
-      {
-        itemName: '外观检查',
-        standard: '无划痕、变形、色差',
-        actualValue: '无划痕、无变形、无色差',
-        result: 'pass',
-        itemRemark: '',
-      },
-      {
-        itemName: '尺寸检查',
-        standard: 'Ф32±0.1mm',
-        actualValue: 'Ф32.05mm',
-        result: 'pass',
-        itemRemark: '',
-      },
-      {
-        itemName: '材质检查',
-        standard: '符合材质标准',
-        actualValue: '符合标准',
-        result: 'pass',
-        itemRemark: '',
-      },
-    ],
-  },
-  {
-    id: 'IQC20250303002',
-    date: '2025-03-03',
-    supplier: '华通材料',
-    materialName: 'PVC绝缘胶带',
-    specification: '20mm*20m',
-    batchNo: 'B20250303002',
-    quantity: 500,
-    unit: '卷',
-    inspectionType: '全检',
-    result: 'pass',
-    inspector: '李四',
-    remark: '检验合格',
-    items: [
-      {
-        itemName: '外观检查',
-        standard: '无破损、无异味',
-        actualValue: '无破损、无异味',
-        result: 'pass',
-        itemRemark: '',
-      },
-      {
-        itemName: '尺寸检查',
-        standard: '20mm*20m',
-        actualValue: '20mm*20.5m',
-        result: 'pass',
-        itemRemark: '长度略有盈余',
-      },
-      {
-        itemName: '粘性测试',
-        standard: '符合粘性要求',
-        actualValue: '符合要求',
-        result: 'pass',
-        itemRemark: '',
-      },
-    ],
-  },
-  {
-    id: 'IQC20250302001',
-    date: '2025-03-02',
-    supplier: '江南电缆',
-    materialName: '铜芯线',
-    specification: '1.5mm²',
-    batchNo: 'B20250302001',
-    quantity: 2000,
-    unit: 'M',
-    inspectionType: '抽检',
-    result: 'reject',
-    inspector: '张三',
-    remark: '部分线材直径不达标',
-    items: [
-      {
-        itemName: '外观检查',
-        standard: '无破损、无氧化',
-        actualValue: '无破损、无氧化',
-        result: 'pass',
-        itemRemark: '',
-      },
-      {
-        itemName: '尺寸检查',
-        standard: '1.5mm²±0.1mm²',
-        actualValue: '1.3mm²',
-        result: 'reject',
-        itemRemark: '直径偏小',
-      },
-      {
-        itemName: '电阻测试',
-        standard: '符合电阻要求',
-        actualValue: '符合要求',
-        result: 'pass',
-        itemRemark: '',
-      },
-    ],
-  },
-  {
-    id: 'IQC20250301001',
-    date: '2025-03-01',
-    supplier: '恒翌达',
-    materialName: 'PE管',
-    specification: '25mm',
-    batchNo: 'B20250301001',
-    quantity: 1500,
-    unit: 'M',
-    inspectionType: '抽检',
-    result: 'pending',
-    inspector: '李四',
-    remark: '待检验',
-    items: [],
-  },
-];
-
 const getStatusConfig = (
   t: (key: string) => string,
   tc: (key: string) => string
@@ -225,6 +95,38 @@ const getStatusConfig = (
   reject: { label: tc('unqualified'), variant: 'destructive' },
   pending: { label: t('pendingInspection'), variant: 'outline' },
 });
+
+// 将 API 返回的 camelCase 字段映射为页面内部格式
+function mapApiToInternal(item: Loose): Loose {
+  const inspectionTypeLabel =
+    item.inspectionType === 'sampling'
+      ? '抽检'
+      : item.inspectionType === 'full'
+        ? '全检'
+        : item.inspectionType === 'visual'
+          ? '外观检查'
+          : item.inspectionType === 'functional'
+            ? '功能测试'
+            : item.inspectionType || '抽检';
+  return {
+    dbId: item.id,
+    id: item.inspectionNo,
+    date: item.inspectionDate,
+    supplier: item.supplierName,
+    materialCode: item.materialCode,
+    materialName: item.materialName,
+    specification: item.specification,
+    batchNo: item.batchNo,
+    quantity: parseFloat(item.quantity) || 0,
+    unit: item.unit,
+    inspectionType: inspectionTypeLabel,
+    inspectionTypeRaw: item.inspectionType || 'sampling',
+    result: item.inspectionResult,
+    inspector: item.inspectorName,
+    remark: item.remark || '',
+    items: Array.isArray(item.items) ? item.items : [],
+  };
+}
 
 export default function IncomingInspectionPage() {
   // 翻译钩子
@@ -246,50 +148,28 @@ export default function IncomingInspectionPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
-  const [incomingInspections, setIncomingInspections] = useState(() => {
-    if (USE_MOCK) {
-      const mapped = mockQualityIncoming.map((item: Loose) => ({
-        id: item.inspect_no,
-        date: item.inspect_time,
-        supplier: item.supplier_name,
-        materialName: item.material_name,
-        specification: item.specification,
-        batchNo: item.batch_no,
-        quantity: item.inspect_qty,
-        unit: 'pcs',
-        inspectionType:
-          item.inspection_type === 'sampling'
-            ? '抽检'
-            : item.inspection_type === 'full'
-              ? '全检'
-              : '抽检',
-        result: item.result,
-        inspector: item.inspector,
-        remark: item.remark || '',
-        items: [
-          {
-            itemName: '外观检查',
-            standard: item.standard || '符合标准',
-            actualValue: '合格',
-            result: 'pass',
-            itemRemark: '',
-          },
-          {
-            itemName: '尺寸检查',
-            standard: item.standard || '符合标准',
-            actualValue: '合格',
-            result: 'pass',
-            itemRemark: '',
-          },
-        ],
-      }));
-      logger.info({ module: 'Quality', action: 'incoming' }, '使用 mock 来料检验数据', {
-        count: mapped.length,
-      });
-      return mapped;
+  const [incomingInspections, setIncomingInspections] = useState<Loose[]>([]);
+
+  // 从 API 获取来料检验数据
+  const fetchInspections = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await authFetch('/api/quality/incoming?page=1&pageSize=100');
+      const result = await res.json();
+      if (result.success && result.data) {
+        const list = Array.isArray(result.data.list) ? result.data.list : [];
+        setIncomingInspections(list.map(mapApiToInternal));
+      }
+    } catch {
+      toast.error(tc('fetchFailed'));
+    } finally {
+      setIsLoading(false);
     }
-    return initialIncomingInspections;
-  });
+  }, [tc]);
+
+  useEffect(() => {
+    fetchInspections();
+  }, [fetchInspections]);
   const [selectedInspections, setSelectedInspections] = useState<string[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -350,11 +230,9 @@ export default function IncomingInspectionPage() {
   );
 
   const handleRefresh = useCallback(async () => {
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setIsLoading(false);
+    await fetchInspections();
     toast.success(tc('dataRefreshed'));
-  }, []);
+  }, [fetchInspections, tc]);
 
   const handleReset = useCallback(() => {
     setSearchQuery('');
@@ -399,14 +277,7 @@ export default function IncomingInspectionPage() {
       batchNo: inspection.batchNo,
       quantity: inspection.quantity?.toString() || '',
       unit: inspection.unit,
-      inspectionType:
-        inspection.inspectionType === t('samplingInspection')
-          ? 'sampling'
-          : inspection.inspectionType === t('fullInspection')
-            ? 'full'
-            : inspection.inspectionType === t('visualInspection')
-              ? 'visual'
-              : 'functional',
+      inspectionType: inspection.inspectionTypeRaw || 'sampling',
       inspectionResult: inspection.result,
       inspectorName: inspection.inspector,
       remark: inspection.remark || '',
@@ -430,66 +301,75 @@ export default function IncomingInspectionPage() {
     setIsEditDialogOpen(true);
   };
 
-  const handleSave = () => {
-    const newInspection = {
-      id: `IQC${new Date().toISOString().slice(0, 10).replace(/-/g, '')}${String(incomingInspections.length + 1).padStart(3, '0')}`,
-      date: formData.inspectionDate,
-      supplier: formData.supplierName,
-      materialName: formData.materialName,
-      specification: formData.specification,
-      batchNo: formData.batchNo,
-      quantity: parseFloat(formData.quantity) || 0,
-      unit: formData.unit,
-      inspectionType:
-        formData.inspectionType === 'sampling'
-          ? t('samplingInspection')
-          : formData.inspectionType === 'full'
-            ? t('fullInspection')
-            : formData.inspectionType === 'visual'
-              ? t('visualInspection')
-              : t('functionalTest'),
-      result: formData.inspectionResult,
-      inspector: formData.inspectorName,
-      remark: formData.remark,
-      items: formData.items,
-    };
-    setIncomingInspections([newInspection, ...incomingInspections]);
-    setIsAddDialogOpen(false);
-    toast.success(t('incomingInspectionSaved'));
+  const handleSave = async () => {
+    try {
+      const res = await authFetch('/api/quality/incoming', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          inspectionDate: formData.inspectionDate,
+          supplierName: formData.supplierName,
+          materialCode: formData.materialCode,
+          materialName: formData.materialName,
+          specification: formData.specification,
+          batchNo: formData.batchNo,
+          quantity: formData.quantity,
+          unit: formData.unit,
+          inspectionType: formData.inspectionType,
+          inspectionResult: formData.inspectionResult,
+          inspectorName: formData.inspectorName,
+          remark: formData.remark,
+          items: formData.items,
+        }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setIsAddDialogOpen(false);
+        toast.success(t('incomingInspectionSaved'));
+        fetchInspections();
+      } else {
+        toast.error(result.message || tc('fetchFailed'));
+      }
+    } catch {
+      toast.error(tc('fetchFailed'));
+    }
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!currentInspection) return;
-    setIncomingInspections(
-      incomingInspections.map((i) =>
-        i.id === currentInspection.id
-          ? {
-              ...i,
-              date: formData.inspectionDate,
-              supplier: formData.supplierName,
-              materialName: formData.materialName,
-              specification: formData.specification,
-              batchNo: formData.batchNo,
-              quantity: parseFloat(formData.quantity) || 0,
-              unit: formData.unit,
-              inspectionType:
-                formData.inspectionType === 'sampling'
-                  ? t('samplingInspection')
-                  : formData.inspectionType === 'full'
-                    ? t('fullInspection')
-                    : formData.inspectionType === 'visual'
-                      ? t('visualInspection')
-                      : t('functionalTest'),
-              result: formData.inspectionResult,
-              inspector: formData.inspectorName,
-              remark: formData.remark,
-              items: formData.items,
-            }
-          : i
-      )
-    );
-    setIsEditDialogOpen(false);
-    toast.success(t('incomingInspectionUpdated'));
+    try {
+      const res = await authFetch('/api/quality/incoming', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: currentInspection.dbId,
+          inspectionNo: currentInspection.id,
+          inspectionDate: formData.inspectionDate,
+          supplierName: formData.supplierName,
+          materialCode: formData.materialCode,
+          materialName: formData.materialName,
+          specification: formData.specification,
+          batchNo: formData.batchNo,
+          quantity: formData.quantity,
+          unit: formData.unit,
+          inspectionType: formData.inspectionType,
+          inspectionResult: formData.inspectionResult,
+          inspectorName: formData.inspectorName,
+          remark: formData.remark,
+          items: formData.items,
+        }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setIsEditDialogOpen(false);
+        toast.success(t('incomingInspectionUpdated'));
+        fetchInspections();
+      } else {
+        toast.error(result.message || tc('fetchFailed'));
+      }
+    } catch {
+      toast.error(tc('fetchFailed'));
+    }
   };
 
   const handleDelete = (inspection: Loose) => {
@@ -497,11 +377,23 @@ export default function IncomingInspectionPage() {
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!currentInspection) return;
-    setIncomingInspections(incomingInspections.filter((i) => i.id !== currentInspection.id));
-    setIsDeleteDialogOpen(false);
-    toast.success(t('inspectionDeleted'));
+    try {
+      const res = await authFetch(`/api/quality/incoming?id=${currentInspection.dbId}`, {
+        method: 'DELETE',
+      });
+      const result = await res.json();
+      if (result.success) {
+        setIsDeleteDialogOpen(false);
+        toast.success(t('inspectionDeleted'));
+        fetchInspections();
+      } else {
+        toast.error(result.message || tc('deleteFailed'));
+      }
+    } catch {
+      toast.error(tc('deleteFailed'));
+    }
   };
 
   const toggleSelectInspection = (inspectionId: string) => {

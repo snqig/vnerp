@@ -65,12 +65,21 @@ export async function getNumberingConfig(): Promise<DocumentNumberingConfig> {
         'return_prefix',
         'reconciliation_prefix',
         'serial_length',
+        'order.prefix',
+        'purchase.prefix',
+        'inbound.prefix',
+        'outbound.prefix',
       ]
     );
     const configs: Record<string, string> = {};
     rows.forEach((row: Loose) => {
       configs[row.config_key] = row.config_value;
     });
+    // 命名空间前缀配置（系统配置中心）覆盖对应的扁平前缀字段
+    if (configs['order.prefix']) configs['sales_order_prefix'] = configs['order.prefix'];
+    if (configs['purchase.prefix']) configs['purchase_order_prefix'] = configs['purchase.prefix'];
+    if (configs['inbound.prefix']) configs['inbound_prefix'] = configs['inbound.prefix'];
+    if (configs['outbound.prefix']) configs['outbound_prefix'] = configs['outbound.prefix'];
     return {
       sales_order_prefix: configs['sales_order_prefix'] || DEFAULT_CONFIG.sales_order_prefix,
       purchase_order_prefix:

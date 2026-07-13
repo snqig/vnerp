@@ -140,7 +140,16 @@ async function deleteHandler(request: NextRequest, user: UserInfo) {
     if (!id) {
       return NextResponse.json({ code: 400, message: '缺少标准卡ID' }, { status: 400 });
     }
-    await service.delete(parseInt(id));
+    const ids = id
+      .split(',')
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => !Number.isNaN(n));
+    if (ids.length === 0) {
+      return NextResponse.json({ code: 400, message: '标准卡ID无效' }, { status: 400 });
+    }
+    for (const one of ids) {
+      await service.delete(one);
+    }
     return NextResponse.json({
       code: 200,
       message: '删除成功',

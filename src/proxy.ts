@@ -104,10 +104,13 @@ export function proxy(request: NextRequest) {
 
   // API 路由：access_token 存在性检查 + CSRF 校验 + 放行（不做 i18n 处理）
   if (pathname.startsWith('/api/')) {
-    // 跳过公开 API（登录/注册/健康检查等）
+    // 跳过公开 API（登录/注册/登出/刷新/健康检查等）
+    // logout 和 refresh 必须放行：登出时 token 可能已过期，refresh 本身就是为了获取新 token
     const isPublicApi = [
       '/api/auth/login',
       '/api/auth/register',
+      '/api/auth/logout',
+      '/api/auth/refresh',
       '/api/health',
       '/api/migrations',
     ].some((p) => pathname.startsWith(p));

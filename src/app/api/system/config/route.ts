@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
+import { clearSystemConfigCache } from '@/lib/system-config';
 import { withPermission } from '@/lib/api-permissions';
 
 export const GET = withPermission(
@@ -48,6 +49,7 @@ export const POST = withPermission(
       [config_name, config_key, config_value, config_type ?? 1, description || null]
     );
 
+    clearSystemConfigCache();
     return successResponse({ id: result.insertId }, '创建成功');
   },
   { logTitle: '创建系统配置', logType: 'system' }
@@ -63,6 +65,7 @@ export const PUT = withPermission(
       [config_name, config_key, config_value, config_type ?? 1, description || null, id]
     );
 
+    clearSystemConfigCache();
     return successResponse(null, '更新成功');
   },
   { logTitle: '更新系统配置', logType: 'system' }
@@ -75,6 +78,7 @@ export const DELETE = withPermission(
     if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
 
     await execute(`DELETE FROM sys_config WHERE id = ?`, [Number(id)]);
+    clearSystemConfigCache();
     return successResponse(null, '删除成功');
   },
   { logTitle: '删除系统配置', logType: 'system' }

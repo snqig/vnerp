@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Save, Eye } from 'lucide-react';
+import { ArrowLeft, Save, Printer } from 'lucide-react';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/hooks/use-toast';
@@ -52,17 +52,19 @@ const EditableTextarea = ({
   onChange,
   placeholder = '',
   className = '',
+  rows = 2,
 }: {
   value: string;
   onChange: (val: string) => void;
   placeholder?: string;
   className?: string;
+  rows?: number;
 }) => (
   <textarea
     value={value}
     onChange={(e) => onChange(e.target.value)}
     placeholder={placeholder}
-    rows={2}
+    rows={rows}
     className={`w-full px-1 py-0.5 text-xs text-black dark:text-gray-200 bg-transparent border-none outline-none focus:bg-blue-50 dark:focus:bg-blue-900/30 focus:ring-1 focus:ring-blue-400 rounded-sm resize-none ${className}`}
   />
 );
@@ -96,8 +98,9 @@ export function InputCardForm() {
       console.log('[StandardCard:Load] 响应: status=', response.status, 'ok=', response.ok);
       const result = await response.json();
       console.log('[StandardCard:Load] 结果: success=', result.success, 'hasData=', !!result.data);
-      if (result.success && result.data) {
-        setData(mapApiDataToCardData(result.data));
+      const apiData = Array.isArray(result.data) ? result.data[0] : result.data;
+      if (result.success && apiData) {
+        setData(mapApiDataToCardData(apiData));
       } else {
         console.error('[StandardCard:Load] API返回失败:', result.message);
         setError(result.message || '加载失败');
@@ -186,53 +189,27 @@ export function InputCardForm() {
       c.customerCode.toLowerCase().includes(customerSearch.toLowerCase())
   );
 
-  const handleSave = async () => {
-    console.log(
-      '[StandardCard:Save] 开始保存, mode=',
-      isEditMode ? 'edit' : 'create',
-      'editId=',
-      editId
-    );
-    console.log('[StandardCard:Save] 表单数据 snapshot:', {
-      cardNo: data.cardNo,
-      customer: data.customer,
-      customerCode: data.customerCode,
-      productName: data.productName,
-      version: data.version,
-      date: data.date,
-      sequencesCount: data.sequences?.length,
-      coreType: data.coreType,
-      printType: data.printType,
-      processMethod: data.processMethod,
-    });
-
+  const handleSave = async (): Promise<number | null> => {
     if (!data.customer) {
-      console.warn('[StandardCard:Save] 校验失败: 客户为空');
       toast({ title: '请选择客户', variant: 'destructive' });
-      return;
+      return null;
+    }
+    if (!data.customerCode) {
+      toast({ title: '请输入客户料号', variant: 'destructive' });
+      return null;
     }
     if (!data.productName) {
-      console.warn('[StandardCard:Save] 校验失败: 品名为空');
       toast({ title: '请输入品名', variant: 'destructive' });
-      return;
+      return null;
     }
 
     try {
       setSaving(true);
-      console.log('[StandardCard:Save] 构建API payload...');
 
       const saveData = mapCardDataToApiPayload(data, isEditMode, editId || undefined);
 
       const url = '/api/standard-cards';
       const method = isEditMode ? 'PUT' : 'POST';
-
-      console.log('[StandardCard:Save] 发送请求:', {
-        url,
-        method,
-        hasId: !!saveData.id,
-        payloadSize: JSON.stringify(saveData).length,
-        sequencesSerialized: saveData.sequences,
-      });
 
       const response = await authFetch(url, {
         method,
@@ -240,42 +217,34 @@ export function InputCardForm() {
         body: JSON.stringify(saveData),
       });
 
-      console.log('[StandardCard:Save] 收到响应: status=', response.status, 'ok=', response.ok);
-
       const result = await response.json();
 
-      console.log('[StandardCard:Save] 响应体:', {
-        success: result.success,
-        message: result.message,
-        dataId: result.data?.id,
-      });
-
       if (!result.success) {
-        console.error('[StandardCard:Save] API返回失败:', result.message, result);
         toast({ title: result.message || '保存失败', variant: 'destructive' });
-        return;
+        return null;
       }
 
       const newId = result.data?.id || parseInt(editId || '0');
-      console.log('[StandardCard:Save] 保存成功, newId=', newId);
       toast({ title: isEditMode ? '标准卡更新成功' : '标准卡保存成功' });
 
       if (!isEditMode && newId) {
-        console.log('[StandardCard:Save] 跳转到编辑模式, id=', newId);
-        router.push(`/sample/standard-card/input-card?id=${newId}`);
+        // 保存成功后切换为编辑模式（保持在传统录入页面）
+        router.push(`/sample/standard-card?id=${newId}&edit=true&mode=card`);
       }
+
+      return newId;
     } catch (e) {
       console.error('[StandardCard:Save] 异常:', e instanceof Error ? e.message : e, e);
       toast({ title: '保存失败，请检查网络连接', variant: 'destructive' });
+      return null;
     } finally {
-      console.log('[StandardCard:Save] 完成, saving=false');
       setSaving(false);
     }
   };
 
   const handleSaveAndPreview = async () => {
-    await handleSave();
-    const id = searchParams.get('id');
+    const savedId = await handleSave();
+    const id = savedId || (editId ? parseInt(editId) : null);
     if (id) {
       router.push(`/sample/standard-card/print?id=${id}`);
     }
@@ -307,29 +276,6 @@ export function InputCardForm() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
-      {/* 顶部操作栏 */}
-      <div className="mb-4 flex justify-between items-center bg-white dark:bg-gray-800 rounded-lg shadow p-3">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={() => router.push('/sample/standard-card')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            返回列表
-          </Button>
-          <span className="text-lg font-bold text-[#1a3c7a] dark:text-blue-300">
-            {isEditMode ? '编辑标准卡' : '新增标准卡'}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? '保存中...' : '保存'}
-          </Button>
-          <Button variant="outline" onClick={handleSaveAndPreview} disabled={saving}>
-            <Eye className="h-4 w-4 mr-2" />
-            保存并预览
-          </Button>
-        </div>
-      </div>
-
       {/* A4 横向表格录入区 */}
       <div
         ref={printRef}
@@ -356,7 +302,10 @@ export function InputCardForm() {
           }}
         />
 
-        <table className="w-full border-collapse text-xs" style={{ tableLayout: 'fixed' }}>
+        <table
+          className="w-full border-collapse text-xs"
+          style={{ tableLayout: 'fixed', height: 'calc(210mm - 6mm)' }}
+        >
           <tbody>
             {/* 标题行 */}
             <tr>
@@ -1050,6 +999,7 @@ export function InputCardForm() {
                     onChange={(v) => updateField('notes', v)}
                     placeholder="输入注意事项"
                     className="mt-1"
+                    rows={3}
                   />
                 </div>
               </td>
@@ -1101,16 +1051,32 @@ export function InputCardForm() {
             </tr>
           </tbody>
         </table>
+      </div>
 
-        {/* 底部编号 */}
-        <div className="mt-2 flex items-center">
-          <span className="font-bold text-sm mr-2">编号：</span>
-          <EditableCell
-            value={data.documentCode}
-            onChange={(v) => updateField('documentCode', v)}
-            className="flex-1 border-b border-black dark:border-gray-400 min-w-[200px]"
-          />
-        </div>
+      {/* 底部编号 — 移至页面最底部 */}
+      <div className="mt-2 flex items-center">
+        <span className="font-bold text-sm mr-2">编号：</span>
+        <EditableCell
+          value={data.documentCode}
+          onChange={(v) => updateField('documentCode', v)}
+          className="flex-1 border-b border-black dark:border-gray-400 min-w-[200px]"
+        />
+      </div>
+
+      {/* 操作按钮 */}
+      <div className="mt-4 flex items-center justify-center gap-3 pb-4">
+        <Button variant="outline" onClick={() => router.push('/sample/standard-card')}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          返回列表
+        </Button>
+        <Button variant="outline" onClick={handleSave} disabled={saving}>
+          <Save className="h-4 w-4 mr-2" />
+          {saving ? '保存中...' : isEditMode ? '更新' : '保存'}
+        </Button>
+        <Button onClick={handleSaveAndPreview} disabled={saving}>
+          <Printer className="h-4 w-4 mr-2" />
+          {saving ? '保存中...' : '保存并预览'}
+        </Button>
       </div>
     </div>
   );

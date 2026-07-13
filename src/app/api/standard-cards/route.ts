@@ -360,6 +360,18 @@ export const PUT = withPermission(
       return commonErrors.notFound('标准卡不存在');
     }
 
+    // 检查标准卡编号唯一性（排除当前记录自身）
+    if (body.card_no !== undefined && body.card_no !== '') {
+      const cardNoToCheck = body.card_no;
+      const duplicate = await queryOne<{ id: number }>(
+        'SELECT id FROM prd_standard_card WHERE card_no = ? AND deleted = 0 AND id != ?',
+        [cardNoToCheck, id]
+      );
+      if (duplicate) {
+        return errorResponse('标准卡编号已存在', 409, 409);
+      }
+    }
+
     // 处理sequences字段
     let sequencesToStore = body.sequences;
     if (
@@ -373,6 +385,7 @@ export const PUT = withPermission(
     // 构建更新数据（过滤掉undefined值）
     const updateData: Loose = {};
     const fieldMappings: Record<string, string> = {
+      card_no: 'card_no',
       version: 'version',
       status: 'status',
       customer_id: 'customer_id',
@@ -490,6 +503,27 @@ export const PUT = withPermission(
 
     // 更新时间
     updateData.update_time = new Date();
+
+    // 防御：查询当前记录完整数据，防止前端遗漏字段导致已有数据被空值覆盖
+    const currentCard = await queryOne<Record<string, unknown>>(
+      'SELECT * FROM prd_standard_card WHERE id = ? AND deleted = 0',
+      [id]
+    );
+    if (currentCard) {
+      for (const field of Object.keys(updateData)) {
+        const newVal = updateData[field];
+        const oldVal = currentCard[field];
+        // 如果新值为空字符串/null 但原值有数据，跳过更新（防止误清空）
+        if (
+          (newVal === '' || newVal === null) &&
+          oldVal !== null &&
+          oldVal !== '' &&
+          oldVal !== undefined
+        ) {
+          delete updateData[field];
+        }
+      }
+    }
 
     // 构建SQL
     if (Object.keys(updateData).length === 0) {

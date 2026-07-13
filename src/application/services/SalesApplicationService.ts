@@ -5,6 +5,11 @@ import { DomainError, NotFoundError, VersionConflictError } from '@/domain/share
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
 import { InventoryValidationService } from '@/application/services/InventoryValidationService';
+import {
+  getSystemConfig,
+  getSystemConfigBoolean,
+  getSystemConfigNumber,
+} from '@/lib/system-config';
 
 export class SalesApplicationService {
   constructor(private readonly orderRepo: ISalesOrderRepository) {}
@@ -25,7 +30,36 @@ export class SalesApplicationService {
   }
 
   async createOrder(props: SalesOrderProps): Promise<{ id: number; orderNo: string }> {
-    const order = SalesOrder.create(props);
+    let effectiveProps = props;
+    // 财务默认税率/币种（未指定时使用系统配置）
+    if (!props.taxRate) {
+      const taxRate = await getSystemConfigNumber('finance.tax_rate', 13);
+      effectiveProps = { ...effectiveProps, taxRate };
+    }
+    if (!props.currency) {
+      const currency = await getSystemConfig('finance.default_currency', 'CNY');
+      if (currency) effectiveProps = { ...effectiveProps, currency };
+    }
+
+    // 明细行税率默认继承表头税率
+    effectiveProps = {
+      ...effectiveProps,
+      lines: effectiveProps.lines.map((l) => ({
+        ...l,
+        taxRate: l.taxRate ?? effectiveProps.taxRate,
+      })),
+    };
+
+    const order = SalesOrder.create(effectiveProps);
+
+    // 订单最低金额校验
+    const minAmount = await getSystemConfigNumber('order.min_amount', 0);
+    if (minAmount > 0 && order.totalAmount < minAmount) {
+      throw new DomainError(
+        `订单金额 ${order.totalAmount} 低于最低订单金额 ${minAmount}，无法创建`
+      );
+    }
+
     const result = await this.orderRepo.save(order);
     if (result.id) await this.persistAndPublishEvents(result.id, order);
     return result;
@@ -38,6 +72,16 @@ export class SalesApplicationService {
     const updated = await this.orderRepo.updateStatus(id, 'submitted', previousStatus);
     if (!updated) throw new VersionConflictError();
     await this.persistAndPublishEvents(id, order);
+
+    // 订单自动审核
+    const autoApprove = await getSystemConfigBoolean('order.auto_approve', false);
+    if (autoApprove) {
+      try {
+        return await this.approveOrder(id, order.createBy || 0);
+      } catch {
+        // 自动审核失败（如状态不允许）则保持已提交状态
+      }
+    }
     return { id, status: 'submitted' };
   }
 
