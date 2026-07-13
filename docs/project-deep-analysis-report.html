@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dcprint ERP 项目深度体检报告</title>
+<style>
+  :root{
+    --bg:#f8fafc; --card:#ffffff; --border:#e2e8f0; --text:#1e293b; --muted:#64748b;
+    --p0:#dc2626; --p0-bg:#fef2f2; --p1:#d97706; --p1-bg:#fffbeb; --p2:#0891b2; --p2-bg:#ecfeff;
+    --accent:#4f46e5; --accent-bg:#eef2ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:24px}
+  .wrap{max-width:1100px;margin:0 auto}
+  header{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:36px 32px;border-radius:16px;margin-bottom:28px;box-shadow:0 10px 30px rgba(79,70,229,.18)}
+  header h1{font-size:28px;margin-bottom:8px}
+  header .sub{opacity:.92;font-size:15px}
+  header .meta{display:flex;gap:24px;margin-top:16px;flex-wrap:wrap}
+  header .meta span{background:rgba(255,255,255,.18);padding:6px 14px;border-radius:20px;font-size:13px;backdrop-filter:blur(4px)}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:32px}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+  .stat .num{font-size:32px;font-weight:800;color:var(--accent)}
+  .stat.p0 .num{color:var(--p0)} .stat.p1 .num{color:var(--p1)}
+  .stat .lbl{font-size:13px;color:var(--muted);margin-top:4px}
+
+  section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:24px}
+  section h2{font-size:20px;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+  section h2 .badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:.5px}
+  .badge.p0{background:var(--p0-bg);color:var(--p0)} .badge.p1{background:var(--p1-bg);color:var(--p1)} .badge.p2{background:var(--p2-bg);color:var(--p2)}
+  section .desc{color:var(--muted);font-size:14px;margin-bottom:20px}
+
+  .issue{border-left:4px solid var(--border);padding:16px 20px;margin:14px 0;border-radius:0 8px 8px 0;background:#fafbfc}
+  .issue.p0{border-color:var(--p0);background:var(--p0-bg)} .issue.p1{border-color:var(--p1);background:var(--p1-bg)} .issue.p2{border-color:var(--p2);background:var(--p2-bg)}
+  .issue h3{font-size:16px;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .issue .tag{font-size:11px;background:#fff;border:1px solid var(--border);padding:2px 8px;border-radius:4px;color:var(--muted)}
+  .issue .impact{font-size:13px;padding:8px 12px;background:#fff;border-radius:6px;margin:10px 0;border:1px solid var(--border)}
+  .issue .impact strong{color:var(--p0)}
+  .issue pre{background:#1e293b;color:#e2e8f0;padding:14px 16px;border-radius:8px;font-size:12.5px;overflow-x:auto;margin:10px 0;font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace}
+  .issue .fix{font-size:13.5px;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;padding:10px 14px;border-radius:8px;margin-top:10px}
+  .issue .fix strong{color:#15803d}
+  .issue .evidence{font-size:13px;color:var(--muted);margin-top:6px}
+  .issue .evidence code{background:#f1f5f9;padding:1px 6px;border-radius:3px;font-size:12px;color:#334155}
+
+  .roadmap{counter-reset:step}
+  .roadmap-item{display:flex;gap:16px;margin-bottom:18px;align-items:flex-start}
+  .roadmap-item .step-num{min-width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0}
+  .roadmap-item .step-body{flex:1}
+  .roadmap-item .step-body h4{font-size:15px;margin-bottom:4px}
+  .roadmap-item .step-body p{font-size:13.5px;color:var(--muted)}
+
+  footer{text-align:center;color:var(--muted);font-size:13px;padding:24px 0;border-top:1px solid var(--border);margin-top:20px}
+  .severity-legend{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:24px;font-size:13px}
+  .severity-legend span{display:flex;align-items:center;gap:6px}
+  .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+  .dot.p0{background:var(--p0)} .dot.p1{background:var(--p1)} .dot.p2{background:var(--p2)}
+  @media(max-width:640px){header h1{font-size:22px} body{padding:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>dcprint ERP 项目深度体检报告</h1>
+  <div class="sub">印刷行业 ERP 系统 · 全栈架构全面诊断</div>
+  <div class="meta">
+    <span>技术栈: Next.js 16 + React 19 + TS + MySQL 8 + Drizzle</span>
+    <span>检测时间: 2026-07-10</span>
+    <span>覆盖维度: 架构 / 数据库 / 类型 / 安全 / 性能 / 工程化</span>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat p0"><div class="num">5</div><div class="lbl">严重问题 (P0)</div></div>
+  <div class="stat p1"><div class="num">11</div><div class="lbl">中等问题 (P1)</div></div>
+  <div class="stat"><div class="num">8</div><div class="lbl">轻微问题 (P2)</div></div>
+  <div class="stat"><div class="num">249</div><div class="lbl">问题总数</div></div>
+</div>
+
+<div class="severity-legend">
+  <span><i class="dot p0"></i> P0 严重 — 可被直接利用 / 阻碍维护，需立即修复</span>
+  <span><i class="dot p1"></i> P1 中等 — 影响质量与性能，应尽快处理</span>
+  <span><i class="dot p2"></i> P2 轻微 — 代码规范与体验，迭代改进</span>
+</div>
+
+<!-- ============ P0 严重问题 ============ -->
+<section>
+  <h2>一、严重问题 <span class="badge p0">P0 · 立即修复</span></h2>
+  <p class="desc">以下问题可被直接利用造成数据泄露或系统破坏，或严重阻碍项目可维护性，必须在上线前修复。</p>
+
+  <div class="issue p0">
+    <h3>1. 未鉴权的远程命令执行 (RCE) + 命令注入 <span class="tag">安全</span></h3>
+    <div class="evidence">文件: <code>src/app/api/project-files/upload/route.ts</code></div>
+    <div class="impact"><strong>影响:</strong> 攻击者无需登录即可通过 commitMsg 注入 <code>"; rm -rf / #</code> 实现任意命令执行，同时 git add . 会将含密码的 .env 提交进仓库。</div>
+    <pre>execSync(`git commit -m "${commitMsg || 'Initial commit'}"`, { cwd: PROJECT_ROOT });
+execSync('git add .', { cwd: PROJECT_ROOT });</pre>
+    <div class="fix"><strong>修复建议:</strong> 立即删除该路由（或迁移至 scripts/ 脚本），严禁在生产环境暴露 git 操作 API。如必须保留，需添加鉴权 + 使用参数化方式调用 git。</div>
+  </div>
+
+  <div class="issue p0">
+    <h3>2. 未鉴权的文件系统信息泄露 <span class="tag">安全</span></h3>
+    <div class="evidence">文件: <code>src/app/api/project-files/route.ts</code></div>
+    <div class="impact"><strong>影响:</strong> GET 递归遍历 PROJECT_ROOT 全部文件并返回路径/大小，无任何鉴权。攻击者可枚举源码结构、定位配置文件。</div>
+    <div class="fix"><strong>修复建议:</strong> 删除该路由或添加严格鉴权，生产环境不应暴露文件系统遍历接口。</div>
+  </div>
+
+  <div class="issue p0">
+    <h3>3. SQL 注入 (字符串拼接) <span class="tag">安全</span></h3>
+    <div class="evidence">文件: <code>src/application/handlers/StandardCardHandlers.ts:200-211</code></div>
+    <div class="impact"><strong>影响:</strong> 直接模板字符串插值拼接 SQL，未参数化。materialId 若上游校验不严即可注入。</div>
+    <pre>SELECT id FROM prd_work_order WHERE material_id = ${materialId} ...
+UPDATE prd_work_order SET standard_card_id = ${standardCardId} ... WHERE id = ${wo.id}</pre>
+    <div class="fix"><strong>修复建议:</strong> 改为参数化查询 <code>query(sql, [materialId, standardCardId, wo.id])</code>，并全局审计所有 SQL 拼接。</div>
+  </div>
+
+  <div class="issue p0">
+    <h3>4. Loose = any 类型黑洞 (1911 处) <span class="tag">类型安全</span></h3>
+    <div class="evidence">文件: <code>src/types/loose.d.ts</code> · 影响范围: <code>300+ 文件</code></div>
+    <div class="impact"><strong>影响:</strong> <code>type Loose = any</code> 被 1911 处使用，等价于全局禁用类型检查。配合 ESLint 关闭 no-unsafe-* 规则，整个项目的类型安全形同虚设。</div>
+    <pre>type Loose = any;      // src/types/loose.d.ts
+type LooseArray = any[];
+// 1911 处: const rows: Loose = await query(...)  ← 返回 any[]</pre>
+    <div class="fix"><strong>修复建议:</strong> 分步替换——先为 query() 调用补全泛型 <code>query&lt;MyRow&gt;(sql)</code>，再逐步删除 Loose 定义，最后重新启用 ESLint no-unsafe 规则。</div>
+  </div>
+
+  <div class="issue p0">
+    <h3>5. 218 个空 catch 块静默吞掉错误 <span class="tag">代码质量</span></h3>
+    <div class="evidence">集中区域: <code>src/app/api/dashboard/</code> · <code>src/app/api/dcprint/ink-consumption/</code></div>
+    <div class="impact"><strong>影响:</strong> 数据库查询失败时返回空数据但 HTTP 仍 200 成功，前端无法感知数据缺失原因，生产环境故障将完全不可见。</div>
+    <pre>try {
+  const rows = await query(`SELECT COUNT(*) ...`);
+  overview.totalItems = Number(rows[0].total || 0);
+} catch {}  // ← 错误被完全忽略，overview 保持全 0</pre>
+    <div class="fix"><strong>修复建议:</strong> 统一错误处理策略——至少 <code>catch (e) { logger.error('...', e) }</code>，关键查询应向上抛出或返回错误状态码。</div>
+  </div>
+</section>
+
+<!-- ============ P1 中等问题 ============ -->
+<section>
+  <h2>二、中等问题 <span class="badge p1">P1 · 尽快处理</span></h2>
+  <p class="desc">影响代码质量、性能与可维护性，建议在迭代中逐步解决。</p>
+
+  <div class="issue p1">
+    <h3>6. 中间件不校验 API 身份，鉴权依赖各路由自觉 <span class="tag">安全</span></h3>
+    <div class="evidence">文件: <code>src/middleware.ts:111-121</code></div>
+    <div class="impact"><strong>影响:</strong> 中间件对 /api/ 仅做 CSRF 校验后放行，不在边缘层验证 JWT。开发者遗漏 withPermission 即导致裸奔路由（问题 1/2 即为实例）。BLOCKED_ROUTES 仅生产环境拦截，开发/预发全部暴露。</div>
+    <div class="fix"><strong>修复建议:</strong> 在中间件对 /api/ 统一校验 access_token，危险路由（init/diagnose）改为构建时排除。</div>
+  </div>
+
+  <div class="issue p1">
+    <h3>7. Drizzle ORM 名存实亡，253 个路由用原始 SQL <span class="tag">架构</span></h3>
+    <div class="evidence">覆盖: <code>0 个路由</code>使用 Drizzle 查询构建器 · <code>253 个路由</code>调用 query()/execute() 拼接 SQL</div>
+    <div class="impact"><strong>影响:</strong> schema.ts 仅定义 36 张表（实际 164 张），ORM 类型安全与迁移可追溯能力完全浪费。74 个路由手动拼接 WHERE 子句。</div>
+    <div class="fix"><strong>修复建议:</strong> 统一收敛到 Drizzle 查询构建器，或正式放弃 Drizzle 改为声明式数据访问层（DAL）。</div>
+  </div>
+
+  <div class="issue p1">
+    <h3>8. DDD 与传统架构并行，迁移未完成 <span class="tag">架构</span></h3>
+    <div class="evidence">并存目录: <code>src/domain/</code> + <code>src/application/</code> + <code>src/infrastructure/</code> ‖ <code>src/lib/services/</code> + <code>src/services/</code></div>
+    <div class="impact"><strong>影响:</strong> 仅 52/349 路由使用 @/application，服务类散落 4 处，边界混乱。半截子 DDD 重构增加认知负担。</div>
+    <div class="fix"><strong>修复建议:</strong> 明确一种范式并完成迁移，删除孤儿目录。如选 DDD 则将 lib/services 迁入 application/services。</div>
+  </div>
+
+  <div class="issue p1">
+    <h3>9. N+1 查询普遍存在 (80 个文件) <span class="tag">性能</span></h3>
+    <div class="evidence">典型: <code>src/infrastructure/repositories/MysqlVoucherRepository.ts</code> · <code>src/application/services/DashboardDataService.ts</code></div>
+    <div class="impact"><strong>影响:</strong> 循环内逐条查子表，N 条主记录触发 N 次查询，数据量增长后响应时间线性恶化。</div>
+    <div class="fix"><strong>修复建议:</strong> 改用 <code>WHERE id IN (...)</code> 批量查询后内存 join。</div>
+  </div>
+
+  <div class="issue p1">
+    <h3>10. 数据库主键类型不统一 (BIGINT vs INT) <span class="tag">数据库</span></h3>
+    <div class="evidence">147 表 BIGINT PK · 16 表 INT PK（含 inv_inbound_order, pur_purchase_order, prd_die 等核心表）</div>
+    <div class="impact"><strong>影响:</strong> 跨类型 JOIN 触发隐式转换导致索引失效；数据量超 21 亿时 INT 溢出。如 inv_inbound_item.order_id 是 bigint 但主表 inv_inbound_order.id 是 int。</div>
+    <div class="fix"><strong>修复建议:</strong> 统一为 BIGINT UNSIGNED，分批 ALTER TABLE 对齐。</div>
+  </div>
+
+  <div class="issue p1">
+    <h3>11. 状态码三体系并存 <span class="tag">数据库</span></h3>
+    <div class="evidence">tinyint 75 个 (1-5 体系) · int 5 个 (10-90 体系) · varchar 7 个 ('pending' 等)</div>
+    <div class="impact"><strong>影响:</strong> 同一系统内数字与字符串状态码混用，前端需为每个模块维护独立映射，跨模块状态筛选无法统一。</div>
+    <div class="fix"><strong>修复建议:</strong> 全量统一为 tinyint + 字典表 sys_dict_data。</div>
+  </div>
+
+  <div class="issue p1">
+    <h3>12. xlsx 依赖存在已知 CVE 漏洞 <span class="tag">工程化</span></h3>
+    <div class="evidence">package.json: <code>"xlsx": "^0.18.5"</code> · CVE-2023-30533 (原型污染) + CVE-2024-22363 (ReDoS)</div>
+    <div class="impact"><strong>影响:</strong> npm 仓库已撤包，存在可被利用的安全漏洞。</div>
+    <div class="fix"><strong>修复建议:</strong> 迁移至 <code>@e965/xlsx</code> 或官方修复版。</div>
+  </div>
+
+  <div class="issue p1">
+    <h3>13. 测试覆盖率不足 18% <span class="tag">工程化</span></h3>
+    <div class="evidence">349 个 API 路由 · 仅 61 个测试文件 · hr/crm/reports/audit/dashboard 等 10+ 模块零测试</div>
+    <div class="impact"><strong>影响:</strong> 核心业务域缺乏回归保障，重构风险高。vitest.config 未匹配 .tsx、未启用 jsdom、无 coverage 阈值。</div>
+    <div class="fix"><strong>修复建议:</strong> include 改为 <code>['tests/**/*.test.{ts,tsx}']</code>；按需设置 jsdom 环境；添加 coverage 阈值。</div>
+  </div>
+
+  <div class="issue p1">
+    <h3>14. 'use client' 滥用，丧失 SSR 优势 <span class="tag">性能</span></h3>
+    <div class="evidence">250+ 文件标注 'use client'，几乎所有列表/详情页均为客户端组件</div>
+    <div class="impact"><strong>影响:</strong> 数据在客户端 fetch，完全丧失 Next.js 16 服务端组件的流式 SSR 与数据预取优势，首屏加载慢。</div>
+    <div class="fix"><strong>修复建议:</strong> 列表/详情页改为服务端组件 + fetch + cache，仅交互部分下沉为客户端子组件。</div>
+  </div>
+
+  <div class="issue p1">
+    <h3>15. 监控配置不完整 <span class="tag">工程化</span></h3>
+    <div class="evidence">alertmanager.yml 使用 ${SMTP_USER} 变量插值（Alertmanager 原生不支持）· Grafana 无仪表盘 · 无 /metrics 端点</div>
+    <div class="impact"><strong>影响:</strong> 邮件告警将失败；Grafana 启动后是空白实例；无法观测请求延迟、错误率、事件积压等业务指标。</div>
+    <div class="fix"><strong>修复建议:</strong> 用 envsubst 生成 alertmanager 配置；补充 Grafana 仪表盘 JSON；集成 prom-client 暴露 /metrics。</div>
+  </div>
+
+  <div class="issue p1">
+    <h3>16. 46 个 init/diagnose 路由暴露在生产 API 中 <span class="tag">架构</span></h3>
+    <div class="evidence">如 <code>src/app/api/init/full-seed/route.ts</code> (3616 行) · <code>src/app/api/diagnose/all-tables/route.ts</code></div>
+    <div class="impact"><strong>影响:</strong> 应为 CLI 脚本的生产逻辑暴露为 API，init/full-seed 单文件 3616 行。40% 路由无 try/catch。</div>
+    <div class="fix"><strong>修复建议:</strong> 迁移到 scripts/ 目录，加路由级错误兜底中间件。</div>
+  </div>
+</section>
+
+<!-- ============ P2 轻微问题 ============ -->
+<section>
+  <h2>三、轻微问题 <span class="badge p2">P2 · 迭代改进</span></h2>
+  <p class="desc">代码规范、重复代码与配置细节问题，不影响功能但影响开发体验。</p>
+
+  <div class="issue p2">
+    <h3>17. 19 个 page.tsx 超过 1000 行 (最大 2139 行) <span class="tag">架构</span></h3>
+    <div class="evidence">如 <code>src/app/[locale]/prepress/die-template/page.tsx</code> (2139 行) · <code>warehouse/outbound/page.tsx</code> (1864 行)</div>
+    <div class="fix"><strong>建议:</strong> 按 components/ 子目录拆分（项目已在 hr/employee/components/dialogs 局部尝试此模式）。</div>
+  </div>
+
+  <div class="issue p2">
+    <h3>18. 重复路由与重复模块 <span class="tag">架构</span></h3>
+    <div class="evidence">dcprint/ink ↔ prepress/ink · standard-card ↔ standard-cards · finance/payable ↔ finance/payables · mrp-engine.ts(1081行) 与 mrp-engine-v2.ts(1048行) 并存</div>
+    <div class="fix"><strong>建议:</strong> 统一命名并删除旧版迁移残留。</div>
+  </div>
+
+  <div class="issue p2">
+    <h3>19. 外键缺失 (eqp_/hr_/outsource_ 等模块 0 FK) <span class="tag">数据库</span></h3>
+    <div class="evidence">eqp_maintenance_record.equipment_id、hr_attendance、outsource_order 等无外键约束</div>
+    <div class="fix"><strong>建议:</strong> 分模块逐步补齐外键约束。</div>
+  </div>
+
+  <div class="issue p2">
+    <h3>20. 排序规则混用 <span class="tag">数据库</span></h3>
+    <div class="evidence">utf8mb4_0900_ai_ci (135 处) 与 utf8mb4_unicode_ci (28 处) 混用</div>
+    <div class="impact"><strong>影响:</strong> 不同 collation 的字符串列 JOIN 会报 Illegal mix of collations。</div>
+    <div class="fix"><strong>建议:</strong> 全量 ALTER TABLE CONVERT TO 统一为 utf8mb4_0900_ai_ci。</div>
+  </div>
+
+  <div class="issue p2">
+    <h3>21. 硬编码魔术数字与 LIMIT <span class="tag">代码质量</span></h3>
+    <div class="evidence">30+ 处硬编码 LIMIT 5/10/20 · INTERVAL 7/30/90 DAY · qrcode/print/route.ts:36 硬编码用户 ID 1</div>
+    <div class="fix"><strong>建议:</strong> 提取为常量或配置项。</div>
+  </div>
+
+  <div class="issue p2">
+    <h3>22. SELECT * 泛滥 (100+ 处) <span class="tag">性能</span></h3>
+    <div class="evidence">WorkflowEngine.ts (7 处)、ToolManagementService.ts、audit-logger.ts:725 等</div>
+    <div class="fix"><strong>建议:</strong> 显式列举所需列（仓储层已有 MAIN_COLUMNS 常量模式，应推广）。</div>
+  </div>
+
+  <div class="issue p2">
+    <h3>23. .gitignore 拼写错误导致目录泄露 <span class="tag">工程化</span></h3>
+    <div class="evidence">.gitignore:25 <code>.ro0/</code> (数字零) 应为 <code>.roo/</code> · :28 <code>.VS/</code> (大写) 应为 <code>.vs/</code></div>
+    <div class="fix"><strong>建议:</strong> 修正拼写；eslint_errors.json (6 字节损坏) 应重新生成或删除。</div>
+  </div>
+
+  <div class="issue p2">
+    <h3>24. ESLint 规则过于宽松 + shadcn 用 latest <span class="tag">工程化</span></h3>
+    <div class="evidence">no-unsafe-* 5 条规则全 off · no-explicit-any 仅警告(2644 条) · shadcn: "latest" 构建不可复现 · drizzle-kit 误放 dependencies</div>
+    <div class="fix"><strong>建议:</strong> 清理 any 后重新启用 unsafe 规则；锁定 shadcn 版本；drizzle-kit 移至 devDependencies；lint-staged 增加 tsc --noEmit。</div>
+  </div>
+</section>
+
+<!-- ============ 改进路线图 ============ -->
+<section>
+  <h2>四、改进路线图 <span class="badge p2">建议执行顺序</span></h2>
+  <p class="desc">按风险与杠杆效应排序，每步聚焦最高优先级问题。</p>
+
+  <div class="roadmap">
+    <div class="roadmap-item">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>紧急安全修复 (1-2 天)</h4>
+        <p>删除/鉴权 project-files 路由 (问题 1/2) · 修复 SQL 注入 (问题 3) · 加强中间件 API 鉴权 (问题 6) · 替换 xlsx 漏洞依赖 (问题 12) · 生成强 JWT 密钥</p>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>错误处理与类型安全基建 (1 周)</h4>
+        <p>统一空 catch 处理策略 (问题 5) · 为 query() 补全泛型并逐步消除 Loose (问题 4) · 统一 API 错误响应结构</p>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>数据库一致性对齐 (1-2 周)</h4>
+        <p>主键类型统一为 BIGINT (问题 10) · 状态码体系统一 (问题 11) · 排序规则对齐 (问题 20) · 补齐外键约束 (问题 19)</p>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>架构收敛与性能优化 (2-4 周)</h4>
+        <p>统一数据访问层/Drizzle 收敛 (问题 7) · 完成 DDD 迁移或回退 (问题 8) · 消除 N+1 查询 (问题 9) · 服务端组件化改造 (问题 14) · 迁移 init/diagnose 路由 (问题 16)</p>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>工程化补齐 (持续)</h4>
+        <p>提升测试覆盖率至 60%+ (问题 13) · 完善监控埋点与仪表盘 (问题 15) · 拆分巨石页面 (问题 17) · 清理重复代码 (问题 18) · 收紧 ESLint (问题 24)</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  dcprint ERP 项目深度体检报告 · 由 WorkBuddy 全栈开发伴侣生成 · 2026-07-10<br>
+  共检测 24 项问题: 5 严重 · 11 中等 · 8 轻微 · 覆盖 6 个维度
+</footer>
+
+</div>
+</body>
+</html>
