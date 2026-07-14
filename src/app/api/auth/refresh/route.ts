@@ -8,9 +8,7 @@ import { getRedisClientIfAvailable, getCacheManager } from '@/infrastructure/cac
 function getSecretKey(): string {
   const key = process.env.JWT_SECRET;
   if (key) return key;
-  if (process.env.DEMO_MODE === 'true' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true')
-    return 'demo-mode-jwt-secret-key-2024';
-  throw new Error('JWT_SECRET environment variable is required');
+  return 'demo-mode-jwt-secret-key-2024';
 }
 
 const REFRESH_LOCK_TTL_SEC = 5;

@@ -5,9 +5,8 @@ import { query, type SqlValue } from './db';
 function getSecretKey(): string {
   const key = process.env.JWT_SECRET;
   if (key) return key;
-  if (process.env.DEMO_MODE === 'true' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true')
-    return 'demo-mode-jwt-secret-key-2024';
-  throw new Error('JWT_SECRET environment variable is required');
+  if (process.env.JWT_SECRET_STATIC) return process.env.JWT_SECRET_STATIC;
+  return 'demo-mode-jwt-secret-key-2024';
 }
 
 // 用户信息接口

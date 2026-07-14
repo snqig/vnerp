@@ -655,10 +655,10 @@ export function InputCardForm() {
                 ) : index === 3 ? (
                   <>
                     <td colSpan={2} className="border">
-                      背胶
+                      {t('cardAdhesive')}
                     </td>
                     <td colSpan={2} className="border">
-                      加虚线刀
+                      {t('cardDashedKnife')}
                     </td>
                     <td colSpan={2} className="border">
                       <div className="flex justify-center gap-4">
@@ -670,7 +670,7 @@ export function InputCardForm() {
                             onChange={() => updateField('dashedKnife', true)}
                             className="w-3 h-3"
                           />{' '}
-                          是
+                          {t('yes')}
                         </label>
                         <label className="flex items-center gap-1 text-xs cursor-pointer">
                           <input
@@ -740,7 +740,7 @@ export function InputCardForm() {
                       />
                     </td>
                     <td colSpan={2} className="border">
-                      PCS/扎
+                      {t('cardPcsPerBundle')}
                     </td>
                   </>
                 ) : (
@@ -928,7 +928,9 @@ export function InputCardForm() {
               <td colSpan={3} className="border font-bold text-center">
                 <EditableCell value={data.sales} onChange={(v) => updateField('sales', v)} />
               </td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">核准</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardApprover')}
+              </td>
               <td colSpan={3} className="border font-bold text-center">
                 <EditableCell value={data.approver} onChange={(v) => updateField('approver', v)} />
               </td>
