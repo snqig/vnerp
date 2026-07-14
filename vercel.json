@@ -6,6 +6,12 @@
   "env": {
     "NEXT_PUBLIC_APP_NAME": "Print MIS",
     "DEMO_MODE": "true",
-    "NEXT_PUBLIC_DEMO_MODE": "true"
+    "NEXT_PUBLIC_DEMO_MODE": "true",
+    "JWT_SECRET": "demo-mode-jwt-secret-key-2024",
+    "DB_HOST": "localhost",
+    "DB_PORT": "3306",
+    "DB_USER": "demo",
+    "DB_PASSWORD": "demo",
+    "DB_NAME": "demo"
   }
 }
