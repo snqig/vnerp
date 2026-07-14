@@ -1,4 +1,4 @@
-import './src/lib/env'; // 启动时校验环境变量（生产 fail-fast，开发回退默认值）
+import './src/lib/env'; // 加载环境变量配置（永不抛出，Vercel demo 和本地开发均有回退值）
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
