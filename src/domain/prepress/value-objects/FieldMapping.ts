@@ -18,8 +18,8 @@ export class FieldMapper {
     warning_usage: 'warningUsage',
     max_impressions: 'maxImpressions',
     cumulative_impressions: 'cumulativeImpressions',
-    cum_after: 'cumulativeImpressions',
-    cumulative_after: 'cumulativeImpressions',
+    cum_after: 'cumulativeAfter',
+    cumulative_after: 'cumulativeAfter',
     warning_threshold: 'warningThreshold',
     maintenance_interval: 'maintenanceInterval',
     maintenance_count: 'maintenanceCount',
@@ -116,6 +116,25 @@ export class FieldMapper {
     avg_usage_pct: 'avgUsagePct',
     maintenance_needed_count: 'maintenanceNeededCount',
     re_rule_needed_count: 'reRuleNeededCount',
+    force_die_status: 'forceDieStatus',
+    complete_immediately: 'completeImmediately',
+    actual_qty: 'actualQty',
+    cost: 'cost',
+    total_cost: 'totalCost',
+    avg_cost: 'avgCost',
+    pending_count: 'pendingCount',
+    lead_days: 'leadDays',
+    estimated_hours: 'estimatedHours',
+    estimated_cost: 'estimatedCost',
+    checklist: 'checklist',
+    plan_no: 'planNo',
+    plan_name: 'planName',
+    equipment_name: 'equipmentName',
+    equipment_type: 'equipmentType',
+    impression_rate: 'impressionRate',
+    usage_pct: 'usagePct',
+    new_die_status: 'newDieStatus',
+    impressions_added: 'impressionsAdded',
   };
 
   static readonly DOMAIN_TO_DB: MappingTable = Object.fromEntries(
@@ -148,6 +167,17 @@ export class FieldMapper {
       return FieldMapper.toDomain(data as Record<string, unknown>) as T;
     }
     return data as T;
+  }
+
+  static addCamelCase<T extends Record<string, unknown>>(data: T): T & Record<string, unknown> {
+    const camelCasePart = FieldMapper.toDomain(data);
+    return { ...data, ...camelCasePart } as T & Record<string, unknown>;
+  }
+
+  static addCamelCaseToArray<T extends Record<string, unknown>>(
+    arr: T[]
+  ): (T & Record<string, unknown>)[] {
+    return arr.map((item) => FieldMapper.addCamelCase(item));
   }
 }
 

@@ -7,6 +7,7 @@ import {
   validateRequestBody,
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { FieldMapper } from '@/domain/prepress/value-objects/FieldMapping';
 
 const ASSET_TYPE_MAP: Record<string, string> = {
   die: '刀模',
@@ -106,13 +107,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   )) as Loose[];
 
   return successResponse({
-    list,
+    list: FieldMapper.addCamelCaseToArray(list as Record<string, unknown>[]),
     total: countResult?.total || 0,
     page,
     pageSize,
-    warningList,
+    warningList: FieldMapper.addCamelCaseToArray(warningList as Record<string, unknown>[]),
     typeStats,
-    dashboardStats: dashboardStats[0] || {},
+    dashboardStats: FieldMapper.addCamelCase((dashboardStats[0] || {}) as Record<string, unknown>),
     assetTypeMap: ASSET_TYPE_MAP,
     dieStatusMap: DIE_STATUS_MAP,
   });
@@ -191,7 +192,10 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId }, '刀模板/网版创建成功');
+    return successResponse(
+      FieldMapper.addCamelCase({ id: result.insertId }),
+      '刀模板/网版创建成功'
+    );
   },
   { errorMessage: '创建刀模板/网版失败' }
 );

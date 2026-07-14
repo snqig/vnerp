@@ -2,6 +2,7 @@
 import { query, queryOne, transaction } from '@/lib/db';
 import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { FieldMapper } from '@/domain/prepress/value-objects/FieldMapping';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -80,11 +81,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   )) as Loose[];
 
   return successResponse({
-    list,
+    list: FieldMapper.addCamelCaseToArray(list as Record<string, unknown>[]),
     total: countResult?.total || 0,
     page,
     pageSize,
-    summaryStats: summaryStats[0] || {},
+    summaryStats: FieldMapper.addCamelCase((summaryStats[0] || {}) as Record<string, unknown>),
   });
 });
 
@@ -188,17 +189,15 @@ export const POST = withPermission(
         ]
       );
 
-      return successResponse(
-        {
-          die_id: dieId,
-          impressions_added: actualImpressions,
-          cumulative_after: newCumulative,
-          die_status: newDieStatus,
-          usage_pct:
-            die.max_impressions > 0 ? Math.round((newCumulative / die.max_impressions) * 100) : 0,
-        },
-        '刀模使用记录已更新'
-      );
+      const result = {
+        die_id: dieId,
+        impressions_added: actualImpressions,
+        cumulative_after: newCumulative,
+        die_status: newDieStatus,
+        usage_pct:
+          die.max_impressions > 0 ? Math.round((newCumulative / die.max_impressions) * 100) : 0,
+      };
+      return successResponse(FieldMapper.addCamelCase(result), '刀模使用记录已更新');
     });
   },
   { logTitle: '记录刀模使用', logType: 'business' }

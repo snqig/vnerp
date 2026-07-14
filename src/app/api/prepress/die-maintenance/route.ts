@@ -7,6 +7,7 @@ import {
   validateRequestBody,
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { FieldMapper } from '@/domain/prepress/value-objects/FieldMapping';
 
 const MAINTENANCE_TYPE_MAP: Record<string, string> = {
   routine: '常规保养',
@@ -65,11 +66,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   )) as Loose;
 
   return successResponse({
-    list,
+    list: FieldMapper.addCamelCaseToArray(list as Record<string, unknown>[]),
     total: countResult?.total || 0,
     page,
     pageSize,
-    costStats,
+    costStats: FieldMapper.addCamelCaseToArray(costStats as Record<string, unknown>[]),
     pendingCount: pendingCount?.count || 0,
     maintenanceTypeMap: MAINTENANCE_TYPE_MAP,
   });
@@ -160,17 +161,15 @@ export const POST = withPermission(
         );
       }
 
-      return successResponse(
-        {
-          maintenance_no: maintenanceNo,
-          die_id: dieId,
-          maintenance_type: maintenanceType,
-          impressions_before: impressionsBefore,
-          impressions_after: impressionsAfter,
-          new_die_status: newDieStatus,
-        },
-        '保养记录创建成功'
-      );
+      const maintResult = {
+        maintenance_no: maintenanceNo,
+        die_id: dieId,
+        maintenance_type: maintenanceType,
+        impressions_before: impressionsBefore,
+        impressions_after: impressionsAfter,
+        new_die_status: newDieStatus,
+      };
+      return successResponse(FieldMapper.addCamelCase(maintResult), '保养记录创建成功');
     });
   },
   { errorMessage: '创建保养记录失败' }
