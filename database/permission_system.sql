@@ -60,7 +60,7 @@ INSERT INTO `sys_menu` (`parent_id`, `menu_name`, `menu_code`, `menu_type`, `ico
 
 -- 财务管理
 (0, '财务管理', 'finance', 1, 'Banknote', '/finance', NULL, 'finance:*', 6, 1),
-(18, '应收应付', 'finance_receivable', 2, NULL, '/finance/receivable', '/finance/receivable', 'finance:receivable:*', 1, 1),
+(18, '应收应付', 'fin_receivable', 2, NULL, '/finance/receivable', '/finance/receivable', 'finance:receivable:*', 1, 1),
 (18, '成本核算', 'finance_cost', 2, NULL, '/finance/cost', '/finance/cost', 'finance:cost:*', 2, 1),
 (18, '财务报表', 'finance_report', 2, NULL, '/finance/report', '/finance/report', 'finance:report:*', 3, 1),
 
@@ -149,7 +149,7 @@ SELECT 2, id FROM sys_menu WHERE status = 1 AND menu_code NOT LIKE 'settings_%';
 
 -- 财务经理权限
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
-SELECT 3, id FROM sys_menu WHERE menu_code IN ('dashboard', 'finance', 'finance_receivable', 'finance_cost', 'finance_report', 'orders_sales', 'orders_customers');
+SELECT 3, id FROM sys_menu WHERE menu_code IN ('dashboard', 'finance', 'fin_receivable', 'finance_cost', 'finance_report', 'orders_sales', 'orders_customers');
 
 -- 销售经理权限
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
@@ -169,7 +169,7 @@ SELECT 7, id FROM sys_menu WHERE menu_code IN ('dashboard', 'quality', 'quality_
 
 -- 采购经理权限
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
-SELECT 8, id FROM sys_menu WHERE menu_code IN ('dashboard', 'purchase', 'purchase_orders', 'purchase_suppliers', 'warehouse', 'warehouse_inventory', 'finance', 'finance_receivable');
+SELECT 8, id FROM sys_menu WHERE menu_code IN ('dashboard', 'purchase', 'purchase_orders', 'purchase_suppliers', 'warehouse', 'warehouse_inventory', 'finance', 'fin_receivable');
 
 -- 人事经理权限
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)

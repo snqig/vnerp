@@ -19,7 +19,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     await safeDelete('inv_inventory');
     await safeDelete('qc_inspection');
     await safeDelete('crm_customer');
-    await safeDelete('finance_receivable');
+    await safeDelete('fin_receivable');
     await safeDelete('finance_receipt');
     await safeDelete('prd_process_card');
     await safeDelete('qc_final_inspection');
@@ -220,7 +220,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       const customerId = customerMap[rec.customer];
       const salesOrderId = orderMap[rec.order_no];
       await conn.execute(
-        `INSERT INTO finance_receivable (receivable_no, sales_order_id, sales_order_no, customer_id, customer_name, amount, received_amount, pending_amount, due_date, status, create_time, update_time, deleted) 
+        `INSERT INTO fin_receivable (receivable_no, sales_order_id, sales_order_no, customer_id, customer_name, amount, received_amount, pending_amount, due_date, status, create_time, update_time, deleted) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
         [
           'RC' + Date.now().toString(36) + Math.random().toString(36).substr(2, 3),
@@ -236,7 +236,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
     }
-    stats.finance_receivable = receivables.length;
+    stats.fin_receivable = receivables.length;
 
     const workOrders = [
       {

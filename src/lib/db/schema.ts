@@ -431,7 +431,7 @@ export const salOrderDetail = mysqlTable(
 
 // 销售出库单
 export const salDelivery = mysqlTable(
-  'sal_delivery',
+  'sal_delivery_order',
   {
     id: serial('id').primaryKey(),
     deliveryNo: varchar('delivery_no', { length: 50 }).notNull(),
@@ -710,11 +710,18 @@ export const finReceivable = mysqlTable(
     sourceType: tinyint('source_type').default(1),
     sourceNo: varchar('source_no', { length: 50 }),
     customerId: bigint('customer_id', { mode: 'number', unsigned: true }),
+    customerName: varchar('customer_name', { length: 100 }),
+    salesOrderId: bigint('sales_order_id', { mode: 'number', unsigned: true }),
+    salesOrderNo: varchar('sales_order_no', { length: 50 }),
     amount: decimal('amount', { precision: 18, scale: 4 }).default('0.0000'),
     receivedAmount: decimal('received_amount', { precision: 18, scale: 4 }).default('0.0000'),
+    pendingAmount: decimal('pending_amount', { precision: 18, scale: 4 }).default('0.0000'),
     balance: decimal('balance', { precision: 18, scale: 4 }).default('0.0000'),
+    currency: varchar('currency', { length: 10 }).default('CNY'),
     dueDate: date('due_date'),
     status: tinyint('status').default(1),
+    invoiceNo: varchar('invoice_no', { length: 50 }),
+    invoiceDate: date('invoice_date'),
     remark: text('remark'),
     createBy: bigint('create_by', { mode: 'number', unsigned: true }),
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
@@ -1295,7 +1302,7 @@ export const dcprintToolMaintenance = mysqlTable(
 
 // 生产领料单主表
 export const prdPickOrder = mysqlTable(
-  'prd_pick_order',
+  'prd_material_issue',
   {
     id: serial('id').primaryKey(),
     pickNo: varchar('pick_no', { length: 50 }).notNull(),
@@ -1319,7 +1326,7 @@ export const prdPickOrder = mysqlTable(
 
 // 生产领料单明细
 export const prdPickOrderItem = mysqlTable(
-  'prd_pick_order_item',
+  'prd_material_issue_item',
   {
     id: serial('id').primaryKey(),
     pickOrderId: bigint('pick_order_id', { mode: 'number', unsigned: true }).notNull(),
@@ -1343,7 +1350,7 @@ export const prdPickOrderItem = mysqlTable(
 
 // 生产退料单主表
 export const prdReturnOrder = mysqlTable(
-  'prd_return_order',
+  'prd_material_return',
   {
     id: serial('id').primaryKey(),
     returnNo: varchar('return_no', { length: 50 }).notNull(),
@@ -1367,7 +1374,7 @@ export const prdReturnOrder = mysqlTable(
 
 // 生产退料单明细
 export const prdReturnOrderItem = mysqlTable(
-  'prd_return_order_item',
+  'prd_material_return_item',
   {
     id: serial('id').primaryKey(),
     returnOrderId: bigint('return_order_id', { mode: 'number', unsigned: true }).notNull(),
@@ -2078,7 +2085,7 @@ export const prdWorkOrderBom = mysqlTable(
 
 // 打样单主表
 export const sampleOrder = mysqlTable(
-  'sample_order',
+  'sal_sample_order',
   {
     id: int('id', { unsigned: true }).autoincrement().primaryKey(),
     sampleNo: varchar('sample_no', { length: 50 }).notNull(),

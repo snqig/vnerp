@@ -10,7 +10,7 @@ const tables = [
   'inv_inventory',
   'qc_inspection',
   'crm_customer',
-  'finance_receivable',
+  'fin_receivable',
   'finance_receipt',
   'prd_process_card',
   'qc_final_inspection',

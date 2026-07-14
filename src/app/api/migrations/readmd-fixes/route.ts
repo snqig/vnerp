@@ -706,7 +706,7 @@ export const GET = withPermission(async (request: NextRequest) => {
       {
         parent_code: 'finance',
         menu_name: '应付款管理',
-        menu_code: 'finance_payable',
+        menu_code: 'fin_payable',
         menu_type: 2,
         icon: null,
         path: '/finance/payable',

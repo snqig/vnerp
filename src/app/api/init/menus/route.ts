@@ -872,7 +872,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       {
         parent_code: 'finance',
         menu_name: '应收款管理',
-        menu_code: 'finance_receivable',
+        menu_code: 'fin_receivable',
         menu_type: 2,
         icon: null,
         path: '/finance/receivable',

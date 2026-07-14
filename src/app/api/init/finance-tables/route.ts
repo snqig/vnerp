@@ -5,34 +5,37 @@ export async function POST(_request: NextRequest) {
   const results: string[] = [];
 
   try {
-    await execute(`CREATE TABLE IF NOT EXISTS finance_receivable (
+    await execute(`CREATE TABLE IF NOT EXISTS fin_receivable (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       receivable_no VARCHAR(50) NOT NULL COMMENT '应收单号',
-      customer_id BIGINT UNSIGNED NOT NULL COMMENT '客户ID',
-      customer_name VARCHAR(100) NOT NULL COMMENT '客户名称',
-      sales_order_id BIGINT UNSIGNED DEFAULT NULL COMMENT '销售订单ID',
-      sales_order_no VARCHAR(50) DEFAULT NULL COMMENT '销售订单号',
-      amount DECIMAL(15,2) NOT NULL DEFAULT 0 COMMENT '应收金额',
-      received_amount DECIMAL(15,2) NOT NULL DEFAULT 0 COMMENT '已收金额',
-      pending_amount DECIMAL(15,2) NOT NULL DEFAULT 0 COMMENT '待收金额',
+      source_type TINYINT DEFAULT 1 COMMENT '来源类型',
+      source_no VARCHAR(50) COMMENT '来源单号',
+      customer_id BIGINT UNSIGNED COMMENT '客户ID',
+      customer_name VARCHAR(100) COMMENT '客户名称',
+      sales_order_id BIGINT UNSIGNED COMMENT '销售订单ID',
+      sales_order_no VARCHAR(50) COMMENT '销售订单号',
+      amount DECIMAL(18,4) NOT NULL DEFAULT 0 COMMENT '应收金额',
+      received_amount DECIMAL(18,4) NOT NULL DEFAULT 0 COMMENT '已收金额',
+      pending_amount DECIMAL(18,4) NOT NULL DEFAULT 0 COMMENT '待收金额',
+      balance DECIMAL(18,4) NOT NULL DEFAULT 0 COMMENT '余额',
       currency VARCHAR(10) DEFAULT 'CNY' COMMENT '币种',
-      due_date DATE DEFAULT NULL COMMENT '到期日期',
-      status VARCHAR(20) DEFAULT 'pending' COMMENT '状态: pending-待收款, partial-部分收款, completed-已完成, overdue-逾期',
-      invoice_no VARCHAR(50) DEFAULT NULL COMMENT '发票号',
-      invoice_date DATE DEFAULT NULL COMMENT '发票日期',
+      due_date DATE COMMENT '到期日期',
+      status TINYINT DEFAULT 1 COMMENT '状态: 1-待收款 2-部分收款 3-已完成 4-逾期',
+      invoice_no VARCHAR(50) COMMENT '发票号',
+      invoice_date DATE COMMENT '发票日期',
       remark TEXT COMMENT '备注',
-      create_by BIGINT UNSIGNED DEFAULT NULL,
+      create_by BIGINT UNSIGNED,
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-      update_by BIGINT UNSIGNED DEFAULT NULL,
+      update_by BIGINT UNSIGNED,
       update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       deleted TINYINT(1) DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_receivable_no (receivable_no),
       KEY idx_customer (customer_id),
-      KEY idx_due_date (due_date),
+      KEY idx_source (source_no),
       KEY idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='应收款表'`);
-    results.push('finance_receivable');
+    results.push('fin_receivable');
 
     await execute(`CREATE TABLE IF NOT EXISTS finance_receipt (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
