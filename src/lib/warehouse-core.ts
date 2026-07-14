@@ -142,8 +142,8 @@ function allocateFromBatches(batches: Loose[], quantity: number): FIFOAllocation
     totalAllocated,
     remainingNeed: Math.max(0, remainingNeed),
     message: success
-      ? `成功分配 ${totalAllocated} 数量`
-      : `库存不足，已分配 ${totalAllocated}，还差 ${remainingNeed}`,
+      ? `Allocated ${totalAllocated}`
+      : `Insufficient stock: ${totalAllocated} allocated, ${remainingNeed} remaining`,
   };
 }
 
@@ -416,7 +416,7 @@ function getSplitStandard(materialType: string): number {
 export async function enforceFIFO(
   materialId: number,
   batchNo: string,
-  requisitionId?: number
+  _requisitionId?: number
 ): Promise<{
   isValid: boolean;
   recommendedBatchNo?: string;

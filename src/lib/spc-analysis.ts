@@ -100,7 +100,7 @@ const D2_TABLE: Record<number, number> = {
 
 export function calculateXbarRChart(
   data: { subgroup_id: number; values: number[] }[],
-  sigmaMultiplier: number = 3
+  _sigmaMultiplier: number = 3
 ): XbarRChart {
   if (data.length === 0) {
     return {

@@ -28,7 +28,7 @@
 ```
 src/lib/db/
 ├── index.ts                  # mysql2 连接池单例 + Drizzle ORM 实例 + query/execute/transaction CRUD 辅助
-└── schema.ts                 # 42 张 Drizzle ORM 消费表定义（mysqlTable）
+└── schema.ts                 # 66 张 Drizzle ORM 消费表定义（mysqlTable）
 
 src/infrastructure/
 ├── RepositoryRegistry.ts     # 仓储工厂注册中心（REPOSITORY_IMPL 切换入口）
@@ -83,19 +83,19 @@ export const RepositoryRegistry = {
 
 ## 三、Schema 层实际落地
 
-### 3.1 Drizzle ORM 消费表（`src/lib/db/schema.ts`，42 张）
+### 3.1 Drizzle ORM 消费表（`src/lib/db/schema.ts`，66 张）
 
-> 文件头注释写「35 张」已过时，实际 42 张。权威 SQL 来源：`database/vnerpdacahng_schema.sql`。
+> 2026-07-14 更新：Schema 对齐补全后从 **42 张 → 66 张**（新增 15 张 `prd_` 生产基础资料表 + 已存在但未入表的 9 张表）。权威 SQL 来源：`database/vnerpdacahng_schema.sql`。
 
 | 域 | 表数 | 表清单 |
 | --- | --- | --- |
-| 仓库 `inv_` | 8 | `inv_inbound_order`、`inv_inbound_item`、`inv_warehouse`、`inv_inventory`、`inv_outbound_order`、`inv_outbound_item`、`inv_transfer_order`、`inv_stocktaking` |
-| 销售 `sal_` | 7 | `sal_order`、`sal_order_detail`、`sal_delivery`、`sal_return_order`、`sal_reconciliation`、`sal_quote`、`sal_quote_item` |
+| 仓库 `inv_` | 10 | `inv_material`、`inv_inventory_batch`、`inv_inbound_order`、`inv_inbound_item`、`inv_warehouse`、`inv_inventory`、`inv_outbound_order`、`inv_outbound_item`、`inv_transfer_order`、`inv_stocktaking` |
+| 销售 `sal_` | 9 | `sal_order`、`sal_order_detail`、`sal_delivery`、`sal_return_order`、`sal_reconciliation`、`sal_quote`、`sal_quote_item`、`sal_sample_feedback`、`sal_sample_quotation` |
 | 采购 `pur_` | 4 | `pur_purchase_order`、`pur_purchase_order_line`、`pur_purchase_return`、`pur_purchase_reconciliation` |
 | 财务 `fin_` | 2 | `fin_receivable`、`fin_payable` |
-| 生产 `prd_`/`prod_` | 12 | `prd_work_order`、`prod_work_order`、`prod_work_order_item`、`prod_work_order_material_req`、`prd_schedule`、`prd_schedule_detail`、`prd_pick_order`、`prd_pick_order_item`、`prd_return_order`、`prd_return_order_item`、`prd_work_report`、`prd_finish_order` |
-| 打样 `sample_` | 3 | `sample_process_template`、`sample_process_template_item`、`sample_process_template_step` |
-| 印前 `dcprint_` | 6 | `dcprint_ink_color`、`dcprint_ink_formula_version`、`dcprint_ink_formula_item`、`dcprint_tool`、`dcprint_tool_usage`、`dcprint_tool_maintenance` |
+| 生产 `prd_`/`prod_` | 28 | `prd_work_order`、`prod_work_order`、`prod_work_order_item`、`prod_work_order_material_req`、`prd_schedule`、`prd_schedule_detail`、`prd_pick_order`、`prd_pick_order_item`、`prd_return_order`、`prd_return_order_item`、`prd_work_report`、`prd_finish_order`、`prd_work_order_bom`、`prd_standard_card`、`prd_product_label`、`prd_bom`、`prd_bom_detail`、`prd_bom_std`、`prd_bom_line_std`、`prd_die`、`prd_die_template`、`prd_ink`、`prd_screen_plate`、`prd_process_card`、`prd_process_card_material`、`prd_process_route`、`prd_process_route_step`、`prd_work_order_color_seq` |
+| 印前 `dcprint_` | 12 | `dcprint_ink_color`、`dcprint_ink_formula_version`、`dcprint_ink_formula_item`、`dcprint_tool`、`dcprint_tool_usage`、`dcprint_tool_maintenance`、`dcprint_sample_process_template`、`dcprint_sample_process_template_item`、`dcprint_sample_process_template_step`、`dcprint_sample_process_card`、`dcprint_sample_process_item`、`dcprint_sample_process_step` |
+| 打样 `sample_` | 1 | `sample_order` |
 
 **遗留表（经原始 SQL 管理，非 Drizzle）**：`sys_user`、`sys_role`、`sys_permission`、`sys_menu`、`sys_config`、`sys_dict_type`、`sys_dict_data`、`sys_oper_log`、`sys_login_log`、`sys_event_processed`、`domain_event_outbox`、`hr_employee`、`hr_department`、`qc_inspection`、`qc_unqualified_product`、`material`、`material_category`、`supplier`、`customer`、`bom`、`bom_item`、`equipment` 等（具体以 `database/vnerpdacahng_schema.sql` 为准）。
 
@@ -190,7 +190,7 @@ const rows = await query(`
 | 文件路径 | 改造内容 | 状态 |
 | --- | --- | --- |
 | `src/lib/db/index.ts` | mysql2 连接池单例 + Drizzle ORM 实例 + `query`/`execute`/`transaction`/`queryPaginated` 全套 API | ✅ |
-| `src/lib/db/schema.ts` | 42 张 Drizzle ORM 消费表定义（`mysqlTable`） | ✅ |
+| `src/lib/db/schema.ts` | 66 张 Drizzle ORM 消费表定义（`mysqlTable`） | ✅ |
 | `src/infrastructure/RepositoryRegistry.ts` | `REPOSITORY_IMPL` 环境变量切换 3 个仓储实现 | ✅ |
 | `src/infrastructure/repositories/DrizzleSalesOrderRepository.ts` | Drizzle ORM 实现销售订单仓储，修复 MysqlSalesOrderRepository 查询不存在列的 SQL 错误 | ✅ |
 | `src/infrastructure/repositories/DrizzlePurchaseOrderRepository.ts` | Drizzle ORM 实现采购订单仓储 | ✅ |
@@ -325,7 +325,7 @@ pnpm backup:restore
 ### P0 基础架构改造（已完成 ✅）
 
 - [x] mysql2 连接池单例 + Drizzle ORM 实例（`src/lib/db/index.ts`）
-- [x] 42 张 Drizzle ORM 消费表定义（`src/lib/db/schema.ts`）
+- [x] 66 张 Drizzle ORM 消费表定义（`src/lib/db/schema.ts`）
 - [x] 仓储工厂注册中心 + `REPOSITORY_IMPL` 切换（`src/infrastructure/RepositoryRegistry.ts`）
 - [x] 3 个 Drizzle 仓储实现（SalesOrder / PurchaseOrder / InboundOrder）
 - [x] 废弃 drizzle-kit 迁移路径，引导 `setup:db` / `migrate`
@@ -354,7 +354,7 @@ pnpm backup:restore
 | 文件 | 用途 |
 | --- | --- |
 | `src/lib/db/index.ts` | mysql2 连接池 + Drizzle ORM 实例 + query/execute/transaction API |
-| `src/lib/db/schema.ts` | 42 张 Drizzle ORM 消费表定义 |
+| `src/lib/db/schema.ts` | 66 张 Drizzle ORM 消费表定义 |
 | `src/infrastructure/RepositoryRegistry.ts` | 仓储工厂（REPOSITORY_IMPL 切换） |
 | `src/infrastructure/repositories/DrizzleSalesOrderRepository.ts` | Drizzle 销售订单仓储 |
 | `src/infrastructure/repositories/DrizzlePurchaseOrderRepository.ts` | Drizzle 采购订单仓储 |
@@ -368,4 +368,4 @@ pnpm backup:restore
 
 ---
 
-> 最后更新：2026-07-10
+> 最后更新：2026-07-14（Schema 补全 15 张 `prd_` 表为 66 张，修复类型别名）

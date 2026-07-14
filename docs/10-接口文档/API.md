@@ -632,7 +632,7 @@ interface PaginatedResponse<T> extends ApiResponse<{ list: T[]; total: number; p
 | `/api/migrations/readmd-fixes` | GET | README 修复 | system:migrate |
 | `/api/migrations/six-critical-fixes` | GET | 六项关键修复 | system:migrate |
 | `/api/migrations/views` | GET | 视图修复 | system:migrate |
-| `/api/setup/create-tables` | GET | 创建表（生产默认禁用） | system:setup |
+<!-- 已移除：/api/setup/create-tables（废弃建表接口） -->
 | `/api/init/warehouse` | GET/POST | 仓库初始化 | system:setup |
 | `/api/init/warehouse-category` | GET/POST | 仓库分类初始化 | system:setup |
 | `/api/init/warehouse-category-seed` | GET/POST | 仓库分类种子数据 | system:setup |

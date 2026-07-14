@@ -1,5 +1,6 @@
-import { DomainError } from '../../shared/DomainTypes';
+import { DomainError, DomainEvent } from '../../shared/DomainTypes';
 import { ToolStatus } from '../value-objects/ToolStatus';
+import { ToolUsedEvent, ToolScrappedEvent, ToolWarningTriggeredEvent } from '../events/ToolEvents';
 
 export interface ToolProps {
   id?: number;
@@ -54,9 +55,18 @@ export interface ToolProps {
 
 export class Tool {
   private _props: ToolProps;
+  private _domainEvents: DomainEvent[] = [];
 
   private constructor(props: ToolProps) {
     this._props = props;
+  }
+
+  getDomainEvents(): DomainEvent[] {
+    return [...this._domainEvents];
+  }
+
+  clearDomainEvents(): void {
+    this._domainEvents = [];
   }
 
   get id(): number | undefined {
@@ -389,7 +399,16 @@ export class Tool {
     });
   }
 
-  recordUsage(useCount: number): {
+  recordUsage(
+    useCount: number,
+    context?: {
+      workOrderId?: number;
+      workOrderNo?: string;
+      processName?: string;
+      operatorId?: number;
+      operatorName?: string;
+    }
+  ): {
     newUsedCount: number;
     newRemainLife: number;
     amortizedCost: number;
@@ -424,12 +443,45 @@ export class Tool {
     }
 
     const oldStatus = this._props.status;
+    const shouldWarn = newStatus === ToolStatus.WARNING && oldStatus !== ToolStatus.WARNING;
 
     this._props.usedCount = newUsedCount;
     this._props.remainLife = newRemainLife;
     this._props.accumulatedCost = newAccumulatedCost;
     this._props.netValue = newNetValue;
     this._props.status = newStatus;
+
+    // T101: 触发领域事件
+    if (this._props.id && context?.workOrderId) {
+      this._domainEvents.push(
+        new ToolUsedEvent({
+          toolId: this._props.id,
+          toolCode: this._props.toolCode,
+          toolType: this._props.toolType,
+          workOrderId: context.workOrderId,
+          workOrderNo: context.workOrderNo || '',
+          processName: context.processName,
+          useCount,
+          usedCountAfter: newUsedCount,
+          remainLifeAfter: newRemainLife,
+          operatorId: context.operatorId,
+          operatorName: context.operatorName,
+        })
+      );
+    }
+    if (shouldWarn && this._props.id) {
+      this._domainEvents.push(
+        new ToolWarningTriggeredEvent({
+          toolId: this._props.id,
+          toolCode: this._props.toolCode,
+          toolType: this._props.toolType,
+          usedCount: newUsedCount,
+          remainLife: newRemainLife,
+          warningThreshold: this._props.warningThreshold,
+          totalLife: this._props.totalLife,
+        })
+      );
+    }
 
     return {
       newUsedCount,
@@ -438,7 +490,7 @@ export class Tool {
       newAccumulatedCost,
       newNetValue,
       newStatus,
-      shouldWarn: newStatus === ToolStatus.WARNING && oldStatus !== ToolStatus.WARNING,
+      shouldWarn,
       isEndOfLife: newRemainLife <= 0,
     };
   }
@@ -482,6 +534,22 @@ export class Tool {
     this._props.scrapReason = reason;
     this._props.scrapTime = new Date().toISOString();
     this._props.scrapBy = operatorId;
+
+    // T101: 触发工装报废事件
+    if (this._props.id) {
+      this._domainEvents.push(
+        new ToolScrappedEvent({
+          toolId: this._props.id,
+          toolCode: this._props.toolCode,
+          toolType: this._props.toolType,
+          usedCount: this._props.usedCount,
+          remainLife: this._props.remainLife,
+          netValue: this._props.netValue,
+          scrapReason: reason,
+          scrapBy: operatorId,
+        })
+      );
+    }
   }
 
   toRow(): Record<string, unknown> {

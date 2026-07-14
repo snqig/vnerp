@@ -35,12 +35,15 @@ export const PUT = withPermission(
         case 'confirm':
           await service.confirmOrder(id, userId);
           break;
-        case 'convert':
-          if (!salesOrderId) {
-            return errorResponse('转大货需要提供 salesOrderId', 400, 400);
+        case 'convert': {
+          let targetSalesOrderId = salesOrderId;
+          if (!targetSalesOrderId) {
+            // T305: Auto-generate sales order from sample
+            targetSalesOrderId = await service.createSalesOrderFromSample(id, userId);
           }
-          await service.convertOrder(id, salesOrderId, userId);
+          await service.convertOrder(id, targetSalesOrderId, userId);
           break;
+        }
         case 'cancel':
           await service.cancelOrder(id, reason || '手动作废', userId);
           break;

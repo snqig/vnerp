@@ -6,7 +6,7 @@ import { SampleFeedback } from '@/domain/sample/entities/SampleFeedback';
 import { SampleFeedbackProps } from '@/domain/sample/entities/SampleFeedback';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
-import { transaction } from '@/lib/db';
+import { transaction, execute, query } from '@/lib/db';
 import { logger, generateTraceId } from '@/lib/logger';
 
 export class SampleOrderApplicationService {
@@ -161,6 +161,82 @@ export class SampleOrderApplicationService {
     await this.orderRepo.update(order);
     await this.persistEvents(id, order, ctx);
     logger.stepEnd(ctx, '确认打样', { id });
+  }
+
+  /**
+   * T305: Auto-generate sales order from sample order
+   * @description Reads sample order data, creates sal_order + sal_order_detail records,
+   *   and returns the new sales order id. Called when converting a sample to production
+   *   without an existing salesOrderId.
+   */
+  async createSalesOrderFromSample(id: number, userId: number): Promise<number> {
+    const traceId = generateTraceId();
+    const ctx = { module: 'sample', action: 'createSalesOrderFromSample', traceId, userId };
+    logger.stepStart(ctx, 'Create sales order from sample', { id, userId });
+
+    // 1. Read sample order
+    const order = await this.getOrderById(id);
+    logger.info(ctx, 'Sample order loaded', {
+      id,
+      orderNo: order.orderNo,
+      customerId: order.customerId,
+      sampleFee: order.sampleFee,
+    });
+
+    // 2. Generate sales order number: SO + YYYYMMDD + 4-digit sequence
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    const prefix = `SO${y}${m}${d}`;
+    const seqRows = await query<{ cnt: number }>(
+      'SELECT COUNT(*) AS cnt FROM sal_order WHERE order_no LIKE ?',
+      [`${prefix}%`]
+    );
+    const nextSeq = (seqRows[0]?.cnt || 0) + 1;
+    const orderNo = `${prefix}${String(nextSeq).padStart(4, '0')}`;
+    logger.info(ctx, 'Sales order number generated', { orderNo });
+
+    // 3. Lookup material id by material_no (sample material_no -> inv_material.id)
+    let materialId = 0;
+    if (order.materialNo) {
+      const matRows = await query<{ id: number }>(
+        'SELECT id FROM inv_material WHERE material_code = ? AND deleted = 0 LIMIT 1',
+        [order.materialNo]
+      );
+      if (matRows.length > 0) {
+        materialId = matRows[0].id;
+      }
+    }
+    logger.info(ctx, 'Material id resolved', { materialNo: order.materialNo, materialId });
+
+    // 4. Compute amounts (from sample fee / quotation)
+    const quantity = order.quantity || 1;
+    const unitPrice = order.sampleFee || 0;
+    const totalAmount = unitPrice;
+
+    // 5. Insert sal_order
+    const today = `${y}-${m}-${d}`;
+    const orderResult = await execute(
+      `INSERT INTO sal_order
+       (order_no, order_date, customer_id, total_amount, total_with_tax, currency, status, create_by, create_time)
+       VALUES (?, ?, ?, ?, ?, 'CNY', 1, ?, NOW())`,
+      [orderNo, today, order.customerId || 0, totalAmount, totalAmount, userId]
+    );
+    const salesOrderId = orderResult.insertId;
+    logger.info(ctx, 'Sales order created', { salesOrderId, orderNo });
+
+    // 6. Insert sal_order_detail
+    await execute(
+      `INSERT INTO sal_order_detail
+       (order_id, material_id, material_name, quantity, unit_price, total_amount, create_time)
+       VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+      [salesOrderId, materialId, order.productName || null, quantity, unitPrice, totalAmount]
+    );
+    logger.info(ctx, 'Sales order detail created', { salesOrderId, materialId });
+
+    logger.stepEnd(ctx, 'Create sales order from sample', { salesOrderId, orderNo });
+    return salesOrderId;
   }
 
   async convertOrder(id: number, salesOrderId: number, userId: number): Promise<void> {

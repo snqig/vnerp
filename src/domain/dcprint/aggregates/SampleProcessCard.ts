@@ -1,4 +1,5 @@
-import { DomainError } from '../../shared/DomainTypes';
+import { DomainError, DomainEvent } from '../../shared/DomainTypes';
+import { ProcessCardConfirmedEvent } from '../events/ProcessCardEvents';
 
 export type CardStatus = 1 | 2 | 3 | 4;
 
@@ -71,7 +72,7 @@ export interface SampleProcessCardProps {
 }
 
 export class SampleProcessCard {
-  private _domainEvents: Array<{ eventType: string; payload: unknown }> = [];
+  private _domainEvents: DomainEvent[] = [];
 
   private constructor(private _props: SampleProcessCardProps) {}
 
@@ -234,6 +235,27 @@ export class SampleProcessCard {
     this._props.status = 3;
     this._props.confirmBy = confirmBy;
     this._props.confirmTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+    // T101: 触发工艺卡确认事件
+    if (this._props.id) {
+      this._domainEvents.push(
+        new ProcessCardConfirmedEvent({
+          cardId: this._props.id,
+          sampleNo: this._props.sampleNo || '',
+          sampleName: this._props.sampleName,
+          customerId: this._props.customerId,
+          customerName: this._props.customerName,
+          productId: this._props.productId,
+          productName: this._props.productName,
+          versionNo: this._props.versionNo || 'V1.0',
+          dieToolId: this._props.dieToolId,
+          screenPlateId: this._props.screenPlateId,
+          inkColorId: this._props.inkColorId,
+          totalCost: this._props.totalCost || 0,
+          confirmBy,
+        })
+      );
+    }
   }
 
   cancel(): void {

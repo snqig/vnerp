@@ -184,7 +184,7 @@ describe('warehouse-core', () => {
       expect(result.success).toBe(false);
       expect(result.totalAllocated).toBe(30);
       expect(result.remainingNeed).toBe(70);
-      expect(result.message).toContain('库存不足');
+      expect(result.message).toContain('Insufficient stock');
     });
 
     it('无可用批次时返回失败', async () => {

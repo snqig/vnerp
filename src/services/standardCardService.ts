@@ -20,7 +20,7 @@ export class StandardCardService {
     return response.json();
   }
 
-  async save(data: Record<string, unknown>, isEditMode: boolean, editId?: string) {
+  async save(data: Record<string, unknown>, isEditMode: boolean, _editId?: string) {
     const url = '/api/standard-cards';
     const method = isEditMode ? 'PUT' : 'POST';
     const response = await authFetch(url, {

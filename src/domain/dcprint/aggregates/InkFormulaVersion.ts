@@ -12,7 +12,11 @@
  */
 import { FormulaStatus, canTransition, isEditable } from '../value-objects/FormulaStatus';
 import { FormulaItemVO, FormulaItemProps } from '../value-objects/FormulaItemVO';
-import { DomainError, InvalidTransitionError } from '@/domain/shared/DomainTypes';
+import { DomainError, DomainEvent, InvalidTransitionError } from '@/domain/shared/DomainTypes';
+import {
+  FormulaVersionActivatedEvent,
+  FormulaVersionCancelledEvent,
+} from '../events/FormulaVersionEvents';
 
 export interface InkFormulaVersionProps {
   id?: number;
@@ -83,6 +87,7 @@ export class InkFormulaVersion {
   private _updateTime: Date | null;
 
   private _items: FormulaItemVO[];
+  private _domainEvents: DomainEvent[] = [];
 
   constructor(props: InkFormulaVersionProps) {
     this.validateCreation(props);
@@ -200,6 +205,16 @@ export class InkFormulaVersion {
     return [...this._items];
   }
 
+  // ===== 领域事件 =====
+
+  getDomainEvents(): DomainEvent[] {
+    return [...this._domainEvents];
+  }
+
+  clearDomainEvents(): void {
+    this._domainEvents = [];
+  }
+
   // ===== 状态判断 =====
 
   get isDraft(): boolean {
@@ -229,6 +244,19 @@ export class InkFormulaVersion {
     this._activateBy = operatorId;
     this._activateTime = new Date();
     this._updateBy = operatorId;
+
+    // T101: 触发配方生效事件
+    if (this.id) {
+      this._domainEvents.push(
+        new FormulaVersionActivatedEvent({
+          versionId: this.id,
+          colorId: this._colorId,
+          versionNo: this._versionNo,
+          activatedBy: operatorId,
+          theoreticalCost: this._theoreticalCost,
+        })
+      );
+    }
   }
 
   /** 版本作废：已生效 → 已作废 */
@@ -244,6 +272,19 @@ export class InkFormulaVersion {
     this._cancelReason = reason;
     this._cancelTime = new Date();
     this._updateBy = operatorId;
+
+    // T101: 触发配方作废事件
+    if (this.id) {
+      this._domainEvents.push(
+        new FormulaVersionCancelledEvent({
+          versionId: this.id,
+          colorId: this._colorId,
+          versionNo: this._versionNo,
+          cancelledBy: operatorId,
+          reason,
+        })
+      );
+    }
   }
 
   // ===== 明细操作 =====
