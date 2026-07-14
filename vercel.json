@@ -1,8 +1,5 @@
 {
   "framework": "nextjs",
-  "buildCommand": "pnpm build",
-  "outputDirectory": ".next",
-  "installCommand": "pnpm install",
   "env": {
     "NEXT_PUBLIC_APP_NAME": "Print MIS",
     "DEMO_MODE": "true",

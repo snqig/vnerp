@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   poweredByHeader: false,
   compress: true,
-  output: 'standalone',
+  output: process.env.VERCEL ? undefined : 'standalone',
   serverExternalPackages: ['ioredis', 'mysql2'],
   images: {
     remotePatterns: [
