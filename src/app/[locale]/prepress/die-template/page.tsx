@@ -67,93 +67,12 @@ import {
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import type { ExportColumn } from '@/lib/global-export-service';
 import { useTranslations } from 'next-intl';
+import type { DieApiResponse, DashboardStatsResponse } from '@/domain/prepress';
 
-interface DieTemplate {
-  id: number;
-  template_code: string;
-  template_name: string;
-  template_type: number;
-  asset_type: string;
-  layout_type: string;
-  pieces_per_impression: number;
-  specification: string;
-  material: string;
-  max_usage: number;
-  current_usage: number;
-  remaining_usage: number;
-  warning_usage: number;
-  max_impressions: number;
-  cumulative_impressions: number;
-  warning_threshold: number;
-  maintenance_interval: number;
-  maintenance_count: number;
-  last_maintenance_impressions: number;
-  last_maintenance_date: string;
-  last_used_date: string;
-  unit_price: number;
-  die_status: string;
-  qr_code: string;
-  status: number;
-  storage_location: string;
-  purchase_date: string;
-  supplier_id: number;
-  remark: string;
-  create_time: string;
-}
-
-interface DashboardStats {
-  total_count?: number;
-  totalTemplates?: number;
-  warningCount?: number;
-  warning_count?: number;
-  inUseCount?: number;
-  in_use_count?: number;
-  availableCount?: number;
-  available_count?: number;
-  maintenanceCount?: number;
-  maintenance_count?: number;
-  totalImpressions?: number;
-  total_impressions?: number;
-  avgUsageRate?: number;
-  avg_usage_rate?: number;
-  locked_count?: number;
-  scrap_count?: number;
-  maintenance_due_count?: number;
-}
-
-interface MaintenanceRecord {
-  id: number;
-  maintenance_no: string;
-  die_id: number;
-  die_code: string;
-  template_name: string;
-  maintenance_type: string;
-  impressions_before: number;
-  impressions_after: number;
-  maintenance_date: string;
-  next_maintenance_date: string;
-  cost: number;
-  technician_name: string;
-  status: number;
-  remark: string;
-  create_time: string;
-}
-
-interface UsageLog {
-  id: number;
-  die_id: number;
-  die_code: string;
-  template_name: string;
-  work_report_id: number;
-  work_order_id: number;
-  work_order_no: string;
-  process_name: string;
-  impressions: number;
-  cumulative_after: number;
-  operator_name: string;
-  usage_date: string;
-  create_time: string;
-}
+type DieTemplate = DieApiResponse & Record<string, any>;
+type DashboardStats = DashboardStatsResponse & Record<string, any>;
+type MaintenanceRecord = Record<string, any>;
+type UsageLog = Record<string, any>;
 
 export default function DieTemplatePage() {
   const t = useTranslations('Common');
@@ -202,7 +121,7 @@ export default function DieTemplatePage() {
   const { toast } = useToast();
   const [list, setList] = useState<DieTemplate[]>([]);
   const [warningList, setWarningList] = useState<DieTemplate[]>([]);
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({});
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({} as DashboardStats);
   const [maintenanceList, setMaintenanceList] = useState<MaintenanceRecord[]>([]);
   const [usageLogList, setUsageLogList] = useState<UsageLog[]>([]);
   const [loading, setLoading] = useState(false);
