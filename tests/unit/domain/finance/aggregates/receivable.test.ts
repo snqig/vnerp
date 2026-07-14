@@ -56,6 +56,71 @@ describe('Receivable 聚合根', () => {
     });
   });
 
+  describe('createRedLetter() 红字应收工厂（T305）', () => {
+    it('负数金额创建成功，状态为 UNPAID(1)', () => {
+      const receivable = Receivable.createRedLetter(makeProps({ amount: -500 }));
+      expect(receivable.status.value).toBe(ReceivableStatusEnum.UNPAID);
+      expect(receivable.amount.amount).toBe(-500);
+      expect(receivable.receivedAmount.amount).toBe(0);
+      expect(receivable.balance.amount).toBe(-500);
+    });
+
+    it('sourceType 默认为 3（退货红字）', () => {
+      const receivable = Receivable.createRedLetter(
+        makeProps({ amount: -300, sourceType: undefined })
+      );
+      expect(receivable.sourceType).toBe(3);
+    });
+
+    it('有 id 时发布 ReceivableCreatedEvent（含负数金额）', () => {
+      const receivable = Receivable.createRedLetter(makeProps({ id: 200, amount: -800 }));
+      const events = receivable.getDomainEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0].eventType).toBe('receivable.created');
+      expect(events[0].payload.receivableId).toBe(200);
+      expect(events[0].payload.amount).toBe(-800);
+    });
+
+    it('无 id 时不发布创建事件', () => {
+      const receivable = Receivable.createRedLetter(
+        makeProps({ id: undefined, amount: -100 })
+      );
+      expect(receivable.getDomainEvents()).toHaveLength(0);
+    });
+
+    it('customerId 为 0 抛 DomainError', () => {
+      expect(() =>
+        Receivable.createRedLetter(makeProps({ amount: -500, customerId: 0 }))
+      ).toThrow(DomainError);
+      expect(() =>
+        Receivable.createRedLetter(makeProps({ amount: -500, customerId: 0 }))
+      ).toThrow(/客户ID不能为空/);
+    });
+
+    it('正数金额抛 DomainError', () => {
+      expect(() =>
+        Receivable.createRedLetter(makeProps({ amount: 500 }))
+      ).toThrow(DomainError);
+      expect(() =>
+        Receivable.createRedLetter(makeProps({ amount: 500 }))
+      ).toThrow(/红字应收金额必须为负数/);
+    });
+
+    it('金额为 0 抛 DomainError', () => {
+      expect(() =>
+        Receivable.createRedLetter(makeProps({ amount: 0 }))
+      ).toThrow(DomainError);
+      expect(() =>
+        Receivable.createRedLetter(makeProps({ amount: 0 }))
+      ).toThrow(/红字应收金额必须为负数/);
+    });
+
+    it('对红字应收记录收款应抛错（不可收款）', () => {
+      const receivable = Receivable.createRedLetter(makeProps({ id: 1, amount: -500 }));
+      expect(() => receivable.recordReceipt(100)).toThrow(DomainError);
+    });
+  });
+
   describe('reconstitute() 重建方法', () => {
     it('从 DB 字段重建聚合', () => {
       const receivable = Receivable.reconstitute(

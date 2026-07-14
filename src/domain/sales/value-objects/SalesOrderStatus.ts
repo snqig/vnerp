@@ -6,7 +6,8 @@ export type SalesStatus =
   | 'approved'
   | 'partially_shipped'
   | 'completed'
-  | 'closed';
+  | 'closed'
+  | 'voided';
 
 export class SalesOrderStatus {
   private constructor(public readonly value: SalesStatus) {}
@@ -29,6 +30,9 @@ export class SalesOrderStatus {
   static closed(): SalesOrderStatus {
     return new SalesOrderStatus('closed');
   }
+  static voided(): SalesOrderStatus {
+    return new SalesOrderStatus('voided');
+  }
 
   static from(value: string): SalesOrderStatus {
     const validStatuses: SalesStatus[] = [
@@ -38,6 +42,7 @@ export class SalesOrderStatus {
       'partially_shipped',
       'completed',
       'closed',
+      'voided',
     ];
     if (!validStatuses.includes(value as SalesStatus)) {
       throw new DomainError(`无效的销售单状态: ${value}`);
@@ -52,6 +57,7 @@ export class SalesOrderStatus {
       2: 'approved',
       3: 'partially_shipped',
       4: 'completed',
+      6: 'voided',
       9: 'closed',
     };
     const status = map[code];
@@ -66,27 +72,31 @@ export class SalesOrderStatus {
       approved: 2,
       partially_shipped: 3,
       completed: 4,
+      voided: 6,
       closed: 9,
     };
     return map[this.value];
   }
 
   private static transitions: Record<SalesStatus, SalesStatus[]> = {
-    draft: ['submitted', 'closed'],
-    submitted: ['approved', 'closed'],
-    approved: ['partially_shipped', 'completed', 'closed'],
-    partially_shipped: ['completed', 'closed'],
-    completed: [],
+    draft: ['submitted', 'closed', 'voided'],
+    submitted: ['approved', 'closed', 'voided'],
+    approved: ['partially_shipped', 'completed', 'closed', 'voided'],
+    partially_shipped: ['completed', 'closed', 'voided'],
+    // 已完成可关闭（支持作废全链路回滚 T403）
+    completed: ['closed'],
     closed: [],
+    voided: [],
   };
 
   private static operations: Record<SalesStatus, string[]> = {
-    draft: ['edit', 'delete', 'submit'],
-    submitted: ['approve', 'close'],
-    approved: ['ship', 'close'],
-    partially_shipped: ['ship', 'close'],
-    completed: ['view'],
+    draft: ['edit', 'delete', 'submit', 'void'],
+    submitted: ['approve', 'close', 'void'],
+    approved: ['ship', 'close', 'void'],
+    partially_shipped: ['ship', 'close', 'void'],
+    completed: ['view', 'close'],
     closed: ['view'],
+    voided: ['view'],
   };
 
   canTransitionTo(target: SalesStatus): boolean {
@@ -114,6 +124,9 @@ export class SalesOrderStatus {
   canShip(): boolean {
     return SalesOrderStatus.operations[this.value].includes('ship');
   }
+  canVoid(): boolean {
+    return SalesOrderStatus.operations[this.value].includes('void');
+  }
 
   label(): string {
     const labels: Record<SalesStatus, string> = {
@@ -123,6 +136,7 @@ export class SalesOrderStatus {
       partially_shipped: '部分出库',
       completed: '已完成',
       closed: '已关闭',
+      voided: '已作废',
     };
     return labels[this.value];
   }

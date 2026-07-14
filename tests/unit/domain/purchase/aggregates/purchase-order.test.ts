@@ -305,9 +305,12 @@ describe('PurchaseOrder Aggregate', () => {
       }
     );
 
-    it('已完成状态不可关闭', () => {
+    it('已完成状态可关闭（支持作废全链路回滚）', () => {
       const order = PurchaseOrder.reconstitute(buildValidProps({ id: 1, status: 'completed' }));
-      expect(() => order.close()).toThrow(DomainError);
+      order.close();
+      expect(order.status.value).toBe('closed');
+      const closeEvent = order.getDomainEvents().find((e) => e.eventType === 'purchase.closed');
+      expect(closeEvent).toBeDefined();
     });
 
     it('已关闭状态不可再次关闭', () => {
@@ -382,8 +385,20 @@ describe('PurchaseOrderStatus Value Object', () => {
       expect(PurchaseOrderStatus.partiallyReceived().canTransitionTo('completed')).toBe(true);
     });
 
-    it('已完成不可流转', () => {
-      expect(PurchaseOrderStatus.completed().canTransitionTo('closed')).toBe(false);
+    it('已完成可流转到已关闭（支持作废全链路回滚）', () => {
+      expect(PurchaseOrderStatus.completed().canTransitionTo('closed')).toBe(true);
+    });
+
+    it('已作废不可流转', () => {
+      expect(PurchaseOrderStatus.voided().canTransitionTo('closed')).toBe(false);
+      expect(PurchaseOrderStatus.voided().canTransitionTo('approved')).toBe(false);
+    });
+
+    it('草稿/已提交/已审核/部分入库可流转到已作废', () => {
+      expect(PurchaseOrderStatus.draft().canTransitionTo('voided')).toBe(true);
+      expect(PurchaseOrderStatus.submitted().canTransitionTo('voided')).toBe(true);
+      expect(PurchaseOrderStatus.approved().canTransitionTo('voided')).toBe(true);
+      expect(PurchaseOrderStatus.partiallyReceived().canTransitionTo('voided')).toBe(true);
     });
 
     it('非法流转应抛出 DomainError', () => {
@@ -423,6 +438,7 @@ describe('PurchaseOrderStatus Value Object', () => {
       [40, 'partially_received'],
       [50, 'completed'],
       [90, 'closed'],
+      [99, 'voided'],
     ] as const)('状态码 %i 对应状态 %s', (code, status) => {
       expect(PurchaseOrderStatus.fromDbCode(code).value).toBe(status);
       expect(PurchaseOrderStatus.from(status).toDbCode()).toBe(code);

@@ -147,3 +147,32 @@ export class ToolScrappedEvent implements DomainEvent {
     this.aggregateId = payload.toolId;
   }
 }
+
+/**
+ * 工装使用事件
+ * 触发时机：报工审核时，联动累计关联刀模/网版的使用次数
+ */
+export class ToolUsedEvent implements DomainEvent {
+  readonly eventType = 'tool.used';
+  readonly occurredAt = new Date();
+  readonly aggregateType = 'Tool';
+  public readonly aggregateId?: number;
+
+  constructor(
+    public readonly payload: {
+      toolId: number;
+      toolCode: string;
+      toolType: number;
+      workOrderId: number;
+      workOrderNo: string;
+      processName?: string;
+      useCount: number;
+      usedCountAfter: number;
+      remainLifeAfter: number;
+      operatorId?: number;
+      operatorName?: string;
+    }
+  ) {
+    this.aggregateId = payload.toolId;
+  }
+}

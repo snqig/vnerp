@@ -2,12 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ReturnOrderInventoryHandler } from '@/application/handlers/ReturnOrderInventoryHandler';
 import { ReturnOrderCompletedEvent } from '@/domain/sales/events/ReturnOrderEvents';
 
-const mockExecute = vi.fn().mockResolvedValue([[], []]);
-const mockTransaction = vi.fn(async (fn: Function) => fn({ execute: mockExecute }));
+// vi.mock 工厂会被 hoist，必须用 vi.hoisted 才能在工厂内引用 mock 函数
+const { mockExecute, mockTransaction } = vi.hoisted(() => {
+  const mockExecute = vi.fn().mockResolvedValue([[], []]);
+  const mockTransaction = vi.fn(async (fn: Function) => fn({ execute: mockExecute }));
+  return { mockExecute, mockTransaction };
+});
 
 vi.mock('@/lib/db', () => ({
   transaction: (...args: unknown[]) => mockTransaction(args[0] as Function),
   query: vi.fn().mockResolvedValue([]),
+  // ReturnOrderInventoryHandler 直接调用 execute（非 transaction 包裹）
+  execute: mockExecute,
 }));
 
 vi.mock('@/lib/logger', () => ({

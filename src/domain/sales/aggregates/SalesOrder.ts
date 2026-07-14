@@ -82,9 +82,9 @@ export class SalesOrder {
     const totalQuantity = lines.reduce((sum, l) => sum + l.orderQty, 0);
     const taxRate = props.taxRate ?? 0;
     const discountRate = props.discountRate ?? 0;
-    const discountAmount = props.discountAmount ?? roundAmount(totalAmount * discountRate / 100);
+    const discountAmount = props.discountAmount ?? roundAmount((totalAmount * discountRate) / 100);
     const taxableAmount = roundAmount(totalAmount - discountAmount);
-    const taxAmount = props.taxAmount ?? roundAmount(taxableAmount * taxRate / 100);
+    const taxAmount = props.taxAmount ?? roundAmount((taxableAmount * taxRate) / 100);
     const totalWithTax = roundAmount(taxableAmount + taxAmount);
 
     const order = new SalesOrder(
@@ -302,11 +302,29 @@ export class SalesOrder {
     );
   }
 
+  /**
+   * 作废：销售单从 draft/submitted/approved/partially_shipped 流转到 voided 终态。
+   * 已完成（completed）状态不可直接作废（需要先 close 再处理后续回滚）。
+   * 复用 SalesOrderClosedEvent 触发清理流程（与 T403 作废全链路回滚配套）。
+   */
+  void(): void {
+    if (!this._status.canVoid()) {
+      throw new DomainError(`当前状态"${this._status.label()}"不允许作废`);
+    }
+    this._status = this._status.transitionTo('voided');
+    this._domainEvents.push(
+      new SalesOrderClosedEvent({ orderId: this.id!, orderNo: this.orderNo })
+    );
+  }
+
   canEdit(): boolean {
     return this._status.canEdit();
   }
   canDelete(): boolean {
     return this._status.canDelete();
+  }
+  canVoid(): boolean {
+    return this._status.canVoid();
   }
 
   getDomainEvents(): DomainEvent[] {

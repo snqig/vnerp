@@ -87,10 +87,11 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
     const params: Loose[] = [];
 
     if (filters?.keyword) {
-      const condition = ` AND (o.order_no LIKE ? OR o.supplier_name LIKE ?)`;
+      // T401: keyword 同时匹配入库单号、供应商名称、关联采购单号（po_no）
+      const condition = ` AND (o.order_no LIKE ? OR o.supplier_name LIKE ? OR o.po_no LIKE ?)`;
       sql += condition;
       countSql += condition;
-      params.push(`%${filters.keyword}%`, `%${filters.keyword}%`);
+      params.push(`%${filters.keyword}%`, `%${filters.keyword}%`, `%${filters.keyword}%`);
     }
 
     if (status) {

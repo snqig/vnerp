@@ -22,6 +22,8 @@ export interface PurchaseOrderLineProps {
 }
 
 export class PurchaseOrderLine {
+  private _isClosed: boolean = false;
+
   private constructor(
     public readonly id: number | undefined,
     public readonly orderId: number | undefined,
@@ -137,7 +139,14 @@ export class PurchaseOrderLine {
     return this._receivedQty >= this._orderQty;
   }
 
+  get isClosed(): boolean {
+    return this._isClosed;
+  }
+
   receive(quantity: number, tolerancePercent: number = 0): void {
+    if (this._isClosed) {
+      throw new DomainError(`行${this.lineNo}已关闭，不允许入库`);
+    }
     if (quantity <= 0) {
       throw new DomainError('入库数量必须大于0');
     }
@@ -149,6 +158,13 @@ export class PurchaseOrderLine {
       );
     }
     this._receivedQty = newReceivedQty;
+  }
+
+  close(): void {
+    if (this._isClosed) {
+      throw new DomainError(`行${this.lineNo}已关闭`);
+    }
+    this._isClosed = true;
   }
 
   recalculate(): void {

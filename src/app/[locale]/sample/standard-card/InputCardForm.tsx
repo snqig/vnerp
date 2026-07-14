@@ -1,29 +1,13 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRef } from 'react';
 import { useRouter } from '@/i18n/navigation';
-import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Save, Printer } from 'lucide-react';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { useTranslations } from 'next-intl';
-import { useToast } from '@/hooks/use-toast';
-import {
-  type CardData,
-  type PrintSequence,
-  createEmptyData,
-  toggleMultiValue,
-  mapCardDataToApiPayload,
-  mapApiDataToCardData,
-} from './input-card/utils';
-
-interface Customer {
-  id: number;
-  customerCode: string;
-  customerName: string;
-  shortName: string;
-}
+import { type CardData, type PrintSequence } from './input-card/utils';
+import { useStandardCardForm } from '@/hooks/useStandardCardForm';
 
 const EditableCell = ({
   value,
@@ -73,182 +57,28 @@ const EditableTextarea = ({
 export function InputCardForm() {
   const { companyName } = useCompanyName();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const tc = useTranslations('Common');
-  const { toast } = useToast();
   const printRef = useRef<HTMLDivElement>(null);
 
-  const editId = searchParams.get('id');
-  const isEditMode = !!editId;
-
-  const [data, setData] = useState<CardData>(createEmptyData);
-  const [loading, setLoading] = useState(isEditMode);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
-
-  const loadData = useCallback(async (id: string) => {
-    console.log('[StandardCard:Load] 开始加载, id=', id);
-    try {
-      setLoading(true);
-      const response = await authFetch(`/api/standard-cards?id=${id}`);
-      console.log('[StandardCard:Load] 响应: status=', response.status, 'ok=', response.ok);
-      const result = await response.json();
-      console.log('[StandardCard:Load] 结果: success=', result.success, 'hasData=', !!result.data);
-      const apiData = Array.isArray(result.data) ? result.data[0] : result.data;
-      if (result.success && apiData) {
-        setData(mapApiDataToCardData(apiData));
-      } else {
-        console.error('[StandardCard:Load] API返回失败:', result.message);
-        setError(result.message || '加载失败');
-      }
-    } catch (e) {
-      console.error('[StandardCard:Load] 异常:', e instanceof Error ? e.message : e, e);
-      setError(e instanceof Error ? e.message : '加载数据失败');
-    } finally {
-      console.log('[StandardCard:Load] 完成, loading=false');
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchCustomers = useCallback(async () => {
-    try {
-      const response = await authFetch('/api/customers?page=1&pageSize=999');
-      const result = await response.json();
-      if (result.success && Array.isArray(result.data)) {
-        const formatted: Customer[] = result.data.map((item: Record<string, unknown>) => ({
-          id: item.id as number,
-          customerCode: (item.customer_code as string) || '',
-          customerName: (item.customer_name as string) || '',
-          shortName: (item.short_name as string) || '',
-        }));
-        setCustomers(formatted);
-      } else if (result.success && result.data?.list && Array.isArray(result.data.list)) {
-        const formatted: Customer[] = result.data.list.map((item: Record<string, unknown>) => ({
-          id: item.id as number,
-          customerCode: (item.customer_code as string) || '',
-          customerName: (item.customer_name as string) || '',
-          shortName: (item.short_name as string) || '',
-        }));
-        setCustomers(formatted);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchCustomers();
-    if (editId) {
-      loadData(editId);
-    }
-  }, [editId, loadData, fetchCustomers]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.customer-dropdown-container')) {
-        setShowCustomerDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const updateField = <K extends keyof CardData>(field: K, value: CardData[K]) => {
-    setData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const updateSequence = (index: number, field: keyof PrintSequence, value: string) => {
-    setData((prev) => ({
-      ...prev,
-      sequences: prev.sequences.map((seq, i) => (i === index ? { ...seq, [field]: value } : seq)),
-    }));
-  };
-
-  const handleToggleMultiValue = (
-    field: 'coreType' | 'printType' | 'processMethod',
-    value: string
-  ) => {
-    setData((prev) => ({ ...prev, [field]: toggleMultiValue(prev[field], value) }));
-  };
-
-  const handleSelectCustomer = (customer: Customer) => {
-    updateField('customer', customer.customerName);
-    updateField('customerCode', customer.customerCode);
-    setCustomerSearch('');
-    setShowCustomerDropdown(false);
-  };
-
-  const filteredCustomers = customers.filter(
-    (c) =>
-      c.customerName.toLowerCase().includes(customerSearch.toLowerCase()) ||
-      c.customerCode.toLowerCase().includes(customerSearch.toLowerCase())
-  );
-
-  const handleSave = async (): Promise<number | null> => {
-    if (!data.customer) {
-      toast({ title: '请选择客户', variant: 'destructive' });
-      return null;
-    }
-    if (!data.customerCode) {
-      toast({ title: '请输入客户料号', variant: 'destructive' });
-      return null;
-    }
-    if (!data.productName) {
-      toast({ title: '请输入品名', variant: 'destructive' });
-      return null;
-    }
-
-    try {
-      setSaving(true);
-
-      const saveData = mapCardDataToApiPayload(data, isEditMode, editId || undefined);
-
-      const url = '/api/standard-cards';
-      const method = isEditMode ? 'PUT' : 'POST';
-
-      const response = await authFetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(saveData),
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        toast({ title: result.message || '保存失败', variant: 'destructive' });
-        return null;
-      }
-
-      const newId = result.data?.id || parseInt(editId || '0');
-      toast({ title: isEditMode ? '标准卡更新成功' : '标准卡保存成功' });
-
-      if (!isEditMode && newId) {
-        // 保存成功后切换为编辑模式（保持在传统录入页面）
-        router.push(`/sample/standard-card?id=${newId}&edit=true&mode=card`);
-      }
-
-      return newId;
-    } catch (e) {
-      console.error('[StandardCard:Save] 异常:', e instanceof Error ? e.message : e, e);
-      toast({ title: '保存失败，请检查网络连接', variant: 'destructive' });
-      return null;
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSaveAndPreview = async () => {
-    const savedId = await handleSave();
-    const id = savedId || (editId ? parseInt(editId) : null);
-    if (id) {
-      router.push(`/sample/standard-card/print?id=${id}`);
-    }
-  };
+  const {
+    data,
+    loading,
+    saving,
+    error,
+    customers,
+    customerSearch,
+    setCustomerSearch,
+    showCustomerDropdown,
+    setShowCustomerDropdown,
+    filteredCustomers,
+    updateField,
+    updateSequence,
+    handleToggleMultiValue,
+    handleSelectCustomer,
+    handleSave,
+    handleSaveAndPreview,
+    isEditMode,
+  } = useStandardCardForm({ mode: 'card' });
 
   const coreTypes = data.coreType?.split(',').filter(Boolean) || [];
   const printTypes = data.printType?.split(',').filter(Boolean) || [];

@@ -92,6 +92,60 @@ export class Receivable {
     return receivable;
   }
 
+  /**
+   * 创建红字应收单（退货冲销专用）。
+   *
+   * 与 create() 的区别：允许负数金额，用于冲减客户应收余额。
+   * 约束：amount 必须为负数；balance 初始化为 amount（负数）；
+   * receivedAmount 初始化为 0，后续不可对该红字单记录收款（recordReceipt 会因 newReceived > amount 抛错）。
+   *
+   * T305: 销售退货审核后生成负金额红字应收单，冲减对应客户应收余额。
+   */
+  static createRedLetter(props: ReceivableProps): Receivable {
+    if (!props.customerId) {
+      throw new DomainError('客户ID不能为空');
+    }
+    if (!props.amount || props.amount >= 0) {
+      throw new DomainError('红字应收金额必须为负数');
+    }
+
+    const amount = Money.redLetter(props.amount);
+    const receivable = new Receivable(
+      props.id,
+      props.receivableNo || '',
+      props.sourceType || 3,
+      props.sourceId,
+      props.sourceNo || '',
+      props.customerId,
+      props.customerName || '',
+      amount,
+      Money.zero(),
+      amount,
+      props.dueDate || '',
+      ReceivableStatus.unpaid(),
+      props.remark || '',
+      props.createTime,
+      props.updateTime
+    );
+
+    if (receivable.id) {
+      receivable._domainEvents.push(
+        new ReceivableCreatedEvent({
+          receivableId: receivable.id,
+          receivableNo: receivable.receivableNo,
+          sourceType: receivable.sourceType,
+          sourceId: receivable.sourceId,
+          sourceNo: receivable.sourceNo,
+          customerId: receivable.customerId,
+          amount: receivable._amount.amount,
+          dueDate: receivable.dueDate,
+        })
+      );
+    }
+
+    return receivable;
+  }
+
   static reconstitute(props: ReceivableProps): Receivable {
     return new Receivable(
       props.id,

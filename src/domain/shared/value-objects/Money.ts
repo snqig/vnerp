@@ -3,9 +3,10 @@ import { DomainError } from '../../shared/DomainTypes';
 export class Money {
   private constructor(
     public readonly amount: number,
-    public readonly currency: string = 'CNY'
+    public readonly currency: string = 'CNY',
+    allowNegative = false
   ) {
-    if (amount < 0) {
+    if (amount < 0 && !allowNegative) {
       throw new DomainError('金额不能为负数');
     }
   }
@@ -16,6 +17,14 @@ export class Money {
 
   static create(amount: number, currency: string = 'CNY'): Money {
     return new Money(Math.round(amount * 100) / 100, currency);
+  }
+
+  /**
+   * 创建红字金额（允许负数），用于退货冲销等红字核算场景。
+   * T305: 销售退货红字应收单需要负数金额冲减客户应收余额。
+   */
+  static redLetter(amount: number, currency: string = 'CNY'): Money {
+    return new Money(Math.round(amount * 100) / 100, currency, true);
   }
 
   add(other: Money): Money {

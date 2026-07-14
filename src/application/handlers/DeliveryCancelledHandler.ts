@@ -84,6 +84,28 @@ export class DeliveryCancelledHandler implements EventHandler<DeliveryCancelledE
             }
           }
         }
+
+        // T403: 发货单作废时联动软删对应应收单（按 source_no = 发货单号）
+        // 仅处理销售发货来源（source_type=1），避免误删退货红字应收
+        if (deliveryNo) {
+          const [receivableRows] = await conn.execute<RowDataPacket[]>(
+            `SELECT id, receivable_no FROM fin_receivable
+             WHERE source_no = ? AND source_type = 1 AND deleted = 0`,
+            [deliveryNo]
+          );
+          if (receivableRows.length > 0) {
+            await conn.execute(
+              `UPDATE fin_receivable SET deleted = 1, update_time = NOW()
+               WHERE source_no = ? AND source_type = 1 AND deleted = 0`,
+              [deliveryNo]
+            );
+            logger.info(ctx, '应收单联动软删完成 (T403)', {
+              deliveryNo,
+              count: receivableRows.length,
+              receivableNos: receivableRows.map((r) => r.receivable_no),
+            });
+          }
+        }
       });
 
       secureLog('info', 'Delivery cancelled and order quantities rolled back', {

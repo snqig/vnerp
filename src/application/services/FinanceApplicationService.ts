@@ -4,11 +4,7 @@ import { IVoucherRepository } from '@/domain/finance/repositories/IVoucherReposi
 import { Receivable, ReceivableProps } from '@/domain/finance/aggregates/Receivable';
 import { Payable, PayableProps } from '@/domain/finance/aggregates/Payable';
 import { Voucher, VoucherProps } from '@/domain/finance/aggregates/Voucher';
-import {
-  DomainError,
-  DomainEvent,
-  NotFoundError,
-} from '@/domain/shared/DomainTypes';
+import { DomainError, DomainEvent, NotFoundError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction, query, queryPaginated, PaginatedResult, type SqlValue } from '@/lib/db';
 import { MysqlReceivableRepository } from '@/infrastructure/repositories/MysqlReceivableRepository';
@@ -86,6 +82,8 @@ export interface ReceivableListQuery {
   status?: number;
   startDate?: string;
   endDate?: string;
+  /** T401/T402: 按源单号精确过滤（用于订单详情页关联应收单） */
+  sourceNo?: string;
 }
 
 export interface PayableListQuery {
@@ -95,6 +93,8 @@ export interface PayableListQuery {
   status?: number;
   startDate?: string;
   endDate?: string;
+  /** T401/T402: 按源单号精确过滤（用于订单详情页关联应付单） */
+  sourceNo?: string;
 }
 
 export interface FinanceSummaryQuery {
@@ -158,15 +158,17 @@ export class FinanceApplicationService {
       where.push('receivable_date <= ?');
       values.push(q.endDate);
     }
+    if (q.sourceNo) {
+      where.push('source_no = ?');
+      values.push(q.sourceNo);
+    }
     const whereClause = where.join(' AND ');
     const sql = `SELECT * FROM fin_receivable WHERE ${whereClause} ORDER BY create_time DESC`;
     const countSql = `SELECT COUNT(*) as total FROM fin_receivable WHERE ${whereClause}`;
-    return queryPaginated<ReceivableRow>(
-      sql,
-      countSql,
-      values,
-      { page: q.page, pageSize: q.pageSize }
-    );
+    return queryPaginated<ReceivableRow>(sql, countSql, values, {
+      page: q.page,
+      pageSize: q.pageSize,
+    });
   }
 
   async getReceivableSummary(q: FinanceSummaryQuery): Promise<ReceivableSummary> {
@@ -229,15 +231,17 @@ export class FinanceApplicationService {
       where.push('payable_date <= ?');
       values.push(q.endDate);
     }
+    if (q.sourceNo) {
+      where.push('source_no = ?');
+      values.push(q.sourceNo);
+    }
     const whereClause = where.join(' AND ');
     const sql = `SELECT * FROM fin_payable WHERE ${whereClause} ORDER BY create_time DESC`;
     const countSql = `SELECT COUNT(*) as total FROM fin_payable WHERE ${whereClause}`;
-    return queryPaginated<PayableRow>(
-      sql,
-      countSql,
-      values,
-      { page: q.page, pageSize: q.pageSize }
-    );
+    return queryPaginated<PayableRow>(sql, countSql, values, {
+      page: q.page,
+      pageSize: q.pageSize,
+    });
   }
 
   async getPayableSummary(q: FinanceSummaryQuery): Promise<PayableSummary> {
@@ -417,12 +421,7 @@ export class FinanceApplicationService {
         `UPDATE fin_payable
          SET paid_amount = ?, balance = ?, status = ?, update_time = NOW()
          WHERE id = ?`,
-        [
-          payable.paidAmount.amount,
-          payable.balance.amount,
-          payable.status.value,
-          input.payableId,
-        ]
+        [payable.paidAmount.amount, payable.balance.amount, payable.status.value, input.payableId]
       );
 
       const events = payable.getDomainEvents();

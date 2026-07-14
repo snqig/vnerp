@@ -246,17 +246,51 @@ export class ReturnOrder {
     );
   }
 
+  /**
+   * 校验退货数量不得超过累计已发货数量（扣减已退数量）。
+   * 在 approve() 之前由 ApplicationService 调用：传入从 sal_order_detail
+   * 查询得到的 delivered_qty / returned_qty 聚合数据，由领域层执行业务规则判定。
+   *
+   * 设计原则：保持领域层零框架依赖；数据获取在应用层，规则判定在领域层。
+   * 与 PurchaseReturn.validateAgainstReceivedQuantities 对称（T204 复用 T104 模板）。
+   */
+  validateAgainstShippedQuantities(
+    shippedQtyByMaterial: Map<number, number>,
+    alreadyReturnedQtyByMaterial?: Map<number, number>
+  ): void {
+    for (const line of this._lines) {
+      const shipped = shippedQtyByMaterial.get(line.materialId) ?? 0;
+      const alreadyReturned = alreadyReturnedQtyByMaterial?.get(line.materialId) ?? 0;
+      const available = shipped - alreadyReturned;
+      if (line.quantity > available) {
+        throw new DomainError(
+          `退货数量超出可退数量：物料「${line.materialName}」(${line.materialCode}) 本次退货 ${line.quantity}，已发货 ${shipped}，已退货 ${alreadyReturned}，可退 ${available}`
+        );
+      }
+    }
+  }
+
   complete(
     completeBy: number,
-    inboundCallback: (items: Array<{
-      materialId: number;
-      materialCode: string;
-      materialName: string;
-      quantity: number;
-      unit: string;
-      batchNo: string;
-    }>, warehouseId: number, returnId: number, returnNo: string) => InboundResult,
-    receivableCallback: (customerId: number, refundAmount: number, returnId: number, returnNo: string) => ReceivableResult
+    inboundCallback: (
+      items: Array<{
+        materialId: number;
+        materialCode: string;
+        materialName: string;
+        quantity: number;
+        unit: string;
+        batchNo: string;
+      }>,
+      warehouseId: number,
+      returnId: number,
+      returnNo: string
+    ) => InboundResult,
+    receivableCallback: (
+      customerId: number,
+      refundAmount: number,
+      returnId: number,
+      returnNo: string
+    ) => ReceivableResult
   ): void {
     if (!this._status.canComplete()) {
       throw new DomainError(`当前状态"${this._status.label}"不允许完成`);

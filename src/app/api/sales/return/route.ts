@@ -26,6 +26,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status') || '';
   const customerId = searchParams.get('customerId') || '';
+  const orderId = searchParams.get('orderId') || '';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
   const page = parseInt(searchParams.get('page') || '1');
@@ -45,6 +46,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   if (customerId) {
     where += ' AND r.customer_id = ?';
     params.push(Number(customerId));
+  }
+  if (orderId) {
+    // T402: 按销售订单 ID 过滤关联退货单
+    where += ' AND r.order_id = ?';
+    params.push(Number(orderId));
   }
   if (startDate) {
     where += ' AND r.return_date >= ?';

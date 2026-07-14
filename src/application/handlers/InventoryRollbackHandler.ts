@@ -115,6 +115,28 @@ export class InventoryRollbackHandler implements EventHandler<InboundOrderUnappr
           }
         }
       }
+
+      // T403: 入库单作废时联动软删对应应付单（按 source_no = 入库单号）
+      // 仅处理采购入库类型（order_type='purchase'），避免误删其他来源应付
+      if (inboundNo) {
+        const [payableRows] = await conn.execute<RowDataPacket[]>(
+          `SELECT id, payable_no FROM fin_payable
+           WHERE source_no = ? AND source_type = 1 AND deleted = 0`,
+          [inboundNo]
+        );
+        if (payableRows.length > 0) {
+          await conn.execute(
+            `UPDATE fin_payable SET deleted = 1, update_time = NOW()
+             WHERE source_no = ? AND source_type = 1 AND deleted = 0`,
+            [inboundNo]
+          );
+          secureLog('info', 'Payables soft-deleted on inbound void (T403)', {
+            inboundNo,
+            count: payableRows.length,
+            payableNos: payableRows.map((r) => r.payable_no),
+          });
+        }
+      }
     });
 
     secureLog('info', 'Inventory rolled back for unapproved inbound order', {

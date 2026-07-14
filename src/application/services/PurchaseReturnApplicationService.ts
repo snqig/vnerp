@@ -8,9 +8,9 @@ import {
 import { MysqlPurchaseReturnRepository } from '@/infrastructure/repositories/MysqlPurchaseReturnRepository';
 import { DomainError, DomainEvent, NotFoundError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
-import { transaction } from '@/lib/db';
+import { query, transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
-import type { ResultSetHeader } from 'mysql2';
+import type { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 export class PurchaseReturnApplicationService {
   constructor(private readonly returnRepo: IPurchaseReturnRepository) {}
@@ -25,9 +25,7 @@ export class PurchaseReturnApplicationService {
     return ret;
   }
 
-  async createReturn(
-    props: PurchaseReturnProps
-  ): Promise<{ id: number; returnNo: string }> {
+  async createReturn(props: PurchaseReturnProps): Promise<{ id: number; returnNo: string }> {
     const ret = PurchaseReturn.create(props);
     const result = await this.returnRepo.save(ret);
     await this.persistAndPublishEvents('PurchaseReturn', result.id, ret);
@@ -36,11 +34,51 @@ export class PurchaseReturnApplicationService {
 
   async approveReturn(id: number, approveBy: number): Promise<{ status: number }> {
     const ret = await this.getReturnById(id);
+
+    // T104: 审核前校验退货数量不得超过累计已入库量（扣减已退数量）
+    await this.validateReturnQuantitiesAgainstReceived(ret);
+
     ret.approve(approveBy);
 
     await this.returnRepo.updateApproveInfo(id, ret.approveBy!, ret.approveTime!);
     await this.persistAndPublishEvents('PurchaseReturn', id, ret);
     return { status: ret.status.value };
+  }
+
+  /**
+   * 从 pur_purchase_order_line 拉取 received_qty / returned_qty 聚合数据，
+   * 调用聚合根的领域校验方法 validateAgainstReceivedQuantities。
+   *
+   * 数据获取在应用层，规则判定在领域层，保持 DDD 分层规范。
+   */
+  private async validateReturnQuantitiesAgainstReceived(ret: PurchaseReturn): Promise<void> {
+    interface LineQtyRow {
+      material_id: number;
+      received_qty: number | string;
+      returned_qty: number | string;
+    }
+    const rows = await query<LineQtyRow>(
+      'SELECT material_id, received_qty, returned_qty FROM pur_purchase_order_line WHERE po_id = ?',
+      [ret.orderId]
+    );
+
+    if (!rows || rows.length === 0) {
+      // 采购单无明细行：所有退货均不合法
+      const receivedMap = new Map<number, number>();
+      const returnedMap = new Map<number, number>();
+      ret.validateAgainstReceivedQuantities(receivedMap, returnedMap);
+      return;
+    }
+
+    const receivedMap = new Map<number, number>();
+    const returnedMap = new Map<number, number>();
+    for (const row of rows) {
+      const mid = Number(row.material_id);
+      // 同一物料在多行的情况：累加 received/returned
+      receivedMap.set(mid, (receivedMap.get(mid) ?? 0) + Number(row.received_qty || 0));
+      returnedMap.set(mid, (returnedMap.get(mid) ?? 0) + Number(row.returned_qty || 0));
+    }
+    ret.validateAgainstReceivedQuantities(receivedMap, returnedMap);
   }
 
   async completeReturn(

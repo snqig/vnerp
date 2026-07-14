@@ -338,13 +338,84 @@ describe('SalesOrder Aggregate', () => {
       expect(events[0].eventType).toBe('sales.closed');
     });
 
-    it('已完成状态不允许关闭', () => {
+    it('已完成状态可关闭（支持作废全链路回滚 T403）', () => {
       const order = createApprovedOrder();
       order.ship([
         { lineNo: 1, quantity: 100, batchNo: 'B001', warehouseId: 1 },
         { lineNo: 2, quantity: 50, batchNo: 'B002', warehouseId: 1 },
       ]);
-      expect(() => order.close()).toThrow(DomainError);
+      order.close();
+      expect(order.status.value).toBe('closed');
+      const closeEvent = order.getDomainEvents().find((e) => e.eventType === 'sales.closed');
+      expect(closeEvent).toBeDefined();
+    });
+  });
+
+  // ========================================
+  // 6.1 void() 作废（T201）
+  // ========================================
+  describe('void()', () => {
+    it('草稿状态可作废', () => {
+      const order = createDraftOrder();
+      order.clearDomainEvents();
+      order.void();
+      expect(order.status.value).toBe('voided');
+      const events = order.getDomainEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0].eventType).toBe('sales.closed');
+    });
+
+    it('已审核状态可作废', () => {
+      const order = createApprovedOrder();
+      order.clearDomainEvents();
+      order.void();
+      expect(order.status.value).toBe('voided');
+    });
+
+    it('部分出库状态可作废', () => {
+      const order = createApprovedOrder();
+      order.ship([{ lineNo: 1, quantity: 50, batchNo: 'B001', warehouseId: 1 }]);
+      order.clearDomainEvents();
+      order.void();
+      expect(order.status.value).toBe('voided');
+    });
+
+    it('已完成状态不可作废（需先 close 后处理回滚）', () => {
+      const order = createApprovedOrder();
+      order.ship([
+        { lineNo: 1, quantity: 100, batchNo: 'B001', warehouseId: 1 },
+        { lineNo: 2, quantity: 50, batchNo: 'B002', warehouseId: 1 },
+      ]);
+      expect(() => order.void()).toThrow(DomainError);
+    });
+
+    it('已关闭状态不可作废', () => {
+      const order = createDraftOrder();
+      order.close();
+      expect(() => order.void()).toThrow(DomainError);
+    });
+
+    it('已作废状态再次作废抛错', () => {
+      const order = createDraftOrder();
+      order.void();
+      expect(() => order.void()).toThrow(DomainError);
+    });
+
+    it('canVoid() 在允许状态返回 true', () => {
+      expect(createDraftOrder().canVoid()).toBe(true);
+      expect(createApprovedOrder().canVoid()).toBe(true);
+    });
+
+    it('canVoid() 在终态返回 false', () => {
+      const completed = createApprovedOrder();
+      completed.ship([
+        { lineNo: 1, quantity: 100, batchNo: 'B001', warehouseId: 1 },
+        { lineNo: 2, quantity: 50, batchNo: 'B002', warehouseId: 1 },
+      ]);
+      expect(completed.canVoid()).toBe(false);
+      const closed = createDraftOrder();
+      closed.close();
+      expect(closed.canVoid()).toBe(false);
     });
   });
 
@@ -401,6 +472,7 @@ describe('SalesOrderStatus Value Object', () => {
       expect(SalesOrderStatus.approved().toDbCode()).toBe(2);
       expect(SalesOrderStatus.partiallyShipped().toDbCode()).toBe(3);
       expect(SalesOrderStatus.completed().toDbCode()).toBe(4);
+      expect(SalesOrderStatus.voided().toDbCode()).toBe(6);
       expect(SalesOrderStatus.closed().toDbCode()).toBe(9);
     });
 
@@ -410,6 +482,7 @@ describe('SalesOrderStatus Value Object', () => {
       expect(SalesOrderStatus.fromDbCode(2).value).toBe('approved');
       expect(SalesOrderStatus.fromDbCode(3).value).toBe('partially_shipped');
       expect(SalesOrderStatus.fromDbCode(4).value).toBe('completed');
+      expect(SalesOrderStatus.fromDbCode(6).value).toBe('voided');
       expect(SalesOrderStatus.fromDbCode(9).value).toBe('closed');
     });
 
@@ -431,8 +504,20 @@ describe('SalesOrderStatus Value Object', () => {
       expect(SalesOrderStatus.draft().canTransitionTo('approved')).toBe(false);
     });
 
-    it('已完成不可流转', () => {
-      expect(SalesOrderStatus.completed().canTransitionTo('closed')).toBe(false);
+    it('已完成可流转到已关闭（支持作废全链路回滚 T403）', () => {
+      expect(SalesOrderStatus.completed().canTransitionTo('closed')).toBe(true);
+    });
+
+    it('已作废不可流转', () => {
+      expect(SalesOrderStatus.voided().canTransitionTo('closed')).toBe(false);
+      expect(SalesOrderStatus.voided().canTransitionTo('approved')).toBe(false);
+    });
+
+    it('草稿/已提交/已审核/部分出库可流转到已作废', () => {
+      expect(SalesOrderStatus.draft().canTransitionTo('voided')).toBe(true);
+      expect(SalesOrderStatus.submitted().canTransitionTo('voided')).toBe(true);
+      expect(SalesOrderStatus.approved().canTransitionTo('voided')).toBe(true);
+      expect(SalesOrderStatus.partiallyShipped().canTransitionTo('voided')).toBe(true);
     });
 
     it('已关闭不可流转', () => {
@@ -451,6 +536,7 @@ describe('SalesOrderStatus Value Object', () => {
       expect(SalesOrderStatus.approved().label()).toBe('已审核');
       expect(SalesOrderStatus.partiallyShipped().label()).toBe('部分出库');
       expect(SalesOrderStatus.completed().label()).toBe('已完成');
+      expect(SalesOrderStatus.voided().label()).toBe('已作废');
       expect(SalesOrderStatus.closed().label()).toBe('已关闭');
     });
   });

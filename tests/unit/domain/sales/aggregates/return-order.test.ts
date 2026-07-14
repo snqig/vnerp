@@ -397,6 +397,61 @@ describe('ReturnOrder 聚合根', () => {
       expect(approved.canDelete()).toBe(false);
     });
 
+    it('validateAgainstShippedQuantities 退货量 ≤ 已发货量 时通过（T204）', () => {
+      const ret = createPendingReturn();
+      // 物料 1: 已发 10；本次退 3 ≤ 10 ✅
+      // 物料 2: 已发 5；本次退 2 ≤ 5 ✅
+      const shipped = new Map([
+        [1, 10],
+        [2, 5],
+      ]);
+      expect(() => ret.validateAgainstShippedQuantities(shipped)).not.toThrow();
+    });
+
+    it('validateAgainstShippedQuantities 退货量超过已发货量时抛错（T204）', () => {
+      const ret = createPendingReturn();
+      // 物料 1: 已发 2；本次退 3 > 2 ❌
+      const shipped = new Map([
+        [1, 2],
+        [2, 5],
+      ]);
+      expect(() => ret.validateAgainstShippedQuantities(shipped)).toThrow();
+    });
+
+    it('validateAgainstShippedQuantities 扣减已退数量后校验', () => {
+      const ret = createPendingReturn();
+      // 物料 1: 已发 10，已退 8 → 可退 2；本次退 3 > 2 ❌
+      const shipped = new Map([[1, 10]]);
+      const alreadyReturned = new Map([[1, 8]]);
+      expect(() =>
+        ret.validateAgainstShippedQuantities(shipped, alreadyReturned)
+      ).toThrow();
+    });
+
+    it('validateAgainstShippedQuantities 物料不在 Map 中视为 0 抛错', () => {
+      const ret = createPendingReturn();
+      // 空 Map → 所有物料视为已发 0；本次退 > 0 → 抛错
+      const shipped = new Map<number, number>();
+      expect(() => ret.validateAgainstShippedQuantities(shipped)).toThrow();
+    });
+
+    it('validateAgainstShippedQuantities 多物料混合校验', () => {
+      const ret = createPendingReturn();
+      // 物料 1: 已发 10，已退 5 → 可退 5；本次退 3 ≤ 5 ✅
+      // 物料 2: 已发 5，已退 0 → 可退 5；本次退 2 ≤ 5 ✅
+      const shipped = new Map([
+        [1, 10],
+        [2, 5],
+      ]);
+      const alreadyReturned = new Map([
+        [1, 5],
+        [2, 0],
+      ]);
+      expect(() =>
+        ret.validateAgainstShippedQuantities(shipped, alreadyReturned)
+      ).not.toThrow();
+    });
+
     it('isTerminal 在 completed/cancelled 返回 true', () => {
       expect(createPendingReturn().status.isTerminal()).toBe(false);
       expect(createApprovedReturn().status.isTerminal()).toBe(false);

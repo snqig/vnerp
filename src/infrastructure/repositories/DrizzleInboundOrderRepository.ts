@@ -49,7 +49,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
    */
   async findById(id: number): Promise<InboundOrder | null> {
     const order = await drizzleDb.query.invInboundOrders.findFirst({
-      where: and(eq(invInboundOrders.id, id), eq(invInboundOrders.deleted, false)),
+      where: and(eq(invInboundOrders.id, id), eq(invInboundOrders.deleted, 0)),
     });
 
     if (!order) return null;
@@ -102,7 +102,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
     pagination: Pagination,
     filters?: { keyword?: string; startDate?: string; endDate?: string }
   ): Promise<PaginatedResult<InboundOrder>> {
-    const conditions = [eq(invInboundOrders.deleted, false)];
+    const conditions = [eq(invInboundOrders.deleted, 0)];
 
     if (filters?.keyword) {
       const kw = `%${filters.keyword}%`;
@@ -291,7 +291,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
   async softDelete(id: number): Promise<void> {
     await drizzleDb
       .update(invInboundOrders)
-      .set({ deleted: true, updateTime: new Date() })
+      .set({ deleted: 1, updateTime: new Date() })
       .where(eq(invInboundOrders.id, id));
   }
 

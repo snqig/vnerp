@@ -1,5 +1,8 @@
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
-import { PurchaseReturnStatus, PurchaseReturnStatusValue } from '../value-objects/PurchaseReturnStatus';
+import {
+  PurchaseReturnStatus,
+  PurchaseReturnStatusValue,
+} from '../value-objects/PurchaseReturnStatus';
 import { PurchaseReturnLine, PurchaseReturnLineProps } from '../entities/PurchaseReturnLine';
 import {
   PurchaseReturnCreatedEvent,
@@ -245,17 +248,50 @@ export class PurchaseReturn {
     );
   }
 
+  /**
+   * 校验退货数量不得超过累计已入库量（已扣减已退数量）。
+   * 在 approve() 之前由 ApplicationService 调用：传入从 pur_purchase_order_line
+   * 查询得到的 received_qty / returned_qty 聚合数据，由领域层执行业务规则判定。
+   *
+   * 设计原则：保持领域层零框架依赖；数据获取在应用层，规则判定在领域层。
+   */
+  validateAgainstReceivedQuantities(
+    receivedQtyByMaterial: Map<number, number>,
+    alreadyReturnedQtyByMaterial?: Map<number, number>
+  ): void {
+    for (const line of this._lines) {
+      const received = receivedQtyByMaterial.get(line.materialId) ?? 0;
+      const alreadyReturned = alreadyReturnedQtyByMaterial?.get(line.materialId) ?? 0;
+      const available = received - alreadyReturned;
+      if (line.quantity > available) {
+        throw new DomainError(
+          `退货数量超出可退数量：物料「${line.materialName}」(${line.materialCode}) 本次退货 ${line.quantity}，已入库 ${received}，已退货 ${alreadyReturned}，可退 ${available}`
+        );
+      }
+    }
+  }
+
   complete(
     completeBy: number,
-    outboundCallback: (items: Array<{
-      materialId: number;
-      materialCode: string;
-      materialName: string;
-      quantity: number;
-      unit: string;
-      batchNo: string;
-    }>, warehouseId: number, returnId: number, returnNo: string) => OutboundResult,
-    payableCallback: (supplierId: number, refundAmount: number, returnId: number, returnNo: string) => PayableRefundResult
+    outboundCallback: (
+      items: Array<{
+        materialId: number;
+        materialCode: string;
+        materialName: string;
+        quantity: number;
+        unit: string;
+        batchNo: string;
+      }>,
+      warehouseId: number,
+      returnId: number,
+      returnNo: string
+    ) => OutboundResult,
+    payableCallback: (
+      supplierId: number,
+      refundAmount: number,
+      returnId: number,
+      returnNo: string
+    ) => PayableRefundResult
   ): void {
     if (!this._status.canComplete()) {
       throw new DomainError(`当前状态"${this._status.label}"不允许完成`);

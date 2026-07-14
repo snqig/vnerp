@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { authFetch } from '@/lib/auth-fetch';
+import { useState } from 'react';
+import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +10,6 @@ import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
 import {
   Select,
   SelectContent,
@@ -31,193 +29,38 @@ import {
   CheckCircle2,
   Building2,
   ChevronDown,
+  ChevronUp,
+  MoreHorizontal,
 } from 'lucide-react';
-import {
-  type CardData,
-  type PrintSequence,
-  createEmptyData,
-  mapCardDataToApiPayload,
-  mapApiDataToCardData,
-} from './input-card/utils';
-
-interface Customer {
-  id: number;
-  customerCode: string;
-  customerName: string;
-  shortName: string;
-  contactName: string;
-  contactPhone: string;
-  province: string;
-  city: string;
-  district: string;
-  address: string;
-}
+import { useStandardCardForm } from '@/hooks/useStandardCardForm';
+import { type PrintSequence } from './input-card/utils';
 
 // 现代化录入表单组件（不含 MainLayout/Suspense 包装，由父页面统一提供）
 export function InputV2Form() {
   const router = useRouter();
-  const { toast } = useToast();
-  const searchParams = useSearchParams();
-  const editId = searchParams.get('id');
-  const isEditMode = searchParams.get('edit') === 'true';
   const [activeTab, setActiveTab] = useState('basic');
-  const [data, setData] = useState<CardData>(createEmptyData);
+  const [showMoreFields, setShowMoreFields] = useState(false);
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [savedCardId, setSavedCardId] = useState<number | null>(null);
-
-  // 客户列表数据
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [customerSearchTerm, setCustomerSearchTerm] = useState('');
-  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
-
-  // 加载客户列表
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
-
-  // 加载编辑数据
-  useEffect(() => {
-    if (isEditMode && editId) {
-      fetchCardData(parseInt(editId));
-    }
-  }, [isEditMode, editId]);
-
-  const fetchCardData = async (id: number) => {
-    try {
-      const response = await authFetch(`/api/standard-cards?id=${id}`);
-      const result = await response.json();
-      const apiData = Array.isArray(result.data) ? result.data[0] : result.data;
-      if (result.success && apiData) {
-        // 使用 card 模式统一的映射函数，回填全部 78 个字段
-        setData(mapApiDataToCardData(apiData));
-      } else {
-        toast({ title: '加载标准卡数据失败', variant: 'destructive' });
-      }
-    } catch (error) {
-      console.error('加载标准卡数据失败:', error);
-      toast({ title: '加载标准卡数据失败', variant: 'destructive' });
-    }
-  };
-
-  // 点击外部关闭客户下拉列表
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.customer-dropdown-container')) {
-        setShowCustomerDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const fetchCustomers = async () => {
-    try {
-      const response = await authFetch('/api/customers?page=1&pageSize=100');
-      const result = await response.json();
-      if (result.success) {
-        const formattedCustomers: Customer[] = result.data.map((item: any) => ({
-          id: item.id,
-          customerCode: item.customer_code,
-          customerName: item.customer_name,
-          shortName: item.short_name,
-          contactName: item.contact_name,
-          contactPhone: item.contact_phone,
-          province: item.province,
-          city: item.city,
-          district: item.district,
-          address: item.address,
-        }));
-        setCustomers(formattedCustomers);
-      }
-    } catch (error) {
-      console.error('加载客户列表失败:', error);
-    }
-  };
-
-  // 筛选客户
-  const filteredCustomers = customers.filter(
-    (c) =>
-      c.customerName.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
-      c.customerCode.toLowerCase().includes(customerSearchTerm.toLowerCase())
-  );
-
-  // 选择客户
-  const handleSelectCustomer = (customer: Customer) => {
-    updateField('customer', customer.customerName);
-    updateField('customerCode', customer.customerCode);
-    setCustomerSearchTerm('');
-    setShowCustomerDropdown(false);
-  };
-
-  // 保存到数据库
-  const saveToDatabase = async (): Promise<boolean> => {
-    try {
-      setIsSaving(true);
-
-      // 使用 card 模式统一的映射函数，提交全部 78 个字段
-      const saveData = mapCardDataToApiPayload(data, isEditMode, editId || undefined);
-
-      const url = '/api/standard-cards';
-      const method = isEditMode && editId ? 'PUT' : 'POST';
-
-      const response = await authFetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(saveData),
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        toast({ title: result.message || '保存失败', variant: 'destructive' });
-        return false;
-      }
-
-      setSavedCardId(result.data?.id || parseInt(editId || '0'));
-      toast({ title: isEditMode ? '标准卡更新成功！' : '标准卡保存成功！' });
-
-      // 新建成功后切换为编辑模式（保持 V2 页面）
-      if (!isEditMode && result.data?.id) {
-        router.push(`/sample/standard-card?id=${result.data.id}&edit=true&mode=v2`);
-      }
-
-      return true;
-    } catch (error) {
-      console.error('保存失败:', error);
-      toast({ title: '保存失败，请检查网络连接', variant: 'destructive' });
-      return false;
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleSave = async () => {
-    const success = await saveToDatabase();
-    if (success) {
-      // 同时保存到 sessionStorage 用于预览
-      sessionStorage.setItem('standardCardData', JSON.stringify(data));
-    }
-  };
-
-  const handleSaveAndPreview = async () => {
-    const success = await saveToDatabase();
-    if (success && savedCardId) {
-      router.push(`/sample/standard-card/print?id=${savedCardId}`);
-    }
-  };
-
-  const updateField = (field: keyof CardData, value: CardData[keyof CardData]) => {
-    setData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const updateSequence = (index: number, field: keyof PrintSequence, value: string) => {
-    setData((prev) => ({
-      ...prev,
-      sequences: prev.sequences.map((seq, i) => (i === index ? { ...seq, [field]: value } : seq)),
-    }));
-  };
+  const {
+    data,
+    loading,
+    saving,
+    error,
+    savedCardId,
+    customerSearch,
+    setCustomerSearch,
+    showCustomerDropdown,
+    setShowCustomerDropdown,
+    filteredCustomers,
+    isEditMode,
+    editId,
+    updateField,
+    updateSequence,
+    handleToggleMultiValue,
+    handleSelectCustomer,
+    handleSave,
+    handleSaveAndPreview,
+  } = useStandardCardForm({ mode: 'v2' });
 
   return (
     <div className="container mx-auto py-6 max-w-7xl">
@@ -243,13 +86,13 @@ export function InputV2Form() {
               已保存 ID: {savedCardId}
             </Badge>
           )}
-          <Button variant="outline" onClick={handleSave} disabled={isSaving}>
+          <Button variant="outline" onClick={handleSave} disabled={saving}>
             <Save className="h-4 w-4 mr-2" />
-            {isSaving ? (isEditMode ? '更新中...' : '保存中...') : isEditMode ? '更新' : '保存'}
+            {saving ? (isEditMode ? '更新中...' : '保存中...') : isEditMode ? '更新' : '保存'}
           </Button>
-          <Button onClick={handleSaveAndPreview} disabled={isSaving}>
+          <Button onClick={handleSaveAndPreview} disabled={saving}>
             <Printer className="h-4 w-4 mr-2" />
-            {isSaving
+            {saving
               ? isEditMode
                 ? '更新中...'
                 : '保存中...'
@@ -359,7 +202,7 @@ export function InputV2Form() {
                           value={data.customer}
                           onChange={(e) => {
                             updateField('customer', e.target.value);
-                            setCustomerSearchTerm(e.target.value);
+                            setCustomerSearch(e.target.value);
                             setShowCustomerDropdown(true);
                           }}
                           onFocus={() => setShowCustomerDropdown(true)}
@@ -659,6 +502,32 @@ export function InputV2Form() {
                               onChange={(e) => updateSequence(index, 'mesh', e.target.value)}
                             />
                           </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                            <Input
+                              placeholder="菲林编号"
+                              value={seq.linCode}
+                              onChange={(e) => updateSequence(index, 'linCode', e.target.value)}
+                            />
+                            <Input
+                              placeholder="存放位置"
+                              value={seq.storageLocation}
+                              onChange={(e) =>
+                                updateSequence(index, 'storageLocation', e.target.value)
+                              }
+                            />
+                            <Input
+                              placeholder="印版存放"
+                              value={seq.plateStorage}
+                              onChange={(e) =>
+                                updateSequence(index, 'plateStorage', e.target.value)
+                              }
+                            />
+                            <Input
+                              placeholder="印面"
+                              value={seq.printSide}
+                              onChange={(e) => updateSequence(index, 'printSide', e.target.value)}
+                            />
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
@@ -784,6 +653,16 @@ export function InputV2Form() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label>每袋片数</Label>
+                  <Input
+                    value={data.slicePerBag}
+                    onChange={(e) => updateField('slicePerBag', e.target.value)}
+                    placeholder="输入每袋片数"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
                   <Label>每箱片数</Label>
                   <Input
                     value={data.slicePerBox}
@@ -791,6 +670,314 @@ export function InputV2Form() {
                     placeholder="输入每箱片数"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>每扎片数</Label>
+                  <Input
+                    value={data.slicePerBundle}
+                    onChange={(e) => updateField('slicePerBundle', e.target.value)}
+                    placeholder="输入每扎片数"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>包装数量</Label>
+                  <Input
+                    value={data.packingQty}
+                    onChange={(e) => updateField('packingQty', e.target.value)}
+                    placeholder="输入包装数量"
+                  />
+                </div>
+              </div>
+
+              {/* 更多字段（可折叠，保障全字段提交） */}
+              <div className="border rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setShowMoreFields(!showMoreFields)}
+                  className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/50 rounded-lg"
+                >
+                  <span className="flex items-center gap-2">
+                    <MoreHorizontal className="h-4 w-4" />
+                    更多字段（非高频，提交时自动包含）
+                  </span>
+                  {showMoreFields ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </button>
+                {showMoreFields && (
+                  <div className="p-4 border-t space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label>间距</Label>
+                        <Input
+                          value={data.spacing}
+                          onChange={(e) => updateField('spacing', e.target.value)}
+                          placeholder="间距"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>间距值</Label>
+                        <Input
+                          value={data.spacingValue}
+                          onChange={(e) => updateField('spacingValue', e.target.value)}
+                          placeholder="间距值"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>跳距</Label>
+                        <Input
+                          value={data.jumpDistance}
+                          onChange={(e) => updateField('jumpDistance', e.target.value)}
+                          placeholder="跳距"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>跳距2</Label>
+                        <Input
+                          value={data.jumpDistance2}
+                          onChange={(e) => updateField('jumpDistance2', e.target.value)}
+                          placeholder="跳距2"
+                        />
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label>冲压方法</Label>
+                        <Input
+                          value={data.stampingMethod}
+                          onChange={(e) => updateField('stampingMethod', e.target.value)}
+                          placeholder="冲压方法"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>排模方法</Label>
+                        <Input
+                          value={data.layoutMethod}
+                          onChange={(e) => updateField('layoutMethod', e.target.value)}
+                          placeholder="排模方法"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>菲林厂商</Label>
+                        <Input
+                          value={data.filmManufacturer}
+                          onChange={(e) => updateField('filmManufacturer', e.target.value)}
+                          placeholder="菲林厂商"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>菲林编号</Label>
+                        <Input
+                          value={data.filmCode}
+                          onChange={(e) => updateField('filmCode', e.target.value)}
+                          placeholder="菲林编号"
+                        />
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label>背胶类型</Label>
+                        <Input
+                          value={data.adhesiveType}
+                          onChange={(e) => updateField('adhesiveType', e.target.value)}
+                          placeholder="背胶类型"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>背胶厂商</Label>
+                        <Input
+                          value={data.adhesiveManufacturer}
+                          onChange={(e) => updateField('adhesiveManufacturer', e.target.value)}
+                          placeholder="背胶厂商"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>背胶编号</Label>
+                        <Input
+                          value={data.adhesiveCode}
+                          onChange={(e) => updateField('adhesiveCode', e.target.value)}
+                          placeholder="背胶编号"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>虚线刀</Label>
+                        <Select
+                          value={data.dashedKnife ? 'true' : 'false'}
+                          onValueChange={(v) => updateField('dashedKnife', v === 'true')}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="是否加虚线刀" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="false">否</SelectItem>
+                            <SelectItem value="true">是</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label>MYLAR材料</Label>
+                        <Input
+                          value={data.mylarMaterial}
+                          onChange={(e) => updateField('mylarMaterial', e.target.value)}
+                          placeholder="MYLAR材料"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>MYLAR规格</Label>
+                        <Input
+                          value={data.mylarSpecs}
+                          onChange={(e) => updateField('mylarSpecs', e.target.value)}
+                          placeholder="MYLAR规格"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>离型纸种类</Label>
+                        <Input
+                          value={data.releasePaperType}
+                          onChange={(e) => updateField('releasePaperType', e.target.value)}
+                          placeholder="离型纸种类"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>离型纸规格</Label>
+                        <Input
+                          value={data.releasePaperSpecs}
+                          onChange={(e) => updateField('releasePaperSpecs', e.target.value)}
+                          placeholder="离型纸规格"
+                        />
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label>背刀模具</Label>
+                        <Input
+                          value={data.backKnifeMold}
+                          onChange={(e) => updateField('backKnifeMold', e.target.value)}
+                          placeholder="背刀模具"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>腐蚀刀模</Label>
+                        <Input
+                          value={data.etchMold}
+                          onChange={(e) => updateField('etchMold', e.target.value)}
+                          placeholder="腐蚀刀模"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>垫纸材料</Label>
+                        <Input
+                          value={data.paddingMaterial}
+                          onChange={(e) => updateField('paddingMaterial', e.target.value)}
+                          placeholder="垫纸材料"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>打包材料</Label>
+                        <Input
+                          value={data.packingMaterial}
+                          onChange={(e) => updateField('packingMaterial', e.target.value)}
+                          placeholder="打包材料"
+                        />
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label>专色信息</Label>
+                        <Input
+                          value={data.specialColor}
+                          onChange={(e) => updateField('specialColor', e.target.value)}
+                          placeholder="专色信息"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>专色配比</Label>
+                        <Input
+                          value={data.colorFormula}
+                          onChange={(e) => updateField('colorFormula', e.target.value)}
+                          placeholder="专色配比"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>图档路径</Label>
+                        <Input
+                          value={data.filePath}
+                          onChange={(e) => updateField('filePath', e.target.value)}
+                          placeholder="图档路径"
+                        />
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label>制表</Label>
+                        <Input
+                          value={data.creator}
+                          onChange={(e) => updateField('creator', e.target.value)}
+                          placeholder="制表"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>审核</Label>
+                        <Input
+                          value={data.reviewer}
+                          onChange={(e) => updateField('reviewer', e.target.value)}
+                          placeholder="审核"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>厂务</Label>
+                        <Input
+                          value={data.factoryManager}
+                          onChange={(e) => updateField('factoryManager', e.target.value)}
+                          placeholder="厂务"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>品管</Label>
+                        <Input
+                          value={data.qualityManager}
+                          onChange={(e) => updateField('qualityManager', e.target.value)}
+                          placeholder="品管"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                      <div className="space-y-2">
+                        <Label>业务</Label>
+                        <Input
+                          value={data.sales}
+                          onChange={(e) => updateField('sales', e.target.value)}
+                          placeholder="业务"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>核准</Label>
+                        <Input
+                          value={data.approver}
+                          onChange={(e) => updateField('approver', e.target.value)}
+                          placeholder="核准"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>样品信息</Label>
+                        <Input
+                          value={data.sampleInfo}
+                          onChange={(e) => updateField('sampleInfo', e.target.value)}
+                          placeholder="样品信息"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">

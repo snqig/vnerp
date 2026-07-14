@@ -288,6 +288,93 @@ describe('PurchaseReturn 聚合根', () => {
     });
   });
 
+  describe('validateAgainstReceivedQuantities() 退货量校验（T104）', () => {
+    it('退货数量 <= 已入库数量 - 已退数量 时通过', () => {
+      const order = PurchaseReturn.create(makeOrderProps({ id: 1 }));
+      // 已入库 20，已退 5 → 可退 15；本次退货 10 → 通过
+      const received = new Map([[1, 20]]);
+      const returned = new Map([[1, 5]]);
+      expect(() => order.validateAgainstReceivedQuantities(received, returned)).not.toThrow();
+    });
+
+    it('退货数量超过可退数量时抛出 DomainError', () => {
+      const order = PurchaseReturn.create(makeOrderProps({ id: 1 }));
+      // 已入库 20，已退 5 → 可退 15；本次退货 10 + 已退 5 = 15 ✅；本次 16 → 16 > 15 ❌
+      const order2 = PurchaseReturn.create(
+        makeOrderProps({ id: 2, lines: [makeLineProps({ quantity: 16 })] })
+      );
+      const received = new Map([[1, 20]]);
+      const returned = new Map([[1, 5]]);
+      expect(() => order2.validateAgainstReceivedQuantities(received, returned)).toThrow(DomainError);
+    });
+
+    it('未提供已退数量 Map 时仅校验退货量 ≤ 已入库量', () => {
+      const order = PurchaseReturn.create(makeOrderProps({ id: 1 }));
+      // 已入库 20；本次退货 10 ≤ 20 → 通过
+      const received = new Map([[1, 20]]);
+      expect(() => order.validateAgainstReceivedQuantities(received)).not.toThrow();
+
+      // 已入库 5；本次退货 10 > 5 → 抛错
+      const order2 = PurchaseReturn.create(
+        makeOrderProps({ id: 2, lines: [makeLineProps({ quantity: 10 })] })
+      );
+      const received2 = new Map([[1, 5]]);
+      expect(() => order2.validateAgainstReceivedQuantities(received2)).toThrow(DomainError);
+    });
+
+    it('物料不在已入库 Map 中时视为 0，抛出 DomainError', () => {
+      const order = PurchaseReturn.create(makeOrderProps({ id: 1 }));
+      // 物料 1 不在 Map 中 → 视为已入库 0；本次退货 10 > 0 → 抛错
+      const received = new Map<number, number>(); // 空 Map
+      expect(() => order.validateAgainstReceivedQuantities(received)).toThrow(DomainError);
+    });
+
+    it('多物料行混合校验', () => {
+      const order = PurchaseReturn.create(
+        makeOrderProps({
+          id: 1,
+          lines: [
+            makeLineProps({ lineNo: 1, materialId: 1, quantity: 5 }),
+            makeLineProps({ lineNo: 2, materialId: 2, quantity: 3 }),
+          ],
+        })
+      );
+      // 物料 1: 已入库 10，已退 3 → 可退 7；本次 5 ≤ 7 ✅
+      // 物料 2: 已入库 5，已退 0 → 可退 5；本次 3 ≤ 5 ✅
+      const received = new Map([
+        [1, 10],
+        [2, 5],
+      ]);
+      const returned = new Map([
+        [1, 3],
+        [2, 0],
+      ]);
+      expect(() => order.validateAgainstReceivedQuantities(received, returned)).not.toThrow();
+    });
+
+    it('多物料行其中一行超量时抛错', () => {
+      const order = PurchaseReturn.create(
+        makeOrderProps({
+          id: 1,
+          lines: [
+            makeLineProps({ lineNo: 1, materialId: 1, quantity: 5 }),
+            makeLineProps({ lineNo: 2, materialId: 2, quantity: 8 }),
+          ],
+        })
+      );
+      // 物料 2: 已入库 5，已退 0 → 可退 5；本次 8 > 5 ❌
+      const received = new Map([
+        [1, 10],
+        [2, 5],
+      ]);
+      const returned = new Map([
+        [1, 3],
+        [2, 0],
+      ]);
+      expect(() => order.validateAgainstReceivedQuantities(received, returned)).toThrow(DomainError);
+    });
+  });
+
   describe('领域事件管理', () => {
     it('getDomainEvents 返回副本（不可变）', () => {
       const order = PurchaseReturn.create(makeOrderProps({ id: 1 }));

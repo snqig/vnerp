@@ -7,8 +7,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Package, DollarSign, Factory, ShoppingCart, AlertTriangle } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import type { ExportColumn } from '@/lib/global-export-service';
 
@@ -49,11 +57,38 @@ interface DashboardData {
   };
 }
 
+interface SupplierStat {
+  rank: number;
+  supplierId: number;
+  supplierName: string;
+  supplierCode: string;
+  orderCount: number;
+  receivedCount: number;
+  totalAmount: number;
+  totalQuantity: number;
+  proportion: number;
+}
+
+interface CustomerStat {
+  rank: number;
+  customerId: number;
+  customerName: string;
+  customerCode: string;
+  orderCount: number;
+  completedCount: number;
+  totalAmount: number;
+  totalWithTax: number;
+  proportion: number;
+}
+
 export default function ReportsPage() {
-  // 翻译钩子
   const tc = useTranslations('Common');
+  const t = useTranslations('Reports');
+  const locale = useLocale();
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [supplierStats, setSupplierStats] = useState<SupplierStat[]>([]);
+  const [customerStats, setCustomerStats] = useState<CustomerStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30');
 
@@ -75,8 +110,36 @@ export default function ReportsPage() {
     }
   };
 
+  const fetchSupplierStats = async () => {
+    try {
+      const response = await authFetch(`/api/reports/purchase-supplier?period=${period}`);
+      const result = await response.json();
+      if (result.success) {
+        setSupplierStats(result.data.list);
+      }
+    } catch {}
+  };
+
+  const fetchCustomerStats = async () => {
+    try {
+      const response = await authFetch(`/api/reports/sales-customer?period=${period}`);
+      const result = await response.json();
+      if (result.success) {
+        setCustomerStats(result.data.list);
+      }
+    } catch {}
+  };
+
+  const handleTabChange = (value: string) => {
+    if (value === 'purchaseSupplier' && supplierStats.length === 0) {
+      fetchSupplierStats();
+    } else if (value === 'salesCustomer' && customerStats.length === 0) {
+      fetchCustomerStats();
+    }
+  };
+
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('zh-CN', {
+    return new Intl.NumberFormat(locale === 'zh-CN' ? 'zh-CN' : 'en-US', {
       style: 'currency',
       currency: 'CNY',
       minimumFractionDigits: 0,
@@ -85,14 +148,14 @@ export default function ReportsPage() {
   };
 
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('zh-CN').format(num);
+    return new Intl.NumberFormat(locale === 'zh-CN' ? 'zh-CN' : 'en-US').format(num);
   };
 
   if (loading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">报表中心</h1>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(8)].map((_, i) => (
@@ -109,8 +172,8 @@ export default function ReportsPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">报表中心</h1>
-          <p className="text-muted-foreground mt-1">{tc('text_px9nzj')}</p>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -118,141 +181,142 @@ export default function ReportsPage() {
             size="sm"
             onClick={() => setPeriod('7')}
           >
-            近7天
+            {t('last7Days')}
           </Button>
           <Button
             variant={period === '30' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setPeriod('30')}
           >
-            近30天
+            {t('last30Days')}
           </Button>
           <Button
             variant={period === '90' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setPeriod('90')}
           >
-            近90天
+            {t('last90Days')}
           </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs defaultValue="overview" className="space-y-6" onValueChange={handleTabChange}>
         <TabsList>
-          <TabsTrigger value="overview">{tc('text_h4h9')}</TabsTrigger>
-          <TabsTrigger value="orders">{tc('text_hylwx3')}</TabsTrigger>
-          <TabsTrigger value="inventory">{tc('text_cb844p')}</TabsTrigger>
-          <TabsTrigger value="costs">生产成本</TabsTrigger>
+          <TabsTrigger value="overview">{t('overview')}</TabsTrigger>
+          <TabsTrigger value="orders">{t('orders')}</TabsTrigger>
+          <TabsTrigger value="inventory">{t('inventory')}</TabsTrigger>
+          <TabsTrigger value="costs">{t('costs')}</TabsTrigger>
+          <TabsTrigger value="purchaseSupplier">{t('purchaseSupplier')}</TabsTrigger>
+          <TabsTrigger value="salesCustomer">{t('salesCustomer')}</TabsTrigger>
         </TabsList>
 
         <div className="flex justify-end mb-2">
           <GlobalExportToolbar
-            filename="运营报表总览"
-            title="企业运营核心指标报表"
-            subtitle={`统计周期: ${data?.period || '近30天'}`}
+            filename={t('exportFilename')}
+            title={t('exportTitle')}
+            subtitle={`${t('exportSubtitle')}: ${data?.period || t('last30Days')}`}
             columns={
               [
-                { key: 'category', label: '指标分类', width: 15 },
-                { key: 'metric', label: '指标名称', width: 20 },
-                { key: 'value', label: '数值', width: 15 },
-                { key: 'unit', label: '单位', width: 8 },
-                { key: 'trend', label: '趋势', width: 10 },
+                { key: 'category', label: t('colCategory'), width: 15 },
+                { key: 'metric', label: t('colMetric'), width: 20 },
+                { key: 'value', label: t('colValue'), width: 15 },
+                { key: 'unit', label: t('colUnit'), width: 8 },
+                { key: 'trend', label: t('colTrend'), width: 10 },
               ] as ExportColumn[]
             }
             data={
               data
                 ? [
                     {
-                      category: '销售订单',
-                      metric: '总订单数',
+                      category: t('catSalesOrder'),
+                      metric: t('metricTotalOrders'),
                       value: data.orderMetrics.totalOrders,
-                      unit: '个',
+                      unit: t('unitPiece'),
                       trend: '',
                     },
                     {
-                      category: '销售订单',
-                      metric: '已完成数',
+                      category: t('catSalesOrder'),
+                      metric: t('metricCompletedOrders'),
                       value: data.orderMetrics.completedOrders,
-                      unit: '个',
+                      unit: t('unitPiece'),
                       trend: '',
                     },
                     {
-                      category: '销售订单',
-                      metric: '总金额',
+                      category: t('catSalesOrder'),
+                      metric: t('metricTotalAmount'),
                       value: data.orderMetrics.totalAmount,
-                      unit: '元',
+                      unit: t('unitYuan'),
                       trend: '',
                     },
                     {
-                      category: '销售订单',
-                      metric: '完成率',
+                      category: t('catSalesOrder'),
+                      metric: t('metricCompletionRate'),
                       value: `${data.orderMetrics.completionRate.toFixed(1)}%`,
-                      unit: '%',
+                      unit: t('unitPercent'),
                       trend: '',
                     },
                     {
-                      category: '生产',
-                      metric: '工单总数',
+                      category: t('catProduction'),
+                      metric: t('metricTotalWorkOrders'),
                       value: data.productionMetrics.totalWorkOrders,
-                      unit: '个',
+                      unit: t('unitPiece'),
                       trend: '',
                     },
                     {
-                      category: '生产',
-                      metric: '完成数',
+                      category: t('catProduction'),
+                      metric: t('metricCompletedWorkOrders'),
                       value: data.productionMetrics.completedWorkOrders,
-                      unit: '个',
+                      unit: t('unitPiece'),
                       trend: '',
                     },
                     {
-                      category: '生产',
-                      metric: '在制数',
+                      category: t('catProduction'),
+                      metric: t('metricInProgressWorkOrders'),
                       value: data.productionMetrics.inProgressWorkOrders,
-                      unit: '个',
+                      unit: t('unitPiece'),
                       trend: '',
                     },
                     {
-                      category: '库存',
-                      metric: '库存预警',
+                      category: t('catInventory'),
+                      metric: t('metricLowStockAlert'),
                       value: data.inventoryMetrics?.lowStockCount || 0,
-                      unit: '个',
+                      unit: t('unitPiece'),
                       trend: '',
                     },
                     {
-                      category: '采购',
-                      metric: '采购总额',
+                      category: t('catPurchase'),
+                      metric: t('metricTotalPurchaseAmount'),
                       value: data.purchaseMetrics?.totalPurchaseAmount || 0,
-                      unit: '元',
+                      unit: t('unitYuan'),
                       trend: '',
                     },
                     {
-                      category: '财务',
-                      metric: '应收总额',
+                      category: t('catFinance'),
+                      metric: t('metricPendingReceivable'),
                       value: data.financeMetrics?.pendingReceivable || 0,
-                      unit: '元',
+                      unit: t('unitYuan'),
                       trend: '',
                     },
                     {
-                      category: '财务',
-                      metric: '应付总额',
+                      category: t('catFinance'),
+                      metric: t('metricPendingPayable'),
                       value: data.financeMetrics?.pendingPayable || 0,
-                      unit: '元',
+                      unit: t('unitYuan'),
                       trend: '',
                     },
                   ]
                 : []
             }
             landscape={true}
-            footer="本报表由 ERP 系统自动生成。"
+            footer={t('exportFooter')}
           />
         </div>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* 核心指标卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">销售订单</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('cardSalesOrder')}</CardTitle>
                 <ShoppingCart className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -260,11 +324,11 @@ export default function ReportsPage() {
                   {formatNumber(data?.orderMetrics.totalOrders || 0)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  完成率
+                  {t('labelCompletionRate')}
                   {data?.orderMetrics.completionRate || 0}%
                 </p>
                 <div className="mt-2 text-sm text-muted-foreground">
-                  {tc('text_m2uha')}
+                  {t('labelOrderAmount')}
                   {formatCurrency(data?.orderMetrics.totalAmount || 0)}
                 </div>
               </CardContent>
@@ -272,7 +336,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">生产工单</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('cardProductionOrder')}</CardTitle>
                 <Factory className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -280,11 +344,11 @@ export default function ReportsPage() {
                   {formatNumber(data?.productionMetrics.totalWorkOrders || 0)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  进行中
+                  {t('labelInProgress')}
                   {data?.productionMetrics.inProgressWorkOrders || 0}
                 </p>
                 <div className="mt-2 text-sm text-muted-foreground">
-                  完成
+                  {t('labelCompleted')}
                   {formatNumber(data?.productionMetrics.completedWorkOrders || 0)}
                 </div>
               </CardContent>
@@ -292,7 +356,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{tc('text_cbczlh')}</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('cardInventory')}</CardTitle>
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -303,13 +367,13 @@ export default function ReportsPage() {
                   {data?.inventoryMetrics.zeroStockCount ? (
                     <Badge variant="destructive" className="text-xs">
                       <AlertTriangle className="h-3 w-3 mr-1" />
-                      缺货
+                      {t('labelOutOfStock')}
                       {data.inventoryMetrics.zeroStockCount}
                     </Badge>
                   ) : null}
                   {data?.inventoryMetrics.lowStockCount ? (
                     <Badge variant="outline" className="text-xs text-orange-500 border-orange-500">
-                      {tc('text_c2rcj')}
+                      {t('labelLowStock')}
                       {data.inventoryMetrics.lowStockCount}
                     </Badge>
                   ) : null}
@@ -319,36 +383,32 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{tc('text_rf80cx')}</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('cardFinance')}</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
                   {formatCurrency(data?.financeMetrics.pendingReceivable || 0)}
                 </div>
-                <p className="text-xs text-muted-foreground">{tc('receivable')}</p>
+                <p className="text-xs text-muted-foreground">{t('labelReceivable')}</p>
                 <div className="mt-2 text-sm text-red-500">
-                  {tc('text_e84c6')}
+                  {t('labelPayable')}
                   {formatCurrency(data?.financeMetrics.pendingPayable || 0)}
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* 详细数据 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>订单趋势</CardTitle>
-                <CardDescription>
-                  近{period}
-                  {tc('text_whcsy8')}
-                </CardDescription>
+                <CardTitle>{t('orderTrendTitle')}</CardTitle>
+                <CardDescription>{t('orderTrendDesc', { period })}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">总订单数</span>
+                    <span className="text-sm">{t('labelTotalOrders')}</span>
                     <span className="font-medium">
                       {formatNumber(data?.orderMetrics.totalOrders || 0)}
                     </span>
@@ -360,19 +420,19 @@ export default function ReportsPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">待处理</span>
+                    <span className="text-sm">{t('labelPending')}</span>
                     <span className="font-medium text-orange-500">
                       {formatNumber(data?.orderMetrics.pendingOrders || 0)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">订单金额</span>
+                    <span className="text-sm">{t('labelOrderAmount')}</span>
                     <span className="font-medium">
                       {formatCurrency(data?.orderMetrics.totalAmount || 0)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">{tc('text_byr6k0')}</span>
+                    <span className="text-sm">{t('labelCompletedAmount')}</span>
                     <span className="font-medium text-green-600">
                       {formatCurrency(data?.orderMetrics.completedAmount || 0)}
                     </span>
@@ -383,28 +443,25 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>{tc('text_f40ln7')}</CardTitle>
-                <CardDescription>
-                  近{period}
-                  {tc('text_97c523')}
-                </CardDescription>
+                <CardTitle>{t('productionTitle')}</CardTitle>
+                <CardDescription>{t('productionDesc', { period })}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">计划数量</span>
+                    <span className="text-sm">{t('labelPlanQty')}</span>
                     <span className="font-medium">
                       {formatNumber(data?.productionMetrics.totalPlanQty || 0)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">完成数量</span>
+                    <span className="text-sm">{t('labelCompletedQty')}</span>
                     <span className="font-medium text-green-600">
                       {formatNumber(data?.productionMetrics.totalCompletedQty || 0)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">完成率</span>
+                    <span className="text-sm">{t('labelCompletionRate')}</span>
                     <span className="font-medium">
                       {data?.productionMetrics.completionRate || 0}%
                     </span>
@@ -424,14 +481,13 @@ export default function ReportsPage() {
         <TabsContent value="orders" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>订单交付率报表</CardTitle>
-              <CardDescription>{tc('text_zf9o8i')}</CardDescription>
+              <CardTitle>{t('deliveryRateTitle')}</CardTitle>
+              <CardDescription>{t('deliveryRateDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-sm text-muted-foreground">
-                请访问
-                <code>/api/reports/delivery-rate?groupBy=month</code>
-                {tc('text_q2ngf7')}
+                {t('deliveryRateHint')}
+                <code className="ml-1">/api/reports/delivery-rate?groupBy=month</code>
               </div>
             </CardContent>
           </Card>
@@ -440,14 +496,13 @@ export default function ReportsPage() {
         <TabsContent value="inventory" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>库存周转率报表</CardTitle>
-              <CardDescription>{tc('text_hmg0ih')}</CardDescription>
+              <CardTitle>{t('inventoryTurnoverTitle')}</CardTitle>
+              <CardDescription>{t('inventoryTurnoverDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-sm text-muted-foreground">
-                请访问
-                <code>/api/reports/inventory-turnover?groupBy=category</code>
-                {tc('text_q2ngf7')}
+                {t('deliveryRateHint')}
+                <code className="ml-1">/api/reports/inventory-turnover?groupBy=category</code>
               </div>
             </CardContent>
           </Card>
@@ -456,15 +511,108 @@ export default function ReportsPage() {
         <TabsContent value="costs" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>生产成本汇总报表</CardTitle>
-              <CardDescription>{tc('text_hh5jvg')}</CardDescription>
+              <CardTitle>{t('productionCostTitle')}</CardTitle>
+              <CardDescription>{t('productionCostDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-sm text-muted-foreground">
-                请访问
-                <code>/api/reports/production-cost?groupBy=workshop</code>
-                {tc('text_q2ngf7')}
+                {t('deliveryRateHint')}
+                <code className="ml-1">/api/reports/production-cost?groupBy=workshop</code>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="purchaseSupplier" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('purchaseSupplierTitle')}</CardTitle>
+              <CardDescription>{t('purchaseSupplierDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {supplierStats.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-16">{t('rank')}</TableHead>
+                      <TableHead>{t('supplierName')}</TableHead>
+                      <TableHead>{t('supplierCode')}</TableHead>
+                      <TableHead className="text-right">{t('orderCount')}</TableHead>
+                      <TableHead className="text-right">{t('purchaseAmount')}</TableHead>
+                      <TableHead className="text-right">{t('purchaseQty')}</TableHead>
+                      <TableHead className="text-right">{t('unitPercent')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {supplierStats.map((stat) => (
+                      <TableRow key={stat.supplierId || stat.supplierName}>
+                        <TableCell className="font-mono">{stat.rank}</TableCell>
+                        <TableCell className="font-medium">{stat.supplierName}</TableCell>
+                        <TableCell className="font-mono text-muted-foreground">
+                          {stat.supplierCode || '-'}
+                        </TableCell>
+                        <TableCell className="text-right">{stat.orderCount}</TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(stat.totalAmount)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatNumber(stat.totalQuantity)}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {stat.proportion}%
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-sm text-muted-foreground">{tc('noData')}</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="salesCustomer" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('salesCustomerTitle')}</CardTitle>
+              <CardDescription>{t('salesCustomerDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {customerStats.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-16">{t('rank')}</TableHead>
+                      <TableHead>{t('customerName')}</TableHead>
+                      <TableHead>{t('customerCode')}</TableHead>
+                      <TableHead className="text-right">{t('orderCount')}</TableHead>
+                      <TableHead className="text-right">{t('salesAmount')}</TableHead>
+                      <TableHead className="text-right">{t('unitPercent')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {customerStats.map((stat) => (
+                      <TableRow key={stat.customerId || stat.customerName}>
+                        <TableCell className="font-mono">{stat.rank}</TableCell>
+                        <TableCell className="font-medium">{stat.customerName}</TableCell>
+                        <TableCell className="font-mono text-muted-foreground">
+                          {stat.customerCode || '-'}
+                        </TableCell>
+                        <TableCell className="text-right">{stat.orderCount}</TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(stat.totalAmount)}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {stat.proportion}%
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-sm text-muted-foreground">{tc('noData')}</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

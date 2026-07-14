@@ -13,6 +13,7 @@ export const GET = withPermission(
     const status = searchParams.get('status');
     const startDate = searchParams.get('startDate') || '';
     const endDate = searchParams.get('endDate') || '';
+    const sourceNo = searchParams.get('sourceNo') || '';
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
@@ -23,6 +24,7 @@ export const GET = withPermission(
       status: status ? parseInt(status) : undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
+      sourceNo: sourceNo || undefined,
     });
 
     return paginatedResponse(result.data, result.pagination);

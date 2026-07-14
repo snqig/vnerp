@@ -41,11 +41,51 @@ export class ReturnOrderApplicationService {
 
   async approveReturn(id: number, approveBy: number): Promise<{ status: number }> {
     const ret = await this.getReturnById(id);
+
+    // T204: 审核前校验退货数量不得超过累计已发货量
+    await this.validateReturnQuantitiesAgainstShipped(ret);
+
     ret.approve(approveBy);
 
     await this.returnRepo.updateApproval(id, ret.status.value, ret.approveBy!, ret.approveTime!);
     await this.persistAndPublishEvents('ReturnOrder', id, ret);
     return { status: ret.status.value };
+  }
+
+  /**
+   * 从 sal_order_detail 拉取 delivered_qty 聚合数据，
+   * 调用聚合根的领域校验方法 validateAgainstShippedQuantities。
+   *
+   * 数据获取在应用层，规则判定在领域层，保持 DDD 分层规范。
+   * 与 PurchaseReturnApplicationService.validateReturnQuantitiesAgainstReceived 对称（T204 复用 T104 模板）。
+   *
+   * 注：sal_order_detail 当前未维护 returned_qty 列，已退数量暂以 0 计；
+   * 后续若新增 returned_qty 列，可在此处补充 SUM 查询并传入 alreadyReturned map。
+   */
+  private async validateReturnQuantitiesAgainstShipped(ret: ReturnOrder): Promise<void> {
+    interface LineQtyRow {
+      material_id: number;
+      delivered_qty: number | string | null;
+    }
+    const rows = await query<LineQtyRow>(
+      'SELECT material_id, delivered_qty FROM sal_order_detail WHERE order_id = ?',
+      [ret.orderId]
+    );
+
+    if (!rows || rows.length === 0) {
+      // 销售单无明细行：所有退货均不合法
+      const shippedMap = new Map<number, number>();
+      ret.validateAgainstShippedQuantities(shippedMap);
+      return;
+    }
+
+    const shippedMap = new Map<number, number>();
+    for (const row of rows) {
+      const mid = Number(row.material_id);
+      // 同一物料在多行的情况：累加 delivered_qty
+      shippedMap.set(mid, (shippedMap.get(mid) ?? 0) + Number(row.delivered_qty || 0));
+    }
+    ret.validateAgainstShippedQuantities(shippedMap);
   }
 
   async completeReturn(
@@ -173,11 +213,12 @@ export class ReturnOrderApplicationService {
       sourceNo: ret.returnNo,
       customerId: ret.customerId,
       customerName: ret.customerName,
-      amount: ret.totalAmount,
+      // T305: 红字应收使用负数金额，冲减客户应收余额
+      amount: -ret.totalAmount,
       remark: `退货红字应收：${ret.returnNo}`,
     };
 
-    const receivable = Receivable.create(receivableProps);
+    const receivable = Receivable.createRedLetter(receivableProps);
     const receivableId = await this.receivableRepo.save(receivable);
     await this.persistAndPublishEvents('Receivable', receivableId, receivable);
 

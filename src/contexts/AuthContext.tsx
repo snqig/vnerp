@@ -298,6 +298,9 @@ export function AuthProvider({
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+      // React StrictMode 双调用：cleanup 重置标记，使第二次 invoke 能重新初始化。
+      // 生产环境 cleanup 仅在卸载时执行，effect 不会再运行，无副作用。
+      authChecked.current = false;
     };
   }, [fetchMenus]);
 

@@ -116,9 +116,11 @@ export function proxy(request: NextRequest) {
     ].some((p) => pathname.startsWith(p));
 
     if (!isPublicApi) {
-      // 所有非公开 API 必须携带 access_token cookie
+      // 非公开 API 需携带 access_token cookie 或 Authorization header（兼容 localStorage 与 cookie 两种认证模式）
       const apiToken = request.cookies.get('access_token')?.value;
-      if (!apiToken) {
+      const authHeader = request.headers.get('authorization');
+      const hasBearerToken = authHeader?.startsWith('Bearer ') && authHeader.length > 7;
+      if (!apiToken && !hasBearerToken) {
         return NextResponse.json(
           { success: false, message: 'Authentication required' },
           { status: 401 }

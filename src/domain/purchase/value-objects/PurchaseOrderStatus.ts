@@ -6,7 +6,8 @@ export type PurchaseStatus =
   | 'approved'
   | 'partially_received'
   | 'completed'
-  | 'closed';
+  | 'closed'
+  | 'voided';
 
 export class PurchaseOrderStatus {
   private constructor(public readonly value: PurchaseStatus) {}
@@ -29,6 +30,9 @@ export class PurchaseOrderStatus {
   static closed(): PurchaseOrderStatus {
     return new PurchaseOrderStatus('closed');
   }
+  static voided(): PurchaseOrderStatus {
+    return new PurchaseOrderStatus('voided');
+  }
 
   static from(value: string): PurchaseOrderStatus {
     const validStatuses: PurchaseStatus[] = [
@@ -38,6 +42,7 @@ export class PurchaseOrderStatus {
       'partially_received',
       'completed',
       'closed',
+      'voided',
     ];
     if (!validStatuses.includes(value as PurchaseStatus)) {
       throw new DomainError(`无效的采购单状态: ${value}`);
@@ -53,6 +58,7 @@ export class PurchaseOrderStatus {
       40: 'partially_received',
       50: 'completed',
       90: 'closed',
+      99: 'voided',
     };
     const status = map[code];
     if (!status) {
@@ -69,26 +75,29 @@ export class PurchaseOrderStatus {
       partially_received: 40,
       completed: 50,
       closed: 90,
+      voided: 99,
     };
     return map[this.value];
   }
 
   private static transitions: Record<PurchaseStatus, PurchaseStatus[]> = {
-    draft: ['submitted', 'closed'],
-    submitted: ['approved', 'closed'],
-    approved: ['partially_received', 'completed', 'closed'],
-    partially_received: ['completed', 'closed'],
-    completed: [],
+    draft: ['submitted', 'closed', 'voided'],
+    submitted: ['approved', 'closed', 'voided'],
+    approved: ['partially_received', 'completed', 'closed', 'voided'],
+    partially_received: ['completed', 'closed', 'voided'],
+    completed: ['closed'],
     closed: [],
+    voided: [],
   };
 
   private static operations: Record<PurchaseStatus, string[]> = {
-    draft: ['edit', 'delete', 'submit'],
-    submitted: ['approve', 'close'],
-    approved: ['receive', 'close'],
-    partially_received: ['receive', 'close'],
-    completed: ['view'],
+    draft: ['edit', 'delete', 'submit', 'void'],
+    submitted: ['approve', 'close', 'void'],
+    approved: ['receive', 'close', 'void'],
+    partially_received: ['receive', 'close', 'void'],
+    completed: ['view', 'close'],
     closed: ['view'],
+    voided: ['view'],
   };
 
   canTransitionTo(target: PurchaseStatus): boolean {
@@ -120,6 +129,10 @@ export class PurchaseOrderStatus {
     return PurchaseOrderStatus.operations[this.value].includes('receive');
   }
 
+  canVoid(): boolean {
+    return PurchaseOrderStatus.operations[this.value].includes('void');
+  }
+
   label(): string {
     const labels: Record<PurchaseStatus, string> = {
       draft: '草稿',
@@ -128,6 +141,7 @@ export class PurchaseOrderStatus {
       partially_received: '部分入库',
       completed: '已完成',
       closed: '已关闭',
+      voided: '已作废',
     };
     return labels[this.value];
   }

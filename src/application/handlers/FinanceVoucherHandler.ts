@@ -32,7 +32,22 @@ export class FinanceVoucherHandler implements EventHandler<FinanceEvent> {
 
     if (totalAmount <= 0 || !inboundNo) return;
 
+    let created = false;
     await transaction(async (conn) => {
+      // 幂等校验：同一 source_no 仅生成一条应付单，避免重复审核导致重复记账（T301）
+      const [existing]: Loose = await conn.execute(
+        'SELECT id FROM fin_payable WHERE source_no = ? AND deleted = 0 LIMIT 1',
+        [inboundNo]
+      );
+      if (existing && existing.length > 0) {
+        secureLog('info', 'Payable already exists for source, skip', {
+          inboundNo,
+          sourceType,
+          existingId: existing[0].id,
+        });
+        return;
+      }
+
       const payableNo = 'AP' + Date.now();
       await conn.execute(
         `INSERT INTO fin_payable
@@ -40,13 +55,16 @@ export class FinanceVoucherHandler implements EventHandler<FinanceEvent> {
          VALUES (?, ?, ?, ?, ?, 0, ?, 1, DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, NOW())`,
         [payableNo, supplierId || null, sourceType, inboundNo, totalAmount, totalAmount, remark]
       );
+      created = true;
     });
 
-    secureLog('info', 'Payable created', {
-      inboundNo,
-      totalAmount,
-      supplierId,
-      sourceType,
-    });
+    if (created) {
+      secureLog('info', 'Payable created', {
+        inboundNo,
+        totalAmount,
+        supplierId,
+        sourceType,
+      });
+    }
   }
 }

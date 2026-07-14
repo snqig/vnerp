@@ -102,7 +102,7 @@ export class PurchaseOrder {
       totalQuantity,
       taxAmount,
       grandTotal,
-      props.overReceiptTolerance || 0,
+      props.overReceiptTolerance ?? 5,
       props.paymentTerms || '',
       props.deliveryAddress || '',
       props.remark || '',
@@ -319,12 +319,41 @@ export class PurchaseOrder {
     );
   }
 
+  void(): void {
+    if (!this._status.canVoid()) {
+      throw new DomainError(`当前状态"${this._status.label()}"不允许作废`);
+    }
+    this._status = this._status.transitionTo('voided');
+    this._domainEvents.push(
+      new PurchaseOrderClosedEvent({
+        orderId: this.id!,
+        orderNo: this.orderNo,
+      })
+    );
+  }
+
+  closeLine(lineNo: number): void {
+    const line = this._lines.find((l) => l.lineNo === lineNo);
+    if (!line) {
+      throw new DomainError(`行号${lineNo}不存在`);
+    }
+    line.close();
+
+    if (this._lines.every((l) => l.isClosed || l.isFullyReceived)) {
+      this._status = this._status.transitionTo('completed');
+    }
+  }
+
   canEdit(): boolean {
     return this._status.canEdit();
   }
 
   canDelete(): boolean {
     return this._status.canDelete();
+  }
+
+  canVoid(): boolean {
+    return this._status.canVoid();
   }
 
   getDomainEvents(): DomainEvent[] {
