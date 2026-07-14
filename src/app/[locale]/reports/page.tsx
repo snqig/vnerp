@@ -19,6 +19,7 @@ import { Package, DollarSign, Factory, ShoppingCart, AlertTriangle } from 'lucid
 import { useTranslations, useLocale } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import type { ExportColumn } from '@/lib/global-export-service';
+import PrepressReportsContent from '@/components/reports/PrepressReportsContent';
 
 interface DashboardData {
   period: string;
@@ -208,6 +209,7 @@ export default function ReportsPage() {
           <TabsTrigger value="costs">{t('costs')}</TabsTrigger>
           <TabsTrigger value="purchaseSupplier">{t('purchaseSupplier')}</TabsTrigger>
           <TabsTrigger value="salesCustomer">{t('salesCustomer')}</TabsTrigger>
+          <TabsTrigger value="prepress">{t('prepress')}</TabsTrigger>
         </TabsList>
 
         <div className="flex justify-end mb-2">
@@ -615,6 +617,9 @@ export default function ReportsPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="prepress" className="space-y-4">
+          <PrepressReportsContent />
         </TabsContent>
       </Tabs>
     </div>
