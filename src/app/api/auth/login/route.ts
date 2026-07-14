@@ -189,7 +189,17 @@ export async function POST(request: NextRequest) {
     }
 
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true' || process.env.DEMO_MODE === 'true') {
-      logger.branch(ctx, '演示模式', '跳过密码验证', false);
+      if (process.env.VERCEL) {
+        logger.branch(ctx, '演示模式', 'Vercel预览环境-跳过密码验证', false);
+      } else if (process.env.NODE_ENV !== 'production') {
+        logger.branch(ctx, '演示模式', '本地开发环境-跳过密码验证', false);
+      } else {
+        logger.branch(ctx, '演示模式', '生产环境禁止演示模式', true);
+        return NextResponse.json(
+          { code: 403, msg: 'Demo mode is not allowed in production' },
+          { status: 403 }
+        );
+      }
     } else {
       const isPasswordValid = await verifyPassword(password, user.password);
       if (!isPasswordValid) {

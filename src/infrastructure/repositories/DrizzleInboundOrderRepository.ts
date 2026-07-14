@@ -5,18 +5,18 @@
  * 迁移到 Drizzle 查询构建器，验证迁移流程。
  *
  * 5 个核心查询对应的 Drizzle 构建器写法：
- *   1. findById            -> drizzleDb.query.invInboundOrders.findFirst + inArray items
- *   2. findByStatus        -> drizzleDb.select().from().where(and(...)) + count + orderBy + limit
- *   3. save                -> drizzleDb.insert(values) + batch insert items (transaction)
- *   4. updateStatus        -> drizzleDb.update().set().where(and(eq, eq)) 条件乐观锁
- *   5. softDelete          -> drizzleDb.update().set({deleted:true}).where(eq)
+ *   1. findById            -> getDrizzleDb().query.invInboundOrders.findFirst + inArray items
+ *   2. findByStatus        -> getDrizzleDb().select().from().where(and(...)) + count + orderBy + limit
+ *   3. save                -> getDrizzleDb().insert(values) + batch insert items (transaction)
+ *   4. updateStatus        -> getDrizzleDb().update().set().where(and(eq, eq)) 条件乐观锁
+ *   5. softDelete          -> getDrizzleDb().update().set({deleted:true}).where(eq)
  *
  * 与原 MysqlInboundOrderRepository 行为对齐，字段映射保持一致。
  * 原始 raw SQL 版本仍保留运行（未删除），便于对比验证。
  */
 
 import { eq, and, like, or, gte, lte, desc, inArray, count } from 'drizzle-orm';
-import { drizzleDb } from '@/lib/db';
+import { getDrizzleDb } from '@/lib/db';
 import { invInboundOrders, invInboundItems } from '@/lib/db/schema';
 import { transaction } from '@/lib/db';
 import {
@@ -48,13 +48,13 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
    * Drizzle 替代：query API + inArray 加载子表
    */
   async findById(id: number): Promise<InboundOrder | null> {
-    const order = await drizzleDb.query.invInboundOrders.findFirst({
+    const order = await getDrizzleDb().query.invInboundOrders.findFirst({
       where: and(eq(invInboundOrders.id, id), eq(invInboundOrders.deleted, 0)),
     });
 
     if (!order) return null;
 
-    const items = await drizzleDb.query.invInboundItems.findMany({
+    const items = await getDrizzleDb().query.invInboundItems.findMany({
       where: eq(invInboundItems.orderId, id),
     });
 
@@ -126,11 +126,14 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
     const where = and(...conditions);
 
     // 总数
-    const totalRow = await drizzleDb.select({ total: count() }).from(invInboundOrders).where(where);
+    const totalRow = await getDrizzleDb()
+      .select({ total: count() })
+      .from(invInboundOrders)
+      .where(where);
     const total = totalRow[0]?.total ?? 0;
 
     // 分页数据
-    const orders = await drizzleDb
+    const orders = await getDrizzleDb()
       .select()
       .from(invInboundOrders)
       .where(where)
@@ -152,7 +155,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
 
     // 批量加载明细（inArray 一次性查询，避免 N+1）
     const orderIds = orders.map((o) => o.id);
-    const allItems = await drizzleDb.query.invInboundItems.findMany({
+    const allItems = await getDrizzleDb().query.invInboundItems.findMany({
       where: inArray(invInboundItems.orderId, orderIds),
     });
 
@@ -209,7 +212,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
 
   /**
    * 3. save - 事务插入主表 + 批量插入明细
-   * Drizzle 替代：transaction 内 drizzleDb.insert() 链式调用
+   * Drizzle 替代：transaction 内 getDrizzleDb().insert() 链式调用
    * 注意：仍使用现有 transaction 包装以复用连接管理
    */
   async save(order: InboundOrder): Promise<{ id: number; orderNo: string }> {
@@ -241,7 +244,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
       const orderId = orderResult.insertId;
 
       // 明细批量插入（保留 raw execute 以在事务连接内执行；
-      // 后续可改用 drizzleDb.transaction + drizzleDb.insert 完成彻底迁移）
+      // 后续可改用 getDrizzleDb().transaction + getDrizzleDb().insert 完成彻底迁移）
       for (const item of items) {
         await conn.execute(
           `INSERT INTO inv_inbound_item
@@ -269,13 +272,13 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
 
   /**
    * 4. updateStatus - 条件 UPDATE（乐观锁，要求当前 status 匹配）
-   * Drizzle 替代：drizzleDb.update().set().where(and(eq, eq))
+   * Drizzle 替代：getDrizzleDb().update().set().where(and(eq, eq))
    */
   async updateStatus(id: number, status: string, currentStatus: string): Promise<boolean> {
     const dbStatus = DOMAIN_TO_DB_STATUS[status] ?? status;
     const dbCurrentStatus = DOMAIN_TO_DB_STATUS[currentStatus] ?? currentStatus;
 
-    const result = await drizzleDb
+    const result = await getDrizzleDb()
       .update(invInboundOrders)
       .set({ status: dbStatus, updateTime: new Date() })
       .where(and(eq(invInboundOrders.id, id), eq(invInboundOrders.status, dbCurrentStatus)));
@@ -286,10 +289,10 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
 
   /**
    * 5. softDelete - 软删除（deleted = 1）
-   * Drizzle 替代：drizzleDb.update().set({deleted:true}).where(eq)
+   * Drizzle 替代：getDrizzleDb().update().set({deleted:true}).where(eq)
    */
   async softDelete(id: number): Promise<void> {
-    await drizzleDb
+    await getDrizzleDb()
       .update(invInboundOrders)
       .set({ deleted: 1, updateTime: new Date() })
       .where(eq(invInboundOrders.id, id));
@@ -305,7 +308,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
     financePosted: boolean
   ): Promise<void> {
     // 使用 Drizzle 更新 qc_status
-    await drizzleDb
+    await getDrizzleDb()
       .update(invInboundOrders)
       .set({
         qcStatus: inspectionStatus === 3 ? 'pass' : 'pending',

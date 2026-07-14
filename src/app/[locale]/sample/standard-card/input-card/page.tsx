@@ -91,13 +91,10 @@ function InputCardPageContent() {
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
 
   const loadData = useCallback(async (id: string) => {
-    console.log('[StandardCard:Load] 开始加载, id=', id);
     try {
       setLoading(true);
       const response = await authFetch(`/api/standard-cards?id=${id}`);
-      console.log('[StandardCard:Load] 响应: status=', response.status, 'ok=', response.ok);
       const result = await response.json();
-      console.log('[StandardCard:Load] 结果: success=', result.success, 'hasData=', !!result.data);
       if (result.success && result.data) {
         setData(mapApiDataToCardData(result.data));
       } else {
@@ -108,7 +105,6 @@ function InputCardPageContent() {
       console.error('[StandardCard:Load] 异常:', e instanceof Error ? e.message : e, e);
       setError(e instanceof Error ? e.message : '加载数据失败');
     } finally {
-      console.log('[StandardCard:Load] 完成, loading=false');
       setLoading(false);
     }
   }, []);
@@ -189,25 +185,6 @@ function InputCardPageContent() {
   );
 
   const handleSave = async () => {
-    console.log(
-      '[StandardCard:Save] 开始保存, mode=',
-      isEditMode ? 'edit' : 'create',
-      'editId=',
-      editId
-    );
-    console.log('[StandardCard:Save] 表单数据 snapshot:', {
-      cardNo: data.cardNo,
-      customer: data.customer,
-      customerCode: data.customerCode,
-      productName: data.productName,
-      version: data.version,
-      date: data.date,
-      sequencesCount: data.sequences?.length,
-      coreType: data.coreType,
-      printType: data.printType,
-      processMethod: data.processMethod,
-    });
-
     if (!data.customer) {
       console.warn('[StandardCard:Save] 校验失败: 客户为空');
       toast({ title: '请选择客户', variant: 'destructive' });
@@ -221,20 +198,10 @@ function InputCardPageContent() {
 
     try {
       setSaving(true);
-      console.log('[StandardCard:Save] 构建API payload...');
-
       const saveData = mapCardDataToApiPayload(data, isEditMode, editId || undefined);
 
       const url = '/api/standard-cards';
       const method = isEditMode ? 'PUT' : 'POST';
-
-      console.log('[StandardCard:Save] 发送请求:', {
-        url,
-        method,
-        hasId: !!saveData.id,
-        payloadSize: JSON.stringify(saveData).length,
-        sequencesSerialized: saveData.sequences,
-      });
 
       const response = await authFetch(url, {
         method,
@@ -242,15 +209,7 @@ function InputCardPageContent() {
         body: JSON.stringify(saveData),
       });
 
-      console.log('[StandardCard:Save] 收到响应: status=', response.status, 'ok=', response.ok);
-
       const result = await response.json();
-
-      console.log('[StandardCard:Save] 响应体:', {
-        success: result.success,
-        message: result.message,
-        dataId: result.data?.id,
-      });
 
       if (!result.success) {
         console.error('[StandardCard:Save] API返回失败:', result.message, result);
@@ -259,18 +218,15 @@ function InputCardPageContent() {
       }
 
       const newId = result.data?.id || parseInt(editId || '0');
-      console.log('[StandardCard:Save] 保存成功, newId=', newId);
       toast({ title: isEditMode ? '标准卡更新成功' : '标准卡保存成功' });
 
       if (!isEditMode && newId) {
-        console.log('[StandardCard:Save] 跳转到编辑模式, id=', newId);
         router.push(`/sample/standard-card/input-card?id=${newId}`);
       }
     } catch (e) {
       console.error('[StandardCard:Save] 异常:', e instanceof Error ? e.message : e, e);
       toast({ title: '保存失败，请检查网络连接', variant: 'destructive' });
     } finally {
-      console.log('[StandardCard:Save] 完成, saving=false');
       setSaving(false);
     }
   };

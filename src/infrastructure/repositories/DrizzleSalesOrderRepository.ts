@@ -17,7 +17,7 @@
  */
 
 import { eq, and, like, or, gte, lte, desc, inArray, sql, count } from 'drizzle-orm';
-import { drizzleDb } from '@/lib/db';
+import { getDrizzleDb } from '@/lib/db';
 import { salOrder, salOrderDetail } from '@/lib/db/schema';
 import { transaction } from '@/lib/db';
 import { ISalesOrderRepository } from '@/domain/sales/repositories/ISalesOrderRepository';
@@ -70,7 +70,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
   async findById(id: number): Promise<SalesOrder | null> {
     const t0 = nowMs();
     const sqlDesc = `SELECT * FROM sal_order WHERE id=${id} AND deleted=false LIMIT 1`;
-    const order = await drizzleDb.query.salOrder.findFirst({
+    const order = await getDrizzleDb().query.salOrder.findFirst({
       where: and(eq(salOrder.id, id), eq(salOrder.deleted, false)),
     });
 
@@ -88,7 +88,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     }
 
     const detailsSqlDesc = `SELECT * FROM sal_order_detail WHERE order_id=${id} AND deleted=false ORDER BY id`;
-    const details = await drizzleDb.query.salOrderDetail.findMany({
+    const details = await getDrizzleDb().query.salOrderDetail.findMany({
       where: and(eq(salOrderDetail.orderId, id), eq(salOrderDetail.deleted, false)),
       orderBy: (t) => t.id,
     });
@@ -140,10 +140,10 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
 
     const where = and(...conditions);
 
-    const totalRow = await drizzleDb.select({ total: count() }).from(salOrder).where(where);
+    const totalRow = await getDrizzleDb().select({ total: count() }).from(salOrder).where(where);
     const total = totalRow[0]?.total ?? 0;
 
-    const orders = await drizzleDb
+    const orders = await getDrizzleDb()
       .select()
       .from(salOrder)
       .where(where)
@@ -173,7 +173,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     }
 
     const orderIds = orders.map((o) => o.id);
-    const allDetails = await drizzleDb.query.salOrderDetail.findMany({
+    const allDetails = await getDrizzleDb().query.salOrderDetail.findMany({
       where: and(inArray(salOrderDetail.orderId, orderIds), eq(salOrderDetail.deleted, false)),
       orderBy: (t) => t.id,
     });
@@ -311,7 +311,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     const dbStatus = SalesOrderStatus.from(status).toDbCode();
     const dbCurrentStatus = SalesOrderStatus.from(currentStatus).toDbCode();
 
-    const result = await drizzleDb
+    const result = await getDrizzleDb()
       .update(salOrder)
       .set({ status: dbStatus, updateTime: new Date() })
       .where(and(eq(salOrder.id, id), eq(salOrder.status, dbCurrentStatus)));
@@ -334,7 +334,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
    */
   async updateShippedQty(lineId: number, shippedQty: number): Promise<void> {
     const t0 = nowMs();
-    await drizzleDb
+    await getDrizzleDb()
       .update(salOrderDetail)
       .set({ deliveredQty: shippedQty.toString() })
       .where(eq(salOrderDetail.id, lineId));
@@ -356,7 +356,10 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
    */
   async updateAuditInfo(id: number, auditBy: number, auditTime: string): Promise<void> {
     const t0 = nowMs();
-    await drizzleDb.update(salOrder).set({ updateTime: new Date() }).where(eq(salOrder.id, id));
+    await getDrizzleDb()
+      .update(salOrder)
+      .set({ updateTime: new Date() })
+      .where(eq(salOrder.id, id));
     logOp(
       'updateAuditInfo',
       'sal_order (UPDATE)',
@@ -373,7 +376,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
    */
   async softDelete(id: number): Promise<void> {
     const t0 = nowMs();
-    await drizzleDb
+    await getDrizzleDb()
       .update(salOrder)
       .set({ deleted: true, updateTime: new Date() })
       .where(eq(salOrder.id, id));

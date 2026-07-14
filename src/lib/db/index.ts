@@ -188,6 +188,20 @@ export async function queryOne<T = any>(sql: string, values?: SqlValue[]): Promi
 export async function transaction<T>(
   callback: (connection: mysql.PoolConnection) => Promise<T>
 ): Promise<T> {
+  if (isDemoMode()) {
+    const mockConnection = {
+      execute: async (_sql: string, _values?: unknown[]) => [
+        [{ affectedRows: 1, insertId: 1 }],
+        undefined,
+      ],
+      query: async (_sql: string, _values?: unknown[]) => [[], undefined],
+      beginTransaction: async () => {},
+      commit: async () => {},
+      rollback: async () => {},
+      release: () => {},
+    } as unknown as mysql.PoolConnection;
+    return callback(mockConnection);
+  }
   const pool = getPool();
   const connection = await pool.getConnection();
 
@@ -426,4 +440,16 @@ export const db = {
  *   新代码可使用 drizzleDb 查询构建器；旧代码继续使用 query/execute 保持兼容。
  *   注意：drizzle-orm 0.45.x 仅识别 client 或 connection 参数，传入 pool 会被忽略。
  */
-export const drizzleDb = drizzle({ client: getPool(), schema, mode: 'default' });
+let _drizzleDb: ReturnType<typeof createDrizzleDb> | null = null;
+function createDrizzleDb() {
+  return drizzle({ client: getPool(), schema, mode: 'default' });
+}
+export function getDrizzleDb() {
+  if (isDemoMode()) {
+    throw new Error('Drizzle ORM is not available in demo mode. Use db.query/execute instead.');
+  }
+  if (!_drizzleDb) {
+    _drizzleDb = createDrizzleDb();
+  }
+  return _drizzleDb;
+}

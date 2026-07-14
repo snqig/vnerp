@@ -13,7 +13,7 @@
 pnpm install
 cp .env.example .env
 # 编辑 .env 配置数据库连接等
-pnpm setup-db
+pnpm setup:db
 pnpm dev
 ```
 
@@ -87,7 +87,7 @@ pnpm build           # 生产构建验证
 
 - 迁移文件位于 `database/migrations/`，按序号命名
 - Drizzle schema 定义在 `src/lib/db/schema.ts`
-- 使用 `pnpm setup-db` 执行迁移
+- 使用 `pnpm setup:db` 执行迁移
 - 禁止 SQL 与 Drizzle 双轨维护
 
 ## 问题反馈

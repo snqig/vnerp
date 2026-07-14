@@ -14,7 +14,7 @@
  */
 
 import { eq, and, like, or, gte, lte, desc, inArray, sql, count } from 'drizzle-orm';
-import { drizzleDb } from '@/lib/db';
+import { getDrizzleDb } from '@/lib/db';
 import { purPurchaseOrder, purPurchaseOrderLine } from '@/lib/db/schema';
 import { transaction } from '@/lib/db';
 import {
@@ -64,7 +64,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
   async findById(id: number): Promise<PurchaseOrder | null> {
     const t0 = nowMs();
     const sqlDesc = `SELECT * FROM pur_purchase_order WHERE id=${id} AND deleted=false LIMIT 1`;
-    const order = await drizzleDb.query.purPurchaseOrder.findFirst({
+    const order = await getDrizzleDb().query.purPurchaseOrder.findFirst({
       where: and(eq(purPurchaseOrder.id, id), eq(purPurchaseOrder.deleted, false)),
     });
 
@@ -82,7 +82,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     }
 
     const linesSqlDesc = `SELECT * FROM pur_purchase_order_line WHERE po_id=${id} ORDER BY line_no`;
-    const lines = await drizzleDb.query.purPurchaseOrderLine.findMany({
+    const lines = await getDrizzleDb().query.purPurchaseOrderLine.findMany({
       where: eq(purPurchaseOrderLine.poId, id),
       orderBy: (t) => t.lineNo,
     });
@@ -106,7 +106,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
   async findByOrderNo(orderNo: string): Promise<PurchaseOrder | null> {
     const t0 = nowMs();
     const sqlDesc = `SELECT * FROM pur_purchase_order WHERE po_no='${orderNo}' AND deleted=false LIMIT 1`;
-    const order = await drizzleDb.query.purPurchaseOrder.findFirst({
+    const order = await getDrizzleDb().query.purPurchaseOrder.findFirst({
       where: and(eq(purPurchaseOrder.poNo, orderNo), eq(purPurchaseOrder.deleted, false)),
     });
 
@@ -123,7 +123,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
       return null;
     }
 
-    const lines = await drizzleDb.query.purPurchaseOrderLine.findMany({
+    const lines = await getDrizzleDb().query.purPurchaseOrderLine.findMany({
       where: eq(purPurchaseOrderLine.poId, order.id),
       orderBy: (t) => t.lineNo,
     });
@@ -182,10 +182,13 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
 
     const where = and(...conditions);
 
-    const totalRow = await drizzleDb.select({ total: count() }).from(purPurchaseOrder).where(where);
+    const totalRow = await getDrizzleDb()
+      .select({ total: count() })
+      .from(purPurchaseOrder)
+      .where(where);
     const total = totalRow[0]?.total ?? 0;
 
-    const orders = await drizzleDb
+    const orders = await getDrizzleDb()
       .select()
       .from(purPurchaseOrder)
       .where(where)
@@ -215,7 +218,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     }
 
     const orderIds = orders.map((o) => o.id);
-    const allLines = await drizzleDb.query.purPurchaseOrderLine.findMany({
+    const allLines = await getDrizzleDb().query.purPurchaseOrderLine.findMany({
       where: inArray(purPurchaseOrderLine.poId, orderIds),
       orderBy: (t) => t.lineNo,
     });
@@ -341,7 +344,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     const dbStatus = PurchaseOrderStatus.from(status).toDbCode();
     const dbCurrentStatus = PurchaseOrderStatus.from(currentStatus).toDbCode();
 
-    const result = await drizzleDb
+    const result = await getDrizzleDb()
       .update(purPurchaseOrder)
       .set({ status: dbStatus, updateTime: new Date() })
       .where(and(eq(purPurchaseOrder.id, id), eq(purPurchaseOrder.status, dbCurrentStatus)));
@@ -364,7 +367,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
    */
   async updateReceivedQty(lineId: number, receivedQty: number): Promise<void> {
     const t0 = nowMs();
-    await drizzleDb
+    await getDrizzleDb()
       .update(purPurchaseOrderLine)
       .set({ receivedQty: receivedQty.toString(), updateTime: new Date() })
       .where(eq(purPurchaseOrderLine.id, lineId));
@@ -384,7 +387,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
    */
   async updateAuditInfo(id: number, auditBy: number, auditTime: string): Promise<void> {
     const t0 = nowMs();
-    await drizzleDb
+    await getDrizzleDb()
       .update(purPurchaseOrder)
       .set({
         auditBy,
@@ -408,7 +411,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
    */
   async softDelete(id: number): Promise<void> {
     const t0 = nowMs();
-    await drizzleDb
+    await getDrizzleDb()
       .update(purPurchaseOrder)
       .set({ deleted: true, updateTime: new Date() })
       .where(eq(purPurchaseOrder.id, id));

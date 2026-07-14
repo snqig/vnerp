@@ -142,12 +142,6 @@ function PrintPageContent() {
             return;
           }
           const result = await response.json();
-          console.log('[Print:Load] result:', {
-            success: result.success,
-            hasData: !!result.data,
-            message: result.message,
-          });
-
           // 如果API返回的是分页列表格式（data是数组），取第一条
           const apiData = Array.isArray(result.data) ? result.data[0] : result.data;
 

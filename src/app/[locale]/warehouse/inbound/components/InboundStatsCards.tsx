@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { TrendingUp, Boxes, Clock, QrCode } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
@@ -40,20 +39,6 @@ export function InboundStatsCards({
     },
     { label: t('labelsGenerated'), value: labelsCount, unit: t('unitLabels'), icon: QrCode },
   ];
-
-  useEffect(() => {
-    console.log('[InboundStatsCards] quieter 渲染检查', {
-      cardsTotal: stats.length,
-      pendingCount,
-      hasHighlight: pendingCount > 0,
-      renderedCards: stats.map((s) => ({
-        label: s.label,
-        value: s.value,
-        highlight: s.highlight === true && pendingCount > 0,
-        gradientRemoved: true,
-      })),
-    });
-  }, [pendingCount, totalInboundToday, totalInboundMonth, labelsCount]);
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
