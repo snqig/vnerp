@@ -1,5 +1,3 @@
-import { secureLog } from '@/lib/logger';
-
 export type ShipmentStatus =
   | 'draft' // 草稿
   | 'pending_review' // 待审批
@@ -116,7 +114,7 @@ export class ShipmentStateMachine {
   static canTransition(from: ShipmentStatus, to: ShipmentStatus): boolean {
     const config = shipmentStateMachineConfig[from];
     if (!config) {
-      secureLog('error', '无效的源状态', { from });
+      console.warn('[ShipmentStateMachine] 无效的源状态', { from });
       return false;
     }
     return config.allowedTransitions.includes(to);

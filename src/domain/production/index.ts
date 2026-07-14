@@ -12,10 +12,6 @@ export type { WorkReportProps, WorkReportStatus } from './aggregates/WorkReport'
 export { FinishOrder } from './aggregates/FinishOrder';
 export type { FinishOrderProps, FinishOrderStatus } from './aggregates/FinishOrder';
 
-// Entities
-export { MaterialRequirement } from './entities/MaterialRequirement';
-export type { MaterialRequirementProps } from './entities/MaterialRequirement';
-
 // Events
 export {
   WorkOrderCreatedEvent,
@@ -49,6 +45,11 @@ export {
   FinishOrderCancelledEvent,
 } from './events/FinishOrderEvents';
 
+// Entities
+export { MaterialRequirement } from './entities/MaterialRequirement';
+export type { MaterialRequirementProps } from './entities/MaterialRequirement';
+export type { ProductionSchedule, ProductionScheduleDetail } from './entities/ProductionSchedule';
+
 // Repository interfaces
 export type { IWorkOrderRepository, WorkOrderFilters } from './repositories/IWorkOrderRepository';
 export type { IPickOrderRepository, PickOrderFilters } from './repositories/IPickOrderRepository';
@@ -60,3 +61,4 @@ export type {
   IFinishOrderRepository,
   FinishOrderFilters,
 } from './repositories/IFinishOrderRepository';
+export type { IScheduleRepository } from './repositories/IScheduleRepository';

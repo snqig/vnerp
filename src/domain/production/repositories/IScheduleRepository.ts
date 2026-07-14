@@ -1,9 +1,9 @@
-import { PrdSchedule, PrdScheduleDetail } from '@/lib/db/schema';
+import type { ProductionSchedule, ProductionScheduleDetail } from '../entities/ProductionSchedule';
 
 export interface IScheduleRepository {
-  findById(id: number): Promise<PrdSchedule | null>;
-  findDetailsByScheduleId(scheduleId: number): Promise<PrdScheduleDetail[]>;
-  findByWorkOrderId(workOrderId: number): Promise<PrdSchedule | null>;
+  findById(id: number): Promise<ProductionSchedule | null>;
+  findDetailsByScheduleId(scheduleId: number): Promise<ProductionScheduleDetail[]>;
+  findByWorkOrderId(workOrderId: number): Promise<ProductionSchedule | null>;
   findPaginated(params: {
     page: number;
     pageSize: number;
@@ -11,7 +11,7 @@ export interface IScheduleRepository {
     status?: number;
     keyword?: string;
   }): Promise<{
-    data: PrdSchedule[];
+    data: ProductionSchedule[];
     pagination: { page: number; pageSize: number; total: number; totalPages: number };
   }>;
   save(schedule: {
