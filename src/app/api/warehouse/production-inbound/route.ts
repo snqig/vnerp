@@ -4,6 +4,8 @@ import { successResponse, errorResponse, logOperation } from '@/lib/api-response
 import { randomUUID } from 'crypto';
 
 import { withPermission } from '@/lib/api-permissions';
+import { FinishOrderApprovedEvent } from '@/domain/production/events/FinishOrderEvents';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
@@ -253,6 +255,25 @@ export const PUT = withPermission(async (request: NextRequest) => {
           }
         }
       }
+
+      // T206: Publish FinishOrderApprovedEvent for downstream handlers (finance, etc.)
+      const totalQualifiedQty = itemRows.reduce(
+        (sum: number, item: Loose) => sum + Number(item.quantity || 0),
+        0
+      );
+      await getDomainEventOutbox().saveEvents(conn, 'ProductionInbound', id, [
+        new FinishOrderApprovedEvent({
+          finishOrderId: id,
+          finishNo: inbound.inbound_no,
+          workOrderId: inbound.work_order_id || 0,
+          workOrderNo: inbound.work_order_no || '',
+          productName: itemRows[0]?.material_name || '',
+          qualifiedQty: totalQualifiedQty,
+          defectiveQty: 0,
+          warehouseId: inbound.warehouse_id,
+          userId: 0,
+        }),
+      ]);
 
       return { id, status: 3 };
     });

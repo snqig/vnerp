@@ -4,6 +4,8 @@
   "outputDirectory": ".next",
   "installCommand": "pnpm install",
   "env": {
-    "NEXT_PUBLIC_APP_NAME": "Print MIS"
+    "NEXT_PUBLIC_APP_NAME": "Print MIS",
+    "DEMO_MODE": "true",
+    "NEXT_PUBLIC_DEMO_MODE": "true"
   }
 }

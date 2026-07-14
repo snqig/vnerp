@@ -7,6 +7,7 @@
 import mysql from 'mysql2/promise';
 import { drizzle } from 'drizzle-orm/mysql2';
 import * as schema from './schema';
+import { isDemoMode, demoQuery, demoExecute } from '@/lib/demo-data';
 
 // SECURITY: All database queries in this module use parameterized prepared statements
 // via mysql2's pool.query() and pool.execute() with placeholder values (?).
@@ -97,6 +98,9 @@ export async function getConnection(): Promise<mysql.PoolConnection> {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function query<T = any>(sql: string, values?: SqlValue[]): Promise<T[]> {
+  if (isDemoMode()) {
+    return demoQuery(sql, values) as T[];
+  }
   let retries = 2;
   let lastError: Error | null = null;
 
@@ -137,6 +141,9 @@ export async function query<T = any>(sql: string, values?: SqlValue[]): Promise<
  * @throws 数据库错误
  */
 export async function execute(sql: string, values?: SqlValue[]): Promise<mysql.ResultSetHeader> {
+  if (isDemoMode()) {
+    return demoExecute(sql, values) as mysql.ResultSetHeader;
+  }
   try {
     const pool = getPool();
     if (DEBUG_DB) {

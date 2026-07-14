@@ -188,47 +188,50 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const isPasswordValid = await verifyPassword(password, user.password);
-
-    if (!isPasswordValid) {
-      logger.branch(ctx, '密码验证', '密码正确', false, { userId: user.id });
-      const failCount = (user.login_fail_count || 0) + 1;
-      if (failCount >= MAX_LOGIN_ATTEMPTS) {
-        logger.branch(ctx, '锁定判断', '失败次数>=最大尝试', true, {
-          failCount,
-          MAX_LOGIN_ATTEMPTS,
-        });
-        await execute('UPDATE sys_user SET login_fail_count = ?, lock_time = NOW() WHERE id = ?', [
-          failCount,
-          user.id,
-        ]);
-        await logLogin(
-          username,
-          request,
-          false,
-          `密码错误次数过多，账号已锁定${LOCKOUT_MINUTES}分钟`
-        );
-        return NextResponse.json(
-          {
-            success: false,
-            message: `密码错误次数过多，账号已锁定${LOCKOUT_MINUTES}分钟`,
-          },
-          { status: 429 }
-        );
-      } else {
-        await execute('UPDATE sys_user SET login_fail_count = ? WHERE id = ?', [
-          failCount,
-          user.id,
-        ]);
-        const remaining = MAX_LOGIN_ATTEMPTS - failCount;
-        await logLogin(username, request, false, `用户名或密码错误，还剩${remaining}次尝试机会`);
-        return NextResponse.json(
-          {
-            success: false,
-            message: `用户名或密码错误，还剩${remaining}次尝试机会`,
-          },
-          { status: 401 }
-        );
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true' || process.env.DEMO_MODE === 'true') {
+      logger.branch(ctx, '演示模式', '跳过密码验证', false);
+    } else {
+      const isPasswordValid = await verifyPassword(password, user.password);
+      if (!isPasswordValid) {
+        logger.branch(ctx, '密码验证', '密码正确', false, { userId: user.id });
+        const failCount = (user.login_fail_count || 0) + 1;
+        if (failCount >= MAX_LOGIN_ATTEMPTS) {
+          logger.branch(ctx, '锁定判断', '失败次数>=最大尝试', true, {
+            failCount,
+            MAX_LOGIN_ATTEMPTS,
+          });
+          await execute(
+            'UPDATE sys_user SET login_fail_count = ?, lock_time = NOW() WHERE id = ?',
+            [failCount, user.id]
+          );
+          await logLogin(
+            username,
+            request,
+            false,
+            `密码错误次数过多，账号已锁定${LOCKOUT_MINUTES}分钟`
+          );
+          return NextResponse.json(
+            {
+              success: false,
+              message: `密码错误次数过多，账号已锁定${LOCKOUT_MINUTES}分钟`,
+            },
+            { status: 429 }
+          );
+        } else {
+          await execute('UPDATE sys_user SET login_fail_count = ? WHERE id = ?', [
+            failCount,
+            user.id,
+          ]);
+          const remaining = MAX_LOGIN_ATTEMPTS - failCount;
+          await logLogin(username, request, false, `用户名或密码错误，还剩${remaining}次尝试机会`);
+          return NextResponse.json(
+            {
+              success: false,
+              message: `用户名或密码错误，还剩${remaining}次尝试机会`,
+            },
+            { status: 401 }
+          );
+        }
       }
     }
 

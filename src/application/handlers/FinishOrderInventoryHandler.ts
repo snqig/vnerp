@@ -29,6 +29,19 @@ export class FinishOrderInventoryHandler {
       warehouseId,
     });
 
+    // Idempotency: skip if this finish order was already processed (prevents double-counting
+    // when the production-inbound route has already performed the inventory updates).
+    const existingTxn = await execute(
+      'SELECT id FROM inv_inventory_transaction WHERE source_type = ? AND source_id = ? LIMIT 1',
+      ['prod_finish', finishOrderId]
+    );
+    if ((existingTxn as any).length > 0) {
+      secureLog('info', 'FinishOrderInventoryHandler: already processed, skipping', {
+        finishOrderId,
+      });
+      return;
+    }
+
     // 获取工单的产品信息
     const woRows = await execute(
       'SELECT product_id, product_code, product_name FROM prod_work_order WHERE id = ? AND deleted = 0',
