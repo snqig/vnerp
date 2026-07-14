@@ -5,9 +5,11 @@ import { withPermission } from '@/lib/api-permissions';
 import { jwtVerify } from 'jose';
 import { secureLog } from '@/lib/logger';
 
-const SECRET_KEY = process.env.JWT_SECRET;
-
-if (!SECRET_KEY) {
+function getSecretKey(): string {
+  const key = process.env.JWT_SECRET;
+  if (key) return key;
+  if (process.env.DEMO_MODE === 'true' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true')
+    return 'demo-mode-jwt-secret-key-2024';
   throw new Error('JWT_SECRET environment variable is required');
 }
 
@@ -20,7 +22,7 @@ interface MenuSortItem {
 // 验证JWT Token
 async function verifyToken(token: string) {
   try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(getSecretKey()));
     return payload;
   } catch {
     return null;

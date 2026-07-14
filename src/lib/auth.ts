@@ -2,9 +2,11 @@ import { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import { query, type SqlValue } from './db';
 
-const SECRET_KEY = process.env.JWT_SECRET;
-
-if (!SECRET_KEY) {
+function getSecretKey(): string {
+  const key = process.env.JWT_SECRET;
+  if (key) return key;
+  if (process.env.DEMO_MODE === 'true' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true')
+    return 'demo-mode-jwt-secret-key-2024';
   throw new Error('JWT_SECRET environment variable is required');
 }
 
@@ -87,7 +89,7 @@ export function extractToken(request: NextRequest): string | null {
 // 验证JWT Token
 export async function verifyToken(token: string): Promise<UserInfo | null> {
   try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(getSecretKey()));
 
     const userId = payload.userId as number;
     // jose 将 iat 解析为秒级 number
@@ -126,7 +128,7 @@ export async function verifyTokenLight(token: string): Promise<{
   roles: string[];
 } | null> {
   try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(getSecretKey()));
     return {
       userId: payload.userId as number,
       username: payload.username as string,

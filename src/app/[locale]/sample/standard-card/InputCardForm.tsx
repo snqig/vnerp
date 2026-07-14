@@ -58,6 +58,7 @@ export function InputCardForm() {
   const { companyName } = useCompanyName();
   const router = useRouter();
   const tc = useTranslations('Common');
+  const t = useTranslations('StandardCard');
   const printRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -95,10 +96,12 @@ export function InputCardForm() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background gap-4">
-        <p className="text-destructive">加载错误: {error}</p>
+        <p className="text-destructive">
+          {t('loadError')}: {error}
+        </p>
         <Button onClick={() => router.push('/sample/standard-card')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          返回列表
+          {t('backToList')}
         </Button>
       </div>
     );
@@ -161,7 +164,7 @@ export function InputCardForm() {
 
             {/* 客户/版次/日期行 */}
             <tr>
-              <td className="font-bold pr-2 border-none">客户：</td>
+              <td className="font-bold pr-2 border-none">{t('cardCustomer')}：</td>
               <td colSpan={4} className="font-bold border-none">
                 <div className="customer-dropdown-container relative">
                   <input
@@ -176,7 +179,7 @@ export function InputCardForm() {
                       setCustomerSearch(data.customer);
                       setShowCustomerDropdown(true);
                     }}
-                    placeholder="选择或输入客户"
+                    placeholder={t('cardSelectCustomer')}
                     className="w-full px-1 py-0.5 text-xs font-bold bg-transparent border-none outline-none focus:bg-blue-50 dark:focus:bg-blue-900/30 rounded-sm"
                   />
                   {showCustomerDropdown && filteredCustomers.length > 0 && (
@@ -195,12 +198,12 @@ export function InputCardForm() {
                   )}
                 </div>
               </td>
-              <td className="font-bold px-2 border-none">版次:</td>
+              <td className="font-bold px-2 border-none">{t('cardVersion')}:</td>
               <td className="font-bold border-none">
                 <EditableCell value={data.version} onChange={(v) => updateField('version', v)} />
               </td>
               <td colSpan={4} className="text-center text-xl font-bold border-none">
-                标准卡（流程卡）
+                {t('cardFormTitle')}
               </td>
               <td colSpan={4} className="text-center border-none">
                 <span className="bg-[#1a3c7a] dark:bg-blue-700 text-white px-3 py-1 rounded font-bold">
@@ -208,7 +211,7 @@ export function InputCardForm() {
                 </span>
               </td>
               <td colSpan={2} className="font-bold text-right px-2 border-none">
-                日期：
+                {t('cardDate')}：
               </td>
               <td colSpan={2} className="font-bold border-none">
                 <EditableCell
@@ -225,16 +228,16 @@ export function InputCardForm() {
 
             {/* 品名/客户料号/成品尺寸/公差 */}
             <tr>
-              <td className="border font-bold text-center w-[4%]">品名</td>
+              <td className="border font-bold text-center w-[4%]">{t('cardProductName')}</td>
               <td colSpan={4} className="border font-bold">
                 <EditableCell
                   value={data.productName}
                   onChange={(v) => updateField('productName', v)}
-                  placeholder="输入品名"
+                  placeholder={t('cardInputProductName')}
                 />
               </td>
               <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center w-[8%]">
-                客户料号
+                {t('cardCustomerCode')}
               </td>
               <td colSpan={3} className="border">
                 <EditableCell
@@ -243,7 +246,7 @@ export function InputCardForm() {
                 />
               </td>
               <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center w-[8%]">
-                成品尺寸
+                {t('cardFinishedSize')}
               </td>
               <td colSpan={4} className="border">
                 <EditableCell
@@ -253,7 +256,7 @@ export function InputCardForm() {
               </td>
               <td className="border w-[4%]">m/m</td>
               <td colSpan={2} className="border font-bold">
-                公差+
+                {t('cardTolerance')}
               </td>
               <td className="border">
                 <EditableCell
@@ -266,14 +269,18 @@ export function InputCardForm() {
 
             {/* 材料名称/排版方式/间距/片料规格/标准用量 */}
             <tr>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">材料名称</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardMaterialName')}
+              </td>
               <td colSpan={4} className="border font-bold">
                 <EditableCell
                   value={data.materialName}
                   onChange={(v) => updateField('materialName', v)}
                 />
               </td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">排版方式</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardLayoutType')}
+              </td>
               <td className="border">
                 <EditableCell
                   value={data.layoutType}
@@ -281,12 +288,14 @@ export function InputCardForm() {
                 />
               </td>
               <td rowSpan={2} className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
-                间距
+                {t('cardSpacing')}
               </td>
               <td className="border">
                 <EditableCell value={data.spacing} onChange={(v) => updateField('spacing', v)} />
               </td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">片料规格</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardSheetSpecs')}
+              </td>
               <td className="border">
                 <EditableCell
                   value={data.sheetSpecs.width}
@@ -304,7 +313,7 @@ export function InputCardForm() {
               </td>
               <td className="border">m/m长</td>
               <td colSpan={2} className="border font-bold">
-                标准用量
+                {t('cardStandardUsage')}
               </td>
               <td className="border">
                 <EditableCell
@@ -317,7 +326,9 @@ export function InputCardForm() {
 
             {/* 纸芯类型/出纸方向/卷料宽度/纸边/跳距 */}
             <tr>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">纸芯类型</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardCoreType')}
+              </td>
               <td colSpan={4} className="border font-bold">
                 <div className="flex justify-center gap-3">
                   {['3#', '2#', '1#'].map((num) => (
@@ -333,7 +344,9 @@ export function InputCardForm() {
                   ))}
                 </div>
               </td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">出纸方向</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardPaperDirection')}
+              </td>
               <td className="border">
                 <EditableCell
                   value={data.paperDirection}
@@ -346,7 +359,9 @@ export function InputCardForm() {
                   onChange={(v) => updateField('spacingValue', v)}
                 />
               </td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">卷料宽度</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardRollWidth')}
+              </td>
               <td className="border">
                 <EditableCell
                   value={data.rollWidth}
@@ -354,7 +369,7 @@ export function InputCardForm() {
                 />
               </td>
               <td className="border">mm</td>
-              <td className="border">纸边</td>
+              <td className="border">{t('cardPaperEdge')}</td>
               <td className="border">
                 <EditableCell
                   value={data.paperEdge}
@@ -363,7 +378,7 @@ export function InputCardForm() {
               </td>
               <td className="border">mm</td>
               <td colSpan={2} className="border font-bold">
-                跳距
+                {t('cardJumpDistance')}
               </td>
               <td className="border">
                 <EditableCell
@@ -385,7 +400,7 @@ export function InputCardForm() {
                 <EditableCell
                   value={data.processFlow1}
                   onChange={(v) => updateField('processFlow1', v)}
-                  placeholder="工艺流程1"
+                  placeholder={t('cardProcessFlow1')}
                 />
               </td>
             </tr>
@@ -394,17 +409,24 @@ export function InputCardForm() {
                 <EditableCell
                   value={data.processFlow2}
                   onChange={(v) => updateField('processFlow2', v)}
-                  placeholder="工艺流程2"
+                  placeholder={t('cardProcessFlow2')}
                 />
               </td>
             </tr>
 
             {/* 印刷方式/第一跳距/覆膜/成型/MYLAR */}
             <tr>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">印刷方式</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardPrintType')}
+              </td>
               <td colSpan={6} className="border">
                 <div className="flex justify-center gap-3">
-                  {['胶印', '卷料丝印', '片料丝印', '轮转印'].map((type) => (
+                  {[
+                    t('cardOffsetPrint'),
+                    t('cardRollScreenPrint'),
+                    t('cardSheetScreenPrint'),
+                    t('cardRotaryPrint'),
+                  ].map((type) => (
                     <label key={type} className="flex items-center gap-1 cursor-pointer">
                       <input
                         type="checkbox"
@@ -417,7 +439,9 @@ export function InputCardForm() {
                   ))}
                 </div>
               </td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">第一跳距</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardFirstJumpDistance')}
+              </td>
               <td className="border">
                 <EditableCell
                   value={data.firstJumpDistance}
@@ -425,10 +449,10 @@ export function InputCardForm() {
                 />
               </td>
               <td colSpan={2} className="border font-bold text-center">
-                覆 膜
+                {t('cardLaminating')}
               </td>
               <td colSpan={4} className="border font-bold text-center">
-                成 型
+                {t('cardForming')}
               </td>
               <td colSpan={4} className="border font-bold text-center">
                 MYLAR
@@ -437,22 +461,42 @@ export function InputCardForm() {
 
             {/* 印序表头行 */}
             <tr>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">印序</td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">印色</td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">油墨编号</td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">菲林编号</td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">存放位置</td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">印版编号</td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">网目</td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">存放位置</td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">印面</td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">种类</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardPrintSequence')}
+              </td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardPrintColor')}
+              </td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardInkCode')}
+              </td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardFilmCode')}
+              </td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardStorageLocation')}
+              </td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardPlateCode')}
+              </td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardMesh')}
+              </td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardStorageLocation')}
+              </td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardPrintSide')}
+              </td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardCategory')}
+              </td>
               <td className="border">
                 <EditableCell value={data.moldType} onChange={(v) => updateField('moldType', v)} />
               </td>
               <td colSpan={4} className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
                 <div className="flex justify-center gap-3">
-                  {['模切', '冲压'].map((type) => (
+                  {[t('cardDieCut'), t('cardStamping')].map((type) => (
                     <label key={type} className="flex items-center gap-1 cursor-pointer">
                       <input
                         type="checkbox"
@@ -465,7 +509,9 @@ export function InputCardForm() {
                   ))}
                 </div>
               </td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">材料</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardMaterial')}
+              </td>
               <td colSpan={3} className="border">
                 <EditableCell
                   value={data.materialType}
@@ -528,7 +574,7 @@ export function InputCardForm() {
                 </td>
                 {index === 0 ? (
                   <>
-                    <td className="border">厂商</td>
+                    <td className="border">{t('cardManufacturer')}</td>
                     <td className="border">
                       <EditableCell
                         value={data.filmManufacturer}
@@ -536,7 +582,7 @@ export function InputCardForm() {
                       />
                     </td>
                     <td colSpan={2} className="border">
-                      冲压方法
+                      {t('cardStampingMethod')}
                     </td>
                     <td colSpan={2} className="border">
                       <EditableCell
