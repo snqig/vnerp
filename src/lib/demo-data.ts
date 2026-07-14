@@ -70,6 +70,9 @@ export function demoQuery(sql: string, _values?: unknown[]): unknown[] {
   if (/SELECT.*FROM\s+sys_user_role.*JOIN\s+sys_role/i.test(sql)) {
     return demoRoles;
   }
+  if (/SELECT.*FROM\s+sys_role.*JOIN\s+sys_user_role/i.test(sql)) {
+    return demoRoles;
+  }
   if (/SELECT.*FROM\s+sys_department/i.test(sql)) {
     return [{ dept_name: '演示部门' }];
   }
@@ -95,6 +98,12 @@ export function demoQuery(sql: string, _values?: unknown[]): unknown[] {
     return [{ config_key: 'demo', config_value: 'demo' }];
   }
   console.log('[demoQuery] unhandled SQL:', sql.substring(0, 200));
+  // catch-all: return a safe default result with common field names
+  if (/\bFROM\b/i.test(sql)) {
+    return [
+      { id: 1, name: 'demo', value: 'demo', total: 0, config_key: 'demo', config_value: 'demo' },
+    ];
+  }
   return [];
 }
 

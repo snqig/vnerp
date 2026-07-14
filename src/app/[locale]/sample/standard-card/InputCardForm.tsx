@@ -99,7 +99,7 @@ export function InputCardForm() {
         <p className="text-destructive">
           {t('loadError')}: {error}
         </p>
-        <Button onClick={() => router.push('/sample/standard-card')}>
+        <Button onClick={() => router.push('/sample/standard-card?mode=list')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t('backToList')}
         </Button>
@@ -951,7 +951,7 @@ export function InputCardForm() {
 
       {/* 操作按钮 */}
       <div className="mt-4 flex items-center justify-center gap-3 pb-4">
-        <Button variant="outline" onClick={() => router.push('/sample/standard-card')}>
+        <Button variant="outline" onClick={() => router.push('/sample/standard-card?mode=list')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t('backToList')}
         </Button>

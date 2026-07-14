@@ -59,6 +59,7 @@ export interface InitialAuthData {
 }
 
 interface AuthContextType extends AuthState {
+  isHydrated: boolean;
   login: (
     username: string,
     password: string,
@@ -134,8 +135,14 @@ export function AuthProvider({
     menus: initialAuth?.menus ?? [],
     permissions: initialAuth?.permissions ?? [],
     isAuthenticated: false,
-    isLoading: !initialAuth,
+    isLoading: !(initialAuth && initialAuth.menus.length > 0),
   });
+
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const authChecked = useRef(false);
   const menusLoadedRef = useRef(false);
@@ -261,29 +268,18 @@ export function AuthProvider({
             return;
           }
 
-          // 降级：优先从 localStorage 恢复缓存的菜单，实现 0ms 侧边栏渲染
-          const cached = loadCachedMenus();
-
+          // 无 SSR 数据时，保持 isLoading=true 直到服务端 API 返回
+          // 确保服务端和客户端初始渲染一致，避免 hydration mismatch
           setState({
             user,
-            menus: cached?.menus ?? [],
-            permissions: cached?.permissions ?? [],
+            menus: [],
+            permissions: [],
             isAuthenticated: true,
-            // 有缓存菜单 → 不显示 loading（侧边栏即时展示）
-            // 无缓存菜单 → 显示骨架屏
-            isLoading: !cached,
+            isLoading: true,
           });
 
-          if (cached) {
-            // 有缓存：先展示缓存菜单，后台静默刷新最新数据
-            menusLoadedRef.current = true;
-            menusCountRef.current = cached.menus.length;
-            // 静默刷新，不清除认证状态
-            fetchMenus(token, true, false).catch(() => {});
-          } else {
-            // 无缓存：等待 API 返回（首次登录场景）
-            await fetchMenus(token);
-          }
+          // 等待 API 返回菜单数据
+          await fetchMenus(token);
         } catch {
           setState((prev) => ({ ...prev, isLoading: false }));
         }
@@ -426,6 +422,7 @@ export function AuthProvider({
     <AuthContext.Provider
       value={{
         ...state,
+        isHydrated,
         login,
         logout,
         register,
