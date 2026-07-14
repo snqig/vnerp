@@ -601,7 +601,7 @@ export function InputCardForm() {
                   </>
                 ) : index === 1 ? (
                   <>
-                    <td className="border">编号</td>
+                    <td className="border">{t('cardNumber')}</td>
                     <td className="border">
                       <EditableCell
                         value={data.moldCode}
@@ -609,7 +609,7 @@ export function InputCardForm() {
                       />
                     </td>
                     <td colSpan={2} className="border">
-                      模具编号
+                      {t('cardMoldCode')}
                     </td>
                     <td colSpan={2} className="border">
                       <EditableCell
@@ -617,7 +617,7 @@ export function InputCardForm() {
                         onChange={(v) => updateField('backMoldCode', v)}
                       />
                     </td>
-                    <td className="border">排模</td>
+                    <td className="border">{t('cardLayoutMold')}</td>
                     <td colSpan={3} className="border">
                       <EditableCell
                         value={data.layoutMethod}
@@ -635,7 +635,7 @@ export function InputCardForm() {
                       />
                     </td>
                     <td colSpan={2} className="border">
-                      排模方法
+                      {t('cardLayoutMethod')}
                     </td>
                     <td colSpan={2} className="border">
                       <EditableCell
@@ -643,7 +643,7 @@ export function InputCardForm() {
                         onChange={(v) => updateField('backMylarMold', v)}
                       />
                     </td>
-                    <td className="border">跳距</td>
+                    <td className="border">{t('cardJumpDistance')}</td>
                     <td colSpan={2} className="border">
                       <EditableCell
                         value={data.jumpDistance2}
@@ -680,17 +680,17 @@ export function InputCardForm() {
                             onChange={() => updateField('dashedKnife', false)}
                             className="w-3 h-3"
                           />{' '}
-                          否
+                          {t('no')}
                         </label>
                       </div>
                     </td>
                     <td colSpan={4} className="border">
-                      包装
+                      {t('cardPacking')}
                     </td>
                   </>
                 ) : index === 4 ? (
                   <>
-                    <td className="border">种类</td>
+                    <td className="border">{t('cardCategory')}</td>
                     <td className="border">
                       <EditableCell
                         value={data.adhesiveType}
@@ -698,7 +698,7 @@ export function InputCardForm() {
                       />
                     </td>
                     <td rowSpan={3} colSpan={2} className="border font-bold">
-                      切片方式
+                      {t('cardSliceMethod')}
                     </td>
                     <td className="border">
                       <EditableCell
@@ -706,7 +706,7 @@ export function InputCardForm() {
                         onChange={(v) => updateField('slicePerRow', v)}
                       />
                     </td>
-                    <td className="border">PCS/排</td>
+                    <td className="border">{t('cardPcsPerRow')}</td>
                     <td colSpan={2} className="border">
                       <EditableCell
                         value={data.slicePerRoll}
@@ -714,12 +714,12 @@ export function InputCardForm() {
                       />
                     </td>
                     <td colSpan={2} className="border">
-                      PCS/卷
+                      {t('cardPcsPerRoll')}
                     </td>
                   </>
                 ) : index === 5 ? (
                   <>
-                    <td className="border">厂商</td>
+                    <td className="border">{t('cardManufacturer')}</td>
                     <td className="border">
                       <EditableCell
                         value={data.adhesiveManufacturer}
@@ -732,7 +732,7 @@ export function InputCardForm() {
                         onChange={(v) => updateField('slicePerBundle', v)}
                       />
                     </td>
-                    <td className="border">PCS/袋</td>
+                    <td className="border">{t('cardPcsPerBag')}</td>
                     <td colSpan={2} className="border">
                       <EditableCell
                         value={data.slicePerBag}
@@ -758,7 +758,7 @@ export function InputCardForm() {
                         onChange={(v) => updateField('slicePerBox', v)}
                       />
                     </td>
-                    <td className="border">PCS/箱</td>
+                    <td className="border">{t('cardPcsPerBox')}</td>
                     <td colSpan={2} className="border">
                       <EditableCell
                         value={data.packingQty}
@@ -766,7 +766,7 @@ export function InputCardForm() {
                       />
                     </td>
                     <td colSpan={2} className="border">
-                      PCS/袋
+                      {t('cardPcsPerBag')}
                     </td>
                   </>
                 )}
@@ -776,20 +776,20 @@ export function InputCardForm() {
             {/* 专色配比/离型纸/刀模行 */}
             <tr>
               <td rowSpan={3} className="border text-center font-bold">
-                专色配比
+                {t('cardSpecialColorRatio')}
               </td>
               <td rowSpan={3} colSpan={8} className="border">
                 <EditableTextarea
                   value={data.colorFormula}
                   onChange={(v) => updateField('colorFormula', v)}
-                  placeholder="专色配比"
+                  placeholder={t('cardSpecialColorRatio')}
                 />
               </td>
               <td colSpan={2} className="border">
-                离型纸
+                {t('cardReleasePaper')}
               </td>
               <td colSpan={2} className="border">
-                背刀刀模
+                {t('cardBackKnifeMold')}
               </td>
               <td colSpan={2} className="border">
                 <EditableCell
@@ -804,11 +804,11 @@ export function InputCardForm() {
                 />
               </td>
               <td colSpan={2} className="border">
-                PCS/箱
+                {t('cardPcsPerBox')}
               </td>
             </tr>
             <tr>
-              <td className="border">种类</td>
+              <td className="border">{t('cardCategory')}</td>
               <td className="border">
                 <EditableCell
                   value={data.releasePaperType}
@@ -816,13 +816,13 @@ export function InputCardForm() {
                 />
               </td>
               <td colSpan={2} className="border">
-                腐蚀刀模
+                {t('cardEtchMold')}
               </td>
               <td colSpan={2} className="border">
                 <EditableCell value={data.etchMold} onChange={(v) => updateField('etchMold', v)} />
               </td>
               <td colSpan={2} className="border">
-                垫纸材料
+                {t('cardPaddingMaterial')}
               </td>
               <td colSpan={2} className="border">
                 <EditableCell
@@ -840,7 +840,7 @@ export function InputCardForm() {
                 />
               </td>
               <td colSpan={2} className="border">
-                腐蚀刀模
+                {t('cardEtchMold')}
               </td>
               <td colSpan={2} className="border">
                 <EditableCell
@@ -849,7 +849,7 @@ export function InputCardForm() {
                 />
               </td>
               <td colSpan={2} className="border">
-                打包材料
+                {t('cardPackingMaterial')}
               </td>
               <td colSpan={2} className="border">
                 <EditableCell
@@ -862,18 +862,18 @@ export function InputCardForm() {
             {/* 电脑图档/样品/注意事项 */}
             <tr>
               <td colSpan={3} className="border">
-                电脑图档存储路径
+                {t('cardFilePath')}
               </td>
               <td colSpan={8} className="border">
                 <EditableCell value={data.filePath} onChange={(v) => updateField('filePath', v)} />
               </td>
               <td rowSpan={2} colSpan={8} className="border align-top">
                 <div className="text-left p-1">
-                  <span className="font-bold text-xs">注意事项：</span>
+                  <span className="font-bold text-xs">{t('cardNotesLabel')}</span>
                   <EditableTextarea
                     value={data.notes}
                     onChange={(v) => updateField('notes', v)}
-                    placeholder="输入注意事项"
+                    placeholder={t('cardInputNotes')}
                     className="mt-1"
                     rows={3}
                   />
@@ -881,7 +881,7 @@ export function InputCardForm() {
               </td>
             </tr>
             <tr>
-              <td className="border text-center font-bold">样品</td>
+              <td className="border text-center font-bold">{t('cardSample')}</td>
               <td colSpan={10} className="border">
                 <EditableCell
                   value={data.sampleInfo}
@@ -892,7 +892,9 @@ export function InputCardForm() {
 
             {/* 审批行 */}
             <tr>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">制表</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardCreator')}
+              </td>
               <td colSpan={2} className="border font-bold text-center">
                 <EditableCell value={data.creator} onChange={(v) => updateField('creator', v)} />
               </td>
@@ -902,21 +904,27 @@ export function InputCardForm() {
               <td className="border">
                 <EditableCell value={data.reviewer} onChange={(v) => updateField('reviewer', v)} />
               </td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">厂务</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardFactoryManager')}
+              </td>
               <td colSpan={2} className="border font-bold text-center">
                 <EditableCell
                   value={data.factoryManager}
                   onChange={(v) => updateField('factoryManager', v)}
                 />
               </td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">品管</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardQualityManager')}
+              </td>
               <td colSpan={2} className="border font-bold text-center">
                 <EditableCell
                   value={data.qualityManager}
                   onChange={(v) => updateField('qualityManager', v)}
                 />
               </td>
-              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">业务</td>
+              <td className="border bg-gray-50 dark:bg-gray-700 font-bold text-center">
+                {t('cardSales')}
+              </td>
               <td colSpan={3} className="border font-bold text-center">
                 <EditableCell value={data.sales} onChange={(v) => updateField('sales', v)} />
               </td>
@@ -931,7 +939,7 @@ export function InputCardForm() {
 
       {/* 底部编号 — 移至页面最底部 */}
       <div className="mt-2 flex items-center">
-        <span className="font-bold text-sm mr-2">编号：</span>
+        <span className="font-bold text-sm mr-2">{t('cardDocumentCode')}</span>
         <EditableCell
           value={data.documentCode}
           onChange={(v) => updateField('documentCode', v)}
@@ -943,15 +951,15 @@ export function InputCardForm() {
       <div className="mt-4 flex items-center justify-center gap-3 pb-4">
         <Button variant="outline" onClick={() => router.push('/sample/standard-card')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          返回列表
+          {t('backToList')}
         </Button>
         <Button variant="outline" onClick={handleSave} disabled={saving}>
           <Save className="h-4 w-4 mr-2" />
-          {saving ? '保存中...' : isEditMode ? '更新' : '保存'}
+          {saving ? t('saving') : isEditMode ? t('cardUpdate') : t('cardSave')}
         </Button>
         <Button onClick={handleSaveAndPreview} disabled={saving}>
           <Printer className="h-4 w-4 mr-2" />
-          {saving ? '保存中...' : '保存并预览'}
+          {saving ? t('saving') : t('saveAndPreview')}
         </Button>
       </div>
     </div>

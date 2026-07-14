@@ -1,7 +1,5 @@
-const DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true' || process.env.DEMO_MODE === 'true';
-
 export function isDemoMode(): boolean {
-  return DEMO;
+  return process.env.NEXT_PUBLIC_DEMO_MODE === 'true' || process.env.DEMO_MODE === 'true';
 }
 
 export const demoUser = {
@@ -93,6 +91,10 @@ export function demoQuery(sql: string, _values?: unknown[]): unknown[] {
   if (/SELECT.*FROM\s+sys_data_scope/i.test(sql)) {
     return [];
   }
+  if (/SELECT.*FROM\s+sys_config/i.test(sql)) {
+    return [{ config_key: 'demo', config_value: 'demo' }];
+  }
+  console.log('[demoQuery] unhandled SQL:', sql.substring(0, 200));
   return [];
 }
 
