@@ -137,7 +137,7 @@ export function AuthProvider({
     menus: initialAuth?.menus ?? [],
     permissions: initialAuth?.permissions ?? [],
     isAuthenticated: false,
-    isLoading: !(initialAuth && initialAuth.menus.length > 0),
+    isLoading: !(initialAuth && initialAuth.menus && initialAuth.menus.length > 0),
   });
 
   const [isHydrated, setIsHydrated] = useState(false);
@@ -257,17 +257,17 @@ export function AuthProvider({
           // 仅恢复 user / isAuthenticated（这些字段 SSR 阶段无法从 localStorage 读取），
           // 仍触发后台静默刷新，保证菜单最终与服务端一致；同时持久化到 localStorage 作降级缓存。
           const ssrInitial = initialAuthRef.current;
-          if (ssrInitial && ssrInitial.menus.length > 0) {
+          if (ssrInitial && ssrInitial.menus && ssrInitial.menus.length > 0) {
             setState({
               user,
               menus: ssrInitial.menus,
-              permissions: ssrInitial.permissions,
+              permissions: ssrInitial.permissions ?? [],
               isAuthenticated: true,
               isLoading: false,
             });
             menusLoadedRef.current = true;
             menusCountRef.current = ssrInitial.menus.length;
-            saveCachedMenus(ssrInitial.menus, ssrInitial.permissions);
+            saveCachedMenus(ssrInitial.menus, ssrInitial.permissions ?? []);
             // 后台静默刷新，不清除认证状态
             fetchMenus(token, true, false).catch(() => {});
             return;
