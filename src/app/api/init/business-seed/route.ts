@@ -42,6 +42,119 @@ export const POST = withPermission(async (_request: NextRequest) => {
       await conn.execute('DELETE FROM inv_inventory');
     } catch (_e) {}
 
+    // 清理即将插入的表
+    await safeDelete('prd_bom_detail');
+    await safeDelete('prd_bom');
+    await safeDelete('pur_supplier');
+    await safeDelete('inv_warehouse');
+
+    // ===== 仓库种子数据（inv_inbound_order FK 依赖） =====
+    const warehouses = [
+      {
+        warehouse_code: 'WH001',
+        warehouse_name: '原材料仓',
+        warehouse_type: 1,
+        address: '厂区A栋1楼',
+      },
+      {
+        warehouse_code: 'WH002',
+        warehouse_name: '半成品仓',
+        warehouse_type: 2,
+        address: '厂区A栋2楼',
+      },
+      {
+        warehouse_code: 'WH003',
+        warehouse_name: '成品仓',
+        warehouse_type: 3,
+        address: '厂区B栋1楼',
+      },
+      {
+        warehouse_code: 'WH004',
+        warehouse_name: '辅料仓',
+        warehouse_type: 4,
+        address: '厂区B栋2楼',
+      },
+      {
+        warehouse_code: 'WH005',
+        warehouse_name: '油墨仓',
+        warehouse_type: 5,
+        address: '厂区C栋1楼',
+      },
+    ];
+    for (const wh of warehouses) {
+      await safeInsert(
+        `INSERT IGNORE INTO inv_warehouse (warehouse_code, warehouse_name, warehouse_type, address, status, create_time, update_time, deleted) VALUES (?, ?, ?, ?, 1, NOW(), NOW(), 0)`,
+        [wh.warehouse_code, wh.warehouse_name, wh.warehouse_type, wh.address]
+      );
+    }
+    stats.inv_warehouse = warehouses.length;
+
+    // ===== 供应商种子数据 =====
+    const suppliers = [
+      {
+        supplier_code: 'SUP001',
+        supplier_name: '东莞PET薄膜厂',
+        short_name: '东莞PET',
+        contact_name: '陈总',
+        contact_phone: '0769-12345678',
+        address: '广东省东莞市',
+      },
+      {
+        supplier_code: 'SUP002',
+        supplier_name: '深圳油墨公司',
+        short_name: '深圳油墨',
+        contact_name: '刘总',
+        contact_phone: '0755-87654321',
+        address: '广东省深圳市',
+      },
+      {
+        supplier_code: 'SUP003',
+        supplier_name: '广州不干胶厂',
+        short_name: '广州不干胶',
+        contact_name: '王总',
+        contact_phone: '020-11112222',
+        address: '广东省广州市',
+      },
+      {
+        supplier_code: 'SUP004',
+        supplier_name: '佛山PVC厂',
+        short_name: '佛山PVC',
+        contact_name: '李总',
+        contact_phone: '0757-33334444',
+        address: '广东省佛山市',
+      },
+      {
+        supplier_code: 'SUP005',
+        supplier_name: '深圳特种油墨',
+        short_name: '特种油墨',
+        contact_name: '赵总',
+        contact_phone: '0755-55556666',
+        address: '广东省深圳市',
+      },
+      {
+        supplier_code: 'SUP006',
+        supplier_name: '广州保护膜厂',
+        short_name: '广州保护膜',
+        contact_name: '孙总',
+        contact_phone: '020-77778888',
+        address: '广东省广州市',
+      },
+    ];
+    for (const sup of suppliers) {
+      await safeInsert(
+        `INSERT IGNORE INTO pur_supplier (supplier_code, supplier_name, short_name, supplier_type, address, contact_name, contact_phone, status, create_time, update_time, deleted) VALUES (?, ?, ?, 1, ?, ?, ?, 1, NOW(), NOW(), 0)`,
+        [
+          sup.supplier_code,
+          sup.supplier_name,
+          sup.short_name,
+          sup.address,
+          sup.contact_name,
+          sup.contact_phone,
+        ]
+      );
+    }
+    stats.pur_supplier = suppliers.length;
+
     const customers = [
       {
         customer_name: '美的集团',
@@ -227,23 +340,25 @@ export const POST = withPermission(async (_request: NextRequest) => {
       },
     ];
 
+    const recvStatusMap: Record<string, number> = {
+      pending: 1,
+      partial: 2,
+      completed: 3,
+    };
     for (const rec of receivables) {
       const customerId = customerMap[rec.customer];
-      const salesOrderId = orderMap[rec.order_no];
       await safeInsert(
-        `INSERT INTO fin_receivable (receivable_no, sales_order_id, sales_order_no, customer_id, customer_name, amount, received_amount, pending_amount, due_date, status, create_time, update_time, deleted) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
+        `INSERT INTO fin_receivable (receivable_no, source_type, source_no, customer_id, amount, received_amount, balance, due_date, status, create_time, update_time, deleted)
+         VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
         [
           'RC' + Date.now().toString(36) + Math.random().toString(36).substr(2, 3),
-          salesOrderId,
           rec.order_no,
           customerId,
-          rec.customer,
           rec.amount,
           rec.received,
           rec.amount - rec.received,
           rec.due_date,
-          rec.status,
+          recvStatusMap[rec.status] || 1,
         ]
       );
     }
@@ -825,6 +940,54 @@ export const POST = withPermission(async (_request: NextRequest) => {
       );
     }
     stats.qc_inspection = inspections.length;
+
+    // ===== BOM 种子数据 =====
+    const boms = [
+      {
+        bom_name: '空调面板标签-BOM',
+        product_id: 1,
+        total_cost: 0.85,
+        remark: '美的空调面板标签物料清单',
+      },
+      {
+        bom_name: '洗衣机面板-BOM',
+        product_id: 2,
+        total_cost: 1.2,
+        remark: '格力洗衣机面板物料清单',
+      },
+      { bom_name: '冰箱标签-BOM', product_id: 3, total_cost: 0.65, remark: '海尔冰箱标签物料清单' },
+      { bom_name: '电视标签-BOM', product_id: 4, total_cost: 0.95, remark: 'TCL电视标签物料清单' },
+      {
+        bom_name: '空调标签-BOM',
+        product_id: 5,
+        total_cost: 0.75,
+        remark: '奥克斯空调标签物料清单',
+      },
+    ];
+    const [matRows2]: Loose = await conn.execute(
+      'SELECT id, material_name FROM inv_material WHERE deleted = 0 ORDER BY id LIMIT 5'
+    );
+    const matList: Array<{ id: number; material_name: string }> = matRows2 as any;
+    for (const bom of boms) {
+      await safeInsert(
+        `INSERT INTO prd_bom (bom_name, product_id, version, total_cost, status, remark, create_time, update_time, deleted) VALUES (?, ?, '1.0', ?, 1, ?, NOW(), NOW(), 0)`,
+        [bom.bom_name, bom.product_id, bom.total_cost, bom.remark]
+      );
+      const [bomRow]: Loose = await conn.execute('SELECT id FROM prd_bom WHERE bom_name = ?', [
+        bom.bom_name,
+      ]);
+      const bomId = bomRow[0]?.id;
+      if (!bomId) continue;
+      // 为每个 BOM 添加明细：取前 3 个物料作为组成
+      for (let i = 0; i < Math.min(3, matList.length); i++) {
+        const mat = matList[i];
+        await safeInsert(
+          `INSERT INTO prd_bom_detail (bom_id, material_id, material_name, quantity, unit, loss_rate, unit_cost, total_cost, item_type, create_time) VALUES (?, ?, ?, ?, '卷', 0.05, 10, 100, 1, NOW())`,
+          [bomId, mat.id, mat.material_name, 100 + i * 50]
+        );
+      }
+    }
+    stats.prd_bom = boms.length;
 
     return stats;
   });

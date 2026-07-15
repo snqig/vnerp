@@ -525,9 +525,12 @@ export default function BasicsSettingsPage() {
       toast.warning('配置数据加载失败，使用本地模拟数据');
     } finally {
       setLoading(false);
-      console.log('[Settings/Basics] 配置数据加载完成，当前分类:', categories);
+      setCategories((prev) => {
+        console.log('[Settings/Basics] 配置数据加载完成，当前分类:', prev);
+        return prev;
+      });
     }
-  }, [categories]);
+  }, []);
 
   useEffect(() => {
     console.log('[Settings/Basics] useEffect 触发，isAdmin:', isAdmin);
@@ -537,7 +540,7 @@ export default function BasicsSettingsPage() {
       setLoading(false);
       console.log('[Settings/Basics] 非管理员，跳过配置加载');
     }
-  }, [isAdmin, loadConfigs]);
+  }, [isAdmin]);
 
   const handleCardClick = (category: string) => {
     const routeInfo = configRouteMap[category];
