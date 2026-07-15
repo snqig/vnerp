@@ -489,6 +489,17 @@ export async function clearBomExpansionCache(): Promise<void> {
   await getCacheManager().deletePattern('bom:expansion:*');
 }
 
+interface BomTreeNode {
+  id: number;
+  code: string;
+  name: string;
+  type: 'product' | 'material';
+  quantity: number;
+  lossRate: number;
+  level: number;
+  children: BomTreeNode[];
+}
+
 /**
  * 获取BOM展开的树形结构（用于前端展示）
  */
@@ -497,16 +508,7 @@ export async function getBomExpansionTree(
   quantity: number,
   config: Partial<BomExpansionConfig> = {}
 ): Promise<{
-  node: {
-    id: number;
-    code: string;
-    name: string;
-    type: 'product' | 'material';
-    quantity: number;
-    lossRate: number;
-    level: number;
-    children: Loose[];
-  };
+  node: BomTreeNode;
   warnings?: string[];
 }> {
   const warnings: string[] = [];
@@ -520,7 +522,7 @@ export async function getBomExpansionTree(
     plossRate: number,
     level: number,
     path: string[]
-  ): Promise<Loose> {
+  ): Promise<BomTreeNode> {
     // 深度和循环检查
     if (level >= (config.maxDepth || 10)) {
       warnings.push(`达到最大递归深度，产品 ${pcode} 的展开已停止`);

@@ -7,7 +7,7 @@ const seenMissingKeys = new Set<string>();
 export default getRequestConfig(async ({ requestLocale }) => {
   let locale = await requestLocale;
 
-  if (!locale || !locales.includes(locale as Loose)) {
+  if (!locale || !locales.includes(locale as (typeof locales)[number])) {
     locale = defaultLocale;
   }
 

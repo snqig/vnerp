@@ -25,6 +25,7 @@ import {
   MysqlInkColorRepository,
 } from '@/infrastructure/repositories/MysqlFormulaVersionRepository';
 import { MaterialCostProvider } from '@/infrastructure/providers/MaterialCostProvider';
+import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 
 // ===== DTO 类型定义（保持与 API 路由兼容）=====
 
@@ -365,10 +366,10 @@ export async function activateVersion(id: number, operatorId: number): Promise<v
     // 计算成本快照
     await calculateAndSnapshotCost(conn, id);
 
-    const [costRows]: Loose = await conn.execute(
+    const [costRows] = await conn.execute(
       'SELECT theoretical_cost FROM dcprint_ink_formula_version WHERE id = ?',
       [id]
-    );
+    ) as [RowDataPacket[], any];
     await getDomainEventOutbox().saveEvents(conn, 'InkFormulaVersion', id, [
       new FormulaVersionActivatedEvent({
         versionId: id,
@@ -450,7 +451,7 @@ export async function updateVersion(
 
   agg.toProps(); // 触发内部状态
   // 更新 updateBy
-  (agg as Loose)._updateBy = operatorId;
+  (agg as InkFormulaVersion)['_updateBy'] = operatorId;
 
   await versionRepo.update(agg);
 }
@@ -486,7 +487,7 @@ export async function updateVersionItems(
   agg.updateItems(items.map(itemDTOToProps));
 
   // 更新 updateBy
-  (agg as Loose)._updateBy = operatorId;
+  (agg as InkFormulaVersion)['_updateBy'] = operatorId;
 
   // 通过仓储更新明细
   const props = agg.toProps();
@@ -581,8 +582,8 @@ export async function compareVersions(leftId: number, rightId: number): Promise<
  * 理论成本 = Σ (配比比例% × 原料单位成本)
  * 成本取值：优先 inv_material.weighted_avg_cost，降级 base_ink.unit_price
  */
-async function calculateAndSnapshotCost(conn: Loose, versionId: number): Promise<void> {
-  const items: Loose = await query(
+async function calculateAndSnapshotCost(conn: any, versionId: number): Promise<void> {
+  const items = await query(
     `SELECT fi.*, bi.unit_price
      FROM dcprint_ink_formula_item fi
      LEFT JOIN base_ink bi ON fi.material_id = bi.id

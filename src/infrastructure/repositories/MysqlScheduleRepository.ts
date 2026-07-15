@@ -2,22 +2,22 @@ import { IScheduleRepository } from '@/domain/production/repositories/IScheduleR
 import { query, execute, queryPaginated } from '@/lib/db';
 
 export class MysqlScheduleRepository implements IScheduleRepository {
-  async findById(id: number): Promise<Loose | null> {
-    const rows = await query<Loose>('SELECT * FROM prd_schedule WHERE id = ? AND deleted = 0', [
+  async findById(id: number): Promise<any | null> {
+    const rows = await query('SELECT * FROM prd_schedule WHERE id = ? AND deleted = 0', [
       id,
     ]);
     return rows.length > 0 ? rows[0] : null;
   }
 
-  async findDetailsByScheduleId(scheduleId: number): Promise<Loose[]> {
-    return await query<Loose>(
+  async findDetailsByScheduleId(scheduleId: number): Promise<any[]> {
+    return await query(
       'SELECT * FROM prd_schedule_detail WHERE schedule_id = ? AND deleted = 0 ORDER BY color_seq_no ASC',
       [scheduleId]
     );
   }
 
-  async findByWorkOrderId(workOrderId: number): Promise<Loose | null> {
-    const rows = await query<Loose>(
+  async findByWorkOrderId(workOrderId: number): Promise<any | null> {
+    const rows = await query(
       'SELECT * FROM prd_schedule WHERE work_order_id = ? AND deleted = 0 ORDER BY create_time DESC LIMIT 1',
       [workOrderId]
     );
@@ -31,12 +31,12 @@ export class MysqlScheduleRepository implements IScheduleRepository {
     status?: number;
     keyword?: string;
   }): Promise<{
-    data: Loose[];
+    data: any[];
     pagination: { page: number; pageSize: number; total: number; totalPages: number };
   }> {
     let sql = 'SELECT * FROM prd_schedule WHERE deleted = 0';
     let countSql = 'SELECT COUNT(*) as total FROM prd_schedule WHERE deleted = 0';
-    const paramsArr: Loose[] = [];
+    const paramsArr: (string | number)[] = [];
 
     if (params.workshop) {
       sql += ' AND workshop = ?';
@@ -87,7 +87,7 @@ export class MysqlScheduleRepository implements IScheduleRepository {
     scheduler?: string;
     remark?: string;
   }): Promise<number> {
-    const [result]: Loose = await execute(
+    const result = await execute(
       `INSERT INTO prd_schedule (
         schedule_no, work_order_id, order_id, order_no, product_id, product_code,
         product_name, workshop, planned_qty, completed_qty, planned_start, planned_end,
@@ -169,7 +169,7 @@ export class MysqlScheduleRepository implements IScheduleRepository {
     }>
   ): Promise<boolean> {
     const setClauses: string[] = [];
-    const values: Loose[] = [];
+    const values: (string | number | Date)[] = [];
 
     if (fields.workshop !== undefined) {
       setClauses.push('workshop = ?');
@@ -233,7 +233,7 @@ export class MysqlScheduleRepository implements IScheduleRepository {
   }
 
   async countByStatus(): Promise<Record<number, number>> {
-    const rows = await query<Loose>(
+    const rows = await query(
       'SELECT status, COUNT(*) as count FROM prd_schedule WHERE deleted = 0 GROUP BY status'
     );
     const result: Record<number, number> = {};
@@ -257,14 +257,14 @@ export class MysqlScheduleRepository implements IScheduleRepository {
         AND planned_start < ?
         AND planned_end > ?
     `;
-    const values: Loose[] = [params.workshop, params.end, params.start];
+    const values: (string | number | Date)[] = [params.workshop, params.end, params.start];
 
     if (params.excludeId !== undefined) {
       sql += ' AND id != ?';
       values.push(params.excludeId);
     }
 
-    const rows = await query<Loose>(sql, values);
+    const rows = await query(sql, values);
     return rows.length > 0 ? rows[0].count : 0;
   }
 }

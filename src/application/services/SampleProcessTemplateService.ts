@@ -10,6 +10,7 @@ import { query, execute, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import type { SampleProcessTemplateInput } from '@/lib/validators/sample-template.schema';
 import type { SampleProcessCard } from './SampleProcessCardService';
+import type { ResultSetHeader, RowDataPacket, PoolConnection } from 'mysql2/promise';
 
 export interface SampleProcessTemplate {
   id: number;
@@ -51,7 +52,7 @@ async function generateTemplateNo(): Promise<string> {
   const today = new Date();
   const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
   const prefix = `SPT${ymd}`;
-  const [rows]: Loose = await query(
+  const [rows] = await query(
     `SELECT template_no FROM dcprint_sample_process_template WHERE template_no LIKE ? ORDER BY id DESC LIMIT 1`,
     [`${prefix}%`]
   );
@@ -72,7 +73,7 @@ export class SampleProcessTemplateService {
     pageSize: number;
   }) {
     const conditions: string[] = ['deleted = 0'];
-    const values: Loose[] = [];
+    const values: (string | number)[] = [];
 
     if (params.keyword) {
       conditions.push('(template_no LIKE ? OR template_name LIKE ? OR tags LIKE ?)');
@@ -87,13 +88,13 @@ export class SampleProcessTemplateService {
     const where = conditions.join(' AND ');
     const offset = (params.page - 1) * params.pageSize;
 
-    const [countRows]: Loose = await query(
+    const [countRows] = await query(
       `SELECT COUNT(*) AS total FROM dcprint_sample_process_template WHERE ${where}`,
       values
     );
     const total = countRows[0]?.total || 0;
 
-    const [rows]: Loose = await query(
+    const [rows] = await query(
       `SELECT * FROM dcprint_sample_process_template WHERE ${where} ORDER BY usage_count DESC, id DESC LIMIT ? OFFSET ?`,
       [...values, params.pageSize, offset]
     );
@@ -103,18 +104,18 @@ export class SampleProcessTemplateService {
 
   /** 详情（含明细） */
   async getTemplateDetail(id: number): Promise<SampleProcessTemplate | null> {
-    const [templates]: Loose = await query(
+    const [templates] = await query(
       `SELECT * FROM dcprint_sample_process_template WHERE id = ? AND deleted = 0 LIMIT 1`,
       [id]
     );
     if (templates.length === 0) return null;
     const template = templates[0];
 
-    const [items]: Loose = await query(
+    const [items] = await query(
       `SELECT * FROM dcprint_sample_process_template_item WHERE template_id = ? ORDER BY sort, id`,
       [id]
     );
-    const [steps]: Loose = await query(
+    const [steps] = await query(
       `SELECT * FROM dcprint_sample_process_template_step WHERE template_id = ? ORDER BY sort, id`,
       [id]
     );
@@ -127,7 +128,7 @@ export class SampleProcessTemplateService {
     const templateNo = data.template_no || (await generateTemplateNo());
 
     return await transaction(async (conn) => {
-      const [result]: Loose = await conn.execute(
+      const [result] = await conn.execute(
         `INSERT INTO dcprint_sample_process_template
          (template_no, template_name, category, tags, description, customer_id, customer_name, product_name,
           substrate_material_id, substrate_material_name, spec, print_color, ink_color_id, screen_plate_id, die_tool_id,
@@ -146,7 +147,6 @@ export class SampleProcessTemplateService {
           data.substrate_material_id || null,
           data.substrate_material_name || null,
           data.spec || null,
-          data.print_color || null,
           data.ink_color_id || null,
           data.screen_plate_id || null,
           data.die_tool_id || null,
@@ -155,8 +155,8 @@ export class SampleProcessTemplateService {
           data.diagram_url || null,
           data.remark || null,
           userId,
-        ] as Loose[]
-      );
+        ]
+      ) as [ResultSetHeader, any];
       const templateId = result.insertId;
 
       await this.insertItems(conn, templateId, data.items || []);
@@ -174,32 +174,32 @@ export class SampleProcessTemplateService {
     category: string | null,
     userId: number
   ): Promise<number> {
-    const cardRes: Loose = await query(
+    const cardRes = await query(
       `SELECT * FROM dcprint_sample_process_card WHERE id = ? AND deleted = 0 LIMIT 1`,
       [cardId]
     );
-    const [cards] = cardRes as unknown as [Loose[]];
+    const [cards] = cardRes as unknown as [RowDataPacket[]];
     if (!cards || cards.length === 0) throw new Error('工艺卡不存在');
     const card = cards[0] as SampleProcessCard;
 
-    const [items]: Loose = await query(
+    const [items] = await query(
       `SELECT * FROM dcprint_sample_process_item WHERE card_id = ? ORDER BY sort, id`,
       [cardId]
     );
-    const [steps]: Loose = await query(
+    const [steps] = await query(
       `SELECT * FROM dcprint_sample_process_step WHERE card_id = ? ORDER BY sort, id`,
       [cardId]
     );
 
     const templateNo = await generateTemplateNo();
 
-    return await transaction(async (conn) => {
-      const [result]: Loose = await conn.execute(
+return await transaction(async (conn) => {
+      const [result] = await conn.execute(
         `INSERT INTO dcprint_sample_process_template
          (template_no, template_name, category, source_card_id, customer_id, customer_name, product_name,
-          substrate_material_id, substrate_material_name, spec, print_color, ink_color_id, screen_plate_id, die_tool_id,
-          material_loss_rate, estimated_hour, diagram_url, total_material_cost, total_labor_cost, total_tool_cost, total_cost, remark,
-          status, create_by, create_time)
+           substrate_material_id, substrate_material_name, spec, print_color, ink_color_id, screen_plate_id, die_tool_id,
+           material_loss_rate, estimated_hour, diagram_url, total_material_cost, total_labor_cost, total_tool_cost, total_cost, remark,
+           status, create_by, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
         [
           templateNo,
@@ -225,12 +225,12 @@ export class SampleProcessTemplateService {
           card.total_cost,
           card.remark,
           userId,
-        ] as Loose[]
-      );
+        ]
+      ) as [ResultSetHeader, any];
       const templateId = result.insertId;
 
-      await this.insertItems(conn, templateId, items as Loose[]);
-      await this.insertSteps(conn, templateId, steps as Loose[]);
+      await this.insertItems(conn, templateId, items);
+      await this.insertSteps(conn, templateId, steps);
 
       secureLog('info', 'Sample process template saved from card', {
         cardId,
@@ -258,7 +258,7 @@ export class SampleProcessTemplateService {
          update_by = ?, update_time = NOW()
          WHERE id = ? AND deleted = 0`,
         [
-          data.template_name,
+          data.template_name || null,
           data.category || null,
           data.tags || null,
           data.description || null,
@@ -278,7 +278,7 @@ export class SampleProcessTemplateService {
           data.remark || null,
           userId,
           id,
-        ] as Loose[]
+        ]
       );
 
       if (data.items) {
@@ -312,7 +312,11 @@ export class SampleProcessTemplateService {
   }
 
   /** 私有：批量插入物料明细 */
-  private async insertItems(conn: Loose, templateId: number, items: Loose[]): Promise<void> {
+  private async insertItems(
+    conn: PoolConnection,
+    templateId: number,
+    items: SampleProcessTemplateInput['items']
+  ): Promise<void> {
     for (const item of items) {
       await conn.execute(
         `INSERT INTO dcprint_sample_process_template_item
@@ -331,13 +335,17 @@ export class SampleProcessTemplateService {
           item.line_cost || 0,
           item.remark || null,
           item.sort || 0,
-        ] as Loose[]
+        ]
       );
     }
   }
 
   /** 私有：批量插入工序明细 */
-  private async insertSteps(conn: Loose, templateId: number, steps: Loose[]): Promise<void> {
+  private async insertSteps(
+    conn: PoolConnection,
+    templateId: number,
+    steps: SampleProcessTemplateInput['steps']
+  ): Promise<void> {
     for (const step of steps) {
       await conn.execute(
         `INSERT INTO dcprint_sample_process_template_step
@@ -352,7 +360,7 @@ export class SampleProcessTemplateService {
           step.line_cost || 0,
           step.process_param || null,
           step.sort || 0,
-        ] as Loose[]
+        ]
       );
     }
   }

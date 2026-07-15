@@ -22,7 +22,7 @@ export class MaterialCostProvider implements IMaterialCostProvider {
 
     // 优先尝试从库存模块获取移动加权平均成本
     try {
-      const invCosts: Loose = await query(
+      const invCosts = await query<any>(
         `SELECT id, weighted_avg_cost FROM inv_material WHERE id IN (${materialIds.map(() => '?').join(',')}) AND deleted = 0 AND weighted_avg_cost IS NOT NULL AND weighted_avg_cost > 0`,
         materialIds
       );
@@ -37,7 +37,7 @@ export class MaterialCostProvider implements IMaterialCostProvider {
     const missingIds = materialIds.filter((id) => !costMap.has(id));
     if (missingIds.length > 0) {
       try {
-        const baseInkCosts: Loose = await query(
+        const baseInkCosts = await query<any>(
           `SELECT id, unit_price FROM base_ink WHERE id IN (${missingIds.map(() => '?').join(',')})`,
           missingIds
         );

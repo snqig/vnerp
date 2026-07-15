@@ -219,9 +219,9 @@ export class StandardCardApplicationService {
     }
 
     const id = await repo.save(card);
-    // id 字段为 readonly，仅在此处通过类型断言赋值以记录持久化主键
+    // id 字段为 readonly，直接使用 toProps 创建新实例
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (card as any).id = id;
+    // (card as any).id = id; // 不需要，下方通过 toProps 创建新实例
 
     await this.saveDetailItems(id, dto);
 
@@ -432,9 +432,7 @@ export class StandardCardApplicationService {
 
     const newCard = card.createNewVersion(StandardCard.generateVersion(card.version), userId);
     const newId = await repo.save(newCard);
-    // id 字段为 readonly，仅在此处通过类型断言赋值以记录持久化主键
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (newCard as any).id = newId;
+    // id 字段为 readonly，直接使用 toProps 创建新实例即可
 
     const { ColorStandardItemRepository } =
       await import('@/infrastructure/repositories/MysqlStandardCardRepository');

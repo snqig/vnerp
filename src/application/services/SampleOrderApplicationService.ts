@@ -1,4 +1,4 @@
-import { ISampleOrderRepository } from '@/domain/sample/repositories/ISampleOrderRepository';
+import { ISampleOrderRepository, SampleOrderFilters } from '@/domain/sample/repositories/ISampleOrderRepository';
 import { ISampleFeedbackRepository } from '@/domain/sample/repositories/ISampleFeedbackRepository';
 import { SampleOrder } from '@/domain/sample/aggregates/SampleOrder';
 import { SampleOrderProps } from '@/domain/sample/aggregates/SampleOrder';
@@ -6,7 +6,8 @@ import { SampleFeedback } from '@/domain/sample/entities/SampleFeedback';
 import { SampleFeedbackProps } from '@/domain/sample/entities/SampleFeedback';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
-import { transaction, execute, query } from '@/lib/db';
+import { transaction, query } from '@/lib/db';
+import type { PoolConnection, ResultSetHeader } from 'mysql2/promise';
 import { logger, generateTraceId } from '@/lib/logger';
 
 export class SampleOrderApplicationService {
@@ -22,14 +23,14 @@ export class SampleOrderApplicationService {
   }
 
   async listOrders(
-    filters: Record<string, unknown>,
+    filters: SampleOrderFilters,
     page: number,
     pageSize: number
   ): Promise<{ list: SampleOrder[]; total: number }> {
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'listOrders', traceId };
     logger.stepStart(ctx, '列表查询', { filters, page, pageSize });
-    const result = await this.orderRepo.findByFilters(filters as any, page, pageSize);
+    const result = await this.orderRepo.findByFilters(filters, page, pageSize);
     logger.stepEnd(ctx, '列表查询', { total: result.total, count: result.list.length });
     return result;
   }
@@ -47,11 +48,18 @@ export class SampleOrderApplicationService {
     logger.info(ctx, '生成打样单号', { orderNo });
 
     const order = SampleOrder.create({ ...props, orderNo } as SampleOrderProps);
-    const id = await this.orderRepo.save(order);
-    logger.info(ctx, '打样单已保存', { id, orderNo });
 
+    // 聚合写入与事件 Outbox 写入必须在同一事务内，保证 Transactional Outbox 契约
+    const id = await transaction(async (conn) => {
+      const newId = await this.orderRepo.save(order, conn);
+      logger.info(ctx, '打样单已保存', { id: newId, orderNo });
+      if (newId) {
+        await this.persistEvents(newId, order, ctx, conn);
+      }
+      return newId;
+    });
     if (id) {
-      await this.persistEvents(id, order, ctx);
+      order.clearDomainEvents();
     }
     logger.stepEnd(ctx, '创建打样单', { id, orderNo });
     return { id, orderNo };
@@ -101,8 +109,11 @@ export class SampleOrderApplicationService {
       events: order.domainEvents.map((e) => e.eventType),
     });
 
-    await this.orderRepo.update(order);
-    await this.persistEvents(id, order, ctx);
+    await transaction(async (conn) => {
+      await this.orderRepo.update(order, conn);
+      await this.persistEvents(id, order, ctx, conn);
+    });
+    order.clearDomainEvents();
     logger.stepEnd(ctx, '提交打样单', { id });
   }
 
@@ -120,8 +131,11 @@ export class SampleOrderApplicationService {
       events: order.domainEvents.map((e) => e.eventType),
     });
 
-    await this.orderRepo.update(order);
-    await this.persistEvents(id, order, ctx);
+    await transaction(async (conn) => {
+      await this.orderRepo.update(order, conn);
+      await this.persistEvents(id, order, ctx, conn);
+    });
+    order.clearDomainEvents();
     logger.stepEnd(ctx, '开始打样生产', { id });
   }
 
@@ -139,8 +153,11 @@ export class SampleOrderApplicationService {
       events: order.domainEvents.map((e) => e.eventType),
     });
 
-    await this.orderRepo.update(order);
-    await this.persistEvents(id, order, ctx);
+    await transaction(async (conn) => {
+      await this.orderRepo.update(order, conn);
+      await this.persistEvents(id, order, ctx, conn);
+    });
+    order.clearDomainEvents();
     logger.stepEnd(ctx, '完成打样', { id });
   }
 
@@ -158,8 +175,11 @@ export class SampleOrderApplicationService {
       events: order.domainEvents.map((e) => e.eventType),
     });
 
-    await this.orderRepo.update(order);
-    await this.persistEvents(id, order, ctx);
+    await transaction(async (conn) => {
+      await this.orderRepo.update(order, conn);
+      await this.persistEvents(id, order, ctx, conn);
+    });
+    order.clearDomainEvents();
     logger.stepEnd(ctx, '确认打样', { id });
   }
 
@@ -183,19 +203,33 @@ export class SampleOrderApplicationService {
       sampleFee: order.sampleFee,
     });
 
-    // 2. Generate sales order number: SO + YYYYMMDD + 4-digit sequence
+    // 1.1 Idempotency: if sample order already linked to a sales order, return existing id
+    if (order.salesOrderId) {
+      logger.info(ctx, 'Sample order already linked to sales order, returning existing id', {
+        id,
+        salesOrderId: order.salesOrderId,
+      });
+      logger.stepEnd(ctx, 'Create sales order from sample', {
+        salesOrderId: order.salesOrderId,
+        skipped: true,
+      });
+      return order.salesOrderId;
+    }
+
+    // 2. Generate sales order number prefix: SO + YYYYMMDD
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth() + 1).padStart(2, '0');
     const d = String(now.getDate()).padStart(2, '0');
     const prefix = `SO${y}${m}${d}`;
+    const today = `${y}-${m}-${d}`;
+
+    // Query base sequence once; on unique constraint conflict, increment locally (seq + 1 per retry)
     const seqRows = await query<{ cnt: number }>(
       'SELECT COUNT(*) AS cnt FROM sal_order WHERE order_no LIKE ?',
       [`${prefix}%`]
     );
-    const nextSeq = (seqRows[0]?.cnt || 0) + 1;
-    const orderNo = `${prefix}${String(nextSeq).padStart(4, '0')}`;
-    logger.info(ctx, 'Sales order number generated', { orderNo });
+    const baseSeq = (seqRows[0]?.cnt || 0) + 1;
 
     // 3. Lookup material id by material_no (sample material_no -> inv_material.id)
     let materialId = 0;
@@ -215,28 +249,59 @@ export class SampleOrderApplicationService {
     const unitPrice = order.sampleFee || 0;
     const totalAmount = unitPrice;
 
-    // 5. Insert sal_order
-    const today = `${y}-${m}-${d}`;
-    const orderResult = await execute(
-      `INSERT INTO sal_order
-       (order_no, order_date, customer_id, total_amount, total_with_tax, currency, status, create_by, create_time)
-       VALUES (?, ?, ?, ?, ?, 'CNY', 1, ?, NOW())`,
-      [orderNo, today, order.customerId || 0, totalAmount, totalAmount, userId]
-    );
-    const salesOrderId = orderResult.insertId;
-    logger.info(ctx, 'Sales order created', { salesOrderId, orderNo });
+    // 5. Insert sal_order + sal_order_detail in one transaction (atomic)
+    //    Retry on unique constraint conflict (ER_DUP_ENTRY): increment sequence by 1 each retry.
+    //    The uk_order_no unique index (migration 062) provides the concurrency safety net.
+    const MAX_RETRIES = 3;
+    let lastOrderNo = '';
 
-    // 6. Insert sal_order_detail
-    await execute(
-      `INSERT INTO sal_order_detail
-       (order_id, material_id, material_name, quantity, unit_price, total_amount, create_time)
-       VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-      [salesOrderId, materialId, order.productName || null, quantity, unitPrice, totalAmount]
-    );
-    logger.info(ctx, 'Sales order detail created', { salesOrderId, materialId });
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      const nextSeq = baseSeq + attempt;
+      const orderNo = `${prefix}${String(nextSeq).padStart(4, '0')}`;
+      lastOrderNo = orderNo;
+      logger.info(ctx, 'Sales order number generated', { orderNo, attempt });
 
-    logger.stepEnd(ctx, 'Create sales order from sample', { salesOrderId, orderNo });
-    return salesOrderId;
+      try {
+        const newSalesOrderId = await transaction(async (conn) => {
+          const [orderResult] = await conn.execute(
+            `INSERT INTO sal_order
+             (order_no, order_date, customer_id, total_amount, total_with_tax, currency, status, create_by, create_time)
+             VALUES (?, ?, ?, ?, ?, 'CNY', 1, ?, NOW())`,
+            [orderNo, today, order.customerId || 0, totalAmount, totalAmount, userId]
+          );
+          const newId = (orderResult as ResultSetHeader).insertId;
+          logger.info(ctx, 'Sales order created', { salesOrderId: newId, orderNo });
+
+          await conn.execute(
+            `INSERT INTO sal_order_detail
+             (order_id, material_id, material_name, quantity, unit_price, total_amount, create_time)
+             VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+            [newId, materialId, order.productName || null, quantity, unitPrice, totalAmount]
+          );
+          logger.info(ctx, 'Sales order detail created', { salesOrderId: newId, materialId });
+          return newId;
+        });
+
+        logger.stepEnd(ctx, 'Create sales order from sample', { salesOrderId: newSalesOrderId, orderNo });
+        return newSalesOrderId;
+      } catch (error) {
+        const dbErr = error as { code?: string };
+        if (dbErr.code === 'ER_DUP_ENTRY') {
+          logger.warn(ctx, 'Sales order number conflict, retrying', { orderNo, attempt });
+          if (attempt < MAX_RETRIES - 1) {
+            continue; // retry with next sequence number
+          }
+          break; // last attempt exhausted — fall through to DomainError
+        }
+        throw error; // non-DUP error: propagate immediately
+      }
+    }
+
+    // All retries exhausted — unique constraint still violated
+    throw new DomainError(
+      `Sales order number generation failed after ${MAX_RETRIES} retries (last attempted: ${lastOrderNo})`,
+      'SALES_ORDER_NO_CONFLICT'
+    );
   }
 
   async convertOrder(id: number, salesOrderId: number, userId: number): Promise<void> {
@@ -254,8 +319,11 @@ export class SampleOrderApplicationService {
       events: order.domainEvents.map((e) => e.eventType),
     });
 
-    await this.orderRepo.update(order);
-    await this.persistEvents(id, order, ctx);
+    await transaction(async (conn) => {
+      await this.orderRepo.update(order, conn);
+      await this.persistEvents(id, order, ctx, conn);
+    });
+    order.clearDomainEvents();
     logger.stepEnd(ctx, '转大货', { id, salesOrderId });
   }
 
@@ -273,15 +341,25 @@ export class SampleOrderApplicationService {
       events: order.domainEvents.map((e) => e.eventType),
     });
 
-    await this.orderRepo.update(order);
-    await this.persistEvents(id, order, ctx);
+    await transaction(async (conn) => {
+      await this.orderRepo.update(order, conn);
+      await this.persistEvents(id, order, ctx, conn);
+    });
+    order.clearDomainEvents();
     logger.stepEnd(ctx, '作废打样单', { id });
   }
 
+  /**
+   * 持久化领域事件到 Outbox。
+   * - 传入 conn 时：在外部事务连接上写入，不开启新事务、不清除事件
+   *   （由调用方在事务提交成功后调用 aggregate.clearDomainEvents()）。
+   * - 未传入 conn 时：开启独立事务写入并立即清除事件（兼容旧调用方）。
+   */
   private async persistEvents(
     aggregateId: number,
     aggregate: any,
-    parentCtx?: Record<string, unknown>
+    parentCtx?: Record<string, unknown>,
+    conn?: PoolConnection
   ): Promise<void> {
     const events = aggregate.domainEvents || [];
     if (events.length === 0) return;
@@ -295,9 +373,14 @@ export class SampleOrderApplicationService {
       eventCount: events.length,
       eventTypes: events.map((e: any) => e.eventType),
     });
-    await transaction(async (conn) => {
-      const aggregateType = aggregate.constructor.name;
+    const aggregateType = aggregate.constructor.name;
+    if (conn) {
       await getDomainEventOutbox().saveEvents(conn, aggregateType, aggregateId, events);
+      logger.info(ctx, '领域事件已写入 Outbox（外部事务）', { aggregateId });
+      return;
+    }
+    await transaction(async (tx) => {
+      await getDomainEventOutbox().saveEvents(tx, aggregateType, aggregateId, events);
     });
     aggregate.clearDomainEvents();
     logger.info(ctx, '领域事件已持久化', { aggregateId, cleared: true });

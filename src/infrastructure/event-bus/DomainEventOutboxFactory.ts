@@ -16,10 +16,25 @@ export type EventBusType = 'memory' | 'db';
 
 /**
  * 读取 EVENT_BUS_TYPE 环境变量，返回合法值
+ * 
+ * 生产环境（NODE_ENV === 'production'）：
+ * - 强制 'db' 模式，memory 模式不支持多实例部署，事件可能丢失
+ * - 未配置或配置为 'memory' 时抛出错误
+ * 
+ * 开发环境：
  * - 未设置或非法值时降级为 'memory'（向后兼容）
  */
 export function getEventBusType(): EventBusType {
   const raw = (process.env.EVENT_BUS_TYPE || '').toLowerCase().trim();
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (isProduction) {
+    if (raw !== 'db') {
+      throw new Error('生产环境必须配置 EVENT_BUS_TYPE=db，memory 模式不支持多实例部署');
+    }
+    return 'db';
+  }
+
   return raw === 'db' ? 'db' : 'memory';
 }
 

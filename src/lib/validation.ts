@@ -37,11 +37,11 @@ export interface ValidationRule {
   /** 正则表达式匹配规则 */
   pattern?: RegExp;
   /** 允许的枚举值列表 */
-  enum?: Loose[];
+  enum?: any[];
   /** 自定义错误消息，覆盖默认错误消息 */
   message?: string;
   /** 自定义验证函数，返回 true 表示通过，返回字符串表示错误消息 */
-  custom?: (value: Loose) => boolean | string;
+  custom?: (value: any) => boolean | string;
 }
 
 /**
@@ -58,7 +58,7 @@ export class Validator {
    * const error = Validator.validateValue('abc', { field: 'name', required: true, type: 'string', maxLength: 50 });
    * // 返回 null 表示通过验证
    */
-  static validateValue(value: Loose, rule: ValidationRule): string | null {
+  static validateValue(value: any, rule: ValidationRule): string | null {
     const {
       field,
       required,
@@ -148,7 +148,7 @@ export class Validator {
    * @returns 验证失败时返回错误消息，通过时返回 null
    * @private
    */
-  private static validateType(value: Loose, type: string, field: string): string | null {
+  private static validateType(value: any, type: string, field: string): string | null {
     switch (type) {
       case 'string':
         if (typeof value !== 'string') return `${field} 必须是字符串`;
@@ -198,7 +198,7 @@ export class Validator {
    * );
    * // result.valid === false, result.errors === ['name 为必填项']
    */
-  static validate(data: Record<string, Loose>, rules: ValidationRule[]): ValidationResult {
+  static validate(data: Record<string, any>, rules: ValidationRule[]): ValidationResult {
     const errors: string[] = [];
 
     for (const rule of rules) {
@@ -224,7 +224,7 @@ export class Validator {
    * const result = Validator.validateRequired({ name: '', email: 'test' }, ['name', 'email']);
    * // result.valid === false, result.errors === ['name 为必填项']
    */
-  static validateRequired(data: Record<string, Loose>, fields: string[]): ValidationResult {
+  static validateRequired(data: Record<string, any>, fields: string[]): ValidationResult {
     const errors: string[] = [];
 
     for (const field of fields) {
@@ -354,7 +354,7 @@ export const ValidationPresets = {
    * @param enumValues - 允许的状态值列表，默认为 [0, 1]
    * @returns 配置好的验证规则：数字类型、枚举值限制
    */
-  status: (field = 'status', required = true, enumValues: Loose[] = [0, 1]): ValidationRule => ({
+  status: (field = 'status', required = true, enumValues: any[] = [0, 1]): ValidationRule => ({
     field,
     required,
     type: 'number',
@@ -400,7 +400,7 @@ export const ValidationPresets = {
  * const result = validateBody({ name: 'test' });
  */
 export function validateRequestBody(rules: ValidationRule[]) {
-  return (body: Record<string, Loose>): ValidationResult => {
+  return (body: Record<string, any>): ValidationResult => {
     return Validator.validate(body, rules);
   };
 }
@@ -415,7 +415,7 @@ export const CommonValidations = {
    * @param data - 包含 page 和 pageSize 字段的数据对象
    * @returns 验证结果，page 和 pageSize 均为可选、数字类型、page >= 1、pageSize 1-1000
    */
-  pagination: (data: Record<string, Loose>): ValidationResult => {
+  pagination: (data: Record<string, any>): ValidationResult => {
     return Validator.validate(data, [
       { field: 'page', required: false, type: 'number', min: 1 },
       { field: 'pageSize', required: false, type: 'number', min: 1, max: 1000 },
@@ -427,7 +427,7 @@ export const CommonValidations = {
    * @param data - 包含 id 字段的数据对象
    * @returns 验证结果，id 必填、数字类型、最小值为 1
    */
-  id: (data: Record<string, Loose>): ValidationResult => {
+  id: (data: Record<string, any>): ValidationResult => {
     return Validator.validate(data, [ValidationPresets.id()]);
   },
 
@@ -436,7 +436,7 @@ export const CommonValidations = {
    * @param data - 包含员工信息的数据库对象
    * @returns 验证结果，包含工号、姓名、性别、部门ID、职位、手机号、邮箱等字段验证
    */
-  employee: (data: Record<string, Loose>): ValidationResult => {
+  employee: (data: Record<string, any>): ValidationResult => {
     return Validator.validate(data, [
       ValidationPresets.code('employee_no'),
       ValidationPresets.name('name'),
@@ -453,7 +453,7 @@ export const CommonValidations = {
    * @param data - 包含薪资信息的数据对象
    * @returns 验证结果，包含员工ID、月份、各项薪资组成字段的验证
    */
-  salary: (data: Record<string, Loose>): ValidationResult => {
+  salary: (data: Record<string, any>): ValidationResult => {
     return Validator.validate(data, [
       { field: 'employeeId', required: true, type: 'number', min: 1 },
       { field: 'month', required: true, type: 'string', pattern: /^\d{4}-\d{2}$/ },
@@ -475,7 +475,7 @@ export const CommonValidations = {
    * @param data - 包含品质检验信息的数据对象
    * @returns 验证结果，包含工序卡ID、检验结果、合格/缺陷数量、检验员、备注等字段验证
    */
-  qualityInspection: (data: Record<string, Loose>): ValidationResult => {
+  qualityInspection: (data: Record<string, any>): ValidationResult => {
     return Validator.validate(data, [
       { field: 'cardId', required: true, type: 'number', min: 1 },
       {

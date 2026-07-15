@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { withPermission } from '@/lib/api-permissions';
 
 async function addColumnIfNotExists(table: string, column: string, definition: string) {
-  const result = await query(`
-    SELECT COUNT(*) as cnt FROM information_schema.COLUMNS 
-    WHERE TABLE_SCHEMA = DATABASE() 
-    AND TABLE_NAME = '${table}' 
-    AND COLUMN_NAME = '${column}'
-  `);
+  const result = await query(
+    'SELECT COUNT(*) as cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?',
+    [table, column]
+  );
 
   if (result[0]?.cnt === 0) {
-    await query(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+    await query(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
     return true;
   }
   return false;
@@ -25,7 +24,7 @@ async function createTableIfNotExists(sql: string) {
   }
 }
 
-export async function POST() {
+export const POST = withPermission(async () => {
   try {
     const results: string[] = [];
 
@@ -139,8 +138,6 @@ export async function POST() {
       { status: 500 }
     );
   }
-}
+});
 
-export async function GET() {
-  return POST();
-}
+export const GET = POST;

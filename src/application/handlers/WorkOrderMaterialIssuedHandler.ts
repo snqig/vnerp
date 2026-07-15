@@ -24,13 +24,13 @@ export class WorkOrderMaterialIssuedHandler implements EventHandler<WorkOrderMat
       await transaction(async (conn) => {
         for (const item of issuedItems) {
           phase = 'load_inventory';
-          const [invRows]: Loose = await conn.execute(
+          const [invRows] = await conn.execute(
             `SELECT id, quantity, available_qty
              FROM inv_inventory
              WHERE material_id = ? AND warehouse_id = ? AND deleted = 0
              FOR UPDATE`,
             [item.materialId, item.warehouseId]
-          );
+          ) as any;
 
           if (invRows.length === 0) {
             secureLog('warn', '领料失败：库存记录不存在，跳过', {
@@ -73,13 +73,13 @@ export class WorkOrderMaterialIssuedHandler implements EventHandler<WorkOrderMat
 
           if (item.batchNo) {
             phase = 'update_batch';
-            const [batchRows]: Loose = await conn.execute(
+            const [batchRows] = await conn.execute(
               `SELECT id, available_qty, quantity
                FROM inv_inventory_batch
                WHERE batch_no = ? AND material_id = ? AND warehouse_id = ?
                FOR UPDATE`,
               [item.batchNo, item.materialId, item.warehouseId]
-            );
+            ) as any;
 
             if (batchRows.length > 0) {
               const batch = batchRows[0];

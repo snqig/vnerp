@@ -24,6 +24,7 @@ import { ISalesOrderRepository } from '@/domain/sales/repositories/ISalesOrderRe
 import { SalesOrder, SalesOrderProps } from '@/domain/sales/aggregates/SalesOrder';
 import { SalesOrderStatus, SalesStatus } from '@/domain/sales/value-objects/SalesOrderStatus';
 import { generateDocumentNo } from '@/lib/document-numbering';
+import type { ResultSetHeader, FieldPacket } from 'mysql2/promise';
 
 type SalOrderRow = typeof salOrder.$inferSelect;
 type SalOrderDetailRow = typeof salOrderDetail.$inferSelect;
@@ -69,16 +70,16 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
    */
   async findById(id: number): Promise<SalesOrder | null> {
     const t0 = nowMs();
-    const sqlDesc = `SELECT * FROM sal_order WHERE id=${id} AND deleted=false LIMIT 1`;
+    const sqlDesc = `SELECT * FROM sal_order WHERE id=${id} AND deleted=0 LIMIT 1`;
     const order = await getDrizzleDb().query.salOrder.findFirst({
-      where: and(eq(salOrder.id, id), eq(salOrder.deleted, false)),
+      where: and(eq(salOrder.id, id), eq(salOrder.deleted, 0)),
     });
 
     if (!order) {
       logOp(
         'findById',
         'sal_order',
-        `id=${id} AND deleted=false`,
+        `id=${id} AND deleted=0`,
         sqlDesc,
         { id },
         'null (not found)',
@@ -87,9 +88,9 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
       return null;
     }
 
-    const detailsSqlDesc = `SELECT * FROM sal_order_detail WHERE order_id=${id} AND deleted=false ORDER BY id`;
+    const detailsSqlDesc = `SELECT * FROM sal_order_detail WHERE order_id=${id} AND deleted=0 ORDER BY id`;
     const details = await getDrizzleDb().query.salOrderDetail.findMany({
-      where: and(eq(salOrderDetail.orderId, id), eq(salOrderDetail.deleted, false)),
+      where: and(eq(salOrderDetail.orderId, id), eq(salOrderDetail.deleted, 0)),
       orderBy: (t) => t.id,
     });
 
@@ -97,7 +98,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     logOp(
       'findById',
       'sal_order + sal_order_detail',
-      `id=${id} AND deleted=false`,
+      `id=${id} AND deleted=0`,
       `${sqlDesc}; ${detailsSqlDesc}`,
       { id },
       `order+${details.length} details`,
@@ -115,7 +116,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     filters?: { keyword?: string; customerId?: number; startDate?: string; endDate?: string }
   ): Promise<PaginatedResult<SalesOrder>> {
     const t0 = nowMs();
-    const conditions = [eq(salOrder.deleted, false)];
+    const conditions = [eq(salOrder.deleted, 0)];
 
     if (status && status !== 'all') {
       const dbCode = SalesOrderStatus.from(status).toDbCode();
@@ -155,8 +156,8 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
       logOp(
         'findByStatus',
         'sal_order',
-        `deleted=false AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}`,
-        `SELECT * FROM sal_order WHERE deleted=false AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}`,
+        `deleted=0 AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}`,
+        `SELECT * FROM sal_order WHERE deleted=0 AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}`,
         { status, pagination, filters },
         '0 rows (empty)',
         nowMs() - t0
@@ -174,7 +175,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
 
     const orderIds = orders.map((o) => o.id);
     const allDetails = await getDrizzleDb().query.salOrderDetail.findMany({
-      where: and(inArray(salOrderDetail.orderId, orderIds), eq(salOrderDetail.deleted, false)),
+      where: and(inArray(salOrderDetail.orderId, orderIds), eq(salOrderDetail.deleted, 0)),
       orderBy: (t) => t.id,
     });
 
@@ -192,8 +193,8 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     logOp(
       'findByStatus',
       'sal_order + sal_order_detail',
-      `deleted=false AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}`,
-      `SELECT * FROM sal_order WHERE deleted=false AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}; SELECT * FROM sal_order_detail WHERE order_id IN (${orderIds.join(',')})`,
+      `deleted=0 AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}`,
+      `SELECT * FROM sal_order WHERE deleted=0 AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}; SELECT * FROM sal_order_detail WHERE order_id IN (${orderIds.join(',')})`,
       { status, pagination, filters },
       `${orders.length} orders, ${allDetails.length} details, total=${total}`,
       nowMs() - t0
@@ -245,7 +246,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
         `[DrizzleSalesRepo] save (entry)\n  TABLE: sal_order (INSERT)\n  CONDITIONS: N/A (new row)\n  SQL: ${orderSql}\n  PARAMS: ${JSON.stringify(orderParams)}`
       );
 
-      const [orderResult]: Loose = await conn.execute(
+      const [orderResult]: [ResultSetHeader, FieldPacket[]] = await conn.execute(
         `INSERT INTO sal_order
          (order_no, order_date, customer_id, contact_name, contact_phone, delivery_address,
           salesman_id, total_amount, tax_amount, total_with_tax, discount_amount,
@@ -254,7 +255,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         orderParams
       );
-      const orderId = orderResult.insertId;
+      const orderId = (orderResult as ResultSetHeader).insertId;
 
       for (const line of order.lines) {
         const lineParams = [
@@ -316,7 +317,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
       .set({ status: dbStatus, updateTime: new Date() })
       .where(and(eq(salOrder.id, id), eq(salOrder.status, dbCurrentStatus)));
 
-    const affected = (result[0] as Loose)?.affectedRows > 0;
+    const affected = (result[0] as ResultSetHeader)?.affectedRows > 0;
     logOp(
       'updateStatus',
       'sal_order (UPDATE)',
@@ -378,7 +379,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     const t0 = nowMs();
     await getDrizzleDb()
       .update(salOrder)
-      .set({ deleted: true, updateTime: new Date() })
+      .set({ deleted: 1, updateTime: new Date() })
       .where(eq(salOrder.id, id));
     logOp(
       'softDelete',

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { withPermission } from '@/lib/api-permissions';
 import { logger } from '@/lib/logger';
 
-export async function GET(_request: NextRequest) {
+export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   try {
     let orderStats: Loose = { total_orders: 0, active_orders: 0, completed_today: 0 };
     try {
@@ -196,4 +197,4 @@ export async function GET(_request: NextRequest) {
   } catch {
     return NextResponse.json({ success: false, message: '获取生产看板数据失败' }, { status: 500 });
   }
-}
+});

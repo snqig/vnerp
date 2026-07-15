@@ -26,6 +26,8 @@ import {
 } from '@/domain/warehouse/repositories/IInboundOrderRepository';
 import { InboundOrder, InboundOrderProps } from '@/domain/warehouse/aggregates/InboundOrder';
 import { generateDocumentNo } from '@/lib/document-numbering';
+import type { ResultSetHeader } from 'mysql2/promise';
+import type { InboundStatus } from '@/domain/warehouse/value-objects/OrderStatus';
 
 const DB_TO_DOMAIN_STATUS: Record<string, string> = {
   draft: 'draft',
@@ -61,7 +63,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
     const props: InboundOrderProps = {
       id: order.id,
       orderNo: order.orderNo,
-      status: (DB_TO_DOMAIN_STATUS[order.status ?? 'pending'] ?? 'pending') as Loose,
+      status: (DB_TO_DOMAIN_STATUS[order.status ?? 'pending'] ?? 'pending') as InboundStatus,
       warehouseId: order.warehouseId,
       supplierName: order.supplierName ?? '',
       supplierId: order.supplierId ?? undefined,
@@ -170,7 +172,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
       InboundOrder.reconstitute({
         id: o.id,
         orderNo: o.orderNo,
-        status: (DB_TO_DOMAIN_STATUS[o.status ?? 'pending'] ?? 'pending') as Loose,
+        status: (DB_TO_DOMAIN_STATUS[o.status ?? 'pending'] ?? 'pending') as InboundStatus,
         warehouseId: o.warehouseId,
         supplierName: o.supplierName ?? '',
         supplierId: o.supplierId ?? undefined,
@@ -221,7 +223,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
 
     return await transaction(async (conn) => {
       // 主表插入
-      const [orderResult]: Loose = await conn.execute(
+      const [orderResult] = await conn.execute(
         `INSERT INTO inv_inbound_order
          (order_no, order_type, warehouse_id, supplier_id, supplier_name, po_id, po_no,
           total_amount, total_quantity, status, inbound_date, remark, create_time)
@@ -241,7 +243,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
           order.remark || null,
         ]
       );
-      const orderId = orderResult.insertId;
+      const orderId = (orderResult as ResultSetHeader).insertId;
 
       // 明细批量插入（保留 raw execute 以在事务连接内执行；
       // 后续可改用 getDrizzleDb().transaction + getDrizzleDb().insert 完成彻底迁移）
@@ -284,7 +286,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
       .where(and(eq(invInboundOrders.id, id), eq(invInboundOrders.status, dbCurrentStatus)));
 
     // affectedRows 在 mysql2 ResultSetHeader 上
-    return (result[0] as Loose)?.affectedRows > 0;
+    return (result[0] as ResultSetHeader)?.affectedRows > 0;
   }
 
   /**

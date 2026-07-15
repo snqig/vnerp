@@ -70,7 +70,7 @@ export interface QRCodePrintParams {
   label_spec?: string;
   printer_id?: number;
   copies?: number;
-  data?: Record<string, Loose>;
+  data?: Record<string, any>;
 }
 
 export interface TraceEvent {
@@ -83,10 +83,10 @@ export interface TraceEvent {
 
 export interface TraceData {
   record: QRCodeRecord | null;
-  order: Record<string, Loose> | null;
+  order: Record<string, any> | null;
   timeline: TraceEvent[];
   related_records: QRCodeRecord[];
-  inventory: Record<string, Loose>[];
+  inventory: Record<string, any>[];
 }
 
 export const QRCodeTypeLabels: Record<string, string> = {

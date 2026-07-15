@@ -36,10 +36,16 @@ export interface RateLimitResult {
 }
 
 /**
- * 速率限制检查（Redis 优先，内存降级）
+ * 速率限制检查（生产环境强制 Redis，开发环境允许内存降级）
  *
  * Redis 模式使用 INCR + EXPIRE 实现固定窗口计数器，多实例共享。
- * REDIS_URL 缺失或 Redis 操作异常时自动降级到内存 Map（仅单实例有效）。
+ * 
+ * 生产环境（NODE_ENV === 'production'）：
+ * - 必须配置 REDIS_URL，Redis 不可用时抛出错误，禁止降级到内存
+ * - 多实例部署时限流必须共享，否则被绕过
+ * 
+ * 开发环境：
+ * - REDIS_URL 缺失或 Redis 操作异常时自动降级到内存 Map（仅单实例有效）
  */
 export async function checkRateLimit(
   identifier: string,
@@ -48,6 +54,7 @@ export async function checkRateLimit(
   const key = `${options.keyPrefix || 'rl'}:${identifier}`;
   const now = Date.now();
   const windowSeconds = Math.ceil(options.windowMs / 1000);
+  const isProduction = process.env.NODE_ENV === 'production';
 
   const redis = getRedisClientIfAvailable();
   if (redis) {
@@ -75,9 +82,15 @@ export async function checkRateLimit(
         resetTime,
         retryAfterMs: 0,
       };
-    } catch {
-      // Redis 操作异常，降级到内存
+    } catch (error) {
+      if (isProduction) {
+        throw new Error(`Rate limit Redis operation failed in production: ${(error as Error).message}`);
+      }
     }
+  }
+
+  if (isProduction) {
+    throw new Error('Rate limit requires Redis in production, but REDIS_URL is not configured or Redis is unavailable');
   }
 
   return checkRateLimitMemory(key, options, now);

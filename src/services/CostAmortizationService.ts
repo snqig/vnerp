@@ -161,7 +161,7 @@ export class CostAmortizationService {
     totalCost: number;
     unitCost: number;
   }> {
-    const rows: Loose[] = (await query(
+    const rows = (await query<any>(
       `SELECT 
         COALESCE(material_cost, 0) as material_cost,
         COALESCE(labor_cost, 0) as labor_cost,
@@ -171,7 +171,7 @@ export class CostAmortizationService {
        FROM work_order_costs
        WHERE work_order_id = ?`,
       [workOrderId]
-    )) as Loose[];
+    ));
 
     if (rows.length > 0) {
       const row = rows[0];
@@ -205,7 +205,7 @@ export class CostAmortizationService {
     const allocations: CostAllocationParams[] = [];
 
     // 获取材料成本
-    const materialRows: Loose[] = (await query(
+    const materialRows = (await query<any>(
       `SELECT 
         m.id, m.material_code, SUM(wm.required_qty) as total_qty, 
         m.cost_price, m.unit
@@ -214,7 +214,7 @@ export class CostAmortizationService {
        WHERE wm.work_order_id = ?
        GROUP BY m.id`,
       [workOrderId]
-    )) as Loose[];
+    ));
 
     for (const row of materialRows) {
       const qty = parseFloat(row.total_qty || 0);
@@ -234,7 +234,7 @@ export class CostAmortizationService {
     }
 
     // 获取油墨成本
-    const inkRows: Loose[] = (await query(
+    const inkRows = (await query<any>(
       `SELECT 
         bi.id, bi.ink_code, SUM(iu.usage_qty) as total_qty,
         bi.unit_price
@@ -243,7 +243,7 @@ export class CostAmortizationService {
        WHERE iu.work_order_id = ?
        GROUP BY bi.id`,
       [workOrderId]
-    )) as Loose[];
+    ));
 
     for (const row of inkRows) {
       const qty = parseFloat(row.total_qty || 0);

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { execute, queryOne, queryPaginated } from '@/lib/db';
+import { execute, query, queryOne, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
@@ -547,7 +547,7 @@ export const PUT = withPermission(
   { logTitle: '更新标准卡', logType: 'business' }
 );
 
-// DELETE - 删除标准卡（软删除）
+// DELETE - 删除标准卡（软删除，支持批量）
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
     const { searchParams } = new URL(request.url);
@@ -557,21 +557,44 @@ export const DELETE = withPermission(
       return commonErrors.badRequest('缺少标准卡ID');
     }
 
-    const cardId = parseInt(id);
+    // 支持批量删除：id=1,2,3
+    const ids = id.split(',').map((s) => parseInt(s.trim())).filter((n) => !isNaN(n) && n > 0);
 
-    // 检查标准卡是否存在
-    const existingCard = await queryOne<{ id: number }>(
-      'SELECT id FROM prd_standard_card WHERE id = ? AND deleted = 0',
-      [cardId]
-    );
-
-    if (!existingCard) {
-      return commonErrors.notFound('标准卡不存在');
+    if (ids.length === 0) {
+      return commonErrors.badRequest('缺少有效的标准卡ID');
     }
 
-    await execute('UPDATE prd_standard_card SET deleted = 1 WHERE id = ?', [cardId]);
+    if (ids.length === 1) {
+      // 单条删除
+      const cardId = ids[0];
+      const existingCard = await queryOne<{ id: number }>(
+        'SELECT id FROM prd_standard_card WHERE id = ? AND deleted = 0',
+        [cardId]
+      );
+      if (!existingCard) {
+        return commonErrors.notFound('标准卡不存在');
+      }
+      await execute('UPDATE prd_standard_card SET deleted = 1 WHERE id = ?', [cardId]);
+      return successResponse(null, '标准卡删除成功');
+    }
 
-    return successResponse(null, '标准卡删除成功');
+    // 批量删除
+    const placeholders = ids.map(() => '?').join(', ');
+    const existingRows = await query(
+      `SELECT id FROM prd_standard_card WHERE id IN (${placeholders}) AND deleted = 0`,
+      ids as unknown as import('@/lib/db').SqlValue[]
+    );
+    if (!existingRows || existingRows.length === 0) {
+      return commonErrors.notFound('未找到可删除的标准卡');
+    }
+    await execute(
+      `UPDATE prd_standard_card SET deleted = 1 WHERE id IN (${placeholders})`,
+      ids as unknown as import('@/lib/db').SqlValue[]
+    );
+    return successResponse(
+      { deletedCount: existingRows.length },
+      `成功删除 ${existingRows.length} 条标准卡`
+    );
   },
   { logTitle: '删除标准卡', logType: 'business' }
 );

@@ -9,6 +9,7 @@ import {
   IStandardCardRepository,
   StandardCardFilters,
 } from '@/domain/standard-card/repositories/IStandardCardRepository';
+import type { ResultSetHeader } from 'mysql2/promise';
 
 export class MysqlStandardCardRepository implements IStandardCardRepository {
   async findById(id: number): Promise<StandardCard | null> {
@@ -28,7 +29,7 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
   }
 
   async findByMaterialId(materialId: number, includeObsolete = false): Promise<StandardCard[]> {
-    const params: Loose[] = [materialId];
+    const params: (string | number | null)[] = [materialId];
     let sql = 'SELECT * FROM prd_standard_card WHERE material_id = ?';
     if (!includeObsolete) {
       sql += ' AND is_obsolete = 0';
@@ -53,7 +54,7 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
     pageSize = 20
   ): Promise<{ list: StandardCard[]; total: number }> {
     const conditions: string[] = ['deleted = 0'];
-    const params: Loose[] = [];
+    const params: (string | number | null)[] = [];
 
     if (filters.code) {
       conditions.push('code LIKE ?');
@@ -89,11 +90,11 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
     }
     if (filters.effectiveDateFrom) {
       conditions.push('effective_date >= ?');
-      params.push(filters.effectiveDateFrom);
+      params.push(filters.effectiveDateFrom instanceof Date ? filters.effectiveDateFrom.toISOString().slice(0, 10) : filters.effectiveDateFrom);
     }
     if (filters.effectiveDateTo) {
       conditions.push('effective_date <= ?');
-      params.push(filters.effectiveDateTo);
+      params.push(filters.effectiveDateTo instanceof Date ? filters.effectiveDateTo.toISOString().slice(0, 10) : filters.effectiveDateTo);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -129,8 +130,8 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
       customer_name: props.customerName,
       spec: props.spec,
       status: props.status,
-      effective_date: props.effectiveDate,
-      expiry_date: props.expiryDate,
+      effective_date: props.effectiveDate || null,
+      expiry_date: props.expiryDate || null,
       parent_version_id: props.parentVersionId,
       is_current: props.isCurrent ? 1 : 0,
       is_obsolete: props.isObsolete ? 1 : 0,
@@ -146,7 +147,7 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
       process_requirement: props.processRequirement,
       create_user: props.createUser,
       create_time: new Date(),
-    } as Loose);
+    });
     return result.insertId;
   }
 
@@ -223,7 +224,7 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
     return `${datePrefix}${nextSeq}`;
   }
 
-  private mapToEntity(row: Loose): StandardCard {
+  private mapToEntity(row: any): StandardCard {
     const props: StandardCardProps = {
       id: row.id,
       code: row.code,
@@ -261,13 +262,13 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
 }
 
 export class ColorStandardItemRepository {
-  async findByStandardCardId(standardCardId: number): Promise<Loose[]> {
+  async findByStandardCardId(standardCardId: number): Promise<any[]> {
     return await db.query('SELECT * FROM prd_color_standard_item WHERE standard_card_id = ?', [
       standardCardId,
     ]);
   }
 
-  async saveBatch(standardCardId: number, items: Loose[]): Promise<void> {
+  async saveBatch(standardCardId: number, items: any[]): Promise<void> {
     await db.execute('DELETE FROM prd_color_standard_item WHERE standard_card_id = ?', [
       standardCardId,
     ]);
@@ -281,7 +282,7 @@ export class ColorStandardItemRepository {
         color_sample_image: item.colorSampleImage,
         tolerance: item.tolerance,
         remark: item.remark,
-      } as Loose);
+      });
     }
   }
 
@@ -293,14 +294,14 @@ export class ColorStandardItemRepository {
 }
 
 export class ProcessStandardItemRepository {
-  async findByStandardCardId(standardCardId: number): Promise<Loose[]> {
+  async findByStandardCardId(standardCardId: number): Promise<any[]> {
     return await db.query(
       'SELECT * FROM prd_process_standard_item WHERE standard_card_id = ? ORDER BY process_order',
       [standardCardId]
     );
   }
 
-  async saveBatch(standardCardId: number, items: Loose[]): Promise<void> {
+  async saveBatch(standardCardId: number, items: any[]): Promise<void> {
     await db.execute('DELETE FROM prd_process_standard_item WHERE standard_card_id = ?', [
       standardCardId,
     ]);
@@ -318,7 +319,7 @@ export class ProcessStandardItemRepository {
         machine_type: item.machineType,
         description: item.description,
         remark: item.remark,
-      } as Loose);
+      });
     }
   }
 
@@ -330,13 +331,13 @@ export class ProcessStandardItemRepository {
 }
 
 export class QualityStandardItemRepository {
-  async findByStandardCardId(standardCardId: number): Promise<Loose[]> {
+  async findByStandardCardId(standardCardId: number): Promise<any[]> {
     return await db.query('SELECT * FROM prd_quality_standard_item WHERE standard_card_id = ?', [
       standardCardId,
     ]);
   }
 
-  async saveBatch(standardCardId: number, items: Loose[]): Promise<void> {
+  async saveBatch(standardCardId: number, items: any[]): Promise<void> {
     await db.execute('DELETE FROM prd_quality_standard_item WHERE standard_card_id = ?', [
       standardCardId,
     ]);
@@ -350,7 +351,7 @@ export class QualityStandardItemRepository {
         is_key: item.isKey ? 1 : 0,
         defect_level: item.defectLevel,
         remark: item.remark,
-      } as Loose);
+      });
     }
   }
 
@@ -362,7 +363,7 @@ export class QualityStandardItemRepository {
 }
 
 export class StandardCardMaterialRepository {
-  async findByStandardCardId(standardCardId: number): Promise<Loose[]> {
+  async findByStandardCardId(standardCardId: number): Promise<any[]> {
     return await db.query(
       `SELECT scm.*, im.material_code, im.material_name 
        FROM prd_standard_card_material scm
@@ -372,7 +373,7 @@ export class StandardCardMaterialRepository {
     );
   }
 
-  async saveBatch(standardCardId: number, materials: Loose[]): Promise<void> {
+  async saveBatch(standardCardId: number, materials: any[]): Promise<void> {
     await db.execute('DELETE FROM prd_standard_card_material WHERE standard_card_id = ?', [
       standardCardId,
     ]);
@@ -384,7 +385,7 @@ export class StandardCardMaterialRepository {
         unit_consumption: m.unitConsumption,
         loss_rate: m.lossRate ?? 0,
         remark: m.remark,
-      } as Loose);
+      });
     }
   }
 
@@ -396,7 +397,7 @@ export class StandardCardMaterialRepository {
 }
 
 export class StandardCardInkRepository {
-  async findByStandardCardId(standardCardId: number): Promise<Loose[]> {
+  async findByStandardCardId(standardCardId: number): Promise<any[]> {
     return await db.query(
       `SELECT sci.*, di.ink_code, di.ink_name, di.color_name
        FROM prd_standard_card_ink sci
@@ -406,7 +407,7 @@ export class StandardCardInkRepository {
     );
   }
 
-  async saveBatch(standardCardId: number, inks: Loose[]): Promise<void> {
+  async saveBatch(standardCardId: number, inks: any[]): Promise<void> {
     await db.execute('DELETE FROM prd_standard_card_ink WHERE standard_card_id = ?', [
       standardCardId,
     ]);
@@ -417,7 +418,7 @@ export class StandardCardInkRepository {
         ratio: ink.ratio,
         unit_consumption: ink.unitConsumption,
         remark: ink.remark,
-      } as Loose);
+      });
     }
   }
 
@@ -429,13 +430,13 @@ export class StandardCardInkRepository {
 }
 
 export class StandardCardToolingRepository {
-  async findByStandardCardId(standardCardId: number): Promise<Loose[]> {
+  async findByStandardCardId(standardCardId: number): Promise<any[]> {
     return await db.query('SELECT * FROM prd_standard_card_tooling WHERE standard_card_id = ?', [
       standardCardId,
     ]);
   }
 
-  async saveBatch(standardCardId: number, toolings: Loose[]): Promise<void> {
+  async saveBatch(standardCardId: number, toolings: any[]): Promise<void> {
     await db.execute('DELETE FROM prd_standard_card_tooling WHERE standard_card_id = ?', [
       standardCardId,
     ]);
@@ -445,7 +446,7 @@ export class StandardCardToolingRepository {
         die_mold_id: t.dieMoldId,
         screen_plate_id: t.screenPlateId,
         remark: t.remark,
-      } as Loose);
+      });
     }
   }
 
@@ -457,13 +458,13 @@ export class StandardCardToolingRepository {
 }
 
 export class StandardCardAttachmentRepository {
-  async findByStandardCardId(standardCardId: number): Promise<Loose[]> {
+  async findByStandardCardId(standardCardId: number): Promise<any[]> {
     return await db.query('SELECT * FROM prd_standard_card_attachment WHERE standard_card_id = ?', [
       standardCardId,
     ]);
   }
 
-  async save(standardCardId: number, attachment: Loose): Promise<number> {
+  async save(standardCardId: number, attachment: any): Promise<number> {
     const result = await db.insert('prd_standard_card_attachment', {
       standard_card_id: standardCardId,
       version: attachment.version,
@@ -472,7 +473,7 @@ export class StandardCardAttachmentRepository {
       file_size: attachment.fileSize,
       remark: attachment.remark,
       uploaded_by: attachment.uploadedBy,
-    } as Loose);
+    });
     return result.insertId;
   }
 
@@ -488,7 +489,7 @@ export class StandardCardAttachmentRepository {
 }
 
 export class VersionChangeLogRepository {
-  async findByStandardCardId(standardCardId: number): Promise<Loose[]> {
+  async findByStandardCardId(standardCardId: number): Promise<any[]> {
     return await db.query(
       `SELECT vcl.*, u.user_name as changed_by_name
        FROM prd_standard_card_version_log vcl
@@ -499,13 +500,13 @@ export class VersionChangeLogRepository {
     );
   }
 
-  async save(log: Loose): Promise<void> {
+  async save(log: any): Promise<void> {
     await db.insert('prd_standard_card_version_log', {
       standard_card_id: log.standardCardId,
       version: log.version,
       change_type: log.changeType,
       change_content: log.changeContent,
       changed_by: log.changedBy,
-    } as Loose);
+    });
   }
 }

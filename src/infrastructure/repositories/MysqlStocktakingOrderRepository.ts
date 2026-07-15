@@ -16,14 +16,14 @@ const ITEM_COLUMNS = `id, taking_id, material_id, material_code, material_name, 
 
 export class MysqlStocktakingOrderRepository implements IStocktakingOrderRepository {
   async findById(id: number): Promise<StocktakingOrder | null> {
-    const orders = await query<Loose>(
+    const orders = await query(
       'SELECT * FROM inv_stocktaking WHERE id = ? AND deleted = 0',
       [id]
     );
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
-    const items = await query<Loose>(
+    const items = await query(
       `SELECT ${ITEM_COLUMNS} FROM inv_stocktaking_item WHERE taking_id = ? AND deleted = 0`,
       [id]
     );
@@ -32,14 +32,14 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
   }
 
   async findByCheckNo(checkNo: string): Promise<StocktakingOrder | null> {
-    const orders = await query<Loose>(
+    const orders = await query(
       'SELECT * FROM inv_stocktaking WHERE check_no = ? AND deleted = 0',
       [checkNo]
     );
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
-    const items = await query<Loose>(
+    const items = await query(
       `SELECT ${ITEM_COLUMNS} FROM inv_stocktaking_item WHERE taking_id = ? AND deleted = 0`,
       [order.id]
     );
@@ -64,7 +64,7 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
                s.version, s.remark, s.create_time, s.update_time
                FROM inv_stocktaking s WHERE s.deleted = 0`;
     let countSql = `SELECT COUNT(*) as total FROM inv_stocktaking s WHERE s.deleted = 0`;
-    const params: Loose[] = [];
+    const params: (string | number)[] = [];
 
     if (filters?.keyword) {
       const condition = ` AND (s.check_no LIKE ? OR s.warehouse_name LIKE ? OR s.applicant_name LIKE ?)`;
@@ -108,28 +108,28 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
     const result = await queryPaginated(sql, countSql, params, pagination);
 
     if (result.data.length > 0) {
-      const orderIds = result.data.map((s: Loose) => s.id);
+      const orderIds = result.data.map((s: any) => s.id);
       const placeholders = orderIds.map(() => '?').join(',');
       const items = await query(
         `SELECT ${ITEM_COLUMNS} FROM inv_stocktaking_item WHERE taking_id IN (${placeholders}) AND deleted = 0`,
         orderIds
       );
 
-      const itemsMap = new Map<number, Loose[]>();
-      for (const item of items as Loose[]) {
+      const itemsMap = new Map<number, any[]>();
+      for (const item of items as any[]) {
         if (!itemsMap.has(item.taking_id)) {
           itemsMap.set(item.taking_id, []);
         }
         itemsMap.get(item.taking_id)!.push(item);
       }
 
-      for (const order of result.data as Loose[]) {
+      for (const order of result.data as any[]) {
         order.items = itemsMap.get(order.id) || [];
       }
     }
 
     return {
-      data: result.data.map((s: Loose) =>
+      data: result.data.map((s: any) =>
         StocktakingOrder.reconstitute(this.mapRowToProps(s, s.items || []))
       ),
       pagination: result.pagination,
@@ -141,7 +141,7 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
     const items = order.items;
 
     return await transaction(async (conn) => {
-      const [orderResult]: Loose = await conn.execute(
+      const [orderResult] = await conn.execute(
         `INSERT INTO inv_stocktaking
          (check_no, type, warehouse_id, warehouse_name, scope, status,
           applicant_id, applicant_name, total_items, diff_items, total_diff_amount,
@@ -162,7 +162,7 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
           order.version,
           order.remark || null,
         ]
-      );
+      ) as any;
 
       const orderId = orderResult.insertId;
 
@@ -246,7 +246,7 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
     await execute('UPDATE inv_stocktaking SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
   }
 
-  private mapRowToProps(order: Loose, items: Loose[]): StocktakingOrderProps {
+  private mapRowToProps(order: any, items: any[]): StocktakingOrderProps {
     return {
       id: order.id,
       checkNo: order.check_no,
@@ -262,7 +262,7 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
       approveTime: order.approve_time,
       approveRemark: order.approve_remark,
       remark: order.remark,
-      items: items.map((item: Loose) => ({
+      items: items.map((item: any) => ({
         id: item.id,
         takingId: item.taking_id,
         materialId: item.material_id,

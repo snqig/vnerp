@@ -1,3 +1,5 @@
+import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
+
 export interface CuttingInput {
   id: string;
   width: number;
@@ -272,10 +274,10 @@ export function calculateScrapRate(result: CuttingOptimizationResult): {
 }
 
 export async function generateCuttingPlan(
-  conn: Loose,
+  conn: PoolConnection,
   cuttingRecordId: number
 ): Promise<CuttingOptimizationResult> {
-  const [records]: Loose = await conn.query(
+  const [records]: [RowDataPacket[], unknown] = await conn.query(
     `SELECT
       r.id,
       r.record_no,
@@ -296,7 +298,7 @@ export async function generateCuttingPlan(
 
   const record = records[0];
 
-  const [labels]: Loose = await conn.query(
+  const [labels]: [RowDataPacket[], unknown] = await conn.query(
     `SELECT
       id,
       label_no,
@@ -323,7 +325,7 @@ export async function generateCuttingPlan(
     throw new Error('无法确定原材料尺寸，请检查标签宽幅和长度信息');
   }
 
-  const [details]: Loose = await conn.query(
+  const [details]: [RowDataPacket[], unknown] = await conn.query(
     `SELECT
       d.id,
       d.new_label_no,

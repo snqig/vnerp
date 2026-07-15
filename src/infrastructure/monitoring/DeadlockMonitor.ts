@@ -38,8 +38,8 @@ export class DeadlockMonitor {
     };
 
     try {
-      const statusRows: Loose = await query('SHOW ENGINE INNODB STATUS');
-      const statusText = (statusRows as Loose[])[0]?.Status || '';
+      const statusRows = await query<any>('SHOW ENGINE INNODB STATUS');
+      const statusText = statusRows[0]?.Status || '';
 
       const deadlockMatch = statusText.match(/LATEST DETECTED DEADLOCK[\s\S]*?TRANSACTIONS/);
       if (deadlockMatch) {
@@ -61,7 +61,7 @@ export class DeadlockMonitor {
     }
 
     try {
-      const longTxRows: Loose = await query(
+      const longTxRows = await query<any>(
         `SELECT
           trx_id as id,
           trx_started as startTime,
@@ -75,7 +75,7 @@ export class DeadlockMonitor {
          LIMIT 10`
       );
 
-      result.longTransactions = (longTxRows as Loose[]).map((row: Loose) => ({
+      result.longTransactions = longTxRows.map((row) => ({
         id: row.id,
         startTime: row.startTime,
         duration: row.duration,
@@ -98,10 +98,10 @@ export class DeadlockMonitor {
     }
 
     try {
-      const deadlockHistory: Loose = await query(
+      const deadlockHistory = await query<any>(
         `SELECT * FROM mysql.deadlocks ORDER BY id DESC LIMIT 5`
       );
-      result.innodbStatus.deadlocks = (deadlockHistory as Loose[]).map((row: Loose) => ({
+      result.innodbStatus.deadlocks = deadlockHistory.map((row) => ({
         id: row.id,
         timestamp: row.timestamp,
         victimQuery: row.victim_query?.substring(0, 200) || '',
@@ -116,14 +116,14 @@ export class DeadlockMonitor {
 
   static async killLongTransaction(trxId: number): Promise<boolean> {
     try {
-      const trxRows: Loose = await query(
+      const trxRows = await query<any>(
         `SELECT trx_mysql_thread_id FROM information_schema.innodb_trx WHERE trx_id = ?`,
         [trxId]
       );
-      if ((trxRows as Loose[]).length === 0) {
+      if (trxRows.length === 0) {
         return false;
       }
-      const threadId = (trxRows as Loose[])[0].trx_mysql_thread_id;
+      const threadId = trxRows[0].trx_mysql_thread_id;
       await query(`KILL ?`, [threadId]);
       secureLog('warn', 'Killed long transaction', { trxId, threadId });
       return true;

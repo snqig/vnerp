@@ -166,7 +166,7 @@ export class ReconciliationApplicationService {
   private async persistAndPublishEvents(
     aggregateType: string,
     aggregateId: number,
-    aggregate: { getDomainEvents(): Loose[]; clearDomainEvents(): void }
+    aggregate: { getDomainEvents(): any[]; clearDomainEvents(): void }
   ): Promise<void> {
     const events = aggregate.getDomainEvents();
     if (events.length === 0) return;

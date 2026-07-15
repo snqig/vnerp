@@ -2,6 +2,7 @@
 import { query } from '@/lib/db';
 import QRCode from 'qrcode';
 import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // 扩展的二维码数据类型
 export interface QrCodePayload {
@@ -82,7 +83,7 @@ export function parseQrCodePayload(data: string): QrCodePayload | null {
 }
 
 // API接口 - 生成带复杂数据的二维码
-export async function POST(request: NextRequest) {
+export const POST = withPermission(async (request: NextRequest, _userInfo) => {
   try {
     const body = await request.json();
     const { payload, width, margin } = body;
@@ -103,10 +104,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return errorResponse('二维码生成失败: ' + (error as Error).message, 500);
   }
-}
+});
 
 // API接口 - 获取二维码记录
-export async function GET(request: NextRequest) {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const qrCode = searchParams.get('qrCode');
   const type = searchParams.get('type');
@@ -144,4 +145,4 @@ export async function GET(request: NextRequest) {
     page,
     pageSize,
   });
-}
+});

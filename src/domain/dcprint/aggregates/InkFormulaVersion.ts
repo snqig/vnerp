@@ -461,7 +461,7 @@ export class InkFormulaVersion {
   }
 
   /** 从数据库行重建聚合根 */
-  static fromRow(row: Loose, items?: FormulaItemVO[]): InkFormulaVersion {
+  static fromRow(row: any, items?: FormulaItemVO[]): InkFormulaVersion {
     return new InkFormulaVersion({
       id: row.id,
       colorId: row.color_id,

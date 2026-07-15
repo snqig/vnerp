@@ -4,6 +4,7 @@ import { IPurchaseOrderRepository } from '@/domain/purchase/repositories/IPurcha
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { query, transaction } from '@/lib/db';
+import type { ResultSetHeader } from 'mysql2/promise';
 
 export interface CreateInboundFromPOParams {
   poId: number;
@@ -125,7 +126,7 @@ export class InboundApplicationService {
   async approveOrder(id: number): Promise<{ id: number; status: string }> {
     const order = await this.getOrderById(id);
 
-    const warehouseRows: Loose = await query(
+    const warehouseRows = await query(
       'SELECT warehouse_name FROM inv_warehouse WHERE id = ?',
       [order.warehouseId]
     );
@@ -135,10 +136,10 @@ export class InboundApplicationService {
     order.approve(warehouseName);
 
     await transaction(async (conn) => {
-      const [result]: Loose = await conn.execute(
+      const [result] = await conn.execute(
         "UPDATE inv_inbound_order SET status = 'approved', update_time = NOW() WHERE id = ? AND status = ?",
         [id, previousStatus === 'completed' ? 'approved' : previousStatus]
-      );
+      ) as [ResultSetHeader, any];
       if (result.affectedRows === 0) {
         throw new VersionConflictError();
       }

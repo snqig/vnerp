@@ -25,7 +25,7 @@ export class MysqlWorkReportRepository implements IWorkReportRepository {
       'SELECT * FROM prd_work_report WHERE work_order_id = ? AND deleted = 0 ORDER BY id DESC',
       [workOrderId]
     );
-    return rows.map((r: Loose) => this.mapToEntity(r));
+    return rows.map((r: any) => this.mapToEntity(r));
   }
 
   async findByFilters(
@@ -34,7 +34,7 @@ export class MysqlWorkReportRepository implements IWorkReportRepository {
     pageSize = 20
   ): Promise<{ list: WorkReport[]; total: number }> {
     const conditions: string[] = ['wr.deleted = 0'];
-    const params: Loose[] = [];
+    const params: (string | number | null)[] = [];
 
     if (filters.workOrderId) {
       conditions.push('wr.work_order_id = ?');
@@ -70,7 +70,7 @@ export class MysqlWorkReportRepository implements IWorkReportRepository {
       [...params, pageSize, offset]
     );
 
-    const list = rows.map((r: Loose) => this.mapToEntity(r));
+    const list = rows.map((r: any) => this.mapToEntity(r));
     return { list, total };
   }
 
@@ -94,7 +94,7 @@ export class MysqlWorkReportRepository implements IWorkReportRepository {
         report.createBy,
       ]
     );
-    return (result as Loose).insertId;
+    return (result as any).insertId;
   }
 
   async update(report: WorkReport): Promise<void> {
@@ -119,7 +119,7 @@ export class MysqlWorkReportRepository implements IWorkReportRepository {
     await execute('UPDATE prd_work_report SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
   }
 
-  private mapToEntity(row: Loose): WorkReport {
+  private mapToEntity(row: any): WorkReport {
     const props: WorkReportProps = {
       id: row.id,
       reportNo: row.report_no,

@@ -168,7 +168,7 @@ export class ReturnOrderApplicationService {
   }
 
   private async createInboundForReturn(ret: ReturnOrder): Promise<InboundResult> {
-    const warehouseRows: Loose = await query(
+    const warehouseRows = await query(
       'SELECT warehouse_name FROM inv_warehouse WHERE id = ?',
       [ret.warehouseId]
     );
@@ -231,7 +231,7 @@ export class ReturnOrderApplicationService {
   private async persistAndPublishEvents(
     aggregateType: string,
     aggregateId: number,
-    aggregate: { getDomainEvents(): Loose[]; clearDomainEvents(): void }
+    aggregate: { getDomainEvents(): any[]; clearDomainEvents(): void }
   ): Promise<void> {
     const events = aggregate.getDomainEvents();
     if (events.length === 0) return;

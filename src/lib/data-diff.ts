@@ -11,8 +11,8 @@
 export interface FieldDiff {
   field: string;
   label: string;
-  oldValue: Loose;
-  newValue: Loose;
+  oldValue: unknown;
+  newValue: unknown;
   type: 'added' | 'removed' | 'modified' | 'unchanged';
 }
 
@@ -23,10 +23,10 @@ export interface ObjectDiff {
 }
 
 export interface ArrayDiff {
-  added: Loose[];
-  removed: Loose[];
-  modified: Array<{ index: number; oldItem: Loose; newItem: Loose; changes: FieldDiff[] }>;
-  unchanged: Loose[];
+  added: Record<string, unknown>[];
+  removed: Record<string, unknown>[];
+  modified: Array<{ index: number; oldItem: Record<string, unknown>; newItem: Record<string, unknown>; changes: FieldDiff[] }>;
+  unchanged: Record<string, unknown>[];
 }
 
 // ============================================================
@@ -114,8 +114,8 @@ export const COMMON_FIELD_LABELS: Record<string, string> = {
  * @param ignoreFields 忽略的字段列表
  */
 export function diffObjects(
-  oldObj: Record<string, Loose>,
-  newObj: Record<string, Loose>,
+  oldObj: Record<string, unknown>,
+  newObj: Record<string, unknown>,
   fieldLabels?: Record<string, string>,
   ignoreFields: string[] = ['create_time', 'update_time', 'create_by', 'update_by']
 ): ObjectDiff {
@@ -186,14 +186,14 @@ export function diffObjects(
  * @param newArr 修改后数组
  * @param keyField 用于匹配的唯一字段
  */
-export function diffArrays(oldArr: Loose[], newArr: Loose[], keyField: string = 'id'): ArrayDiff {
+export function diffArrays(oldArr: Record<string, unknown>[], newArr: Record<string, unknown>[], keyField: string = 'id'): ArrayDiff {
   const oldMap = new Map(oldArr.map((item) => [item[keyField], item]));
   const newMap = new Map(newArr.map((item) => [item[keyField], item]));
 
-  const added: Loose[] = [];
-  const removed: Loose[] = [];
+  const added: Record<string, unknown>[] = [];
+  const removed: Record<string, unknown>[] = [];
   const modified: ArrayDiff['modified'] = [];
-  const unchanged: Loose[] = [];
+  const unchanged: Record<string, unknown>[] = [];
 
   // 查找新增和修改的
   for (const [key, newItem] of newMap) {
@@ -304,7 +304,7 @@ export function formatDiffToHtml(diff: ObjectDiff): string {
 /**
  * 格式化单个值
  */
-function formatValue(value: Loose): string {
+function formatValue(value: unknown): string {
   if (value === null || value === undefined) return '空';
   if (typeof value === 'boolean') return value ? '是' : '否';
   if (typeof value === 'object') return JSON.stringify(value);
@@ -373,8 +373,8 @@ export const CRITICAL_FIELDS: Record<string, string[]> = {
  */
 export function hasCriticalChanges(
   tableName: string,
-  oldObj: Record<string, Loose>,
-  newObj: Record<string, Loose>
+  oldObj: Record<string, unknown>,
+  newObj: Record<string, unknown>
 ): { hasCritical: boolean; criticalChanges: FieldDiff[] } {
   const criticalFields = CRITICAL_FIELDS[tableName] || [];
   const diff = diffObjects(oldObj, newObj);
@@ -412,7 +412,7 @@ export function generateOperationContent(
 /**
  * 生成数据快照（用于作废/删除时保存）
  */
-export function createSnapshot(data: Record<string, Loose>): Record<string, Loose> {
+export function createSnapshot(data: Record<string, unknown>): Record<string, unknown> {
   return JSON.parse(JSON.stringify(data));
 }
 

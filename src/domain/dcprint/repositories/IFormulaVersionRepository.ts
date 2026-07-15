@@ -58,15 +58,15 @@ export interface IFormulaVersionRepository {
  * 色号仓储接口
  */
 export interface IInkColorRepository {
-  findById(id: number): Promise<Loose | null>;
-  findByCode(code: string): Promise<Loose | null>;
+  findById(id: number): Promise<any | null>;
+  findByCode(code: string): Promise<any | null>;
   findList(params: {
     page: number;
     pageSize: number;
     keyword?: string;
     status?: number;
-  }): Promise<{ list: Loose[]; total: number }>;
-  save(data: Loose, operatorId: number): Promise<number>;
-  update(id: number, data: Loose, operatorId: number): Promise<void>;
+  }): Promise<{ list: any[]; total: number }>;
+  save(data: any, operatorId: number): Promise<number>;
+  update(id: number, data: any, operatorId: number): Promise<void>;
   softDelete(id: number): Promise<void>;
 }

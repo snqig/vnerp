@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { withPermission } from '@/lib/api-permissions';
 import { logger } from '@/lib/logger';
 
-export async function GET(_request: NextRequest) {
+export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   try {
     const overview: Loose = {
       totalItems: 0,
@@ -126,4 +127,4 @@ export async function GET(_request: NextRequest) {
   } catch {
     return NextResponse.json({ success: false, message: '获取仓库看板数据失败' }, { status: 500 });
   }
-}
+});

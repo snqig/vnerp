@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getConfig } from '@/lib/global-config';
+import { withPermission } from '@/lib/api-permissions';
 import { logger } from '@/lib/logger';
 
-export async function GET(_request: NextRequest) {
+export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
@@ -133,4 +134,4 @@ export async function GET(_request: NextRequest) {
   } catch {
     return NextResponse.json({ success: false, message: '获取质量看板数据失败' }, { status: 500 });
   }
-}
+});

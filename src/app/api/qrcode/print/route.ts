@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query, queryOne, execute } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission(async (request: NextRequest, _userInfo) => {
   try {
     const body = await request.json();
     const { qr_code, label_type, label_spec, printer_id, copies = 1, data = {} } = body;
@@ -59,9 +60,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return errorResponse('创建打印任务失败: ' + (error as Error).message, 500);
   }
-}
+});
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   try {
     const { searchParams } = new URL(request.url);
     const qr_code = searchParams.get('qr_code');
@@ -82,4 +83,4 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return errorResponse('获取打印记录失败: ' + (error as Error).message, 500);
   }
-}
+});

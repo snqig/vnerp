@@ -28,6 +28,7 @@ import {
   PurchaseStatus,
 } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
 import { generateDocumentNo } from '@/lib/document-numbering';
+import type { ResultSetHeader, FieldPacket } from 'mysql2/promise';
 
 type PurPurchaseOrderRow = typeof purPurchaseOrder.$inferSelect;
 type PurPurchaseOrderLineRow = typeof purPurchaseOrderLine.$inferSelect;
@@ -63,16 +64,16 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
    */
   async findById(id: number): Promise<PurchaseOrder | null> {
     const t0 = nowMs();
-    const sqlDesc = `SELECT * FROM pur_purchase_order WHERE id=${id} AND deleted=false LIMIT 1`;
+    const sqlDesc = `SELECT * FROM pur_purchase_order WHERE id=${id} AND deleted=0 LIMIT 1`;
     const order = await getDrizzleDb().query.purPurchaseOrder.findFirst({
-      where: and(eq(purPurchaseOrder.id, id), eq(purPurchaseOrder.deleted, false)),
+      where: and(eq(purPurchaseOrder.id, id), eq(purPurchaseOrder.deleted, 0)),
     });
 
     if (!order) {
       logOp(
         'findById',
         'pur_purchase_order',
-        `id=${id} AND deleted=false`,
+        `id=${id} AND deleted=0`,
         sqlDesc,
         { id },
         'null (not found)',
@@ -91,7 +92,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     logOp(
       'findById',
       'pur_purchase_order + pur_purchase_order_line',
-      `id=${id} AND deleted=false`,
+      `id=${id} AND deleted=0`,
       `${sqlDesc}; ${linesSqlDesc}`,
       { id },
       `order+${lines.length} lines`,
@@ -105,16 +106,16 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
    */
   async findByOrderNo(orderNo: string): Promise<PurchaseOrder | null> {
     const t0 = nowMs();
-    const sqlDesc = `SELECT * FROM pur_purchase_order WHERE po_no='${orderNo}' AND deleted=false LIMIT 1`;
+    const sqlDesc = `SELECT * FROM pur_purchase_order WHERE po_no='${orderNo}' AND deleted=0 LIMIT 1`;
     const order = await getDrizzleDb().query.purPurchaseOrder.findFirst({
-      where: and(eq(purPurchaseOrder.poNo, orderNo), eq(purPurchaseOrder.deleted, false)),
+      where: and(eq(purPurchaseOrder.poNo, orderNo), eq(purPurchaseOrder.deleted, 0)),
     });
 
     if (!order) {
       logOp(
         'findByOrderNo',
         'pur_purchase_order',
-        `po_no='${orderNo}' AND deleted=false`,
+        `po_no='${orderNo}' AND deleted=0`,
         sqlDesc,
         { orderNo },
         'null (not found)',
@@ -132,7 +133,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     logOp(
       'findByOrderNo',
       'pur_purchase_order + pur_purchase_order_line',
-      `po_no='${orderNo}' AND deleted=false`,
+      `po_no='${orderNo}' AND deleted=0`,
       `${sqlDesc}; SELECT * FROM pur_purchase_order_line WHERE po_id=${order.id}`,
       { orderNo },
       `order+${lines.length} lines`,
@@ -155,7 +156,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     }
   ): Promise<PaginatedResult<PurchaseOrder>> {
     const t0 = nowMs();
-    const conditions = [eq(purPurchaseOrder.deleted, false)];
+    const conditions = [eq(purPurchaseOrder.deleted, 0)];
 
     if (status && status !== 'all') {
       const dbCode = PurchaseOrderStatus.from(status).toDbCode();
@@ -200,8 +201,8 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
       logOp(
         'findByStatus',
         'pur_purchase_order',
-        `deleted=false AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}`,
-        `SELECT * FROM pur_purchase_order WHERE deleted=false AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}`,
+        `deleted=0 AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}`,
+        `SELECT * FROM pur_purchase_order WHERE deleted=0 AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}`,
         { status, pagination, filters },
         '0 rows (empty)',
         nowMs() - t0
@@ -237,8 +238,8 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     logOp(
       'findByStatus',
       'pur_purchase_order + pur_purchase_order_line',
-      `deleted=false AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}`,
-      `SELECT * FROM pur_purchase_order WHERE deleted=false AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}; SELECT * FROM pur_purchase_order_line WHERE po_id IN (${orderIds.join(',')})`,
+      `deleted=0 AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}`,
+      `SELECT * FROM pur_purchase_order WHERE deleted=0 AND status=${status} LIMIT ${pagination.pageSize} OFFSET ${(pagination.page - 1) * pagination.pageSize}; SELECT * FROM pur_purchase_order_line WHERE po_id IN (${orderIds.join(',')})`,
       { status, pagination, filters },
       `${orders.length} orders, ${allLines.length} lines, total=${total}`,
       nowMs() - t0
@@ -263,7 +264,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     const orderNo = await generateDocumentNo('purchase_order');
 
     const result = await transaction(async (conn) => {
-      const [orderResult]: Loose = await conn.execute(
+      const [orderResult] = await conn.execute(
         `INSERT INTO pur_purchase_order
          (po_no, supplier_id, supplier_name, supplier_code, order_date, delivery_date,
           currency, exchange_rate, total_amount, total_quantity, tax_rate, tax_amount, grand_total,
@@ -291,7 +292,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
           order.createBy || null,
         ]
       );
-      const orderId = orderResult.insertId;
+      const orderId = (orderResult as ResultSetHeader).insertId;
 
       for (const line of order.lines) {
         await conn.execute(
@@ -349,7 +350,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
       .set({ status: dbStatus, updateTime: new Date() })
       .where(and(eq(purPurchaseOrder.id, id), eq(purPurchaseOrder.status, dbCurrentStatus)));
 
-    const affected = (result[0] as Loose)?.affectedRows > 0;
+    const affected = (result[0] as ResultSetHeader)?.affectedRows > 0;
     logOp(
       'updateStatus',
       'pur_purchase_order (UPDATE)',
@@ -413,7 +414,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     const t0 = nowMs();
     await getDrizzleDb()
       .update(purPurchaseOrder)
-      .set({ deleted: true, updateTime: new Date() })
+      .set({ deleted: 1, updateTime: new Date() })
       .where(eq(purPurchaseOrder.id, id));
     logOp(
       'softDelete',

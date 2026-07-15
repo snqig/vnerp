@@ -10,18 +10,18 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const categoryName = searchParams.get('categoryName') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: Loose[] = [];
+  const params: (string | number)[] = [];
   if (categoryName) {
     where += ' AND category_name LIKE ?';
     params.push('%' + categoryName + '%');
   }
 
-  const totalRows: Loose = await query(
+  const totalRows = await query(
     'SELECT COUNT(*) as total FROM inv_material_category ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: Loose = await query(
+  const rows = await query(
     'SELECT * FROM inv_material_category ' +
       where +
       ' ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?',
@@ -34,7 +34,7 @@ export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
     const body = await request.json();
     const { category_code, category_name, parent_id, sort_order, status } = body;
-    const result: Loose = await execute(
+    const result = await execute(
       'INSERT INTO inv_material_category (category_code, category_name, parent_id, sort_order, status) VALUES (?, ?, ?, ?, ?)',
       [category_code, category_name, parent_id || 0, sort_order || 0, status ?? 1]
     );

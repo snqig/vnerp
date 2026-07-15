@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { withPermission } from '@/lib/api-permissions';
 
 // 获取薪资统计
-export async function GET(request: NextRequest) {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   try {
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month') || format(new Date(), 'yyyy-MM');
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ success: false, message: '获取薪资统计失败' }, { status: 500 });
   }
-}
+});
 
 function format(date: Date, format: string): string {
   const year = date.getFullYear();

@@ -9,6 +9,7 @@ import {
   getSystemConfigBoolean,
   getSystemConfigNumber,
 } from '@/lib/system-config';
+import type { ResultSetHeader } from 'mysql2/promise';
 
 export class PurchaseApplicationService {
   constructor(private readonly orderRepo: IPurchaseOrderRepository) {}
@@ -98,7 +99,7 @@ export class PurchaseApplicationService {
   private async getHistoricalMaxPrice(materialId: number): Promise<number | null> {
     if (!materialId) return null;
     try {
-      const rows: Loose = await query(
+      const rows = await query(
         'SELECT MAX(unit_price) AS max_price FROM pur_purchase_order_line WHERE material_id = ?',
         [materialId]
       );
@@ -132,10 +133,10 @@ export class PurchaseApplicationService {
     order.approve(auditBy);
 
     await transaction(async (conn) => {
-      const [result]: Loose = await conn.execute(
+      const [result] = await conn.execute(
         'UPDATE pur_purchase_order SET status = ?, audit_by = ?, audit_time = NOW(), update_time = NOW() WHERE id = ? AND status = ?',
         [order.status.toDbCode(), auditBy, id, PurchaseOrderStatus.from(previousStatus).toDbCode()]
-      );
+      ) as [ResultSetHeader, any];
       if (result.affectedRows === 0) {
         throw new VersionConflictError();
       }

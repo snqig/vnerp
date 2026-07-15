@@ -43,7 +43,7 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
    * 原实现未过滤 next_execute_at，本实现向后兼容（NULL 视为立即可执行）
    */
   async fetchPendingEvents(limit: number = 50): Promise<EventOutboxRecord[]> {
-    const rows: Loose[] = await query(
+    const rows = await query(
       `SELECT id, event_type, aggregate_type, aggregate_id, payload, status,
               retry_count, error_message, next_execute_at, create_time, processed_at
        FROM domain_event_outbox
@@ -68,7 +68,7 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
     try {
       await conn.beginTransaction();
 
-      const [rows]: [Loose[], Loose] = await conn.query(
+      const [rows] = await conn.query(
         `SELECT id, event_type, aggregate_type, aggregate_id, payload, status,
                 retry_count, error_message, next_execute_at, create_time, processed_at
          FROM domain_event_outbox
@@ -78,7 +78,7 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
          LIMIT ?
          FOR UPDATE SKIP LOCKED`,
         [limit]
-      );
+      ) as [any[], any];
 
       if (rows.length === 0) {
         await conn.commit();
@@ -201,7 +201,7 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
   }
 
   // 将数据库行映射为 EventOutboxRecord
-  private toRecord(row: Loose): EventOutboxRecord {
+  private toRecord(row: any): EventOutboxRecord {
     return {
       id: row.id,
       eventType: row.event_type,

@@ -7,6 +7,13 @@
 # !.eslintrc.js
 # !.prettierrc.js
 
+# superpowers-zh 安装的 bootstrap 文件（与项目无关，不同步）
+CLAUDE.md
+CODEBUDDY.md
+
+# agency-agents-zh 角色定义库（workflow-runner 依赖，与项目无关，不同步）
+agency-agents-zh/
+
 # 保留工程治理相关配置（需纳入版本控制）
 !.github/
 !.husky/

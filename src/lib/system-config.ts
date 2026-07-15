@@ -22,7 +22,7 @@ export async function getSystemConfig(key: string, defaultValue = ''): Promise<s
   }
 
   try {
-    const rows: Loose = await query(
+    const rows = await query(
       'SELECT config_value FROM sys_config WHERE config_key = ? AND deleted = 0 LIMIT 1',
       [key]
     );
@@ -58,12 +58,12 @@ export async function getSystemConfigs(keys: string[]): Promise<Record<string, s
   if (missing.length > 0) {
     try {
       const placeholders = missing.map(() => '?').join(', ');
-      const rows: Loose = await query(
+      const rows = await query(
         `SELECT config_key, config_value FROM sys_config WHERE config_key IN (${placeholders}) AND deleted = 0`,
         missing
       );
       const found: Record<string, string> = {};
-      rows.forEach((row: Loose) => {
+      rows.forEach((row: any) => {
         found[row.config_key] = String(row.config_value ?? '');
       });
       for (const key of missing) {

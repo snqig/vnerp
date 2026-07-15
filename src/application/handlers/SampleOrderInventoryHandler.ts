@@ -5,7 +5,7 @@ export class SampleOrderInventoryHandler {
     const { payload } = event;
 
     if (event.eventType === 'SampleOrderCompleted') {
-      const order = await query<Loose>('SELECT * FROM sal_sample_order WHERE id = ?', [
+      const order = await query('SELECT * FROM sal_sample_order WHERE id = ?', [
         payload.sampleOrderId,
       ]);
       if (!order || order.length === 0) return;

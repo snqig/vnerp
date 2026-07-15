@@ -4,19 +4,21 @@ import {
 } from '@/domain/sample/repositories/ISampleOrderRepository';
 import { SampleOrder } from '@/domain/sample/aggregates/SampleOrder';
 import { SampleOrderStatus } from '@/domain/sample/value-objects/SampleOrderStatus';
-import { query, execute, queryPaginated, transaction } from '@/lib/db';
+import { query, execute, queryPaginated, transaction, SqlValue } from '@/lib/db';
+import type { PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 
 export class MysqlSampleOrderRepository implements ISampleOrderRepository {
   async findById(id: number): Promise<SampleOrder | null> {
-    const rows = await query<Loose>('SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0', [
-      id,
-    ]);
+    const rows = await query<RowDataPacket>(
+      'SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0',
+      [id]
+    );
     if (!rows || rows.length === 0) return null;
     return SampleOrder.reconstitute(this.mapToProps(rows[0]));
   }
 
   async findByOrderNo(orderNo: string): Promise<SampleOrder | null> {
-    const rows = await query<Loose>(
+    const rows = await query<RowDataPacket>(
       'SELECT * FROM sal_sample_order WHERE order_no = ? AND deleted = 0',
       [orderNo]
     );
@@ -31,7 +33,7 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
   ): Promise<{ list: SampleOrder[]; total: number }> {
     let sql = 'SELECT * FROM sal_sample_order WHERE deleted = 0';
     let countSql = 'SELECT COUNT(*) as total FROM sal_sample_order WHERE deleted = 0';
-    const params: Loose[] = [];
+    const params: SqlValue[] = [];
 
     if (filters.orderNo) {
       sql += ' AND order_no LIKE ?';
@@ -89,14 +91,15 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
     const result = await queryPaginated(sql, countSql, params, { page, pageSize });
 
     return {
-      list: result.data.map((row: Loose) => SampleOrder.reconstitute(this.mapToProps(row))),
+      list: result.data.map((row: RowDataPacket) => SampleOrder.reconstitute(this.mapToProps(row))),
       total: result.pagination.total,
     };
   }
 
-  async save(order: SampleOrder): Promise<number> {
+  async save(order: SampleOrder, conn?: PoolConnection): Promise<number> {
     const p = order.toProps();
-    const result = await execute(
+    const result = await this.execWith(
+      conn,
       `INSERT INTO sal_sample_order
        (order_no, notify_date, customer_id, customer_name, product_name, material_no, version,
         size_spec, material_spec, specification, quantity, order_date, customer_require_date,
@@ -141,9 +144,10 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
     return result.insertId;
   }
 
-  async update(order: SampleOrder): Promise<void> {
+  async update(order: SampleOrder, conn?: PoolConnection): Promise<void> {
     const p = order.toProps();
-    await execute(
+    await this.execWith(
+      conn,
       `UPDATE sal_sample_order SET
         notify_date = ?, customer_id = ?, customer_name = ?, product_name = ?,
         material_no = ?, version = ?, size_spec = ?, material_spec = ?, specification = ?,
@@ -188,6 +192,24 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
     );
   }
 
+  /**
+   * 在外部事务连接或默认连接池上执行写操作。
+   * 当 conn 提供时，使用该连接（加入外部事务）；否则回退到全局 execute（走连接池）。
+   */
+  private async execWith(
+    conn: PoolConnection | undefined,
+    sql: string,
+    values: SqlValue[]
+  ): Promise<ResultSetHeader> {
+    if (conn) {
+      // mysql2 的 execute 类型签名比 query 更严格（不接受 undefined），实际运行时支持
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const [result] = await conn.execute(sql, values as any[]);
+      return result as ResultSetHeader;
+    }
+    return execute(sql, values);
+  }
+
   async delete(id: number): Promise<void> {
     await execute('UPDATE sal_sample_order SET deleted = 1, update_time = NOW() WHERE id = ?', [
       id,
@@ -195,7 +217,7 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
   }
 
   async exists(orderNo: string): Promise<boolean> {
-    const rows = await query<Loose>(
+    const rows = await query<RowDataPacket>(
       'SELECT 1 FROM sal_sample_order WHERE order_no = ? AND deleted = 0 LIMIT 1',
       [orderNo]
     );
@@ -213,7 +235,7 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
       const [lockResult] = await conn.query('SELECT GET_LOCK(?, 10) AS acquired', [
         'sample_order_seq',
       ]);
-      if ((lockResult as Loose[])[0]?.acquired !== 1) {
+      if ((lockResult as RowDataPacket[])[0]?.acquired !== 1) {
         throw new Error('获取打样单序号锁超时');
       }
       try {
@@ -221,7 +243,7 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
           'SELECT COUNT(*) AS cnt FROM sal_sample_order WHERE order_no LIKE ? AND deleted = 0',
           [`${prefix}%`]
         );
-        const nextSeq = ((rows as Loose[])[0]?.cnt || 0) + 1;
+        const nextSeq = ((rows as RowDataPacket[])[0]?.cnt || 0) + 1;
         return `${prefix}${String(nextSeq).padStart(4, '0')}`;
       } finally {
         await conn.query('SELECT RELEASE_LOCK(?)', ['sample_order_seq']);
@@ -229,7 +251,7 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
     });
   }
 
-  private mapToProps(row: Loose) {
+  private mapToProps(row: RowDataPacket) {
     return {
       id: row.id,
       orderNo: row.order_no,

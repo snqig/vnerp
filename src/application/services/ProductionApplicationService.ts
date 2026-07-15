@@ -1,7 +1,7 @@
 import { IWorkOrderRepository } from '@/domain/production/repositories/IWorkOrderRepository';
-import { IPickOrderRepository } from '@/domain/production/repositories/IPickOrderRepository';
-import { IWorkReportRepository } from '@/domain/production/repositories/IWorkReportRepository';
-import { IFinishOrderRepository } from '@/domain/production/repositories/IFinishOrderRepository';
+import { IPickOrderRepository, PickOrderFilters } from '@/domain/production/repositories/IPickOrderRepository';
+import { IWorkReportRepository, WorkReportFilters } from '@/domain/production/repositories/IWorkReportRepository';
+import { IFinishOrderRepository, FinishOrderFilters } from '@/domain/production/repositories/IFinishOrderRepository';
 import { WorkOrder, WorkOrderProps } from '@/domain/production/aggregates/WorkOrder';
 import { PickOrder, PickOrderProps } from '@/domain/production/aggregates/PickOrder';
 import { WorkReport, WorkReportProps } from '@/domain/production/aggregates/WorkReport';
@@ -160,7 +160,7 @@ export class ProductionApplicationService {
   }
 
   async listPickOrders(filters: Record<string, unknown>, page = 1, pageSize = 20) {
-    return this.pickOrderRepo!.findByFilters(filters as any, page, pageSize);
+    return this.pickOrderRepo!.findByFilters(filters as PickOrderFilters, page, pageSize);
   }
 
   // ==================== 报工单 ====================
@@ -189,7 +189,7 @@ export class ProductionApplicationService {
   }
 
   async listWorkReports(filters: Record<string, unknown>, page = 1, pageSize = 20) {
-    return this.workReportRepo!.findByFilters(filters as any, page, pageSize);
+    return this.workReportRepo!.findByFilters(filters as WorkReportFilters, page, pageSize);
   }
 
   // ==================== 完工入库单 ====================
@@ -218,7 +218,7 @@ export class ProductionApplicationService {
   }
 
   async listFinishOrders(filters: Record<string, unknown>, page = 1, pageSize = 20) {
-    return this.finishOrderRepo!.findByFilters(filters as any, page, pageSize);
+    return this.finishOrderRepo!.findByFilters(filters as FinishOrderFilters, page, pageSize);
   }
 
   // ==================== 成本核算 ====================

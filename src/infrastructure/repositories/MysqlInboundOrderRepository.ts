@@ -6,6 +6,8 @@ import {
 import { InboundOrder, InboundOrderProps } from '@/domain/warehouse/aggregates/InboundOrder';
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
+import type { InboundStatus } from '@/domain/warehouse/value-objects/OrderStatus';
+import type { ResultSetHeader } from 'mysql2/promise';
 
 const DB_TO_DOMAIN_STATUS: Record<string, string> = {
   draft: 'draft',
@@ -27,7 +29,7 @@ const ITEM_COLUMNS = `id, order_id, material_id, material_name, material_spec,
 
 export class MysqlInboundOrderRepository implements IInboundOrderRepository {
   async findById(id: number): Promise<InboundOrder | null> {
-    const orders = await query<Loose>(
+    const orders = await query<any>(
       'SELECT * FROM inv_inbound_order WHERE id = ? AND deleted = 0',
       [id]
     );
@@ -35,7 +37,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
-    const items = await query<Loose>(
+    const items = await query<any>(
       `SELECT ${ITEM_COLUMNS} FROM inv_inbound_item WHERE order_id = ?`,
       [id]
     );
@@ -43,7 +45,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
     const props: InboundOrderProps = {
       id: order.id,
       orderNo: order.order_no,
-      status: (DB_TO_DOMAIN_STATUS[order.status] || order.status) as Loose,
+      status: (DB_TO_DOMAIN_STATUS[order.status] || order.status) as InboundStatus,
       warehouseId: order.warehouse_id,
       supplierName: order.supplier_name || '',
       supplierId: order.supplier_id,
@@ -52,7 +54,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
       orderType: order.order_type,
       inboundDate: order.inbound_date,
       remark: order.remark,
-      items: items.map((item: Loose) => ({
+      items: items.map((item: any) => ({
         id: item.id,
         orderId: item.order_id,
         materialId: item.material_id,
@@ -84,7 +86,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
                o.total_amount, o.status, o.remark, o.create_time, o.update_time
                FROM inv_inbound_order o WHERE o.deleted = 0`;
     let countSql = `SELECT COUNT(*) as total FROM inv_inbound_order o WHERE o.deleted = 0`;
-    const params: Loose[] = [];
+    const params: (string | number | null)[] = [];
 
     if (filters?.keyword) {
       // T401: keyword 同时匹配入库单号、供应商名称、关联采购单号（po_no）
@@ -118,32 +120,32 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
     const result = await queryPaginated(sql, countSql, params, pagination);
 
     if (result.data.length > 0) {
-      const orderIds = result.data.map((o: Loose) => o.id);
+      const orderIds = result.data.map((o: any) => o.id);
       const placeholders = orderIds.map(() => '?').join(',');
       const items = await query(
         `SELECT ${ITEM_COLUMNS} FROM inv_inbound_item WHERE order_id IN (${placeholders})`,
         orderIds
       );
 
-      const itemsMap = new Map<number, Loose[]>();
-      for (const item of items as Loose[]) {
+      const itemsMap = new Map<number, any>();
+      for (const item of items as any[]) {
         if (!itemsMap.has(item.order_id)) {
           itemsMap.set(item.order_id, []);
         }
         itemsMap.get(item.order_id)!.push(item);
       }
 
-      for (const order of result.data as Loose[]) {
+      for (const order of result.data as any[]) {
         order.items = itemsMap.get(order.id) || [];
       }
     }
 
     return {
-      data: result.data.map((o: Loose) =>
+      data: result.data.map((o: any) =>
         InboundOrder.reconstitute({
           id: o.id,
           orderNo: o.order_no,
-          status: (DB_TO_DOMAIN_STATUS[o.status] || o.status) as Loose,
+          status: (DB_TO_DOMAIN_STATUS[o.status] || o.status) as InboundStatus,
           warehouseId: o.warehouse_id,
           supplierName: o.supplier_name || '',
           supplierId: o.supplier_id,
@@ -152,7 +154,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
           orderType: o.order_type,
           inboundDate: o.inbound_date,
           remark: o.remark,
-          items: (o.items || []).map((item: Loose) => ({
+          items: (o.items || []).map((item: any) => ({
             id: item.id,
             orderId: item.order_id,
             materialId: item.material_id,
@@ -180,7 +182,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
     const items = order.items;
 
     return await transaction(async (conn) => {
-      const [orderResult]: Loose = await conn.execute(
+      const [orderResult] = await conn.execute(
         `INSERT INTO inv_inbound_order
          (order_no, order_type, warehouse_id, supplier_id, supplier_name, po_id, po_no,
           total_amount, total_quantity, status, inbound_date, remark, create_time)
@@ -201,7 +203,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
         ]
       );
 
-      const orderId = orderResult.insertId;
+      const orderId = (orderResult as ResultSetHeader).insertId;
 
       for (const item of items) {
         await conn.execute(

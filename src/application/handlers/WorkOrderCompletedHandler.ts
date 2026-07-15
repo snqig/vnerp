@@ -23,21 +23,21 @@ export class WorkOrderCompletedHandler implements EventHandler<WorkOrderComplete
     const today = new Date().toISOString().slice(0, 10);
 
     await transaction(async (conn) => {
-      const [invRows]: Loose = await conn.execute(
+      const [invRows] = await conn.execute(
         `SELECT id, quantity, available_qty, unit
          FROM inv_inventory
          WHERE material_id = ? AND warehouse_id = ?
          FOR UPDATE`,
         [productId, warehouseId]
-      );
+      ) as any;
 
       let materialCode = '';
       let unit = '件';
 
-      const [matRows]: Loose = await conn.execute(
+      const [matRows] = await conn.execute(
         `SELECT material_code, unit FROM inv_material WHERE id = ?`,
         [productId]
-      );
+      ) as any;
       if (matRows.length > 0) {
         materialCode = matRows[0].material_code || '';
         unit = matRows[0].unit || '件';

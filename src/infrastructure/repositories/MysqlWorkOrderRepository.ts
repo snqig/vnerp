@@ -6,14 +6,14 @@ import { generateDocumentNo } from '@/lib/document-numbering';
 
 export class MysqlWorkOrderRepository implements IWorkOrderRepository {
   async findById(id: number): Promise<WorkOrder | null> {
-    const orders = await query<Loose>(
+    const orders = await query(
       'SELECT * FROM prod_work_order WHERE id = ? AND deleted = 0',
       [id]
     );
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
-    const materials = await query<Loose>(
+    const materials = await query(
       'SELECT * FROM prod_work_order_material WHERE work_order_id = ? AND deleted = 0 ORDER BY id ASC',
       [id]
     );
@@ -22,14 +22,14 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
   }
 
   async findByWorkOrderNo(workOrderNo: string): Promise<WorkOrder | null> {
-    const orders = await query<Loose>(
+    const orders = await query(
       'SELECT * FROM prod_work_order WHERE work_order_no = ? AND deleted = 0',
       [workOrderNo]
     );
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
-    const materials = await query<Loose>(
+    const materials = await query(
       'SELECT * FROM prod_work_order_material WHERE work_order_id = ? AND deleted = 0 ORDER BY id ASC',
       [order.id]
     );
@@ -44,7 +44,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
   ) {
     let sql = 'SELECT o.* FROM prod_work_order o WHERE o.deleted = 0';
     let countSql = 'SELECT COUNT(*) as total FROM prod_work_order o WHERE o.deleted = 0';
-    const params: Loose[] = [];
+    const params: (string | number)[] = [];
 
     if (status && status !== 'all') {
       const dbCode = WorkOrderStatusVO.from(status).toDbCode();
@@ -69,7 +69,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
     const result = await queryPaginated(sql, countSql, params, pagination);
 
     return {
-      data: result.data.map((o: Loose) => WorkOrder.reconstitute(this.mapToProps(o, []))),
+      data: result.data.map((o: any) => WorkOrder.reconstitute(this.mapToProps(o, []))),
       pagination: result.pagination,
     };
   }
@@ -78,7 +78,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
     const workOrderNo = await generateDocumentNo('work_order');
 
     return await transaction(async (conn) => {
-      const [result]: Loose = await conn.execute(
+      const [result] = await conn.execute(
         `INSERT INTO prod_work_order (work_order_no, product_id, product_name, product_code, planned_qty, completed_qty,
           order_type, process_id, process_name, warehouse_id, planned_start_date, planned_end_date, status, remark, create_by, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
@@ -99,7 +99,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
           order.remark,
           order.createBy || null,
         ]
-      );
+      ) as any;
 
       const orderId = result.insertId;
 
@@ -138,7 +138,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
     await execute('UPDATE prod_work_order SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
   }
 
-  private mapToProps(order: Loose, materials: Loose[]): WorkOrderProps {
+  private mapToProps(order: any, materials: any[]): WorkOrderProps {
     return {
       id: order.id,
       workOrderNo: order.work_order_no,
@@ -158,7 +158,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
       actualEndDate: order.actual_end_date,
       remark: order.remark || '',
       createBy: order.create_by,
-      materialRequirements: (materials || []).map((m: Loose) => ({
+      materialRequirements: (materials || []).map((m: any) => ({
         id: m.id,
         materialId: m.material_id,
         materialCode: m.material_code || '',

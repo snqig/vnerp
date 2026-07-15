@@ -18,7 +18,7 @@ export class BatchExpiryScheduler {
     };
 
     try {
-      const [batchResult]: Loose = await execute(
+      const batchResult = await execute(
         `UPDATE inv_inventory_batch
          SET status = 'expired'
          WHERE status = 'normal'
@@ -40,7 +40,7 @@ export class BatchExpiryScheduler {
     }
 
     try {
-      const [inkResult]: Loose = await execute(
+      const inkResult = await execute(
         `UPDATE ink_opening_record
          SET status = 2
          WHERE status = 1
@@ -61,7 +61,7 @@ export class BatchExpiryScheduler {
     }
 
     try {
-      const warningBatches: Loose = await query(
+      const warningBatches = await query<any>(
         `SELECT id, batch_no, material_code, material_name, expire_date
          FROM inv_inventory_batch
          WHERE status = 'normal'
@@ -70,12 +70,12 @@ export class BatchExpiryScheduler {
          AND expire_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
          AND deleted = 0`
       );
-      result.warningBatches = (warningBatches as Loose[]).length;
+      result.warningBatches = warningBatches.length;
 
       if (result.warningBatches > 0) {
         secureLog('warn', 'Inventory batches expiring within 7 days', {
           count: result.warningBatches,
-          batches: (warningBatches as Loose[]).slice(0, 10).map((b: Loose) => ({
+          batches: warningBatches.slice(0, 10).map((b) => ({
             id: b.id,
             batchNo: b.batch_no,
             materialCode: b.material_code,
@@ -90,7 +90,7 @@ export class BatchExpiryScheduler {
     }
 
     try {
-      const warningInk: Loose = await query(
+      const warningInk = await query<any>(
         `SELECT id, record_no, material_name, expire_time
          FROM ink_opening_record
          WHERE status = 1
@@ -98,12 +98,12 @@ export class BatchExpiryScheduler {
          AND expire_time <= DATE_ADD(NOW(), INTERVAL 24 HOUR)
          AND deleted = 0`
       );
-      result.warningInkOpenings = (warningInk as Loose[]).length;
+      result.warningInkOpenings = warningInk.length;
 
       if (result.warningInkOpenings > 0) {
         secureLog('warn', 'Ink openings expiring within 24 hours', {
           count: result.warningInkOpenings,
-          records: (warningInk as Loose[]).slice(0, 10).map((r: Loose) => ({
+          records: warningInk.slice(0, 10).map((r) => ({
             id: r.id,
             recordNo: r.record_no,
             materialName: r.material_name,

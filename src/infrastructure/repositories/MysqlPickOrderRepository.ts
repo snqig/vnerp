@@ -4,6 +4,7 @@ import {
   IPickOrderRepository,
   PickOrderFilters,
 } from '@/domain/production/repositories/IPickOrderRepository';
+import type { ResultSetHeader } from 'mysql2/promise';
 
 export class MysqlPickOrderRepository implements IPickOrderRepository {
   async findById(id: number): Promise<PickOrder | null> {
@@ -25,7 +26,7 @@ export class MysqlPickOrderRepository implements IPickOrderRepository {
       'SELECT * FROM prd_pick_order WHERE work_order_id = ? AND deleted = 0 ORDER BY id DESC',
       [workOrderId]
     );
-    return Promise.all(rows.map((r: Loose) => this.mapToEntity(r)));
+    return Promise.all(rows.map((r: any) => this.mapToEntity(r)));
   }
 
   async findByFilters(
@@ -34,7 +35,7 @@ export class MysqlPickOrderRepository implements IPickOrderRepository {
     pageSize = 20
   ): Promise<{ list: PickOrder[]; total: number }> {
     const conditions: string[] = ['po.deleted = 0'];
-    const params: Loose[] = [];
+    const params: (string | number | null)[] = [];
 
     if (filters.workOrderId) {
       conditions.push('po.work_order_id = ?');
@@ -62,7 +63,7 @@ export class MysqlPickOrderRepository implements IPickOrderRepository {
       [...params, pageSize, offset]
     );
 
-    const list = await Promise.all(rows.map((r: Loose) => this.mapToEntity(r)));
+    const list = await Promise.all(rows.map((r: any) => this.mapToEntity(r)));
     return { list, total };
   }
 
@@ -81,7 +82,7 @@ export class MysqlPickOrderRepository implements IPickOrderRepository {
         order.createBy,
       ]
     );
-    const id = (result as Loose).insertId;
+    const id = result.insertId;
 
     for (const item of order.items) {
       await execute(
@@ -119,7 +120,7 @@ export class MysqlPickOrderRepository implements IPickOrderRepository {
     await execute('UPDATE prd_pick_order SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
   }
 
-  private async mapToEntity(row: Loose): Promise<PickOrder> {
+  private async mapToEntity(row: any): Promise<PickOrder> {
     const items = await query('SELECT * FROM prd_pick_order_item WHERE pick_order_id = ?', [
       row.id,
     ]);
@@ -134,7 +135,7 @@ export class MysqlPickOrderRepository implements IPickOrderRepository {
       createBy: row.create_by,
       createTime: row.create_time,
       updateTime: row.update_time,
-      items: (items || []).map((i: Loose) => ({
+      items: (items || []).map((i: any) => ({
         id: i.id,
         materialId: i.material_id,
         materialName: i.material_name,

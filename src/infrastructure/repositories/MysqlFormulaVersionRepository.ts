@@ -10,6 +10,7 @@ import {
   IFormulaVersionRepository,
   IInkColorRepository,
 } from '@/domain/dcprint/repositories/IFormulaVersionRepository';
+import type { ResultSetHeader, PoolConnection } from 'mysql2/promise';
 
 const VERSION_SELECT_FIELDS = `
   v.id, v.color_id, v.version_no, v.version_name, v.status,
@@ -29,7 +30,7 @@ const ITEM_INSERT_PLACEHOLDER = `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
 export class MysqlFormulaVersionRepository implements IFormulaVersionRepository {
   async findById(id: number): Promise<InkFormulaVersion | null> {
-    const rows: Loose = await query(
+    const rows = await query<any>(
       `SELECT ${VERSION_SELECT_FIELDS} FROM dcprint_ink_formula_version v WHERE v.id = ? AND v.is_deleted = 0`,
       [id]
     );
@@ -38,7 +39,7 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
   }
 
   async findByIdWithItems(id: number): Promise<InkFormulaVersion | null> {
-    const rows: Loose = await query(
+    const rows = await query<any>(
       `SELECT ${VERSION_SELECT_FIELDS}, c.color_code, c.color_name, c.pantone_code, c.base_ink_type
        FROM dcprint_ink_formula_version v
        LEFT JOIN dcprint_ink_color c ON v.color_id = c.id
@@ -47,27 +48,27 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
     );
     if (!rows || rows.length === 0) return null;
 
-    const items: Loose = await query(
+    const items = await query<any>(
       `SELECT * FROM dcprint_ink_formula_item WHERE version_id = ? ORDER BY sort, add_order`,
       [id]
     );
 
-    const itemVOs = items.map((row: Loose) => this.mapItemRowToVO(row));
+    const itemVOs = items.map((row: any) => this.mapItemRowToVO(row));
     return InkFormulaVersion.fromRow(rows[0], itemVOs);
   }
 
   async findByColorId(colorId: number): Promise<InkFormulaVersion[]> {
-    const rows: Loose = await query(
+    const rows = await query<any>(
       `SELECT ${VERSION_SELECT_FIELDS} FROM dcprint_ink_formula_version v
        WHERE v.color_id = ? AND v.is_deleted = 0
        ORDER BY v.status ASC, v.create_time DESC`,
       [colorId]
     );
-    return rows.map((row: Loose) => InkFormulaVersion.fromRow(row));
+    return rows.map((row: any) => InkFormulaVersion.fromRow(row));
   }
 
   async getActiveVersion(colorId: number): Promise<InkFormulaVersion | null> {
-    const rows: Loose = await query(
+    const rows = await query<any>(
       `SELECT ${VERSION_SELECT_FIELDS} FROM dcprint_ink_formula_version v
        WHERE v.color_id = ? AND v.status = 2 AND v.is_deleted = 0
        ORDER BY v.activate_time DESC LIMIT 1`,
@@ -78,18 +79,18 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
   }
 
   async getVersionNos(colorId: number): Promise<string[]> {
-    const rows: Loose = await query(
+    const rows = await query<any>(
       `SELECT version_no FROM dcprint_ink_formula_version
        WHERE color_id = ? AND is_deleted = 0 ORDER BY id DESC`,
       [colorId]
     );
-    return rows.map((r: Loose) => r.version_no as string);
+    return rows.map((r: any) => r.version_no as string);
   }
 
   async save(version: InkFormulaVersion): Promise<number> {
     const props = version.toProps();
     return transaction(async (conn) => {
-      const [insertResult]: Loose = await conn.execute(
+      const [insertResult] = await conn.execute(
         `INSERT INTO dcprint_ink_formula_version
          (color_id, version_no, version_name, status, change_reason, source_version_id, process_note, total_weight, unit, shelf_life_hours, cost_calc_status, create_by, update_by)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -109,7 +110,7 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
           props.updateBy ?? null,
         ]
       );
-      const versionId = insertResult.insertId;
+      const versionId = (insertResult as ResultSetHeader).insertId;
 
       await this.saveItems(conn, versionId, props.items ?? []);
       return versionId;
@@ -211,7 +212,7 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
   }
 
   async exists(id: number): Promise<boolean> {
-    const rows: Loose = await query(
+    const rows = await query<any>(
       'SELECT 1 FROM dcprint_ink_formula_version WHERE id = ? AND is_deleted = 0 LIMIT 1',
       [id]
     );
@@ -220,7 +221,7 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
 
   // ===== 私有方法 =====
 
-  private async saveItems(conn: Loose, versionId: number, items: FormulaItemVO[]): Promise<void> {
+  private async saveItems(conn: PoolConnection, versionId: number, items: FormulaItemVO[]): Promise<void> {
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       await conn.execute(
@@ -244,7 +245,7 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
     }
   }
 
-  private mapItemRowToVO(row: Loose): FormulaItemVO {
+  private mapItemRowToVO(row: any): FormulaItemVO {
     return new FormulaItemVO({
       id: row.id,
       versionId: row.version_id,
@@ -269,16 +270,16 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
  * 色号仓储 — MySQL 实现
  */
 export class MysqlInkColorRepository implements IInkColorRepository {
-  async findById(id: number): Promise<Loose | null> {
-    const rows: Loose = await query(
+  async findById(id: number): Promise<any | null> {
+    const rows = await query<any>(
       'SELECT * FROM dcprint_ink_color WHERE id = ? AND is_deleted = 0',
       [id]
     );
     return rows?.[0] ?? null;
   }
 
-  async findByCode(code: string): Promise<Loose | null> {
-    const rows: Loose = await query(
+  async findByCode(code: string): Promise<any | null> {
+    const rows = await query<any>(
       'SELECT * FROM dcprint_ink_color WHERE color_code = ? AND is_deleted = 0',
       [code]
     );
@@ -290,7 +291,7 @@ export class MysqlInkColorRepository implements IInkColorRepository {
     pageSize: number;
     keyword?: string;
     status?: number;
-  }): Promise<{ list: Loose[]; total: number }> {
+  }): Promise<{ list: any[]; total: number }> {
     const { page, pageSize, keyword, status } = params;
     let where = 'WHERE c.is_deleted = 0';
     const sqlParams: (string | number)[] = [];
@@ -305,13 +306,13 @@ export class MysqlInkColorRepository implements IInkColorRepository {
       sqlParams.push(Number(status));
     }
 
-    const totalRows: Loose = await query(
+    const totalRows = await query<any>(
       `SELECT COUNT(*) as total FROM dcprint_ink_color c ${where}`,
       sqlParams
     );
-    const total = totalRows[0]?.total || 0;
+    const total = Number(totalRows[0]?.total || 0);
 
-    const rows: Loose = await query(
+    const rows = await query<any>(
       `SELECT c.*,
        (SELECT v.version_no FROM dcprint_ink_formula_version v
         WHERE v.color_id = c.id AND v.status = 2 AND v.is_deleted = 0
@@ -327,8 +328,8 @@ export class MysqlInkColorRepository implements IInkColorRepository {
     return { list: rows, total };
   }
 
-  async save(data: Loose, operatorId: number): Promise<number> {
-    const result: Loose = await execute(
+  async save(data: any, operatorId: number): Promise<number> {
+    const result = await execute(
       `INSERT INTO dcprint_ink_color (color_code, color_name, color_series, base_ink_type, pantone_code, remark, status, create_by, update_by)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -346,7 +347,7 @@ export class MysqlInkColorRepository implements IInkColorRepository {
     return result.insertId;
   }
 
-  async update(id: number, data: Loose, operatorId: number): Promise<void> {
+  async update(id: number, data: any, operatorId: number): Promise<void> {
     const fields: string[] = [];
     const values: (string | number | null)[] = [];
 

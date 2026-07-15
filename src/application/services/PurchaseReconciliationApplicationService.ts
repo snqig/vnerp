@@ -9,6 +9,7 @@ import { MysqlPayableRepository } from '@/infrastructure/repositories/MysqlPayab
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
+import type { ResultSetHeader } from 'mysql2/promise';
 
 export interface WriteOffInput {
   reconciliationId: number;
@@ -89,7 +90,7 @@ export class PurchaseReconciliationApplicationService {
       );
 
       // 乐观锁：仅当余额未被其他事务修改时才更新（WHERE balance_amount = 原始余额）
-      const [updateResult]: Loose = await conn.execute(
+      const [updateResult] = await conn.execute(
         `UPDATE pur_purchase_reconciliation
          SET paid_amount = ?, balance_amount = ?, status = ?, update_time = NOW()
          WHERE id = ? AND balance_amount = ?`,
@@ -100,7 +101,7 @@ export class PurchaseReconciliationApplicationService {
           input.reconciliationId,
           originalBalance,
         ]
-      );
+      ) as [ResultSetHeader, any];
       if (updateResult.affectedRows === 0) {
         throw new VersionConflictError();
       }
@@ -155,7 +156,7 @@ export class PurchaseReconciliationApplicationService {
   private async persistAndPublishEvents(
     aggregateType: string,
     aggregateId: number,
-    aggregate: { getDomainEvents(): Loose[]; clearDomainEvents(): void }
+    aggregate: { getDomainEvents(): any[]; clearDomainEvents(): void }
   ): Promise<void> {
     const events = aggregate.getDomainEvents();
     if (events.length === 0) return;

@@ -1,9 +1,10 @@
 import { execute, query } from '@/lib/db';
 import { DomainEvent } from '@/domain/shared/DomainTypes';
+import type { PoolConnection } from 'mysql2/promise';
 
 export class DomainEventOutbox {
   static async saveEvents(
-    conn: Loose,
+    conn: PoolConnection,
     aggregateType: string,
     aggregateId: number,
     events: DomainEvent[]
@@ -17,16 +18,16 @@ export class DomainEventOutbox {
     }
   }
 
-  static async fetchPendingEvents(limit: number = 50): Promise<Loose[]> {
+  static async fetchPendingEvents(limit: number = 50): Promise<Record<string, any>[]> {
     // 1.4 指数退避：仅查询 next_execute_at 已到期或为 NULL 的待处理事件
-    const rows: Loose = await query(
+    const rows = await query<Record<string, any>>(
       `SELECT * FROM domain_event_outbox
        WHERE status = 'pending'
          AND (next_execute_at IS NULL OR next_execute_at <= NOW())
        ORDER BY create_time ASC LIMIT ?`,
       [limit]
     );
-    return rows as Loose[];
+    return rows;
   }
 
   static async markAsProcessed(id: number): Promise<void> {

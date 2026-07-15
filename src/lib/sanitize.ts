@@ -17,7 +17,7 @@ import he from 'he';
  */
 export function sanitizeText(text: string | null | undefined): string | null {
   if (text == null) return null;
-  if (typeof text !== 'string') return text as Loose;
+  if (typeof text !== 'string') return text as any;
   return he.encode(text, { useNamedReferences: false });
 }
 
@@ -31,11 +31,11 @@ export function sanitizeText(text: string | null | undefined): string | null {
  */
 export function sanitizeObject<T>(obj: T, skipFields?: string[]): T {
   if (obj == null) return obj;
-  if (typeof obj === 'string') return sanitizeText(obj) as Loose;
-  if (Array.isArray(obj)) return obj.map((item) => sanitizeObject(item, skipFields)) as Loose;
+  if (typeof obj === 'string') return sanitizeText(obj) as any;
+  if (Array.isArray(obj)) return obj.map((item) => sanitizeObject(item, skipFields)) as any;
   if (typeof obj === 'object' && !(obj instanceof Date) && !(obj instanceof RegExp)) {
-    const result: Record<string, Loose> = {};
-    for (const [key, value] of Object.entries(obj as Record<string, Loose>)) {
+    const result: Record<string, any> = {};
+    for (const [key, value] of Object.entries(obj as Record<string, any>)) {
       if (skipFields?.includes(key)) {
         result[key] = value;
       } else {
@@ -53,9 +53,9 @@ export function sanitizeObject<T>(obj: T, skipFields?: string[]): T {
  * @example
  * sanitizeFields(data, ['remark', 'description', 'process_note'])
  */
-export function sanitizeFields<T extends Record<string, Loose>>(obj: T, fields: string[]): T {
+export function sanitizeFields<T extends Record<string, any>>(obj: T, fields: string[]): T {
   if (obj == null || typeof obj !== 'object') return obj;
-  const result: Record<string, Loose> = { ...obj };
+  const result: Record<string, any> = { ...obj };
   for (const field of fields) {
     if (field in result && typeof result[field] === 'string') {
       result[field] = sanitizeText(result[field]);

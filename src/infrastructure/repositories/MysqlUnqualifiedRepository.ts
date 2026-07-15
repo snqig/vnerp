@@ -188,7 +188,7 @@ export class MysqlUnqualifiedRepository implements IUnqualifiedRepository {
     const unqualifiedNo = record.unqualifiedNo || generateUnqualifiedNo();
     const handleNo = record.handleNo || generateHandleNo();
 
-    const result: Loose = await execute(
+    const result = await execute(
       `INSERT INTO qc_unqualified
        (unqualified_no, handle_no, inspection_id, source_type, source_no,
         material_id, material_code, material_name, quantity, defect_type, defect_desc,
@@ -242,7 +242,7 @@ export class MysqlUnqualifiedRepository implements IUnqualifiedRepository {
       updateBy !== undefined
         ? [newDbCode, updateBy, id, currentDbCode]
         : [newDbCode, id, currentDbCode];
-    const result: Loose = await execute(sql, params);
+    const result = await execute(sql, params);
     return result.affectedRows > 0;
   }
 

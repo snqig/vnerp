@@ -3,6 +3,7 @@ import { OutboundOrder, OutboundOrderProps } from '@/domain/warehouse/aggregates
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { query, transaction } from '@/lib/db';
+import type { ResultSetHeader } from 'mysql2/promise';
 
 export class OutboundApplicationService {
   constructor(private readonly orderRepo: IOutboundOrderRepository) {}
@@ -57,7 +58,7 @@ export class OutboundApplicationService {
   ): Promise<{ id: number; status: string }> {
     const order = await this.getOrderById(id);
 
-    const warehouseRows: Loose = await query(
+    const warehouseRows = await query(
       'SELECT warehouse_name FROM inv_warehouse WHERE id = ?',
       [order.warehouseId]
     );
@@ -67,7 +68,7 @@ export class OutboundApplicationService {
     order.approve(warehouseName, auditorId, auditorName);
 
     await transaction(async (conn) => {
-      const [result]: Loose = await conn.execute(
+      const [result] = await conn.execute(
         "UPDATE inv_outbound_order SET status = 'approved', audit_status = 1, finance_posted = 1, auditor_id = ?, auditor_name = ?, audit_time = NOW(), update_time = NOW() WHERE id = ? AND status = ?",
         [
           auditorId || null,
@@ -75,7 +76,7 @@ export class OutboundApplicationService {
           id,
           previousStatus === 'completed' ? 'approved' : previousStatus,
         ]
-      );
+      ) as [ResultSetHeader, any];
       if (result.affectedRows === 0) {
         throw new VersionConflictError();
       }

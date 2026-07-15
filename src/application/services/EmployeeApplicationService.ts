@@ -1,5 +1,6 @@
 import { IEmployeeRepository } from '@/domain/hr/repositories/IEmployeeRepository';
 import { Employee } from '@/domain/hr/aggregates/Employee';
+import { EmployeeStatus } from '@/domain/hr/aggregates/Employee';
 
 export class EmployeeApplicationService {
   constructor(private employeeRepo: IEmployeeRepository) {}
@@ -67,7 +68,7 @@ export class EmployeeApplicationService {
     return this.employeeRepo.getById(id);
   }
 
-  async list(status?: string, deptId?: number): Promise<Employee[]> {
-    return this.employeeRepo.findAll(status as any, deptId);
+  async list(status?: EmployeeStatus, deptId?: number): Promise<Employee[]> {
+    return this.employeeRepo.findAll(status, deptId);
   }
 }
