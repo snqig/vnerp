@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useCompanyName } from './useCompanyName';
 
-const DEFAULT_NAME = '越南达昌科技有限公司';
+const DEFAULT_NAME = 'VNERP丝网印刷管理系统';
 
 // 构造符合 hook fetchWithRetry 校验（res.ok / res.status / res.headers）的响应
 const mockJsonResponse = (data: any, opts: { ok?: boolean; status?: number } = {}) => ({
@@ -76,9 +76,7 @@ describe('useCompanyName Hook测试', () => {
   it('config 无公司配置时应从组织API获取全称', async () => {
     const mockFetch = vi
       .fn()
-      .mockResolvedValueOnce(
-        mockJsonResponse({ success: true, data: { list: [] } })
-      )
+      .mockResolvedValueOnce(mockJsonResponse({ success: true, data: { list: [] } }))
       .mockResolvedValueOnce(
         mockJsonResponse({ success: true, data: { full_name: '测试公司全称' } })
       );
@@ -91,16 +89,18 @@ describe('useCompanyName Hook测试', () => {
     });
 
     expect(result.current.companyName).toBe('测试公司全称');
-    expect(mockFetch).toHaveBeenNthCalledWith(2, '/api/organization?type=company', expect.anything());
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      '/api/organization?type=company',
+      expect.anything()
+    );
   });
 
   it('组织API无全称时应使用短名称', async () => {
     const mockFetch = vi
       .fn()
       .mockResolvedValueOnce(mockJsonResponse({ success: false }))
-      .mockResolvedValueOnce(
-        mockJsonResponse({ success: true, data: { short_name: '测试短名' } })
-      );
+      .mockResolvedValueOnce(mockJsonResponse({ success: true, data: { short_name: '测试短名' } }));
     global.fetch = mockFetch;
 
     const { result } = renderHook(() => useCompanyName());

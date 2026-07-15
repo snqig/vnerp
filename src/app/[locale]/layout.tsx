@@ -22,7 +22,7 @@ async function getCompanyName(): Promise<string> {
   }
   try {
     const rows = await query<{ config_value: string }>(
-      `SELECT config_value FROM sys_config WHERE config_key IN ('company_name', 'company_short_name') ORDER BY FIELD(config_key, 'company_name', 'company_short_name') LIMIT 1`
+      `SELECT config_value FROM sys_config WHERE config_key IN ('sys.name', 'company_name', 'company_short_name') ORDER BY FIELD(config_key, 'sys.name', 'company_name', 'company_short_name') LIMIT 1`
     );
     if (Array.isArray(rows) && rows.length > 0 && rows[0]?.config_value) {
       cachedCompanyName = rows[0].config_value;
@@ -32,7 +32,7 @@ async function getCompanyName(): Promise<string> {
   } catch {
     if (cachedCompanyName) return cachedCompanyName;
   }
-  return '越南达昌科技有限公司';
+  return 'VNERP丝网印刷管理系统';
 }
 
 /**
