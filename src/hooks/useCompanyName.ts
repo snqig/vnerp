@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function useCompanyName() {
-  const [companyName, setCompanyName] = useState('VNERP丝网印刷管理系统');
+  const { companyName: authCompanyName } = useAuth();
+  const [companyName, setCompanyName] = useState(authCompanyName);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -56,6 +56,7 @@ interface AuthState {
 export interface InitialAuthData {
   menus: Menu[];
   permissions: string[];
+  companyName?: string;
 }
 
 interface AuthContextType extends AuthState {
@@ -70,6 +71,7 @@ interface AuthContextType extends AuthState {
   hasPermission: (permission: string) => boolean;
   hasAnyPermission: (perms: string[]) => boolean;
   hasRole: (roleCode: string) => boolean;
+  companyName: string;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -139,6 +141,9 @@ export function AuthProvider({
   });
 
   const [isHydrated, setIsHydrated] = useState(false);
+  const [companyName, setCompanyName] = useState(
+    initialAuth?.companyName ?? 'VNERP丝网印刷管理系统'
+  );
 
   useEffect(() => {
     setIsHydrated(true);
@@ -429,6 +434,7 @@ export function AuthProvider({
         hasPermission,
         hasAnyPermission,
         hasRole,
+        companyName,
       }}
     >
       {children}

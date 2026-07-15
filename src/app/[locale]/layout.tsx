@@ -84,8 +84,10 @@ export default async function LocaleLayout({
   }
 
   const messages = await getMessages();
-  const _companyName = await getCompanyName();
-  const initialAuth = await prefetchMenus();
+  const companyName = await getCompanyName();
+  const initialAuthData = await prefetchMenus();
+
+  const initialAuth = initialAuthData ? { ...initialAuthData, companyName } : { companyName };
 
   return (
     <>
