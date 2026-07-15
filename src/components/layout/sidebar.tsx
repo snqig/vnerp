@@ -230,10 +230,6 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   const { menus, isLoading, user, isAuthenticated, logout, isHydrated } = useAuth();
   const { companyName } = useCompanyName();
   const t = useTranslations('Auth');
-
-  console.log('[Sidebar] companyName:', companyName);
-  console.log('[Sidebar] isHydrated:', isHydrated);
-  console.log('[Sidebar] menus length:', menus?.length);
   const tc = useTranslations('Common');
   const tn = useTranslations('Nav');
   const { toast } = useToast();

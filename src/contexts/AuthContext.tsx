@@ -133,17 +133,6 @@ export function AuthProvider({
   //   - user / isAuthenticated 仍由 useEffect 从 localStorage 恢复（避免 SSR 读取 localStorage）
   // 无 initialAuth 时（未登录 / SSR 预取失败）：保持原有行为，isLoading=true 显示骨架屏。
 
-  console.log('[AuthContext] initialAuth received:', {
-    hasValue: !!initialAuth,
-    hasMenus: !!initialAuth?.menus,
-    menusLength: initialAuth?.menus?.length,
-    hasPermissions: !!initialAuth?.permissions,
-    permissionsLength: initialAuth?.permissions?.length,
-    hasCompanyName: !!initialAuth?.companyName,
-    companyName: initialAuth?.companyName,
-    isMenusArray: Array.isArray(initialAuth?.menus),
-  });
-
   const [state, setState] = useState<AuthState>({
     user: null,
     menus: initialAuth?.menus ?? [],
@@ -156,13 +145,6 @@ export function AuthProvider({
   const [companyName, setCompanyName] = useState(
     initialAuth?.companyName ?? 'VNERP丝网印刷管理系统'
   );
-
-  console.log('[AuthContext] Initial state:', {
-    menusLength: state.menus.length,
-    permissionsLength: state.permissions.length,
-    isLoading: state.isLoading,
-    companyName,
-  });
 
   useEffect(() => {
     setIsHydrated(true);

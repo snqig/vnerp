@@ -11,27 +11,15 @@ import { HtmlLangSetter } from '@/components/HtmlLangSetter';
 import { query } from '@/lib/db';
 import { getMenusByToken } from '@/lib/menu-service';
 
-let cachedCompanyName: string | null = null;
-let cacheTimestamp: number = 0;
-const CACHE_TTL = 5 * 60 * 1000;
-
 async function getCompanyName(): Promise<string> {
-  const now = Date.now();
-  if (cachedCompanyName && now - cacheTimestamp < CACHE_TTL) {
-    return cachedCompanyName;
-  }
   try {
     const rows = await query<{ config_value: string }>(
       `SELECT config_value FROM sys_config WHERE config_key IN ('sys.name', 'company_name', 'company_short_name') ORDER BY FIELD(config_key, 'sys.name', 'company_name', 'company_short_name') LIMIT 1`
     );
     if (Array.isArray(rows) && rows.length > 0 && rows[0]?.config_value) {
-      cachedCompanyName = rows[0].config_value;
-      cacheTimestamp = now;
-      return cachedCompanyName!;
+      return rows[0].config_value;
     }
-  } catch {
-    if (cachedCompanyName) return cachedCompanyName;
-  }
+  } catch {}
   return 'VNERP丝网印刷管理系统';
 }
 
@@ -87,27 +75,7 @@ export default async function LocaleLayout({
   const companyName = await getCompanyName();
   const initialAuthData = await prefetchMenus();
 
-  console.log('[SSR Layout] companyName:', companyName);
-  console.log(
-    '[SSR Layout] initialAuthData:',
-    initialAuthData
-      ? {
-          menusCount: initialAuthData.menus?.length,
-          permissionsCount: initialAuthData.permissions?.length,
-        }
-      : null
-  );
-
   const initialAuth = initialAuthData ? { ...initialAuthData, companyName } : { companyName };
-
-  console.log('[SSR Layout] initialAuth structure:', {
-    hasMenus: !!initialAuth.menus,
-    menusLength: initialAuth.menus?.length,
-    hasPermissions: !!initialAuth.permissions,
-    permissionsLength: initialAuth.permissions?.length,
-    hasCompanyName: !!initialAuth.companyName,
-    companyName: initialAuth.companyName,
-  });
 
   return (
     <>
