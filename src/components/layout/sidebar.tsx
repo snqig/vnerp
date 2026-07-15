@@ -577,7 +577,10 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                   alt="达昌"
                   className="w-8 h-8 rounded-lg object-contain"
                 />
-                <span className="font-bold text-xs text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
+                <span
+                  className="font-bold text-xs text-foreground whitespace-nowrap overflow-hidden text-ellipsis"
+                  suppressHydrationWarning
+                >
                   {companyName}
                 </span>
               </div>

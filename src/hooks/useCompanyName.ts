@@ -8,6 +8,10 @@ export function useCompanyName() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setCompanyName(authCompanyName);
+  }, [authCompanyName]);
+
+  useEffect(() => {
     let cancelled = false;
 
     const fetchWithRetry = async (url: string, retries = 2): Promise<Response | null> => {
