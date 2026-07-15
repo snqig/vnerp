@@ -22,16 +22,10 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
+import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { PageHeader, StatusBadge, usePaginatedList } from '@/components/common';
 import { useTranslations } from 'next-intl';
 
@@ -268,9 +262,9 @@ export default function ProductionInboundPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>{tc('warehouse')}</Label>
-                <Select
-                  value={String(editItem.warehouse_id || '')}
-                  onValueChange={(v) => {
+                <WarehouseSelect
+                  value={editItem.warehouse_id || ''}
+                  onChange={(v) => {
                     const wh = warehouses.find((w) => w.id === Number(v));
                     setEditItem({
                       ...editItem,
@@ -278,18 +272,8 @@ export default function ProductionInboundPage() {
                       warehouse_name: wh?.name || '',
                     });
                   }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('selectWarehouse')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map((w) => (
-                      <SelectItem key={w.id} value={String(w.id)}>
-                        {w.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder={t('selectWarehouse')}
+                />
               </div>
               <div>
                 <Label>入库日期</Label>

@@ -33,6 +33,7 @@ import {
 import { Plus, Search, Trash2, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
+import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { useTranslations } from 'next-intl';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
@@ -84,7 +85,6 @@ export default function OutsourceIssuePage() {
   const [showDialog, setShowDialog] = useState(false);
   const [form, setForm] = useState<Loose>({ items: [] });
   const [outsourceOrders, setOutsourceOrders] = useState<Loose[]>([]);
-  const [warehouses, setWarehouses] = useState<{ id: number; warehouse_name: string }[]>([]);
   const [materials, setMaterials] = useState<Loose[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
@@ -131,14 +131,6 @@ export default function OutsourceIssuePage() {
     } catch {}
   };
 
-  const fetchWarehouses = async () => {
-    try {
-      const res = await authFetch('/api/warehouse/categories');
-      const result = await res.json();
-      if (result.success) setWarehouses(result.data || []);
-    } catch {}
-  };
-
   const fetchMaterials = async () => {
     try {
       const res = await authFetch('/api/materials?pageSize=200');
@@ -152,7 +144,6 @@ export default function OutsourceIssuePage() {
   }, [page]);
   useEffect(() => {
     fetchOutsourceOrders();
-    fetchWarehouses();
     fetchMaterials();
   }, []);
 
@@ -472,21 +463,11 @@ export default function OutsourceIssuePage() {
                   <Label>
                     {t('issueWarehouse')} <span className="text-red-500">*</span>
                   </Label>
-                  <Select
-                    value={String(form.warehouse_id || '')}
-                    onValueChange={(v) => setForm({ ...form, warehouse_id: Number(v) })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('selectWarehouse')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {warehouses.map((w) => (
-                        <SelectItem key={w.id} value={String(w.id)}>
-                          {w.warehouse_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <WarehouseSelect
+                    value={form.warehouse_id || ''}
+                    onChange={(v) => setForm({ ...form, warehouse_id: Number(v) })}
+                    placeholder={t('selectWarehouse')}
+                  />
                 </div>
                 <div>
                   <Label>{t('issueDate')}</Label>

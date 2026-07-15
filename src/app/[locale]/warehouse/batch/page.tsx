@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import {
   Layers,
   RefreshCw,
@@ -94,7 +95,6 @@ export default function BatchPage() {
     remark: '',
   });
   const [materials, setMaterials] = useState<Loose[]>([]);
-  const [warehouses, setWarehouses] = useState<Loose[]>([]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -125,14 +125,9 @@ export default function BatchPage() {
   useEffect(() => {
     const loadOptions = async () => {
       try {
-        const [matRes, whRes] = await Promise.all([
-          authFetch('/api/materials?page=1&pageSize=100'),
-          authFetch('/api/warehouses'),
-        ]);
+        const matRes = await authFetch('/api/materials?page=1&pageSize=100');
         const matResult = await matRes.json();
-        const whResult = await whRes.json();
         if (matResult.success) setMaterials(matResult.data?.list || []);
-        if (whResult.success) setWarehouses(whResult.data?.list || whResult.data || []);
       } catch {}
     };
     loadOptions();
@@ -577,21 +572,11 @@ export default function BatchPage() {
               </div>
               <div className="space-y-1">
                 <Label>{t('warehouse')} *</Label>
-                <Select
+                <WarehouseSelect
                   value={form.warehouse_id}
-                  onValueChange={(v) => setForm((f) => ({ ...f, warehouse_id: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('selectWarehouse')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map((w: Loose) => (
-                      <SelectItem key={w.id} value={String(w.id)}>
-                        {w.warehouse_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(v) => setForm((f) => ({ ...f, warehouse_id: v }))}
+                  placeholder={t('selectWarehouse')}
+                />
               </div>
               <div className="space-y-1">
                 <Label>{t('batchNo')} *</Label>

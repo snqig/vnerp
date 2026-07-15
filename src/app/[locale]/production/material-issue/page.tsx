@@ -34,6 +34,7 @@ import {
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
+import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { formatDate } from '@/lib/date-utils';
 
 interface Item {
@@ -74,7 +75,6 @@ export default function MaterialIssuePage() {
   const [searchNo, setSearchNo] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
-  const [warehouses, setWarehouses] = useState<{ id: number; name: string }[]>([]);
 
   const fetchData = async () => {
     try {
@@ -87,25 +87,9 @@ export default function MaterialIssuePage() {
       }
     } catch {}
   };
-  const fetchWarehouses = async () => {
-    try {
-      const res = await authFetch('/api/warehouse');
-      const result = await res.json();
-      if (result.success)
-        setWarehouses(
-          (result.data?.list || result.data || []).map((w: Loose) => ({
-            id: w.id,
-            name: w.name || w.warehouse_name || '',
-          }))
-        );
-    } catch {}
-  };
   useEffect(() => {
     fetchData();
   }, [page]);
-  useEffect(() => {
-    fetchWarehouses();
-  }, []);
 
   const handleSave = async () => {
     try {
@@ -301,21 +285,11 @@ export default function MaterialIssuePage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>{t('warehouse')}</Label>
-                <Select
-                  value={String(editItem.warehouse_id || '')}
-                  onValueChange={(v) => setEditItem({ ...editItem, warehouse_id: Number(v) })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('selectWarehouse')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map((w) => (
-                      <SelectItem key={w.id} value={String(w.id)}>
-                        {w.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <WarehouseSelect
+                  value={editItem.warehouse_id || ''}
+                  onChange={(v) => setEditItem({ ...editItem, warehouse_id: Number(v) })}
+                  placeholder={t('selectWarehouse')}
+                />
               </div>
               <div>
                 <Label>{t('issueDate')}</Label>

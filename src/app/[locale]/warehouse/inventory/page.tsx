@@ -39,6 +39,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { AdvancedSearch, FilterField, ActiveFilter } from '@/components/ui/advanced-search';
 import { BatchToolbar, BatchAction } from '@/components/ui/batch-toolbar';
+import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { useToast } from '@/hooks/use-toast';
 import { authFetch } from '@/lib/auth-fetch';
 
@@ -50,10 +51,9 @@ export default function InventoryPage() {
   const [inventoryItems, setInventoryItems] = useState<Loose[]>([]);
   const [warehouseStats, setWarehouseStats] = useState<Loose[]>([]);
   const [alerts, setAlerts] = useState<Loose[]>([]);
-  const [warehouses, setWarehouses] = useState<Loose[]>([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');
-  const [warehouseId, setWarehouseId] = useState('all');
+  const [warehouseId, setWarehouseId] = useState('');
   const [status, setStatus] = useState('all');
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
@@ -216,27 +216,15 @@ export default function InventoryPage() {
   }, [inventoryItems, sortField, sortOrder]);
 
   useEffect(() => {
-    fetchWarehouses();
     fetchInventory();
   }, []);
-
-  const fetchWarehouses = async () => {
-    try {
-      const response = await authFetch('/api/warehouse?all=true');
-      const result = await response.json();
-      if (result.success && result.data) {
-        const list = Array.isArray(result.data) ? result.data : result.data.list || [];
-        setWarehouses(list);
-      }
-    } catch {}
-  };
 
   const fetchInventory = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (keyword) params.set('keyword', keyword);
-      if (warehouseId && warehouseId !== 'all') params.set('warehouseId', warehouseId);
+      if (warehouseId) params.set('warehouseId', warehouseId);
       if (status && status !== 'all') params.set('status', status);
       params.set('pageSize', '100');
 
@@ -401,24 +389,12 @@ export default function InventoryPage() {
                   onSearch={() => fetchInventory()}
                   className="flex-1"
                 />
-                <Select
+                <WarehouseSelect
                   value={warehouseId}
-                  onValueChange={(v) => {
-                    setWarehouseId(v);
-                  }}
-                >
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder={t('warehouseName')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('allWarehouses')}</SelectItem>
-                    {warehouses.map((wh: Loose) => (
-                      <SelectItem key={wh.id} value={String(wh.id)}>
-                        {wh.warehouse_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={setWarehouseId}
+                  placeholder={t('allWarehouses')}
+                  className="w-[140px]"
+                />
                 <Select
                   value={status}
                   onValueChange={(v) => {
@@ -469,7 +445,7 @@ export default function InventoryPage() {
                   onReset={() => {
                     setActiveFilters([]);
                     setKeyword('');
-                    setWarehouseId('all');
+                    setWarehouseId('');
                     setStatus('all');
                     fetchInventory();
                   }}

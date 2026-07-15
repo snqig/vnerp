@@ -33,6 +33,7 @@ import {
 import { Plus, Search, Trash2, CheckCircle, XCircle, PackageCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
+import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { useTranslations } from 'next-intl';
 
 interface OutsourceReceive {
@@ -83,7 +84,6 @@ export default function OutsourceReceivePage() {
   const [showDialog, setShowDialog] = useState(false);
   const [form, setForm] = useState<Loose>({});
   const [outsourceOrders, setOutsourceOrders] = useState<Loose[]>([]);
-  const [warehouses, setWarehouses] = useState<{ id: number; warehouse_name: string }[]>([]);
 
   const fetchData = async () => {
     try {
@@ -109,20 +109,11 @@ export default function OutsourceReceivePage() {
     } catch {}
   };
 
-  const fetchWarehouses = async () => {
-    try {
-      const res = await authFetch('/api/warehouse/categories');
-      const result = await res.json();
-      if (result.success) setWarehouses(result.data || []);
-    } catch {}
-  };
-
   useEffect(() => {
     fetchData();
   }, [page]);
   useEffect(() => {
     fetchOutsourceOrders();
-    fetchWarehouses();
   }, []);
 
   const handleSave = async () => {
@@ -402,21 +393,11 @@ export default function OutsourceReceivePage() {
                 <Label>
                   {t('warehouseIn')} <span className="text-red-500">*</span>
                 </Label>
-                <Select
-                  value={String(form.warehouse_id || '')}
-                  onValueChange={(v) => setForm({ ...form, warehouse_id: Number(v) })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('selectWarehouse')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map((w) => (
-                      <SelectItem key={w.id} value={String(w.id)}>
-                        {w.warehouse_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <WarehouseSelect
+                  value={form.warehouse_id || ''}
+                  onChange={(v) => setForm({ ...form, warehouse_id: Number(v) })}
+                  placeholder={t('selectWarehouse')}
+                />
               </div>
               <div>
                 <Label>{t('receiveDate')}</Label>

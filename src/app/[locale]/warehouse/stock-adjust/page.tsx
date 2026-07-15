@@ -33,6 +33,7 @@ import {
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
+import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
@@ -72,7 +73,6 @@ export default function StockAdjustPage() {
   const [searchNo, setSearchNo] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
-  const [warehouses, setWarehouses] = useState<{ id: number; name: string; code: string }[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const _exportColumns = [
@@ -108,19 +108,9 @@ export default function StockAdjustPage() {
       }
     } catch {}
   };
-  const fetchWarehouses = async () => {
-    try {
-      const res = await authFetch('/api/warehouse?status=1&all=true');
-      const result = await res.json();
-      if (result.success) setWarehouses(result.data || []);
-    } catch {}
-  };
   useEffect(() => {
     fetchData();
   }, [page]);
-  useEffect(() => {
-    fetchWarehouses();
-  }, []);
 
   const handleSave = async () => {
     try {
@@ -381,28 +371,16 @@ export default function StockAdjustPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>{tc('warehouse')}</Label>
-                <Select
-                  value={String(editItem.warehouse_id || '')}
-                  onValueChange={(v) => {
-                    const wh = warehouses.find((w) => w.id === Number(v));
+                <WarehouseSelect
+                  value={editItem.warehouse_id || ''}
+                  onChange={(v) =>
                     setEditItem({
                       ...editItem,
                       warehouse_id: Number(v),
-                      warehouse_name: wh?.name || '',
-                    });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('warehousePlaceholder')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map((w) => (
-                      <SelectItem key={w.id} value={String(w.id)}>
-                        {w.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    })
+                  }
+                  placeholder={t('warehousePlaceholder')}
+                />
               </div>
               <div>
                 <Label>{t('adjustDateLabel')}</Label>

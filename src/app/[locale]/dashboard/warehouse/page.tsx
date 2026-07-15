@@ -79,25 +79,19 @@ function AutoScroll({
   maxHeight?: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const innerRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
-    const inner = innerRef.current;
-    if (!container || !inner) return;
+    if (!container) return;
 
     let animId: number;
     let scrollPos = 0;
-    const contentHeight = inner.scrollHeight / 2;
-    const viewportHeight = maxHeight;
-
-    if (contentHeight <= viewportHeight) return;
 
     const step = () => {
-      if (!isPaused) {
+      if (!isPaused && container) {
         scrollPos += 0.3;
-        if (scrollPos >= contentHeight) {
+        if (scrollPos >= container.scrollHeight - maxHeight) {
           scrollPos = 0;
         }
         container.scrollTop = scrollPos;
@@ -107,7 +101,7 @@ function AutoScroll({
 
     animId = requestAnimationFrame(step);
     return () => cancelAnimationFrame(animId);
-  }, [isPaused, maxHeight, children]);
+  }, [isPaused, maxHeight]);
 
   return (
     <div
@@ -117,10 +111,7 @@ function AutoScroll({
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      <div ref={innerRef}>
-        {children}
-        {children}
-      </div>
+      {children}
     </div>
   );
 }
@@ -160,7 +151,12 @@ export default function WarehouseDashboard() {
     warehouseOccupancy: [],
   });
   const [loading, setLoading] = useState(true);
-  const [currentTime, setCurrentTime] = useState<Date | null>(null);
+  const [currentTime, setCurrentTime] = useState<Date>(() => {
+    if (typeof window !== 'undefined') {
+      return new Date();
+    }
+    return new Date(0);
+  });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
   const [warehouseHistory, setWarehouseHistory] = useState<number[]>([65, 68, 70, 72, 69, 73]);
@@ -177,7 +173,6 @@ export default function WarehouseDashboard() {
       }
     };
     fetchData();
-    setCurrentTime(new Date());
     const timer1 = setInterval(fetchData, 60000);
     const timer2 = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => {
@@ -677,73 +672,75 @@ export default function WarehouseDashboard() {
             <Clock className="h-4 w-4 text-cyan-400" />
             <span className="text-sm font-medium text-white/80">{t('recentInoutRecords')}</span>
           </div>
-          <div className="p-4">
-            {data.recentTransactions.length === 0 ? (
-              <p className="text-white/40 text-center py-8">{tc('noRecords')}</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
-                        {tc('inspectionType')}
-                      </th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
-                        {tc('materialCode')}
-                      </th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
-                        {tc('materialName')}
-                      </th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
-                        {tc('planQty')}
-                      </th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
-                        {tc('time')}
-                      </th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
-                        {tc('remark')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.recentTransactions.slice(0, 10).map((t, i) => (
-                      <tr
-                        key={i}
-                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                      >
-                        <td className="py-2 px-3">
-                          <span
-                            className={`px-2 py-0.5 rounded text-xs ${
-                              t.transaction_type === 'inbound'
-                                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                            }`}
-                          >
-                            {t.transaction_type === 'inbound'
-                              ? tc('inbound')
-                              : t.transaction_type === 'outbound'
-                                ? tc('outbound')
-                                : t.transaction_type}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 font-mono text-cyan-300 text-xs">
-                          {t.material_code}
-                        </td>
-                        <td className="py-2 px-3 text-white/80 text-xs">{t.material_name}</td>
-                        <td className="py-2 px-3 text-white/60 text-xs font-medium">
-                          {Number(t.quantity).toLocaleString()} {t.unit}
-                        </td>
-                        <td className="py-2 px-3 text-white/50 text-xs">
-                          {t.create_time?.substring(5, 16)}
-                        </td>
-                        <td className="py-2 px-3 text-white/40 text-xs">{t.remark || '-'}</td>
+          <AutoScroll maxHeight={200}>
+            <div className="p-4">
+              {data.recentTransactions.length === 0 ? (
+                <p className="text-white/40 text-center py-8">{tc('noRecords')}</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">
+                          {tc('inspectionType')}
+                        </th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">
+                          {tc('materialCode')}
+                        </th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">
+                          {tc('materialName')}
+                        </th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">
+                          {tc('planQty')}
+                        </th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">
+                          {tc('time')}
+                        </th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">
+                          {tc('remark')}
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                    </thead>
+                    <tbody>
+                      {data.recentTransactions.map((t, i) => (
+                        <tr
+                          key={i}
+                          className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                        >
+                          <td className="py-2 px-3">
+                            <span
+                              className={`px-2 py-0.5 rounded text-xs ${
+                                t.transaction_type === 'inbound'
+                                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                  : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                              }`}
+                            >
+                              {t.transaction_type === 'inbound'
+                                ? tc('inbound')
+                                : t.transaction_type === 'outbound'
+                                  ? tc('outbound')
+                                  : t.transaction_type}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 font-mono text-cyan-300 text-xs">
+                            {t.material_code}
+                          </td>
+                          <td className="py-2 px-3 text-white/80 text-xs">{t.material_name}</td>
+                          <td className="py-2 px-3 text-white/60 text-xs font-medium">
+                            {Number(t.quantity).toLocaleString()} {t.unit}
+                          </td>
+                          <td className="py-2 px-3 text-white/50 text-xs">
+                            {t.create_time?.substring(5, 16)}
+                          </td>
+                          <td className="py-2 px-3 text-white/40 text-xs">{t.remark || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </AutoScroll>
         </div>
       </div>
     </MainLayout>

@@ -36,6 +36,7 @@ import { Plus, Search, RefreshCw, Truck, Eye, Trash2, Printer } from 'lucide-rea
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { mockShipments, mockCustomers, USE_MOCK } from '@/lib/mock-data';
+import { WarehouseSelect } from '@/components/ui/warehouse-select';
 
 // ============================================================
 // 发货类型定义（符合设计文档 3.1 节）
@@ -204,7 +205,6 @@ export default function DeliveryPage() {
   const [salesOrders, setSalesOrders] = useState<
     Array<{ id: number; order_no: string; customer_id: number; customer_name: string }>
   >([]);
-  const [warehouses, setWarehouses] = useState<Array<{ id: number; name: string }>>([]);
   const [total, setTotal] = useState(0);
   const [shipForm, setShipForm] = useState<{
     // 扫码发货表单
@@ -295,26 +295,11 @@ export default function DeliveryPage() {
     }
   }, []);
 
-  const fetchWarehouses = useCallback(async () => {
-    try {
-      const res = await authFetch('/api/inventory/warehouses');
-      const result = await res.json();
-      if (result.success) {
-        setWarehouses(result.data?.list || result.data || []);
-      }
-    } catch (e) {
-      logger.error({ module: 'Sales', action: 'fetchWarehouses' }, '获取仓库列表失败', {
-        error: (e as Error).message,
-      });
-    }
-  }, []);
-
   useEffect(() => {
     fetchData();
     fetchCustomers();
     fetchSalesOrders();
-    fetchWarehouses();
-  }, [fetchData, fetchCustomers, fetchSalesOrders, fetchWarehouses]);
+  }, [fetchData, fetchCustomers, fetchSalesOrders]);
 
   const addItem = () => {
     setForm((prev) => ({
@@ -838,21 +823,13 @@ export default function DeliveryPage() {
                   仓库
                   <span className="text-red-500">*</span>
                 </Label>
-                <Select
-                  value={String(form.warehouse_id || '')}
-                  onValueChange={(v) => setForm((prev) => ({ ...prev, warehouse_id: parseInt(v) }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择仓库" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map((w) => (
-                      <SelectItem key={w.id} value={String(w.id)}>
-                        {w.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <WarehouseSelect
+                  value={form.warehouse_id || ''}
+                  onChange={(v) =>
+                    setForm((prev) => ({ ...prev, warehouse_id: v ? parseInt(v) : 0 }))
+                  }
+                  placeholder="选择仓库"
+                />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
