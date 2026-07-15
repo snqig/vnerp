@@ -5,14 +5,21 @@ import { useAuth } from '@/contexts/AuthContext';
 export function useCompanyName() {
   const { companyName: authCompanyName } = useAuth();
   const [companyName, setCompanyName] = useState(authCompanyName);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setCompanyName(authCompanyName);
+    if (authCompanyName && authCompanyName !== 'VNERP丝网印刷管理系统') {
+      setCompanyName(authCompanyName);
+    }
   }, [authCompanyName]);
 
   useEffect(() => {
+    if (companyName && companyName !== 'VNERP丝网印刷管理系统') {
+      return;
+    }
+
     let cancelled = false;
+    setLoading(true);
 
     const fetchWithRetry = async (url: string, retries = 2): Promise<Response | null> => {
       for (let i = 0; i <= retries; i++) {
@@ -92,7 +99,7 @@ export function useCompanyName() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [companyName]);
 
   return { companyName, loading };
 }

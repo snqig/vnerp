@@ -50,11 +50,21 @@ interface SnowAdminThemeContextType extends SnowAdminThemeState {
 const SnowAdminThemeContext = createContext<SnowAdminThemeContextType | null>(null);
 
 export function SnowAdminThemeProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<SnowAdminThemeState>(defaultState);
+  const [state, setState] = useState<SnowAdminThemeState>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return { ...defaultState, ...parsed };
+        }
+      } catch {}
+    }
+    return defaultState;
+  });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setState(loadState());
     setMounted(true);
   }, []);
 

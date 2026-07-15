@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import {
   Play,
   PackageSearch,
@@ -59,12 +60,6 @@ interface WorkOrder {
   plan_qty: number;
   plan_start_date: string;
   status: number;
-}
-
-interface Warehouse {
-  id: number;
-  warehouse_name: string;
-  warehouse_code: string;
 }
 
 interface Material {
@@ -179,7 +174,6 @@ export default function MRPPage() {
   const [activeTab, setActiveTab] = useState('mrp-run');
 
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
 
   const [selectedWorkOrderIds, setSelectedWorkOrderIds] = useState<number[]>([]);
@@ -229,23 +223,6 @@ export default function MRPPage() {
     } catch {}
   }, []);
 
-  const fetchWarehouses = useCallback(async () => {
-    try {
-      const res = await authFetch('/api/organization/warehouse-category');
-      const data = await res.json();
-      if (data.success || data.data) {
-        const list = Array.isArray(data.data) ? data.data : [];
-        setWarehouses(
-          list.map((item: Record<string, unknown>) => ({
-            id: item.id as number,
-            warehouse_name: (item.warehouse_name || item.name || '') as string,
-            warehouse_code: (item.warehouse_code || item.code || '') as string,
-          }))
-        );
-      }
-    } catch {}
-  }, []);
-
   const fetchMaterials = useCallback(async () => {
     try {
       const res = await fetch('/api/materials');
@@ -266,9 +243,8 @@ export default function MRPPage() {
 
   useEffect(() => {
     fetchWorkOrders();
-    fetchWarehouses();
     fetchMaterials();
-  }, [fetchWorkOrders, fetchWarehouses, fetchMaterials]);
+  }, [fetchWorkOrders, fetchMaterials]);
 
   const handleRunMRP = async () => {
     if (selectedWorkOrderIds.length === 0 || !selectedWarehouseId) return;
@@ -403,18 +379,11 @@ export default function MRPPage() {
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label>{t('warehouse')}</Label>
-                        <Select value={selectedWarehouseId} onValueChange={setSelectedWarehouseId}>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('selectWarehouse')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {warehouses.map((wh) => (
-                              <SelectItem key={wh.id} value={String(wh.id)}>
-                                {wh.warehouse_name} ({wh.warehouse_code})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <WarehouseSelect
+                          value={selectedWarehouseId}
+                          onChange={setSelectedWarehouseId}
+                          placeholder={t('selectWarehouse')}
+                        />
                       </div>
 
                       <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
@@ -858,18 +827,11 @@ export default function MRPPage() {
                     </div>
                     <div className="space-y-2">
                       <Label>{tc('warehouse')}</Label>
-                      <Select value={bucketWarehouseId} onValueChange={setBucketWarehouseId}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="选择仓库" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {warehouses.map((wh) => (
-                            <SelectItem key={wh.id} value={String(wh.id)}>
-                              {wh.warehouse_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <WarehouseSelect
+                        value={bucketWarehouseId}
+                        onChange={setBucketWarehouseId}
+                        placeholder="选择仓库"
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>{t('startDate')}</Label>
