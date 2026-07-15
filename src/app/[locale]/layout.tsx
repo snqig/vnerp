@@ -87,7 +87,27 @@ export default async function LocaleLayout({
   const companyName = await getCompanyName();
   const initialAuthData = await prefetchMenus();
 
+  console.log('[SSR Layout] companyName:', companyName);
+  console.log(
+    '[SSR Layout] initialAuthData:',
+    initialAuthData
+      ? {
+          menusCount: initialAuthData.menus?.length,
+          permissionsCount: initialAuthData.permissions?.length,
+        }
+      : null
+  );
+
   const initialAuth = initialAuthData ? { ...initialAuthData, companyName } : { companyName };
+
+  console.log('[SSR Layout] initialAuth structure:', {
+    hasMenus: !!initialAuth.menus,
+    menusLength: initialAuth.menus?.length,
+    hasPermissions: !!initialAuth.permissions,
+    permissionsLength: initialAuth.permissions?.length,
+    hasCompanyName: !!initialAuth.companyName,
+    companyName: initialAuth.companyName,
+  });
 
   return (
     <>

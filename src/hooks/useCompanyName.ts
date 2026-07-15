@@ -7,7 +7,11 @@ export function useCompanyName() {
   const [companyName, setCompanyName] = useState(authCompanyName);
   const [loading, setLoading] = useState(true);
 
+  console.log('[useCompanyName] authCompanyName:', authCompanyName);
+  console.log('[useCompanyName] companyName state:', companyName);
+
   useEffect(() => {
+    console.log('[useCompanyName] authCompanyName changed:', authCompanyName);
     setCompanyName(authCompanyName);
   }, [authCompanyName]);
 
