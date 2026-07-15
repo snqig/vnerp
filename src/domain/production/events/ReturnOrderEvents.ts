@@ -1,7 +1,7 @@
 import { DomainEvent } from '../../shared/DomainTypes';
 
-export class ReturnOrderCreatedEvent implements DomainEvent {
-  readonly eventType = 'prod.return.created';
+export class MaterialReturnCreatedEvent implements DomainEvent {
+  readonly eventType = 'material_return.created';
   readonly occurredAt = new Date();
   constructor(
     public readonly payload: {

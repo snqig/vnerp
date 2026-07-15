@@ -121,9 +121,6 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     stats.businessTablesCleared = clearedCount;
 
     const settingsTables = [
-      'sys_user',
-      'sys_role',
-      'sys_user_role',
       'sys_role_menu',
       'sys_department',
       'sys_warehouse_category',
@@ -144,20 +141,20 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     }
 
     const departments = [
-      { dept_code: 'DEPT001', dept_name: '管理部', parent_id: 0, sort_order: 1 },
-      { dept_code: 'DEPT002', dept_name: '业务部', parent_id: 0, sort_order: 2 },
-      { dept_code: 'DEPT003', dept_name: '工程技术部', parent_id: 0, sort_order: 3 },
-      { dept_code: 'DEPT004', dept_name: '生产部', parent_id: 0, sort_order: 4 },
-      { dept_code: 'DEPT00401', dept_name: '模切车间', parent_id: 0, sort_order: 1 },
-      { dept_code: 'DEPT00402', dept_name: '商标车间', parent_id: 0, sort_order: 2 },
-      { dept_code: 'DEPT005', dept_name: '仓库管理部', parent_id: 0, sort_order: 5 },
-      { dept_code: 'DEPT006', dept_name: '采购部', parent_id: 0, sort_order: 6 },
-      { dept_code: 'DEPT007', dept_name: '品质部', parent_id: 0, sort_order: 7 },
-      { dept_code: 'DEPT008', dept_name: '财务行政部', parent_id: 0, sort_order: 8 },
+      { dept_code: 'DEPT001', dept_name: '管理部', parent_id: null, sort_order: 1 },
+      { dept_code: 'DEPT002', dept_name: '业务部', parent_id: null, sort_order: 2 },
+      { dept_code: 'DEPT003', dept_name: '工程技术部', parent_id: null, sort_order: 3 },
+      { dept_code: 'DEPT004', dept_name: '生产部', parent_id: null, sort_order: 4 },
+      { dept_code: 'DEPT00401', dept_name: '模切车间', parent_id: null, sort_order: 1 },
+      { dept_code: 'DEPT00402', dept_name: '商标车间', parent_id: null, sort_order: 2 },
+      { dept_code: 'DEPT005', dept_name: '仓库管理部', parent_id: null, sort_order: 5 },
+      { dept_code: 'DEPT006', dept_name: '采购部', parent_id: null, sort_order: 6 },
+      { dept_code: 'DEPT007', dept_name: '品质部', parent_id: null, sort_order: 7 },
+      { dept_code: 'DEPT008', dept_name: '财务行政部', parent_id: null, sort_order: 8 },
     ];
     for (const dept of departments) {
       await conn.execute(
-        `INSERT INTO sys_department (dept_code, dept_name, parent_id, sort_order, status, create_time, update_time) VALUES (?, ?, ?, ?, 1, NOW(), NOW())`,
+        `INSERT IGNORE INTO sys_department (dept_code, dept_name, parent_id, sort_order, status, create_time, update_time) VALUES (?, ?, ?, ?, 1, NOW(), NOW())`,
         [dept.dept_code, dept.dept_name, dept.parent_id, dept.sort_order]
       );
     }
@@ -262,7 +259,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     ];
     for (const role of roles) {
       await conn.execute(
-        `INSERT INTO sys_role (role_name, role_code, description, data_scope, status, permissions) VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT IGNORE INTO sys_role (role_name, role_code, description, data_scope, status, permissions) VALUES (?, ?, ?, ?, ?, ?)`,
         [
           role.role_name,
           role.role_code,
@@ -366,15 +363,18 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     for (const user of users) {
       const deptId = deptMap[user.dept_name] || null;
       await conn.execute(
-        `INSERT INTO sys_user (username, password, real_name, email, phone, department_id, status, first_login) VALUES (?, ?, ?, ?, ?, ?, 1, 1)`,
+        `INSERT IGNORE INTO sys_user (username, password, real_name, email, phone, department_id, status, first_login) VALUES (?, ?, ?, ?, ?, ?, 1, 1)`,
         [user.username, passwordHash, user.real_name, user.email, user.phone, deptId]
       );
-      const [userRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      const userId = userRow[0].id;
+      const [userRow]: Loose = await conn.execute('SELECT id FROM sys_user WHERE username = ?', [
+        user.username,
+      ]);
+      const userId = userRow[0]?.id;
+      if (!userId) continue;
       const roleId = roleMap[user.role_code];
       if (roleId) {
         try {
-          await conn.execute('INSERT INTO sys_user_role (user_id, role_id) VALUES (?, ?)', [
+          await conn.execute('INSERT IGNORE INTO sys_user_role (user_id, role_id) VALUES (?, ?)', [
             userId,
             roleId,
           ]);
@@ -432,7 +432,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     ];
     for (const cat of warehouseCategories) {
       await conn.execute(
-        `INSERT INTO sys_warehouse_category (code, name, description, sort_order, status) VALUES (?, ?, ?, ?, ?)`,
+        `INSERT IGNORE INTO sys_warehouse_category (code, name, description, sort_order, status) VALUES (?, ?, ?, ?, ?)`,
         [cat.code, cat.name, cat.description, cat.sort_order, 1]
       );
     }
@@ -442,85 +442,78 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       {
         category_code: 'MATCAT001',
         category_name: '薄膜材料',
-        parent_id: 0,
+        parent_id: null,
         category_type: 1,
         sort_order: 1,
       },
       {
         category_code: 'MATCAT002',
         category_name: '油墨材料',
-        parent_id: 0,
+        parent_id: null,
         category_type: 2,
         sort_order: 2,
       },
       {
         category_code: 'MATCAT003',
         category_name: '辅助材料',
-        parent_id: 0,
+        parent_id: null,
         category_type: 3,
         sort_order: 3,
       },
       {
         category_code: 'MATCAT004',
         category_name: '成品',
-        parent_id: 0,
+        parent_id: null,
         category_type: 4,
         sort_order: 4,
       },
       {
         category_code: 'MATCAT01001',
         category_name: 'PET薄膜',
-        parent_id: 0,
+        parent_id: null,
         category_type: 1,
         sort_order: 1,
       },
       {
         category_code: 'MATCAT01002',
         category_name: 'PVC薄膜',
-        parent_id: 0,
+        parent_id: null,
         category_type: 1,
         sort_order: 2,
       },
       {
         category_code: 'MATCAT02001',
         category_name: '溶剂型油墨',
-        parent_id: 0,
+        parent_id: null,
         category_type: 2,
         sort_order: 1,
       },
       {
         category_code: 'MATCAT02002',
         category_name: 'UV油墨',
-        parent_id: 0,
+        parent_id: null,
         category_type: 2,
         sort_order: 2,
       },
       {
         category_code: 'MATCAT03001',
         category_name: '网版材料',
-        parent_id: 0,
+        parent_id: null,
         category_type: 3,
         sort_order: 1,
       },
       {
         category_code: 'MATCAT04001',
         category_name: '标签成品',
-        parent_id: 0,
+        parent_id: null,
         category_type: 4,
         sort_order: 1,
       },
     ];
     for (const cat of materialCategories) {
       await conn.execute(
-        `INSERT INTO inv_material_category (category_code, category_name, parent_id, category_type, sort_order, remark) VALUES (?, ?, ?, ?, ?, ?)`,
-        [
-          cat.category_code,
-          cat.category_name,
-          cat.parent_id,
-          cat.category_type,
-          cat.sort_order,
-          null,
-        ]
+        `INSERT IGNORE INTO inv_material_category (category_code, category_name, parent_id, sort_order, status) VALUES (?, ?, ?, ?, 1)`,
+        [cat.category_code, cat.category_name, cat.parent_id, cat.sort_order]
       );
     }
     const [matCatRows]: Loose = await conn.execute(
@@ -592,7 +585,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     ];
     for (const dt of dictTypes) {
       await conn.execute(
-        `INSERT INTO sys_dict_type (dict_name, dict_code, status, description) VALUES (?, ?, ?, ?)`,
+        `INSERT IGNORE INTO sys_dict_type (dict_name, dict_code, status, description) VALUES (?, ?, ?, ?)`,
         [dt.dict_name, dt.dict_code, dt.status, dt.description]
       );
     }
@@ -764,7 +757,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       for (let i = 0; i < dt.items.length; i++) {
         const item = dt.items[i];
         await conn.execute(
-          `INSERT INTO sys_dict_data (dict_type_id, dict_label, dict_value, sort_order, status, remark) VALUES (?, ?, ?, ?, ?, ?)`,
+          `INSERT IGNORE INTO sys_dict_data (dict_type_id, dict_label, dict_value, sort_order, status, remark) VALUES (?, ?, ?, ?, ?, ?)`,
           [dictTypeId, item.label, item.value, i + 1, 1, null]
         );
         dictDataCount++;
@@ -1315,7 +1308,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     ];
     for (const cfg of configs) {
       await conn.execute(
-        `INSERT INTO sys_config (config_name, config_key, config_value, config_type, description) VALUES (?, ?, ?, ?, ?)`,
+        `INSERT IGNORE INTO sys_config (config_name, config_key, config_value, config_type, description) VALUES (?, ?, ?, ?, ?)`,
         [cfg.config_name, cfg.config_key, cfg.config_value, cfg.config_type, cfg.remark]
       );
     }
@@ -1420,7 +1413,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       if (!roleId) continue;
       for (const menuId of menuIds) {
         if (!menuId) continue;
-        await conn.execute(`INSERT INTO sys_role_menu (role_id, menu_id) VALUES (?, ?)`, [
+        await conn.execute(`INSERT IGNORE INTO sys_role_menu (role_id, menu_id) VALUES (?, ?)`, [
           roleId,
           menuId,
         ]);
@@ -1497,7 +1490,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     ];
     for (const notice of notices) {
       await conn.execute(
-        `INSERT INTO sys_notice (notice_title, notice_type, notice_content, status) VALUES (?, ?, ?, ?)`,
+        `INSERT IGNORE INTO sys_notice (notice_title, notice_type, notice_content, status) VALUES (?, ?, ?, ?)`,
         [notice.notice_title, notice.notice_type, notice.notice_content, notice.status]
       );
     }
@@ -1596,18 +1589,12 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       },
     ];
     for (const log of loginLogs) {
-      await conn.execute(
-        `INSERT INTO sys_login_log (user_name, ipaddr, login_location, browser, os, status, msg) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          log.username,
-          log.ip_address,
-          log.login_location,
-          log.browser,
-          log.os,
-          log.status,
-          log.remark,
-        ]
-      );
+      try {
+        await conn.execute(
+          `INSERT INTO sys_login_log (username, ip, location, user_agent, status, error_msg) VALUES (?, ?, ?, ?, ?, ?)`,
+          [log.username, log.ip_address, log.login_location, log.browser, log.status, log.remark]
+        );
+      } catch (_e) {}
     }
     stats.sys_login_log = loginLogs.length;
 
@@ -1704,18 +1691,20 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       },
     ];
     for (const log of operLogs) {
-      await conn.execute(
-        `INSERT INTO sys_oper_log (title, business_type, method, request_method, oper_name, oper_url, oper_ip, status, oper_time) VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW())`,
-        [
-          log.title,
-          log.business_type,
-          log.method,
-          log.request_method,
-          log.oper_name,
-          log.oper_url,
-          log.oper_ip,
-        ]
-      );
+      try {
+        await conn.execute(
+          `INSERT INTO sys_oper_log (title, business_type, method, request_method, oper_name, oper_url, oper_ip, status, oper_time) VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW())`,
+          [
+            log.title,
+            log.business_type,
+            log.method,
+            log.request_method,
+            log.oper_name,
+            log.oper_url,
+            log.oper_ip,
+          ]
+        );
+      } catch (_e) {}
     }
     stats.sys_oper_log = operLogs.length;
 
@@ -1842,21 +1831,23 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       },
     ];
     for (const log of operationLogs) {
-      await conn.execute(
-        `INSERT INTO sys_operation_log (module, operation, oper_name, oper_type, oper_method, oper_url, oper_ip, oper_param, oper_result, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          log.module,
-          log.operation,
-          log.oper_name,
-          log.oper_type,
-          log.oper_method,
-          log.oper_url,
-          log.oper_ip,
-          log.oper_param,
-          log.oper_result,
-          log.status,
-        ]
-      );
+      try {
+        await conn.execute(
+          `INSERT INTO sys_operation_log (module, operation, oper_name, oper_type, oper_method, oper_url, oper_ip, oper_param, oper_result, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            log.module,
+            log.operation,
+            log.oper_name,
+            log.oper_type,
+            log.oper_method,
+            log.oper_url,
+            log.oper_ip,
+            log.oper_param,
+            log.oper_result,
+            log.status,
+          ]
+        );
+      } catch (_e) {}
     }
     stats.sys_operation_log = operationLogs.length;
 

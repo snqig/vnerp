@@ -29,6 +29,11 @@ const eslintConfig = defineConfig([
   // 配置自定义规则
   {
     rules: {
+      // 作用域安全规则（防止 var 提升/变量泄漏，消除类似 Tool.shouldWarn 的缺陷）
+      'no-var': 'error',            // 禁止 var，强制 let/const
+      'block-scoped-var': 'error',  // 捕获块作用域外引用（如 if 块内 var 泄漏到外层）
+      'prefer-const': 'error',      // 已声明且未重新赋值的变量必须用 const
+
       // 启用禁止硬编码中文规则（警告级别）
       'i18n/no-chinese-hardcode': ['warn', {
         // 允许包含中文的函数名（这些函数已经处理了国际化）

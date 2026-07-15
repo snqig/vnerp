@@ -241,7 +241,7 @@ export class SampleProcessCardService {
 
       return await transaction(async (conn) => {
         phase = 'insert_card';
-        const [result] = await conn.execute(
+        const [result] = (await conn.execute(
           `INSERT INTO dcprint_sample_process_card
          (sample_no, sample_name, customer_id, customer_name, product_id, product_name, version_no, status,
           substrate_material_id, substrate_material_name, spec, print_color, ink_color_id, screen_plate_id, die_tool_id,
@@ -273,7 +273,7 @@ export class SampleProcessCardService {
             data.remark || null,
             userId,
           ]
-        ) as [ResultSetHeader, any];
+        )) as [ResultSetHeader, any];
         const cardId = result.insertId;
 
         phase = 'insert_items';
@@ -499,7 +499,7 @@ export class SampleProcessCardService {
         );
 
         phase = 'insert_work_order';
-        const [woResult] = await conn.execute(
+        const [woResult] = (await conn.execute(
           `INSERT INTO prd_work_order
          (work_order_no, work_order_date, material_id, plan_qty, unit, priority, status, remark, create_by, create_time)
          VALUES (?, CURDATE(), ?, 1, 'pcs', 1, 1, ?, ?, NOW())`,
@@ -509,7 +509,7 @@ export class SampleProcessCardService {
             `打样工单 - ${card.sample_no} ${card.sample_name}`,
             userId,
           ]
-        ) as [ResultSetHeader, any];
+        )) as [ResultSetHeader, any];
         const workOrderId = woResult.insertId;
 
         phase = 'write_back_work_order_id';
@@ -605,42 +605,40 @@ export class SampleProcessCardService {
         stepCount: source.steps?.length || 0,
       });
 
-return await transaction(async (conn) => {
+      return await transaction(async (conn) => {
         phase = 'insert_card';
-        const [result] = await conn.execute(
-          `INSERT INTO dcprint_sample_process_card
+        const sql = `INSERT INTO dcprint_sample_process_card
          (sample_no, sample_name, customer_id, customer_name, product_id, product_name, version_no, status,
            substrate_material_id, substrate_material_name, spec, print_color, ink_color_id, screen_plate_id, die_tool_id,
            material_loss_rate, estimated_hour, total_material_cost, total_labor_cost, total_tool_cost, total_cost, diagram_url, remark,
            source_version_id, create_by, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-          [
-            newSampleNo,
-            source.sample_name,
-            source.customer_id,
-            source.customer_name,
-            source.product_id,
-            source.product_name,
-            newVersion,
-            source.substrate_material_id,
-            source.substrate_material_name,
-            source.spec,
-            source.print_color,
-            source.ink_color_id,
-            source.screen_plate_id,
-            source.die_tool_id,
-            source.material_loss_rate,
-            source.estimated_hour,
-            source.total_material_cost,
-            source.total_labor_cost,
-            source.total_tool_cost,
-            source.total_cost,
-            source.diagram_url || null,
-            source.remark,
-            sourceId,
-            userId,
-          ]
-        ) as [ResultSetHeader, any];
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`;
+        const [result] = (await conn.execute(sql, [
+          newSampleNo,
+          source.sample_name ?? null,
+          source.customer_id ?? null,
+          source.customer_name ?? null,
+          source.product_id ?? null,
+          source.product_name ?? null,
+          newVersion,
+          source.substrate_material_id ?? null,
+          source.substrate_material_name ?? null,
+          source.spec ?? null,
+          source.print_color ?? null,
+          source.ink_color_id ?? null,
+          source.screen_plate_id ?? null,
+          source.die_tool_id ?? null,
+          source.material_loss_rate ?? null,
+          source.estimated_hour ?? null,
+          source.total_material_cost,
+          source.total_labor_cost,
+          source.total_tool_cost,
+          source.total_cost,
+          source.diagram_url ?? null,
+          source.remark ?? null,
+          sourceId,
+          userId,
+        ])) as [ResultSetHeader, any];
         const newCardId = result.insertId;
 
         phase = 'copy_items';
@@ -784,7 +782,7 @@ return await transaction(async (conn) => {
       return await transaction(async (conn) => {
         phase = 'insert_sal_quote';
         secureLog('info', '[generateQuote] 开始写入 sal_quote', { quoteNo });
-        const [result] = await conn.execute(
+        const [result] = (await conn.execute(
           `INSERT INTO sal_quote
            (quote_no, quote_date, customer_id, customer_name, sample_card_id, sample_no, product_name,
             quantity, unit, material_cost, labor_cost, tool_cost, total_cost, markup_rate, quoted_price,
@@ -808,7 +806,7 @@ return await transaction(async (conn) => {
             options.remark || null,
             userId,
           ]
-        ) as [ResultSetHeader, any];
+        )) as [ResultSetHeader, any];
         const quoteId = result.insertId;
         secureLog('info', '[generateQuote] sal_quote 写入成功', { quoteId, quoteNo });
 
@@ -933,7 +931,7 @@ return await transaction(async (conn) => {
           workOrderNo,
           planQty,
         });
-        const [result] = await conn.execute(
+        const [result] = (await conn.execute(
           `INSERT INTO prod_work_order
            (work_order_no, order_no, customer_name, product_name, quantity, unit, status, priority,
             plan_start_date, plan_end_date, create_time)
@@ -948,7 +946,7 @@ return await transaction(async (conn) => {
             options.planStartDate || null,
             options.planEndDate || null,
           ]
-        ) as [ResultSetHeader, any];
+        )) as [ResultSetHeader, any];
         const workOrderId = result.insertId;
         secureLog('info', '[convertToFormalWorkOrder] prod_work_order 写入成功', {
           workOrderId,
@@ -1086,10 +1084,9 @@ return await transaction(async (conn) => {
     let workOrderNo: string | null = null;
 
     if (card.formal_work_order_id) {
-      const woRows = await query(
-        `SELECT work_order_no FROM prod_work_order WHERE id = ? LIMIT 1`,
-        [card.formal_work_order_id]
-      );
+      const woRows = await query(`SELECT work_order_no FROM prod_work_order WHERE id = ? LIMIT 1`, [
+        card.formal_work_order_id,
+      ]);
       if (woRows.length > 0) workOrderNo = woRows[0].work_order_no;
 
       const itemRows = await query(

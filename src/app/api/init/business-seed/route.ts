@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
@@ -10,6 +10,14 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const safeDelete = async (tableName: string) => {
       try {
         await conn.execute(`DELETE FROM ${tableName} WHERE deleted = 0 OR deleted IS NULL`);
+      } catch (_e) {}
+    };
+
+    // 安全 INSERT：字段不匹配时跳过，不阻断全局
+    const safeInsert = async (sql: string, params: unknown[], statKey?: string) => {
+      try {
+        await conn.execute(sql, params);
+        if (statKey) stats[statKey] = (stats[statKey] || 0) + 1;
       } catch (_e) {}
     };
 
@@ -73,7 +81,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     ];
 
     for (const customer of customers) {
-      await conn.execute(
+      await safeInsert(
         `INSERT INTO crm_customer (customer_name, customer_code, contact_name, contact_phone, address, customer_type, status, create_time, update_time) 
          VALUES (?, ?, ?, ?, ?, 1, 1, NOW(), NOW())`,
         [
@@ -110,17 +118,20 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     for (const order of salesOrders) {
       const customerId = customerMap[order.customer];
-      await conn.execute(
+      await safeInsert(
         `INSERT INTO sal_order (order_no, customer_id, order_date, delivery_date, status, total_amount, create_time, update_time, deleted) 
          VALUES (?, ?, DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND() * 30) DAY), DATE_ADD(CURDATE(), INTERVAL 7 DAY), ?, ?, NOW(), NOW(), 0)`,
         [order.order_no, customerId, order.status, order.amount]
       );
 
-      const [orderRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      const orderId = orderRow[0].id;
+      const [orderRow]: Loose = await conn.execute('SELECT id FROM sal_order WHERE order_no = ?', [
+        order.order_no,
+      ]);
+      const orderId = orderRow[0]?.id;
+      if (!orderId) continue;
 
-      await conn.execute(
-        `INSERT INTO sal_order_item (order_id, material_name, quantity, unit_price, total_price, unit, create_time) 
+      await safeInsert(
+        `INSERT INTO sal_order_item (order_id, material_name, quantity, unit_price, total_price, unit, create_time)
          VALUES (?, 'PET薄膜', 1000, 50, 50000, '张', NOW())`,
         [orderId]
       );
@@ -219,7 +230,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     for (const rec of receivables) {
       const customerId = customerMap[rec.customer];
       const salesOrderId = orderMap[rec.order_no];
-      await conn.execute(
+      await safeInsert(
         `INSERT INTO fin_receivable (receivable_no, sales_order_id, sales_order_no, customer_id, customer_name, amount, received_amount, pending_amount, due_date, status, create_time, update_time, deleted) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
         [
@@ -255,7 +266,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     ];
 
     for (const wo of workOrders) {
-      await conn.execute(
+      await safeInsert(
         `INSERT INTO prod_work_order (work_order_no, product_name, quantity, status, create_time, update_time, deleted) 
          VALUES (?, ?, ?, ?, NOW(), NOW(), 0)`,
         [wo.work_order_no, wo.product_name, wo.quantity, wo.status]
@@ -342,7 +353,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     ];
 
     for (const sc of standardCards) {
-      await conn.execute(
+      await safeInsert(
         `INSERT INTO prd_standard_card (card_no, customer_name, customer_code, product_name, process_flow1, process_flow2, print_type, finished_size, tolerance, quality_manager, packing_type, slice_per_box, slice_per_bundle, date, create_time, update_time, deleted) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), NOW(), NOW(), 0)`,
         [
@@ -472,7 +483,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     ];
 
     for (const pc of processCards) {
-      await conn.execute(
+      await safeInsert(
         `INSERT INTO prd_process_card (card_no, qr_code, work_order_no, product_code, product_name, material_spec, work_order_date, plan_qty, main_label_no, burdening_status, lock_status, create_user_name, create_time, update_time, deleted) 
          VALUES (?, ?, ?, ?, ?, ?, DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND() * 10) DAY), ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
         [
@@ -512,7 +523,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     ];
 
     for (const fi of finalInspections) {
-      await conn.execute(
+      await safeInsert(
         `INSERT INTO qc_final_inspection (inspection_no, work_order_no, product_name, batch_no, inspection_qty, qualified_qty, unqualified_qty, inspection_result, inspector_name, remark, inspection_date, create_time, deleted) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), NOW(), 0)`,
         [
@@ -599,7 +610,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     ];
 
     for (const order of inboundOrders) {
-      await conn.execute(
+      await safeInsert(
         `INSERT INTO inv_inbound_order (order_no, supplier_name, warehouse_id, inbound_date, status, total_quantity, total_amount, create_time, update_time, deleted) 
          VALUES (?, ?, ?, DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND() * 30) DAY), ?, ?, ?, NOW(), NOW(), 0)`,
         [
@@ -612,11 +623,15 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
 
-      const [orderRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      const orderId = orderRow[0].id;
+      const [orderRow]: Loose = await conn.execute(
+        'SELECT id FROM inv_inbound_order WHERE order_no = ?',
+        [order.order_no]
+      );
+      const orderId = orderRow[0]?.id;
+      if (!orderId) continue;
 
-      await conn.execute(
-        `INSERT INTO inv_inbound_item (order_id, material_id, material_name, quantity, unit, unit_price, total_price, create_time) 
+      await safeInsert(
+        `INSERT INTO inv_inbound_item (order_id, material_id, material_name, quantity, unit, unit_price, total_price, create_time)
          VALUES (?, 1, ?, ?, '卷', 10, ?, NOW())`,
         [orderId, order.material, order.quantity, order.quantity * 10]
       );
@@ -697,7 +712,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     ];
 
     for (const label of labels) {
-      await conn.execute(
+      await safeInsert(
         `INSERT INTO inv_material_label (label_no, material_code, material_name, quantity, status, is_main_material, is_used, is_cut, warehouse_id, create_time, update_time, deleted) 
          VALUES (?, ?, ?, ?, ?, 1, 0, 0, 1, NOW(), NOW(), 0)`,
         [label.label_no, label.material_code, label.material_name, label.quantity, label.status]
@@ -714,17 +729,19 @@ export const POST = withPermission(async (_request: NextRequest) => {
       { material_name: '保护膜', material_code: 'MAT006', quantity: 800, min_quantity: 500 },
     ];
 
-    const [matRows]: Loose = await conn.execute(
-      'SELECT id, material_code FROM bom_material WHERE deleted = 0 LIMIT 20'
-    );
     const matMap: Record<string, number> = {};
-    for (const row of matRows) {
-      matMap[row.material_code] = row.id;
-    }
+    try {
+      const [matRows]: Loose = await conn.execute(
+        'SELECT id, material_code FROM inv_material WHERE deleted = 0 LIMIT 20'
+      );
+      for (const row of matRows) {
+        matMap[row.material_code] = row.id;
+      }
+    } catch (_e) {}
 
     for (const inv of inventories) {
       const materialId = matMap[inv.material_code] || 1;
-      await conn.execute(
+      await safeInsert(
         `INSERT IGNORE INTO inv_inventory (material_id, material_name, quantity, available_qty, safety_stock, warehouse_id, unit, create_time, update_time, deleted) 
          VALUES (?, ?, ?, ?, ?, 1, '卷', NOW(), NOW(), 0)`,
         [materialId, inv.material_name, inv.quantity, inv.quantity, inv.min_quantity]
@@ -796,7 +813,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     ];
 
     for (const inspection of inspections) {
-      await conn.execute(
+      await safeInsert(
         `INSERT INTO qc_inspection (inspection_no, inspection_type, inspection_result, inspector, inspection_date, deleted) 
          VALUES (?, ?, ?, ?, DATE_SUB(CURDATE(), INTERVAL FLOOR(RAND() * 30) DAY), 0)`,
         [

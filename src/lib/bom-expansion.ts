@@ -530,11 +530,11 @@ export async function getBomExpansionTree(
         id: pid,
         code: pcode,
         name: pname,
-        type: 'product',
+        type: 'product' as const,
         quantity: pquantity,
         lossRate: plossRate,
         level,
-        children: [],
+        children: [] as BomTreeNode[],
       };
     }
 
@@ -545,17 +545,17 @@ export async function getBomExpansionTree(
         id: pid,
         code: pcode,
         name: pname,
-        type: 'product',
+        type: 'product' as const,
         quantity: pquantity,
         lossRate: plossRate,
         level,
-        children: [],
+        children: [] as BomTreeNode[],
       };
     }
     visitedNodes.add(nodeKey);
 
     const bomLines = await getBomLines(pid);
-    const children = [];
+    const children: BomTreeNode[] = [];
 
     for (const line of bomLines) {
       const baseQty = pquantity * line.quantity;
@@ -581,7 +581,7 @@ export async function getBomExpansionTree(
           id: line.materialId,
           code: line.materialCode,
           name: line.materialName,
-          type: 'material',
+          type: 'material' as const,
           quantity: actualQty,
           lossRate: accLossRate,
           level: level + 1,

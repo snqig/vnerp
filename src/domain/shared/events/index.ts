@@ -128,7 +128,7 @@ export {
 } from '../../production/events/PickOrderEvents';
 
 export {
-  ReturnOrderCreatedEvent as ProdReturnOrderCreatedEvent,
+  MaterialReturnCreatedEvent,
   ReturnOrderApprovedEvent as ProdReturnOrderApprovedEvent,
   ReturnOrderCancelledEvent as ProdReturnOrderCancelledEvent,
 } from '../../production/events/ReturnOrderEvents';

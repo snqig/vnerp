@@ -128,7 +128,7 @@ export class SampleProcessTemplateService {
     const templateNo = data.template_no || (await generateTemplateNo());
 
     return await transaction(async (conn) => {
-      const [result] = await conn.execute(
+      const [result] = (await conn.execute(
         `INSERT INTO dcprint_sample_process_template
          (template_no, template_name, category, tags, description, customer_id, customer_name, product_name,
           substrate_material_id, substrate_material_name, spec, print_color, ink_color_id, screen_plate_id, die_tool_id,
@@ -156,7 +156,7 @@ export class SampleProcessTemplateService {
           data.remark || null,
           userId,
         ]
-      ) as [ResultSetHeader, any];
+      )) as [ResultSetHeader, any];
       const templateId = result.insertId;
 
       await this.insertItems(conn, templateId, data.items || []);
@@ -193,40 +193,38 @@ export class SampleProcessTemplateService {
 
     const templateNo = await generateTemplateNo();
 
-return await transaction(async (conn) => {
-      const [result] = await conn.execute(
-        `INSERT INTO dcprint_sample_process_template
+    return await transaction(async (conn) => {
+      const sql = `INSERT INTO dcprint_sample_process_template
          (template_no, template_name, category, source_card_id, customer_id, customer_name, product_name,
            substrate_material_id, substrate_material_name, spec, print_color, ink_color_id, screen_plate_id, die_tool_id,
            material_loss_rate, estimated_hour, diagram_url, total_material_cost, total_labor_cost, total_tool_cost, total_cost, remark,
            status, create_by, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
-        [
-          templateNo,
-          templateName,
-          category,
-          cardId,
-          card.customer_id,
-          card.customer_name,
-          card.product_name,
-          card.substrate_material_id,
-          card.substrate_material_name,
-          card.spec,
-          card.print_color,
-          card.ink_color_id,
-          card.screen_plate_id,
-          card.die_tool_id,
-          card.material_loss_rate,
-          card.estimated_hour,
-          card.diagram_url,
-          card.total_material_cost,
-          card.total_labor_cost,
-          card.total_tool_cost,
-          card.total_cost,
-          card.remark,
-          userId,
-        ]
-      ) as [ResultSetHeader, any];
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`;
+      const [result] = (await conn.query(sql, [
+        templateNo,
+        templateName,
+        category,
+        cardId,
+        card.customer_id,
+        card.customer_name,
+        card.product_name,
+        card.substrate_material_id,
+        card.substrate_material_name,
+        card.spec,
+        card.print_color,
+        card.ink_color_id,
+        card.screen_plate_id,
+        card.die_tool_id,
+        card.material_loss_rate,
+        card.estimated_hour,
+        card.diagram_url,
+        card.total_material_cost,
+        card.total_labor_cost,
+        card.total_tool_cost,
+        card.total_cost,
+        card.remark,
+        userId,
+      ])) as [ResultSetHeader, any];
       const templateId = result.insertId;
 
       await this.insertItems(conn, templateId, items);

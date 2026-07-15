@@ -23,6 +23,7 @@
     "test:unit": "vitest",
     "test:unit:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:coverage:ci": "vitest run --coverage --reporter=junit --reporter=default",
     "db:studio": "drizzle-kit studio",
     "db:generate": "pnpm dlx drizzle-kit generate",
     "db:push": "pnpm dlx drizzle-kit push",

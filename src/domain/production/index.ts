@@ -30,7 +30,7 @@ export {
   PickOrderCancelledEvent,
 } from './events/PickOrderEvents';
 export {
-  ReturnOrderCreatedEvent,
+  MaterialReturnCreatedEvent,
   ReturnOrderApprovedEvent,
   ReturnOrderCancelledEvent,
 } from './events/ReturnOrderEvents';

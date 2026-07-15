@@ -249,7 +249,7 @@ export class EventRegistry {
     eventBus.subscribe('prod.pick.cancelled', new AuditLogHandler());
 
     // 生产退料单事件
-    eventBus.subscribe('prod.return.created', new AuditLogHandler());
+    eventBus.subscribe('material_return.created', new AuditLogHandler());
     eventBus.subscribe(
       'prod.return.approved',
       new IdempotentHandler(new ReturnOrderInventoryHandler())
