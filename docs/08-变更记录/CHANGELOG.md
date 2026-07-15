@@ -12,6 +12,7 @@
 ### 新增
 - **生产环境强制 Redis/DB 模式**：新增 3 个测试用例验证生产模式行为（`rate-limit-production.test.ts`、`cache-manager-production.test.ts`、`event-bus-production.test.ts`）
 - **BaseRepository 类型安全增强**：支持自定义列名参数，SQL 标识符转义，兼容字符串/数字状态值
+- **设置页面卡片导航**：`/settings/basics` 页面从 Tab 切换改为卡片导航，点击跳转到对应功能模块，支持模拟数据降级
 
 ### 修复
 - **RUN-001 限流为进程内内存**：生产环境强制 Redis 计数器，Redis 不可用时快速失败
@@ -19,6 +20,7 @@
 - **RUN-003 事件总线仅内存/DB 两选**：生产环境强制 `EVENT_BUS_TYPE=db`（Outbox 模式 + Redis Streams）
 - **DATA-005 幂等保护 TOCTOU 竞态**：完工入库 Handler 改用 `INSERT IGNORE` + 唯一索引 + 事务包裹
 - **INV-001 soft-delete 表名与库存 API 不匹配**：经核查已正确使用 `inv_` 前缀表名
+- **设置页面无限循环**：`/settings/basics` 页面因 `loadConfigs` useCallback 依赖 `categories` 导致无限循环，移除依赖并修复 useEffect 触发逻辑
 
 ### 优化
 - **INV-002 制造费用分摊为硬编码**：优先从事件驱动实际数据读取，配置系数兜底
