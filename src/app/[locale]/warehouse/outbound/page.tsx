@@ -94,6 +94,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { MainLayout } from '@/components/layout';
+import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -394,7 +395,6 @@ export default function OutboundManagementPage() {
   const [outboundRecords, setOutboundRecords] = useState(initialOutboundRecords);
   const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
   const [warehouses, setWarehouses] = useState<Loose[]>([]);
-  const [warehouseCategories, setWarehouseCategories] = useState<Loose[]>([]);
 
   // 对话框状态
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -468,22 +468,10 @@ export default function OutboundManagementPage() {
     } catch {}
   }, []);
 
-  // 获取仓库分类列表
-  const fetchWarehouseCategories = useCallback(async () => {
-    try {
-      const response = await authFetch('/api/warehouse/categories');
-      const result = await response.json();
-      if (result.success) {
-        setWarehouseCategories(result.data);
-      }
-    } catch {}
-  }, []);
-
   // 初始加载仓库数据
   useEffect(() => {
     fetchWarehouses();
-    fetchWarehouseCategories();
-  }, [fetchWarehouses, fetchWarehouseCategories]);
+  }, [fetchWarehouses]);
 
   // 重置筛选
   const handleReset = useCallback(() => {
@@ -536,7 +524,7 @@ export default function OutboundManagementPage() {
       specification: record.spec || '',
       quantity: record.quantity?.toString() || '',
       unit: record.unit || '',
-      warehouse: record.warehouse || '',
+      warehouse: record.warehouseId ? String(record.warehouseId) : '',
       remark: record.remark || '',
       outboundType:
         record.type === '生产出库'
@@ -556,16 +544,14 @@ export default function OutboundManagementPage() {
   // 保存出库单
   const handleSave = async () => {
     try {
-      const warehouseData = warehouses.find(
-        (w) => w.code === formData.warehouse || w.name === formData.warehouse
-      );
+      const warehouseData = warehouses.find((w) => String(w.id) === formData.warehouse);
 
       const apiData = {
         orderDate: new Date().toISOString().slice(0, 10),
         outboundType: formData.outboundType,
-        warehouseId: warehouseData?.id || 0,
-        warehouseCode: warehouseData?.code || formData.warehouse,
-        warehouseName: warehouseData?.name || formData.warehouse,
+        warehouseId: warehouseData?.id || Number(formData.warehouse) || 0,
+        warehouseCode: warehouseData?.code || '',
+        warehouseName: warehouseData?.name || '',
         remark: formData.remark,
         items: [
           {
@@ -610,17 +596,15 @@ export default function OutboundManagementPage() {
     if (!currentRecord) return;
 
     try {
-      const warehouseData = warehouses.find(
-        (w) => w.code === formData.warehouse || w.name === formData.warehouse
-      );
+      const warehouseData = warehouses.find((w) => String(w.id) === formData.warehouse);
 
       const apiData = {
         id: currentRecord.id,
         orderDate: currentRecord.orderDate || new Date().toISOString().slice(0, 10),
         outboundType: formData.outboundType,
-        warehouseId: warehouseData?.id || 0,
-        warehouseCode: warehouseData?.code || formData.warehouse,
-        warehouseName: warehouseData?.name || formData.warehouse,
+        warehouseId: warehouseData?.id || Number(formData.warehouse) || 0,
+        warehouseCode: warehouseData?.code || '',
+        warehouseName: warehouseData?.name || '',
         remark: formData.remark,
         items: [
           {
@@ -1361,21 +1345,12 @@ export default function OutboundManagementPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="warehouse">{t('warehouse')} *</Label>
-              <Select
+              <WarehouseSelect
                 value={formData.warehouse}
-                onValueChange={(value) => setFormData({ ...formData, warehouse: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('selectWarehouse')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {warehouses.map((warehouse) => (
-                    <SelectItem key={warehouse.id} value={warehouse.name}>
-                      {warehouse.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData({ ...formData, warehouse: value })}
+                placeholder={t('selectWarehouse')}
+                showCategory={false}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="outboundType">{t('outboundType')}</Label>
@@ -1510,21 +1485,12 @@ export default function OutboundManagementPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="warehouse">{t('warehouse')} *</Label>
-              <Select
+              <WarehouseSelect
                 value={formData.warehouse}
-                onValueChange={(value) => setFormData({ ...formData, warehouse: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('selectWarehouse')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {warehouses.map((warehouse) => (
-                    <SelectItem key={warehouse.id} value={warehouse.name}>
-                      {warehouse.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData({ ...formData, warehouse: value })}
+                placeholder={t('selectWarehouse')}
+                showCategory={false}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="outboundType">{t('outboundType')}</Label>

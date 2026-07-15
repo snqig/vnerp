@@ -171,7 +171,6 @@ export function InboundDialogs(props: InboundDialogsProps) {
         formData={formData}
         setFormData={setFormData}
         suppliers={suppliers}
-        warehouseCategories={warehouseCategories}
         poSearchResults={poSearchResults}
         poSearchLoading={poSearchLoading}
         poDropdownVisible={poDropdownVisible}

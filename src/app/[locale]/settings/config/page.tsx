@@ -556,7 +556,7 @@ export default function ConfigPage() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '50',
+        pageSize: '200',
         configName: searchName,
       });
       const res = await authFetch('/api/system/config?' + params);
@@ -614,21 +614,34 @@ export default function ConfigPage() {
 
   const handleInitPresets = async () => {
     if (!confirm('确定初始化预设配置？已存在的配置不会被覆盖。')) return;
-    let created = 0;
-    for (const preset of presetConfigs) {
-      const exists = list.some((item) => item.config_key === preset.config_key);
-      if (!exists) {
-        try {
-          const res = await authFetch('/api/system/config', {
-            method: 'POST',
-            body: JSON.stringify(preset),
-          });
-          const result = await res.json();
-          if (result.success) created++;
-        } catch {}
+    // 先加载全量数据用于存在性检查，避免因分页遗漏导致重复 INSERT 失败
+    let existingKeys: Set<string> = new Set(list.map((i) => i.config_key));
+    try {
+      const res = await authFetch('/api/system/config?page=1&pageSize=500');
+      const result = await res.json();
+      if (result.success) {
+        existingKeys = new Set((result.data.list || []).map((i: ConfigItem) => i.config_key));
       }
+    } catch {}
+    let created = 0;
+    let skipped = 0;
+    for (const preset of presetConfigs) {
+      if (existingKeys.has(preset.config_key!)) {
+        skipped++;
+        continue;
+      }
+      try {
+        const res = await authFetch('/api/system/config', {
+          method: 'POST',
+          body: JSON.stringify(preset),
+        });
+        const result = await res.json();
+        if (result.success) created++;
+      } catch {}
     }
-    toast({ title: `初始化完成，新增 ${created} 条配置` });
+    toast({
+      title: `初始化完成：新增 ${created} 条，跳过 ${skipped} 条已存在`,
+    });
     fetchData();
   };
 

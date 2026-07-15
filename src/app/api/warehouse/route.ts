@@ -54,6 +54,7 @@ function buildQueryConditions(params: {
       warehouse_code as code,
       warehouse_name as name,
       warehouse_type,
+      category_id,
       address,
       remark,
       status,
@@ -132,6 +133,10 @@ export const GET = withPermission(
     if (type) {
       countSql += ` AND warehouse_type = ?`;
       countValues.push(warehouseTypeMap[type] || 1);
+    }
+    if (categoryId) {
+      countSql += ` AND category_id = ?`;
+      countValues.push(parseInt(categoryId));
     }
     if (status !== undefined && status !== '') {
       const statusNum = parseInt(status);

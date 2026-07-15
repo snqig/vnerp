@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
+import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { useTranslations } from 'next-intl';
 
 interface TransferOrder {
@@ -84,11 +85,6 @@ interface TransferItem {
   material_name?: string;
 }
 
-interface Warehouse {
-  id: number;
-  name: string;
-}
-
 export default function TransferPage() {
   // 翻译钩子
   const t = useTranslations('Warehouse');
@@ -117,7 +113,6 @@ export default function TransferPage() {
   const [searchNo, setSearchNo] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<TransferOrder>>({});
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [locations, setLocations] = useState<
     { id: number; code: string; name: string; wh_id: number }[]
   >([]);
@@ -153,16 +148,6 @@ export default function TransferPage() {
     } catch {}
   };
 
-  const fetchWarehouses = async () => {
-    try {
-      const res = await authFetch('/api/warehouse?status=active&all=true');
-      const result = await res.json();
-      if (result.success) {
-        setWarehouses(result.data?.map((w: Loose) => ({ id: w.id, name: w.name })) || []);
-      }
-    } catch {}
-  };
-
   const fetchLocations = async (whId: number) => {
     try {
       const res = await authFetch(`/api/warehouse/locations?wh_id=${whId}`);
@@ -177,9 +162,6 @@ export default function TransferPage() {
   useEffect(() => {
     fetchData();
   }, [page]);
-  useEffect(() => {
-    fetchWarehouses();
-  }, []);
 
   const handleSave = async () => {
     if (!editItem.from_warehouse_id) {
@@ -665,27 +647,17 @@ export default function TransferPage() {
                 <Label>
                   {t('sourceWarehouse')} <span className="text-red-500">*</span>
                 </Label>
-                <Select
-                  value={String(editItem.from_warehouse_id || '')}
-                  onValueChange={(v) => {
+                <WarehouseSelect
+                  value={editItem.from_warehouse_id}
+                  onChange={(v) => {
                     const whId = Number(v);
                     setEditItem({ ...editItem, from_warehouse_id: whId });
                     if (editItem.type === 1) {
                       fetchLocations(whId);
                     }
                   }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('selectSourceWarehouse')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map((w) => (
-                      <SelectItem key={w.id} value={String(w.id)}>
-                        {w.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder={t('selectSourceWarehouse')}
+                />
               </div>
               {editItem.type === 1 && (
                 <>
@@ -731,21 +703,11 @@ export default function TransferPage() {
                 <Label>
                   {t('targetWarehouse')} <span className="text-red-500">*</span>
                 </Label>
-                <Select
-                  value={String(editItem.to_warehouse_id || '')}
-                  onValueChange={(v) => setEditItem({ ...editItem, to_warehouse_id: Number(v) })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('selectTargetWarehouse')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map((w) => (
-                      <SelectItem key={w.id} value={String(w.id)}>
-                        {w.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <WarehouseSelect
+                  value={editItem.to_warehouse_id}
+                  onChange={(v) => setEditItem({ ...editItem, to_warehouse_id: Number(v) })}
+                  placeholder={t('selectTargetWarehouse')}
+                />
               </div>
               <div>
                 <Label>{tc('applicant')}</Label>

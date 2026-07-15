@@ -22,7 +22,8 @@ import { RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { authFetch } from '@/lib/auth-fetch';
-import type { InboundFormData, Supplier, WarehouseCategory, PurchaseOrder } from '../../types';
+import { WarehouseSelect } from '@/components/ui/warehouse-select';
+import type { InboundFormData, Supplier, PurchaseOrder } from '../../types';
 import { INITIAL_FORM_DATA } from '../../types';
 
 interface AddDialogProps {
@@ -31,7 +32,6 @@ interface AddDialogProps {
   formData: InboundFormData;
   setFormData: React.Dispatch<React.SetStateAction<InboundFormData>>;
   suppliers: Supplier[];
-  warehouseCategories: WarehouseCategory[];
   poSearchResults: PurchaseOrder[];
   poSearchLoading: boolean;
   poDropdownVisible: boolean;
@@ -47,7 +47,6 @@ export function AddDialog({
   formData,
   setFormData,
   suppliers,
-  warehouseCategories,
   poSearchResults,
   poSearchLoading,
   poDropdownVisible,
@@ -201,23 +200,14 @@ export function AddDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="add-warehouse">{tc('warehouse')}</Label>
-              <Select
+              <WarehouseSelect
                 value={formData.warehouse}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, warehouse: value }))}
-              >
-                <SelectTrigger id="add-warehouse">
-                  <SelectValue placeholder={t('selectWarehouse')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {warehouseCategories
-                    .filter((wh: Loose) => wh.status !== 0)
-                    .map((wh: Loose) => (
-                      <SelectItem key={wh.id} value={wh.name}>
-                        {wh.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+                onChange={(warehouseId) =>
+                  setFormData((prev) => ({ ...prev, warehouse: warehouseId }))
+                }
+                placeholder={t('selectWarehouse')}
+                className="w-full"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="add-purchaseOrderNo">{t('purchaseOrderNo')}</Label>
