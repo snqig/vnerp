@@ -61,6 +61,8 @@ export default function ExchangeRatePage() {
       if (result.success) {
         const data = result.data;
         setRates(Array.isArray(data) ? data : data?.list || []);
+      } else {
+        toast.error(result.message || tc('fetchFailed'));
       }
     } catch (error) {
       logger.error({ module: 'Currency', action: 'fetchRates' }, '获取汇率列表失败', {
