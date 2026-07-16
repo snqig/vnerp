@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Select,
   SelectContent,
@@ -26,32 +27,34 @@ interface CurrencySelectProps {
   disabled?: boolean;
 }
 
-export function CurrencySelect({
-  value,
-  onChange,
-  placeholder = '选择币种',
-  disabled,
-}: CurrencySelectProps) {
+export function CurrencySelect({ value, onChange, placeholder, disabled }: CurrencySelectProps) {
+  const t = useTranslations('Common');
   const [currencies, setCurrencies] = useState<Currency[]>([]);
 
   useEffect(() => {
+    let mounted = true;
     const loadCurrencies = async () => {
       try {
         const response = await authFetch('/api/system/currency?active=true');
         const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
+        if (mounted && result.success && Array.isArray(result.data)) {
           setCurrencies(result.data);
         }
       } catch {
         // 降级：使用默认币种列表
-        setCurrencies([
-          { id: 1, code: 'CNY', name: '人民币', symbol: '¥', decimal_places: 2 },
-          { id: 2, code: 'USD', name: '美元', symbol: '$', decimal_places: 2 },
-          { id: 3, code: 'VND', name: '越南盾', symbol: '₫', decimal_places: 0 },
-        ]);
+        if (mounted) {
+          setCurrencies([
+            { id: 1, code: 'CNY', name: 'CNY', symbol: '¥', decimal_places: 2 },
+            { id: 2, code: 'USD', name: 'USD', symbol: '$', decimal_places: 2 },
+            { id: 3, code: 'VND', name: 'VND', symbol: '₫', decimal_places: 0 },
+          ]);
+        }
       }
     };
     loadCurrencies();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -64,14 +67,20 @@ export function CurrencySelect({
       disabled={disabled}
     >
       <SelectTrigger>
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={placeholder ?? t('selectCurrency') ?? '选择币种'} />
       </SelectTrigger>
       <SelectContent>
-        {currencies.map((currency) => (
-          <SelectItem key={currency.code} value={currency.code}>
-            {currency.symbol} {currency.code} {currency.name}
+        {currencies.length === 0 ? (
+          <SelectItem value="_empty" disabled>
+            {t('noCurrency') || '暂无币种'}
           </SelectItem>
-        ))}
+        ) : (
+          currencies.map((currency) => (
+            <SelectItem key={currency.code} value={currency.code}>
+              {currency.symbol} {currency.code} {currency.name}
+            </SelectItem>
+          ))
+        )}
       </SelectContent>
     </Select>
   );

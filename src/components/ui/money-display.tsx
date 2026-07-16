@@ -23,14 +23,14 @@ export function MoneyDisplay({
   const original = showSymbol ? formatMoney(amount, currency) : formatAmount(amount, currency);
 
   // 同币种或无本位币金额时，单行显示
-  if (!baseAmount || currency === baseCurrency) {
+  if (baseAmount === undefined || currency === baseCurrency) {
     return <span className={className}>{original}</span>;
   }
 
   // 双行显示：原币 + 本位币
   const base = showSymbol
-    ? formatMoney(baseAmount, baseCurrency!)
-    : formatAmount(baseAmount, baseCurrency!);
+    ? formatMoney(baseAmount, baseCurrency)
+    : formatAmount(baseAmount, baseCurrency);
 
   return (
     <span className={className}>
