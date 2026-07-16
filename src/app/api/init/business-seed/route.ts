@@ -14,7 +14,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     };
 
     // 安全 INSERT：字段不匹配时跳过，不阻断全局
-    const safeInsert = async (sql: string, params: unknown[], statKey?: string) => {
+    const safeInsert = async (sql: string, params: any[], statKey?: string) => {
       try {
         await conn.execute(sql, params);
         if (statKey) stats[statKey] = (stats[statKey] || 0) + 1;

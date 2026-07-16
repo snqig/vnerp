@@ -76,8 +76,11 @@ export async function authFetch(url: string, options: RequestInit = {}): Promise
       ? localStorage.getItem('token') || sessionStorage.getItem('token')
       : null;
 
+  // FormData 上传时不能手动设置 Content-Type，浏览器需自动生成 multipart boundary
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(options.headers as Record<string, string>),
   };
 

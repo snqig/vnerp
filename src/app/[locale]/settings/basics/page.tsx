@@ -554,8 +554,6 @@ export default function BasicsSettingsPage() {
     }
 
     console.log('[Settings/Basics] 准备跳转到:', routeInfo.path);
-    console.log('[Settings/Basics] 当前路由:', router.pathname);
-    console.log('[Settings/Basics] 当前 locale:', router.locale);
 
     try {
       router.push(routeInfo.path);

@@ -4,10 +4,10 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
-// 开发环境允许的源：从环境变量读取（逗号分隔），默认仅 localhost
+// 开发环境允许的源：从环境变量读取（逗号分隔），默认 localhost + 局域网 IP
 const devOrigins = process.env.DEV_ORIGINS
   ? process.env.DEV_ORIGINS.split(',').map(s => s.trim()).filter(Boolean)
-  : ['localhost'];
+  : ['localhost', '192.168.0.150'];
 
 // CORS 允许的源：从环境变量读取，默认 *（开发）。生产应配置具体域名
 const corsAllowOrigin = process.env.CORS_ALLOW_ORIGIN || '*';

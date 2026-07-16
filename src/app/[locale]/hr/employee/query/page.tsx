@@ -51,7 +51,7 @@ function EmployeeQueryContent() {
     if (employeeId) {
       fetchEmployee(parseInt(employeeId));
     } else {
-      setError(tc('text_c5r1p9'));
+      setError(tc('invalidEmployeeId'));
       setLoading(false);
     }
   }, [employeeId]);
@@ -63,10 +63,10 @@ function EmployeeQueryContent() {
       if (result.success && result.data) {
         setEmployee(result.data);
       } else {
-        setError(tc('text_5zljy4'));
+        setError(tc('employeeNotExist'));
       }
     } catch {
-      setError(tc('text_sx9vxu'));
+      setError(tc('fetchEmployeeFailed'));
     } finally {
       setLoading(false);
     }
@@ -80,10 +80,10 @@ function EmployeeQueryContent() {
       3: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
     };
     const labels: Record<number, string> = {
-      1: '在职',
-      0: '停用',
-      2: '试用期',
-      3: '离职',
+      1: tc('statusActive'),
+      0: tc('statusInactive'),
+      2: tc('statusProbation'),
+      3: tc('statusResigned'),
     };
     return (
       <Badge className={styles[status] || 'bg-gray-100'}>{labels[status] || tc('unknown')}</Badge>
@@ -95,7 +95,7 @@ function EmployeeQueryContent() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
-          <p className="text-gray-600">加载中...</p>
+          <p className="text-gray-600">{tc('loading')}</p>
         </div>
       </div>
     );
@@ -109,12 +109,12 @@ function EmployeeQueryContent() {
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <UserCircle className="w-8 h-8 text-red-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">查询失败</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{tc('queryFailed')}</h2>
             <p className="text-gray-600 mb-6">{error}</p>
             <Link href="/hr/employee">
               <Button className="w-full">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                返回员工列表
+                {tc('backToEmployeeList')}
               </Button>
             </Link>
           </CardContent>
@@ -131,12 +131,12 @@ function EmployeeQueryContent() {
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <UserCircle className="w-8 h-8 text-gray-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">{tc('text_a1pxef')}</h2>
-            <p className="text-gray-600 mb-6">{tc('text_gi5gqe')}</p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{tc('queryFailed')}</h2>
+            <p className="text-gray-600 mb-6">{tc('employeeNotExistDesc')}</p>
             <Link href="/hr/employee">
               <Button className="w-full">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                返回员工列表
+                {tc('backToEmployeeList')}
               </Button>
             </Link>
           </CardContent>
@@ -153,11 +153,11 @@ function EmployeeQueryContent() {
           <Link href="/hr/employee">
             <Button variant="outline" className="bg-white/80 backdrop-blur">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              返回员工列表
+              {tc('backToEmployeeList')}
             </Button>
           </Link>
           <div className="text-sm text-gray-500">
-            {tc('text_d01zp0')}
+            {tc('employeeNoLabel')}
             {employee.employee_no}
           </div>
         </div>
@@ -176,7 +176,7 @@ function EmployeeQueryContent() {
                 <h1 className="text-3xl font-bold mb-2">{employee.name}</h1>
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                   <Badge className="bg-white/20 text-white border-0">
-                    {employee.gender === 1 ? '男' : tc('text_ho3')}
+                    {employee.gender === 1 ? tc('maleShort') : tc('femaleShort')}
                   </Badge>
                   {getStatusBadge(employee.status)}
                 </div>
@@ -192,7 +192,7 @@ function EmployeeQueryContent() {
                   <Building2 className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">{tc('text_cscota')}</p>
+                  <p className="text-sm text-gray-500 mb-1">{tc('department')}</p>
                   <p className="font-semibold text-gray-900">{employee.dept_name || '-'}</p>
                 </div>
               </div>
@@ -203,7 +203,7 @@ function EmployeeQueryContent() {
                   <Briefcase className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">职位</p>
+                  <p className="text-sm text-gray-500 mb-1">{tc('position')}</p>
                   <p className="font-semibold text-gray-900">{employee.position || '-'}</p>
                 </div>
               </div>
@@ -225,7 +225,7 @@ function EmployeeQueryContent() {
                   <Calendar className="w-5 h-5 text-orange-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">入职日期</p>
+                  <p className="text-sm text-gray-500 mb-1">{tc('entryDate')}</p>
                   <p className="font-semibold text-gray-900">{employee.entry_date || '-'}</p>
                 </div>
               </div>
@@ -265,7 +265,7 @@ function EmployeeQueryContent() {
 
         {/* 底部版权 */}
         <div className="mt-8 text-center text-sm text-gray-500">
-          <p>{tc('text_b3jm4h')}</p>
+          <p>{tc('employeeInfoFooter')}</p>
         </div>
       </div>
     </div>
@@ -273,11 +273,12 @@ function EmployeeQueryContent() {
 }
 
 function Loading() {
+  const tc = useTranslations('Common');
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="flex flex-col items-center gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
-        <p className="text-gray-600">加载中...</p>
+        <p className="text-gray-600">{tc('loading')}</p>
       </div>
     </div>
   );

@@ -146,7 +146,9 @@ export function proxy(request: NextRequest) {
   const { locale, cleanPath } = stripLocale(pathname);
 
   // 受保护路由：无 access_token → 重定向到 /login（保留 locale 前缀）
-  if (isPathUnder(cleanPath, PROTECTED_ROUTE_PREFIXES) && !accessToken) {
+  // 根路径 '/' 也受保护（渲染 dashboard）
+  const isProtected = cleanPath === '/' || isPathUnder(cleanPath, PROTECTED_ROUTE_PREFIXES);
+  if (isProtected && !accessToken) {
     const loginUrl = new URL(withLocalePrefix('/login', locale), request.url);
     // 携带原始路径作为 next 参数，便于登录后回跳
     loginUrl.searchParams.set('next', pathname);

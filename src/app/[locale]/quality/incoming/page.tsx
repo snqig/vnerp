@@ -98,16 +98,6 @@ const getStatusConfig = (
 
 // 将 API 返回的 camelCase 字段映射为页面内部格式
 function mapApiToInternal(item: Loose): Loose {
-  const inspectionTypeLabel =
-    item.inspectionType === 'sampling'
-      ? '抽检'
-      : item.inspectionType === 'full'
-        ? '全检'
-        : item.inspectionType === 'visual'
-          ? '外观检查'
-          : item.inspectionType === 'functional'
-            ? '功能测试'
-            : item.inspectionType || '抽检';
   return {
     dbId: item.id,
     id: item.inspectionNo,
@@ -119,7 +109,7 @@ function mapApiToInternal(item: Loose): Loose {
     batchNo: item.batchNo,
     quantity: parseFloat(item.quantity) || 0,
     unit: item.unit,
-    inspectionType: inspectionTypeLabel,
+    inspectionType: item.inspectionType || 'sampling',
     inspectionTypeRaw: item.inspectionType || 'sampling',
     result: item.inspectionResult,
     inspector: item.inspectorName,
@@ -684,8 +674,8 @@ export default function IncomingInspectionPage() {
               {tc('add')}
             </Button>
             <GlobalExportToolbar
-              filename="来料检验报告"
-              title="来料检验报告"
+              filename={t('incomingInspectionReport')}
+              title={t('incomingInspectionReport')}
               landscape
               columns={[
                 { key: 'id', label: t('inspectionNo'), width: 18 },
@@ -695,7 +685,12 @@ export default function IncomingInspectionPage() {
                 { key: 'specification', label: tc('specification'), width: 12 },
                 { key: 'batchNo', label: tc('batchNo'), width: 15 },
                 { key: 'quantity', label: tc('quantity'), width: 10 },
-                { key: 'inspectionType', label: t('inspectionType'), width: 10 },
+                {
+                  key: 'inspectionType',
+                  label: t('inspectionType'),
+                  width: 10,
+                  formatter: (v) => inspectionTypeOptions.find((o) => o.value === v)?.label || v,
+                },
                 {
                   key: 'result',
                   label: t('inspectionResult'),
@@ -860,7 +855,10 @@ export default function IncomingInspectionPage() {
                       {inspection.quantity} {inspection.unit}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{inspection.inspectionType}</Badge>
+                      <Badge variant="outline">
+                        {inspectionTypeOptions.find((o) => o.value === inspection.inspectionTypeRaw)
+                          ?.label || inspection.inspectionTypeRaw}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={statusConfig[inspection.result]?.variant || 'outline'}>

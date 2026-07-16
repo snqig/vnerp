@@ -75,7 +75,9 @@ export default async function LocaleLayout({
   const companyName = await getCompanyName();
   const initialAuthData = await prefetchMenus();
 
-  const initialAuth = initialAuthData ? { ...initialAuthData, companyName } : { companyName };
+  const initialAuth = initialAuthData
+    ? { ...initialAuthData, companyName }
+    : { companyName, menus: [], permissions: [] };
 
   return (
     <>

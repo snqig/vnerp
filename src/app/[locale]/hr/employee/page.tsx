@@ -298,8 +298,10 @@ export default function EmployeePage() {
 
       const result = await response.json();
       if (result.success) {
-        setForm({ ...form, photo: result.url });
-        logger.info({ module: 'Hr', action: 'handleUpload' }, '照片上传成功', { url: result.url });
+        setForm({ ...form, photo: result.data?.url });
+        logger.info({ module: 'Hr', action: 'handleUpload' }, '照片上传成功', {
+          url: result.data?.url,
+        });
         toast.success(t('uploadSuccess'));
       } else {
         logger.warn({ module: 'Hr', action: 'handleUpload' }, '照片上传失败', {
