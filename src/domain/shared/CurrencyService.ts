@@ -1,5 +1,3 @@
-// src/domain/shared/CurrencyService.ts
-
 /**
  * 币种信息
  */
