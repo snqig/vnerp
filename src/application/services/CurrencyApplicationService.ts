@@ -62,3 +62,10 @@ export class CurrencyApplicationService {
     memoryCache.clear();
   }
 }
+
+/**
+ * 清除汇率缓存（供 API 路由在录入/删除汇率后调用）
+ */
+export function clearExchangeRateCache(): void {
+  memoryCache.clear();
+}

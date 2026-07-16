@@ -77,6 +77,10 @@ export const PUT = withPermission(
       return commonErrors.notFound('币种不存在');
     }
 
+    if (!body.name) {
+      return errorResponse('币种名称不能为空', 400, 400);
+    }
+
     await execute(
       `UPDATE sys_currency SET name = ?, symbol = ?, decimal_places = ?, status = ?, sort = ? WHERE id = ?`,
       [

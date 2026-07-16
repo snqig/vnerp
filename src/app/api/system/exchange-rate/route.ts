@@ -8,6 +8,7 @@ import {
   paginatedResponse,
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { clearExchangeRateCache } from '@/application/services/CurrencyApplicationService';
 
 // GET - 汇率列表或最新汇率查询
 export const GET = withPermission(async (request: NextRequest) => {
@@ -80,7 +81,8 @@ export const POST = withPermission(
       return errorResponse('源币种和目标币种不能相同', 400, 400);
     }
 
-    if (parseFloat(body.rate) <= 0) {
+    const rate = Number(body.rate);
+    if (!Number.isFinite(rate) || rate <= 0) {
       return errorResponse('汇率必须大于 0', 400, 400);
     }
 
@@ -90,13 +92,14 @@ export const POST = withPermission(
       [
         body.from_currency,
         body.to_currency,
-        body.rate,
+        rate,
         body.rate_date,
         body.source ?? 'manual',
         body.remark ?? null,
       ]
     );
 
+    clearExchangeRateCache();
     return successResponse({ id: result.insertId }, '汇率录入成功');
   },
   { logTitle: '录入汇率' }
@@ -112,6 +115,7 @@ export const DELETE = withPermission(
     }
 
     await execute('DELETE FROM sys_exchange_rate WHERE id = ?', [parseInt(id)]);
+    clearExchangeRateCache();
     return successResponse(null, '汇率记录删除成功');
   },
   { logTitle: '删除汇率' }
