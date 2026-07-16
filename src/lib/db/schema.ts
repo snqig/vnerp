@@ -2288,3 +2288,49 @@ export type PrdWorkOrderColorSeq = typeof prdWorkOrderColorSeq.$inferSelect;
 export type SampleOrder = typeof sampleOrder.$inferSelect;
 export type SalSampleFeedback = typeof salSampleFeedback.$inferSelect;
 export type SalSampleQuotation = typeof salSampleQuotation.$inferSelect;
+
+// ==================== 币种与汇率（多币种基础设施） ====================
+
+export const sysCurrency = mysqlTable(
+  'sys_currency',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    code: varchar('code', { length: 10 }).notNull(),
+    name: varchar('name', { length: 50 }).notNull(),
+    symbol: varchar('symbol', { length: 10 }),
+    decimalPlaces: int('decimal_places').default(2),
+    status: tinyint('status').default(1),
+    sort: int('sort').default(0),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    codeIdx: uniqueIndex('uk_code').on(table.code),
+  })
+);
+
+export const sysExchangeRate = mysqlTable(
+  'sys_exchange_rate',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    fromCurrency: varchar('from_currency', { length: 10 }).notNull(),
+    toCurrency: varchar('to_currency', { length: 10 }).notNull(),
+    rate: decimal('rate', { precision: 18, scale: 6 }).notNull(),
+    rateDate: date('rate_date').notNull(),
+    source: varchar('source', { length: 50 }).default('manual'),
+    remark: varchar('remark', { length: 200 }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+  },
+  (table) => ({
+    fromToDateIdx: index('idx_from_to_date').on(
+      table.fromCurrency,
+      table.toCurrency,
+      table.rateDate
+    ),
+    dateIdx: index('idx_date').on(table.rateDate),
+  })
+);
