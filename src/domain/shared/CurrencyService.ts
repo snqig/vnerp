@@ -22,7 +22,7 @@ export interface ExchangeRate {
 
 /**
  * 币种与汇率领域服务接口
- * 实现由基础设施层提供（MysqlCurrencyRepository）
+ * 实现由基础设施层提供
  */
 export interface ICurrencyService {
   /** 获取币种信息（含小数位） */

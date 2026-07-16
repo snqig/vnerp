@@ -128,7 +128,7 @@ describe('8.3 Money 值对象', () => {
   });
 
   describe('convertTo() 汇率转换', () => {
-    it('同币种转换返回自身', () => {
+    it('同币种转换忽略汇率返回等价金额', () => {
       const m = Money.create(100, 'CNY');
       const result = m.convertTo(7.25, 'CNY', 2);
       expect(result.amount).toBe(100);
@@ -149,19 +149,32 @@ describe('8.3 Money 值对象', () => {
       expect(cny.currency).toBe('CNY');
     });
 
-    it('转换结果四舍五入到指定小数位', () => {
-      const usd = Money.create(100, 'USD');
-      const cny = usd.convertTo(7.253, 'CNY', 2);
-      // 100 * 7.253 = 725.3 → 725.30
-      expect(cny.amount).toBe(725.3);
+    it('转换结果舍入到 2 位小数（舍去方向）', () => {
+      // 10 * 0.3333 = 3.333 → 舍去第 3 位 → 3.33
+      const usd = Money.create(10, 'USD');
+      const cny = usd.convertTo(0.3333, 'CNY', 2);
+      expect(cny.amount).toBe(3.33);
     });
 
-    it('VND 0 位小数转换四舍五入到整数', () => {
-      const cny = Money.create(99.99, 'CNY');
-      const vnd = cny.convertTo(3400, 'VND', 0);
-      // 99.99 * 3400 = 339966
-      expect(vnd.amount).toBe(339966);
-      expect(vnd.currency).toBe('VND');
+    it('转换结果舍入到 2 位小数（进位方向）', () => {
+      // 10 * 0.3338 = 3.338 → 进位第 3 位 → 3.34
+      const usd = Money.create(10, 'USD');
+      const cny = usd.convertTo(0.3338, 'CNY', 2);
+      expect(cny.amount).toBe(3.34);
+    });
+
+    it('VND 0 位小数舍入（舍去方向）', () => {
+      // 100.4 * 1 = 100.4 → 舍去小数 → 100
+      const cny = Money.create(100.4, 'CNY');
+      const vnd = cny.convertTo(1, 'VND', 0);
+      expect(vnd.amount).toBe(100);
+    });
+
+    it('VND 0 位小数舍入（进位方向）', () => {
+      // 100.5 * 1 = 100.5 → 进位 → 101
+      const cny = Money.create(100.5, 'CNY');
+      const vnd = cny.convertTo(1, 'VND', 0);
+      expect(vnd.amount).toBe(101);
     });
   });
 
