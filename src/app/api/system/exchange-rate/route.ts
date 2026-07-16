@@ -9,6 +9,7 @@ import {
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { clearExchangeRateCache } from '@/application/services/CurrencyApplicationService';
+import { UserInfo } from '@/lib/auth';
 
 // GET - 汇率列表或最新汇率查询
 export const GET = withPermission(async (request: NextRequest) => {
@@ -38,6 +39,9 @@ export const GET = withPermission(async (request: NextRequest) => {
       'SELECT * FROM sys_exchange_rate WHERE from_currency = ? AND to_currency = ? AND rate_date = ? ORDER BY id DESC LIMIT 1',
       [from, to, date]
     );
+    if (!rate) {
+      return successResponse(null, '未找到指定日期的汇率记录');
+    }
     return successResponse(rate);
   }
 
@@ -65,7 +69,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 
 // POST - 录入汇率
 export const POST = withPermission(
-  async (request: NextRequest) => {
+  async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const validation = validateRequestBody(body, [
       'from_currency',
@@ -86,9 +90,22 @@ export const POST = withPermission(
       return errorResponse('汇率必须大于 0', 400, 400);
     }
 
+    const fromExists = await queryOne('SELECT 1 FROM sys_currency WHERE code = ? AND deleted = 0', [
+      body.from_currency,
+    ]);
+    if (!fromExists) {
+      return errorResponse('源币种不存在', 400, 400);
+    }
+    const toExists = await queryOne('SELECT 1 FROM sys_currency WHERE code = ? AND deleted = 0', [
+      body.to_currency,
+    ]);
+    if (!toExists) {
+      return errorResponse('目标币种不存在', 400, 400);
+    }
+
     const result = await execute(
-      `INSERT INTO sys_exchange_rate (from_currency, to_currency, rate, rate_date, source, remark)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO sys_exchange_rate (from_currency, to_currency, rate, rate_date, source, remark, create_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         body.from_currency,
         body.to_currency,
@@ -96,6 +113,7 @@ export const POST = withPermission(
         body.rate_date,
         body.source ?? 'manual',
         body.remark ?? null,
+        userInfo.userId,
       ]
     );
 
@@ -107,7 +125,7 @@ export const POST = withPermission(
 
 // DELETE - 删除汇率记录
 export const DELETE = withPermission(
-  async (request: NextRequest) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) {
