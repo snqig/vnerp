@@ -16,6 +16,7 @@ describe('CurrencyApplicationService', () => {
       listActiveCurrencies: vi.fn(),
     };
     service = new CurrencyApplicationService(mockCurrencyService);
+    service.clearCache();
   });
 
   describe('getLatestRate()', () => {
@@ -89,6 +90,34 @@ describe('CurrencyApplicationService', () => {
       const vnd = Money.create(250000, 'VND');
       const cny = await service.convertToBaseCurrency(vnd, 'CNY');
       expect(cny.amount).toBe(75);
+    });
+
+    it('本位币未配置抛错', async () => {
+      vi.mocked(mockCurrencyService.getLatestRate).mockResolvedValue({
+        fromCurrency: 'USD',
+        toCurrency: 'CNY',
+        rate: 7.25,
+        rateDate: new Date(),
+      });
+      vi.mocked(mockCurrencyService.getCurrency).mockResolvedValue(null);
+      const usd = Money.create(1000, 'USD');
+      await expect(service.convertToBaseCurrency(usd, 'XYZ')).rejects.toThrow(/本位币.*未配置/);
+    });
+  });
+
+  describe('clearCache()', () => {
+    it('清除缓存后重新查询 DB', async () => {
+      vi.mocked(mockCurrencyService.getLatestRate).mockResolvedValue({
+        fromCurrency: 'USD',
+        toCurrency: 'CNY',
+        rate: 7.25,
+        rateDate: new Date('2026-07-16'),
+      });
+      await service.getLatestRate('USD', 'CNY');
+      service.clearCache();
+      await service.getLatestRate('USD', 'CNY');
+      // 清除缓存后应再次查询 DB
+      expect(mockCurrencyService.getLatestRate).toHaveBeenCalledTimes(2);
     });
   });
 });

@@ -1,8 +1,9 @@
 import type { ICurrencyService } from '@/domain/shared/CurrencyService';
 import { Money } from '@/domain/shared/value-objects/Money';
+import { NotFoundError } from '@/domain/shared/DomainTypes';
 import { logger } from '@/lib/logger';
 
-// 内存缓存（无 Redis 时降级使用）
+// 内存缓存（无 Redis 时降级使用；多实例部署需替换为 Redis 实现）
 const memoryCache = new Map<string, { value: number; expiresAt: number }>();
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 分钟
 
@@ -24,7 +25,7 @@ export class CurrencyApplicationService {
 
     const rate = await this.currencyService.getLatestRate(from, to);
     if (!rate) {
-      throw new Error(`汇率未配置: ${from}→${to}，请先在汇率管理中录入`);
+      throw new NotFoundError(`汇率未配置: ${from}→${to}，请先在汇率管理中录入`);
     }
 
     memoryCache.set(cacheKey, { value: rate.rate, expiresAt: Date.now() + CACHE_TTL_MS });
@@ -39,7 +40,10 @@ export class CurrencyApplicationService {
 
     const rate = await this.getLatestRate(money.currency, baseCurrency);
     const target = await this.currencyService.getCurrency(baseCurrency);
-    const decimalPlaces = target?.decimalPlaces ?? 2;
+    if (!target) {
+      throw new NotFoundError(`本位币 ${baseCurrency} 未配置`);
+    }
+    const decimalPlaces = target.decimalPlaces;
 
     logger.info({ module: 'Currency', action: 'convertToBaseCurrency' }, '汇率换算', {
       from: money.currency,

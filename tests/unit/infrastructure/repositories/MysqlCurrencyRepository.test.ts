@@ -76,4 +76,28 @@ describe('MysqlCurrencyRepository', () => {
       expect(result[0].code).toBe('CNY');
     });
   });
+
+  describe('getRateOnDate()', () => {
+    it('返回指定日期的汇率记录', async () => {
+      vi.mocked(queryOne).mockResolvedValue({
+        from_currency: 'USD',
+        to_currency: 'CNY',
+        rate: '7.250000',
+        rate_date: new Date('2026-07-16'),
+      });
+      const result = await repo.getRateOnDate('USD', 'CNY', new Date(2026, 6, 16));
+      expect(result).toEqual({
+        fromCurrency: 'USD',
+        toCurrency: 'CNY',
+        rate: 7.25,
+        rateDate: new Date('2026-07-16'),
+      });
+    });
+
+    it('指定日期无汇率返回 null', async () => {
+      vi.mocked(queryOne).mockResolvedValue(null);
+      const result = await repo.getRateOnDate('EUR', 'VND', new Date(2026, 0, 1));
+      expect(result).toBeNull();
+    });
+  });
 });

@@ -49,9 +49,13 @@ export class MysqlCurrencyRepository implements ICurrencyService {
     toCurrency: string,
     date: Date
   ): Promise<ExchangeRate | null> {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${d}`;
     const row = await queryOne<ExchangeRateRow>(
       'SELECT from_currency, to_currency, rate, rate_date FROM sys_exchange_rate WHERE from_currency = ? AND to_currency = ? AND rate_date = ? ORDER BY id DESC LIMIT 1',
-      [fromCurrency, toCurrency, date.toISOString().split('T')[0]]
+      [fromCurrency, toCurrency, dateStr]
     );
     if (!row) return null;
     return {
