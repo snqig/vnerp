@@ -46,6 +46,7 @@ export default function CurrencyPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Currency>>({});
+  const [saving, setSaving] = useState(false);
 
   const fetchCurrencies = useCallback(async () => {
     setLoading(true);
@@ -54,6 +55,8 @@ export default function CurrencyPage() {
       const result = await response.json();
       if (result.success) {
         setCurrencies(Array.isArray(result.data) ? result.data : []);
+      } else {
+        toast.error(result.message || tc('fetchFailed'));
       }
     } catch (error) {
       logger.error({ module: 'Currency', action: 'fetchCurrencies' }, '获取币种列表失败', {
@@ -71,9 +74,10 @@ export default function CurrencyPage() {
 
   const handleSave = async () => {
     if (!form.code || !form.name) {
-      toast.error('请填写币种代码和名称');
+      toast.error(tc('codeAndNameRequired'));
       return;
     }
+    setSaving(true);
     try {
       const method = editing ? 'PUT' : 'POST';
       const response = await authFetch('/api/system/currency', {
@@ -82,28 +86,30 @@ export default function CurrencyPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success(editing ? '更新成功' : '创建成功');
+        toast.success(editing ? tc('updateSuccess') : tc('createSuccess'));
         setDialogOpen(false);
         fetchCurrencies();
       } else {
-        toast.error(result.message || '操作失败');
+        toast.error(result.message || tc('operationFailed'));
       }
-    } catch (error) {
-      toast.error('操作失败');
+    } catch {
+      toast.error(tc('operationFailed'));
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确认删除此币种？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const response = await authFetch(`/api/system/currency?id=${id}`, { method: 'DELETE' });
       const result = await response.json();
       if (result.success) {
-        toast.success('删除成功');
+        toast.success(tc('deleteSuccess'));
         fetchCurrencies();
       }
-    } catch (error) {
-      toast.error('删除失败');
+    } catch {
+      toast.error(tc('deleteFailed'));
     }
   };
 
@@ -142,40 +148,58 @@ export default function CurrencyPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{tc('sort') || '排序'}</TableHead>
+                  <TableHead>{tc('sort')}</TableHead>
                   <TableHead>CODE</TableHead>
                   <TableHead>{tc('currency')}</TableHead>
-                  <TableHead>{tc('symbol') || '符号'}</TableHead>
-                  <TableHead>{tc('decimalPlaces') || '小数位'}</TableHead>
+                  <TableHead>{tc('symbol')}</TableHead>
+                  <TableHead>{tc('decimalPlaces')}</TableHead>
                   <TableHead>{tc('status')}</TableHead>
                   <TableHead>{tc('operation')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currencies.map((currency) => (
-                  <TableRow key={currency.id}>
-                    <TableCell>{currency.sort}</TableCell>
-                    <TableCell className="font-mono">{currency.code}</TableCell>
-                    <TableCell>{currency.name}</TableCell>
-                    <TableCell>{currency.symbol}</TableCell>
-                    <TableCell>{currency.decimal_places}</TableCell>
-                    <TableCell>
-                      <Badge variant={currency.status === 1 ? 'default' : 'secondary'}>
-                        {currency.status === 1 ? tc('enabled') : tc('disabled')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(currency)}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(currency.id)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <RefreshCw className="w-5 h-5 animate-spin mx-auto" />
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : currencies.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      {tc('noData')}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  currencies.map((currency) => (
+                    <TableRow key={currency.id}>
+                      <TableCell>{currency.sort}</TableCell>
+                      <TableCell className="font-mono">{currency.code}</TableCell>
+                      <TableCell>{currency.name}</TableCell>
+                      <TableCell>{currency.symbol}</TableCell>
+                      <TableCell>{currency.decimal_places}</TableCell>
+                      <TableCell>
+                        <Badge variant={currency.status === 1 ? 'default' : 'secondary'}>
+                          {currency.status === 1 ? tc('enabled') : tc('disabled')}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => handleEdit(currency)}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(currency.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -200,7 +224,7 @@ export default function CurrencyPage() {
                 />
               </div>
               <div>
-                <Label>{tc('currency')}名称 *</Label>
+                <Label>{tc('currencyName')} *</Label>
                 <Input
                   value={form.name || ''}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -208,7 +232,7 @@ export default function CurrencyPage() {
                 />
               </div>
               <div>
-                <Label>{tc('symbol') || '符号'}</Label>
+                <Label>{tc('symbol')}</Label>
                 <Input
                   value={form.symbol || ''}
                   onChange={(e) => setForm({ ...form, symbol: e.target.value })}
@@ -216,21 +240,23 @@ export default function CurrencyPage() {
                 />
               </div>
               <div>
-                <Label>{tc('decimalPlaces') || '小数位'}</Label>
+                <Label>{tc('decimalPlaces')}</Label>
                 <Input
                   type="number"
                   value={form.decimal_places ?? 2}
-                  onChange={(e) => setForm({ ...form, decimal_places: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setForm({ ...form, decimal_places: parseInt(e.target.value) || 0 })
+                  }
                   min={0}
                   max={4}
                 />
               </div>
               <div>
-                <Label>{tc('sort') || '排序'}</Label>
+                <Label>{tc('sort')}</Label>
                 <Input
                   type="number"
                   value={form.sort ?? 0}
-                  onChange={(e) => setForm({ ...form, sort: parseInt(e.target.value) })}
+                  onChange={(e) => setForm({ ...form, sort: parseInt(e.target.value) || 0 })}
                 />
               </div>
               <div>
@@ -238,7 +264,7 @@ export default function CurrencyPage() {
                 <select
                   className="w-full border rounded px-2 py-1"
                   value={form.status ?? 1}
-                  onChange={(e) => setForm({ ...form, status: parseInt(e.target.value) })}
+                  onChange={(e) => setForm({ ...form, status: parseInt(e.target.value) || 0 })}
                 >
                   <option value={1}>{tc('enabled')}</option>
                   <option value={0}>{tc('disabled')}</option>
@@ -249,7 +275,9 @@ export default function CurrencyPage() {
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc('save')}</Button>
+              <Button onClick={handleSave} disabled={saving}>
+                {tc('save')}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

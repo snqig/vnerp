@@ -44,6 +44,7 @@ export default function ExchangeRatePage() {
   const [rates, setRates] = useState<ExchangeRate[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     from_currency: 'USD',
     to_currency: 'CNY',
@@ -77,13 +78,14 @@ export default function ExchangeRatePage() {
 
   const handleSave = async () => {
     if (!form.rate || parseFloat(form.rate) <= 0) {
-      toast.error('请输入有效汇率');
+      toast.error(tc('invalidRate'));
       return;
     }
     if (form.from_currency === form.to_currency) {
-      toast.error('源币种和目标币种不能相同');
+      toast.error(tc('sameCurrencyError'));
       return;
     }
+    setSaving(true);
     try {
       const response = await authFetch('/api/system/exchange-rate', {
         method: 'POST',
@@ -91,28 +93,30 @@ export default function ExchangeRatePage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success('汇率录入成功');
+        toast.success(tc('createSuccess'));
         setDialogOpen(false);
         fetchRates();
       } else {
-        toast.error(result.message || '录入失败');
+        toast.error(result.message || tc('operationFailed'));
       }
-    } catch (error) {
-      toast.error('录入失败');
+    } catch {
+      toast.error(tc('operationFailed'));
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确认删除此汇率记录？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const response = await authFetch(`/api/system/exchange-rate?id=${id}`, { method: 'DELETE' });
       const result = await response.json();
       if (result.success) {
-        toast.success('删除成功');
+        toast.success(tc('deleteSuccess'));
         fetchRates();
       }
-    } catch (error) {
-      toast.error('删除失败');
+    } catch {
+      toast.error(tc('deleteFailed'));
     }
   };
 
@@ -142,28 +146,42 @@ export default function ExchangeRatePage() {
                   <TableHead>{tc('originalCurrency')}</TableHead>
                   <TableHead>{tc('baseCurrency')}</TableHead>
                   <TableHead>{tc('exchangeRate')}</TableHead>
-                  <TableHead>{tc('date') || '日期'}</TableHead>
-                  <TableHead>{tc('source') || '来源'}</TableHead>
-                  <TableHead>{tc('remark') || '备注'}</TableHead>
+                  <TableHead>{tc('date')}</TableHead>
+                  <TableHead>{tc('source')}</TableHead>
+                  <TableHead>{tc('remark')}</TableHead>
                   <TableHead>{tc('operation')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rates.map((rate) => (
-                  <TableRow key={rate.id}>
-                    <TableCell className="font-mono">{rate.from_currency}</TableCell>
-                    <TableCell className="font-mono">{rate.to_currency}</TableCell>
-                    <TableCell className="font-mono">{rate.rate}</TableCell>
-                    <TableCell>{rate.rate_date}</TableCell>
-                    <TableCell>{rate.source}</TableCell>
-                    <TableCell>{rate.remark || '-'}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(rate.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <RefreshCw className="w-5 h-5 animate-spin mx-auto" />
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : rates.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      {tc('noData')}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  rates.map((rate) => (
+                    <TableRow key={rate.id}>
+                      <TableCell className="font-mono">{rate.from_currency}</TableCell>
+                      <TableCell className="font-mono">{rate.to_currency}</TableCell>
+                      <TableCell className="font-mono">{rate.rate}</TableCell>
+                      <TableCell>{rate.rate_date}</TableCell>
+                      <TableCell>{rate.source}</TableCell>
+                      <TableCell>{rate.remark || '-'}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(rate.id)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -203,7 +221,7 @@ export default function ExchangeRatePage() {
                 />
               </div>
               <div>
-                <Label>{tc('date') || '日期'} *</Label>
+                <Label>{tc('date')} *</Label>
                 <Input
                   type="date"
                   value={form.rate_date}
@@ -211,11 +229,11 @@ export default function ExchangeRatePage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>{tc('remark') || '备注'}</Label>
+                <Label>{tc('remark')}</Label>
                 <Input
                   value={form.remark}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
-                  placeholder="备注信息"
+                  placeholder={tc('remarkPlaceholder')}
                 />
               </div>
             </div>
@@ -223,7 +241,9 @@ export default function ExchangeRatePage() {
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc('save')}</Button>
+              <Button onClick={handleSave} disabled={saving}>
+                {tc('save')}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
