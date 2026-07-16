@@ -15,15 +15,14 @@ CREATE TABLE IF NOT EXISTS `sys_currency` (
   `update_by` bigint unsigned DEFAULT NULL,
   `deleted` tinyint DEFAULT 0,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_code` (`code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='币种主数据';
+  UNIQUE KEY `uk_currency_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='币种主数据';
 
 -- 预置数据
-INSERT INTO `sys_currency` (`code`, `name`, `symbol`, `decimal_places`, `sort`) VALUES
+INSERT IGNORE INTO `sys_currency` (`code`, `name`, `symbol`, `decimal_places`, `sort`) VALUES
   ('CNY', '人民币', '¥', 2, 1),
   ('USD', '美元', '$', 2, 2),
-  ('VND', '越南盾', '₫', 0, 3)
-ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
+  ('VND', '越南盾', '₫', 0, 3);
 
 -- 2. 汇率表
 CREATE TABLE IF NOT EXISTS `sys_exchange_rate` (
@@ -39,7 +38,7 @@ CREATE TABLE IF NOT EXISTS `sys_exchange_rate` (
   PRIMARY KEY (`id`),
   KEY `idx_from_to_date` (`from_currency`,`to_currency`,`rate_date`),
   KEY `idx_date` (`rate_date`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='汇率表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='汇率表';
 
 -- 3. 公司表加本位币字段（幂等）
 SET @col_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 

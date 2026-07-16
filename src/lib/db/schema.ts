@@ -2298,7 +2298,7 @@ export const sysCurrency = mysqlTable(
     code: varchar('code', { length: 10 }).notNull(),
     name: varchar('name', { length: 50 }).notNull(),
     symbol: varchar('symbol', { length: 10 }),
-    decimalPlaces: int('decimal_places').default(2),
+    decimalPlaces: tinyint('decimal_places').default(2),
     status: tinyint('status').default(1),
     sort: int('sort').default(0),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
@@ -2308,7 +2308,7 @@ export const sysCurrency = mysqlTable(
     deleted: tinyint('deleted').default(0),
   },
   (table) => ({
-    codeIdx: uniqueIndex('uk_code').on(table.code),
+    currencyCodeIdx: uniqueIndex('uk_currency_code').on(table.code),
   })
 );
 
