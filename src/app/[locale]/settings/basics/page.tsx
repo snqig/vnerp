@@ -1,11 +1,16 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useRouter } from '@/i18n/navigation';
 import { MainLayout } from '@/components/layout';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import {
   Settings,
+  Save,
   FileText,
   Scissors,
   LayoutGrid,
@@ -16,7 +21,6 @@ import {
   Factory,
   ShieldCheck,
   Palette,
-  ChevronRight,
 } from 'lucide-react';
 import { ThemeSettings } from '@/components/theme-settings';
 import { toast } from 'sonner';
@@ -59,509 +63,200 @@ interface SystemConfigResponse {
   message?: string;
 }
 
-const configRouteMap: Record<string, { path: string; icon: React.ReactNode; description: string }> =
-  {
-    系统基础配置: {
-      path: '/settings/config',
-      icon: <Settings className="h-5 w-5" />,
-      description: '系统全局配置、基础参数设置',
-    },
-    单据编码规则: {
-      path: '/settings/config',
-      icon: <FileText className="h-5 w-5" />,
-      description: '各类单据编号生成规则配置',
-    },
-    刀模配置: {
-      path: '/dcprint/die',
-      icon: <Scissors className="h-5 w-5" />,
-      description: '刀模模板管理、寿命设置',
-    },
-    网版配置: {
-      path: '/dcprint/screen-plate',
-      icon: <LayoutGrid className="h-5 w-5" />,
-      description: '网版管理、印刷参数配置',
-    },
-    原材料保质期: {
-      path: '/warehouse/inventory',
-      icon: <Package className="h-5 w-5" />,
-      description: '原材料有效期预警设置',
-    },
-    小料拆分标准: {
-      path: '/warehouse/inventory',
-      icon: <Scaling className="h-5 w-5" />,
-      description: '物料拆分规格标准配置',
-    },
-    仓库管理规则: {
-      path: '/warehouse/setup',
-      icon: <Warehouse className="h-5 w-5" />,
-      description: '仓库分类、库位管理规则',
-    },
-    盘点周期管理: {
-      path: '/warehouse/stocktaking',
-      icon: <RefreshCw className="h-5 w-5" />,
-      description: '盘点计划、周期设置',
-    },
-    生产与品质规则: {
-      path: '/production/workorder',
-      icon: <Factory className="h-5 w-5" />,
-      description: '生产流程、品质检验规则',
-    },
-    审批规则: {
-      path: '/settings/config',
-      icon: <ShieldCheck className="h-5 w-5" />,
-      description: '审批流程、权限配置',
-    },
-  };
-
-const mockConfigData: SystemConfigResponse = {
-  success: true,
-  data: {
-    list: [
-      {
-        id: 1,
-        config_name: '系统名称',
-        config_key: 'system_name',
-        config_value: 'Print MIS ERP',
-        config_type: 'string',
-        category: '系统基础配置',
-        display_name: '系统名称',
-        description: '系统显示名称',
-        sort_order: 1,
-        is_required: true,
-        approval_required: false,
-        status: 1,
-      },
-      {
-        id: 2,
-        config_name: '系统版本',
-        config_key: 'system_version',
-        config_value: 'v0.3.1',
-        config_type: 'string',
-        category: '系统基础配置',
-        display_name: '系统版本',
-        description: '当前系统版本号',
-        sort_order: 2,
-        is_required: false,
-        approval_required: false,
-        status: 1,
-      },
-      {
-        id: 3,
-        config_name: '编码前缀',
-        config_key: 'code_prefix',
-        config_value: 'SO',
-        config_type: 'string',
-        category: '单据编码规则',
-        display_name: '销售订单编码前缀',
-        description: '销售订单编号前缀',
-        sort_order: 1,
-        is_required: true,
-        approval_required: false,
-        status: 1,
-      },
-      {
-        id: 4,
-        config_name: '编码位数',
-        config_key: 'code_digits',
-        config_value: '4',
-        config_type: 'number',
-        category: '单据编码规则',
-        display_name: '编码流水位数',
-        description: '编号流水号位数',
-        sort_order: 2,
-        is_required: true,
-        approval_required: false,
-        status: 1,
-      },
-      {
-        id: 5,
-        config_name: '刀模预警阈值',
-        config_key: 'die_warning_threshold',
-        config_value: '80',
-        config_type: 'number',
-        category: '刀模配置',
-        display_name: '刀模预警阈值',
-        description: '刀模使用次数达到此百分比时预警',
-        sort_order: 1,
-        is_required: true,
-        approval_required: false,
-        status: 1,
-      },
-      {
-        id: 6,
-        config_name: '网版预警阈值',
-        config_key: 'screen_warning_threshold',
-        config_value: '85',
-        config_type: 'number',
-        category: '网版配置',
-        display_name: '网版预警阈值',
-        description: '网版使用次数达到此百分比时预警',
-        sort_order: 1,
-        is_required: true,
-        approval_required: false,
-        status: 1,
-      },
-      {
-        id: 7,
-        config_name: '原材料保质期天数',
-        config_key: 'material_expiry_days',
-        config_value: '90',
-        config_type: 'number',
-        category: '原材料保质期',
-        display_name: '原材料保质期天数',
-        description: '原材料默认保质期天数',
-        sort_order: 1,
-        is_required: true,
-        approval_required: false,
-        status: 1,
-      },
-      {
-        id: 8,
-        config_name: '小料拆分最小量',
-        config_key: 'small_material_split_min',
-        config_value: '100',
-        config_type: 'number',
-        category: '小料拆分标准',
-        display_name: '小料拆分最小量',
-        description: '小料拆分的最小数量',
-        sort_order: 1,
-        is_required: true,
-        approval_required: false,
-        status: 1,
-      },
-      {
-        id: 9,
-        config_name: '仓库启用批次管理',
-        config_key: 'warehouse_batch_enabled',
-        config_value: 'true',
-        config_type: 'boolean',
-        category: '仓库管理规则',
-        display_name: '启用批次管理',
-        description: '是否启用库存批次管理',
-        sort_order: 1,
-        is_required: true,
-        approval_required: false,
-        status: 1,
-      },
-      {
-        id: 10,
-        config_name: '盘点周期天数',
-        config_key: 'stocktaking_cycle_days',
-        config_value: '30',
-        config_type: 'number',
-        category: '盘点周期管理',
-        display_name: '盘点周期天数',
-        description: '定期盘点的周期天数',
-        sort_order: 1,
-        is_required: true,
-        approval_required: false,
-        status: 1,
-      },
-      {
-        id: 11,
-        config_name: '品质检验严格模式',
-        config_key: 'quality_strict_mode',
-        config_value: 'true',
-        config_type: 'boolean',
-        category: '生产与品质规则',
-        display_name: '品质检验严格模式',
-        description: '是否启用严格的品质检验',
-        sort_order: 1,
-        is_required: true,
-        approval_required: false,
-        status: 1,
-      },
-      {
-        id: 12,
-        config_name: '审批流程启用',
-        config_key: 'approval_enabled',
-        config_value: 'true',
-        config_type: 'boolean',
-        category: '审批规则',
-        display_name: '启用审批流程',
-        description: '是否启用单据审批流程',
-        sort_order: 1,
-        is_required: true,
-        approval_required: false,
-        status: 1,
-      },
-    ],
-    categories: [
-      '系统基础配置',
-      '单据编码规则',
-      '刀模配置',
-      '网版配置',
-      '原材料保质期',
-      '小料拆分标准',
-      '仓库管理规则',
-      '盘点周期管理',
-      '生产与品质规则',
-      '审批规则',
-    ],
-    grouped: {
-      系统基础配置: [
-        {
-          id: 1,
-          config_name: '系统名称',
-          config_key: 'system_name',
-          config_value: 'Print MIS ERP',
-          config_type: 'string',
-          category: '系统基础配置',
-          display_name: '系统名称',
-          description: '系统显示名称',
-          sort_order: 1,
-          is_required: true,
-          approval_required: false,
-          status: 1,
-        },
-        {
-          id: 2,
-          config_name: '系统版本',
-          config_key: 'system_version',
-          config_value: 'v0.3.1',
-          config_type: 'string',
-          category: '系统基础配置',
-          display_name: '系统版本',
-          description: '当前系统版本号',
-          sort_order: 2,
-          is_required: false,
-          approval_required: false,
-          status: 1,
-        },
-      ],
-      单据编码规则: [
-        {
-          id: 3,
-          config_name: '编码前缀',
-          config_key: 'code_prefix',
-          config_value: 'SO',
-          config_type: 'string',
-          category: '单据编码规则',
-          display_name: '销售订单编码前缀',
-          description: '销售订单编号前缀',
-          sort_order: 1,
-          is_required: true,
-          approval_required: false,
-          status: 1,
-        },
-        {
-          id: 4,
-          config_name: '编码位数',
-          config_key: 'code_digits',
-          config_value: '4',
-          config_type: 'number',
-          category: '单据编码规则',
-          display_name: '编码流水位数',
-          description: '编号流水号位数',
-          sort_order: 2,
-          is_required: true,
-          approval_required: false,
-          status: 1,
-        },
-      ],
-      刀模配置: [
-        {
-          id: 5,
-          config_name: '刀模预警阈值',
-          config_key: 'die_warning_threshold',
-          config_value: '80',
-          config_type: 'number',
-          category: '刀模配置',
-          display_name: '刀模预警阈值',
-          description: '刀模使用次数达到此百分比时预警',
-          sort_order: 1,
-          is_required: true,
-          approval_required: false,
-          status: 1,
-        },
-      ],
-      网版配置: [
-        {
-          id: 6,
-          config_name: '网版预警阈值',
-          config_key: 'screen_warning_threshold',
-          config_value: '85',
-          config_type: 'number',
-          category: '网版配置',
-          display_name: '网版预警阈值',
-          description: '网版使用次数达到此百分比时预警',
-          sort_order: 1,
-          is_required: true,
-          approval_required: false,
-          status: 1,
-        },
-      ],
-      原材料保质期: [
-        {
-          id: 7,
-          config_name: '原材料保质期天数',
-          config_key: 'material_expiry_days',
-          config_value: '90',
-          config_type: 'number',
-          category: '原材料保质期',
-          display_name: '原材料保质期天数',
-          description: '原材料默认保质期天数',
-          sort_order: 1,
-          is_required: true,
-          approval_required: false,
-          status: 1,
-        },
-      ],
-      小料拆分标准: [
-        {
-          id: 8,
-          config_name: '小料拆分最小量',
-          config_key: 'small_material_split_min',
-          config_value: '100',
-          config_type: 'number',
-          category: '小料拆分标准',
-          display_name: '小料拆分最小量',
-          description: '小料拆分的最小数量',
-          sort_order: 1,
-          is_required: true,
-          approval_required: false,
-          status: 1,
-        },
-      ],
-      仓库管理规则: [
-        {
-          id: 9,
-          config_name: '仓库启用批次管理',
-          config_key: 'warehouse_batch_enabled',
-          config_value: 'true',
-          config_type: 'boolean',
-          category: '仓库管理规则',
-          display_name: '启用批次管理',
-          description: '是否启用库存批次管理',
-          sort_order: 1,
-          is_required: true,
-          approval_required: false,
-          status: 1,
-        },
-      ],
-      盘点周期管理: [
-        {
-          id: 10,
-          config_name: '盘点周期天数',
-          config_key: 'stocktaking_cycle_days',
-          config_value: '30',
-          config_type: 'number',
-          category: '盘点周期管理',
-          display_name: '盘点周期天数',
-          description: '定期盘点的周期天数',
-          sort_order: 1,
-          is_required: true,
-          approval_required: false,
-          status: 1,
-        },
-      ],
-      生产与品质规则: [
-        {
-          id: 11,
-          config_name: '品质检验严格模式',
-          config_key: 'quality_strict_mode',
-          config_value: 'true',
-          config_type: 'boolean',
-          category: '生产与品质规则',
-          display_name: '品质检验严格模式',
-          description: '是否启用严格的品质检验',
-          sort_order: 1,
-          is_required: true,
-          approval_required: false,
-          status: 1,
-        },
-      ],
-      审批规则: [
-        {
-          id: 12,
-          config_name: '审批流程启用',
-          config_key: 'approval_enabled',
-          config_value: 'true',
-          config_type: 'boolean',
-          category: '审批规则',
-          display_name: '启用审批流程',
-          description: '是否启用单据审批流程',
-          sort_order: 1,
-          is_required: true,
-          approval_required: false,
-          status: 1,
-        },
-      ],
-    },
-  },
-};
-
 export default function BasicsSettingsPage() {
+  // 翻译钩子
   const tc = useTranslations('Common');
-  const router = useRouter();
 
   const { hasRole, isAuthenticated } = useAuth();
   const { hasPermission } = usePermission();
+  const [activeTab, setActiveTab] = useState<string>('theme');
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [configGroups, setConfigGroups] = useState<ConfigGroup[]>([]);
+  const [configValues, setConfigValues] = useState<Record<string, string>>({});
   const [categories, setCategories] = useState<string[]>([]);
 
+  // 等待用户认证状态确定后才计算isAdmin
   const isAdmin = isAuthenticated && hasRole('super_admin');
 
   const loadConfigs = useCallback(async () => {
-    console.log('[Settings/Basics] 开始加载配置数据...');
     try {
       setLoading(true);
-
-      console.log('[Settings/Basics] 调用 API: GET /api/settings/system');
       const result = await ApiClient.get<SystemConfigResponse>('/api/settings/system');
 
       if (result.success && result.data) {
-        console.log('[Settings/Basics] API 返回成功，分类数量:', result.data.categories.length);
-        console.log('[Settings/Basics] 返回的分类:', result.data.categories);
+        const groups: ConfigGroup[] = [];
+        const values: Record<string, string> = {};
+
+        result.data.categories.forEach((category) => {
+          const items = result.data.grouped[category] || [];
+          if (items.length > 0) {
+            groups.push({
+              category,
+              display_name: category,
+              items: items.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
+            });
+          }
+
+          items.forEach((item) => {
+            values[item.config_key] = item.config_value;
+          });
+        });
+
+        setConfigGroups(groups);
         setCategories(result.data.categories);
-      } else {
-        console.log('[Settings/Basics] API 返回失败，使用模拟数据');
-        setCategories(mockConfigData.data.categories);
+        setConfigValues(values);
+
+        // 使用返回的分类数据，而不是state中的旧值
+        if (groups.length > 0 && !result.data.categories.includes(activeTab)) {
+          setActiveTab(groups[0].category);
+        }
       }
-    } catch (error) {
-      console.error('[Settings/Basics] API 调用失败:', (error as Error).message);
-      console.log('[Settings/Basics] 切换到模拟数据模式');
-      setCategories(mockConfigData.data.categories);
-      toast.warning('配置数据加载失败，使用本地模拟数据');
+    } catch {
+      toast.error('加载配置失败');
     } finally {
       setLoading(false);
-      setCategories((prev) => {
-        console.log('[Settings/Basics] 配置数据加载完成，当前分类:', prev);
-        return prev;
-      });
     }
-  }, []);
+  }, [activeTab]);
 
   useEffect(() => {
-    console.log('[Settings/Basics] useEffect 触发，isAdmin:', isAdmin);
     if (isAdmin) {
       loadConfigs();
     } else {
       setLoading(false);
-      console.log('[Settings/Basics] 非管理员，跳过配置加载');
     }
-  }, [isAdmin]);
+  }, [isAdmin, loadConfigs]);
 
-  const handleCardClick = (category: string) => {
-    const routeInfo = configRouteMap[category];
-    console.log('[Settings/Basics] 点击配置分类:', category);
-    console.log('[Settings/Basics] 路由信息:', routeInfo);
+  const handleValueChange = (key: string, value: string) => {
+    setConfigValues((prev) => ({ ...prev, [key]: value }));
+  };
 
-    if (!routeInfo) {
-      console.error('[Settings/Basics] 未找到路由映射:', category);
-      toast.error(`未找到 "${category}" 的跳转路径`);
-      return;
-    }
+  const handleSave = async (category: string) => {
+    const group = configGroups.find((g) => g.category === category);
+    if (!group) return;
 
-    console.log('[Settings/Basics] 准备跳转到:', routeInfo.path);
-
+    setSaving(true);
     try {
-      router.push(routeInfo.path);
-      console.log('[Settings/Basics] 路由跳转成功');
-    } catch (error) {
-      console.error('[Settings/Basics] 路由跳转失败:', (error as Error).message);
-      toast.error(`跳转失败: ${(error as Error).message}`);
+      const updates = group.items.map((item) => ({
+        config_key: item.config_key,
+        config_value: configValues[item.config_key] ?? item.config_value,
+      }));
+
+      const result = await ApiClient.post('/api/settings/system', { updates });
+
+      if (result.success) {
+        toast.success(result.message || '保存成功');
+        await loadConfigs();
+      } else {
+        toast.error(result.message || '保存失败');
+      }
+    } catch (e) {
+      toast.error((e as Error).message || '保存失败');
+    } finally {
+      setSaving(false);
     }
+  };
+
+  const renderConfigItem = (item: ConfigItem) => {
+    const value = configValues[item.config_key] ?? item.config_value;
+
+    switch (item.config_type) {
+      case 'boolean':
+        return (
+          <div
+            key={item.config_key}
+            className="flex items-center justify-between p-3 border rounded-lg"
+          >
+            <div>
+              <Label className="font-medium">{item.display_name || item.config_name}</Label>
+              {item.description && (
+                <p className="text-sm text-muted-foreground">{item.description}</p>
+              )}
+            </div>
+            <Switch
+              checked={value === 'true'}
+              onCheckedChange={(v) => handleValueChange(item.config_key, String(v))}
+            />
+          </div>
+        );
+
+      case 'number':
+        return (
+          <div key={item.config_key} className="space-y-2">
+            <Label>{item.display_name || item.config_name}</Label>
+            {item.description && (
+              <p className="text-sm text-muted-foreground">{item.description}</p>
+            )}
+            <Input
+              type="number"
+              min={item.min}
+              max={item.max}
+              value={value}
+              onChange={(e) => handleValueChange(item.config_key, e.target.value)}
+            />
+          </div>
+        );
+
+      case 'string':
+        return (
+          <div key={item.config_key} className="space-y-2">
+            <Label>{item.display_name || item.config_name}</Label>
+            {item.description && (
+              <p className="text-sm text-muted-foreground">{item.description}</p>
+            )}
+            <Input
+              value={value}
+              onChange={(e) => handleValueChange(item.config_key, e.target.value)}
+            />
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const renderConfigGroup = (group: ConfigGroup) => {
+    const iconMap: Record<string, React.ReactNode> = {
+      单据编码规则: <FileText className="h-5 w-5" />,
+      刀模配置: <Scissors className="h-5 w-5" />,
+      网版配置: <LayoutGrid className="h-5 w-5" />,
+      原材料保质期: <Package className="h-5 w-5" />,
+      小料拆分标准: <Scaling className="h-5 w-5" />,
+      仓库管理规则: <Warehouse className="h-5 w-5" />,
+      盘点周期管理: <RefreshCw className="h-5 w-5" />,
+      生产与品质规则: <Factory className="h-5 w-5" />,
+      审批规则: <ShieldCheck className="h-5 w-5" />,
+      系统基础配置: <Settings className="h-5 w-5" />,
+    };
+
+    return (
+      <Card key={group.category}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {iconMap[group.category] || <Settings className="h-5 w-5" />}
+            {group.display_name || group.category}
+          </CardTitle>
+          <CardDescription>
+            配置
+            {group.display_name || group.category}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {group.items.map((item) => renderConfigItem(item))}
+          </div>
+        </CardContent>
+        <div className="px-6 pb-6 flex justify-end">
+          {hasPermission('settings:basics:edit') && (
+            <Button onClick={() => handleSave(group.category)} disabled={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? '保存中...' : '保存设置'}
+            </Button>
+          )}
+        </div>
+      </Card>
+    );
   };
 
   if (loading) {
@@ -577,55 +272,42 @@ export default function BasicsSettingsPage() {
   return (
     <MainLayout title="系统设置">
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              系统配置导航
-            </CardTitle>
-            <CardDescription>点击以下分类进入对应功能模块进行配置</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categories.map((category) => {
-                const routeInfo = configRouteMap[category];
-                if (!routeInfo) {
-                  console.warn('[Settings/Basics] 未配置路由映射:', category);
-                  return null;
-                }
-                return (
-                  <button
-                    key={category}
-                    onClick={() => handleCardClick(category)}
-                    className="group flex items-center p-4 border rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer w-full text-left"
-                  >
-                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                      {routeInfo.icon}
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <h4 className="font-medium text-gray-900">{category}</h4>
-                      <p className="text-sm text-gray-500">{routeInfo.description}</p>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
-                  </button>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Palette className="h-5 w-5" />
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="flex flex-wrap w-full gap-1">
+            {isAdmin &&
+              categories.map((category) => (
+                <TabsTrigger key={category} value={category} className="flex items-center gap-1">
+                  {category}
+                </TabsTrigger>
+              ))}
+            <TabsTrigger value="theme" className="flex items-center gap-1">
+              <Palette className="h-4 w-4" />
               主题设置
-            </CardTitle>
-            <CardDescription>{tc('text_kxopjs')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ThemeSettings />
-          </CardContent>
-        </Card>
+            </TabsTrigger>
+          </TabsList>
+
+          {isAdmin &&
+            configGroups.map((group) => (
+              <TabsContent key={group.category} value={group.category} className="space-y-6">
+                {renderConfigGroup(group)}
+              </TabsContent>
+            ))}
+
+          <TabsContent value="theme" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  主题设置
+                </CardTitle>
+                <CardDescription>{tc('text_kxopjs')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ThemeSettings />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </MainLayout>
   );

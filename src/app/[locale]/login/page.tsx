@@ -712,7 +712,7 @@ export default function LoginPage() {
               <Input
                 id="username"
                 type="text"
-                placeholder={tc('pleaseInput') + t('username')}
+                placeholder={`${tc('pleaseInput')} ${t('username')}`}
                 value={loginForm.username}
                 autoComplete="off"
                 onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
@@ -732,7 +732,7 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder={tc('pleaseInput') + t('password')}
+                  placeholder={`${tc('pleaseInput')} ${t('password')}`}
                   value={loginForm.password}
                   onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                   required
@@ -820,7 +820,7 @@ export default function LoginPage() {
                 onChange={(e) =>
                   setChangePwdForm({ ...changePwdForm, oldPassword: e.target.value })
                 }
-                placeholder={tc('pleaseInput') + t('oldPassword')}
+                placeholder={`${tc('pleaseInput')} ${t('oldPassword')}`}
               />
             </div>
             <div>
@@ -842,7 +842,7 @@ export default function LoginPage() {
                 onChange={(e) =>
                   setChangePwdForm({ ...changePwdForm, confirmPassword: e.target.value })
                 }
-                placeholder={tc('pleaseInput') + t('confirmPassword')}
+                placeholder={`${tc('pleaseInput')} ${t('confirmPassword')}`}
               />
             </div>
           </div>

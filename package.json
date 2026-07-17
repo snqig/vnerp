@@ -1,6 +1,6 @@
 {
   "name": "vnerp",
-  "version": "0.3.1",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 5000",
@@ -23,7 +23,6 @@
     "test:unit": "vitest",
     "test:unit:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:coverage:ci": "vitest run --coverage --reporter=junit --reporter=default",
     "db:studio": "drizzle-kit studio",
     "db:generate": "pnpm dlx drizzle-kit generate",
     "db:push": "pnpm dlx drizzle-kit push",

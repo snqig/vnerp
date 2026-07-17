@@ -298,9 +298,11 @@ export default function EmployeePage() {
 
       const result = await response.json();
       if (result.success) {
-        setForm({ ...form, photo: result.data?.url });
+        const photoUrl = result.data?.url;
+        // 使用函数式更新避免闭包陈旧问题：用最新 form state 而非闭包中的 form
+        setForm((prev) => ({ ...prev, photo: photoUrl }));
         logger.info({ module: 'Hr', action: 'handleUpload' }, '照片上传成功', {
-          url: result.data?.url,
+          url: photoUrl,
         });
         toast.success(t('uploadSuccess'));
       } else {
@@ -328,7 +330,7 @@ export default function EmployeePage() {
     logger.info({ module: 'Hr', action: 'handleRemovePhoto' }, '删除员工照片', {
       employeeName: form.name,
     });
-    setForm({ ...form, photo: undefined });
+    setForm((prev) => ({ ...prev, photo: undefined }));
   };
 
   // 保存员工

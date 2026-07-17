@@ -20,6 +20,7 @@ import { ArrowLeft, Package, Receipt, FileText } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import ApiClient from '@/lib/api-client';
 import { logger } from '@/lib/logger';
+import { MoneyDisplay } from '@/components/ui/money-display';
 
 interface PurchaseOrderDetail {
   id: number;
@@ -29,9 +30,14 @@ interface PurchaseOrderDetail {
   supplier_code: string;
   order_date: string;
   delivery_date: string;
+  currency: string;
   total_amount: number;
   total_quantity: number;
   grand_total: number;
+  base_currency?: string;
+  base_total_amount?: number;
+  base_tax_amount?: number;
+  base_grand_total?: number;
   status: number;
   status_label?: string;
   remark: string;
@@ -52,6 +58,10 @@ interface PurchaseOrderLine {
   received_qty: number;
   unit_price: number;
   amount: number;
+  base_unit_price?: number;
+  base_amount?: number;
+  base_tax_amount?: number;
+  base_line_total?: number;
   [key: string]: unknown;
 }
 
@@ -341,9 +351,19 @@ export default function PurchaseOrderDetailPage() {
                 <p className="font-medium">{formatDate(order.delivery_date)}</p>
               </div>
               <div>
+                <span className="text-muted-foreground">{tc('currency')}</span>
+                <p className="font-medium">{order.currency || 'CNY'}</p>
+              </div>
+              <div>
                 <span className="text-muted-foreground">{tc('amount')}</span>
                 <p className="font-medium">
-                  {formatCurrency(order.grand_total || order.total_amount)}
+                  <MoneyDisplay
+                    amount={Number(order.grand_total || order.total_amount || 0)}
+                    currency={order.currency || 'CNY'}
+                    baseAmount={order.base_grand_total}
+                    baseCurrency={order.base_currency}
+                    showSymbol
+                  />
                 </p>
               </div>
               <div>
@@ -393,6 +413,7 @@ export default function PurchaseOrderDetailPage() {
                       <TableHead>{tc('unit')}</TableHead>
                       <TableHead className="text-right">{t('unitPrice')}</TableHead>
                       <TableHead className="text-right">{tc('amount')}</TableHead>
+                      <TableHead className="text-right">{tc('baseCurrencyAmount')}</TableHead>
                       <TableHead className="text-right">{t('receivedQty')}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -412,12 +433,27 @@ export default function PurchaseOrderDetailPage() {
                           <TableCell className="text-right font-medium">
                             {Number(line.amount || 0).toFixed(2)}
                           </TableCell>
+                          <TableCell className="text-right">
+                            {line.base_amount !== undefined ? (
+                              <span className="font-medium">
+                                {Number(line.base_amount).toLocaleString('zh-CN', {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                                <span className="text-xs text-muted-foreground ml-1">
+                                  {order.base_currency || 'CNY'}
+                                </span>
+                              </span>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
                           <TableCell className="text-right">{line.received_qty ?? 0}</TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
+                        <TableCell colSpan={10} className="text-center py-6 text-muted-foreground">
                           {t('noDetailData')}
                         </TableCell>
                       </TableRow>

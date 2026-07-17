@@ -3,7 +3,10 @@ import {
   PurchaseReconciliationStatus,
   PurchaseReconciliationStatusValue,
 } from '../value-objects/PurchaseReconciliationStatus';
-import { PurchaseWriteOffRecord, PurchaseWriteOffRecordProps } from '../entities/PurchaseWriteOffRecord';
+import {
+  PurchaseWriteOffRecord,
+  PurchaseWriteOffRecordProps,
+} from '../entities/PurchaseWriteOffRecord';
 import {
   PurchaseReconciliationCreatedEvent,
   PurchaseReconciliationConfirmedEvent,
@@ -35,6 +38,15 @@ export interface PurchaseReconciliationProps {
   supplierName: string;
   periodStart: string;
   periodEnd: string;
+  currency?: string;
+  exchangeRate?: number;
+  baseCurrency?: string;
+  baseReceiptAmount?: number;
+  baseReturnAmount?: number;
+  baseNetAmount?: number;
+  baseDiscountAmount?: number;
+  basePaidAmount?: number;
+  baseBalanceAmount?: number;
   receiptAmount: number;
   returnAmount: number;
   netAmount?: number;
@@ -70,6 +82,15 @@ export class PurchaseReconciliation {
     private _discountAmount: number,
     private _paidAmount: number,
     private _balanceAmount: number,
+    public readonly currency: string,
+    public readonly exchangeRate: number,
+    public readonly baseCurrency: string,
+    private _baseReceiptAmount: number,
+    private _baseReturnAmount: number,
+    private _baseNetAmount: number,
+    private _baseDiscountAmount: number,
+    private _basePaidAmount: number,
+    private _baseBalanceAmount: number,
     private _lines: PurchaseReconciliationLineProps[],
     private _writeOffRecords: PurchaseWriteOffRecord[],
     public readonly remark: string,
@@ -104,6 +125,16 @@ export class PurchaseReconciliation {
     const discountAmount = roundMoney(props.discountAmount || 0);
     const balanceAmount = roundMoney(netAmount - discountAmount);
 
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseReceiptAmount = props.baseReceiptAmount ?? 0;
+    const baseReturnAmount = props.baseReturnAmount ?? 0;
+    const baseNetAmount = props.baseNetAmount ?? 0;
+    const baseDiscountAmount = props.baseDiscountAmount ?? 0;
+    const basePaidAmount = props.basePaidAmount ?? 0;
+    const baseBalanceAmount = props.baseBalanceAmount ?? 0;
+
     const order = new PurchaseReconciliation(
       props.id,
       props.reconciliationNo || '',
@@ -118,6 +149,15 @@ export class PurchaseReconciliation {
       discountAmount,
       0,
       balanceAmount,
+      currency,
+      exchangeRate,
+      baseCurrency,
+      baseReceiptAmount,
+      baseReturnAmount,
+      baseNetAmount,
+      baseDiscountAmount,
+      basePaidAmount,
+      baseBalanceAmount,
       props.lines || [],
       [],
       props.remark || '',
@@ -140,6 +180,12 @@ export class PurchaseReconciliation {
           receiptAmount: order._receiptAmount,
           returnAmount: order._returnAmount,
           netAmount: order._netAmount,
+          currency: order.currency,
+          exchangeRate: order.exchangeRate,
+          baseCurrency: order.baseCurrency,
+          baseReceiptAmount: order.baseReceiptAmount,
+          baseNetAmount: order.baseNetAmount,
+          baseBalanceAmount: order.baseBalanceAmount,
         })
       );
     }
@@ -178,6 +224,15 @@ export class PurchaseReconciliation {
       discountAmount,
       paidAmount,
       balanceAmount,
+      props.currency || 'CNY',
+      props.exchangeRate || 1.0,
+      props.baseCurrency || 'CNY',
+      props.baseReceiptAmount ?? 0,
+      props.baseReturnAmount ?? 0,
+      props.baseNetAmount ?? 0,
+      props.baseDiscountAmount ?? 0,
+      props.basePaidAmount ?? 0,
+      props.baseBalanceAmount ?? 0,
       props.lines || [],
       writeOffRecords,
       props.remark || '',
@@ -211,6 +266,24 @@ export class PurchaseReconciliation {
   }
   get balanceAmount(): number {
     return this._balanceAmount;
+  }
+  get baseReceiptAmount(): number {
+    return this._baseReceiptAmount;
+  }
+  get baseReturnAmount(): number {
+    return this._baseReturnAmount;
+  }
+  get baseNetAmount(): number {
+    return this._baseNetAmount;
+  }
+  get baseDiscountAmount(): number {
+    return this._baseDiscountAmount;
+  }
+  get basePaidAmount(): number {
+    return this._basePaidAmount;
+  }
+  get baseBalanceAmount(): number {
+    return this._baseBalanceAmount;
   }
   get confirmBy(): number | undefined {
     return this._confirmBy;
@@ -288,9 +361,7 @@ export class PurchaseReconciliation {
 
     const currentBalance = roundMoney(this._balanceAmount);
     if (roundedAmount > currentBalance) {
-      throw new DomainError(
-        `核销金额${roundedAmount}超过对账单余额${currentBalance}`
-      );
+      throw new DomainError(`核销金额${roundedAmount}超过对账单余额${currentBalance}`);
     }
 
     const record = PurchaseWriteOffRecord.create({
@@ -302,9 +373,7 @@ export class PurchaseReconciliation {
     this._writeOffRecords.push(record);
 
     this._paidAmount = roundMoney(this._paidAmount + roundedAmount);
-    this._balanceAmount = roundMoney(
-      this._netAmount - this._discountAmount - this._paidAmount
-    );
+    this._balanceAmount = roundMoney(this._netAmount - this._discountAmount - this._paidAmount);
 
     if (roundMoney(this._balanceAmount) <= 0) {
       this._status = this._status.transitionTo(4);

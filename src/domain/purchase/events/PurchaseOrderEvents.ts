@@ -12,6 +12,11 @@ export class PurchaseOrderCreatedEvent implements DomainEvent {
       supplierName: string;
       totalAmount: number;
       totalQuantity: number;
+      currency?: string;
+      exchangeRate?: number;
+      baseCurrency?: string;
+      baseTotalAmount?: number;
+      baseGrandTotal?: number;
     }
   ) {}
 }

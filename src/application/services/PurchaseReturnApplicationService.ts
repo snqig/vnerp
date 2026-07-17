@@ -1,22 +1,36 @@
 import { IPurchaseReturnRepository } from '@/domain/purchase/repositories/IPurchaseReturnRepository';
+import { IPurchaseOrderRepository } from '@/domain/purchase/repositories/IPurchaseOrderRepository';
 import {
   PurchaseReturn,
   PurchaseReturnProps,
   OutboundResult,
   PayableRefundResult,
 } from '@/domain/purchase/aggregates/PurchaseReturn';
+import { PurchaseReturnLineProps } from '@/domain/purchase/entities/PurchaseReturnLine';
 import { MysqlPurchaseReturnRepository } from '@/infrastructure/repositories/MysqlPurchaseReturnRepository';
+import { MysqlPurchaseOrderRepository } from '@/infrastructure/repositories/MysqlPurchaseOrderRepository';
 import { DomainError, DomainEvent, NotFoundError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { query, transaction } from '@/lib/db';
+import { getSystemConfig } from '@/lib/system-config';
 import { generateDocumentNo } from '@/lib/document-numbering';
+import { CurrencyApplicationService } from './CurrencyApplicationService';
+import { MysqlCurrencyRepository } from '@/infrastructure/repositories/MysqlCurrencyRepository';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 export class PurchaseReturnApplicationService {
-  constructor(private readonly returnRepo: IPurchaseReturnRepository) {}
+  constructor(
+    private readonly returnRepo: IPurchaseReturnRepository,
+    private readonly orderRepo: IPurchaseOrderRepository,
+    private readonly currencyService: CurrencyApplicationService
+  ) {}
 
   static create(): PurchaseReturnApplicationService {
-    return new PurchaseReturnApplicationService(new MysqlPurchaseReturnRepository());
+    return new PurchaseReturnApplicationService(
+      new MysqlPurchaseReturnRepository(),
+      new MysqlPurchaseOrderRepository(),
+      new CurrencyApplicationService(new MysqlCurrencyRepository())
+    );
   }
 
   async getReturnById(id: number): Promise<PurchaseReturn> {
@@ -26,7 +40,38 @@ export class PurchaseReturnApplicationService {
   }
 
   async createReturn(props: PurchaseReturnProps): Promise<{ id: number; returnNo: string }> {
-    const ret = PurchaseReturn.create(props);
+    // 从原采购单继承币种信息
+    const originalOrder = await this.orderRepo.findById(props.orderId);
+    if (!originalOrder) {
+      throw new NotFoundError('原采购订单不存在');
+    }
+
+    const currency = originalOrder.currency;
+    const exchangeRate = originalOrder.exchangeRate;
+    const baseCurrency = originalOrder.baseCurrency;
+
+    // 计算明细行本位币金额
+    const lines: PurchaseReturnLineProps[] = props.lines.map((line) => {
+      const baseUnitPrice = Number((line.unitPrice * exchangeRate).toFixed(2));
+      const baseAmount = Number((line.quantity * line.unitPrice * exchangeRate).toFixed(2));
+      return { ...line, baseUnitPrice, baseAmount };
+    });
+
+    // 计算表头本位币合计
+    const totalAmount = lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0);
+    const baseTotalAmount = Number((totalAmount * exchangeRate).toFixed(2));
+
+    const returnProps: PurchaseReturnProps = {
+      ...props,
+      currency,
+      exchangeRate,
+      baseCurrency,
+      totalAmount,
+      baseTotalAmount,
+      lines,
+    };
+
+    const ret = PurchaseReturn.create(returnProps);
     const result = await this.returnRepo.save(ret);
     await this.persistAndPublishEvents('PurchaseReturn', result.id, ret);
     return { id: result.id, returnNo: result.returnNo };

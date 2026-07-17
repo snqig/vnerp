@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { getMessages } from 'next-intl/server';
 import { cookies } from 'next/headers';
 import { IntlProvider } from '@/components/IntlProvider';
@@ -11,16 +12,37 @@ import { HtmlLangSetter } from '@/components/HtmlLangSetter';
 import { query } from '@/lib/db';
 import { getMenusByToken } from '@/lib/menu-service';
 
-async function getCompanyName(): Promise<string> {
+let cachedCompanyName: string | null = null;
+let cacheTimestamp: number = 0;
+const CACHE_TTL = 5 * 60 * 1000;
+
+async function getMessagesByLocale(locale: string) {
+  try {
+    return (await import(`../../../messages/${locale}.json`)).default;
+  } catch {
+    return (await import(`../../../messages/zh-CN.json`)).default;
+  }
+}
+
+async function getCompanyName(locale: string): Promise<string> {
+  const now = Date.now();
+  if (cachedCompanyName && now - cacheTimestamp < CACHE_TTL) {
+    return cachedCompanyName;
+  }
   try {
     const rows = await query<{ config_value: string }>(
-      `SELECT config_value FROM sys_config WHERE config_key IN ('sys.name', 'company_name', 'company_short_name') ORDER BY FIELD(config_key, 'sys.name', 'company_name', 'company_short_name') LIMIT 1`
+      `SELECT config_value FROM sys_config WHERE config_key IN ('company_name', 'company_short_name') ORDER BY FIELD(config_key, 'company_name', 'company_short_name') LIMIT 1`
     );
     if (Array.isArray(rows) && rows.length > 0 && rows[0]?.config_value) {
-      return rows[0].config_value;
+      cachedCompanyName = rows[0].config_value;
+      cacheTimestamp = now;
+      return cachedCompanyName!;
     }
-  } catch {}
-  return 'VNERP丝网印刷管理系统';
+  } catch {
+    if (cachedCompanyName) return cachedCompanyName;
+  }
+  const messages = await getMessagesByLocale(locale);
+  return messages?.Common?.companyName || '越南达昌科技有限公司';
 }
 
 /**
@@ -55,6 +77,27 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale: rawLocale } = await params;
+  const locale = (locales as readonly string[]).includes(rawLocale)
+    ? (rawLocale as Locale)
+    : 'zh-CN';
+
+  const messages = await getMessagesByLocale(locale);
+
+  const title = messages?.Common?.appTitle || 'VNERP';
+  const description = messages?.Common?.appDescription || 'VNERP ERP系统';
+
+  return {
+    title,
+    description,
+  };
+}
+
 export default async function LocaleLayout({
   children,
   params,
@@ -72,12 +115,8 @@ export default async function LocaleLayout({
   }
 
   const messages = await getMessages();
-  const companyName = await getCompanyName();
-  const initialAuthData = await prefetchMenus();
-
-  const initialAuth = initialAuthData
-    ? { ...initialAuthData, companyName }
-    : { companyName, menus: [], permissions: [] };
+  const _companyName = await getCompanyName(locale);
+  const initialAuth = await prefetchMenus();
 
   return (
     <>

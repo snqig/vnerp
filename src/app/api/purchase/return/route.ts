@@ -65,6 +65,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     `SELECT r.id, r.return_no, r.status, r.order_id, r.order_no,
        r.supplier_id, r.supplier_name, r.warehouse_id, r.receipt_id, r.receipt_no,
        r.reason, r.return_date, r.total_amount,
+       r.currency, r.exchange_rate, r.base_total_amount,
        r.approve_by, r.approve_time, r.complete_by, r.complete_time,
        r.outbound_order_id, r.outbound_order_no, r.payable_id, r.payable_no,
        r.remark, r.create_by, r.create_time, r.update_time,

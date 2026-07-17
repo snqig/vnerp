@@ -1,25 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { authFetch } from '@/lib/auth-fetch';
-import { useAuth } from '@/contexts/AuthContext';
 
 export function useCompanyName() {
-  const { companyName: authCompanyName } = useAuth();
-  const [companyName, setCompanyName] = useState(authCompanyName);
-  const [loading, setLoading] = useState(false);
+  const tc = useTranslations('Common');
+  const [companyName, setCompanyName] = useState(tc('companyName'));
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authCompanyName && authCompanyName !== 'VNERP丝网印刷管理系统') {
-      setCompanyName(authCompanyName);
-    }
-  }, [authCompanyName]);
-
-  useEffect(() => {
-    if (companyName && companyName !== 'VNERP丝网印刷管理系统') {
-      return;
-    }
-
     let cancelled = false;
-    setLoading(true);
 
     const fetchWithRetry = async (url: string, retries = 2): Promise<Response | null> => {
       for (let i = 0; i <= retries; i++) {
@@ -48,10 +37,6 @@ export function useCompanyName() {
           const configData = await configRes.json();
           if (!cancelled && configData.success && configData.data?.list) {
             const companyNameConfig =
-              configData.data.list.find(
-                (item: { config_key: string; config_value: string }) =>
-                  item.config_key === 'sys.name'
-              )?.config_value ||
               configData.data.list.find(
                 (item: { config_key: string; config_value: string }) =>
                   item.config_key === 'company.name'
@@ -99,7 +84,7 @@ export function useCompanyName() {
     return () => {
       cancelled = true;
     };
-  }, [companyName]);
+  }, []);
 
   return { companyName, loading };
 }

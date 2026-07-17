@@ -30,6 +30,14 @@ interface PurPurchaseReconciliationRow {
   discount_amount: number | string | null;
   paid_amount: number | string | null;
   balance_amount: number | string | null;
+  currency: string;
+  exchange_rate: number | string;
+  base_receipt_amount: number | string;
+  base_return_amount: number | string;
+  base_net_amount: number | string;
+  base_discount_amount: number | string;
+  base_paid_amount: number | string;
+  base_balance_amount: number | string;
   remark: string | null;
   create_by: number | null;
   confirm_by: number | null;
@@ -54,8 +62,10 @@ interface PurPurchaseReconciliationWriteoffRow {
 
 const RECON_COLUMNS = `id, reconciliation_no, status, supplier_id, supplier_name,
   period_start, period_end, receipt_amount, return_amount, net_amount,
-  discount_amount, paid_amount, balance_amount, remark,
-  create_by, confirm_by, confirm_time, close_by, close_time,
+  discount_amount, paid_amount, balance_amount,
+  currency, exchange_rate, base_receipt_amount, base_return_amount,
+  base_net_amount, base_discount_amount, base_paid_amount, base_balance_amount,
+  remark, create_by, confirm_by, confirm_time, close_by, close_time,
   create_time, update_time`;
 
 export class MysqlPurchaseReconciliationRepository implements IPurchaseReconciliationRepository {
@@ -193,9 +203,11 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
         `INSERT INTO pur_purchase_reconciliation
          (reconciliation_no, status, supplier_id, supplier_name,
           period_start, period_end, receipt_amount, return_amount, net_amount,
-          discount_amount, paid_amount, balance_amount, remark, create_by,
-          create_time, update_time, deleted)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
+          discount_amount, paid_amount, balance_amount,
+          currency, exchange_rate, base_receipt_amount, base_return_amount,
+          base_net_amount, base_discount_amount, base_paid_amount, base_balance_amount,
+          remark, create_by, create_time, update_time, deleted)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
         [
           reconciliationNo,
           recon.status.value,
@@ -209,6 +221,14 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
           recon.discountAmount,
           recon.paidAmount,
           recon.balanceAmount,
+          recon.currency,
+          recon.exchangeRate,
+          recon.baseReceiptAmount,
+          recon.baseReturnAmount,
+          recon.baseNetAmount,
+          recon.baseDiscountAmount,
+          recon.basePaidAmount,
+          recon.baseBalanceAmount,
           recon.remark,
           recon.createBy ?? null,
         ]
@@ -304,6 +324,15 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
       discountAmount: Number(row.discount_amount || 0),
       paidAmount: Number(row.paid_amount || 0),
       balanceAmount: row.balance_amount !== null ? Number(row.balance_amount) : undefined,
+      currency: row.currency || 'CNY',
+      exchangeRate: Number(row.exchange_rate) || 1.0,
+      baseCurrency: 'CNY',
+      baseReceiptAmount: Number(row.base_receipt_amount) || 0,
+      baseReturnAmount: Number(row.base_return_amount) || 0,
+      baseNetAmount: Number(row.base_net_amount) || 0,
+      baseDiscountAmount: Number(row.base_discount_amount) || 0,
+      basePaidAmount: Number(row.base_paid_amount) || 0,
+      baseBalanceAmount: Number(row.base_balance_amount) || 0,
       remark: row.remark || '',
       createBy: row.create_by ?? undefined,
       confirmBy: row.confirm_by ?? undefined,

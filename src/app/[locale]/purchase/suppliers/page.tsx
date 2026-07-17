@@ -50,6 +50,8 @@ import { useCompanyName } from '@/hooks/useCompanyName';
 import { useDebounce } from '@/hooks/use-debounce';
 import { SearchInput } from '@/components/ui/search-input';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import { USE_MOCK, mockSuppliers } from '@/lib/mock-data';
+import { CurrencySelect } from '@/components/ui/currency-select';
 
 interface Supplier {
   id: number;
@@ -62,27 +64,20 @@ interface Supplier {
   contact_email: string;
   address: string;
   credit_level: string;
-  cooperation_status: string;
+  cooperation_status: number | string;
   settlement_method: string;
   payment_terms: string;
   status: number;
   remark: string;
+  default_currency?: string;
 }
 
-const supplierTypeMap: Record<number, string> = {
-  1: '原料',
-  2: '油墨',
-  3: '辅料',
-  4: '包装',
-  5: '设备',
-  6: '委外',
-};
-const creditLevelMap: Record<string, { label: string; cls: string }> = {
-  S: { label: '战略', cls: 'bg-yellow-500 text-white' },
-  A: { label: '优选', cls: 'bg-gray-400 text-white' },
-  B: { label: '合格', cls: 'bg-orange-400 text-white' },
-  C: { label: '条件', cls: 'bg-orange-500 text-white' },
-  D: { label: '失格', cls: 'bg-red-500 text-white' },
+const creditLevelMap: Record<string, { cls: string }> = {
+  S: { cls: 'bg-yellow-500 text-white' },
+  A: { cls: 'bg-gray-400 text-white' },
+  B: { cls: 'bg-orange-400 text-white' },
+  C: { cls: 'bg-orange-500 text-white' },
+  D: { cls: 'bg-red-500 text-white' },
 };
 
 const emptyForm = {
@@ -99,6 +94,7 @@ const emptyForm = {
   payment_terms: '30天',
   status: 1,
   remark: '',
+  default_currency: '',
 };
 
 export default function SuppliersPage() {
@@ -110,6 +106,21 @@ export default function SuppliersPage() {
     1: { label: tc('enabled'), cls: 'bg-green-100 text-green-800' },
     0: { label: tc('disabled'), cls: 'bg-yellow-100 text-yellow-800' },
     2: { label: tc('blacklist'), cls: 'bg-red-100 text-red-800' },
+  };
+  const supplierTypeLabels: Record<number, string> = {
+    1: t('supplierTypeRaw'),
+    2: t('supplierTypeInk'),
+    3: t('supplierTypeAuxiliary'),
+    4: t('supplierTypePackaging'),
+    5: tc('equipment'),
+    6: t('supplierTypeOutsource'),
+  };
+  const creditLevelLabels: Record<string, string> = {
+    S: tc('strategic'),
+    A: tc('preferred'),
+    B: tc('qualified'),
+    C: tc('conditional'),
+    D: tc('disqualified'),
   };
 
   const { companyName } = useCompanyName();
@@ -164,27 +175,70 @@ export default function SuppliersPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: String(page),
-        pageSize: '20',
-        keyword: debouncedKeyword,
-      });
-      if (gradeFilter !== 'all') params.set('keyword', debouncedKeyword);
-      if (statusFilter !== 'all') params.set('status', statusFilter);
-      const res = await authFetch(`/api/purchase/suppliers?${params}`);
-      const result = await res.json();
-      if (result.success) {
-        let data = Array.isArray(result.data) ? result.data : result.data?.list || [];
-        if (gradeFilter !== 'all') {
-          data = data.filter((s: Supplier) => {
-            const level = s.credit_level || 'B';
-            return level === gradeFilter;
-          });
+      if (USE_MOCK) {
+        console.log(
+          '[Supplier] fetchData using mock data, keyword:',
+          debouncedKeyword,
+          'status:',
+          statusFilter,
+          'grade:',
+          gradeFilter
+        );
+        let data = [...mockSuppliers].map((s) => ({
+          ...s,
+          status: typeof s.status === 'string' ? parseInt(s.status) : s.status,
+        })) as Supplier[];
+        if (debouncedKeyword) {
+          const kw = debouncedKeyword.toLowerCase();
+          data = data.filter(
+            (s) =>
+              s.supplier_code.toLowerCase().includes(kw) ||
+              s.supplier_name.toLowerCase().includes(kw) ||
+              s.short_name.toLowerCase().includes(kw)
+          );
         }
-        setList(data);
-        setTotal(result.pagination?.total || result.data?.total || data.length);
+        if (statusFilter !== 'all') {
+          data = data.filter((s) => s.status === parseInt(statusFilter));
+        }
+        if (gradeFilter !== 'all') {
+          data = data.filter((s) => s.credit_level === gradeFilter);
+        }
+        const pageSize = 20;
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+        const paginatedData = data.slice(start, end);
+        console.log('[Supplier] fetchData mock result:', {
+          total: data.length,
+          pageSize,
+          page,
+          count: paginatedData.length,
+        });
+        setList(paginatedData);
+        setTotal(data.length);
+      } else {
+        const params = new URLSearchParams({
+          page: String(page),
+          pageSize: '20',
+          keyword: debouncedKeyword,
+        });
+        if (gradeFilter !== 'all') params.set('keyword', debouncedKeyword);
+        if (statusFilter !== 'all') params.set('status', statusFilter);
+        const res = await authFetch(`/api/purchase/suppliers?${params}`);
+        const result = await res.json();
+        if (result.success) {
+          let data = Array.isArray(result.data) ? result.data : result.data?.list || [];
+          if (gradeFilter !== 'all') {
+            data = data.filter((s: Supplier) => {
+              const level = s.credit_level || 'B';
+              return level === gradeFilter;
+            });
+          }
+          setList(data);
+          setTotal(result.pagination?.total || result.data?.total || data.length);
+        }
       }
-    } catch {
+    } catch (error) {
+      console.error('[Supplier] fetchData exception:', error);
     } finally {
       setLoading(false);
     }
@@ -216,52 +270,102 @@ export default function SuppliersPage() {
       payment_terms: item.payment_terms || '30天',
       status: item.status ?? 1,
       remark: item.remark || '',
+      default_currency: item.default_currency || '',
     });
     setShowDialog(true);
   };
 
   const handleSave = async () => {
+    console.log(
+      '[Supplier] handleSave called, editId:',
+      editId,
+      'form:',
+      JSON.stringify(form),
+      'USE_MOCK:',
+      USE_MOCK
+    );
     if (!form.supplier_code || !form.supplier_name) {
-      toast({ title: '供应商编码和名称不能为空', variant: 'destructive' });
+      console.log(
+        '[Supplier] handleSave validation failed: supplier_code or supplier_name is empty'
+      );
+      toast({ title: t('supplierCodeNameRequired'), variant: 'destructive' });
       return;
     }
     setSaving(true);
     try {
-      const url = '/api/purchase/suppliers';
-      const method = editId ? 'PUT' : 'POST';
-      const body = editId ? { id: editId, ...form } : form;
-      const res = await authFetch(url, {
-        method,
-        body: JSON.stringify(body),
-      });
-      const result = await res.json();
-      if (result.success) {
-        toast({ title: editId ? '更新成功' : '创建成功' });
+      if (USE_MOCK) {
+        console.log('[Supplier] handleSave mock mode:', editId ? 'update' : 'create');
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        console.log('[Supplier] handleSave mock success:', editId ? 'update' : 'create');
+        toast({ title: editId ? tc('updateSuccess') : tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: result.message || tc('error'), variant: 'destructive' });
+        const url = '/api/purchase/suppliers';
+        const method = editId ? 'PUT' : 'POST';
+        const body = editId ? { id: editId, ...form } : form;
+        console.log('[Supplier] handleSave sending request:', {
+          url,
+          method,
+          body: JSON.stringify(body),
+        });
+        const res = await authFetch(url, {
+          method,
+          body: JSON.stringify(body),
+        });
+        console.log('[Supplier] handleSave response status:', res.status, 'ok:', res.ok);
+        const result = await res.json();
+        console.log('[Supplier] handleSave response data:', JSON.stringify(result));
+        if (result.success) {
+          console.log('[Supplier] handleSave success:', editId ? 'update' : 'create');
+          toast({ title: editId ? tc('updateSuccess') : tc('createSuccess') });
+          setShowDialog(false);
+          fetchData();
+        } else {
+          console.log('[Supplier] handleSave failed:', result.message);
+          toast({ title: result.message || tc('error'), variant: 'destructive' });
+        }
       }
-    } catch {
-      toast({ title: '保存失败', variant: 'destructive' });
+    } catch (error) {
+      console.error('[Supplier] handleSave exception:', error);
+      toast({ title: tc('saveFailed'), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm(tc('confirmDelete'))) return;
+    console.log('[Supplier] handleDelete called, id:', id, 'USE_MOCK:', USE_MOCK);
+    if (!confirm(tc('confirmDelete'))) {
+      console.log('[Supplier] handleDelete cancelled by user');
+      return;
+    }
     try {
-      const res = await authFetch(`/api/purchase/suppliers?id=${id}`, { method: 'DELETE' });
-      const result = await res.json();
-      if (result.success) {
-        toast({ title: '删除成功' });
+      if (USE_MOCK) {
+        console.log('[Supplier] handleDelete mock mode');
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        console.log('[Supplier] handleDelete mock success');
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       } else {
-        toast({ title: result.message || '删除失败', variant: 'destructive' });
+        const url = `/api/purchase/suppliers?id=${id}`;
+        console.log('[Supplier] handleDelete sending request:', { url, method: 'DELETE' });
+        const res = await authFetch(url, { method: 'DELETE' });
+        console.log('[Supplier] handleDelete response status:', res.status, 'ok:', res.ok);
+        const result = await res.json();
+        console.log('[Supplier] handleDelete response data:', JSON.stringify(result));
+        if (result.success) {
+          console.log('[Supplier] handleDelete success');
+          toast({ title: tc('deleteSuccess') });
+          fetchData();
+        } else {
+          console.log('[Supplier] handleDelete failed:', result.message);
+          toast({ title: result.message || tc('deleteFailed'), variant: 'destructive' });
+        }
       }
-    } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+    } catch (error) {
+      console.error('[Supplier] handleDelete exception:', error);
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -281,14 +385,29 @@ export default function SuppliersPage() {
     const recordsToPrint =
       selectedIds.length > 0 ? list.filter((s) => selectedIds.includes(s.id)) : list;
     if (recordsToPrint.length === 0) {
-      toast({ title: '没有可打印的数据', variant: 'destructive' });
+      toast({ title: tc('noDataToPrint'), variant: 'destructive' });
       return;
     }
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      toast({ title: '无法打开打印窗口', variant: 'destructive' });
+      toast({ title: tc('cannotOpenPrintWindow'), variant: 'destructive' });
       return;
     }
+    const typeLabels: Record<number, string> = {
+      1: t('supplierTypeRaw'),
+      2: t('supplierTypeInk'),
+      3: t('supplierTypeAuxiliary'),
+      4: t('supplierTypePackaging'),
+      5: t('supplierTypeEquipment'),
+      6: t('supplierTypeOutsource'),
+    };
+    const levelLabels: Record<string, string> = {
+      S: tc('strategic'),
+      A: tc('preferred'),
+      B: tc('qualified'),
+      C: tc('conditional'),
+      D: tc('disqualified'),
+    };
     const rows = recordsToPrint
       .map((s) => {
         const grade = creditLevelMap[s.credit_level] || creditLevelMap.B;
@@ -296,15 +415,15 @@ export default function SuppliersPage() {
         return `<tr>
         <td>${s.supplier_code}</td>
         <td>${s.supplier_name}</td>
-        <td>${supplierTypeMap[s.supplier_type] || '-'}</td>
-        <td>${s.credit_level} - ${grade.label}</td>
+        <td>${typeLabels[s.supplier_type] || '-'}</td>
+        <td>${s.credit_level} - ${levelLabels[s.credit_level] || '-'}</td>
         <td>${status.label}</td>
         <td>${s.contact_name || '-'}</td>
         <td>${s.contact_phone || '-'}</td>
       </tr>`;
       })
       .join('');
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>供应商列表</title>
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${t('supplierManagement')}</title>
       <style>
         @page { size: A4; margin: 15mm; }
         body { font-family: "Microsoft YaHei", Arial, sans-serif; padding: 20px; color: #333; }
@@ -317,10 +436,10 @@ export default function SuppliersPage() {
         @media print { body { padding: 0; } }
       </style></head>
       <body>
-        <h1>供应商列表</h1>
-        <div class="info">打印时间：${new Date().toLocaleString('zh-CN')} | 共 ${recordsToPrint.length} 条</div>
+        <h1>${t('supplierManagement')}</h1>
+        <div class="info">${tc('printTime')}：${new Date().toLocaleString()} | ${tc('total')} ${recordsToPrint.length} ${tc('records')}</div>
         <table>
-          <thead><tr><th>编号</th><th>{tc("name")}</th><th>{tc("type")}</th><th>等级</th><th>{tc("status")}</th><th>联系人</th><th>{tc("phone")}</th></tr></thead>
+          <thead><tr><th>${tc('code')}</th><th>${tc('name')}</th><th>${tc('type')}</th><th>${tc('grade')}</th><th>${tc('status')}</th><th>${tc('contact')}</th><th>${tc('phone')}</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
         <div class="footer">${companyName}</div>
@@ -334,24 +453,32 @@ export default function SuppliersPage() {
     const recordsToExport =
       selectedIds.length > 0 ? list.filter((s) => selectedIds.includes(s.id)) : list;
     if (recordsToExport.length === 0) {
-      toast({ title: '没有可导出的数据', variant: 'destructive' });
+      toast({ title: tc('noDataToExport'), variant: 'destructive' });
       return;
     }
+    const typeLabels: Record<number, string> = {
+      1: t('supplierTypeRaw'),
+      2: t('supplierTypeInk'),
+      3: t('supplierTypeAuxiliary'),
+      4: t('supplierTypePackaging'),
+      5: t('supplierTypeEquipment'),
+      6: t('supplierTypeOutsource'),
+    };
     const headers = [
-      '供应商编号',
-      '供应商名称',
+      t('supplierCode'),
+      t('supplierName'),
       tc('type'),
-      '等级',
+      tc('grade'),
       tc('status'),
-      '联系人',
-      '联系电话',
-      '邮箱',
-      '地址',
+      tc('contact'),
+      tc('phone'),
+      tc('email'),
+      tc('address'),
     ];
     const rows = recordsToExport.map((s) => [
       s.supplier_code,
       s.supplier_name,
-      supplierTypeMap[s.supplier_type] || '',
+      typeLabels[s.supplier_type] || '',
       s.credit_level,
       (statusMap[s.status] || statusMap[1]).label,
       s.contact_name || '',
@@ -365,24 +492,39 @@ export default function SuppliersPage() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `供应商列表_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `${t('supplierManagement')}_${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-    toast({ title: 'XLS导出成功' });
+    toast({ title: tc('exportSuccess') });
   };
 
   const handleExportPDF = () => {
     const recordsToExport =
       selectedIds.length > 0 ? list.filter((s) => selectedIds.includes(s.id)) : list;
     if (recordsToExport.length === 0) {
-      toast({ title: '没有可导出的数据', variant: 'destructive' });
+      toast({ title: tc('noDataToExport'), variant: 'destructive' });
       return;
     }
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      toast({ title: '无法打开导出窗口', variant: 'destructive' });
+      toast({ title: tc('cannotOpenPrintWindow'), variant: 'destructive' });
       return;
     }
+    const typeLabels: Record<number, string> = {
+      1: t('supplierTypeRaw'),
+      2: t('supplierTypeInk'),
+      3: t('supplierTypeAuxiliary'),
+      4: t('supplierTypePackaging'),
+      5: t('supplierTypeEquipment'),
+      6: t('supplierTypeOutsource'),
+    };
+    const levelLabels: Record<string, string> = {
+      S: tc('strategic'),
+      A: tc('preferred'),
+      B: tc('qualified'),
+      C: tc('conditional'),
+      D: tc('disqualified'),
+    };
     const rows = recordsToExport
       .map((s) => {
         const grade = creditLevelMap[s.credit_level] || creditLevelMap.B;
@@ -390,8 +532,8 @@ export default function SuppliersPage() {
         return `<tr>
         <td>${s.supplier_code}</td>
         <td>${s.supplier_name}</td>
-        <td>${supplierTypeMap[s.supplier_type] || '-'}</td>
-        <td>${s.credit_level} - ${grade.label}</td>
+        <td>${typeLabels[s.supplier_type] || '-'}</td>
+        <td>${s.credit_level} - ${levelLabels[s.credit_level] || '-'}</td>
         <td>${status.label}</td>
         <td>${s.contact_name || '-'}</td>
         <td>${s.contact_phone || '-'}</td>
@@ -400,7 +542,7 @@ export default function SuppliersPage() {
       </tr>`;
       })
       .join('');
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>供应商列表</title>
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${t('supplierManagement')}</title>
       <style>
         @page { size: A4; margin: 15mm; }
         body { font-family: "Microsoft YaHei", Arial, sans-serif; padding: 20px; color: #333; }
@@ -413,10 +555,10 @@ export default function SuppliersPage() {
         @media print { body { padding: 0; } }
       </style></head>
       <body>
-        <h1>供应商列表</h1>
-        <div class="info">导出时间：${new Date().toLocaleString('zh-CN')} | 共 ${recordsToExport.length} 条</div>
+        <h1>${t('supplierManagement')}</h1>
+        <div class="info">${tc('exportTime')}：${new Date().toLocaleString()} | ${tc('total')} ${recordsToExport.length} ${tc('records')}</div>
         <table>
-          <thead><tr><th>编号</th><th>{tc("name")}</th><th>{tc("type")}</th><th>等级</th><th>{tc("status")}</th><th>联系人</th><th>{tc("phone")}</th><th>{tc("email")}</th><th>{tc("address")}</th></tr></thead>
+          <thead><tr><th>${tc('code')}</th><th>${tc('name')}</th><th>${tc('type')}</th><th>${tc('grade')}</th><th>${tc('status')}</th><th>${tc('contact')}</th><th>${tc('phone')}</th><th>${tc('email')}</th><th>${tc('address')}</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
         <div class="footer">${companyName}</div>
@@ -424,7 +566,7 @@ export default function SuppliersPage() {
       </body></html>`;
     printWindow.document.write(html);
     printWindow.document.close();
-    toast({ title: 'PDF导出成功，请在打印对话框中选择"另存为PDF"' });
+    toast({ title: tc('exportPdfSuccess') });
   };
 
   const stats = {
@@ -517,28 +659,28 @@ export default function SuppliersPage() {
               <div className="flex gap-1 ml-2">
                 <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1">
                   <Printer className="h-4 w-4" />
-                  打印
+                  {tc('print')}
                 </Button>
                 <GlobalExportToolbar
-                  filename="供应商列表"
-                  title="供应商列表"
+                  filename={t('supplierManagement')}
+                  title={t('supplierManagement')}
                   columns={[
-                    { key: 'supplier_code', label: '供应商编号', width: 15 },
-                    { key: 'supplier_name', label: '供应商名称', width: 25 },
+                    { key: 'supplier_code', label: t('supplierCode'), width: 15 },
+                    { key: 'supplier_name', label: t('supplierName'), width: 25 },
                     {
                       key: 'supplier_type',
                       label: tc('type'),
                       width: 10,
-                      formatter: (v) => supplierTypeMap[v] || '-',
+                      formatter: (v) => supplierTypeLabels[v] || '-',
                     },
-                    { key: 'credit_level', label: '等级', width: 8 },
+                    { key: 'credit_level', label: tc('grade'), width: 8 },
                     {
                       key: 'status',
                       label: tc('status'),
                       width: 10,
                       formatter: (v) => (statusMap[v] || statusMap[1]).label,
                     },
-                    { key: 'contact_name', label: '联系人', width: 12 },
+                    { key: 'contact_name', label: tc('contact'), width: 12 },
                     { key: 'contact_phone', label: tc('phone'), width: 15 },
                     { key: 'contact_email', label: tc('email'), width: 20 },
                     { key: 'address', label: tc('address'), width: 30 },
@@ -556,13 +698,13 @@ export default function SuppliersPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>供应商列表</CardTitle>
+            <CardTitle>{t('supplierManagement')}</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                <span className="ml-2 text-gray-400">加载中...</span>
+                <span className="ml-2 text-gray-400">{tc('loading')}</span>
               </div>
             ) : (
               <Table>
@@ -579,7 +721,7 @@ export default function SuppliersPage() {
                       onClick={() => handleSort('supplier_code')}
                     >
                       <span className="inline-flex items-center">
-                        供应商编号
+                        {t('supplierCode')}
                         {getSortIcon('supplier_code')}
                       </span>
                     </TableHead>
@@ -588,7 +730,7 @@ export default function SuppliersPage() {
                       onClick={() => handleSort('supplier_name')}
                     >
                       <span className="inline-flex items-center">
-                        供应商名称
+                        {t('supplierName')}
                         {getSortIcon('supplier_name')}
                       </span>
                     </TableHead>
@@ -597,7 +739,7 @@ export default function SuppliersPage() {
                       onClick={() => handleSort('supplier_type')}
                     >
                       <span className="inline-flex items-center">
-                        类型
+                        {tc('type')}
                         {getSortIcon('supplier_type')}
                       </span>
                     </TableHead>
@@ -606,7 +748,7 @@ export default function SuppliersPage() {
                       onClick={() => handleSort('credit_level')}
                     >
                       <span className="inline-flex items-center">
-                        等级
+                        {tc('grade')}
                         {getSortIcon('credit_level')}
                       </span>
                     </TableHead>
@@ -615,7 +757,7 @@ export default function SuppliersPage() {
                       onClick={() => handleSort('status')}
                     >
                       <span className="inline-flex items-center">
-                        状态
+                        {tc('status')}
                         {getSortIcon('status')}
                       </span>
                     </TableHead>
@@ -624,7 +766,7 @@ export default function SuppliersPage() {
                       onClick={() => handleSort('contact_name')}
                     >
                       <span className="inline-flex items-center">
-                        联系人
+                        {tc('contact')}
                         {getSortIcon('contact_name')}
                       </span>
                     </TableHead>
@@ -633,18 +775,19 @@ export default function SuppliersPage() {
                       onClick={() => handleSort('contact_phone')}
                     >
                       <span className="inline-flex items-center">
-                        联系电话
+                        {tc('phone')}
                         {getSortIcon('contact_phone')}
                       </span>
                     </TableHead>
+                    <TableHead>{tc('supplierDefaultCurrency')}</TableHead>
                     <TableHead className="text-right">{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {list.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                        暂无数据
+                      <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                        {tc('noData')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -670,11 +813,11 @@ export default function SuppliersPage() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell>{supplierTypeMap[item.supplier_type] || '-'}</TableCell>
+                          <TableCell>{supplierTypeLabels[item.supplier_type] || '-'}</TableCell>
                           <TableCell>
                             <Badge className={grade.cls}>
                               <Star className="h-3 w-3 mr-1" />
-                              {item.credit_level} - {grade.label}
+                              {item.credit_level} - {creditLevelLabels[item.credit_level] || '-'}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -685,6 +828,7 @@ export default function SuppliersPage() {
                           </TableCell>
                           <TableCell>{item.contact_name || '-'}</TableCell>
                           <TableCell>{item.contact_phone || '-'}</TableCell>
+                          <TableCell>{item.default_currency || 'CNY'}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
                               <Button
@@ -711,7 +855,7 @@ export default function SuppliersPage() {
               </Table>
             )}
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-gray-500">共{total}条</span>
+              <span className="text-sm text-gray-500">{tc('totalRecords', { total })}</span>
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -719,7 +863,7 @@ export default function SuppliersPage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  上一页
+                  {tc('prevPage')}
                 </Button>
                 <Button
                   size="sm"
@@ -727,7 +871,7 @@ export default function SuppliersPage() {
                   disabled={page * 20 >= total}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  下一页
+                  {tc('nextPage')}
                 </Button>
               </div>
             </div>
@@ -741,32 +885,32 @@ export default function SuppliersPage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
-                <Label>供应商编码 *</Label>
+                <Label>{t('supplierCode')} *</Label>
                 <Input
                   value={form.supplier_code}
                   onChange={(e) => setForm({ ...form, supplier_code: e.target.value })}
-                  placeholder="如 S-20240501-001"
+                  placeholder={t('supplierCodePlaceholder')}
                   disabled={!!editId}
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tc('text_m9cun3')}</Label>
+                <Label>{t('supplierName')}</Label>
                 <Input
                   value={form.supplier_name}
                   onChange={(e) => setForm({ ...form, supplier_name: e.target.value })}
-                  placeholder="请输入供应商全称"
+                  placeholder={t('enterSupplierName')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>供应商简称</Label>
+                <Label>{t('shortName')}</Label>
                 <Input
                   value={form.short_name}
                   onChange={(e) => setForm({ ...form, short_name: e.target.value })}
-                  placeholder="请输入简称"
+                  placeholder={t('enterShortName')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>供应商类型</Label>
+                <Label>{t('supplierType')}</Label>
                 <Select
                   value={String(form.supplier_type)}
                   onValueChange={(v) => setForm({ ...form, supplier_type: Number(v) })}
@@ -775,21 +919,21 @@ export default function SuppliersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">原料</SelectItem>
-                    <SelectItem value="2">油墨</SelectItem>
-                    <SelectItem value="3">辅料</SelectItem>
-                    <SelectItem value="4">包装</SelectItem>
+                    <SelectItem value="1">{t('supplierTypeRaw')}</SelectItem>
+                    <SelectItem value="2">{t('supplierTypeInk')}</SelectItem>
+                    <SelectItem value="3">{t('supplierTypeAuxiliary')}</SelectItem>
+                    <SelectItem value="4">{t('supplierTypePackaging')}</SelectItem>
                     <SelectItem value="5">{tc('equipment')}</SelectItem>
-                    <SelectItem value="6">委外</SelectItem>
+                    <SelectItem value="6">{t('supplierTypeOutsource')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>联系人</Label>
+                <Label>{tc('contact')}</Label>
                 <Input
                   value={form.contact_name}
                   onChange={(e) => setForm({ ...form, contact_name: e.target.value })}
-                  placeholder="请输入联系人"
+                  placeholder={t('enterContact')}
                 />
               </div>
               <div className="space-y-2">
@@ -797,7 +941,7 @@ export default function SuppliersPage() {
                 <Input
                   value={form.contact_phone}
                   onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
-                  placeholder="请输入联系电话"
+                  placeholder={tc('enterPhone')}
                 />
               </div>
               <div className="space-y-2">
@@ -809,7 +953,7 @@ export default function SuppliersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>信用等级</Label>
+                <Label>{t('creditLevel')}</Label>
                 <Select
                   value={form.credit_level}
                   onValueChange={(v) => setForm({ ...form, credit_level: v })}
@@ -818,16 +962,16 @@ export default function SuppliersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="S">{tc('text_ru0etr')}</SelectItem>
-                    <SelectItem value="A">{tc('text_rqcwv5')}</SelectItem>
-                    <SelectItem value="B">{tc('text_dg2w6d')}</SelectItem>
-                    <SelectItem value="C">{tc('text_c0l8br')}</SelectItem>
-                    <SelectItem value="D">{tc('text_6q9bpe')}</SelectItem>
+                    <SelectItem value="S">{tc('strategic')}</SelectItem>
+                    <SelectItem value="A">{tc('preferred')}</SelectItem>
+                    <SelectItem value="B">{tc('qualified')}</SelectItem>
+                    <SelectItem value="C">{tc('conditional')}</SelectItem>
+                    <SelectItem value="D">{tc('disqualified')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>结算方式</Label>
+                <Label>{t('settlementMethod')}</Label>
                 <Select
                   value={form.settlement_method || '月结'}
                   onValueChange={(v) => setForm({ ...form, settlement_method: v })}
@@ -836,16 +980,24 @@ export default function SuppliersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="月结">月结</SelectItem>
-                    <SelectItem value="现结">现结</SelectItem>
-                    <SelectItem value="预付">预付</SelectItem>
-                    <SelectItem value="货到付款">货到付款</SelectItem>
-                    <SelectItem value="分期付款">分期付款</SelectItem>
+                    <SelectItem value="月结">{t('settlementMonthly')}</SelectItem>
+                    <SelectItem value="现结">{t('settlementSpot')}</SelectItem>
+                    <SelectItem value="预付">{t('settlementPrepaid')}</SelectItem>
+                    <SelectItem value="货到付款">{t('settlementCOD')}</SelectItem>
+                    <SelectItem value="分期付款">{t('settlementInstallment')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>付款条件</Label>
+                <Label>{tc('supplierDefaultCurrency')}</Label>
+                <CurrencySelect
+                  value={form.default_currency}
+                  onChange={(v) => setForm({ ...form, default_currency: v })}
+                  placeholder={tc('selectCurrency')}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('paymentTerms')}</Label>
                 <Select
                   value={form.payment_terms || '30天'}
                   onValueChange={(v) => setForm({ ...form, payment_terms: v })}
@@ -854,12 +1006,12 @@ export default function SuppliersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="货到付款">货到付款</SelectItem>
-                    <SelectItem value="15天">15天</SelectItem>
-                    <SelectItem value="30天">30天</SelectItem>
-                    <SelectItem value="60天">60天</SelectItem>
-                    <SelectItem value="90天">90天</SelectItem>
-                    <SelectItem value="120天">120天</SelectItem>
+                    <SelectItem value="货到付款">{t('settlementCOD')}</SelectItem>
+                    <SelectItem value="15天">{t('payment15Days')}</SelectItem>
+                    <SelectItem value="30天">{t('payment30Days')}</SelectItem>
+                    <SelectItem value="60天">{t('payment60Days')}</SelectItem>
+                    <SelectItem value="90天">{t('payment90Days')}</SelectItem>
+                    <SelectItem value="120天">{t('payment120Days')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -876,17 +1028,17 @@ export default function SuppliersPage() {
                 <Input
                   value={form.remark}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
-                  placeholder="备注信息"
+                  placeholder={tc('enterRemark')}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
               <Button onClick={handleSave} disabled={saving}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                保存
+                {tc('save')}
               </Button>
             </DialogFooter>
           </DialogContent>

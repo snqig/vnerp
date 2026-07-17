@@ -1,5 +1,8 @@
 {
   "Common": {
+    "appTitle": "VNERP | 絲網印刷管理系統",
+    "appDescription": "VNERP ERP系統 - 專為絲網印刷企業設計的管理系統",
+    "companyName": "越南達昌科技有限公司",
     "save": "儲存",
     "cancel": "取消",
     "delete": "刪除",
@@ -641,7 +644,15 @@
     "exportTime": "匯出時間",
     "records": "筆記錄",
     "cannotOpenPrintWindow": "無法開啟列印視窗",
-    "exportPdfSuccess": "PDF匯出成功，請在列印對話框中選擇「另存為PDF」"
+    "exportPdfSuccess": "PDF匯出成功，請在列印對話框中選擇「另存為PDF」",
+    "baseCurrencyAmount": "本位幣金額",
+    "originalCurrencyAmount": "原幣金額",
+    "currencyImmutableWarning": "幣種創建後不可修改",
+    "exchangeRateLocked": "匯率已固化",
+    "inboundCurrencyMismatch": "關聯入庫單幣種不一致：{currencies}",
+    "supplierDefaultCurrency": "供應商預設幣種",
+    "estimatedBaseAmount": "預估本位幣金額",
+    "exchangeRateAtCreation": "創建時匯率"
   },
   "Nav": {
     "dashboard_center": "看板中心",

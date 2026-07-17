@@ -417,16 +417,9 @@ const presetConfigs: Partial<ConfigItem>[] = [
   {
     config_name: '系统名称',
     config_key: 'system.name',
-    config_value: 'VNERP丝网印刷管理系统',
+    config_value: 'DC ERP',
     config_type: 1,
     description: '系统登录页与标题显示的名称',
-  },
-  {
-    config_name: '系统名称(简写)',
-    config_key: 'sys.name',
-    config_value: 'VNERP丝网印刷管理系统',
-    config_type: 1,
-    description: '系统所有需要显示公司名称的地方都从这里提取',
   },
   {
     config_name: '默认语言',
@@ -467,7 +460,7 @@ const presetConfigs: Partial<ConfigItem>[] = [
   {
     config_name: '公司名称',
     config_key: 'company.name',
-    config_value: 'VNERP丝网印刷管理系统',
+    config_value: '某某科技有限公司',
     config_type: 1,
     description: '打印单据与报表抬头显示的公司名称',
   },
@@ -552,20 +545,36 @@ export default function ConfigPage() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<ConfigItem>>({});
 
+  const [loading, setLoading] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+
   const fetchData = useCallback(async () => {
+    setLoading(true);
+    setInitError(null);
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '200',
+        pageSize: '50',
         configName: searchName,
       });
       const res = await authFetch('/api/system/config?' + params);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        setInitError(errBody?.message || `请求失败 (${res.status})`);
+        return;
+      }
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
+      } else {
+        setInitError(result.message || '获取配置列表失败');
       }
-    } catch {}
+    } catch (e) {
+      setInitError((e as Error)?.message || '网络异常，请检查连接');
+    } finally {
+      setLoading(false);
+    }
   }, [page, searchName]);
 
   useEffect(() => {
@@ -612,36 +621,26 @@ export default function ConfigPage() {
     }
   };
 
+  const [initLoading, setInitLoading] = useState(false);
   const handleInitPresets = async () => {
     if (!confirm('确定初始化预设配置？已存在的配置不会被覆盖。')) return;
-    // 先加载全量数据用于存在性检查，避免因分页遗漏导致重复 INSERT 失败
-    let existingKeys: Set<string> = new Set(list.map((i) => i.config_key));
-    try {
-      const res = await authFetch('/api/system/config?page=1&pageSize=500');
-      const result = await res.json();
-      if (result.success) {
-        existingKeys = new Set((result.data.list || []).map((i: ConfigItem) => i.config_key));
-      }
-    } catch {}
+    setInitLoading(true);
     let created = 0;
-    let skipped = 0;
     for (const preset of presetConfigs) {
-      if (existingKeys.has(preset.config_key!)) {
-        skipped++;
-        continue;
+      const exists = list.some((item) => item.config_key === preset.config_key);
+      if (!exists) {
+        try {
+          const res = await authFetch('/api/system/config', {
+            method: 'POST',
+            body: JSON.stringify(preset),
+          });
+          const result = await res.json();
+          if (result.success) created++;
+        } catch {}
       }
-      try {
-        const res = await authFetch('/api/system/config', {
-          method: 'POST',
-          body: JSON.stringify(preset),
-        });
-        const result = await res.json();
-        if (result.success) created++;
-      } catch {}
     }
-    toast({
-      title: `初始化完成：新增 ${created} 条，跳过 ${skipped} 条已存在`,
-    });
+    setInitLoading(false);
+    toast({ title: `初始化完成，新增 ${created} 条配置` });
     fetchData();
   };
 
@@ -722,8 +721,15 @@ export default function ConfigPage() {
             <Button size="sm" variant="outline" onClick={fetchData}>
               <Search className="h-3 w-3" />
             </Button>
-            <Button size="sm" variant="outline" onClick={handleInitPresets}>
-              {t('initPresets')}
+            <Button size="sm" variant="outline" onClick={handleInitPresets} disabled={initLoading}>
+              {initLoading ? (
+                <span className="flex items-center gap-1">
+                  <span className="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full" />
+                  {t('initPresets')}
+                </span>
+              ) : (
+                t('initPresets')
+              )}
             </Button>
             <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={openAddDialog}>
               <Plus className="h-3 w-3 mr-1" />
@@ -731,6 +737,26 @@ export default function ConfigPage() {
             </Button>
           </div>
         </div>
+
+        {loading && (
+          <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+            <span className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+            加载中...
+          </div>
+        )}
+
+        {initError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
+            <span className="mt-0.5">⚠</span>
+            <div>
+              <p className="font-medium">加载失败</p>
+              <p>{initError}</p>
+              <Button size="sm" variant="outline" className="mt-2 h-7 text-xs" onClick={fetchData}>
+                重试
+              </Button>
+            </div>
+          </div>
+        )}
 
         <Tabs value={activeGroup} onValueChange={setActiveGroup}>
           <TabsList>
@@ -801,10 +827,16 @@ export default function ConfigPage() {
                         </TableCell>
                       </TableRow>
                     ))}
-                    {filteredList.length === 0 && (
+                    {!loading && !initError && filteredList.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                          {tc('noConfigItems')}
+                          <div className="flex flex-col items-center gap-2">
+                            <Settings className="w-8 h-8 opacity-30" />
+                            <p>暂无系统配置项</p>
+                            <p className="text-xs">
+                              请点击上方「初始化预设配置」按钮或手动添加配置
+                            </p>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )}

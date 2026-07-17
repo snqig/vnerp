@@ -62,6 +62,8 @@ import ApiClient from '@/lib/api-client';
 import { logger } from '@/lib/logger';
 import { mockPurchaseOrders, mockSuppliers, USE_MOCK } from '@/lib/mock-data';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import { MoneyDisplay } from '@/components/ui/money-display';
+import { CurrencySelect } from '@/components/ui/currency-select';
 
 interface PurchaseOrder {
   id: number;
@@ -77,6 +79,10 @@ interface PurchaseOrder {
   tax_rate: number;
   tax_amount: number;
   grand_total: number;
+  base_currency?: string;
+  base_total_amount?: number;
+  base_tax_amount?: number;
+  base_grand_total?: number;
   status: number;
   over_receipt_tolerance: number;
   payment_terms: string;
@@ -104,6 +110,10 @@ interface OrderItem {
   quantity: number;
   unit: string;
   unit_price: number;
+  base_unit_price?: number;
+  base_amount?: number;
+  base_tax_amount?: number;
+  base_line_total?: number;
 }
 
 const PO_STATUS = {
@@ -193,6 +203,7 @@ export default function PurchaseOrdersPage() {
     supplier_id: '',
     delivery_date: '',
     remark: '',
+    currency: '',
   });
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
     { id: 1, material_code: '', material_name: '', quantity: 1, unit: '件', unit_price: 0 },
@@ -332,6 +343,7 @@ export default function PurchaseOrdersPage() {
         supplier_code: selectedSupplier?.supplier_code || '',
         delivery_date: newOrder.delivery_date || null,
         remark: newOrder.remark,
+        currency: newOrder.currency || undefined,
         lines: validItems.map((item) => ({
           material_code: item.material_code,
           material_name: item.material_name,
@@ -343,7 +355,7 @@ export default function PurchaseOrdersPage() {
       if (data.success) {
         toast({ title: '成功', description: '采购单创建成功' });
         setIsCreateOpen(false);
-        setNewOrder({ supplier_id: '', delivery_date: '', remark: '' });
+        setNewOrder({ supplier_id: '', delivery_date: '', remark: '', currency: '' });
         setOrderItems([
           { id: 1, material_code: '', material_name: '', quantity: 1, unit: '件', unit_price: 0 },
         ]);
@@ -885,6 +897,14 @@ export default function PurchaseOrdersPage() {
                             }
                           />
                         </div>
+                        <div className="space-y-2">
+                          <Label>{tc('currency')}</Label>
+                          <CurrencySelect
+                            value={newOrder.currency}
+                            onChange={(v) => setNewOrder((prev) => ({ ...prev, currency: v }))}
+                            placeholder={tc('selectCurrency')}
+                          />
+                        </div>
                       </div>
 
                       <div className="space-y-2">
@@ -1091,6 +1111,8 @@ export default function PurchaseOrdersPage() {
                         {getSortIcon('grand_total')}
                       </span>
                     </TableHead>
+                    <TableHead className="text-right">{tc('baseCurrencyAmount')}</TableHead>
+                    <TableHead>{tc('currency')}</TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted/50"
                       onClick={() => handleSort('status')}
@@ -1135,9 +1157,31 @@ export default function PurchaseOrdersPage() {
                           <TableCell>{formatDate(order.order_date)}</TableCell>
                           <TableCell>{formatDate(order.delivery_date)}</TableCell>
                           <TableCell className="text-right">{order.total_quantity}</TableCell>
-                          <TableCell className="text-right font-medium">
-                            ¥{Number(order.grand_total || order.total_amount || 0).toLocaleString()}
+                          <TableCell className="text-right">
+                            <MoneyDisplay
+                              amount={Number(order.grand_total || order.total_amount || 0)}
+                              currency={order.currency || 'CNY'}
+                              baseAmount={order.base_grand_total}
+                              baseCurrency={order.base_currency}
+                              showSymbol={false}
+                            />
                           </TableCell>
+                          <TableCell className="text-right">
+                            {order.base_currency && order.base_grand_total !== undefined ? (
+                              <span className="font-medium">
+                                {Number(order.base_grand_total).toLocaleString('zh-CN', {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                                <span className="text-xs text-muted-foreground ml-1">
+                                  {order.base_currency}
+                                </span>
+                              </span>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                          <TableCell>{order.currency || 'CNY'}</TableCell>
                           <TableCell>{getStatusBadge(order.status)}</TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
@@ -1182,7 +1226,7 @@ export default function PurchaseOrdersPage() {
                         </TableRow>
                         {isExpanded && (
                           <TableRow key={`${order.id}-detail`}>
-                            <TableCell colSpan={10} className="p-0">
+                            <TableCell colSpan={12} className="p-0">
                               <div className="bg-slate-50 dark:bg-slate-800 border-t dark:border-slate-700">
                                 <Table>
                                   <TableHeader>
@@ -1207,6 +1251,9 @@ export default function PurchaseOrdersPage() {
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground text-right">
                                         {tc('amount')}
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">
+                                        {tc('baseCurrencyAmount')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground">
                                         {t('receivedQty')}
@@ -1245,6 +1292,21 @@ export default function PurchaseOrdersPage() {
                                                   (item.unit_price || 0)
                                             ).toFixed(2)}
                                           </TableCell>
+                                          <TableCell className="text-sm text-right">
+                                            {item.base_amount !== undefined ? (
+                                              <span className="font-medium">
+                                                {Number(item.base_amount).toLocaleString('zh-CN', {
+                                                  minimumFractionDigits: 2,
+                                                  maximumFractionDigits: 2,
+                                                })}
+                                                <span className="text-xs text-muted-foreground ml-1">
+                                                  {order.base_currency || 'CNY'}
+                                                </span>
+                                              </span>
+                                            ) : (
+                                              '-'
+                                            )}
+                                          </TableCell>
                                           <TableCell className="text-sm">
                                             {item.received_qty ?? 0}
                                           </TableCell>
@@ -1253,7 +1315,7 @@ export default function PurchaseOrdersPage() {
                                     ) : (
                                       <TableRow>
                                         <TableCell
-                                          colSpan={8}
+                                          colSpan={9}
                                           className="text-center py-3 text-muted-foreground text-sm"
                                         >
                                           {t('noDetailData')}
@@ -1304,12 +1366,21 @@ export default function PurchaseOrdersPage() {
                     <p>{selectedOrder.total_quantity}</p>
                   </div>
                   <div>
+                    <Label className="text-muted-foreground">{tc('currency')}</Label>
+                    <p className="font-medium">{selectedOrder.currency || 'CNY'}</p>
+                  </div>
+                  <div>
                     <Label className="text-muted-foreground">{tc('amount')}</Label>
                     <p className="font-medium">
-                      ¥
-                      {Number(
-                        selectedOrder.grand_total || selectedOrder.total_amount || 0
-                      ).toLocaleString()}
+                      <MoneyDisplay
+                        amount={Number(
+                          selectedOrder.grand_total || selectedOrder.total_amount || 0
+                        )}
+                        currency={selectedOrder.currency || 'CNY'}
+                        baseAmount={selectedOrder.base_grand_total}
+                        baseCurrency={selectedOrder.base_currency}
+                        showSymbol
+                      />
                     </p>
                   </div>
                   <div>

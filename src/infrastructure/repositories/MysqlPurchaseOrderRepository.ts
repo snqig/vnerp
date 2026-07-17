@@ -27,6 +27,9 @@ interface PurPurchaseOrderRow {
   tax_rate: number | string | null;
   tax_amount: number | string | null;
   grand_total: number | string | null;
+  base_total_amount: number | string;
+  base_tax_amount: number | string;
+  base_grand_total: number | string;
   status: number;
   over_receipt_tolerance: number | string | null;
   payment_terms: string | null;
@@ -58,13 +61,17 @@ interface PurPurchaseOrderLineRow {
   tax_rate: number | string | null;
   tax_amount: number | string | null;
   line_total: number | string | null;
+  base_unit_price: number | string;
+  base_amount: number | string;
+  base_tax_amount: number | string;
+  base_line_total: number | string;
   require_date: string | null;
   remark: string | null;
 }
 
 const LINE_COLUMNS = `id, po_id, line_no, material_id, material_code, material_name, material_spec,
-                      unit, order_qty, received_qty, returned_qty, unit_price, amount,
-                      tax_rate, tax_amount, line_total, require_date, remark`;
+                       unit, order_qty, received_qty, returned_qty, unit_price, amount,
+                       tax_rate, tax_amount, line_total, base_unit_price, base_amount, base_tax_amount, base_line_total, require_date, remark`;
 
 export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
   async findById(id: number): Promise<PurchaseOrder | null> {
@@ -198,8 +205,9 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
         `INSERT INTO pur_purchase_order
          (po_no, supplier_id, supplier_name, supplier_code, order_date, delivery_date,
           currency, exchange_rate, total_amount, total_quantity, tax_rate, tax_amount, grand_total,
+          base_total_amount, base_tax_amount, base_grand_total,
           status, over_receipt_tolerance, payment_terms, delivery_address, remark, create_by, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           orderNo,
           order.supplierId,
@@ -214,6 +222,9 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
           order.taxRate,
           order.taxAmount,
           order.grandTotal,
+          order.baseTotalAmount,
+          order.baseTaxAmount,
+          order.baseGrandTotal,
           order.status.toDbCode(),
           order.overReceiptTolerance,
           order.paymentTerms,
@@ -230,8 +241,8 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
           `INSERT INTO pur_purchase_order_line
            (po_id, line_no, material_id, material_code, material_name, material_spec,
             unit, order_qty, received_qty, returned_qty, unit_price, amount,
-            tax_rate, tax_amount, line_total, require_date, remark, create_time)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            tax_rate, tax_amount, line_total, base_unit_price, base_amount, base_tax_amount, base_line_total, require_date, remark, create_time)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
           [
             orderId,
             line.lineNo,
@@ -248,6 +259,10 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
             line.taxRate,
             line.taxAmount,
             line.lineTotal,
+            line.baseUnitPrice,
+            line.baseAmount,
+            line.baseTaxAmount,
+            line.baseLineTotal,
             line.requireDate || null,
             line.remark || null,
           ]
@@ -319,6 +334,10 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
       totalQuantity: Number(order.total_quantity),
       taxAmount: Number(order.tax_amount) || 0,
       grandTotal: Number(order.grand_total) || 0,
+      baseCurrency: 'CNY',
+      baseTotalAmount: Number(order.base_total_amount) || 0,
+      baseTaxAmount: Number(order.base_tax_amount) || 0,
+      baseGrandTotal: Number(order.base_grand_total) || 0,
       overReceiptTolerance: Number(order.over_receipt_tolerance) || 0,
       paymentTerms: order.payment_terms || '',
       deliveryAddress: order.delivery_address || '',
@@ -343,6 +362,10 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
         taxRate: Number(line.tax_rate) || 13,
         taxAmount: Number(line.tax_amount) || 0,
         lineTotal: Number(line.line_total) || 0,
+        baseUnitPrice: Number(line.base_unit_price) || 0,
+        baseAmount: Number(line.base_amount) || 0,
+        baseTaxAmount: Number(line.base_tax_amount) || 0,
+        baseLineTotal: Number(line.base_line_total) || 0,
         requireDate: line.require_date ?? undefined,
         remark: line.remark ?? undefined,
       })),

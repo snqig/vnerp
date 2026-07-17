@@ -30,7 +30,7 @@ export function createCompanyNameConfig(): ConfigFixture {
     id: 1,
     config_name: '公司名称',
     config_key: 'company_name',
-    config_value: 'VNERP丝网印刷管理系统',
+    config_value: '越南达昌科技有限公司',
     description: '系统显示的公司全称',
   });
 }

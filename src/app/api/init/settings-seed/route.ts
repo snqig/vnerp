@@ -1202,16 +1202,9 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       {
         config_name: '系统名称',
         config_key: 'system.name',
-        config_value: 'VNERP丝网印刷管理系统',
+        config_value: 'DC ERP',
         config_type: '1',
         remark: '系统登录页与标题显示的名称',
-      },
-      {
-        config_name: '系统名称(简写)',
-        config_key: 'sys.name',
-        config_value: 'VNERP丝网印刷管理系统',
-        config_type: '1',
-        remark: '系统所有需要显示公司名称的地方都从这里提取',
       },
       {
         config_name: '默认语言',
@@ -1252,7 +1245,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       {
         config_name: '公司名称',
         config_key: 'company.name',
-        config_value: 'VNERP丝网印刷管理系统',
+        config_value: '某某科技有限公司',
         config_type: '1',
         remark: '打印单据与报表抬头显示的公司名称',
       },

@@ -142,11 +142,26 @@ function makeService(recon: PurchaseReconciliation | null, payable: any | null) 
   const payableRepo = {
     findById: vi.fn().mockResolvedValue(payable),
   };
+  const inboundRepo = {
+    findById: vi.fn(),
+    findByStatus: vi.fn(),
+    save: vi.fn(),
+    updateStatus: vi.fn(),
+    updateInspectionAndFinance: vi.fn(),
+    softDelete: vi.fn(),
+  };
+  const currencyService = {
+    getLatestRate: vi.fn().mockResolvedValue(1),
+    convertToBaseCurrency: vi.fn(),
+    clearCache: vi.fn(),
+  };
   const service = new PurchaseReconciliationApplicationService(
     reconRepo as any,
-    payableRepo as any
+    payableRepo as any,
+    inboundRepo as any,
+    currencyService as any
   );
-  return { service, reconRepo, payableRepo };
+  return { service, reconRepo, payableRepo, inboundRepo, currencyService };
 }
 
 describe('采购对账模块集成测试', () => {
