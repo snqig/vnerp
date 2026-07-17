@@ -418,6 +418,8 @@ export default function InboundManagementPage() {
                                     machineNo: '',
                                     width: '',
                                     isRawMaterial: false,
+                                    currency: record.currency || 'CNY',
+                                    baseCurrency: record.base_currency || '',
                                   });
                                   setIsEditDialogOpen(true);
                                 }}

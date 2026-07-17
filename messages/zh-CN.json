@@ -666,7 +666,16 @@
     "inboundCurrencyMismatch": "关联入库单币种不一致：{currencies}",
     "supplierDefaultCurrency": "供应商默认币种",
     "estimatedBaseAmount": "预估本位币金额",
-    "exchangeRateAtCreation": "创建时汇率"
+    "exchangeRateAtCreation": "创建时汇率",
+    "inheritedCurrency": "继承币种",
+    "inboundCurrency": "入库币种",
+    "payableCurrency": "应付币种",
+    "receivableCurrency": "应收币种",
+    "allowOverride": "允许修改",
+    "currencyConsistencyError": "单据币种不一致",
+    "sourceDocument": "来源单据",
+    "paymentCurrency": "付款币种",
+    "receiptCurrency": "收款币种"
   },
   "Nav": {
     "dashboard_center": "看板中心",

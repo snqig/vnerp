@@ -674,7 +674,16 @@
     "inboundCurrencyMismatch": "Inbound currency mismatch: {currencies}",
     "supplierDefaultCurrency": "Supplier Default Currency",
     "estimatedBaseAmount": "Estimated Base Amount",
-    "exchangeRateAtCreation": "Exchange Rate at Creation"
+    "exchangeRateAtCreation": "Exchange Rate at Creation",
+    "inheritedCurrency": "Inherited Currency",
+    "inboundCurrency": "Inbound Currency",
+    "payableCurrency": "Payable Currency",
+    "receivableCurrency": "Receivable Currency",
+    "allowOverride": "Allow Override",
+    "currencyConsistencyError": "Document Currency Mismatch",
+    "sourceDocument": "Source Document",
+    "paymentCurrency": "Payment Currency",
+    "receiptCurrency": "Receipt Currency"
   },
   "Nav": {
     "dashboard_center": "Dashboard Center",

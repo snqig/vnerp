@@ -25,7 +25,8 @@ import { Label } from '@/components/ui/label';
 import { ApiClient } from '@/lib/api-client';
 import { formatDate, formatAmount } from '@/lib/utils';
 import { toast } from 'sonner';
-import { RefreshCw, CreditCard } from 'lucide-react';
+import { MoneyDisplay } from '@/components/ui/money-display';
+import { RefreshCw, CreditCard, FileText } from 'lucide-react';
 
 interface Payable {
   id: number;
@@ -38,6 +39,9 @@ interface Payable {
   due_date: string;
   status: number;
   create_time: string;
+  currency?: string;
+  source_currency?: string;
+  source_amount?: number;
 }
 
 export default function PayablesPage() {
@@ -135,6 +139,7 @@ export default function PayablesPage() {
                 <TableHead>应付金额</TableHead>
                 <TableHead>已付金额</TableHead>
                 <TableHead>{tc('balance')}</TableHead>
+                <TableHead>{tc('currency')}</TableHead>
                 <TableHead>{tc('text_cjh06')}</TableHead>
                 <TableHead>{tc('status')}</TableHead>
                 <TableHead>{tc('actions')}</TableHead>
@@ -144,12 +149,31 @@ export default function PayablesPage() {
               {payables.map((pay) => (
                 <TableRow key={pay.id}>
                   <TableCell className="font-medium">{pay.payable_no}</TableCell>
-                  <TableCell>{pay.source_no}</TableCell>
+                  <TableCell>
+                    {pay.source_currency ? (
+                      <span title={`${tc('sourceCurrency', { currency: pay.source_currency })}`}>
+                        <FileText className="w-3 h-3 inline mr-1 text-muted-foreground" />
+                        {pay.source_no}
+                        <span className="text-xs text-muted-foreground ml-1">
+                          ({pay.source_currency})
+                        </span>
+                      </span>
+                    ) : (
+                      pay.source_no
+                    )}
+                  </TableCell>
                   <TableCell>{pay.supplier_name}</TableCell>
-                  <TableCell>{formatAmount(pay.amount)}</TableCell>
-                  <TableCell>{formatAmount(pay.paid_amount)}</TableCell>
+                  <TableCell>
+                    <MoneyDisplay amount={pay.amount} currency={pay.currency || 'CNY'} />
+                  </TableCell>
+                  <TableCell>
+                    <MoneyDisplay amount={pay.paid_amount} currency={pay.currency || 'CNY'} />
+                  </TableCell>
                   <TableCell className={pay.balance > 0 ? 'text-orange-600 font-medium' : ''}>
-                    {formatAmount(pay.balance)}
+                    <MoneyDisplay amount={pay.balance} currency={pay.currency || 'CNY'} />
+                  </TableCell>
+                  <TableCell>
+                    {pay.currency || <span className="text-muted-foreground">-</span>}
                   </TableCell>
                   <TableCell>{formatDate(pay.due_date)}</TableCell>
                   <TableCell>{getStatusBadge(pay.status)}</TableCell>
@@ -172,7 +196,7 @@ export default function PayablesPage() {
               ))}
               {payables.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                     暂无数据
                   </TableCell>
                 </TableRow>

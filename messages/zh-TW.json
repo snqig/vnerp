@@ -652,7 +652,16 @@
     "inboundCurrencyMismatch": "關聯入庫單幣種不一致：{currencies}",
     "supplierDefaultCurrency": "供應商預設幣種",
     "estimatedBaseAmount": "預估本位幣金額",
-    "exchangeRateAtCreation": "創建時匯率"
+    "exchangeRateAtCreation": "創建時匯率",
+    "inheritedCurrency": "繼承幣種",
+    "inboundCurrency": "入庫幣種",
+    "payableCurrency": "應付幣種",
+    "receivableCurrency": "應收幣種",
+    "allowOverride": "允許修改",
+    "currencyConsistencyError": "單據幣種不一致",
+    "sourceDocument": "來源單據",
+    "paymentCurrency": "付款幣種",
+    "receiptCurrency": "收款幣種"
   },
   "Nav": {
     "dashboard_center": "看板中心",

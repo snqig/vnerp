@@ -652,7 +652,16 @@
     "inboundCurrencyMismatch": "Tiền tệ phiếu nhập không nhất quán: {currencies}",
     "supplierDefaultCurrency": "Tiền tệ mặc định của nhà cung cấp",
     "estimatedBaseAmount": "Số tiền cơ sở ước tính",
-    "exchangeRateAtCreation": "Tỷ giá khi tạo"
+    "exchangeRateAtCreation": "Tỷ giá khi tạo",
+    "inheritedCurrency": "Tiền tệ kế thừa",
+    "inboundCurrency": "Tiền tệ nhập kho",
+    "payableCurrency": "Tiền tệ phải trả",
+    "receivableCurrency": "Tiền tệ phải thu",
+    "allowOverride": "Cho phép ghi đè",
+    "currencyConsistencyError": "Tiền tệ chứng từ không nhất quán",
+    "sourceDocument": "Chứng từ nguồn",
+    "paymentCurrency": "Tiền tệ thanh toán",
+    "receiptCurrency": "Tiền tệ thu tiền"
   },
   "Nav": {
     "dashboard_center": "Trung tâm Bảng điều khiển",
