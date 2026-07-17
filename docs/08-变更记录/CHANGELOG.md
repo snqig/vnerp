@@ -5,6 +5,13 @@
 ## [Unreleased]
 
 ### 新增
+- 多币种功能 Phase 2b：销售/库存/财务模块支持多币种显示（`7140afd`）
+- 财务模块：应收/应付/收款/付款支持多币种字段（`41aab94`）
+- 销售模块：销售订单/配送/退货/对账页面支持多币种展示（`7140afd`）
+- 仓储模块：入库/出库页面支持多币种展示（`7140afd`）
+- API 路由：`/api/orders/sales`、`/api/finance/payment`、`/api/finance/receipt`、`/api/warehouse/inbound`、`/api/warehouse/outbound` 支持多币种
+- 数据库迁移脚本 066-068：添加多币种字段并回填历史数据
+- Git 配置优化脚本：`scripts/setup-git-config.ps1` 和 `scripts/setup-git-config.sh`，解决网络连接问题
 - 测试文档体系重写：00-测试文档总览、测试指南、测试用例模板、测试笔记、测试工具说明、全链路测试方案（基于 `vitest.config.ts` 与 `playwright.config.ts` 现状）
 - 数据库文档重写：数据库关系、数据库架构、领域事件 Outbox（基于 `src/lib/db/schema.ts` 与 `src/infrastructure/event-bus/`）
 - 变更记录目录 README，明确目录用途与版本号规则
