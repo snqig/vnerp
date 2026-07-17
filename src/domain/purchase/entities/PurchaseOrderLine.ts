@@ -17,6 +17,10 @@ export interface PurchaseOrderLineProps {
   taxRate: number;
   taxAmount: number;
   lineTotal: number;
+  baseUnitPrice?: number;
+  baseAmount?: number;
+  baseTaxAmount?: number;
+  baseLineTotal?: number;
   requireDate?: string;
   remark?: string;
 }
@@ -41,6 +45,10 @@ export class PurchaseOrderLine {
     private _taxRate: number,
     private _taxAmount: number,
     private _lineTotal: number,
+    private _baseUnitPrice: number,
+    private _baseAmount: number,
+    private _baseTaxAmount: number,
+    private _baseLineTotal: number,
     public readonly requireDate: string | undefined,
     public readonly remark: string | undefined
   ) {}
@@ -60,6 +68,10 @@ export class PurchaseOrderLine {
     const taxRate = props.taxRate || 13;
     const taxAmount = (amount * taxRate) / 100;
     const lineTotal = amount + taxAmount;
+    const baseUnitPrice = props.baseUnitPrice ?? 0;
+    const baseAmount = props.baseAmount ?? 0;
+    const baseTaxAmount = props.baseTaxAmount ?? 0;
+    const baseLineTotal = props.baseLineTotal ?? 0;
 
     return new PurchaseOrderLine(
       props.id,
@@ -78,6 +90,10 @@ export class PurchaseOrderLine {
       taxRate,
       taxAmount,
       lineTotal,
+      baseUnitPrice,
+      baseAmount,
+      baseTaxAmount,
+      baseLineTotal,
       props.requireDate,
       props.remark
     );
@@ -101,6 +117,10 @@ export class PurchaseOrderLine {
       props.taxRate || 13,
       props.taxAmount || 0,
       props.lineTotal || 0,
+      props.baseUnitPrice ?? 0,
+      props.baseAmount ?? 0,
+      props.baseTaxAmount ?? 0,
+      props.baseLineTotal ?? 0,
       props.requireDate,
       props.remark
     );
@@ -129,6 +149,18 @@ export class PurchaseOrderLine {
   }
   get lineTotal(): number {
     return this._lineTotal;
+  }
+  get baseUnitPrice(): number {
+    return this._baseUnitPrice;
+  }
+  get baseAmount(): number {
+    return this._baseAmount;
+  }
+  get baseTaxAmount(): number {
+    return this._baseTaxAmount;
+  }
+  get baseLineTotal(): number {
+    return this._baseLineTotal;
   }
 
   get remainingQty(): number {

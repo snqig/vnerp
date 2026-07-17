@@ -6,9 +6,14 @@ import {
 } from '@/domain/purchase/aggregates/PurchaseReconciliation';
 import { MysqlPurchaseReconciliationRepository } from '@/infrastructure/repositories/MysqlPurchaseReconciliationRepository';
 import { MysqlPayableRepository } from '@/infrastructure/repositories/MysqlPayableRepository';
+import { IInboundOrderRepository } from '@/domain/warehouse/repositories/IInboundOrderRepository';
+import { MysqlInboundOrderRepository } from '@/infrastructure/repositories/MysqlInboundOrderRepository';
+import { MysqlCurrencyRepository } from '@/infrastructure/repositories/MysqlCurrencyRepository';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
+import { getSystemConfig } from '@/lib/system-config';
+import { CurrencyApplicationService } from './CurrencyApplicationService';
 import type { ResultSetHeader } from 'mysql2/promise';
 
 export interface WriteOffInput {
@@ -23,13 +28,17 @@ export interface WriteOffInput {
 export class PurchaseReconciliationApplicationService {
   constructor(
     private readonly reconciliationRepo: IPurchaseReconciliationRepository,
-    private readonly payableRepo: IPayableRepository
+    private readonly payableRepo: IPayableRepository,
+    private readonly inboundRepo: IInboundOrderRepository,
+    private readonly currencyService: CurrencyApplicationService
   ) {}
 
   static create(): PurchaseReconciliationApplicationService {
     return new PurchaseReconciliationApplicationService(
       new MysqlPurchaseReconciliationRepository(),
-      new MysqlPayableRepository()
+      new MysqlPayableRepository(),
+      new MysqlInboundOrderRepository(),
+      new CurrencyApplicationService(new MysqlCurrencyRepository())
     );
   }
 
@@ -42,7 +51,47 @@ export class PurchaseReconciliationApplicationService {
   async createReconciliation(
     props: PurchaseReconciliationProps
   ): Promise<{ id: number; reconciliationNo: string }> {
-    const recon = PurchaseReconciliation.create(props);
+    // 从关联入库单获取币种信息
+    const inboundIds = (props.lines || []).filter((l) => l.sourceType === 1).map((l) => l.sourceId);
+
+    let currency = props.currency || 'CNY';
+    let exchangeRate = props.exchangeRate || 1.0;
+    const baseCurrency =
+      props.baseCurrency || (await getSystemConfig('finance.base_currency', 'CNY'));
+
+    if (inboundIds.length > 0) {
+      const inbounds = await Promise.all(inboundIds.map((id) => this.inboundRepo.findById(id)));
+      const validInbounds = inbounds.filter((i): i is NonNullable<typeof i> => i !== null);
+
+      if (validInbounds.length > 0) {
+        const currencies = new Set(validInbounds.map((i) => i.totalAmount.currency));
+        if (currencies.size > 1) {
+          throw new DomainError(`关联入库单币种不一致：${Array.from(currencies).join(', ')}`);
+        }
+        currency = Array.from(currencies)[0] || currency;
+      }
+    }
+
+    if (currency !== baseCurrency) {
+      exchangeRate = await this.currencyService.getLatestRate(currency, baseCurrency);
+    }
+
+    // 计算本位币金额
+    const receiptAmount = props.receiptAmount || 0;
+    const returnAmount = props.returnAmount || 0;
+    const baseReceiptAmount = Number((receiptAmount * exchangeRate).toFixed(2));
+    const baseReturnAmount = Number((returnAmount * exchangeRate).toFixed(2));
+
+    const reconciledProps: PurchaseReconciliationProps = {
+      ...props,
+      currency,
+      exchangeRate,
+      baseCurrency,
+      baseReceiptAmount,
+      baseReturnAmount,
+    };
+
+    const recon = PurchaseReconciliation.create(reconciledProps);
     const result = await this.reconciliationRepo.save(recon);
     await this.persistAndPublishEvents('PurchaseReconciliation', result.id, recon);
     return { id: result.id, reconciliationNo: result.reconciliationNo };
@@ -90,7 +139,7 @@ export class PurchaseReconciliationApplicationService {
       );
 
       // 乐观锁：仅当余额未被其他事务修改时才更新（WHERE balance_amount = 原始余额）
-      const [updateResult] = await conn.execute(
+      const [updateResult] = (await conn.execute(
         `UPDATE pur_purchase_reconciliation
          SET paid_amount = ?, balance_amount = ?, status = ?, update_time = NOW()
          WHERE id = ? AND balance_amount = ?`,
@@ -101,7 +150,7 @@ export class PurchaseReconciliationApplicationService {
           input.reconciliationId,
           originalBalance,
         ]
-      ) as [ResultSetHeader, any];
+      )) as [ResultSetHeader, any];
       if (updateResult.affectedRows === 0) {
         throw new VersionConflictError();
       }

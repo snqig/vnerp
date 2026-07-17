@@ -86,24 +86,32 @@ const PRIORITY_MAP: Record<string, { labelKey: string; className: string }> = {
 function AutoScroll({
   children,
   maxHeight = 320,
+  speed = 50,
 }: {
   children: React.ReactNode;
   maxHeight?: number;
+  speed?: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    const inner = innerRef.current;
+    if (!container || !inner) return;
 
     let animId: number;
     let scrollPos = 0;
+    const contentHeight = inner.scrollHeight / 2;
+    const viewportHeight = maxHeight;
+
+    if (contentHeight <= viewportHeight) return;
 
     const step = () => {
-      if (!isPaused && container) {
+      if (!isPaused) {
         scrollPos += 0.3;
-        if (scrollPos >= container.scrollHeight - maxHeight) {
+        if (scrollPos >= contentHeight) {
           scrollPos = 0;
         }
         container.scrollTop = scrollPos;
@@ -113,7 +121,7 @@ function AutoScroll({
 
     animId = requestAnimationFrame(step);
     return () => cancelAnimationFrame(animId);
-  }, [isPaused, maxHeight]);
+  }, [isPaused, maxHeight, children]);
 
   return (
     <div
@@ -123,7 +131,10 @@ function AutoScroll({
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {children}
+      <div ref={innerRef}>
+        {children}
+        {children}
+      </div>
     </div>
   );
 }
@@ -150,12 +161,7 @@ export default function ProductionDashboard() {
     staffStatus: { total: 0, onDuty: 0, onLeave: 0, attendance: 0 },
   });
   const [loading, setLoading] = useState(true);
-  const [currentTime, setCurrentTime] = useState<Date>(() => {
-    if (typeof window !== 'undefined') {
-      return new Date();
-    }
-    return new Date(0);
-  });
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
   const [efficiencyHistory, setEfficiencyHistory] = useState<number[]>([88, 90, 92, 91, 93, 95]);
@@ -163,7 +169,7 @@ export default function ProductionDashboard() {
   const [qualityHistory, setQualityHistory] = useState<number[]>([94, 95, 96, 95, 97, 96]);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
+    const t = setInterval(() => {
       setEfficiencyHistory((h) => {
         const val = Math.max(70, Math.min(100, h[h.length - 1] + (Math.random() * 6 - 3)));
         return h.length > 20 ? [...h.slice(1), Math.round(val)] : [...h, Math.round(val)];
@@ -177,7 +183,7 @@ export default function ProductionDashboard() {
         return h.length > 20 ? [...h.slice(1), Math.round(val)] : [...h, Math.round(val)];
       });
     }, 2500);
-    return () => clearInterval(intervalId);
+    return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
@@ -243,6 +249,7 @@ export default function ProductionDashboard() {
       }
     };
     fetchData();
+    setCurrentTime(new Date());
     const timer1 = setInterval(fetchData, 60000);
     const timer2 = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => {

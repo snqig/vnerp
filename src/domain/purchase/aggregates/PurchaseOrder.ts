@@ -25,6 +25,10 @@ export interface PurchaseOrderProps {
   totalQuantity?: number;
   taxAmount?: number;
   grandTotal?: number;
+  baseCurrency?: string;
+  baseTotalAmount?: number;
+  baseTaxAmount?: number;
+  baseGrandTotal?: number;
   overReceiptTolerance?: number;
   paymentTerms?: string;
   deliveryAddress?: string;
@@ -56,6 +60,10 @@ export class PurchaseOrder {
     private _totalQuantity: number,
     private _taxAmount: number,
     private _grandTotal: number,
+    public readonly baseCurrency: string,
+    private _baseTotalAmount: number,
+    private _baseTaxAmount: number,
+    private _baseGrandTotal: number,
     public readonly overReceiptTolerance: number,
     public readonly paymentTerms: string,
     public readonly deliveryAddress: string,
@@ -85,6 +93,10 @@ export class PurchaseOrder {
     const taxRate = props.taxRate || 13;
     const taxAmount = (totalAmount * taxRate) / 100;
     const grandTotal = totalAmount + taxAmount;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseTotalAmount = props.baseTotalAmount ?? 0;
+    const baseTaxAmount = props.baseTaxAmount ?? 0;
+    const baseGrandTotal = props.baseGrandTotal ?? 0;
 
     const order = new PurchaseOrder(
       props.id,
@@ -102,6 +114,10 @@ export class PurchaseOrder {
       totalQuantity,
       taxAmount,
       grandTotal,
+      baseCurrency,
+      baseTotalAmount,
+      baseTaxAmount,
+      baseGrandTotal,
       props.overReceiptTolerance ?? 5,
       props.paymentTerms || '',
       props.deliveryAddress || '',
@@ -123,6 +139,11 @@ export class PurchaseOrder {
           supplierName: order.supplierName,
           totalAmount: order.totalAmount,
           totalQuantity: order.totalQuantity,
+          currency: order.currency,
+          exchangeRate: order.exchangeRate,
+          baseCurrency: order.baseCurrency,
+          baseTotalAmount: order.baseTotalAmount,
+          baseGrandTotal: order.baseGrandTotal,
         })
       );
     }
@@ -145,6 +166,10 @@ export class PurchaseOrder {
     const taxAmount =
       props.taxAmount !== undefined ? props.taxAmount : (totalAmount * taxRate) / 100;
     const grandTotal = props.grandTotal !== undefined ? props.grandTotal : totalAmount + taxAmount;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseTotalAmount = props.baseTotalAmount ?? 0;
+    const baseTaxAmount = props.baseTaxAmount ?? 0;
+    const baseGrandTotal = props.baseGrandTotal ?? 0;
 
     return new PurchaseOrder(
       props.id,
@@ -162,6 +187,10 @@ export class PurchaseOrder {
       totalQuantity,
       taxAmount,
       grandTotal,
+      baseCurrency,
+      baseTotalAmount,
+      baseTaxAmount,
+      baseGrandTotal,
       props.overReceiptTolerance || 0,
       props.paymentTerms || '',
       props.deliveryAddress || '',
@@ -195,6 +224,15 @@ export class PurchaseOrder {
   }
   get grandTotal(): number {
     return this._grandTotal;
+  }
+  get baseTotalAmount(): number {
+    return this._baseTotalAmount;
+  }
+  get baseTaxAmount(): number {
+    return this._baseTaxAmount;
+  }
+  get baseGrandTotal(): number {
+    return this._baseGrandTotal;
   }
   get auditBy(): number | undefined {
     return this._auditBy;

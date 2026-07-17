@@ -12,6 +12,12 @@ export class PurchaseReconciliationCreatedEvent implements DomainEvent {
       receiptAmount: number;
       returnAmount: number;
       netAmount: number;
+      currency?: string;
+      exchangeRate?: number;
+      baseCurrency?: string;
+      baseReceiptAmount?: number;
+      baseNetAmount?: number;
+      baseBalanceAmount?: number;
     }
   ) {}
 }

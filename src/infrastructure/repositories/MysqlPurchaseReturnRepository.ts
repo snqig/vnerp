@@ -27,6 +27,9 @@ interface PurPurchaseReturnRow {
   reason: string;
   return_date: string;
   total_amount: number | string;
+  currency: string;
+  exchange_rate: number | string;
+  base_total_amount: number | string;
   approve_by: number | null;
   approve_time: string | null;
   complete_by: number | null;
@@ -56,6 +59,8 @@ interface PurPurchaseReturnLineRow {
   quantity: number | string;
   unit_price: number | string;
   amount: number | string;
+  base_unit_price: number | string;
+  base_amount: number | string;
   batch_no: string;
   reason: string;
   remark: string;
@@ -63,12 +68,14 @@ interface PurPurchaseReturnLineRow {
 
 const RETURN_COLUMNS = `id, return_no, status, order_id, order_no, supplier_id, supplier_name,
   warehouse_id, receipt_id, receipt_no, reason, return_date, total_amount,
+  currency, exchange_rate, base_total_amount,
   approve_by, approve_time, complete_by, complete_time,
   outbound_order_id, outbound_order_no, payable_id, payable_no,
   remark, create_by, create_time, update_time`;
 
 const LINE_COLUMNS = `id, return_id, line_no, order_line_id, material_id, material_code,
   material_name, material_spec, unit, quantity, unit_price, amount,
+  base_unit_price, base_amount,
   batch_no, reason, remark`;
 
 export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository {
@@ -195,8 +202,9 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
         `INSERT INTO pur_purchase_return
          (return_no, status, order_id, order_no, supplier_id, supplier_name,
           warehouse_id, receipt_id, receipt_no, reason, return_date, total_amount,
+          currency, exchange_rate, base_total_amount,
           remark, create_by, create_time, update_time, deleted)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
         [
           returnNo,
           ret.status.value,
@@ -210,6 +218,9 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
           ret.reason,
           ret.returnDate,
           ret.totalAmount,
+          ret.currency,
+          ret.exchangeRate,
+          ret.baseTotalAmount,
           ret.remark,
           ret.createBy ?? null,
         ]
@@ -222,8 +233,9 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
           `INSERT INTO pur_purchase_return_line
            (return_id, line_no, order_line_id, material_id, material_code,
             material_name, material_spec, unit, quantity, unit_price, amount,
+            base_unit_price, base_amount,
             batch_no, reason, remark)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             newId,
             line.lineNo,
@@ -236,6 +248,8 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
             line.quantity,
             line.unitPrice,
             line.amount,
+            line.baseUnitPrice,
+            line.baseAmount,
             line.batchNo,
             line.reason,
             line.remark,
@@ -305,6 +319,8 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
       quantity: Number(l.quantity),
       unitPrice: Number(l.unit_price),
       amount: Number(l.amount),
+      baseUnitPrice: Number(l.base_unit_price) || 0,
+      baseAmount: Number(l.base_amount) || 0,
       batchNo: l.batch_no || '',
       reason: l.reason || '',
       remark: l.remark || '',
@@ -324,6 +340,10 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
       reason: row.reason || '',
       returnDate: row.return_date ? String(row.return_date) : '',
       totalAmount: Number(row.total_amount || 0),
+      currency: row.currency || 'CNY',
+      exchangeRate: Number(row.exchange_rate) || 1.0,
+      baseCurrency: 'CNY',
+      baseTotalAmount: Number(row.base_total_amount) || 0,
       approveBy: row.approve_by ?? undefined,
       approveTime: row.approve_time ? String(row.approve_time) : undefined,
       completeBy: row.complete_by ?? undefined,

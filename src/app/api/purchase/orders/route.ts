@@ -10,13 +10,16 @@ import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { PurchaseApplicationService } from '@/application/services/PurchaseApplicationService';
+import { CurrencyApplicationService } from '@/application/services/CurrencyApplicationService';
 import { RepositoryRegistry } from '@/infrastructure/RepositoryRegistry';
+import { MysqlCurrencyRepository } from '@/infrastructure/repositories/MysqlCurrencyRepository';
 import { registerEventHandlers } from '@/application/EventRegistry';
 
 function getPurchaseService(): PurchaseApplicationService {
   registerEventHandlers();
   const orderRepo = RepositoryRegistry.getPurchaseOrderRepository();
-  return new PurchaseApplicationService(orderRepo);
+  const currencyService = new CurrencyApplicationService(new MysqlCurrencyRepository());
+  return new PurchaseApplicationService(orderRepo, currencyService);
 }
 
 export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
@@ -52,6 +55,10 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     tax_rate: order.taxRate,
     tax_amount: order.taxAmount,
     grand_total: order.grandTotal,
+    base_currency: order.baseCurrency,
+    base_total_amount: order.baseTotalAmount,
+    base_tax_amount: order.baseTaxAmount,
+    base_grand_total: order.baseGrandTotal,
     status: order.status.toDbCode(),
     status_label: order.status.label(),
     over_receipt_tolerance: order.overReceiptTolerance,
@@ -80,6 +87,10 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
       tax_rate: line.taxRate,
       tax_amount: line.taxAmount,
       line_total: line.lineTotal,
+      base_unit_price: line.baseUnitPrice,
+      base_amount: line.baseAmount,
+      base_tax_amount: line.baseTaxAmount,
+      base_line_total: line.baseLineTotal,
       require_date: line.requireDate,
       is_fully_received: line.isFullyReceived,
     })),
@@ -157,6 +168,13 @@ export const PUT = withPermission(
 
     if (!id) {
       return errorResponse('采购单ID不能为空', 400, 400);
+    }
+
+    if (body.currency !== undefined) {
+      return errorResponse('币种创建后不可修改', 400, 400);
+    }
+    if (body.exchange_rate !== undefined) {
+      return errorResponse('汇率创建后不可修改', 400, 400);
     }
 
     const service = getPurchaseService();

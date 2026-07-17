@@ -35,6 +35,10 @@ export interface PurchaseReturnProps {
   reason: string;
   returnDate?: string;
   totalAmount?: number;
+  currency?: string;
+  exchangeRate?: number;
+  baseCurrency?: string;
+  baseTotalAmount?: number;
   lines: PurchaseReturnLineProps[];
   approveBy?: number;
   approveTime?: string;
@@ -67,6 +71,10 @@ export class PurchaseReturn {
     private _reason: string,
     public readonly returnDate: string,
     private _totalAmount: number,
+    public readonly currency: string,
+    public readonly exchangeRate: number,
+    public readonly baseCurrency: string,
+    private _baseTotalAmount: number,
     private _lines: PurchaseReturnLine[],
     private _approveBy: number | undefined,
     private _approveTime: string | undefined,
@@ -104,6 +112,11 @@ export class PurchaseReturn {
     );
     const totalAmount = lines.reduce((sum, l) => sum + l.amount, 0);
 
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseTotalAmount = props.baseTotalAmount ?? 0;
+
     const order = new PurchaseReturn(
       props.id,
       props.returnNo || '',
@@ -118,6 +131,10 @@ export class PurchaseReturn {
       props.reason.trim(),
       props.returnDate || new Date().toISOString().slice(0, 10),
       Math.round(totalAmount * 100) / 100,
+      currency,
+      exchangeRate,
+      baseCurrency,
+      baseTotalAmount,
       lines,
       undefined,
       undefined,
@@ -142,6 +159,10 @@ export class PurchaseReturn {
           supplierId: order.supplierId,
           warehouseId: order.warehouseId,
           reason: order._reason,
+          currency: order.currency,
+          exchangeRate: order.exchangeRate,
+          baseCurrency: order.baseCurrency,
+          baseTotalAmount: order.baseTotalAmount,
           lines: lines.map((l) => ({
             materialId: l.materialId,
             materialCode: l.materialCode,
@@ -173,6 +194,10 @@ export class PurchaseReturn {
       props.reason || '',
       props.returnDate || '',
       props.totalAmount || 0,
+      props.currency || 'CNY',
+      props.exchangeRate || 1.0,
+      props.baseCurrency || 'CNY',
+      props.baseTotalAmount ?? 0,
       lines,
       props.approveBy,
       props.approveTime,
@@ -197,6 +222,9 @@ export class PurchaseReturn {
   }
   get totalAmount(): number {
     return this._totalAmount;
+  }
+  get baseTotalAmount(): number {
+    return this._baseTotalAmount;
   }
   get approveBy(): number | undefined {
     return this._approveBy;

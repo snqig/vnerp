@@ -9,10 +9,16 @@ import {
   getSystemConfigBoolean,
   getSystemConfigNumber,
 } from '@/lib/system-config';
+import { CurrencyApplicationService } from './CurrencyApplicationService';
+import { CurrencySnapshot } from '@/domain/shared/value-objects/CurrencySnapshot';
+import { Money } from '@/domain/shared/value-objects/Money';
 import type { ResultSetHeader } from 'mysql2/promise';
 
 export class PurchaseApplicationService {
-  constructor(private readonly orderRepo: IPurchaseOrderRepository) {}
+  constructor(
+    private readonly orderRepo: IPurchaseOrderRepository,
+    private readonly currencyService: CurrencyApplicationService
+  ) {}
 
   async getOrderById(id: number): Promise<PurchaseOrder> {
     const order = await this.orderRepo.findById(id);
@@ -72,6 +78,67 @@ export class PurchaseApplicationService {
         }
       }
     }
+
+    // 多币种换算为本位币
+    const baseCurrency = await getSystemConfig('finance.base_currency', 'CNY');
+    let exchangeRate = effectiveProps.exchangeRate || 1.0;
+    if (effectiveProps.currency && effectiveProps.currency !== baseCurrency) {
+      exchangeRate = await this.currencyService.getLatestRate(
+        effectiveProps.currency,
+        baseCurrency
+      );
+    }
+
+    const snapshot = CurrencySnapshot.create(
+      effectiveProps.currency || 'CNY',
+      exchangeRate,
+      baseCurrency
+    );
+
+    const baseCurrencyDecimalPlaces = 2;
+    effectiveProps = {
+      ...effectiveProps,
+      exchangeRate,
+      lines: effectiveProps.lines.map((line) => {
+        const originalUnitPrice = line.unitPrice || 0;
+        const originalAmount = (line.orderQty || 0) * originalUnitPrice;
+        const originalTaxAmount =
+          (originalAmount * (line.taxRate ?? effectiveProps.taxRate ?? 13)) / 100;
+        const originalLineTotal = originalAmount + originalTaxAmount;
+
+        return {
+          ...line,
+          baseUnitPrice: snapshot.convert(
+            Money.create(originalUnitPrice, snapshot.currency),
+            baseCurrencyDecimalPlaces
+          ).amount,
+          baseAmount: snapshot.convert(
+            Money.create(originalAmount, snapshot.currency),
+            baseCurrencyDecimalPlaces
+          ).amount,
+          baseTaxAmount: snapshot.convert(
+            Money.create(originalTaxAmount, snapshot.currency),
+            baseCurrencyDecimalPlaces
+          ).amount,
+          baseLineTotal: snapshot.convert(
+            Money.create(originalLineTotal, snapshot.currency),
+            baseCurrencyDecimalPlaces
+          ).amount,
+        };
+      }),
+    };
+
+    const baseTotalAmount = effectiveProps.lines.reduce((sum, l) => sum + (l.baseAmount || 0), 0);
+    const baseTaxAmount = effectiveProps.lines.reduce((sum, l) => sum + (l.baseTaxAmount || 0), 0);
+    const baseGrandTotal = baseTotalAmount + baseTaxAmount;
+
+    effectiveProps = {
+      ...effectiveProps,
+      baseCurrency,
+      baseTotalAmount: Math.round(baseTotalAmount * 100) / 100,
+      baseTaxAmount: Math.round(baseTaxAmount * 100) / 100,
+      baseGrandTotal: Math.round(baseGrandTotal * 100) / 100,
+    };
 
     const order = PurchaseOrder.create(effectiveProps);
     const result = await this.orderRepo.save(order);
@@ -133,10 +200,10 @@ export class PurchaseApplicationService {
     order.approve(auditBy);
 
     await transaction(async (conn) => {
-      const [result] = await conn.execute(
+      const [result] = (await conn.execute(
         'UPDATE pur_purchase_order SET status = ?, audit_by = ?, audit_time = NOW(), update_time = NOW() WHERE id = ? AND status = ?',
         [order.status.toDbCode(), auditBy, id, PurchaseOrderStatus.from(previousStatus).toDbCode()]
-      ) as [ResultSetHeader, any];
+      )) as [ResultSetHeader, any];
       if (result.affectedRows === 0) {
         throw new VersionConflictError();
       }

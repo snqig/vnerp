@@ -56,7 +56,6 @@ interface AuthState {
 export interface InitialAuthData {
   menus: Menu[];
   permissions: string[];
-  companyName?: string;
 }
 
 interface AuthContextType extends AuthState {
@@ -71,7 +70,6 @@ interface AuthContextType extends AuthState {
   hasPermission: (permission: string) => boolean;
   hasAnyPermission: (perms: string[]) => boolean;
   hasRole: (roleCode: string) => boolean;
-  companyName: string;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -132,19 +130,15 @@ export function AuthProvider({
   //   - isLoading = false（无需等首次 fetch）
   //   - user / isAuthenticated 仍由 useEffect 从 localStorage 恢复（避免 SSR 读取 localStorage）
   // 无 initialAuth 时（未登录 / SSR 预取失败）：保持原有行为，isLoading=true 显示骨架屏。
-
   const [state, setState] = useState<AuthState>({
     user: null,
     menus: initialAuth?.menus ?? [],
     permissions: initialAuth?.permissions ?? [],
     isAuthenticated: false,
-    isLoading: !(initialAuth && initialAuth.menus && initialAuth.menus.length > 0),
+    isLoading: !(initialAuth && initialAuth.menus.length > 0),
   });
 
   const [isHydrated, setIsHydrated] = useState(false);
-  const [companyName, setCompanyName] = useState(
-    initialAuth?.companyName ?? 'VNERP丝网印刷管理系统'
-  );
 
   useEffect(() => {
     setIsHydrated(true);
@@ -258,17 +252,17 @@ export function AuthProvider({
           // 仅恢复 user / isAuthenticated（这些字段 SSR 阶段无法从 localStorage 读取），
           // 仍触发后台静默刷新，保证菜单最终与服务端一致；同时持久化到 localStorage 作降级缓存。
           const ssrInitial = initialAuthRef.current;
-          if (ssrInitial && ssrInitial.menus && ssrInitial.menus.length > 0) {
+          if (ssrInitial && ssrInitial.menus.length > 0) {
             setState({
               user,
               menus: ssrInitial.menus,
-              permissions: ssrInitial.permissions ?? [],
+              permissions: ssrInitial.permissions,
               isAuthenticated: true,
               isLoading: false,
             });
             menusLoadedRef.current = true;
             menusCountRef.current = ssrInitial.menus.length;
-            saveCachedMenus(ssrInitial.menus, ssrInitial.permissions ?? []);
+            saveCachedMenus(ssrInitial.menus, ssrInitial.permissions);
             // 后台静默刷新，不清除认证状态
             fetchMenus(token, true, false).catch(() => {});
             return;
@@ -435,7 +429,6 @@ export function AuthProvider({
         hasPermission,
         hasAnyPermission,
         hasRole,
-        companyName,
       }}
     >
       {children}

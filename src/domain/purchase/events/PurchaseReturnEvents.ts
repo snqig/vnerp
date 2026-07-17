@@ -11,6 +11,10 @@ export class PurchaseReturnCreatedEvent implements DomainEvent {
       supplierId: number;
       warehouseId: number;
       reason: string;
+      currency?: string;
+      exchangeRate?: number;
+      baseCurrency?: string;
+      baseTotalAmount?: number;
       lines: Array<{
         materialId: number;
         materialCode: string;

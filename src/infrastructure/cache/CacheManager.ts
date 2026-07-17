@@ -72,12 +72,6 @@ let globalCache: CacheManager | null = null;
 
 /**
  * 缓存管理器工厂：根据 REDIS_URL env 自动选择实现
- *
- * 生产环境（NODE_ENV === 'production'）：
- * - 必须配置 REDIS_URL，Redis 连接失败时抛出错误，禁止降级到内存
- * - Token 黑名单、限流等安全功能必须多实例共享，否则失效
- *
- * 开发环境：
  * - REDIS_URL 存在 → RedisCacheManager（多实例共享）
  * - 未配置或连接失败 → InMemoryCacheManager（单实例降级，仅开发环境友好）
  *
@@ -87,17 +81,12 @@ let globalCache: CacheManager | null = null;
 export function getCacheManager(): CacheManager {
   if (!globalCache) {
     const redisUrl = process.env.REDIS_URL;
-    const isProduction = process.env.NODE_ENV === 'production';
-
     if (redisUrl) {
       try {
         globalCache = new RedisCacheManager(redisUrl);
         secureLog('info', 'CacheManager: 使用 RedisCacheManager', { redisUrl });
       } catch (err) {
         const e = err as Error;
-        if (isProduction) {
-          throw new Error(`CacheManager: Redis 初始化失败，生产环境不允许降级到内存: ${e.message}`);
-        }
         secureLog('error', 'CacheManager: RedisCacheManager 初始化失败，降级到内存', {
           message: e.message,
           stack: e.stack,
@@ -105,17 +94,11 @@ export function getCacheManager(): CacheManager {
         globalCache = new InMemoryCacheManager();
       }
     } else {
-      if (isProduction) {
-        secureLog(
-          'error',
-          'CacheManager: 生产环境未配置 REDIS_URL，降级到 InMemoryCacheManager（不推荐用于多实例部署）'
-        );
-      } else {
-        secureLog('info', 'CacheManager: 使用 InMemoryCacheManager（未配置 REDIS_URL）');
-      }
+      secureLog('info', 'CacheManager: 使用 InMemoryCacheManager（未配置 REDIS_URL）');
       globalCache = new InMemoryCacheManager();
     }
   }
+  // 此时 globalCache 必已初始化（所有分支都赋值）
   return globalCache as CacheManager;
 }
 

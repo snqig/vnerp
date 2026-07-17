@@ -29,8 +29,13 @@ export const GET = withPermission(async (request: NextRequest) => {
   if (id) {
     const rc = await queryOne<Loose>(
       `SELECT id, reconciliation_no, status, supplier_id, supplier_name,
-        period_start, period_end, receipt_amount, return_amount, net_amount,
-        discount_amount, paid_amount, balance_amount, remark,
+        period_start, period_end,
+        currency, exchange_rate,
+        receipt_amount, return_amount, net_amount,
+        discount_amount, paid_amount, balance_amount,
+        base_receipt_amount, base_return_amount, base_net_amount,
+        base_discount_amount, base_paid_amount, base_balance_amount,
+        remark,
         create_by, confirm_by, confirm_time, close_by, close_time,
         create_time, update_time
        FROM pur_purchase_reconciliation
@@ -87,8 +92,13 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   const list = await query<Loose>(
     `SELECT r.id, r.reconciliation_no, r.status, r.supplier_id, r.supplier_name,
-       r.period_start, r.period_end, r.receipt_amount, r.return_amount, r.net_amount,
-       r.discount_amount, r.paid_amount, r.balance_amount, r.remark,
+       r.period_start, r.period_end,
+       r.currency, r.exchange_rate,
+       r.receipt_amount, r.return_amount, r.net_amount,
+       r.discount_amount, r.paid_amount, r.balance_amount,
+       r.base_receipt_amount, r.base_return_amount, r.base_net_amount,
+       r.base_discount_amount, r.base_paid_amount, r.base_balance_amount,
+       r.remark,
        r.confirm_by, r.confirm_time, r.close_by, r.close_time,
        r.create_by, r.create_time, r.update_time
      FROM pur_purchase_reconciliation r
@@ -191,7 +201,7 @@ export const POST = withPermission(
         '采购对账单创建成功'
       );
     } catch (error) {
-      if (error instanceof DomainError || error instanceof NotFoundError) {
+      if (error instanceof DomainError) {
         return errorResponse(error.message, 400, 400);
       }
       throw error;

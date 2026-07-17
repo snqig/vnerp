@@ -35,6 +35,7 @@ import {
 import { Plus, RefreshCw, Undo2, CheckCircle, XCircle, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { MoneyDisplay } from '@/components/ui/money-display';
 
 interface ReturnItem {
   id?: number;
@@ -63,6 +64,10 @@ interface ReturnOrder {
   total_amount: number;
   tax_amount: number;
   grand_total: number;
+  currency?: string;
+  base_currency?: string;
+  base_total_amount?: number;
+  base_grand_total?: number;
   status: string;
   remark?: string;
   create_by?: number;
@@ -118,6 +123,8 @@ export default function PurchaseReturnPage() {
     return_date: new Date().toISOString().slice(0, 10),
     return_type: 'quality',
     remark: '',
+    currency: '',
+    base_currency: '',
   });
   const [items, setItems] = useState<ReturnItem[]>([]);
   const [detailItems, setDetailItems] = useState<Loose[]>([]);
@@ -170,6 +177,8 @@ export default function PurchaseReturnPage() {
         order_no: order.po_no,
         supplier_id: order.supplier_id,
         supplier_name: order.supplier_name,
+        currency: order.currency || 'CNY',
+        base_currency: order.base_currency || '',
       });
       // 自动填充退货明细
       const orderItems: ReturnItem[] = (order.lines || []).map((line: Loose, idx: number) => ({
@@ -285,6 +294,8 @@ export default function PurchaseReturnPage() {
       return_date: new Date().toISOString().slice(0, 10),
       return_type: 'quality',
       remark: '',
+      currency: '',
+      base_currency: '',
     });
     setItems([]);
     fetchPurchaseOrders();
@@ -346,6 +357,7 @@ export default function PurchaseReturnPage() {
                   <TableHead>退货日期</TableHead>
                   <TableHead>退货类型</TableHead>
                   <TableHead>{tc('amount')}</TableHead>
+                  <TableHead>{tc('currency')}</TableHead>
                   <TableHead>{tc('status')}</TableHead>
                   <TableHead className="text-right">{tc('actions')}</TableHead>
                 </TableRow>
@@ -353,13 +365,13 @@ export default function PurchaseReturnPage() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
+                    <TableCell colSpan={9} className="text-center py-8">
                       <RefreshCw className="w-5 h-5 animate-spin mx-auto" />
                     </TableCell>
                   </TableRow>
                 ) : list.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                       暂无退货记录
                     </TableCell>
                   </TableRow>
@@ -374,8 +386,15 @@ export default function PurchaseReturnPage() {
                         {returnTypeMap[order.return_type] || order.return_type}
                       </TableCell>
                       <TableCell className="text-sm font-mono">
-                        ¥{(order.grand_total || 0).toLocaleString()}
+                        <MoneyDisplay
+                          amount={Number(order.grand_total || order.total_amount || 0)}
+                          currency={order.currency || 'CNY'}
+                          baseAmount={order.base_grand_total}
+                          baseCurrency={order.base_currency}
+                          showSymbol={false}
+                        />
                       </TableCell>
+                      <TableCell className="text-sm">{order.currency || 'CNY'}</TableCell>
                       <TableCell>
                         <Badge className={statusMap[order.status]?.color || ''}>
                           {statusMap[order.status]?.label || order.status}
@@ -486,6 +505,10 @@ export default function PurchaseReturnPage() {
               <div className="space-y-2">
                 <Label>{tc('supplier')}</Label>
                 <Input value={form.supplier_name} readOnly className="bg-muted" />
+              </div>
+              <div className="space-y-2">
+                <Label>{tc('currency')}</Label>
+                <Input value={form.currency || 'CNY'} readOnly className="bg-muted" />
               </div>
               <div className="space-y-2">
                 <Label>退货日期</Label>
@@ -641,10 +664,27 @@ export default function PurchaseReturnPage() {
                 {t('returnType')}: {returnTypeMap[detailOrder?.return_type || '']}
               </div>
               <div>
-                {tc('amount')}: ¥{(detailOrder?.total_amount || 0).toLocaleString()}
+                {tc('currency')}: {detailOrder?.currency || 'CNY'}
               </div>
               <div>
-                {t('amountWithTaxTotal')}: ¥{(detailOrder?.grand_total || 0).toLocaleString()}
+                {tc('amount')}:{' '}
+                <MoneyDisplay
+                  amount={Number(detailOrder?.total_amount || 0)}
+                  currency={detailOrder?.currency || 'CNY'}
+                  baseAmount={detailOrder?.base_total_amount}
+                  baseCurrency={detailOrder?.base_currency}
+                  showSymbol={false}
+                />
+              </div>
+              <div>
+                {t('amountWithTaxTotal')}:{' '}
+                <MoneyDisplay
+                  amount={Number(detailOrder?.grand_total || 0)}
+                  currency={detailOrder?.currency || 'CNY'}
+                  baseAmount={detailOrder?.base_grand_total}
+                  baseCurrency={detailOrder?.base_currency}
+                  showSymbol={false}
+                />
               </div>
             </div>
             {detailOrder?.remark && (

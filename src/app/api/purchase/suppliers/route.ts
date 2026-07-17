@@ -21,6 +21,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     SELECT
       id,
       supplier_code,
+      default_currency,
       supplier_name,
       short_name,
       supplier_type,
@@ -80,6 +81,7 @@ export const POST = withPermission(
 
     const {
       supplier_code,
+      default_currency,
       supplier_name,
       short_name,
       supplier_type,
@@ -104,11 +106,12 @@ export const POST = withPermission(
 
     const result = await query(
       `INSERT INTO pur_supplier
-       (supplier_code, supplier_name, short_name, supplier_type, contact_name, contact_phone,
+       (supplier_code, default_currency, supplier_name, short_name, supplier_type, contact_name, contact_phone,
         contact_email, address, credit_level, settlement_method, payment_terms, status, remark, create_time)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
       [
         supplier_code,
+        default_currency || 'CNY',
         supplier_name,
         short_name || '',
         supplier_type || 1,
@@ -145,6 +148,7 @@ export const PUT = withPermission(
 
     const fieldMapping: { [key: string]: string } = {
       supplier_code: 'supplier_code',
+      default_currency: 'default_currency',
       supplier_name: 'supplier_name',
       short_name: 'short_name',
       supplier_type: 'supplier_type',
