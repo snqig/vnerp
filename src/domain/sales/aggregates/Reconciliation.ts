@@ -202,6 +202,16 @@ export class Reconciliation {
       balanceAmount = roundMoney(netAmount - discountAmount - receivedAmount);
     }
 
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseDeliveryAmount = props.baseDeliveryAmount ?? 0;
+    const baseReturnAmount = props.baseReturnAmount ?? 0;
+    const baseNetAmount = props.baseNetAmount ?? 0;
+    const baseDiscountAmount = props.baseDiscountAmount ?? 0;
+    const baseReceivedAmount = props.baseReceivedAmount ?? 0;
+    const baseBalanceAmount = props.baseBalanceAmount ?? 0;
+
     const writeOffRecords = (props.writeOffRecords || []).map((r) =>
       WriteOffRecord.reconstitute(r)
     );
@@ -220,6 +230,15 @@ export class Reconciliation {
       discountAmount,
       receivedAmount,
       balanceAmount,
+      currency,
+      exchangeRate,
+      baseCurrency,
+      baseDeliveryAmount,
+      baseReturnAmount,
+      baseNetAmount,
+      baseDiscountAmount,
+      baseReceivedAmount,
+      baseBalanceAmount,
       props.lines || [],
       writeOffRecords,
       props.remark || '',
@@ -253,6 +272,24 @@ export class Reconciliation {
   }
   get balanceAmount(): number {
     return this._balanceAmount;
+  }
+  get baseDeliveryAmount(): number {
+    return this._baseDeliveryAmount;
+  }
+  get baseReturnAmount(): number {
+    return this._baseReturnAmount;
+  }
+  get baseNetAmount(): number {
+    return this._baseNetAmount;
+  }
+  get baseDiscountAmount(): number {
+    return this._baseDiscountAmount;
+  }
+  get baseReceivedAmount(): number {
+    return this._baseReceivedAmount;
+  }
+  get baseBalanceAmount(): number {
+    return this._baseBalanceAmount;
   }
   get confirmBy(): number | undefined {
     return this._confirmBy;

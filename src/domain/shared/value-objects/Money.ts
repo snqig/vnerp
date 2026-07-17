@@ -60,4 +60,28 @@ export class Money {
   equals(other: Money): boolean {
     return this.amount === other.amount && this.currency === other.currency;
   }
+
+  /**
+   * 按汇率转换为目标币种（返回新的 Money 对象）
+   * @param rate 汇率（from→to）
+   * @param targetCurrency 目标币种代码
+   * @param decimalPlaces 目标币种小数位（VND=0, CNY/USD=2）
+   * 注意：本方法不支持 redLetter 创建的负数金额；如需负数转换，使用场景出现后再行扩展。
+   */
+  convertTo(rate: number, targetCurrency: string, decimalPlaces: number = 2): Money {
+    if (this.currency === targetCurrency) {
+      return new Money(this.amount, this.currency);
+    }
+    const converted = this.amount * rate;
+    const factor = Math.pow(10, decimalPlaces);
+    const rounded = Math.round(converted * factor) / factor;
+    return new Money(rounded, targetCurrency);
+  }
+
+  /**
+   * 按指定小数位格式化金额为字符串
+   */
+  format(decimalPlaces: number = 2): string {
+    return this.amount.toFixed(decimalPlaces);
+  }
 }

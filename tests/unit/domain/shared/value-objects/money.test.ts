@@ -126,4 +126,74 @@ describe('8.3 Money 值对象', () => {
       expect(Money.create(99.999).amount).toBe(100);
     });
   });
+
+  describe('convertTo() 汇率转换', () => {
+    it('同币种转换忽略汇率返回等价金额', () => {
+      const m = Money.create(100, 'CNY');
+      const result = m.convertTo(7.25, 'CNY', 2);
+      expect(result.amount).toBe(100);
+      expect(result.currency).toBe('CNY');
+    });
+
+    it('USD 转 CNY 正确换算', () => {
+      const usd = Money.create(1000, 'USD');
+      const cny = usd.convertTo(7.25, 'CNY', 2);
+      expect(cny.amount).toBe(7250);
+      expect(cny.currency).toBe('CNY');
+    });
+
+    it('VND 转 CNY 零小数位', () => {
+      const vnd = Money.create(250000, 'VND');
+      const cny = vnd.convertTo(0.0003, 'CNY', 2);
+      expect(cny.amount).toBe(75);
+      expect(cny.currency).toBe('CNY');
+    });
+
+    it('转换结果舍入到 2 位小数（舍去方向）', () => {
+      // 10 * 0.3333 = 3.333 → 舍去第 3 位 → 3.33
+      const usd = Money.create(10, 'USD');
+      const cny = usd.convertTo(0.3333, 'CNY', 2);
+      expect(cny.amount).toBe(3.33);
+    });
+
+    it('转换结果舍入到 2 位小数（进位方向）', () => {
+      // 10 * 0.3338 = 3.338 → 进位第 3 位 → 3.34
+      const usd = Money.create(10, 'USD');
+      const cny = usd.convertTo(0.3338, 'CNY', 2);
+      expect(cny.amount).toBe(3.34);
+    });
+
+    it('VND 0 位小数舍入（舍去方向）', () => {
+      // 100.4 * 1 = 100.4 → 舍去小数 → 100
+      const cny = Money.create(100.4, 'CNY');
+      const vnd = cny.convertTo(1, 'VND', 0);
+      expect(vnd.amount).toBe(100);
+    });
+
+    it('VND 0 位小数舍入（进位方向）', () => {
+      // 100.5 * 1 = 100.5 → 进位 → 101
+      const cny = Money.create(100.5, 'CNY');
+      const vnd = cny.convertTo(1, 'VND', 0);
+      expect(vnd.amount).toBe(101);
+    });
+  });
+
+  describe('format() 格式化', () => {
+    it('默认 2 位小数', () => {
+      expect(Money.create(1234.5).format()).toBe('1234.50');
+    });
+
+    it('VND 0 位小数', () => {
+      const vnd = Money.create(250000, 'VND');
+      expect(vnd.format(0)).toBe('250000');
+    });
+
+    it('负数格式化（红字）', () => {
+      // 注意：redLetter(-100) 创建负数金额（allowNegative=true）
+      // 计划原文写的是 redLetter(100) 期望 '-100.00'，但 redLetter(100) 创建的是正数 100
+      // 修正为 redLetter(-100) 以正确测试负数格式化
+      const red = Money.redLetter(-100, 'CNY');
+      expect(red.format(2)).toBe('-100.00');
+    });
+  });
 });
