@@ -78,7 +78,7 @@ export default function ProjectUploaderPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [repoName, setRepoName] = useState('erp-project');
-  const [repoDesc, setRepoDesc] = useState('ERP 项目管理系统');
+  const [repoDesc, setRepoDesc] = useState(tc('toolsRepoDescDefault'));
   const [isPrivate, setIsPrivate] = useState(false);
   const [commitMsg, setCommitMsg] = useState('Initial commit');
   const [uploading, setUploading] = useState(false);
@@ -127,13 +127,13 @@ export default function ProjectUploaderPage() {
       const data = await res.json();
       setStatus(data.message);
     } catch {
-      setStatus('生成 .gitignore 失败');
+      setStatus(tc('toolsGenGitignoreFailed'));
     }
   };
 
   const uploadToGitHub = async () => {
     setUploading(true);
-    setStatus('正在上传...');
+    setStatus(tc('toolsUploadingStatus'));
 
     try {
       const res = await fetch('/api/project-files/upload', {
@@ -151,7 +151,7 @@ export default function ProjectUploaderPage() {
       const data = await res.json();
       setStatus(data.message);
     } catch {
-      setStatus('上传失败');
+      setStatus(tc('toolsUploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -162,7 +162,7 @@ export default function ProjectUploaderPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">{tc('text_qyzp04')}</p>
+          <p className="text-muted-foreground">{tc('toolsLoading')}</p>
         </div>
       </div>
     );
@@ -172,15 +172,15 @@ export default function ProjectUploaderPage() {
     <div className="container mx-auto py-6 space-y-6">
       {/* 标题 */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">项目上传工具</h1>
-        <p className="text-muted-foreground">选择文件上传到 GitHub（已排除 . 开头的文件和目录）</p>
+        <h1 className="text-3xl font-bold tracking-tight">{tc('toolsUploadTitle')}</h1>
+        <p className="text-muted-foreground">{tc('toolsUploadDesc')}</p>
       </div>
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{tc('text_ck7e1y')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{tc('toolsFileTotal')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{files.length}</div>
@@ -188,7 +188,7 @@ export default function ProjectUploaderPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{tc('text_ej39f')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{tc('toolsTotalSize')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -206,7 +206,7 @@ export default function ProjectUploaderPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{tc('text_ikxj9k')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{tc('toolsSelectedSize')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-500">{formatSize(selectedSize)}</div>
@@ -216,8 +216,8 @@ export default function ProjectUploaderPage() {
 
       <Tabs defaultValue="files" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="files">{tc('text_d4yym8')}</TabsTrigger>
-          <TabsTrigger value="settings">{tc('text_a6m4w6')}</TabsTrigger>
+          <TabsTrigger value="files">{tc('toolsFileList')}</TabsTrigger>
+          <TabsTrigger value="settings">{tc('toolsUploadSettings')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="files">
@@ -225,22 +225,23 @@ export default function ProjectUploaderPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>{tc('text_d4yym8')}</CardTitle>
+                  <CardTitle>{tc('toolsFileList')}</CardTitle>
                   <CardDescription>
-                    共{files.length}
-                    {tc('text_wxe0ol')}
+                    {tc('analysisTotalPrefix')}
+                    {files.length}
+                    {tc('toolsFileCountSuffix')}
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="搜索文件..."
+                    placeholder={tc('toolsSearchFile')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-64"
                   />
                   <Button onClick={selectAll}>{tc('selectAll')}</Button>
                   <Button variant="outline" onClick={deselectAll}>
-                    取消全选
+                    {tc('toolsCancelSelectAll')}
                   </Button>
                 </div>
               </div>
@@ -250,11 +251,11 @@ export default function ProjectUploaderPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-12">选择</TableHead>
-                      <TableHead>{tc('text_d58wzo')}</TableHead>
+                      <TableHead className="w-12">{tc('toolsSelect')}</TableHead>
+                      <TableHead>{tc('toolsFilePath')}</TableHead>
                       <TableHead className="w-24">{tc('type')}</TableHead>
-                      <TableHead className="w-24">{tc('text_fo3s')}</TableHead>
-                      <TableHead className="w-36">{tc('text_ai9edl')}</TableHead>
+                      <TableHead className="w-24">{tc('toolsFileSize')}</TableHead>
+                      <TableHead className="w-36">{tc('toolsModifiedTime')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -285,8 +286,9 @@ export default function ProjectUploaderPage() {
                 </Table>
                 {filteredFiles.length > 100 && (
                   <p className="text-center text-muted-foreground py-4">
-                    {tc('text_j5mobk')}
-                    {filteredFiles.length}个
+                    {tc('toolsDisplayLimitPrefix')}
+                    {filteredFiles.length}
+                    {tc('toolsDisplayLimitSuffix')}
                   </p>
                 )}
               </ScrollArea>
@@ -297,13 +299,13 @@ export default function ProjectUploaderPage() {
         <TabsContent value="settings">
           <Card>
             <CardHeader>
-              <CardTitle>{tc('text_97jqu5')}</CardTitle>
-              <CardDescription>{tc('text_8lm3n8')}</CardDescription>
+              <CardTitle>{tc('toolsRepoSettings')}</CardTitle>
+              <CardDescription>{tc('toolsRepoSettingsDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="repoName">仓库名称</Label>
+                  <Label htmlFor="repoName">{tc('toolsRepoName')}</Label>
                   <Input
                     id="repoName"
                     value={repoName}
@@ -311,7 +313,7 @@ export default function ProjectUploaderPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="repoDesc">{tc('text_ac98o1')}</Label>
+                  <Label htmlFor="repoDesc">{tc('toolsRepoDesc')}</Label>
                   <Input
                     id="repoDesc"
                     value={repoDesc}
@@ -321,7 +323,7 @@ export default function ProjectUploaderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="commitMsg">{tc('text_cx4d4y')}</Label>
+                <Label htmlFor="commitMsg">{tc('toolsCommitMsg')}</Label>
                 <Input
                   id="commitMsg"
                   value={commitMsg}
@@ -335,15 +337,17 @@ export default function ProjectUploaderPage() {
                   checked={isPrivate}
                   onCheckedChange={(checked) => setIsPrivate(checked as boolean)}
                 />
-                <Label htmlFor="private">{tc('text_fsbedk')}</Label>
+                <Label htmlFor="private">{tc('toolsPrivateRepo')}</Label>
               </div>
 
               <div className="flex gap-4 pt-4">
                 <Button onClick={generateGitignore} variant="outline">
-                  生成 .gitignore
+                  {tc('toolsGenerateGitignore')}
                 </Button>
                 <Button onClick={uploadToGitHub} disabled={uploading || selectedCount === 0}>
-                  {uploading ? '上传中...' : `上传 ${selectedCount} 个文件到 GitHub`}
+                  {uploading
+                    ? tc('toolsUploading')
+                    : tc('toolsUploadFilesToGithub', { count: selectedCount })}
                 </Button>
               </div>
 

@@ -2,7 +2,7 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,9 +69,9 @@ const LABEL_STATUS_CONFIG: Record<
 };
 
 export default function ProductLabelPage() {
-  // 翻译钩子
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const exportColumns = [
     { key: 'label_no', header: t('labelNo') },
@@ -147,14 +147,14 @@ export default function ProductLabelPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功' });
+        toast({ title: tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -166,32 +166,32 @@ export default function ProductLabelPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '更新成功' });
+        toast({ title: tc('updateSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch('/api/production/product-label?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
   const handleBatchPrint = async () => {
     const items = list.filter((i) => selectedIds.has(i.id));
     if (items.length === 0) {
-      toast({ title: '请先选择要打印的标签', variant: 'destructive' });
+      toast({ title: t('selectLabelFirst'), variant: 'destructive' });
       return;
     }
     setPrintItems(items);
@@ -227,7 +227,7 @@ export default function ProductLabelPage() {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) return;
     printWindow.document.write(`
-      <html><head><title>成品标签打印</title>
+      <html><head><title>${t('productLabelTitle')}</title>
       <style>
         body { margin: 10px; font-family: 'Microsoft YaHei', sans-serif; }
         .label-page { page-break-after: always; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -269,12 +269,23 @@ export default function ProductLabelPage() {
       status_label: getExportLabel(item.status),
     }));
 
-  const handlePrint = () => printTable(getExportData(), exportColumns, '成品标签');
+  const handlePrint = () => printTable(getExportData(), exportColumns, t('productLabelTitle'));
   const handleExportPDF = () =>
-    exportTableToPDF(getExportData(), '成品标签', exportColumns, '成品标签');
-  const handleExportXLS = () => exportTableToXLS(getExportData(), '成品标签', exportColumns);
+    exportTableToPDF(
+      getExportData(),
+      t('productLabelTitle'),
+      exportColumns,
+      t('productLabelTitle')
+    );
+  const handleExportXLS = () =>
+    exportTableToXLS(getExportData(), t('productLabelTitle'), exportColumns);
   const handleExportWORD = () =>
-    exportTableToWORD(getExportData(), '成品标签', exportColumns, '成品标签');
+    exportTableToWORD(
+      getExportData(),
+      t('productLabelTitle'),
+      exportColumns,
+      t('productLabelTitle')
+    );
 
   return (
     <MainLayout>
@@ -325,8 +336,8 @@ export default function ProductLabelPage() {
               </Button>
             </div>
             <GlobalExportToolbar
-              filename="成品标签"
-              title="成品标签"
+              filename={t('productLabelTitle')}
+              title={t('productLabelTitle')}
               columns={[
                 { key: 'label_no', label: t('labelNo'), width: 18 },
                 { key: 'work_order_no', label: t('workOrderNo'), width: 15 },
@@ -542,7 +553,7 @@ export default function ProductLabelPage() {
               <div>
                 <Label>{t('unit')}</Label>
                 <Input
-                  value={editItem.unit || '张'}
+                  value={editItem.unit || t('units.sheet')}
                   onChange={(e) => setEditItem({ ...editItem, unit: e.target.value })}
                 />
               </div>

@@ -94,7 +94,7 @@ export default function DbRelationsPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">{tc('text_4b7453')}</p>
+          <p className="text-muted-foreground">{tc('analysisLoading')}</p>
         </div>
       </div>
     );
@@ -103,7 +103,7 @@ export default function DbRelationsPage() {
   if (!data) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-destructive">{tc('text_v327nl')}</p>
+        <p className="text-destructive">{tc('analysisLoadFailed')}</p>
       </div>
     );
   }
@@ -116,11 +116,11 @@ export default function DbRelationsPage() {
     <div className="container mx-auto py-6 space-y-6">
       {/* 页面标题 */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">{tc('text_6t9kkl')}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{tc('analysisPageTitle')}</h1>
         <p className="text-muted-foreground">
-          {tc('text_kyfj1x')}
+          {tc('analysisPageDescPrefix')}
           {totalTables}
-          {tc('text_nkbl1q')}
+          {tc('analysisPageDescSuffix')}
         </p>
       </div>
 
@@ -128,7 +128,7 @@ export default function DbRelationsPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{tc('text_er6gz')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{tc('analysisTotalTables')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalTables}</div>
@@ -136,7 +136,7 @@ export default function DbRelationsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">外键关系</CardTitle>
+            <CardTitle className="text-sm font-medium">{tc('analysisFkTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-500">{totalForeignKeys}</div>
@@ -144,7 +144,7 @@ export default function DbRelationsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">逻辑关联</CardTitle>
+            <CardTitle className="text-sm font-medium">{tc('analysisLogicalCardTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-500">{totalLogicalRelations}</div>
@@ -152,7 +152,7 @@ export default function DbRelationsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{tc('text_dr6o1h')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{tc('analysisModuleCount')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-500">
@@ -167,13 +167,13 @@ export default function DbRelationsPage() {
         {/* 模块分布饼图 */}
         <Card>
           <CardHeader>
-            <CardTitle>模块分布</CardTitle>
-            <CardDescription>{tc('text_k33wbg')}</CardDescription>
+            <CardTitle>{tc('analysisModuleDistribution')}</CardTitle>
+            <CardDescription>{tc('analysisModuleDistDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <img
               src="https://mdn.alipayobjects.com/one_clip/afts/img/AW7BSbaam-gAAAAARSAAAAgAoEACAQFr/original"
-              alt="模块分布饼图"
+              alt={tc('analysisModulePieAlt')}
               className="w-full h-auto"
             />
           </CardContent>
@@ -182,13 +182,13 @@ export default function DbRelationsPage() {
         {/* 关联数量柱状图 */}
         <Card>
           <CardHeader>
-            <CardTitle>表关联数量 TOP 20</CardTitle>
-            <CardDescription>{tc('text_v9manb')}</CardDescription>
+            <CardTitle>{tc('analysisTop20Relations')}</CardTitle>
+            <CardDescription>{tc('analysisTopRelDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <img
               src="https://mdn.alipayobjects.com/one_clip/afts/img/GnogTL6uYV8AAAAAQ0AAAAgAoEACAQFr/original"
-              alt="关联数量柱状图"
+              alt={tc('analysisRelBarAlt')}
               className="w-full h-auto"
             />
           </CardContent>
@@ -198,18 +198,18 @@ export default function DbRelationsPage() {
       {/* 详细信息标签页 */}
       <Tabs defaultValue="modules" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="modules">模块分组</TabsTrigger>
-          <TabsTrigger value="tables">所有表</TabsTrigger>
-          <TabsTrigger value="foreignkeys">外键关系</TabsTrigger>
-          <TabsTrigger value="logical">逻辑关联</TabsTrigger>
+          <TabsTrigger value="modules">{tc('analysisModulesTab')}</TabsTrigger>
+          <TabsTrigger value="tables">{tc('analysisAllTablesTab')}</TabsTrigger>
+          <TabsTrigger value="foreignkeys">{tc('analysisFkTab')}</TabsTrigger>
+          <TabsTrigger value="logical">{tc('analysisLogicalTab')}</TabsTrigger>
         </TabsList>
 
         {/* 模块分组 */}
         <TabsContent value="modules">
           <Card>
             <CardHeader>
-              <CardTitle>模块分组</CardTitle>
-              <CardDescription>{tc('text_fjr4cz')}</CardDescription>
+              <CardTitle>{tc('analysisModulesTab')}</CardTitle>
+              <CardDescription>{tc('analysisModuleGroupDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -228,7 +228,7 @@ export default function DbRelationsPage() {
                         </CardTitle>
                         <Badge variant="outline">
                           {tables.length}
-                          {tc('text_gxfs')}
+                          {tc('analysisTablesUnit')}
                         </Badge>
                       </div>
                     </CardHeader>
@@ -243,11 +243,12 @@ export default function DbRelationsPage() {
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium truncate">{table.name}</p>
                                 <p className="text-xs text-muted-foreground truncate">
-                                  {table.comment || '无注释'}
+                                  {table.comment || tc('analysisNoComment')}
                                 </p>
                               </div>
                               <Badge variant="secondary" className="ml-2">
-                                {table.rows}行
+                                {table.rows}
+                                {tc('analysisRowsSuffix')}
                               </Badge>
                             </div>
                           ))}
@@ -265,20 +266,21 @@ export default function DbRelationsPage() {
         <TabsContent value="tables">
           <Card>
             <CardHeader>
-              <CardTitle>{tc('text_yhjvgk')}</CardTitle>
+              <CardTitle>{tc('analysisAllTables')}</CardTitle>
               <CardDescription>
-                共{totalTables}
-                {tc('text_gxfs')}
+                {tc('analysisTotalPrefix')}
+                {totalTables}
+                {tc('analysisTableCount')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>表名</TableHead>
-                    <TableHead>说明</TableHead>
-                    <TableHead>{tc('text_d7t8gy')}</TableHead>
-                    <TableHead>模块</TableHead>
+                    <TableHead>{tc('analysisTableName')}</TableHead>
+                    <TableHead>{tc('analysisTableComment')}</TableHead>
+                    <TableHead>{tc('analysisRowCount')}</TableHead>
+                    <TableHead>{tc('analysisTableModule')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -311,24 +313,25 @@ export default function DbRelationsPage() {
         <TabsContent value="foreignkeys">
           <Card>
             <CardHeader>
-              <CardTitle>外键关系</CardTitle>
+              <CardTitle>{tc('analysisFkTitle')}</CardTitle>
               <CardDescription>
-                共{totalForeignKeys}
-                {tc('text_xcm9yi')}
+                {tc('analysisTotalPrefix')}
+                {totalForeignKeys}
+                {tc('analysisFkCount')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {totalForeignKeys === 0 ? (
-                <p className="text-muted-foreground text-center py-8">数据库中没有定义外键关系</p>
+                <p className="text-muted-foreground text-center py-8">{tc('analysisNoFk')}</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{tc('text_jjyw')}</TableHead>
-                      <TableHead>{tc('text_gn4cu')}</TableHead>
-                      <TableHead>{tc('text_hxk1b')}</TableHead>
-                      <TableHead>{tc('text_ffp6fr')}</TableHead>
-                      <TableHead>{tc('text_j1uwk')}</TableHead>
+                      <TableHead>{tc('analysisFromTable')}</TableHead>
+                      <TableHead>{tc('analysisFromColumn')}</TableHead>
+                      <TableHead>{tc('analysisToTable')}</TableHead>
+                      <TableHead>{tc('analysisToColumn')}</TableHead>
+                      <TableHead>{tc('analysisConstraint')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -354,9 +357,9 @@ export default function DbRelationsPage() {
         <TabsContent value="logical">
           <Card>
             <CardHeader>
-              <CardTitle>{tc('text_cdd1nj')}</CardTitle>
+              <CardTitle>{tc('analysisLogicalTitle')}</CardTitle>
               <CardDescription>
-                {tc('text_lclylq')}
+                {tc('analysisLogicalDesc')}
                 {totalLogicalRelations}个
               </CardDescription>
             </CardHeader>
@@ -364,10 +367,10 @@ export default function DbRelationsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{tc('text_jjyw')}</TableHead>
-                    <TableHead>{tc('text_at2o8v')}</TableHead>
-                    <TableHead>{tc('text_hxk1b')}</TableHead>
-                    <TableHead>{tc('text_ffp6fr')}</TableHead>
+                    <TableHead>{tc('analysisFromTable')}</TableHead>
+                    <TableHead>{tc('analysisLogicalFromColumn')}</TableHead>
+                    <TableHead>{tc('analysisToTable')}</TableHead>
+                    <TableHead>{tc('analysisToColumn')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

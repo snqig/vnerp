@@ -105,27 +105,27 @@ export default function DieManagementPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: editItem.id ? '更新成功' : '创建成功' });
+        toast({ title: editItem.id ? tc('updateSuccess') : tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch('/api/prepress/die?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -133,7 +133,7 @@ export default function DieManagementPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{tc('text_aov4u4')}</h1>
+          <h1 className="text-2xl font-bold">{tc('dcDieMgmtTitle')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
@@ -174,9 +174,9 @@ export default function DieManagementPage() {
                   <TableHead className="text-xs">{tc('type')}</TableHead>
                   <TableHead className="text-xs">尺寸规格</TableHead>
                   <TableHead className="text-xs">{tc('product')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_dd9hp2')}</TableHead>
+                  <TableHead className="text-xs">{tc('dcMaxUseCountHead')}</TableHead>
                   <TableHead className="text-xs">已用</TableHead>
-                  <TableHead className="text-xs">{tc('text_egb4')}</TableHead>
+                  <TableHead className="text-xs">{tc('dcRemainingCountHead')}</TableHead>
                   <TableHead className="text-xs">{tc('status')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>

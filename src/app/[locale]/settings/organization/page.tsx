@@ -224,12 +224,12 @@ export default function OrganizationPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success('企业信息保存成功');
+        toast.success(tc('companySaved'));
       } else {
         toast.error(result.message || '保存失败');
       }
     } catch {
-      toast.error('保存企业信息失败');
+      toast.error(tc('saveFailed'));
     } finally {
       setCompanySaving(false);
     }
@@ -371,26 +371,26 @@ export default function OrganizationPage() {
         toast.error(result.message || tc('error'));
       }
     } catch {
-      toast.error('保存部门失败');
+      toast.error(tc('saveFailed'));
     }
   };
 
   // 删除部门
   const deleteDepartment = async (id: number) => {
-    if (!confirm('确定要删除该部门吗？')) return;
+    if (!window.confirm(tc('confirmDeleteDept'))) return;
     try {
       const response = await authFetch(`/api/organization/department?id=${id}`, {
         method: 'DELETE',
       });
       const result = await response.json();
       if (result.success) {
-        toast.success('部门删除成功');
+        toast.success(tc('deptDeleted'));
         fetchDepartments();
       } else {
         toast.error(result.message || '删除失败');
       }
     } catch {
-      toast.error('删除部门失败');
+      toast.error(tc('deleteFailed'));
     }
   };
 
@@ -547,18 +547,18 @@ export default function OrganizationPage() {
   const saveRole = async () => {
     // 表单验证
     if (!roleForm.code || !roleForm.code.trim()) {
-      toast.error('请输入角色编码');
+      toast.error(tc('enterRoleCode'));
       return;
     }
     if (!roleForm.name || !roleForm.name.trim()) {
-      toast.error('请输入角色名称');
+      toast.error(tc('enterRoleName'));
       return;
     }
 
     // 检查编码重复
     if (checkRoleCodeDuplicate(roleForm.code, roleForm.id)) {
-      setCodeError('该角色编码已存在');
-      toast.error('该角色编码已存在');
+      setCodeError(tc('roleCodeExists'));
+      toast.error(tc('roleCodeExists'));
       return;
     }
 
@@ -585,26 +585,26 @@ export default function OrganizationPage() {
         toast.error(result.message || tc('error'));
       }
     } catch {
-      toast.error('保存角色失败');
+      toast.error(tc('saveFailed'));
     }
   };
 
   // 删除角色
   const deleteRole = async (id: number) => {
-    if (!confirm('确定要删除该角色吗？')) return;
+    if (!window.confirm(tc('confirmDeleteRole'))) return;
     try {
       const response = await authFetch(`/api/organization/role?id=${id}`, {
         method: 'DELETE',
       });
       const result = await response.json();
       if (result.success) {
-        toast.success('角色删除成功');
+        toast.success(tc('roleDeleted'));
         fetchRoles();
       } else {
         toast.error(result.message || '删除失败');
       }
     } catch {
-      toast.error('删除角色失败');
+      toast.error(tc('deleteFailed'));
     }
   };
 
@@ -760,7 +760,7 @@ export default function OrganizationPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>{tc('text_aam9iq')}</Label>
+                        <Label>{tc('websiteLabel')}</Label>
                         <Input
                           value={company.website || ''}
                           onChange={(e) => setCompany({ ...company, website: e.target.value })}
@@ -776,7 +776,7 @@ export default function OrganizationPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>{tc('text_pb1k')}</Label>
+                        <Label>{tc('postalCodeLabel')}</Label>
                         <Input
                           value={company.postcode || ''}
                           onChange={(e) => setCompany({ ...company, postcode: e.target.value })}
@@ -786,10 +786,10 @@ export default function OrganizationPage() {
                     </div>
 
                     <div className="border-t pt-6">
-                      <h3 className="text-lg font-semibold mb-4">{tc('text_70dlhz')}</h3>
+                      <h3 className="text-lg font-semibold mb-4">{tc('financialInfo')}</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>{tc('text_4yz4qb')}</Label>
+                          <Label>{tc('taxIdLabel')}</Label>
                           <Input
                             value={company.tax_no || ''}
                             onChange={(e) => setCompany({ ...company, tax_no: e.target.value })}
@@ -818,7 +818,7 @@ export default function OrganizationPage() {
                     </div>
 
                     <div className="border-t pt-6">
-                      <h3 className="text-lg font-semibold mb-4">{tc('text_aarfb8')}</h3>
+                      <h3 className="text-lg font-semibold mb-4">{tc('companyIntro')}</h3>
                       <Textarea
                         value={company.description || ''}
                         onChange={(e) => setCompany({ ...company, description: e.target.value })}
@@ -839,7 +839,9 @@ export default function OrganizationPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">{tc('text_n2lby3')}</div>
+                  <div className="text-center py-8 text-muted-foreground">
+                    {tc('noCompanyInfo')}
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -854,7 +856,7 @@ export default function OrganizationPage() {
                     <Users className="w-5 h-5" />
                     部门管理
                   </CardTitle>
-                  <CardDescription>{tc('text_p2iek1')}</CardDescription>
+                  <CardDescription>{tc('deptManagementDesc')}</CardDescription>
                 </div>
                 <Button
                   onClick={() => {
@@ -902,7 +904,7 @@ export default function OrganizationPage() {
                     <Shield className="w-5 h-5" />
                     角色权限
                   </CardTitle>
-                  <CardDescription>{tc('text_t05ypd')}</CardDescription>
+                  <CardDescription>{tc('rolePermissionDesc')}</CardDescription>
                 </div>
                 <Button
                   onClick={() => {
@@ -1023,7 +1025,7 @@ export default function OrganizationPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>{tc('text_adlqxp')}</Label>
+              <Label>{tc('parentDepartmentLabel')}</Label>
               <Select
                 value={String(deptForm.parent_id ?? 0)}
                 onValueChange={(value) => setDeptForm({ ...deptForm, parent_id: parseInt(value) })}
@@ -1032,7 +1034,7 @@ export default function OrganizationPage() {
                   <SelectValue placeholder={tc('selectParentDepartment')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">{tc('text_bbmwiu')}</SelectItem>
+                  <SelectItem value="0">{tc('topDepartment')}</SelectItem>
                   {departments
                     .filter((d) => d.id !== deptForm.id) // 排除自己，避免循环引用
                     .map((dept) => (
@@ -1045,7 +1047,7 @@ export default function OrganizationPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{tc('text_hu00nq')}</Label>
+                <Label>{tc('leaderLabel')}</Label>
                 <Input
                   value={deptForm.leader_name || ''}
                   onChange={(e) => setDeptForm({ ...deptForm, leader_name: e.target.value })}
@@ -1124,7 +1126,7 @@ export default function OrganizationPage() {
 
                     // 实时检测重复
                     if (value && checkRoleCodeDuplicate(value, roleForm.id)) {
-                      setCodeError('该角色编码已存在');
+                      setCodeError(tc('roleCodeExists'));
                     } else {
                       setCodeError('');
                     }
@@ -1160,7 +1162,7 @@ export default function OrganizationPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>{tc('text_hxhwsw')}</Label>
+              <Label>{tc('roleTypeLabel')}</Label>
               <Select
                 value={String(roleForm.role_type ?? 2)}
                 onValueChange={(value) => setRoleForm({ ...roleForm, role_type: parseInt(value) })}
@@ -1170,12 +1172,12 @@ export default function OrganizationPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">系统角色</SelectItem>
-                  <SelectItem value="2">{tc('text_mmvh15')}</SelectItem>
+                  <SelectItem value="2">{tc('customRoleType')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>{tc('text_d7s98v')}</Label>
+              <Label>{tc('dataScopeLabel')}</Label>
               <Select
                 value={String(roleForm.data_scope ?? 1)}
                 onValueChange={(value) => setRoleForm({ ...roleForm, data_scope: parseInt(value) })}
@@ -1186,7 +1188,7 @@ export default function OrganizationPage() {
                 <SelectContent>
                   <SelectItem value="1">全部数据</SelectItem>
                   <SelectItem value="2">本部门数据</SelectItem>
-                  <SelectItem value="3">{tc('text_dchmrw')}</SelectItem>
+                  <SelectItem value="3">{tc('selfDataScope')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1217,7 +1219,7 @@ export default function OrganizationPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>{tc('text_hxe0v5')}</Label>
+              <Label>{tc('roleDescriptionLabel')}</Label>
               <Textarea
                 value={roleForm.description || ''}
                 onChange={(e) => setRoleForm({ ...roleForm, description: e.target.value })}

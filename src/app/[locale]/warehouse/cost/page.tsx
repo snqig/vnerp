@@ -128,7 +128,7 @@ export default function CostPage() {
               <div className="flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-green-600" />
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_qjyhci')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('totalCostAmount')}</div>
                   <div className="text-2xl font-bold">
                     ¥
                     {totalCostAmount.toLocaleString(undefined, {
@@ -145,7 +145,7 @@ export default function CostPage() {
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-blue-600" />
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_euyv8e')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('materialTypeCount')}</div>
                   <div className="text-2xl font-bold">{total}</div>
                 </div>
               </div>
@@ -156,7 +156,7 @@ export default function CostPage() {
               <div className="flex items-center gap-2">
                 <Calculator className="w-5 h-5 text-orange-600" />
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_dntf4r')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('costMethod')}</div>
                   <div className="text-2xl font-bold">移动加权平均</div>
                 </div>
               </div>
@@ -174,9 +174,9 @@ export default function CostPage() {
                   <TableHead>{tc('specification')}</TableHead>
                   <TableHead>{tc('unit')}</TableHead>
                   <TableHead>{tc('totalQuantity')}</TableHead>
-                  <TableHead>{tc('text_pk6raf')}</TableHead>
-                  <TableHead>{tc('text_cbilzl')}</TableHead>
-                  <TableHead>{tc('text_c0a4w')}</TableHead>
+                  <TableHead>{tc('avgCostPrice')}</TableHead>
+                  <TableHead>{tc('costAmount')}</TableHead>
+                  <TableHead>{tc('warehouseCount')}</TableHead>
                   <TableHead className="text-right">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -217,7 +217,7 @@ export default function CostPage() {
                       <TableCell>
                         <Badge variant="outline" className="text-xs">
                           {item.warehouse_count}
-                          {tc('text_bu30q')}
+                          {tc('warehouseUnitSuffix')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -253,7 +253,7 @@ export default function CostPage() {
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
             共{total}
-            {tc('text_ie9r1')}
+            {tc('costRecordUnit')}
           </span>
           <div className="flex gap-2">
             <Button
@@ -280,8 +280,8 @@ export default function CostPage() {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{tc('text_ct1vaz')}</DialogTitle>
-            <DialogDescription>{tc('text_15ks5z')}</DialogDescription>
+            <DialogTitle>{tc('materialCostDetail')}</DialogTitle>
+            <DialogDescription>{tc('materialCostDetailDesc')}</DialogDescription>
           </DialogHeader>
           {detailData && (
             <div className="space-y-4">
@@ -294,7 +294,7 @@ export default function CostPage() {
                       <TableHead className="text-xs">{tc('warehouse')}</TableHead>
                       <TableHead className="text-xs">{tc('quantity')}</TableHead>
                       <TableHead className="text-xs">成本价</TableHead>
-                      <TableHead className="text-xs">{tc('text_cbilzl')}</TableHead>
+                      <TableHead className="text-xs">{tc('costAmount')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -320,7 +320,7 @@ export default function CostPage() {
 
               {/* 成本变动历史 */}
               <div>
-                <h4 className="font-medium mb-2">{tc('text_c52cak')}</h4>
+                <h4 className="font-medium mb-2">{tc('costChangeHistory')}</h4>
                 <Table>
                   <TableHeader>
                     <TableRow>

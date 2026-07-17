@@ -18,7 +18,7 @@ import {
   Activity,
   Target,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface FinanceData {
   overview: {
@@ -205,6 +205,7 @@ function HorizontalBarChart({
   data: { supplier_name: string; count: number; total: number }[];
 }) {
   const tc = useTranslations('Common');
+  const locale = useLocale();
   if (data.length === 0) return null;
   const maxTotal = Math.max(...data.map((d) => d.total), 1);
 
@@ -224,7 +225,7 @@ function HorizontalBarChart({
               }}
             />
             <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
-              ¥{(d.total / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2 })}
+              ¥{(d.total / 100).toLocaleString(locale, { minimumFractionDigits: 2 })}
             </span>
           </div>
         </div>
@@ -236,6 +237,7 @@ function HorizontalBarChart({
 export default function FinanceDashboard() {
   const t = useTranslations('Dashboard');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const { companyName } = useCompanyName();
   const [data, setData] = useState<FinanceData>({
@@ -297,7 +299,7 @@ export default function FinanceDashboard() {
   }, []);
 
   const formatTime = (date: Date) =>
-    date.toLocaleString('zh-CN', {
+    date.toLocaleString(locale, {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -308,7 +310,7 @@ export default function FinanceDashboard() {
     });
 
   const formatMoney = (v: number) =>
-    '¥' + (v / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    '¥' + (v / 100).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const profitRate =
     data.overview.monthRevenue > 0
@@ -499,7 +501,7 @@ export default function FinanceDashboard() {
                           </span>
                           <span className="text-white/50">
                             {a.count}
-                            {tc('text_i10fk')}
+                            {tc('agingRecordsUnit')}
                             {formatMoney(a.total)} ({pct}%)
                           </span>
                         </div>

@@ -70,7 +70,7 @@ export default function PayablesPage() {
         setTotal(result.data.total || 0);
       }
     } catch {
-      toast.error('加载应付单失败');
+      toast.error(tc('loadPayableFailed'));
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ export default function PayablesPage() {
 
   const handlePayment = async () => {
     if (!selectedPay || !paymentAmount || !paymentDate) {
-      toast.error('请填写完整信息');
+      toast.error(tc('fillCompleteInfo'));
       return;
     }
     try {
@@ -111,36 +111,36 @@ export default function PayablesPage() {
         toast.error(result.message);
       }
     } catch {
-      toast.error('付款失败');
+      toast.error(tc('paymentFailed'));
     }
   };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">应付管理</h1>
+        <h1 className="text-2xl font-bold">{tc('tabPayable')}</h1>
         <Button onClick={loadPayables} disabled={loading}>
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          刷新
+          {tc('refresh')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>{tc('text_oxsg76')}</CardTitle>
+          <CardTitle>{tc('payableListTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>应付单号</TableHead>
-                <TableHead>{tc('text_dicb26')}</TableHead>
+                <TableHead>{tc('payableNoLabel')}</TableHead>
+                <TableHead>{tc('sourceNo')}</TableHead>
                 <TableHead>{tc('supplier')}</TableHead>
-                <TableHead>应付金额</TableHead>
-                <TableHead>已付金额</TableHead>
+                <TableHead>{tc('amount')}</TableHead>
+                <TableHead>{tc('paidAmount')}</TableHead>
                 <TableHead>{tc('balance')}</TableHead>
                 <TableHead>{tc('currency')}</TableHead>
-                <TableHead>{tc('text_cjh06')}</TableHead>
+                <TableHead>{tc('dueDate')}</TableHead>
                 <TableHead>{tc('status')}</TableHead>
                 <TableHead>{tc('actions')}</TableHead>
               </TableRow>
@@ -188,7 +188,7 @@ export default function PayablesPage() {
                         }}
                       >
                         <CreditCard className="w-3 h-3 mr-1" />
-                        付款
+                        {tc('paymentTitle')}
                       </Button>
                     )}
                   </TableCell>
@@ -197,7 +197,7 @@ export default function PayablesPage() {
               {payables.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
-                    暂无数据
+                    {tc('noData')}
                   </TableCell>
                 </TableRow>
               )}
@@ -211,13 +211,13 @@ export default function PayablesPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {tc('text_lljs83')}
+              {tc('paymentTitle')}
               {selectedPay?.payable_no}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>应付金额</Label>
+              <Label>{tc('amount')}</Label>
               <Input value={selectedPay ? formatAmount(selectedPay.amount) : ''} disabled />
             </div>
             <div>
@@ -225,7 +225,7 @@ export default function PayablesPage() {
               <Input value={selectedPay ? formatAmount(selectedPay.balance) : ''} disabled />
             </div>
             <div>
-              <Label>付款金额</Label>
+              <Label>{tc('paymentAmount')}</Label>
               <Input
                 type="number"
                 value={paymentAmount}
@@ -233,21 +233,21 @@ export default function PayablesPage() {
               />
             </div>
             <div>
-              <Label>付款方式</Label>
+              <Label>{tc('paymentMethod')}</Label>
               <select
                 className="w-full border rounded-md p-2"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
               >
-                <option value="bank_transfer">银行转账</option>
-                <option value="cash">现金</option>
-                <option value="check">支票</option>
-                <option value="wechat">{tc('text_cemv24')}</option>
-                <option value="alipay">支付宝</option>
+                <option value="bank_transfer">{tc('bankTransfer')}</option>
+                <option value="cash">{tc('cash')}</option>
+                <option value="check">{tc('check')}</option>
+                <option value="wechat">{tc('wechat')}</option>
+                <option value="alipay">{tc('alipay')}</option>
               </select>
             </div>
             <div>
-              <Label>付款日期</Label>
+              <Label>{tc('paymentDate')}</Label>
               <Input
                 type="date"
                 value={paymentDate}
@@ -257,9 +257,9 @@ export default function PayablesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPayment(false)}>
-              取消
+              {tc('cancel')}
             </Button>
-            <Button onClick={handlePayment}>{tc('text_fro15o')}</Button>
+            <Button onClick={handlePayment}>{tc('createPayment')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

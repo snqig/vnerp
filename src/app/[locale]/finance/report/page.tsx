@@ -170,42 +170,42 @@ export default function FinanceReportPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{t('incomeExpenseDetail')}</CardTitle>
             <GlobalExportToolbar
-              filename="财务收支报表"
-              title="财务收支明细报表"
+              filename={tc('financeReportFileName')}
+              title={tc('financeReportTitle')}
               subtitle={periodType || ''}
               columns={
                 [
-                  { key: 'period', label: '期间', width: 18 },
-                  { key: 'type', label: '类型', width: 12 },
-                  { key: 'category', label: '类别', width: 15 },
+                  { key: 'period', label: tc('period'), width: 18 },
+                  { key: 'type', label: tc('type'), width: 12 },
+                  { key: 'category', label: tc('category'), width: 15 },
                   {
                     key: 'revenue',
-                    label: '收入',
+                    label: tc('revenue'),
                     width: 12,
                     formatter: (v) => Number(v || 0).toFixed(2),
                   },
                   {
                     key: 'cost',
-                    label: '成本',
+                    label: tc('cost'),
                     width: 12,
                     formatter: (v) => Number(v || 0).toFixed(2),
                   },
                   {
                     key: 'profit',
-                    label: '利润',
+                    label: tc('profit'),
                     width: 12,
                     formatter: (v) => Number(v || 0).toFixed(2),
                   },
                   {
                     key: 'profit_rate',
-                    label: '利润率',
+                    label: tc('profitRate'),
                     width: 10,
                     formatter: (v) => `${Number(v || 0).toFixed(1)}%`,
                   },
                 ] as ExportColumn[]
               }
               data={list}
-              footer="本报表由 ERP 系统自动生成，仅供参考。"
+              footer={tc('reportFooter')}
             />
           </CardHeader>
           <CardContent className="p-0">

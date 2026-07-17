@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -95,19 +95,19 @@ interface ReceivableRecord {
   [key: string]: unknown;
 }
 
-const formatDate = (dateStr: string | null | undefined) => {
+const formatDate = (dateStr: string | null | undefined, locale: string) => {
   if (!dateStr) return '-';
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString('zh-CN');
+    return d.toLocaleDateString(locale);
   } catch {
     return dateStr;
   }
 };
 
-const formatCurrency = (amount: number) => {
-  return `¥${Number(amount || 0).toLocaleString('zh-CN', {
+const formatCurrency = (amount: number, locale: string) => {
+  return `¥${Number(amount || 0).toLocaleString(locale, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -167,6 +167,7 @@ async function fetchJson(response: Response): Promise<Loose> {
 export default function SalesOrderDetailPage() {
   const t = useTranslations('Sales');
   const tc = useTranslations('Common');
+  const locale = useLocale();
   const params = useParams();
   const router = useRouter();
   const orderId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -347,16 +348,16 @@ export default function SalesOrderDetailPage() {
               </div>
               <div>
                 <span className="text-muted-foreground">{tc('date')}</span>
-                <p className="font-medium">{formatDate(order.order_date)}</p>
+                <p className="font-medium">{formatDate(order.order_date, locale)}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">{t('deliveryDate')}</span>
-                <p className="font-medium">{formatDate(order.delivery_date)}</p>
+                <p className="font-medium">{formatDate(order.delivery_date, locale)}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">{tc('amount')}</span>
                 <p className="font-medium">
-                  {formatCurrency(Number(order.total_with_tax || order.total_amount || 0))}
+                  {formatCurrency(Number(order.total_with_tax || order.total_amount || 0), locale)}
                 </p>
               </div>
               {order.contact_name && (
@@ -485,11 +486,11 @@ export default function SalesOrderDetailPage() {
                           onClick={() => router.push(`/sales/delivery?id=${rec.id}`)}
                         >
                           <TableCell className="font-mono">{rec.delivery_no}</TableCell>
-                          <TableCell>{formatDate(rec.delivery_date)}</TableCell>
+                          <TableCell>{formatDate(rec.delivery_date, locale)}</TableCell>
                           <TableCell>{rec.customer_name || '-'}</TableCell>
                           <TableCell className="text-right">{rec.total_qty}</TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(Number(rec.total_amount || 0))}
+                            {formatCurrency(Number(rec.total_amount || 0), locale)}
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">
@@ -545,13 +546,13 @@ export default function SalesOrderDetailPage() {
                           onClick={() => router.push(`/sales/return?id=${rec.id}`)}
                         >
                           <TableCell className="font-mono">{rec.return_no}</TableCell>
-                          <TableCell>{formatDate(rec.return_date)}</TableCell>
+                          <TableCell>{formatDate(rec.return_date, locale)}</TableCell>
                           <TableCell>{rec.customer_name || '-'}</TableCell>
                           <TableCell className="max-w-xs truncate">
                             {rec.reason || rec.remark || '-'}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(Number(rec.total_amount || 0))}
+                            {formatCurrency(Number(rec.total_amount || 0), locale)}
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">
@@ -610,15 +611,15 @@ export default function SalesOrderDetailPage() {
                           <TableCell className="font-mono">{rec.receivable_no}</TableCell>
                           <TableCell className="font-mono">{rec.source_no || '-'}</TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(Number(rec.amount || 0))}
+                            {formatCurrency(Number(rec.amount || 0), locale)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(Number(rec.received_amount || 0))}
+                            {formatCurrency(Number(rec.received_amount || 0), locale)}
                           </TableCell>
                           <TableCell className="text-right font-medium">
-                            {formatCurrency(Number(rec.balance || 0))}
+                            {formatCurrency(Number(rec.balance || 0), locale)}
                           </TableCell>
-                          <TableCell>{formatDate(rec.due_date)}</TableCell>
+                          <TableCell>{formatDate(rec.due_date, locale)}</TableCell>
                           <TableCell>
                             <Badge variant="outline">
                               {RECEIVABLE_STATUS_KEY[rec.status]
@@ -696,7 +697,7 @@ export default function SalesOrderDetailPage() {
                           </div>
                           <div>
                             <span className="text-muted-foreground">{t('shipTime')}</span>
-                            <p className="font-medium">{formatDate(rec.ship_time)}</p>
+                            <p className="font-medium">{formatDate(rec.ship_time, locale)}</p>
                           </div>
                           {rec.delivery_address && (
                             <div className="col-span-2 md:col-span-3">

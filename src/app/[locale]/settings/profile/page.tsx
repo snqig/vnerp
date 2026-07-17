@@ -48,7 +48,7 @@ export default function ProfilePage() {
 
   const handleSaveProfile = async () => {
     if (!profileForm.realName) {
-      toast({ title: '姓名不能为空', variant: 'destructive' });
+      toast({ title: tc('nameRequired'), variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -59,7 +59,7 @@ export default function ProfilePage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '保存成功' });
+        toast({ title: tc('profileSaved') });
         // 更新本地存储
         const stored = localStorage.getItem('user') || sessionStorage.getItem('user');
         if (stored) {
@@ -73,7 +73,7 @@ export default function ProfilePage() {
         toast({ title: result.message || '保存失败', variant: 'destructive' });
       }
     } catch {
-      toast({ title: '保存失败', variant: 'destructive' });
+      toast({ title: tc('saveFailed'), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -81,15 +81,15 @@ export default function ProfilePage() {
 
   const handleChangePassword = async () => {
     if (!passwordForm.oldPassword || !passwordForm.newPassword) {
-      toast({ title: '请填写完整密码信息', variant: 'destructive' });
+      toast({ title: tc('passwordInfoRequired'), variant: 'destructive' });
       return;
     }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast({ title: '两次密码输入不一致', variant: 'destructive' });
+      toast({ title: tc('passwordMismatch'), variant: 'destructive' });
       return;
     }
     if (passwordForm.newPassword.length < 6) {
-      toast({ title: '密码长度不能少于6位', variant: 'destructive' });
+      toast({ title: tc('passwordTooShort'), variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -103,13 +103,13 @@ export default function ProfilePage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '密码修改成功，请重新登录' });
+        toast({ title: tc('passwordChanged') });
         setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
       } else {
         toast({ title: result.message || '密码修改失败', variant: 'destructive' });
       }
     } catch {
-      toast({ title: '密码修改失败', variant: 'destructive' });
+      toast({ title: tc('saveFailed'), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -125,7 +125,7 @@ export default function ProfilePage() {
       <div className="p-6 max-w-4xl mx-auto space-y-6">
         <h1 className="text-2xl font-bold">
           {t('user')}
-          {tc('text_vzg8bd')}
+          {tc('profileCenter')}
         </h1>
 
         <div className="grid gap-6 md:grid-cols-[240px_1fr]">
@@ -185,7 +185,7 @@ export default function ProfilePage() {
               <Card>
                 <CardHeader>
                   <CardTitle>基本信息</CardTitle>
-                  <CardDescription>{tc('text_n6hg2x')}</CardDescription>
+                  <CardDescription>{tc('basicInfoDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-1">
@@ -221,11 +221,11 @@ export default function ProfilePage() {
               <Card>
                 <CardHeader>
                   <CardTitle>{tc('changePassword')}</CardTitle>
-                  <CardDescription>{tc('text_f6ikpe')}</CardDescription>
+                  <CardDescription>{tc('changePasswordDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-1">
-                    <Label>{tc('text_cdc5hx')}</Label>
+                    <Label>{tc('oldPasswordLabel')}</Label>
                     <Input
                       type="password"
                       value={passwordForm.oldPassword}
@@ -246,7 +246,7 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label>{tc('text_8aswln')}</Label>
+                    <Label>{tc('confirmPasswordLabel')}</Label>
                     <Input
                       type="password"
                       value={passwordForm.confirmPassword}

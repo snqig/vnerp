@@ -19,7 +19,7 @@ import {
   Maximize,
   Minimize,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface CEOData {
   overview: {
@@ -94,6 +94,7 @@ interface DefectItem {
 export default function CEODashboard() {
   const t = useTranslations('Dashboard');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const { companyName } = useCompanyName();
   const [data, setData] = useState<CEOData>({
@@ -204,8 +205,8 @@ export default function CEODashboard() {
   }, []);
 
   const formatMoney = (v: number) =>
-    '¥' + (v / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const formatNumber = (v: number) => v.toLocaleString('zh-CN');
+    '¥' + (v / 100).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const formatNumber = (v: number) => v.toLocaleString(locale);
   const formatQty = (v: number) => {
     if (v >= 10000) return (v / 10000).toFixed(1) + '万';
     return formatNumber(v);
@@ -567,10 +568,10 @@ export default function CEODashboard() {
                 {currentTime && (
                   <>
                     <div className="text-lg font-mono font-bold text-cyan-300">
-                      {currentTime.toLocaleDateString('zh-CN')}
+                      {currentTime.toLocaleDateString(locale)}
                     </div>
                     <div className="text-cyan-200/60 text-sm font-mono">
-                      {currentTime.toLocaleTimeString('zh-CN')}
+                      {currentTime.toLocaleTimeString(locale)}
                     </div>
                   </>
                 )}
@@ -582,7 +583,6 @@ export default function CEODashboard() {
           <div className="grid grid-cols-12 gap-3">
             {/* Left Column */}
             <div className="col-span-4 space-y-3">
-              {/* 车间日产量 */}
               <Panel title={t('workshopDailyProduction')} icon={Factory}>
                 <div className="space-y-1.5">
                   {workshopDaily.length > 0 ? (
@@ -616,7 +616,6 @@ export default function CEODashboard() {
                 </div>
               </Panel>
 
-              {/* 原材料采购&日消耗 */}
               <Panel title={t('materialPurchaseConsumption')} icon={ShoppingCart}>
                 <div className="space-y-3">
                   {materialConsumption.length > 0 ? (
@@ -648,7 +647,6 @@ export default function CEODashboard() {
                 </div>
               </Panel>
 
-              {/* 原材料当月消耗 */}
               <Panel title={t('monthlyMaterialConsumption')} icon={BarChart3}>
                 <div className="space-y-2">
                   {monthlyMaterialConsumption.length > 0 ? (
@@ -680,7 +678,6 @@ export default function CEODashboard() {
                 </div>
               </Panel>
 
-              {/* 车间历史产量 */}
               <Panel title={t('workshopHistory')} icon={TrendingUp}>
                 <div className="space-y-2">
                   {workshopHistory.length > 0 ? (
@@ -705,10 +702,8 @@ export default function CEODashboard() {
 
             {/* Center Column */}
             <div className="col-span-4 space-y-3">
-              {/* 三班生产情况 */}
               <Panel title={t('shiftProduction')} icon={Factory}>
                 <div className="grid grid-cols-3 gap-3">
-                  {/* 设备运转率 */}
                   <div className="space-y-2">
                     <p className="text-xs text-white/50 text-center mb-2">
                       {t('equipmentOperatingRate')}
@@ -766,7 +761,6 @@ export default function CEODashboard() {
                     </div>
                   </div>
 
-                  {/* 中班 */}
                   <div className="space-y-2">
                     <p className="text-xs text-blue-300 text-center font-medium">
                       {tc('shiftMiddle')}
@@ -794,7 +788,6 @@ export default function CEODashboard() {
                   </div>
                 </div>
 
-                {/* 夜班 + 三班比率 */}
                 <div className="mt-3 pt-3 border-t border-white/10">
                   <div className="grid grid-cols-4 gap-3">
                     <div className="space-y-2">
@@ -865,7 +858,6 @@ export default function CEODashboard() {
                 </div>
               </Panel>
 
-              {/* 订单趋势 */}
               <Panel title={t('orderTrend')} icon={TrendingUp}>
                 <div className="h-40">
                   <LineChart
@@ -887,7 +879,6 @@ export default function CEODashboard() {
                 </div>
               </Panel>
 
-              {/* 生产单位电耗 */}
               <Panel title={t('powerConsumptionMaterial')} icon={Zap}>
                 <div className="h-32">
                   <DualLineChart
@@ -919,7 +910,6 @@ export default function CEODashboard() {
 
             {/* Right Column */}
             <div className="col-span-4 space-y-3">
-              {/* 各产品与车间生产工序关系 */}
               <Panel title={t('productProcessRelation')} icon={Factory}>
                 <div className="flex justify-center py-4">
                   <div className="relative w-48 h-48">
@@ -980,7 +970,6 @@ export default function CEODashboard() {
                 </div>
               </Panel>
 
-              {/* 生产状态 */}
               <Panel title={t('productionStatus')} icon={Factory}>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
@@ -1037,7 +1026,6 @@ export default function CEODashboard() {
                 )}
               </Panel>
 
-              {/* 设备状态 */}
               <Panel title={t('equipmentStatusTitle')} icon={Zap}>
                 <AutoScroll maxHeight={160}>
                   <div className="grid grid-cols-2 gap-1.5">
@@ -1073,7 +1061,6 @@ export default function CEODashboard() {
                 </AutoScroll>
               </Panel>
 
-              {/* 财务概览 */}
               <Panel title={t('financeOverview')} icon={DollarSign}>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -1105,7 +1092,6 @@ export default function CEODashboard() {
             </div>
           </div>
 
-          {/* 仪表盘控制区 */}
           <div className="grid grid-cols-12 gap-3 mt-3">
             <div className="col-span-3">
               <Panel title={t('powerCapacityAdjust')} icon={Zap}>

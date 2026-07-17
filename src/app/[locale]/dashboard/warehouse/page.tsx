@@ -23,7 +23,7 @@ import {
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Text, OrbitControls, Box } from '@react-three/drei';
 import * as THREE from 'three';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface WarehouseData {
   overview: {
@@ -204,6 +204,7 @@ export default function WarehouseDashboard() {
   // 翻译钩子
   const t = useTranslations('Dashboard');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const { companyName } = useCompanyName();
   const [data, setData] = useState<WarehouseData>({
@@ -267,7 +268,7 @@ export default function WarehouseDashboard() {
   }, []);
 
   const formatTime = (date: Date) => {
-    return date.toLocaleString('zh-CN', {
+    return date.toLocaleString(locale, {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -279,7 +280,7 @@ export default function WarehouseDashboard() {
   };
 
   const formatMoney = (v: number) =>
-    '¥' + (v / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    '¥' + (v / 100).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const warehouses3D = useMemo(() => {
     const maxQty = Math.max(...data.warehouseOccupancy.map((w) => w.total_qty), 1);
@@ -583,7 +584,7 @@ export default function WarehouseDashboard() {
                               }}
                             />
                             <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
-                              {c.count}种
+                              {c.count}
                             </span>
                           </div>
                         </div>

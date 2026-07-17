@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations, useLocale } from 'next-intl';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -52,6 +53,8 @@ interface CategoryStats {
 }
 
 export function WarehouseCategoryManager() {
+  const tc = useTranslations('Common');
+  const locale = useLocale();
   const [categories, setCategories] = useState<WarehouseCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -116,7 +119,7 @@ export function WarehouseCategoryManager() {
         });
       }
     } catch {
-      toast.error('获取仓库分类失败');
+      toast.error(tc('categoryFetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -125,18 +128,18 @@ export function WarehouseCategoryManager() {
   // 保存仓库分类
   const saveCategory = async () => {
     if (!form.code || !form.code.trim()) {
-      toast.error('请输入分类编码');
+      toast.error(tc('categoryCodeRequired'));
       return;
     }
     if (!form.name || !form.name.trim()) {
-      toast.error('请输入分类名称');
+      toast.error(tc('categoryNameRequired'));
       return;
     }
 
     // 检查编码重复
     if (checkCodeDuplicate(form.code, form.id)) {
-      setCodeError('该分类编码已存在');
-      toast.error('该分类编码已存在');
+      setCodeError(tc('categoryCodeExists'));
+      toast.error(tc('categoryCodeExists'));
       return;
     }
 
@@ -165,32 +168,32 @@ export function WarehouseCategoryManager() {
         fetchCategories();
       } else if (result.message === '分类编码已存在' && !editing) {
         // 如果是新增且编码已存在，自动尝试下一个编码
-        toast.error('编码已存在，请使用自动生成按钮生成新编码');
-        setCodeError('该编码已存在，请重新生成');
+        toast.error(tc('codeExistsUseGenerate'));
+        setCodeError(tc('codeExistsRegenerate'));
       } else {
         toast.error(result.message || '操作失败');
       }
     } catch {
-      toast.error('保存分类失败');
+      toast.error(tc('saveFailed'));
     }
   };
 
   // 删除仓库分类
   const deleteCategory = async (id: number) => {
-    if (!confirm('确定要删除该仓库分类吗？')) return;
+    if (!window.confirm(tc('confirmDeleteWarehouseCategory'))) return;
     try {
       const response = await authFetch(`/api/organization/warehouse-category?id=${id}`, {
         method: 'DELETE',
       });
       const result = await response.json();
       if (result.success) {
-        toast.success('分类删除成功');
+        toast.success(tc('categoryDeleted'));
         fetchCategories();
       } else {
         toast.error(result.message || '删除失败');
       }
     } catch {
-      toast.error('删除分类失败');
+      toast.error(tc('deleteFailed'));
     }
   };
 
@@ -364,7 +367,7 @@ export function WarehouseCategoryManager() {
                       <TableCell>
                         <span className="text-sm text-muted-foreground/80">
                           {(category.total_capacity || 0) > 0
-                            ? `${(category.total_capacity || 0).toLocaleString()} / ${(category.total_used_capacity || 0).toLocaleString()}`
+                            ? `${(category.total_capacity || 0).toLocaleString(locale === 'zh-CN' ? 'zh-CN' : locale === 'zh-TW' ? 'zh-TW' : locale === 'en' ? 'en-US' : 'vi')} / ${(category.total_used_capacity || 0).toLocaleString(locale === 'zh-CN' ? 'zh-CN' : locale === 'zh-TW' ? 'zh-TW' : locale === 'en' ? 'en-US' : 'vi')}`
                             : '-'}
                         </span>
                       </TableCell>
@@ -455,7 +458,7 @@ export function WarehouseCategoryManager() {
 
                       // 实时检测重复
                       if (value && checkCodeDuplicate(value, form.id)) {
-                        setCodeError('该分类编码已存在');
+                        setCodeError(tc('categoryCodeExists'));
                       } else {
                         setCodeError('');
                       }

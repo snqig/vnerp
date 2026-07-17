@@ -123,16 +123,16 @@ export default function InkMixedPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除此记录？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch('/api/dcprint/ink-mixed?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -145,11 +145,11 @@ export default function InkMixedPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '状态更新成功' });
+        toast({ title: tc('statusUpdateSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '更新失败', variant: 'destructive' });
+      toast({ title: tc('statusUpdateFailed'), variant: 'destructive' });
     }
   };
 
@@ -157,7 +157,7 @@ export default function InkMixedPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{tc('text_rnb4dt')}</h1>
+          <h1 className="text-2xl font-bold">{tc('dcInkMixedTitle')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
@@ -195,7 +195,7 @@ export default function InkMixedPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs">记录单号</TableHead>
-                  <TableHead className="text-xs">{tc('text_crwtq')}</TableHead>
+                  <TableHead className="text-xs">{tc('dcBaseInkHead')}</TableHead>
                   <TableHead className="text-xs">调色比例</TableHead>
                   <TableHead className="text-xs">色彩名称</TableHead>
                   <TableHead className="text-xs">{tc('customer')}</TableHead>
@@ -305,7 +305,7 @@ export default function InkMixedPage() {
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">
             共{total}
-            {tc('text_ftebq')}
+            {tc('dcRecordsSuffix')}
           </span>
           <div className="flex gap-2">
             <Button

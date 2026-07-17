@@ -118,28 +118,28 @@ export default function InkUsagePage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '记录成功' });
+        toast({ title: tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch('/api/ink-usages?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -147,7 +147,7 @@ export default function InkUsagePage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{tc('text_pevrqz')}</h1>
+          <h1 className="text-2xl font-bold">{tc('dcInkUsageTitle')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
@@ -267,7 +267,7 @@ export default function InkUsagePage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>{tc('text_sh9ple')}</DialogTitle>
+              <DialogTitle>{tc('dcAddUsageTitle')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -306,7 +306,7 @@ export default function InkUsagePage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_4dwchz')}</Label>
+                <Label>{tc('dcPlateIdLabel')}</Label>
                 <Input
                   type="number"
                   value={editItem.screen_plate_id ?? ''}
@@ -316,7 +316,7 @@ export default function InkUsagePage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_7ieqz2')}</Label>
+                <Label>{tc('dcWorkOrderIdLabel')}</Label>
                 <Input
                   type="number"
                   value={editItem.work_order_id ?? ''}

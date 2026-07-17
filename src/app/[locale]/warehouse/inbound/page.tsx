@@ -30,7 +30,7 @@ import {
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import { authFetch } from '@/lib/auth-fetch';
 
@@ -49,6 +49,7 @@ import { mapRecordsToLabels, filterApprovedRecords } from './utils/mapRecordsToL
 
 export default function InboundManagementPage() {
   // 翻译钩子
+  const locale = useLocale();
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
 
@@ -604,7 +605,7 @@ export default function InboundManagementPage() {
                             <span className="text-gray-500">{t('inboundTime')}：</span>
                             <span>
                               {label.inboundTime
-                                ? new Date(label.inboundTime).toLocaleString('zh-CN')
+                                ? new Date(label.inboundTime).toLocaleString(locale)
                                 : '-'}
                             </span>
                           </div>

@@ -144,7 +144,7 @@ export default function EquipmentPage() {
   };
 
   const deleteEquipment = async (id: number) => {
-    if (!confirm('确定要删除该设备吗？')) return;
+    if (!confirm(tc('confirmDeleteDevice'))) return;
     try {
       const res = await authFetch(`/api/equipment?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
@@ -171,7 +171,7 @@ export default function EquipmentPage() {
                 </div>
                 <div className="text-2xl font-bold">{s.count}</div>
                 <div className="text-xs text-gray-400">
-                  {tc('text_1pq601')}
+                  {tc('avgOee')}
                   {parseFloat(s.avg_oee).toFixed(1)}%
                 </div>
               </CardContent>
@@ -186,7 +186,7 @@ export default function EquipmentPage() {
                 <Cpu className="w-5 h-5" />
                 设备台账
               </CardTitle>
-              <CardDescription>{tc('text_986c7x')}</CardDescription>
+              <CardDescription>{tc('equipmentAccount')}</CardDescription>
             </div>
             <Button
               onClick={() => {
@@ -240,7 +240,7 @@ export default function EquipmentPage() {
                     <TableHead>设备编码</TableHead>
                     <TableHead>设备名称</TableHead>
                     <TableHead>{tc('type')}</TableHead>
-                    <TableHead>{tc('text_9c8nyo')}</TableHead>
+                    <TableHead>{tc('brandModel')}</TableHead>
                     <TableHead>位置</TableHead>
                     <TableHead>产能</TableHead>
                     <TableHead>OEE</TableHead>

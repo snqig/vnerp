@@ -2,7 +2,7 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -152,9 +152,9 @@ function flattenBOMTree(
 }
 
 export default function MRPPage() {
-  // 翻译钩子
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const priorityConfig: Record<string, { label: string; className: string }> = {
     urgent: {
@@ -458,7 +458,7 @@ export default function MRPPage() {
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl font-bold">
-                            {mrpResult.summary.total_planned_qty.toLocaleString()}
+                            {mrpResult.summary.total_planned_qty.toLocaleString(locale)}
                           </div>
                         </CardContent>
                       </Card>
@@ -471,7 +471,7 @@ export default function MRPPage() {
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl font-bold">
-                            ¥{mrpResult.summary.total_planned_amount.toLocaleString()}
+                            ¥{mrpResult.summary.total_planned_amount.toLocaleString(locale)}
                           </div>
                         </CardContent>
                       </Card>
@@ -490,7 +490,7 @@ export default function MRPPage() {
                             {mrpResult.purchase_requests.map((pr, idx) => (
                               <Badge key={idx} variant="outline" className="text-sm py-1 px-3">
                                 {pr.request_no} ({pr.item_count}
-                                {tc('text_pxow')}
+                                {tc('itemsUnit')}
                               </Badge>
                             ))}
                           </div>
@@ -534,23 +534,23 @@ export default function MRPPage() {
                                   <TableCell className="font-medium">{req.material_code}</TableCell>
                                   <TableCell>{req.material_name}</TableCell>
                                   <TableCell className="text-right">
-                                    {req.gross_requirement.toLocaleString()}
+                                    {req.gross_requirement.toLocaleString(locale)}
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    {req.on_hand_qty.toLocaleString()}
+                                    {req.on_hand_qty.toLocaleString(locale)}
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    {req.allocated_qty.toLocaleString()}
+                                    {req.allocated_qty.toLocaleString(locale)}
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    {req.in_transit_qty.toLocaleString()}
+                                    {req.in_transit_qty.toLocaleString(locale)}
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    {req.safety_stock.toLocaleString()}
+                                    {req.safety_stock.toLocaleString(locale)}
                                   </TableCell>
                                   <TableCell className="text-right font-semibold">
                                     {req.net_requirement > 0
-                                      ? req.net_requirement.toLocaleString()
+                                      ? req.net_requirement.toLocaleString(locale)
                                       : '-'}
                                   </TableCell>
                                   <TableCell className="text-right">{req.lead_time_days}</TableCell>
@@ -614,7 +614,7 @@ export default function MRPPage() {
                                   </TableCell>
                                   <TableCell>{order.material_name}</TableCell>
                                   <TableCell className="text-right">
-                                    {order.quantity.toLocaleString()}
+                                    {order.quantity.toLocaleString(locale)}
                                   </TableCell>
                                   <TableCell>{order.required_date}</TableCell>
                                   <TableCell>{order.order_date}</TableCell>
@@ -761,7 +761,7 @@ export default function MRPPage() {
                                     {node.material_name}
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    {node.quantity.toLocaleString()}
+                                    {node.quantity.toLocaleString(locale)}
                                   </TableCell>
                                   <TableCell>{node.unit}</TableCell>
                                   <TableCell className="text-right">
@@ -830,7 +830,7 @@ export default function MRPPage() {
                       <WarehouseSelect
                         value={bucketWarehouseId}
                         onChange={setBucketWarehouseId}
-                        placeholder="选择仓库"
+                        placeholder={t('selectWarehouse')}
                       />
                     </div>
                     <div className="space-y-2">
@@ -996,27 +996,27 @@ export default function MRPPage() {
                                 >
                                   <TableCell className="font-medium">{bucket.date}</TableCell>
                                   <TableCell className="text-right">
-                                    {bucket.gross_requirement.toLocaleString()}
+                                    {bucket.gross_requirement.toLocaleString(locale)}
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    {bucket.scheduled_receipt.toLocaleString()}
+                                    {bucket.scheduled_receipt.toLocaleString(locale)}
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    {bucket.on_hand.toLocaleString()}
+                                    {bucket.on_hand.toLocaleString(locale)}
                                   </TableCell>
                                   <TableCell className="text-right font-semibold">
                                     {bucket.net_requirement > 0
-                                      ? bucket.net_requirement.toLocaleString()
+                                      ? bucket.net_requirement.toLocaleString(locale)
                                       : '-'}
                                   </TableCell>
                                   <TableCell className="text-right">
                                     {bucket.planned_order_release > 0
-                                      ? bucket.planned_order_release.toLocaleString()
+                                      ? bucket.planned_order_release.toLocaleString(locale)
                                       : '-'}
                                   </TableCell>
                                   <TableCell className="text-right">
                                     {bucket.planned_order_receipt > 0
-                                      ? bucket.planned_order_receipt.toLocaleString()
+                                      ? bucket.planned_order_receipt.toLocaleString(locale)
                                       : '-'}
                                   </TableCell>
                                 </TableRow>

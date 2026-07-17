@@ -583,7 +583,7 @@ export default function ConfigPage() {
 
   const handleSave = async () => {
     if (!form.config_key || !form.config_name) {
-      toast({ title: '参数键和名称不能为空', variant: 'destructive' });
+      toast({ title: tc('paramKeyNameRequired'), variant: 'destructive' });
       return;
     }
 
@@ -603,27 +603,27 @@ export default function ConfigPage() {
         toast({ title: result.message || '操作失败', variant: 'destructive' });
       }
     } catch {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!window.confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch('/api/system/config?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
   const [initLoading, setInitLoading] = useState(false);
   const handleInitPresets = async () => {
-    if (!confirm('确定初始化预设配置？已存在的配置不会被覆盖。')) return;
+    if (!window.confirm(tc('confirmInitPresets'))) return;
     setInitLoading(true);
     let created = 0;
     for (const preset of presetConfigs) {

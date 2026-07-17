@@ -68,7 +68,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 // 部门选项
 const departmentOptions = [
@@ -104,6 +104,9 @@ export default function AttendancePage() {
   // 翻译钩子
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
+  const locale = useLocale();
+  const localeTag =
+    locale === 'zh-CN' ? 'zh-CN' : locale === 'zh-TW' ? 'zh-TW' : locale === 'vi' ? 'vi' : 'en-US';
 
   const statusOptions = [
     {
@@ -543,7 +546,7 @@ export default function AttendancePage() {
       </style></head>
       <body>
         <h1>${t('attendanceRecords')}</h1>
-        <div class="info">${t('printTime')}：${new Date().toLocaleString('zh-CN')} | ${t('totalRecords', { count: recordsToPrint.length })}</div>
+        <div class="info">${t('printTime')}：${new Date().toLocaleString(localeTag)} | ${t('totalRecords', { count: recordsToPrint.length })}</div>
         <table>
           <thead><tr><th>${tc('date')}</th><th>${tc('employeeNo')}</th><th>${tc('name')}</th><th>${tc('department')}</th><th>${t('checkIn')}</th><th>${t('checkOut')}</th><th>${t('workingHours')}</th><th>${t('overtimeHours')}</th><th>${tc('status')}</th><th>${tc('remark')}</th></tr></thead>
           <tbody>${rows}</tbody>
@@ -945,7 +948,7 @@ export default function AttendancePage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="workingHours">{tc('text_mkn0t')}</Label>
+                <Label htmlFor="workingHours">{tc('salaryWorkingHours')}</Label>
                 <Input
                   id="workingHours"
                   type="number"
@@ -956,14 +959,14 @@ export default function AttendancePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="overtimeHours">加班时长</Label>
+                <Label htmlFor="overtimeHours">{t('overtimeHours')}</Label>
                 <Input
                   id="overtimeHours"
                   type="number"
                   step="0.1"
                   value={formData.overtimeHours}
                   onChange={(e) => setFormData({ ...formData, overtimeHours: e.target.value })}
-                  placeholder="请输入加班时长"
+                  placeholder={t('overtimeHoursPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
@@ -979,10 +982,10 @@ export default function AttendancePage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              取消
+              {tc('cancel')}
             </Button>
             <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-              保存
+              {tc('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -992,8 +995,8 @@ export default function AttendancePage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-2xl" resizable>
           <DialogHeader>
-            <DialogTitle>编辑考勤记录</DialogTitle>
-            <DialogDescription>{tc('text_6i9gwa')}</DialogDescription>
+            <DialogTitle>{t('editAttendance')}</DialogTitle>
+            <DialogDescription>{tc('fillAttendanceInfoShort')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
@@ -1083,7 +1086,7 @@ export default function AttendancePage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="workingHours">{tc('text_mkn0t')}</Label>
+                <Label htmlFor="workingHours">{tc('salaryWorkingHours')}</Label>
                 <Input
                   id="workingHours"
                   type="number"
@@ -1094,14 +1097,14 @@ export default function AttendancePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="overtimeHours">加班时长</Label>
+                <Label htmlFor="overtimeHours">{t('overtimeHours')}</Label>
                 <Input
                   id="overtimeHours"
                   type="number"
                   step="0.1"
                   value={formData.overtimeHours}
                   onChange={(e) => setFormData({ ...formData, overtimeHours: e.target.value })}
-                  placeholder="请输入加班时长"
+                  placeholder={t('overtimeHoursPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
@@ -1117,10 +1120,10 @@ export default function AttendancePage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              取消
+              {tc('cancel')}
             </Button>
             <Button onClick={handleUpdate} className="bg-blue-600 hover:bg-blue-700">
-              更新
+              {tc('update')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1130,18 +1133,18 @@ export default function AttendancePage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md" resizable>
           <DialogHeader>
-            <DialogTitle>删除考勤记录</DialogTitle>
+            <DialogTitle>{t('deleteAttendance')}</DialogTitle>
             <DialogDescription>
-              {tc('text_e7q3fr')}
+              {tc('confirmDeleteAttendanceDesc')}
               {currentRecord?.employeeName}在{currentRecord?.date} 的考勤记录吗？此操作不可撤销。
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              取消
+              {tc('cancel')}
             </Button>
             <Button onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
-              删除
+              {tc('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

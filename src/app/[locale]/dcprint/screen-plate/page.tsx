@@ -284,9 +284,9 @@ export default function ScreenPlatePage() {
                   <TableHead className="text-xs">目数</TableHead>
                   <TableHead className="text-xs">{tc('size')}</TableHead>
                   <TableHead className="text-xs">{tc('customer')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_qylaao')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_aryty9')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_gmt7')}</TableHead>
+                  <TableHead className="text-xs">{tc('dcLifeCountHead')}</TableHead>
+                  <TableHead className="text-xs">{tc('dcReclaimCountHead')}</TableHead>
+                  <TableHead className="text-xs">{tc('dcTensionHead')}</TableHead>
                   <TableHead className="text-xs">{tc('status')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
@@ -527,15 +527,15 @@ export default function ScreenPlatePage() {
             <Tabs defaultValue="list">
               <TabsList>
                 <TabsTrigger value="list">历史记录</TabsTrigger>
-                <TabsTrigger value="add">{tc('text_d7dmoj')}</TabsTrigger>
+                <TabsTrigger value="add">{tc('dcAddRecordTab')}</TabsTrigger>
               </TabsList>
               <TabsContent value="list">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-xs">操作类型</TableHead>
-                      <TableHead className="text-xs">{tc('text_ec2zl')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_byix7k')}</TableHead>
+                      <TableHead className="text-xs">{tc('dcTensionHead2')}</TableHead>
+                      <TableHead className="text-xs">{tc('dcLifeIncHead')}</TableHead>
                       <TableHead className="text-xs">{tc('remark')}</TableHead>
                       <TableHead className="text-xs">操作人</TableHead>
                       <TableHead className="text-xs">{tc('time')}</TableHead>
@@ -586,7 +586,7 @@ export default function ScreenPlatePage() {
                     </Select>
                   </div>
                   <div>
-                    <Label>{tc('text_6he839')}</Label>
+                    <Label>{tc('dcTensionLabel')}</Label>
                     <Input
                       type="number"
                       value={lifeTension}
@@ -594,7 +594,7 @@ export default function ScreenPlatePage() {
                     />
                   </div>
                   <div>
-                    <Label>{tc('text_ecll9t')}</Label>
+                    <Label>{tc('dcLifeIncLabel')}</Label>
                     <Input
                       type="number"
                       value={lifeIncrement}

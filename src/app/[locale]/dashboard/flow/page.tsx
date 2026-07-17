@@ -691,7 +691,7 @@ function ModuleGroupSection({
         </div>
         <span className="font-semibold text-sm">{t(group.nameKey)}</span>
         <Badge variant="secondary" className="text-[10px] h-4">
-          {group.tables.length}表
+          {t('tableCount', { count: group.tables.length })}
         </Badge>
         <div className="ml-auto">
           {open ? (
@@ -809,28 +809,26 @@ export default function FlowPage() {
   const tc = useTranslations('Common');
 
   return (
-    <MainLayout title="业务流转可视化">
+    <MainLayout title={t('flowVisualization')}>
       <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">{t('flowVisualization')}</h2>
-          <p className="text-muted-foreground mt-1">
-            丝网印刷ERP系统 — 业务链路、表间关联与系统架构全景视图
-          </p>
+          <p className="text-muted-foreground mt-1">{t('flowPageDescription')}</p>
         </div>
 
         <Tabs defaultValue="flow" className="space-y-4">
           <TabsList>
             <TabsTrigger value="flow" className="gap-1.5">
               <Workflow className="h-4 w-4" />
-              业务流转链路
+              {t('businessFlowChain')}
             </TabsTrigger>
             <TabsTrigger value="relation" className="gap-1.5">
               <Database className="h-4 w-4" />
-              表间关联关系
+              {t('tableRelations')}
             </TabsTrigger>
             <TabsTrigger value="architecture" className="gap-1.5">
               <Layers className="h-4 w-4" />
-              系统架构层次
+              {t('systemArchitectureTabs')}
             </TabsTrigger>
           </TabsList>
 
@@ -839,7 +837,7 @@ export default function FlowPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Workflow className="h-5 w-5 text-blue-400" />
-                  丝网印刷生产业务流转链路
+                  {t('productionFlowChain')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -860,7 +858,7 @@ export default function FlowPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Link2 className="h-5 w-5 text-amber-400" />
-                  关键字段贯穿路径
+                  {t('keyFieldPath')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -876,9 +874,9 @@ export default function FlowPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Database className="h-5 w-5 text-cyan-400" />
-                  业务表模块分组
+                  {t('businessTableModules')}
                   <Badge variant="secondary" className="ml-2">
-                    48 张表 · 12 个模块
+                    {t('tableModuleCount', { tables: 48, modules: 12 })}
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -901,10 +899,10 @@ export default function FlowPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Link2 className="h-5 w-5 text-amber-400" />
-                  外键关联清单
+                  {t('foreignKeyList')}
                   <Badge variant="secondary" className="ml-2">
                     {fkConnections.length}
-                    {tc('text_fjo82')}
+                    {tc('foreignKeyCountSuffix')}
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -929,7 +927,7 @@ export default function FlowPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Layers className="h-5 w-5 text-purple-400" />
-                  系统架构层次图
+                  {t('systemArchitectureDiagram')}
                 </CardTitle>
               </CardHeader>
               <CardContent>

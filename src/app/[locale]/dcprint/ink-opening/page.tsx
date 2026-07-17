@@ -297,7 +297,7 @@ export default function InkOpeningPage() {
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {summary.using_count}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">{tc('text_b9271x')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{tc('dcInUseDesc')}</p>
             </CardContent>
           </Card>
           <Card>
@@ -309,7 +309,7 @@ export default function InkOpeningPage() {
               <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                 {summary.expired_count}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">{tc('text_tqjk0e')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{tc('dcExpiredDesc')}</p>
             </CardContent>
           </Card>
           <Card>
@@ -321,7 +321,7 @@ export default function InkOpeningPage() {
               <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 {summary.overdue_using_count}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">{tc('text_o676in')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{tc('dcSoonExpiredDesc')}</p>
             </CardContent>
           </Card>
           <Card>
@@ -333,7 +333,7 @@ export default function InkOpeningPage() {
               <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">
                 {summary.scrapped_count}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">{tc('text_dl7x6j')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{tc('dcScrappedDesc')}</p>
             </CardContent>
           </Card>
         </div>
@@ -405,7 +405,7 @@ export default function InkOpeningPage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>油墨开罐记录</CardTitle>
-                <CardDescription>{tc('text_ws0d89')}</CardDescription>
+                <CardDescription>{tc('dcOpeningRecordDesc')}</CardDescription>
               </div>
               <div className="flex gap-2">
                 <div className="relative w-64">
@@ -460,9 +460,9 @@ export default function InkOpeningPage() {
                   <TableHead>油墨类型</TableHead>
                   <TableHead>批号</TableHead>
                   <TableHead>开罐时间</TableHead>
-                  <TableHead>{tc('text_df6ktk')}</TableHead>
+                  <TableHead>{tc('dcValidHoursHead')}</TableHead>
                   <TableHead>过期时间</TableHead>
-                  <TableHead>{tc('text_aqbiku')}</TableHead>
+                  <TableHead>{tc('dcRemainingTimeHead')}</TableHead>
                   <TableHead>剩余数量</TableHead>
                   <TableHead>{tc('status')}</TableHead>
                   <TableHead>{tc('actions')}</TableHead>
@@ -578,8 +578,8 @@ export default function InkOpeningPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="sm:max-w-[550px]" resizable>
             <DialogHeader>
-              <DialogTitle>{tc('text_q7y77y')}</DialogTitle>
-              <DialogDescription>{tc('text_ue1msy')}</DialogDescription>
+              <DialogTitle>{tc('dcAddOpeningTitle')}</DialogTitle>
+              <DialogDescription>{tc('dcAddOpeningDesc')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -632,7 +632,7 @@ export default function InkOpeningPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{tc('text_lx3btk')}</Label>
+                  <Label>{tc('dcOpenTimeLabel')}</Label>
                   <Input
                     type="datetime-local"
                     value={form.open_time}
@@ -640,7 +640,7 @@ export default function InkOpeningPage() {
                   />
                 </div>
                 <div>
-                  <Label>{tc('text_tbw5qm')}</Label>
+                  <Label>{tc('dcValidHoursLabel')}</Label>
                   <Select
                     value={String(form.expire_hours)}
                     onValueChange={(v) =>
@@ -710,7 +710,7 @@ export default function InkOpeningPage() {
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 取消
               </Button>
-              <Button onClick={handleCreate}>{tc('text_frqw1y')}</Button>
+              <Button onClick={handleCreate}>{tc('dcCreateBtn')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -718,17 +718,17 @@ export default function InkOpeningPage() {
         <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
           <DialogContent className="sm:max-w-[500px]" resizable>
             <DialogHeader>
-              <DialogTitle>{tc('text_tjkhvm')}</DialogTitle>
+              <DialogTitle>{tc('dcDetailTitle')}</DialogTitle>
             </DialogHeader>
             {detailData && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">{tc('text_9p3ezx')}</span>
+                    <span className="text-muted-foreground">{tc('dcRecordNo')}</span>
                     {detailData.record_no}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_yi52m7')}</span>
+                    <span className="text-muted-foreground">{tc('dcMaterialCode')}</span>
                     {detailData.material_code}
                   </div>
                   <div>
@@ -736,36 +736,36 @@ export default function InkOpeningPage() {
                     {detailData.material_name}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_am9xrv')}</span>
+                    <span className="text-muted-foreground">{tc('dcInkType')}</span>
                     <Badge className={INK_TYPE_MAP[detailData.ink_type]?.color || 'bg-gray-100'}>
                       {INK_TYPE_MAP[detailData.ink_type]?.label || detailData.ink_type}
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_euxbw')}</span>
+                    <span className="text-muted-foreground">{tc('dcBatchNo')}</span>
                     {detailData.batch_no || '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_a3z00e')}</span>
+                    <span className="text-muted-foreground">{tc('dcValidHoursLabel')}</span>
                     {detailData.expire_hours}
                     小时
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_wsbgss')}</span>
+                    <span className="text-muted-foreground">{tc('dcOpenTime')}</span>
                     {detailData.open_time}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_7czug4')}</span>
+                    <span className="text-muted-foreground">{tc('dcExpireTime')}</span>
                     {detailData.expire_time}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_mhpcad')}</span>
+                    <span className="text-muted-foreground">{tc('dcRemainingQty')}</span>
                     {detailData.remaining_qty
                       ? `${detailData.remaining_qty} ${detailData.unit}`
                       : '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_d1rbxt')}</span>
+                    <span className="text-muted-foreground">{tc('dcOperator')}</span>
                     {detailData.operator_name || '-'}
                   </div>
                   <div>

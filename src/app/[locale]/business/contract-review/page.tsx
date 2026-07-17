@@ -491,7 +491,7 @@ export default function ContractReviewPage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_2kytaf')}</Label>
+                <Label>{tc('productNameLabel')}</Label>
                 <Input
                   value={editItem.product_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, product_name: e.target.value })}
@@ -571,7 +571,7 @@ export default function ContractReviewPage() {
           <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" resizable>
             <DialogHeader>
               <DialogTitle>
-                {tc('text_jf0lke')}
+                {tc('reviewTitlePrefix')}
                 {editItem.review_no}
               </DialogTitle>
             </DialogHeader>
@@ -581,7 +581,7 @@ export default function ContractReviewPage() {
                 {editItem.customer_name}
               </div>
               <div>
-                <span className="text-muted-foreground">{tc('text_byjq8')}</span>
+                <span className="text-muted-foreground">{tc('productNameLabel')}</span>
                 {editItem.product_name}
               </div>
               <div>
@@ -598,9 +598,9 @@ export default function ContractReviewPage() {
                 <TabsTrigger value="purchase">采购部</TabsTrigger>
               </TabsList>
               <TabsContent value="biz" className="space-y-4 mt-4">
-                <h3 className="font-semibold">{tc('text_hmiy1c')}</h3>
+                <h3 className="font-semibold">{tc('bizReviewOpinionTitle')}</h3>
                 <div>
-                  <Label>{tc('text_i0itv3')}</Label>
+                  <Label>{tc('reviewOpinionLabel')}</Label>
                   <Textarea
                     rows={4}
                     value={editItem.biz_opinion || ''}
@@ -612,7 +612,7 @@ export default function ContractReviewPage() {
               <TabsContent value="eng" className="space-y-4 mt-4">
                 <h3 className="font-semibold">工程技术部评审意见</h3>
                 <div>
-                  <Label>{tc('text_60nmk0')}</Label>
+                  <Label>{tc('engineeringFeasibilityLabel')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.engineering_feasibility || ''}
@@ -623,7 +623,7 @@ export default function ContractReviewPage() {
                   />
                 </div>
                 <div>
-                  <Label>{tc('text_i0itv3')}</Label>
+                  <Label>{tc('reviewOpinionLabel')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.eng_opinion || ''}
@@ -635,7 +635,7 @@ export default function ContractReviewPage() {
               <TabsContent value="quality" className="space-y-4 mt-4">
                 <h3 className="font-semibold">品质部评审意见</h3>
                 <div>
-                  <Label>{tc('text_anxbqs')}</Label>
+                  <Label>{tc('qualityRequirementLabel')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.quality_requirement || ''}
@@ -646,7 +646,7 @@ export default function ContractReviewPage() {
                   />
                 </div>
                 <div>
-                  <Label>{tc('text_i0itv3')}</Label>
+                  <Label>{tc('reviewOpinionLabel')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.quality_opinion || ''}
@@ -669,7 +669,7 @@ export default function ContractReviewPage() {
                   />
                 </div>
                 <div>
-                  <Label>{tc('text_i0itv3')}</Label>
+                  <Label>{tc('reviewOpinionLabel')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.prod_opinion || ''}
@@ -681,7 +681,7 @@ export default function ContractReviewPage() {
               <TabsContent value="purchase" className="space-y-4 mt-4">
                 <h3 className="font-semibold">采购部评审意见</h3>
                 <div>
-                  <Label>{tc('text_1y636z')}</Label>
+                  <Label>{tc('materialAvailabilityLabel')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.material_availability || ''}
@@ -692,7 +692,7 @@ export default function ContractReviewPage() {
                   />
                 </div>
                 <div>
-                  <Label>{tc('text_i0itv3')}</Label>
+                  <Label>{tc('reviewOpinionLabel')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.purchase_opinion || ''}
@@ -755,7 +755,7 @@ export default function ContractReviewPage() {
               <Button variant="outline" onClick={() => setShowReviewDialog(false)}>
                 关闭
               </Button>
-              <Button onClick={handleSaveReview}>{tc('text_v1sw52')}</Button>
+              <Button onClick={handleSaveReview}>{tc('saveReview')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -86,14 +86,14 @@ export default function ProductionInboundPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功' });
+        toast({ title: tc('createSuccess') });
         setShowDialog(false);
         refresh();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
   const handleStatusChange = async (id: number, status: number) => {
@@ -104,26 +104,26 @@ export default function ProductionInboundPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '更新成功' });
+        toast({ title: tc('updateSuccess') });
         refresh();
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!window.confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch('/api/warehouse/production-inbound?id=' + id, {
         method: 'DELETE',
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         refresh();
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
 

@@ -161,14 +161,14 @@ export default function TracePage() {
               <QrCode className="h-5 w-5" />
               扫码追溯
             </CardTitle>
-            <CardDescription>{tc('text_7ywqdy')}</CardDescription>
+            <CardDescription>{tc('dcTraceScanDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {/* 二维码输入 */}
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="text-sm font-medium mb-2 block">{tc('text_lnupky')}</label>
+                  <label className="text-sm font-medium mb-2 block">{tc('dcQrInputLabel')}</label>
                   <Input
                     ref={qrInputRef}
                     placeholder="请扫描流程卡二维码..."
@@ -217,7 +217,7 @@ export default function TracePage() {
                   <div>
                     <CardTitle>追溯结果</CardTitle>
                     <CardDescription>
-                      {tc('text_91y2ee')}
+                      {tc('dcTraceNoPrefix')}
                       {traceResult.traceNo}
                     </CardDescription>
                   </div>
@@ -308,18 +308,18 @@ export default function TracePage() {
                   {/* 统计信息 */}
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">{tc('text_euzt9u')}</CardTitle>
+                      <CardTitle className="text-sm">{tc('dcStatsTitle')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
                         <div className="bg-muted p-3 rounded-lg">
-                          <div className="text-sm text-muted-foreground">{tc('text_aaujro')}</div>
+                          <div className="text-sm text-muted-foreground">{tc('dcMainCount')}</div>
                           <div className="text-2xl font-bold text-green-600">
                             {traceResult.materials.filter((m) => m.materialType === 'main').length}
                           </div>
                         </div>
                         <div className="bg-muted p-3 rounded-lg">
-                          <div className="text-sm text-muted-foreground">{tc('text_ij1t03')}</div>
+                          <div className="text-sm text-muted-foreground">{tc('dcAuxCount')}</div>
                           <div className="text-2xl font-bold text-blue-600">
                             {
                               traceResult.materials.filter((m) => m.materialType === 'auxiliary')
@@ -342,7 +342,7 @@ export default function TracePage() {
             <Card>
               <CardHeader>
                 <CardTitle>物料明细</CardTitle>
-                <CardDescription>{tc('text_57bhxa')}</CardDescription>
+                <CardDescription>{tc('dcMaterialDetailDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="border rounded-lg">
@@ -398,18 +398,18 @@ export default function TracePage() {
         <Card>
           <CardHeader>
             <CardTitle>追溯记录</CardTitle>
-            <CardDescription>{tc('text_1oo8e8')}</CardDescription>
+            <CardDescription>{tc('dcTraceRecordDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{tc('text_imex3o')}</TableHead>
+                    <TableHead>{tc('dcTraceNoHead')}</TableHead>
                     <TableHead>流程卡卡号</TableHead>
                     <TableHead>工单号</TableHead>
                     <TableHead>成品料号</TableHead>
-                    <TableHead>{tc('text_imlxs2')}</TableHead>
+                    <TableHead>{tc('dcTraceTypeHead')}</TableHead>
                     <TableHead>操作员</TableHead>
                     <TableHead>追溯时间</TableHead>
                   </TableRow>

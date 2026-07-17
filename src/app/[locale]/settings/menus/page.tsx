@@ -87,7 +87,7 @@ export default function MenusPage() {
         setExpandedIds(parentIds);
       }
     } catch {
-      toast({ title: '获取菜单失败', variant: 'destructive' });
+      toast({ title: tc('menuFetchFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -207,7 +207,7 @@ export default function MenusPage() {
 
   const handleSave = async () => {
     if (!editItem.menu_name || !editItem.menu_code) {
-      toast({ title: '菜单名称和编码不能为空', variant: 'destructive' });
+      toast({ title: tc('menuNameCodeRequired'), variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -255,7 +255,7 @@ export default function MenusPage() {
         toast({ title: result.message || tc('error'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '保存失败', variant: 'destructive' });
+      toast({ title: tc('saveFailed'), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -267,13 +267,13 @@ export default function MenusPage() {
       const res = await authFetch(`/api/organization/menu?id=${item.id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       } else {
         toast({ title: result.message || '删除失败', variant: 'destructive' });
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 

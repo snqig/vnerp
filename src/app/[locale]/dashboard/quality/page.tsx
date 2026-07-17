@@ -19,7 +19,7 @@ import {
   ClipboardCheck,
   Calendar,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface QualityData {
   overview: {
@@ -133,7 +133,6 @@ function LineChart({
 
   return (
     <svg width={width} height={height} className="w-full">
-      {/* 网格线 */}
       {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
         <g key={i}>
           <line
@@ -156,7 +155,6 @@ function LineChart({
         </g>
       ))}
 
-      {/* X轴标签 */}
       {data
         .filter((_, i) => i % Math.ceil(data.length / 6) === 0 || i === data.length - 1)
         .map((d, i, arr) => {
@@ -175,13 +173,10 @@ function LineChart({
           );
         })}
 
-      {/* 检验总数线 */}
       <path d={totalPath} fill="none" stroke="#06b6d4" strokeWidth="2" strokeLinecap="round" />
 
-      {/* 不良数线 */}
       <path d={defectsPath} fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
 
-      {/* 数据点 */}
       {data.map((d, i) => (
         <g key={i}>
           <circle cx={getX(i)} cy={getY(d.total)} r="3" fill="#06b6d4" />
@@ -189,7 +184,6 @@ function LineChart({
         </g>
       ))}
 
-      {/* 图例 */}
       <g transform={`translate(${width - 150}, 10)`}>
         <line x1="0" y1="0" x2="20" y2="0" stroke="#06b6d4" strokeWidth="2" />
         <text x="25" y="4" fill="rgba(255,255,255,0.7)" fontSize="10">
@@ -239,6 +233,7 @@ export default function QualityDashboard() {
   // 翻译钩子
   const t = useTranslations('Dashboard');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const { companyName } = useCompanyName();
   const [data, setData] = useState<QualityData>({
@@ -319,7 +314,7 @@ export default function QualityDashboard() {
   }, []);
 
   const formatTime = (date: Date) => {
-    return date.toLocaleString('zh-CN', {
+    return date.toLocaleString(locale, {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -616,7 +611,6 @@ export default function QualityDashboard() {
                 {t('inspectionTypeDistribution')}
               </span>
             </div>
-            {/* 检验类型分布 */}
             <div className="p-4">
               {data.processQuality.length === 0 ? (
                 <p className="text-white/40 text-center py-8">{tc('noData')}</p>

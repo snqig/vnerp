@@ -20,7 +20,7 @@ import {
   Minimize,
   Target,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface ProductionData {
   overview: {
@@ -143,6 +143,7 @@ export default function ProductionDashboard() {
   // 翻译钩子
   const t = useTranslations('Dashboard');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const { companyName } = useCompanyName();
   const [data, setData] = useState<ProductionData>({
@@ -275,7 +276,7 @@ export default function ProductionDashboard() {
   }, []);
 
   const formatTime = (date: Date) =>
-    date.toLocaleString('zh-CN', {
+    date.toLocaleString(locale, {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',

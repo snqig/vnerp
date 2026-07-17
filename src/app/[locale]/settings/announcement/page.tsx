@@ -95,7 +95,7 @@ export default function AnnouncementPage() {
 
   const handleCreate = async () => {
     if (!form.title || !form.content) {
-      toast({ title: '标题和内容不能为空', variant: 'destructive' });
+      toast({ title: tc('titleContentRequired'), variant: 'destructive' });
       return;
     }
     try {
@@ -105,7 +105,7 @@ export default function AnnouncementPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '公告创建成功' });
+        toast({ title: tc('announcementCreated') });
         setCreateOpen(false);
         setForm({
           title: '',
@@ -121,7 +121,7 @@ export default function AnnouncementPage() {
         toast({ title: result.message || '创建失败', variant: 'destructive' });
       }
     } catch {
-      toast({ title: '创建失败', variant: 'destructive' });
+      toast({ title: tc('createFailed'), variant: 'destructive' });
     }
   };
 
@@ -133,25 +133,25 @@ export default function AnnouncementPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '公告已发布' });
+        toast({ title: tc('announcementPublished') });
         fetchData();
       }
     } catch {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确认删除此公告？')) return;
+    if (!window.confirm(tc('confirmDeleteAnnouncement'))) return;
     try {
       const res = await authFetch(`/api/system/announcement?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '公告已删除' });
+        toast({ title: tc('announcementDeleted') });
         fetchData();
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -208,8 +208,8 @@ export default function AnnouncementPage() {
                   <TableHead className="w-[40%]">{tc('title') || '标题'}</TableHead>
                   <TableHead>{tc('type')}</TableHead>
                   <TableHead>{tc('status')}</TableHead>
-                  <TableHead>{tc('text_mifc')}</TableHead>
-                  <TableHead>{tc('text_mnnqx')}</TableHead>
+                  <TableHead>{tc('annTop')}</TableHead>
+                  <TableHead>{tc('annReadCount')}</TableHead>
                   <TableHead>发布时间</TableHead>
                   <TableHead className="text-right">{tc('actions')}</TableHead>
                 </TableRow>
@@ -322,19 +322,19 @@ export default function AnnouncementPage() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{tc('text_ar49nh')}</DialogTitle>
-            <DialogDescription>{tc('text_7tfy1j')}</DialogDescription>
+            <DialogTitle>{tc('createAnnouncementTitle')}</DialogTitle>
+            <DialogDescription>{tc('createAnnouncementDesc')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label>{tc('text_dqp6wr')}</Label>
+              <Label>{tc('annTitleLabel')}</Label>
               <Input
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               />
             </div>
             <div className="space-y-1">
-              <Label>{tc('text_anl1i6')}</Label>
+              <Label>{tc('annContentLabel')}</Label>
               <Textarea
                 rows={5}
                 value={form.content}
@@ -386,8 +386,8 @@ export default function AnnouncementPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft">{tc('text_v17vor')}</SelectItem>
-                    <SelectItem value="published">{tc('text_ff4jlv')}</SelectItem>
+                    <SelectItem value="draft">{tc('annDraft')}</SelectItem>
+                    <SelectItem value="published">{tc('annPublished')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

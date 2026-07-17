@@ -178,7 +178,7 @@ export default function PurchaseRequestDetailPage() {
                 采购申请详情
               </h1>
               <p className="text-sm text-muted-foreground">
-                {tc('text_cn388')}
+                {tc('requestNoLabelPrefix')}
                 {request.request_no}
               </p>
             </div>
@@ -219,7 +219,7 @@ export default function PurchaseRequestDetailPage() {
           <span
             className={`px-3 py-1 rounded text-sm font-medium ${priorityMap[request.priority]?.color}`}
           >
-            {tc('text_abodqb')}
+            {tc('priorityLabelPrefix')}
             {priorityMap[request.priority]?.label || tc('medium')}
           </span>
         </div>
@@ -248,7 +248,7 @@ export default function PurchaseRequestDetailPage() {
                 <div className="font-medium">{request.requester_name || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">{tc('text_eamvwz')}</div>
+                <div className="text-sm text-muted-foreground">{tc('expectedArrivalDate')}</div>
                 <div className="font-medium">{request.expected_date || '-'}</div>
               </div>
               <div>
@@ -260,7 +260,7 @@ export default function PurchaseRequestDetailPage() {
                 <div className="font-medium">{new Date(request.create_time).toLocaleString()}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">{tc('text_b6pu85')}</div>
+                <div className="text-sm text-muted-foreground">{tc('totalAmountLabel')}</div>
                 <div className="font-medium text-blue-600">
                   {formatAmount(request.total_amount, request.currency)}
                 </div>
@@ -335,7 +335,7 @@ export default function PurchaseRequestDetailPage() {
                   <div className="font-medium">{request.approver_name || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_byz0eq')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('approveDate')}</div>
                   <div className="font-medium">{request.approve_date || '-'}</div>
                 </div>
                 <div className="md:col-span-3">

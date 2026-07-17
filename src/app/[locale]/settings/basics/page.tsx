@@ -113,7 +113,7 @@ export default function BasicsSettingsPage() {
         }
       }
     } catch {
-      toast.error('加载配置失败');
+      toast.error(tc('configLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -300,7 +300,7 @@ export default function BasicsSettingsPage() {
                   <Palette className="h-5 w-5" />
                   主题设置
                 </CardTitle>
-                <CardDescription>{tc('text_kxopjs')}</CardDescription>
+                <CardDescription>{tc('themeSettingsDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ThemeSettings />

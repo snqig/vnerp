@@ -753,7 +753,7 @@ export default function UserManagementPage() {
             </div>
             <div className="mt-4">
               <div className="flex items-center justify-between mb-2">
-                <Label>{tc('text_hxb087')}</Label>
+                <Label>{tc('assignRoleLabel')}</Label>
                 {roles.length > 0 && (
                   <Button
                     variant="ghost"
@@ -772,7 +772,9 @@ export default function UserManagementPage() {
                 )}
               </div>
               <div className="max-h-60 overflow-y-auto border rounded-md p-3 space-y-2 bg-muted/30">
-                {roles.length === 0 && <p className="text-sm text-gray-400">{tc('text_t59mle')}</p>}
+                {roles.length === 0 && (
+                  <p className="text-sm text-gray-400">{tc('noRolesAvailable')}</p>
+                )}
                 {roles.map((role) => (
                   <label
                     key={role.id}

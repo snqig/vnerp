@@ -24,6 +24,7 @@ interface SeedStats {
 }
 
 export default function SeedDataPage() {
+  const tc = useTranslations('Common');
   // 翻译钩子
 
   const [systemLoading, setSystemLoading] = useState(false);
@@ -49,7 +50,7 @@ export default function SeedDataPage() {
 
       if (result.success) {
         setSystemStats(result.data);
-        toast.success('系统数据种子初始化成功！');
+        toast.success(tc('seedSystemSuccess'));
       } else {
         setError(result.message || '初始化失败');
         toast.error(result.message || '初始化失败');
@@ -79,7 +80,7 @@ export default function SeedDataPage() {
 
       if (result.success) {
         setBusinessStats(result.data);
-        toast.success('业务数据种子初始化成功！');
+        toast.success(tc('seedBusinessSuccess'));
       } else {
         setError(result.message || '初始化失败');
         toast.error(result.message || '初始化失败');

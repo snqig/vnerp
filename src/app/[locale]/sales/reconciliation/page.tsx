@@ -221,7 +221,16 @@ export default function ReconciliationPage() {
 
   const exportReconciliation = (rc: Reconciliation) => {
     const csvContent = [
-      ['对账单号', '客户名称', '期间', '送货金额', '退货金额', '净额', '已收', '余额'].join(','),
+      [
+        t('csvHeaderReconciliationNo'),
+        t('csvHeaderCustomer'),
+        t('csvHeaderPeriod'),
+        t('csvHeaderDeliveryAmount'),
+        t('csvHeaderReturnAmount'),
+        t('csvHeaderNetAmount'),
+        t('csvHeaderReceived'),
+        t('csvHeaderBalance'),
+      ].join(','),
       [
         rc.reconciliation_no,
         rc.customer_name,
@@ -238,7 +247,7 @@ export default function ReconciliationPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `对账单_${rc.reconciliation_no}.csv`;
+    a.download = `${t('csvFilename', { no: rc.reconciliation_no })}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success(t('exportSuccess'));

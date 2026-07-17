@@ -255,7 +255,7 @@ export default function DeliveryPage() {
       logger.error({ module: 'Sales', action: 'fetchDelivery' }, '获取发货单列表失败', {
         error: (e as Error).message,
       });
-      toast.error('获取发货单列表失败');
+      toast.error(t('fetchListFailed'));
     } finally {
       setLoading(false);
     }
@@ -339,15 +339,15 @@ export default function DeliveryPage() {
 
   const saveDelivery = async () => {
     if (!form.sales_order_id) {
-      toast.error('请选择销售订单');
+      toast.error(t('selectSalesOrder'));
       return;
     }
     if (!form.customer_id) {
-      toast.error('请选择客户');
+      toast.error(t('selectCustomer'));
       return;
     }
     if (!form.warehouse_id) {
-      toast.error('请选择仓库');
+      toast.error(t('selectWarehouse'));
       return;
     }
     if (
@@ -355,7 +355,7 @@ export default function DeliveryPage() {
       form.items.length === 0 ||
       form.items.some((i) => !i.material_id || !i.quantity)
     ) {
-      toast.error('请完善发货明细（成品和数量不能为空）');
+      toast.error(t('fillShipmentItems'));
       return;
     }
     try {
@@ -365,14 +365,14 @@ export default function DeliveryPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast.success('发货单创建成功');
+        toast.success(tc('createSuccess'));
         setDialogOpen(false);
         fetchData();
       } else {
-        toast.error(result.message || '创建失败');
+        toast.error(result.message || tc('createFailed'));
       }
     } catch {
-      toast.error('保存发货单失败');
+      toast.error(tc('saveFailed'));
     }
   };
 
@@ -417,7 +417,7 @@ export default function DeliveryPage() {
 
   const executeShipping = async () => {
     if (!shipForm.items.length || shipForm.items.some((i) => !i.qr_code || !i.quantity)) {
-      toast.error('请填写完整的扫码信息（二维码和数量）');
+      toast.error(t('fillQRCodeInfo'));
       return;
     }
 
@@ -432,25 +432,25 @@ export default function DeliveryPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast.success(`发货成功！已发 ${result.data.shipped_quantity} 件`);
+        toast.success(t('shipSuccess', { quantity: result.data.shipped_quantity }));
         setShipDialogOpen(false);
         fetchData();
       } else {
-        toast.error(result.message || '发货失败');
+        toast.error(result.message || t('shipFailed'));
       }
     } catch {
-      toast.error('执行发货操作失败');
+      toast.error(t('executeShipFailed'));
     }
   };
 
   // 提交部分发货申请（符合设计文档 5.3 节）
   const submitPartialShipment = async () => {
-    const salesOrderId = prompt('请输入销售订单ID：');
+    const salesOrderId = prompt(t('enterSalesOrderId'));
     if (!salesOrderId) return;
 
-    const quantity = prompt('请输入部分发货数量：');
+    const quantity = prompt(t('enterPartialQty'));
     if (!quantity || parseFloat(quantity) <= 0) {
-      toast.error('发货数量必须大于0');
+      toast.error(t('qtyMustBePositive'));
       return;
     }
 
@@ -460,30 +460,30 @@ export default function DeliveryPage() {
         body: JSON.stringify({
           sales_order_id: parseInt(salesOrderId),
           quantity: parseFloat(quantity),
-          remark: `部分发货申请`,
+          remark: `${t('partialShipment')}`,
         }),
       });
       const result = await res.json();
       if (result.success) {
-        toast.success('部分发货申请提交成功，等待审批');
+        toast.success(t('partialShipApplied'));
         fetchData();
       } else {
-        toast.error(result.message || '提交失败');
+        toast.error(result.message || t('applyFailed'));
       }
     } catch {
-      toast.error('提交部分发货申请失败');
+      toast.error(t('applyPartialFailed'));
     }
   };
 
   // 提交补发申请（符合设计文档 5.4 节）
   const submitReShip = async (parentShipmentId: number) => {
-    const quantity = prompt('请输入补发数量：');
+    const quantity = prompt(t('enterReShipQty'));
     if (!quantity || parseFloat(quantity) <= 0) {
-      toast.error('补发数量必须大于0');
+      toast.error(t('qtyMustBePositive'));
       return;
     }
 
-    const reason = prompt('请输入补发原因（可选）：') || '';
+    const reason = prompt(t('enterReShipReason')) || '';
 
     try {
       const res = await authFetch('/api/sales/delivery/re-ship', {
@@ -496,13 +496,13 @@ export default function DeliveryPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast.success('补发申请提交成功，等待审批');
+        toast.success(t('reShipApplied'));
         fetchData();
       } else {
-        toast.error(result.message || '提交失败');
+        toast.error(result.message || t('applyFailed'));
       }
     } catch {
-      toast.error('提交补发申请失败');
+      toast.error(t('applyReShipFailed'));
     }
   };
 
@@ -514,29 +514,29 @@ export default function DeliveryPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast.success('状态更新成功');
+        toast.success(tc('updateSuccess'));
         fetchData();
       } else {
-        toast.error(result.message || '更新失败');
+        toast.error(result.message || tc('updateFailed'));
       }
     } catch {
-      toast.error('更新状态失败');
+      toast.error(tc('updateFailed'));
     }
   };
 
   const deleteDelivery = async (id: number) => {
-    if (!confirm('确定要删除该发货单吗？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch(`/api/sales/delivery?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast.success('删除成功');
+        toast.success(tc('deleteSuccess'));
         fetchData();
       } else {
-        toast.error(result.message || '删除失败');
+        toast.error(result.message || tc('deleteFailed'));
       }
     } catch {
-      toast.error('删除失败');
+      toast.error(tc('deleteFailed'));
     }
   };
 
@@ -550,7 +550,7 @@ export default function DeliveryPage() {
         setDetailOpen(true);
       }
     } catch {
-      toast.error('获取详情失败');
+      toast.error(t('fetchDetailFailed'));
     }
   };
 
@@ -727,7 +727,7 @@ export default function DeliveryPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => updateStatus(d.id!, 2)}
-                              title="确认发货"
+                              title={t('confirmShip')}
                             >
                               <Truck className="w-4 h-4 text-blue-500" />
                             </Button>
@@ -737,7 +737,7 @@ export default function DeliveryPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => updateStatus(d.id!, 3)}
-                              title="确认签收"
+                              title={t('confirmSign')}
                             >
                               <Printer className="w-4 h-4 text-green-500" />
                             </Button>
@@ -756,7 +756,7 @@ export default function DeliveryPage() {
                   {list.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={10} className="text-center py-8 text-gray-500">
-                        暂无数据
+                        {tc('noData')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -770,14 +770,14 @@ export default function DeliveryPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" resizable>
           <DialogHeader>
-            <DialogTitle>{tc('text_gt2sbj')}</DialogTitle>
-            <DialogDescription>{tc('text_5k6wux')}</DialogDescription>
+            <DialogTitle>{tc('newDeliveryTitle')}</DialogTitle>
+            <DialogDescription>{tc('newDeliveryDesc')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>
-                  客户
+                  {tc('customer')}
                   <span className="text-red-500">*</span>
                 </Label>
                 <Select
@@ -792,7 +792,7 @@ export default function DeliveryPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择客户" />
+                    <SelectValue placeholder={tc('selectCustomer')} />
                   </SelectTrigger>
                   <SelectContent>
                     {customers.map((c: Loose) => (
@@ -805,7 +805,7 @@ export default function DeliveryPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  关联销售订单
+                  {t('relatedOrder')}
                   <span className="text-red-500">*</span>
                 </Label>
                 <Select
@@ -822,7 +822,7 @@ export default function DeliveryPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择销售订单" />
+                    <SelectValue placeholder={t('selectSalesOrder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {salesOrders.map((o) => (
@@ -835,7 +835,7 @@ export default function DeliveryPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  仓库
+                  {tc('warehouse')}
                   <span className="text-red-500">*</span>
                 </Label>
                 <WarehouseSelect
@@ -843,17 +843,17 @@ export default function DeliveryPage() {
                   onChange={(v) =>
                     setForm((prev) => ({ ...prev, warehouse_id: v ? parseInt(v) : 0 }))
                   }
-                  placeholder="选择仓库"
+                  placeholder={tc('selectWarehouse')}
                 />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>收货联系人</Label>
+                <Label>{t('contactPerson')}</Label>
                 <Input
                   value={form.contact_name || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, contact_name: e.target.value }))}
-                  placeholder="联系人"
+                  placeholder={t('contactPerson')}
                 />
               </div>
               <div className="space-y-2">
@@ -861,11 +861,11 @@ export default function DeliveryPage() {
                 <Input
                   value={form.contact_phone || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, contact_phone: e.target.value }))}
-                  placeholder="电话"
+                  placeholder={tc('phone')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>送货地址</Label>
+                <Label>{t('deliveryAddress')}</Label>
                 <Input
                   value={form.delivery_address || ''}
                   onChange={(e) =>
@@ -877,21 +877,21 @@ export default function DeliveryPage() {
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>物流公司</Label>
+                <Label>{t('logisticsCompany')}</Label>
                 <Input
                   value={form.logistics_company || ''}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, logistics_company: e.target.value }))
                   }
-                  placeholder="物流公司"
+                  placeholder={t('logisticsCompany')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>物流单号</Label>
+                <Label>{t('trackingNo')}</Label>
                 <Input
                   value={form.tracking_no || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, tracking_no: e.target.value }))}
-                  placeholder="物流单号"
+                  placeholder={t('trackingNo')}
                 />
               </div>
               <div className="space-y-2">
@@ -906,20 +906,20 @@ export default function DeliveryPage() {
 
             <div className="border-t pt-4">
               <div className="flex items-center justify-between mb-3">
-                <Label className="text-base font-semibold">{tc('text_ir1jy6')}</Label>
+                <Label className="text-base font-semibold">{tc('shipmentItems')}</Label>
                 <Button variant="outline" size="sm" onClick={addItem}>
                   <Plus className="w-4 h-4 mr-1" />
-                  添加物料
+                  {t('addMaterial')}
                 </Button>
               </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>物料名称</TableHead>
-                    <TableHead>规格型号</TableHead>
+                    <TableHead>{tc('materialName')}</TableHead>
+                    <TableHead>{tc('specification')}</TableHead>
                     <TableHead>{tc('quantity')}</TableHead>
                     <TableHead>{tc('unit')}</TableHead>
-                    <TableHead>单价</TableHead>
+                    <TableHead>{t('unitPrice')}</TableHead>
                     <TableHead>{tc('amount')}</TableHead>
                     <TableHead>{tc('batchNo')}</TableHead>
                     <TableHead></TableHead>
@@ -932,7 +932,7 @@ export default function DeliveryPage() {
                         <Input
                           value={item.material_name}
                           onChange={(e) => updateItem(idx, 'material_name', e.target.value)}
-                          placeholder="物料名称"
+                          placeholder={tc('materialName')}
                           className="w-32"
                         />
                       </TableCell>
@@ -995,11 +995,10 @@ export default function DeliveryPage() {
               </Table>
               <div className="flex justify-end gap-6 mt-3 text-sm">
                 <span>
-                  总数量:
-                  <strong>{calcTotalQty().toLocaleString()}</strong>
+                  {tc('totalQuantity')}:<strong>{calcTotalQty().toLocaleString()}</strong>
                 </span>
                 <span>
-                  总金额:
+                  {tc('totalAmount')}:
                   <strong className="text-blue-600">
                     <MoneyDisplay amount={calcTotal()} currency="CNY" />
                   </strong>
@@ -1009,10 +1008,10 @@ export default function DeliveryPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              取消
+              {tc('cancel')}
             </Button>
             <Button onClick={saveDelivery} className="bg-blue-600 hover:bg-blue-700">
-              保存
+              {tc('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1021,42 +1020,42 @@ export default function DeliveryPage() {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-2xl" resizable>
           <DialogHeader>
-            <DialogTitle>{tc('text_cyrs1a')}</DialogTitle>
+            <DialogTitle>{tc('deliveryDetailTitle')}</DialogTitle>
             <DialogDescription>{detailData?.delivery_no}</DialogDescription>
           </DialogHeader>
           {detailData && (
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">{tc('text_fvh8n6')}</span>
+                  <span className="text-gray-500">{tc('customerLabel')}</span>
                   {detailData.customer_name}
                 </div>
                 <div>
-                  <span className="text-gray-500">{tc('text_d1c9ru')}</span>
+                  <span className="text-gray-500">{tc('deliveryDateLabel')}</span>
                   {detailData.delivery_date}
                 </div>
                 <div>
-                  <span className="text-gray-500">{tc('text_jx9hsq')}</span>
+                  <span className="text-gray-500">{tc('orderNoLabel')}</span>
                   {detailData.order_no || '-'}
                 </div>
                 <div>
-                  <span className="text-gray-500">{tc('text_za1nyu')}</span>
+                  <span className="text-gray-500">{tc('logisticsLabel')}</span>
                   {detailData.logistics_company || '-'}
                 </div>
                 <div>
-                  <span className="text-gray-500">{tc('text_zabqjk')}</span>
+                  <span className="text-gray-500">{tc('trackingLabel')}</span>
                   {detailData.tracking_no || '-'}
                 </div>
                 <div>
-                  <span className="text-gray-500">{tc('text_gpem87')}</span>
+                  <span className="text-gray-500">{tc('contactLabel')}</span>
                   {detailData.contact_name || '-'}
                 </div>
                 <div>
-                  <span className="text-gray-500">{tc('text_ksxgln')}</span>
+                  <span className="text-gray-500">{tc('phoneLabel')}</span>
                   {detailData.contact_phone || '-'}
                 </div>
                 <div>
-                  <span className="text-gray-500">{tc('text_cz40sk')}</span>
+                  <span className="text-gray-500">{tc('addressLabel')}</span>
                   {detailData.delivery_address || '-'}
                 </div>
               </div>
@@ -1080,7 +1079,7 @@ export default function DeliveryPage() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-gray-500 text-sm">签收状态</div>
+                    <div className="text-gray-500 text-sm">{t('signStatus')}</div>
                     <Badge className={SIGN_STATUS_MAP[detailData.sign_status ?? 0]?.color}>
                       {SIGN_STATUS_MAP[detailData.sign_status ?? 0]?.label}
                     </Badge>
@@ -1091,11 +1090,11 @@ export default function DeliveryPage() {
                 <div className="border-t pt-4 text-sm">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <span className="text-gray-500">{tc('text_fzysd4')}</span>
+                      <span className="text-gray-500">{tc('signPersonLabel')}</span>
                       {detailData.sign_person}
                     </div>
                     <div>
-                      <span className="text-gray-500">{tc('text_15vxi4')}</span>
+                      <span className="text-gray-500">{tc('signTimeLabel')}</span>
                       {detailData.sign_time}
                     </div>
                   </div>
@@ -1105,7 +1104,7 @@ export default function DeliveryPage() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDetailOpen(false)}>
-              关闭
+              {tc('close')}
             </Button>
           </DialogFooter>
         </DialogContent>

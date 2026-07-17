@@ -2,7 +2,7 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,9 +64,9 @@ const TYPE_MAP: Record<number, string> = {
 };
 
 export default function MaterialIssuePage() {
-  // 翻译钩子
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);

@@ -521,7 +521,7 @@ export default function PurchaseRequestFormPage() {
             <Button variant="outline" size="icon" onClick={() => router.back()}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-xl font-bold">{tc('text_2tvbip')}</h1>
+            <h1 className="text-xl font-bold">{tc('newPurchaseRequestTitle')}</h1>
             {editingId && (
               <span
                 style={{
@@ -1117,7 +1117,7 @@ export default function PurchaseRequestFormPage() {
         <Dialog open={showListDialog} onOpenChange={setShowListDialog}>
           <DialogContent style={{ maxWidth: '900px', maxHeight: '80vh' }}>
             <DialogHeader>
-              <DialogTitle>{tc('text_wjbz60')}</DialogTitle>
+              <DialogTitle>{tc('requestHistoryTitle')}</DialogTitle>
             </DialogHeader>
             <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
               {loadingRecords ? (

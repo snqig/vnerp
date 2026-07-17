@@ -1,7 +1,7 @@
 'use client';
 
 import { MainLayout } from '@/components/layout';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
@@ -45,7 +45,6 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-// 工单数据
 const workOrders = [
   {
     id: 'WO20240115001',
@@ -129,7 +128,6 @@ const workOrders = [
   },
 ];
 
-// 工序列表
 const processes = [
   { code: 'P01', name: '切料', status: 'completed' },
   { code: 'P02', name: '磨切', status: 'completed' },
@@ -141,9 +139,9 @@ const processes = [
 ];
 
 export default function WorkOrdersPage() {
-  // 翻译钩子
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const ORDER_STATUS_CLASSES: Record<string, string> = {
     created: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
@@ -174,7 +172,6 @@ export default function WorkOrdersPage() {
   return (
     <MainLayout title={t('workOrders')}>
       <div className="space-y-6">
-        {/* 工具栏 */}
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -217,14 +214,14 @@ export default function WorkOrdersPage() {
                             <SelectValue placeholder={t('selectSalesOrder')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="SO001">{tc('text_lb1db4')}</SelectItem>
-                            <SelectItem value="SO002">{tc('text_mtkpe7')}</SelectItem>
+                            <SelectItem value="SO001">{t('salesOrderSO001')}</SelectItem>
+                            <SelectItem value="SO002">{t('salesOrderSO002')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
                         <Label>{t('product')}</Label>
-                        <Input disabled value="包装膜-透明" />
+                        <Input disabled value={t('sampleProductFilm')} />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -260,7 +257,6 @@ export default function WorkOrdersPage() {
           </CardContent>
         </Card>
 
-        {/* 工单列表 */}
         <div className="grid gap-4">
           {workOrders.map((order) => (
             <Card
@@ -271,7 +267,6 @@ export default function WorkOrdersPage() {
             >
               <CardContent className="p-6">
                 <div className="flex flex-col lg:flex-row gap-6">
-                  {/* 基本信息 */}
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -338,13 +333,12 @@ export default function WorkOrdersPage() {
                       </div>
                     </div>
 
-                    {/* 进度 */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">{t('productionProgress')}</span>
                         <span>
-                          {order.completedQty.toLocaleString()} / {order.quantity.toLocaleString()}{' '}
-                          {order.unit}
+                          {order.completedQty.toLocaleString(locale)} /{' '}
+                          {order.quantity.toLocaleString(locale)} {order.unit}
                           {order.scrapQty > 0 && (
                             <span className="text-red-500 ml-2">
                               ({t('scrapLabel')}: {order.scrapQty})
@@ -358,7 +352,6 @@ export default function WorkOrdersPage() {
                       />
                     </div>
 
-                    {/* 效率 */}
                     <div className="flex items-center gap-4 text-sm">
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">{t('efficiencyLabel')}：</span>
@@ -381,7 +374,6 @@ export default function WorkOrdersPage() {
                     </div>
                   </div>
 
-                  {/* 工序进度 */}
                   <div className="lg:w-64 flex-shrink-0">
                     <div className="text-sm font-medium mb-2">{t('processProgress')}</div>
                     <div className="space-y-1">

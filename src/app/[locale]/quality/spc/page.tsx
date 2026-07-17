@@ -47,7 +47,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface Material {
   id: number;
@@ -125,6 +125,7 @@ const capabilityLabel = (value: number): string => {
 export default function SPCPage() {
   // 翻译钩子
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const [activeTab, setActiveTab] = useState('xbar-r');
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -287,7 +288,7 @@ export default function SPCPage() {
                     <Activity className="h-5 w-5" />
                     Xbar-R 控制图参数
                   </CardTitle>
-                  <CardDescription>{tc('text_8j6lln')}</CardDescription>
+                  <CardDescription>{tc('spcXbarRDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
@@ -307,7 +308,7 @@ export default function SPCPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>{tc('text_duv8zg')}</Label>
+                      <Label>{tc('inspectionTypeLabel')}</Label>
                       <Select value={inspectionType} onValueChange={setInspectionType}>
                         <SelectTrigger>
                           <SelectValue />
@@ -340,7 +341,7 @@ export default function SPCPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{tc('text_c1m918')}</Label>
+                      <Label>{tc('subgroupSizeLabel')}</Label>
                       <Select value={subgroupSize} onValueChange={setSubgroupSize}>
                         <SelectTrigger>
                           <SelectValue />
@@ -455,9 +456,9 @@ export default function SPCPage() {
                             异常点警告
                           </CardTitle>
                           <CardDescription>
-                            {tc('text_fvdvp')}
+                            {tc('oocWarningPrefix')}
                             {xbarResult.out_of_control_points.length}
-                            {tc('text_x9wkpj')}
+                            {tc('oocPointsSuffix')}
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -468,7 +469,7 @@ export default function SPCPage() {
                                   key={idx}
                                   className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                                 >
-                                  {tc('text_dz1v3')}
+                                  {tc('subgroupLabel')}
                                   {p.subgroup_id} {p.type === 'x_bar' ? 'X均值' : '极差'}=
                                   {p.value.toFixed(4)}
                                 </Badge>
@@ -481,7 +482,7 @@ export default function SPCPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>{tc('text_2hgwlk')}</CardTitle>
+                        <CardTitle>{tc('xBarChartTitle')}</CardTitle>
                         <CardDescription>
                           UCL={xbarResult.x_bar_limits.ucl.toFixed(4)} | CL=
                           {xbarResult.x_bar_limits.cl.toFixed(4)} | LCL=
@@ -570,7 +571,7 @@ export default function SPCPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>{tc('text_1z0bqs')}</CardTitle>
+                        <CardTitle>{tc('rChartTitle')}</CardTitle>
                         <CardDescription>
                           UCL={xbarResult.r_limits.ucl.toFixed(4)} | CL=
                           {xbarResult.r_limits.cl.toFixed(4)} | LCL=
@@ -659,16 +660,16 @@ export default function SPCPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>{tc('text_190pee')}</CardTitle>
+                        <CardTitle>{tc('dataTableTitle')}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
                         <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>{tc('text_g86s')}</TableHead>
+                                <TableHead>{tc('subgroupCol')}</TableHead>
                                 <TableHead>{tc('time')}</TableHead>
-                                <TableHead>{tc('text_gpjh4')}</TableHead>
+                                <TableHead>{tc('valuesCol')}</TableHead>
                                 <TableHead className="text-right">X均值</TableHead>
                                 <TableHead className="text-right">极差R</TableHead>
                                 <TableHead>{tc('status')}</TableHead>
@@ -746,7 +747,7 @@ export default function SPCPage() {
                     <BarChart3 className="h-5 w-5" />
                     帕累托分析参数
                   </CardTitle>
-                  <CardDescription>{tc('text_ty23k3')}</CardDescription>
+                  <CardDescription>{tc('paretoDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -771,7 +772,7 @@ export default function SPCPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{tc('text_k4uyzb')}</Label>
+                      <Label>{tc('materialFilterLabel')}</Label>
                       <Select value={paretoMaterialId} onValueChange={setParetoMaterialId}>
                         <SelectTrigger>
                           <SelectValue placeholder="全部物料" />
@@ -814,8 +815,8 @@ export default function SPCPage() {
                   >
                     <Card>
                       <CardHeader>
-                        <CardTitle>{tc('text_ce05pc')}</CardTitle>
-                        <CardDescription>{tc('text_gqrtlt')}</CardDescription>
+                        <CardTitle>{tc('paretoChartTitle')}</CardTitle>
+                        <CardDescription>{tc('paretoChartDesc')}</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="h-[400px]">
@@ -902,7 +903,7 @@ export default function SPCPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>{tc('text_stbm6u')}</CardTitle>
+                        <CardTitle>{tc('paretoTableTitle')}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
                         <div className="overflow-x-auto">
@@ -911,8 +912,8 @@ export default function SPCPage() {
                               <TableRow>
                                 <TableHead>不良类型</TableHead>
                                 <TableHead className="text-right">{tc('quantity')}</TableHead>
-                                <TableHead className="text-right">{tc('text_eruc')}</TableHead>
-                                <TableHead className="text-right">{tc('text_gd9tty')}</TableHead>
+                                <TableHead className="text-right">{tc('percentageCol')}</TableHead>
+                                <TableHead className="text-right">{tc('cumulativeCol')}</TableHead>
                                 <TableHead>分类</TableHead>
                               </TableRow>
                             </TableHeader>
@@ -970,7 +971,7 @@ export default function SPCPage() {
                     <PieChart className="h-5 w-5" />
                     P控制图参数
                   </CardTitle>
-                  <CardDescription>{tc('text_n5r8jf')}</CardDescription>
+                  <CardDescription>{tc('pChartDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -995,7 +996,7 @@ export default function SPCPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{tc('text_k4uyzb')}</Label>
+                      <Label>{tc('materialFilterLabel')}</Label>
                       <Select value={pChartMaterialId} onValueChange={setPChartMaterialId}>
                         <SelectTrigger>
                           <SelectValue placeholder="全部物料" />
@@ -1044,9 +1045,9 @@ export default function SPCPage() {
                             异常点警告
                           </CardTitle>
                           <CardDescription>
-                            {tc('text_fvdvp')}
+                            {tc('oocWarningPrefix')}
                             {pChartResult.out_of_control_points.length}
-                            {tc('text_xxo89r')}
+                            {tc('oocPeriodsSuffix')}
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -1058,7 +1059,7 @@ export default function SPCPage() {
                                   className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                                 >
                                   {p.period}
-                                  {tc('text_ae1s7s')}
+                                  {tc('defectiveRateLabel')}
                                   {(p.rate * 100).toFixed(2)}%
                                 </Badge>
                               )
@@ -1070,7 +1071,7 @@ export default function SPCPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>{tc('text_ld8amg')}</CardTitle>
+                        <CardTitle>{tc('pChartTitle')}</CardTitle>
                         <CardDescription>
                           UCL={(pChartResult.limits.ucl * 100).toFixed(2)}% | CL=
                           {(pChartResult.limits.cl * 100).toFixed(2)}% | LCL=
@@ -1175,7 +1176,7 @@ export default function SPCPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>{tc('text_yyguak')}</CardTitle>
+                        <CardTitle>{tc('pChartTableTitle')}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
                         <div className="overflow-x-auto">
@@ -1183,8 +1184,8 @@ export default function SPCPage() {
                             <TableHeader>
                               <TableRow>
                                 <TableHead>时段</TableHead>
-                                <TableHead className="text-right">{tc('text_g36sk')}</TableHead>
-                                <TableHead className="text-right">{tc('text_c2awe')}</TableHead>
+                                <TableHead className="text-right">{tc('inspectedCol')}</TableHead>
+                                <TableHead className="text-right">{tc('defectiveCol')}</TableHead>
                                 <TableHead className="text-right">不良率</TableHead>
                                 <TableHead>{tc('status')}</TableHead>
                               </TableRow>
@@ -1202,10 +1203,10 @@ export default function SPCPage() {
                                   >
                                     <TableCell className="font-medium">{dp.period}</TableCell>
                                     <TableCell className="text-right">
-                                      {(dp.inspected ?? 0).toLocaleString()}
+                                      {(dp.inspected ?? 0).toLocaleString(locale)}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                      {(dp.defective ?? 0).toLocaleString()}
+                                      {(dp.defective ?? 0).toLocaleString(locale)}
                                     </TableCell>
                                     <TableCell className="text-right font-semibold">
                                       {(dp.defective_rate * 100).toFixed(2)}%

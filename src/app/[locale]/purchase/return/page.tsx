@@ -314,7 +314,7 @@ export default function PurchaseReturnPage() {
               <Undo2 className="w-6 h-6" />
               采购退货管理
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">{tc('text_vcqoue')}</p>
+            <p className="text-sm text-muted-foreground mt-1">{tc('returnManagementDesc')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Input
@@ -352,7 +352,7 @@ export default function PurchaseReturnPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>退货单号</TableHead>
-                  <TableHead>{tc('text_jw474i')}</TableHead>
+                  <TableHead>{tc('relatedOrder')}</TableHead>
                   <TableHead>{tc('supplier')}</TableHead>
                   <TableHead>退货日期</TableHead>
                   <TableHead>退货类型</TableHead>
@@ -481,14 +481,14 @@ export default function PurchaseReturnPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{tc('text_19w5rr')}</DialogTitle>
-            <DialogDescription>{tc('text_e7vdkm')}</DialogDescription>
+            <DialogTitle>{tc('newPurchaseReturn')}</DialogTitle>
+            <DialogDescription>{tc('newPurchaseReturnDesc')}</DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{tc('text_mmoe4a')}</Label>
+                <Label>{tc('purchaseOrder')}</Label>
                 <Select onValueChange={handleSelectOrder}>
                   <SelectTrigger>
                     <SelectValue placeholder="选择采购订单" />
@@ -627,7 +627,7 @@ export default function PurchaseReturnPage() {
               {tc('cancel')}
             </Button>
             <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700">
-              {tc('text_cxfim3')}
+              {tc('createReturn')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -638,13 +638,13 @@ export default function PurchaseReturnPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {tc('text_f4fj0a')}
+              {tc('returnDetailTitle')}
               {detailOrder?.return_no}
             </DialogTitle>
             <DialogDescription>
               状态：
               {statusMap[detailOrder?.status || '']?.label}
-              {tc('text_1e6ecv')}
+              {tc('supplierLabelSuffix')}
               {detailOrder?.supplier_name}
             </DialogDescription>
           </DialogHeader>

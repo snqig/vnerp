@@ -16,7 +16,7 @@ import {
   Minimize,
   PieChart,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface SalesData {
   overview: {
@@ -176,6 +176,7 @@ export default function SalesDashboard() {
   // 翻译钩子
   const t = useTranslations('Dashboard');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const { companyName } = useCompanyName();
   const [data, setData] = useState<SalesData>({
@@ -236,7 +237,7 @@ export default function SalesDashboard() {
   }, []);
 
   const formatTime = (date: Date) =>
-    date.toLocaleString('zh-CN', {
+    date.toLocaleString(locale, {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -246,7 +247,7 @@ export default function SalesDashboard() {
       hour12: false,
     });
   const formatMoney = (v: number) =>
-    '¥' + (v / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    '¥' + (v / 100).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <MainLayout>
@@ -383,7 +384,7 @@ export default function SalesDashboard() {
                         </span>
                         <span className="text-white/50">
                           {s.count}
-                          {tc('text_c7fh9')}
+                          {tc('percentSign')}
                           {pct}%)
                         </span>
                       </div>

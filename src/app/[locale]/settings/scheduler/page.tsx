@@ -93,7 +93,7 @@ export default function SchedulerPage() {
 
   const handleCreate = async () => {
     if (!form.task_name || !form.task_type) {
-      toast({ title: '请填写任务名称和类型', variant: 'destructive' });
+      toast({ title: tc('taskNameTypeRequired'), variant: 'destructive' });
       return;
     }
     try {
@@ -103,7 +103,7 @@ export default function SchedulerPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '任务创建成功' });
+        toast({ title: tc('taskCreated') });
         setCreateOpen(false);
         setForm({
           task_name: '',
@@ -118,7 +118,7 @@ export default function SchedulerPage() {
         toast({ title: result.message || '创建失败', variant: 'destructive' });
       }
     } catch {
-      toast({ title: '创建失败', variant: 'destructive' });
+      toast({ title: tc('createFailed'), variant: 'destructive' });
     }
   };
 
@@ -136,7 +136,7 @@ export default function SchedulerPage() {
         toast({ title: result.message || '操作失败', variant: 'destructive' });
       }
     } catch {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 

@@ -154,7 +154,7 @@ export default function SampleOrderDetailPage() {
     return (
       <MainLayout>
         <div className="container mx-auto py-6">
-          <div className="text-center py-12 text-muted-foreground">{tc('text_n90as4')}</div>
+          <div className="text-center py-12 text-muted-foreground">{tc('orderNotFound')}</div>
         </div>
       </MainLayout>
     );
@@ -198,11 +198,11 @@ export default function SampleOrderDetailPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_cu4ghy')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('sampleNoLabel')}</div>
                   <div className="font-medium">{order.sample_no}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_s8mbri')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('sampleOrderNoLabel')}</div>
                   <div className="font-medium">{order.sample_order_no || '-'}</div>
                 </div>
               </div>
@@ -212,7 +212,7 @@ export default function SampleOrderDetailPage() {
                   <div className="font-medium">{order.order_month}月</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_a72dxg')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('orderDateLabel')}</div>
                   <div className="font-medium">{order.order_date}</div>
                 </div>
               </div>
@@ -236,7 +236,7 @@ export default function SampleOrderDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_i8ru0k')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('orderTrackerLabel')}</div>
                   <div className="font-medium">{order.order_tracker || '-'}</div>
                 </div>
               </div>
@@ -262,7 +262,7 @@ export default function SampleOrderDetailPage() {
                 <div className="font-medium">{order.size_spec || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">{tc('text_dgh6oa')}</div>
+                <div className="text-sm text-muted-foreground">{tc('materialDescLabel')}</div>
                 <div className="text-sm">{order.material_desc || '-'}</div>
               </div>
             </CardContent>
@@ -280,7 +280,7 @@ export default function SampleOrderDetailPage() {
                   <div className="font-medium">{order.print_method || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_mpgd')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('colorSequenceLabel')}</div>
                   <div className="font-medium">{order.color_sequence || '-'}</div>
                 </div>
               </div>
@@ -305,29 +305,29 @@ export default function SampleOrderDetailPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_ije4u1')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('progressDetailLabel')}</div>
                   <div className="font-medium">{order.progress_detail || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_cu8lo3')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('sampleCountLabel')}</div>
                   <div className="font-medium">
-                    {tc('text_obw')}
+                    {tc('countPrefix')}
                     {order.sample_count}
-                    {tc('text_g66n9')}
+                    {tc('pieceUnit')}
                   </div>
                 </div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">{tc('text_cu4iud')}</div>
+                <div className="text-sm text-muted-foreground">{tc('sampleReasonLabel')}</div>
                 <div className="font-medium">{order.sample_reason || '-'}</div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_cxjx7k')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('providedMaterialLabel')}</div>
                   <div className="font-medium">{order.provided_material || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_cx5p1q')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('receiveTimeLabel')}</div>
                   <div className="font-medium">{order.receive_time || '-'}</div>
                 </div>
               </div>
@@ -350,7 +350,7 @@ export default function SampleOrderDetailPage() {
                   </span>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_d8w4jx')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('isConfirmedLabel')}</div>
                   <div className="font-medium">{order.is_confirmed ? tc('yes') : tc('no')}</div>
                 </div>
                 <div>
@@ -360,7 +360,9 @@ export default function SampleOrderDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_b14hg2')}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {tc('isProduceTogetherLabel')}
+                  </div>
                   <div className="font-medium">
                     {order.is_produce_together ? tc('yes') : tc('no')}
                   </div>
@@ -368,11 +370,11 @@ export default function SampleOrderDetailPage() {
               </div>
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_kf81jl')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('mylarInfoLabel')}</div>
                   <div className="font-medium">{order.mylar_info || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_di2osv')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('sampleStockLabel')}</div>
                   <div className="font-medium">{order.sample_stock || '-'}</div>
                 </div>
                 <div>
@@ -398,7 +400,7 @@ export default function SampleOrderDetailPage() {
               <DialogDescription>
                 您确定要删除打样单
                 <strong>{order.sample_no}</strong>
-                {tc('text_1z638q')}
+                {tc('confirmDeleteSuffix')}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

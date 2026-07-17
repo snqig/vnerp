@@ -91,7 +91,7 @@ export default function DictPage() {
 
   const handleCreateType = async () => {
     if (!typeForm.dict_name || !typeForm.dict_type) {
-      toast({ title: '请填写字典名称和编码', variant: 'destructive' });
+      toast({ title: tc('dictTypeNameCodeRequired'), variant: 'destructive' });
       return;
     }
     try {
@@ -101,7 +101,7 @@ export default function DictPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '字典类型创建成功' });
+        toast({ title: tc('dictTypeCreated') });
         setTypeDialogOpen(false);
         setTypeForm({ dict_name: '', dict_type: '', status: 1, remark: '' });
         fetchData();
@@ -109,13 +109,13 @@ export default function DictPage() {
         toast({ title: result.message || '创建失败', variant: 'destructive' });
       }
     } catch {
-      toast({ title: '创建失败', variant: 'destructive' });
+      toast({ title: tc('createFailed'), variant: 'destructive' });
     }
   };
 
   const handleCreateData = async () => {
     if (!dataForm.dict_label || !dataForm.dict_value) {
-      toast({ title: '请填写字典标签和值', variant: 'destructive' });
+      toast({ title: tc('dictLabelValueRequired'), variant: 'destructive' });
       return;
     }
     try {
@@ -133,7 +133,7 @@ export default function DictPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '字典数据创建成功' });
+        toast({ title: tc('dictDataCreated') });
         setDataDialogOpen(false);
         setDataForm({
           dict_type: '',
@@ -148,40 +148,40 @@ export default function DictPage() {
         toast({ title: result.message || '创建失败', variant: 'destructive' });
       }
     } catch {
-      toast({ title: '创建失败', variant: 'destructive' });
+      toast({ title: tc('createFailed'), variant: 'destructive' });
     }
   };
 
   const handleDeleteType = async (id: number) => {
-    if (!confirm('确认删除此字典类型及其所有数据？')) return;
+    if (!window.confirm(tc('confirmDeleteDictType'))) return;
     try {
       const res = await authFetch(`/api/system/dict?action=delete_type&id=${id}`, {
         method: 'DELETE',
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '字典类型已删除' });
+        toast({ title: tc('dictTypeDeleted') });
         if (selectedType?.id === id) setSelectedType(null);
         fetchData();
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
   const handleDeleteData = async (id: number) => {
-    if (!confirm('确认删除此字典数据？')) return;
+    if (!window.confirm(tc('confirmDeleteDictData'))) return;
     try {
       const res = await authFetch(`/api/system/dict?action=delete_data&id=${id}`, {
         method: 'DELETE',
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '字典数据已删除' });
+        toast({ title: tc('dictDataDeleted') });
         fetchData();
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 

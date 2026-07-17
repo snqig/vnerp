@@ -2,7 +2,7 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { formatDate } from '@/lib/date-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -174,6 +174,7 @@ const getPriorityConfig = (priority: string, t: (key: string) => string) => {
 export default function WorkOrderPage() {
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
+  const locale = useLocale();
   const { toast } = useToast();
 
   const getStatusBadge = (status: number | string) => {
@@ -431,7 +432,7 @@ export default function WorkOrderPage() {
               <Package className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalQty.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{stats.totalQty.toLocaleString(locale)}</div>
               <p className="text-xs text-muted-foreground">
                 {t('involvingProducts', { count: workOrders.filter((o) => o.product_name).length })}
               </p>
@@ -745,7 +746,8 @@ export default function WorkOrderPage() {
                           </TableCell>
                           <TableCell>
                             <span>
-                              {parseFloat(String(order.quantity)).toLocaleString()} {order.unit}
+                              {parseFloat(String(order.quantity)).toLocaleString(locale)}{' '}
+                              {order.unit}
                             </span>
                           </TableCell>
                           <TableCell>{getStatusBadge(order.status)}</TableCell>
@@ -849,7 +851,7 @@ export default function WorkOrderPage() {
                         <span>{selectedOrder.product_name || '-'}</span>
                         <span className="text-muted-foreground">{t('plannedQuantity')}:</span>
                         <span>
-                          {parseFloat(String(selectedOrder.quantity)).toLocaleString()}{' '}
+                          {parseFloat(String(selectedOrder.quantity)).toLocaleString(locale)}{' '}
                           {selectedOrder.unit}
                         </span>
                         <span className="text-muted-foreground">{t('priority.label')}:</span>
@@ -895,7 +897,7 @@ export default function WorkOrderPage() {
                               <TableCell>{item.material_code || '-'}</TableCell>
                               <TableCell>{item.material_name || '-'}</TableCell>
                               <TableCell>
-                                {parseFloat(String(item.required_qty)).toLocaleString()}
+                                {parseFloat(String(item.required_qty)).toLocaleString(locale)}
                               </TableCell>
                               <TableCell>{item.unit || '-'}</TableCell>
                               <TableCell>{getStatusBadge(item.status)}</TableCell>

@@ -791,8 +791,8 @@ export default function HRSalaryPage() {
                   {tc('print')}
                 </Button>
                 <GlobalExportToolbar
-                  filename={`薪资表_${currentMonth}`}
-                  title="薪资表"
+                  filename={`${t('salaryTable')}_${currentMonth}`}
+                  title={t('salaryTable')}
                   landscape
                   columns={[
                     { key: 'employee_no', label: t('employeeNo'), width: 12 },
@@ -933,15 +933,15 @@ export default function HRSalaryPage() {
                     <TableCell className="text-right">
                       <div className="flex flex-col text-xs">
                         <span>
-                          {tc('text_gvez8p')}
+                          {tc('positionAllowanceShort')}
                           {(salary.position_allowance || 0).toLocaleString()}
                         </span>
                         <span>
-                          {tc('text_brw7s0')}
+                          {tc('performanceBonusShort')}
                           {(salary.performance_bonus || 0).toLocaleString()}
                         </span>
                         <span>
-                          {tc('text_hgxdf2')}
+                          {tc('overtimePayShort')}
                           {(salary.overtime_pay || 0).toLocaleString()}
                         </span>
                       </div>
@@ -949,15 +949,15 @@ export default function HRSalaryPage() {
                     <TableCell className="text-right">
                       <div className="flex flex-col text-xs">
                         <span>
-                          {tc('text_d36a9s')}
+                          {tc('socialSecurityShort')}
                           {(salary.social_security || 0).toLocaleString()}
                         </span>
                         <span>
-                          {tc('text_69v6pb')}
+                          {tc('housingFundShort')}
                           {(salary.housing_fund || 0).toLocaleString()}
                         </span>
                         <span>
-                          {tc('text_y50kmd')}
+                          {tc('personalTaxShort')}
                           {(salary.personal_tax || 0).toLocaleString()}
                         </span>
                       </div>
@@ -970,11 +970,11 @@ export default function HRSalaryPage() {
                     <TableCell>
                       {salary.actual_salary ? (
                         <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                          已发放
+                          {tc('salaryStatusPaid')}
                         </Badge>
                       ) : (
                         <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
-                          未录入
+                          {tc('salaryStatusPending')}
                         </Badge>
                       )}
                     </TableCell>
@@ -999,18 +999,18 @@ export default function HRSalaryPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleViewDetail(salary)}>
                               <Eye className="h-4 w-4 mr-2" />
-                              查看详情
+                              {tc('view')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleEdit(salary)}>
                               <Edit className="h-4 w-4 mr-2" />
-                              编辑薪资
+                              {tc('edit')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDelete(salary)}
                               className="text-red-600"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              删除记录
+                              {tc('delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -1031,7 +1031,7 @@ export default function HRSalaryPage() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Calculator className="h-5 w-5" />
-                    {tc('text_iculqd')}
+                    {tc('editSalaryTitle')}
                     {selectedSalary.name}
                   </DialogTitle>
                   <DialogDescription>
@@ -1045,19 +1045,19 @@ export default function HRSalaryPage() {
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-muted-foreground">{tc('text_d01zp0')}</span>
+                        <span className="text-muted-foreground">{tc('employeeNoLabelShort')}</span>
                         <span className="ml-2 font-medium">{selectedSalary.employee_no}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">{tc('text_djxsw')}</span>
+                        <span className="text-muted-foreground">{tc('employeeNameLabel')}</span>
                         <span className="ml-2 font-medium">{selectedSalary.name}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">{tc('text_lxl4q')}</span>
+                        <span className="text-muted-foreground">{tc('deptLabel')}</span>
                         <span className="ml-2">{selectedSalary.dept_name}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">{tc('text_j5zvd')}</span>
+                        <span className="text-muted-foreground">{tc('positionLabel')}</span>
                         <span className="ml-2">{selectedSalary.position}</span>
                       </div>
                     </div>
@@ -1065,10 +1065,12 @@ export default function HRSalaryPage() {
 
                   {/* 收入项目 */}
                   <div className="space-y-4">
-                    <h4 className="font-semibold text-sm text-muted-foreground">收入项目</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">
+                      {tc('incomeItems')}
+                    </h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>基本工资</Label>
+                        <Label>{t('basicSalary')}</Label>
                         <Input
                           type="number"
                           value={salaryForm.basicSalary}
@@ -1081,7 +1083,7 @@ export default function HRSalaryPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>岗位津贴</Label>
+                        <Label>{t('positionAllowance')}</Label>
                         <Input
                           type="number"
                           value={salaryForm.positionAllowance}
@@ -1094,7 +1096,7 @@ export default function HRSalaryPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>绩效奖金</Label>
+                        <Label>{t('performanceBonus')}</Label>
                         <Input
                           type="number"
                           value={salaryForm.performanceBonus}
@@ -1107,7 +1109,7 @@ export default function HRSalaryPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>加班费</Label>
+                        <Label>{t('overtimePay')}</Label>
                         <Input
                           type="number"
                           value={salaryForm.overtimePay}
@@ -1120,7 +1122,7 @@ export default function HRSalaryPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>其他奖金</Label>
+                        <Label>{t('otherBonus')}</Label>
                         <Input
                           type="number"
                           value={salaryForm.otherBonus}
@@ -1137,10 +1139,12 @@ export default function HRSalaryPage() {
 
                   {/* 扣款项目 */}
                   <div className="space-y-4">
-                    <h4 className="font-semibold text-sm text-muted-foreground">扣款项目</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">
+                      {tc('deductionItems')}
+                    </h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>社保</Label>
+                        <Label>{t('socialSecurity')}</Label>
                         <Input
                           type="number"
                           value={salaryForm.socialSecurity}
@@ -1153,7 +1157,7 @@ export default function HRSalaryPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>公积金</Label>
+                        <Label>{t('housingFund')}</Label>
                         <Input
                           type="number"
                           value={salaryForm.housingFund}
@@ -1166,7 +1170,7 @@ export default function HRSalaryPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>个人所得税</Label>
+                        <Label>{t('personalTax')}</Label>
                         <Input
                           type="number"
                           value={salaryForm.personalTax}
@@ -1179,7 +1183,7 @@ export default function HRSalaryPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>其他扣款</Label>
+                        <Label>{t('otherDeduction')}</Label>
                         <Input
                           type="number"
                           value={salaryForm.otherDeduction}
@@ -1197,7 +1201,7 @@ export default function HRSalaryPage() {
                   {/* 实发工资 */}
                   <div className="bg-green-50 rounded-lg p-4">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold">{tc('text_e1e98o')}</span>
+                      <span className="font-semibold">{tc('netSalaryLabel')}</span>
                       <span className="text-2xl font-bold text-green-600">
                         ¥{calculateActualSalary(salaryForm).toLocaleString()}
                       </span>
@@ -1218,10 +1222,10 @@ export default function HRSalaryPage() {
                   {/* 操作按钮 */}
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-                      取消
+                      {tc('cancel')}
                     </Button>
                     <Button onClick={handleSave} disabled={loading}>
-                      {loading ? '保存中...' : tc('save')}
+                      {loading ? tc('loading') : tc('save')}
                     </Button>
                   </div>
                 </div>
@@ -1238,7 +1242,7 @@ export default function HRSalaryPage() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    {tc('text_r82pb3')}
+                    {tc('viewSalaryDetailTitle')}
                     {selectedSalary.name}
                   </DialogTitle>
                   <DialogDescription>
@@ -1251,27 +1255,31 @@ export default function HRSalaryPage() {
                   {/* 员工信息 */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">员工信息</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {tc('employeeInfo')}
+                      </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">{tc('text_d01zp0')}</span>
+                        <span className="text-muted-foreground">{tc('employeeNoLabelShort')}</span>
                         <span>{selectedSalary.employee_no}</span>
-                        <span className="text-muted-foreground">{tc('text_djxsw')}</span>
+                        <span className="text-muted-foreground">{tc('employeeNameLabel')}</span>
                         <span>{selectedSalary.name}</span>
-                        <span className="text-muted-foreground">{tc('text_egziu')}</span>
+                        <span className="text-muted-foreground">{tc('genderLabel')}</span>
                         <span>{getGenderText(selectedSalary.gender)}</span>
-                        <span className="text-muted-foreground">{tc('text_kakqx3')}</span>
+                        <span className="text-muted-foreground">{tc('entryDateLabel')}</span>
                         <span>{selectedSalary.entry_date}</span>
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">职位信息</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {tc('positionInfo')}
+                      </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">{tc('text_lxl4q')}</span>
+                        <span className="text-muted-foreground">{tc('deptLabel')}</span>
                         <span>{selectedSalary.dept_name}</span>
-                        <span className="text-muted-foreground">{tc('text_j5zvd')}</span>
+                        <span className="text-muted-foreground">{tc('positionLabel')}</span>
                         <span>{selectedSalary.position}</span>
-                        <span className="text-muted-foreground">{tc('text_rdk4l1')}</span>
+                        <span className="text-muted-foreground">{tc('salaryMonthLabel')}</span>
                         <span>{selectedSalary.month || currentMonth}</span>
                       </div>
                     </div>
@@ -1279,35 +1287,37 @@ export default function HRSalaryPage() {
 
                   {/* 薪资明细 */}
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">薪资明细</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">
+                      {tc('salaryDetail')}
+                    </h4>
                     <Table>
                       <TableBody>
                         <TableRow>
-                          <TableCell className="font-medium">基本工资</TableCell>
+                          <TableCell className="font-medium">{t('basicSalary')}</TableCell>
                           <TableCell className="text-right">
                             ¥{(selectedSalary.basic_salary || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium">岗位津贴</TableCell>
+                          <TableCell className="font-medium">{t('positionAllowance')}</TableCell>
                           <TableCell className="text-right">
                             ¥{(selectedSalary.position_allowance || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium">绩效奖金</TableCell>
+                          <TableCell className="font-medium">{t('performanceBonus')}</TableCell>
                           <TableCell className="text-right">
                             ¥{(selectedSalary.performance_bonus || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium">加班费</TableCell>
+                          <TableCell className="font-medium">{t('overtimePay')}</TableCell>
                           <TableCell className="text-right">
                             ¥{(selectedSalary.overtime_pay || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium">其他奖金</TableCell>
+                          <TableCell className="font-medium">{t('otherBonus')}</TableCell>
                           <TableCell className="text-right">
                             ¥{(selectedSalary.other_bonus || 0).toLocaleString()}
                           </TableCell>
@@ -1326,31 +1336,39 @@ export default function HRSalaryPage() {
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium text-red-600">社保</TableCell>
+                          <TableCell className="font-medium text-red-600">
+                            {t('socialSecurity')}
+                          </TableCell>
                           <TableCell className="text-right text-red-600">
                             -¥{(selectedSalary.social_security || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium text-red-600">公积金</TableCell>
+                          <TableCell className="font-medium text-red-600">
+                            {t('housingFund')}
+                          </TableCell>
                           <TableCell className="text-right text-red-600">
                             -¥{(selectedSalary.housing_fund || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium text-red-600">个人所得税</TableCell>
+                          <TableCell className="font-medium text-red-600">
+                            {t('personalTax')}
+                          </TableCell>
                           <TableCell className="text-right text-red-600">
                             -¥{(selectedSalary.personal_tax || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium text-red-600">其他扣款</TableCell>
+                          <TableCell className="font-medium text-red-600">
+                            {t('otherDeduction')}
+                          </TableCell>
                           <TableCell className="text-right text-red-600">
                             -¥{(selectedSalary.other_deduction || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
                         <TableRow className="bg-blue-50">
-                          <TableCell className="font-bold">实发工资</TableCell>
+                          <TableCell className="font-bold">{t('actualSalary')}</TableCell>
                           <TableCell className="text-right font-bold text-xl text-blue-600">
                             ¥{(selectedSalary.actual_salary || 0).toLocaleString()}
                           </TableCell>
@@ -1370,7 +1388,7 @@ export default function HRSalaryPage() {
 
                   <div className="flex justify-end gap-2 pt-4 border-t">
                     <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
-                      关闭
+                      {tc('close')}
                     </Button>
                     <Button
                       onClick={() => {
@@ -1379,7 +1397,7 @@ export default function HRSalaryPage() {
                       }}
                     >
                       <Edit className="h-4 w-4 mr-2" />
-                      编辑
+                      {tc('edit')}
                     </Button>
                   </div>
                 </div>
@@ -1394,23 +1412,23 @@ export default function HRSalaryPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                薪资报表
+                {t('salaryReport')}
               </DialogTitle>
               <DialogDescription>
                 {currentMonth}
-                {tc('text_4funm9')}
+                {tc('reportSubtitle')}
               </DialogDescription>
             </DialogHeader>
 
             <div ref={printRef} className="space-y-6 py-4">
               <div className="text-center border-b pb-4">
-                <h1 className="text-2xl font-bold">薪资报表</h1>
+                <h1 className="text-2xl font-bold">{t('salaryReport')}</h1>
                 <p className="text-muted-foreground mt-2">
-                  {tc('text_rdk4l1')}
+                  {tc('salaryMonthLabel')}
                   {currentMonth}
                 </p>
                 <p className="text-muted-foreground">
-                  {tc('text_qh0f1x')}
+                  {tc('reportGeneratedAt')}
                   {format(new Date(), 'yyyy-MM-dd HH:mm:ss')}
                 </p>
               </div>
@@ -1419,13 +1437,13 @@ export default function HRSalaryPage() {
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-blue-600">{stats.totalEmployees}</div>
-                    <div className="text-sm text-muted-foreground">员工总数</div>
+                    <div className="text-sm text-muted-foreground">{tc('totalEmployees')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-green-600">{stats.paidEmployees}</div>
-                    <div className="text-sm text-muted-foreground">已发薪人数</div>
+                    <div className="text-sm text-muted-foreground">{tc('paidEmployees')}</div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -1433,7 +1451,7 @@ export default function HRSalaryPage() {
                     <div className="text-2xl font-bold text-purple-600">
                       ¥{stats.totalSalary.toLocaleString()}
                     </div>
-                    <div className="text-sm text-muted-foreground">薪资总额</div>
+                    <div className="text-sm text-muted-foreground">{tc('totalSalary')}</div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -1441,7 +1459,7 @@ export default function HRSalaryPage() {
                     <div className="text-2xl font-bold text-orange-600">
                       ¥{stats.avgSalary.toLocaleString()}
                     </div>
-                    <div className="text-sm text-muted-foreground">平均工资</div>
+                    <div className="text-sm text-muted-foreground">{tc('avgSalary')}</div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -1449,7 +1467,7 @@ export default function HRSalaryPage() {
                     <div className="text-2xl font-bold text-indigo-600">
                       ¥{stats.maxSalary.toLocaleString()}
                     </div>
-                    <div className="text-sm text-muted-foreground">最高工资</div>
+                    <div className="text-sm text-muted-foreground">{tc('maxSalary')}</div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -1457,22 +1475,22 @@ export default function HRSalaryPage() {
                     <div className="text-2xl font-bold text-pink-600">
                       ¥{stats.minSalary.toLocaleString()}
                     </div>
-                    <div className="text-sm text-muted-foreground">最低工资</div>
+                    <div className="text-sm text-muted-foreground">{tc('minSalary')}</div>
                   </CardContent>
                 </Card>
               </div>
 
               <div>
-                <h3 className="font-semibold mb-4">薪资明细</h3>
+                <h3 className="font-semibold mb-4">{tc('salaryDetail')}</h3>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>员工编号</TableHead>
-                      <TableHead>姓名</TableHead>
+                      <TableHead>{tc('employeeNo')}</TableHead>
+                      <TableHead>{tc('name')}</TableHead>
                       <TableHead>{tc('department')}</TableHead>
-                      <TableHead>职位</TableHead>
-                      <TableHead className="text-right">基本工资</TableHead>
-                      <TableHead className="text-right">实发工资</TableHead>
+                      <TableHead>{tc('position')}</TableHead>
+                      <TableHead className="text-right">{t('basicSalary')}</TableHead>
+                      <TableHead className="text-right">{t('actualSalary')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1497,26 +1515,27 @@ export default function HRSalaryPage() {
               <div className="grid grid-cols-3 gap-8 pt-8 border-t mt-8">
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>
-                  <div className="text-sm text-muted-foreground">{tc('text_g64db3')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('signaturePrepared')}</div>
                 </div>
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>
-                  <div className="text-sm text-muted-foreground">{tc('text_i5dqye')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('signatureReviewed')}</div>
                 </div>
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>
-                  <div className="text-sm text-muted-foreground">{tc('text_xfz0id')}</div>
+                  <div className="text-sm text-muted-foreground">{tc('signatureApproved')}</div>
                 </div>
               </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button variant="outline" onClick={() => setIsReportOpen(false)}>
-                关闭
+                {tc('close')}
               </Button>
               <Button onClick={handlePrint}>
                 <Printer className="h-4 w-4 mr-2" />
-                打印报表
+                {tc('print')}
+                {t('salaryReport')}
               </Button>
             </div>
           </DialogContent>

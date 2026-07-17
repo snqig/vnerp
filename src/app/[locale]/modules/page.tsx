@@ -218,7 +218,7 @@ export default function ModulesPage() {
               <div className="flex-1">
                 <h2 className="text-xl font-bold mb-2">
                   {companyName}
-                  {tc('text_141rk7')}
+                  {tc('erpIntroTitle')}
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {t('erpSystemDescription')}

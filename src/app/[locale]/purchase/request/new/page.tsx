@@ -190,7 +190,7 @@ export default function NewPurchaseRequestPage() {
                 <FileText className="h-6 w-6" />
                 新增采购申请
               </h1>
-              <p className="text-sm text-muted-foreground">{tc('text_sw65h4')}</p>
+              <p className="text-sm text-muted-foreground">{tc('newRequestDesc')}</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -292,7 +292,7 @@ export default function NewPurchaseRequestPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{tc('text_eamvwz')}</Label>
+                <Label>{tc('expectedArrivalDate')}</Label>
                 <Input
                   type="date"
                   value={formData.expected_date}

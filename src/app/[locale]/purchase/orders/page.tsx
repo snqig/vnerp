@@ -1340,7 +1340,7 @@ export default function PurchaseOrdersPage() {
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{tc('text_jwi7ce')}</DialogTitle>
+              <DialogTitle>{tc('purchaseOrderDetailTitle')}</DialogTitle>
             </DialogHeader>
             {selectedOrder && (
               <div className="space-y-4">
@@ -1354,11 +1354,11 @@ export default function PurchaseOrdersPage() {
                     <p>{selectedOrder.supplier_name}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">{tc('text_a72dxg')}</Label>
+                    <Label className="text-muted-foreground">{tc('orderDateLabel')}</Label>
                     <p>{formatDate(selectedOrder.order_date)}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">{tc('text_dfqu37')}</Label>
+                    <Label className="text-muted-foreground">{tc('expectedArrivalLabel')}</Label>
                     <p>{formatDate(selectedOrder.delivery_date)}</p>
                   </div>
                   <div>
@@ -1396,7 +1396,7 @@ export default function PurchaseOrdersPage() {
                 </div>
                 {detailItems.length > 0 && (
                   <div>
-                    <Label className="text-muted-foreground mb-2 block">{tc('text_iz3kfy')}</Label>
+                    <Label className="text-muted-foreground mb-2 block">{tc('returnItems')}</Label>
                     <Table>
                       <TableHeader>
                         <TableRow>

@@ -86,27 +86,27 @@ export default function NoticePage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功' });
+        toast({ title: tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!window.confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch('/api/system/notice?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 

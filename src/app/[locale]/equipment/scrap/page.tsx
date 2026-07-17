@@ -84,14 +84,18 @@ export default function EquipmentScrapPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功' });
+        toast({ title: tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({
+          title: tc('operationFailed'),
+          description: result.message,
+          variant: 'destructive',
+        });
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('operationFailed'), variant: 'destructive' });
     }
   };
   const handleStatusChange = async (id: number, status: number) => {
@@ -103,24 +107,24 @@ export default function EquipmentScrapPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '更新成功' });
+        toast({ title: tc('updateSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('operationFailed'), variant: 'destructive' });
     }
   };
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDeleteMsg'))) return;
     try {
       const res = await authFetch('/api/equipment/scrap?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('operationFailed'), variant: 'destructive' });
     }
   };
 
@@ -275,7 +279,7 @@ export default function EquipmentScrapPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{tc('text_gzxvoz')}</DialogTitle>
+              <DialogTitle>{tc('scrapTitle')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>

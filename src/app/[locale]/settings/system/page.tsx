@@ -99,7 +99,7 @@ export default function SystemConfigPage() {
         setActiveCategory(result.data.categories[0] || '单据编码规则');
       }
     } catch {
-      toast({ title: '加载配置失败', variant: 'destructive' });
+      toast({ title: tc('configLoadFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -119,7 +119,7 @@ export default function SystemConfigPage() {
     }));
 
     if (configs.length === 0) {
-      toast({ title: '没有修改的配置', variant: 'destructive' });
+      toast({ title: tc('noModifiedConfig'), variant: 'destructive' });
       return;
     }
 
@@ -141,10 +141,10 @@ export default function SystemConfigPage() {
         setRemark('');
         fetchConfig();
       } else {
-        toast({ title: '保存失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('saveFailed'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '保存失败', variant: 'destructive' });
+      toast({ title: tc('saveFailed'), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -197,7 +197,7 @@ export default function SystemConfigPage() {
         <div className="p-6 flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2 text-muted-foreground" />
-            <p className="text-muted-foreground">{tc('text_z3ekhz')}</p>
+            <p className="text-muted-foreground">{tc('loadingConfig')}</p>
           </div>
         </div>
       </MainLayout>
@@ -208,7 +208,7 @@ export default function SystemConfigPage() {
     return (
       <MainLayout>
         <div className="p-6 flex items-center justify-center min-h-[400px]">
-          <p className="text-muted-foreground">{tc('text_2eq39t')}</p>
+          <p className="text-muted-foreground">{tc('noConfigData')}</p>
         </div>
       </MainLayout>
     );
@@ -221,7 +221,7 @@ export default function SystemConfigPage() {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">{tc('text_fql599')}</h1>
+            <h1 className="text-2xl font-bold">{tc('systemConfigTitle')}</h1>
             <p className="text-sm text-muted-foreground mt-1">
               系统核心参数配置中心，修改需审批后生效
             </p>
@@ -245,12 +245,12 @@ export default function SystemConfigPage() {
                 <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
                 <div className="flex-1">
                   <p className="font-medium text-yellow-800">
-                    {tc('text_h081')}
+                    {tc('modifiedConfigPrefix')}
                     {Object.keys(modifiedConfigs).length}
-                    {tc('text_tey3om')}
+                    {tc('modifiedConfigSuffix')}
                   </p>
                   <div className="mt-2">
-                    <Label className="text-xs text-yellow-700">{tc('text_ugwf9w')}</Label>
+                    <Label className="text-xs text-yellow-700">{tc('modifyReasonLabel')}</Label>
                     <Input
                       value={remark}
                       onChange={(e) => setRemark(e.target.value)}

@@ -2,7 +2,7 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import type { ExportColumn } from '@/lib/global-export-service';
 import { MainLayout } from '@/components/layout';
@@ -137,9 +137,9 @@ interface WorkReportForm {
 }
 
 export default function ProductionReportPage() {
-  // 翻译钩子
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const [list, setList] = useState<WorkReport[]>([]);
   const [total, setTotal] = useState(0);
@@ -441,7 +441,7 @@ export default function ProductionReportPage() {
             <CardContent className="pt-4">
               <div className="text-sm text-muted-foreground">{t('totalCompleted')}</div>
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {Number(summaryStats.total_completed || 0).toLocaleString()}
+                {Number(summaryStats.total_completed || 0).toLocaleString(locale)}
               </div>
             </CardContent>
           </Card>
@@ -449,7 +449,7 @@ export default function ProductionReportPage() {
             <CardContent className="pt-4">
               <div className="text-sm text-muted-foreground">{t('qualifiedQty')}</div>
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {Number(summaryStats.total_qualified || 0).toLocaleString()}
+                {Number(summaryStats.total_qualified || 0).toLocaleString(locale)}
               </div>
             </CardContent>
           </Card>
@@ -457,7 +457,7 @@ export default function ProductionReportPage() {
             <CardContent className="pt-4">
               <div className="text-sm text-muted-foreground">{t('defectiveQty')}</div>
               <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {Number(summaryStats.total_defective || 0).toLocaleString()}
+                {Number(summaryStats.total_defective || 0).toLocaleString(locale)}
               </div>
             </CardContent>
           </Card>
@@ -465,7 +465,7 @@ export default function ProductionReportPage() {
             <CardContent className="pt-4">
               <div className="text-sm text-muted-foreground">{t('scrapQty')}</div>
               <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {Number(summaryStats.total_scrap || 0).toLocaleString()}
+                {Number(summaryStats.total_scrap || 0).toLocaleString(locale)}
               </div>
             </CardContent>
           </Card>
@@ -491,32 +491,32 @@ export default function ProductionReportPage() {
                 <RefreshCw className="w-4 h-4" />
               </Button>
               <GlobalExportToolbar
-                filename="生产报工记录"
-                title="生产报工记录列表"
+                filename={t('productionReport')}
+                title={t('productionReport')}
                 columns={
                   [
-                    { key: 'report_no', label: '报工单号', width: 18 },
-                    { key: 'work_order_no', label: '工单号', width: 18 },
-                    { key: 'process_name', label: '工序', width: 15 },
-                    { key: 'operator_name', label: '操作员', width: 12 },
-                    { key: 'equipment_name', label: '设备', width: 15 },
-                    { key: 'plan_qty', label: '计划数量', width: 10 },
-                    { key: 'completed_qty', label: '完成数量', width: 10 },
-                    { key: 'qualified_qty', label: '合格数量', width: 10 },
-                    { key: 'scrap_qty', label: '报废数量', width: 10 },
+                    { key: 'report_no', label: t('reportNo'), width: 18 },
+                    { key: 'work_order_no', label: t('workOrderNo'), width: 18 },
+                    { key: 'process_name', label: t('process'), width: 15 },
+                    { key: 'operator_name', label: t('operator'), width: 12 },
+                    { key: 'equipment_name', label: t('equipment'), width: 15 },
+                    { key: 'plan_qty', label: t('planQty'), width: 10 },
+                    { key: 'completed_qty', label: t('completedQty'), width: 10 },
+                    { key: 'qualified_qty', label: t('qualifiedQty'), width: 10 },
+                    { key: 'scrap_qty', label: t('scrapQty'), width: 10 },
                     {
                       key: 'efficiency',
-                      label: '效率',
+                      label: t('efficiency'),
                       width: 10,
                       formatter: (v: Loose) => `${Number(v || 0).toFixed(1)}%`,
                     },
                     {
                       key: 'work_hours',
-                      label: '工时',
+                      label: t('workHours'),
                       width: 10,
                       formatter: (v: Loose) => `${Number(v || 0).toFixed(1)}h`,
                     },
-                    { key: 'report_time', label: '报工时间', width: 18 },
+                    { key: 'report_time', label: t('reportTime'), width: 18 },
                   ] as ExportColumn[]
                 }
                 data={list}

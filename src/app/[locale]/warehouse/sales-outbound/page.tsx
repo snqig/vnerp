@@ -124,7 +124,7 @@ export default function SalesOutboundPage() {
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
     } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
@@ -138,7 +138,7 @@ export default function SalesOutboundPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '更新成功' });
+        toast({ title: tc('updateSuccess') });
         fetchData();
       }
     } catch {
@@ -146,12 +146,12 @@ export default function SalesOutboundPage() {
     }
   };
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!window.confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch('/api/warehouse/sales-outbound?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch {

@@ -618,7 +618,7 @@ export default function WarehouseSetupPage() {
               <p className="text-muted-foreground">
                 确定要删除仓库
                 <strong>{warehouseToDelete?.name}</strong>
-                {tc('text_fpbc')}
+                {tc('confirmDeleteSuffix')}
               </p>
               <p className="text-sm text-red-500 mt-2">{t('irreversibleWarning')}</p>
             </div>

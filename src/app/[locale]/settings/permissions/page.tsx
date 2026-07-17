@@ -323,7 +323,7 @@ export default function PermissionsSettingsPage() {
                       <Shield className="h-5 w-5" />
                       系统角色
                     </CardTitle>
-                    <CardDescription>{tc('text_frsgjy')}</CardDescription>
+                    <CardDescription>{tc('systemRolesDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
@@ -354,7 +354,7 @@ export default function PermissionsSettingsPage() {
                             </Badge>
                             <span className="text-xs text-muted-foreground">
                               {role.userCount}
-                              {tc('text_fju')}
+                              {tc('userCountSuffix')}
                             </span>
                           </div>
                         </div>
@@ -376,9 +376,9 @@ export default function PermissionsSettingsPage() {
                       <CardDescription>
                         配置
                         {selectedRole.name}
-                        {tc('text_krsk2o')}
+                        {tc('permissionConfigFor')}
                         {selectedRole.isSystem && (
-                          <span className="text-orange-600 ml-2">{tc('text_o8kqbk')}</span>
+                          <span className="text-orange-600 ml-2">{tc('systemRoleCannotEdit')}</span>
                         )}
                       </CardDescription>
                     </div>
@@ -452,14 +452,14 @@ export default function PermissionsSettingsPage() {
                     <Users className="h-5 w-5" />
                     用户权限分配
                   </CardTitle>
-                  <CardDescription>{tc('text_yks3aq')}</CardDescription>
+                  <CardDescription>{tc('userPermissionDesc')}</CardDescription>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-12 text-muted-foreground">
                   <UserCog className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>{tc('text_yl8cd2')}</p>
-                  <p className="text-sm mt-2">{tc('text_pf7uo')}</p>
+                  <p>{tc('noUserPermissionData')}</p>
+                  <p className="text-sm mt-2">{tc('userPermissionHint')}</p>
                 </div>
               </CardContent>
             </Card>

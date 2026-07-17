@@ -2,7 +2,7 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -89,9 +89,9 @@ const STATUS_CLASSES: Record<number, string> = {
 };
 
 export default function ProductionProcessPage() {
-  // 翻译钩子
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const getStatusBadge = (status: number) => {
     const statusLabels: Record<number, string> = {
@@ -277,7 +277,7 @@ export default function ProductionProcessPage() {
               <Package className="h-4 w-4 text-indigo-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalQty.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{stats.totalQty.toLocaleString(locale)}</div>
             </CardContent>
           </Card>
         </div>
@@ -374,7 +374,7 @@ export default function ProductionProcessPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            {parseFloat(String(process.plan_qty)).toLocaleString()}
+                            {parseFloat(String(process.plan_qty)).toLocaleString(locale)}
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col gap-1">
@@ -503,7 +503,9 @@ export default function ProductionProcessPage() {
                         <span className="text-muted-foreground">{t('printType')}:</span>
                         <span>{selectedProcess.print_type || '-'}</span>
                         <span className="text-muted-foreground">{t('planQty')}:</span>
-                        <span>{parseFloat(String(selectedProcess.plan_qty)).toLocaleString()}</span>
+                        <span>
+                          {parseFloat(String(selectedProcess.plan_qty)).toLocaleString(locale)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -616,7 +618,7 @@ export default function ProductionProcessPage() {
                       <div>
                         <span className="text-muted-foreground">{t('planQty')}:</span>
                         <span className="ml-2">
-                          {parseFloat(String(selectedProcess.plan_qty)).toLocaleString()}
+                          {parseFloat(String(selectedProcess.plan_qty)).toLocaleString(locale)}
                         </span>
                       </div>
                       <div>

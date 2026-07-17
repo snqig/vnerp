@@ -73,7 +73,7 @@ export default function DCPrintPage() {
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold mb-2">全程二维码追溯系统</h1>
-                <p className="text-blue-100">{tc('text_1oztkz')}</p>
+                <p className="text-blue-100">{tc('dcWelcomeSubtitle')}</p>
               </div>
               <div className="flex gap-3">
                 <Link href="/warehouse/inbound/cutting">
@@ -144,7 +144,7 @@ export default function DCPrintPage() {
         <Card>
           <CardHeader>
             <CardTitle>快捷操作</CardTitle>
-            <CardDescription>{tc('text_bcu9r4')}</CardDescription>
+            <CardDescription>{tc('dcQuickActionsDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-4">
@@ -164,7 +164,7 @@ export default function DCPrintPage() {
         <Card>
           <CardHeader>
             <CardTitle>系统说明</CardTitle>
-            <CardDescription>{tc('text_2ahj2k')}</CardDescription>
+            <CardDescription>{tc('dcSystemDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -173,7 +173,7 @@ export default function DCPrintPage() {
                   <Package className="h-4 w-4" />
                 </div>
                 <div>
-                  <h4 className="font-medium">{tc('text_9gtzkr')}</h4>
+                  <h4 className="font-medium">{tc('dcQrLabelMgmt')}</h4>
                   <p className="text-sm text-muted-foreground">
                     通过二维码标签管理物料入库、出库，实现先进先出的库存管理
                   </p>
@@ -206,7 +206,7 @@ export default function DCPrintPage() {
                   <Search className="h-4 w-4" />
                 </div>
                 <div>
-                  <h4 className="font-medium">{tc('text_as7h9x')}</h4>
+                  <h4 className="font-medium">{tc('dcMaterialTrace')}</h4>
                   <p className="text-sm text-muted-foreground">
                     通过流程卡二维码追溯产品使用的所有物料信息，支持正向和反向追溯
                   </p>

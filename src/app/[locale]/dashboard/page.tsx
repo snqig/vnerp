@@ -30,7 +30,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface DashboardData {
   stats: {
@@ -61,6 +61,7 @@ interface DashboardData {
 export default function DashboardPage() {
   const t = useTranslations('Dashboard');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const [currentTime, setCurrentTime] = useState<string>('');
   const [data, setData] = useState<DashboardData>({
@@ -100,7 +101,7 @@ export default function DashboardPage() {
     const updateTime = () => {
       const now = new Date();
       setCurrentTime(
-        now.toLocaleString('zh-CN', {
+        now.toLocaleString(locale, {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',

@@ -169,7 +169,7 @@ export default function EquipmentMaintenancePage() {
         setPlanTotal(result.data?.total || 0);
       }
     } catch {
-      toast({ title: '获取保养计划失败', variant: 'destructive' });
+      toast({ title: tc('fetchFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -191,7 +191,7 @@ export default function EquipmentMaintenancePage() {
         setRecordTotal(result.data?.total || 0);
       }
     } catch {
-      toast({ title: '获取保养记录失败', variant: 'destructive' });
+      toast({ title: tc('fetchFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -214,7 +214,9 @@ export default function EquipmentMaintenancePage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: dialogType === 'plan' ? '保养计划创建成功' : '保养记录创建成功' });
+        toast({
+          title: dialogType === 'plan' ? tc('createPlanSuccess') : tc('createRecordSuccess'),
+        });
         setDialogOpen(false);
         if (activeTab === 'plan') fetchPlans();
         else fetchRecords();
@@ -222,7 +224,7 @@ export default function EquipmentMaintenancePage() {
         toast({ title: result.message || tc('error'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '保存失败', variant: 'destructive' });
+      toast({ title: tc('operationFailed'), variant: 'destructive' });
     }
   };
 
@@ -234,32 +236,32 @@ export default function EquipmentMaintenancePage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '状态更新成功' });
+        toast({ title: tc('statusUpdateSuccess') });
         fetchPlans();
       } else {
-        toast({ title: result.message || '更新失败', variant: 'destructive' });
+        toast({ title: result.message || tc('operationFailed'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '更新失败', variant: 'destructive' });
+      toast({ title: tc('operationFailed'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number, type: string) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDeleteMsg'))) return;
     try {
       const res = await authFetch(`/api/equipment/maintenance?id=${id}&type=${type}`, {
         method: 'DELETE',
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         if (type === 'plan') fetchPlans();
         else fetchRecords();
       } else {
-        toast({ title: result.message || '删除失败', variant: 'destructive' });
+        toast({ title: result.message || tc('operationFailed'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('operationFailed'), variant: 'destructive' });
     }
   };
 
@@ -332,7 +334,7 @@ export default function EquipmentMaintenancePage() {
             <Card>
               <CardHeader>
                 <CardTitle>保养计划</CardTitle>
-                <CardDescription>{tc('text_8k1159')}</CardDescription>
+                <CardDescription>{tc('maintenancePlanDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -346,10 +348,9 @@ export default function EquipmentMaintenancePage() {
                         <TableHead>计划编号</TableHead>
                         <TableHead>设备编码</TableHead>
                         <TableHead>设备名称</TableHead>
-                        <TableHead>{tc('text_af5xke')}</TableHead>
-                        <TableHead>{tc('text_aez791')}</TableHead>
-                        <TableHead>计划日期</TableHead>
-                        <TableHead>{tc('text_aeynbm')}</TableHead>
+                        <TableHead>{tc('maintenanceType')}</TableHead>
+                        <TableHead>{tc('cycleValue')}</TableHead>
+                        <TableHead>{tc('content')}</TableHead>
                         <TableHead>{tc('status')}</TableHead>
                         <TableHead className="text-right">{tc('actions')}</TableHead>
                       </TableRow>
@@ -462,7 +463,7 @@ export default function EquipmentMaintenancePage() {
             <Card>
               <CardHeader>
                 <CardTitle>保养记录</CardTitle>
-                <CardDescription>{tc('text_z9ofnv')}</CardDescription>
+                <CardDescription>{tc('recordDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -476,12 +477,12 @@ export default function EquipmentMaintenancePage() {
                         <TableHead>记录编号</TableHead>
                         <TableHead>设备编码</TableHead>
                         <TableHead>设备名称</TableHead>
-                        <TableHead>{tc('text_af5xke')}</TableHead>
+                        <TableHead>{tc('maintenanceType')}</TableHead>
                         <TableHead>开始时间</TableHead>
                         <TableHead>结束时间</TableHead>
                         <TableHead>停机时长</TableHead>
                         <TableHead>费用</TableHead>
-                        <TableHead>{tc('text_m52h')}</TableHead>
+                        <TableHead>{tc('maintenanceResult')}</TableHead>
                         <TableHead className="text-right">{tc('actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -619,7 +620,7 @@ export default function EquipmentMaintenancePage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>{tc('text_af5xke')}</Label>
+                    <Label>{tc('maintenanceType')}</Label>
                     <Select
                       value={String(form.maintenance_type ?? 1)}
                       onValueChange={(v) => setForm({ ...form, maintenance_type: Number(v) })}
@@ -639,7 +640,7 @@ export default function EquipmentMaintenancePage() {
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>周期值</Label>
+                    <Label>{tc('cycleValue')}</Label>
                     <Input
                       type="number"
                       value={form.cycle_value || ''}
@@ -650,7 +651,7 @@ export default function EquipmentMaintenancePage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>{tc('text_b2rlov')}</Label>
+                    <Label>{tc('cycleValue')}</Label>
                     <Select
                       value={String(form.cycle_type ?? 3)}
                       onValueChange={(v) => setForm({ ...form, cycle_type: Number(v) })}
@@ -677,11 +678,11 @@ export default function EquipmentMaintenancePage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>{tc('text_aeynbm')}</Label>
+                  <Label>{tc('content')}</Label>
                   <Textarea
                     value={form.content || ''}
                     onChange={(e) => setForm({ ...form, content: e.target.value })}
-                    placeholder="描述保养内容..."
+                    placeholder={tc('content')}
                     rows={3}
                   />
                 </div>
@@ -728,7 +729,7 @@ export default function EquipmentMaintenancePage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>{tc('text_af5xke')}</Label>
+                    <Label>{tc('maintenanceType')}</Label>
                     <Select
                       value={String(form.maintenance_type ?? 1)}
                       onValueChange={(v) => setForm({ ...form, maintenance_type: Number(v) })}
@@ -766,7 +767,7 @@ export default function EquipmentMaintenancePage() {
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>{tc('text_12d2fy')}</Label>
+                    <Label>{tc('downtimeHours')}</Label>
                     <Input
                       type="number"
                       step="0.5"
@@ -777,7 +778,7 @@ export default function EquipmentMaintenancePage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>{tc('text_1a5a0x')}</Label>
+                    <Label>{tc('cost')}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -786,7 +787,7 @@ export default function EquipmentMaintenancePage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>{tc('text_af6f3b')}</Label>
+                    <Label>{tc('maintenanceResult')}</Label>
                     <Select
                       value={String(form.result ?? 1)}
                       onValueChange={(v) => setForm({ ...form, result: Number(v) })}
@@ -814,11 +815,11 @@ export default function EquipmentMaintenancePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{tc('text_aeynbm')}</Label>
+                  <Label>{tc('content')}</Label>
                   <Textarea
                     value={form.maintenance_content || ''}
                     onChange={(e) => setForm({ ...form, maintenance_content: e.target.value })}
-                    placeholder="描述保养执行内容..."
+                    placeholder={tc('content')}
                     rows={2}
                   />
                 </div>

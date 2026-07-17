@@ -2,7 +2,7 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { formatDate } from '@/lib/date-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,7 +76,6 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { motion } from 'framer-motion';
 
 // ============================================================
-// 数据类型
 // ============================================================
 
 interface Schedule {
@@ -144,13 +143,12 @@ interface AutoScheduleResult {
 }
 
 // ============================================================
-// 主组件
 // ============================================================
 
 export default function ProductionSchedulePage() {
-  // 翻译钩子
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const getWorkshopBadge = (workshop: string) => {
     const workshopMap: Record<string, { label: string; className: string }> = {
@@ -254,7 +252,6 @@ export default function ProductionSchedulePage() {
     }>
   >([]);
 
-  // 编辑表单状态
   const [editForm, setEditForm] = useState({
     product_name: '',
     workshop: '',
@@ -266,7 +263,6 @@ export default function ProductionSchedulePage() {
     remark: '',
   });
 
-  // 获取排程数据
   const fetchSchedules = async () => {
     try {
       setLoading(true);
@@ -276,7 +272,6 @@ export default function ProductionSchedulePage() {
         const list = data.data?.list || [];
         setSchedules(list);
 
-        // 计算冲突数
         let conflicts = 0;
         const workshopGroups: Record<string, Schedule[]> = {};
         list.forEach((s: Schedule) => {
@@ -321,7 +316,6 @@ export default function ProductionSchedulePage() {
     }
   };
 
-  // 获取产能数据
   const fetchCapacityData = async () => {
     try {
       const res = await authFetch('/api/production/schedule/capacity');
@@ -341,7 +335,6 @@ export default function ProductionSchedulePage() {
     } catch {}
   };
 
-  // 获取待排产工单
   const fetchWorkOrders = async () => {
     try {
       const res = await authFetch('/api/production/orders?status=pending&pageSize=50');
@@ -358,7 +351,6 @@ export default function ProductionSchedulePage() {
     fetchWorkOrders();
   }, []);
 
-  // 筛选排程
   const filteredSchedules = schedules.filter((schedule) => {
     if (activeTab !== 'all') {
       const statusMap: Record<string, number> = {
@@ -382,7 +374,6 @@ export default function ProductionSchedulePage() {
   });
 
   // ============================================================
-  // 甘特图配置
   // ============================================================
 
   const GANTT_DAY_WIDTH = 60;
@@ -496,7 +487,6 @@ export default function ProductionSchedulePage() {
   };
 
   // ============================================================
-  // 操作处理函数
   // ============================================================
 
   const handleViewDetail = (schedule: Schedule) => {
@@ -555,7 +545,6 @@ export default function ProductionSchedulePage() {
     }
   };
 
-  // 自动排程
   const handleAutoSchedule = async () => {
     if (selectedWorkOrders.length === 0) {
       alert(t('selectWorkOrdersFirst'));
@@ -588,7 +577,6 @@ export default function ProductionSchedulePage() {
     }
   };
 
-  // 获取未来7天的日期
   const getNext7Days = () => {
     const days = [];
     for (let i = 0; i < 7; i++) {
@@ -605,13 +593,11 @@ export default function ProductionSchedulePage() {
   };
 
   // ============================================================
-  // 渲染
   // ============================================================
 
   return (
     <MainLayout title={t('schedule')}>
       <div className="space-y-6">
-        {/* 统计卡片 */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -670,7 +656,6 @@ export default function ProductionSchedulePage() {
           </Card>
         </div>
 
-        {/* 工具栏 */}
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -810,7 +795,6 @@ export default function ProductionSchedulePage() {
           </CardContent>
         </Card>
 
-        {/* 列表视图 */}
         {viewMode === 'list' && (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
@@ -854,7 +838,9 @@ export default function ProductionSchedulePage() {
                           <TableCell>{schedule.order_no || '-'}</TableCell>
                           <TableCell>{schedule.product_name}</TableCell>
                           <TableCell>{getWorkshopBadge(schedule.workshop)}</TableCell>
-                          <TableCell>{Number(schedule.planned_qty).toLocaleString()}</TableCell>
+                          <TableCell>
+                            {Number(schedule.planned_qty).toLocaleString(locale)}
+                          </TableCell>
                           <TableCell>{formatDate(schedule.planned_start) || '-'}</TableCell>
                           <TableCell>{getPriorityBadge(schedule.priority)}</TableCell>
                           <TableCell>{getStatusBadge(schedule.status)}</TableCell>
@@ -920,7 +906,6 @@ export default function ProductionSchedulePage() {
           </Tabs>
         )}
 
-        {/* 日历视图 */}
         {viewMode === 'calendar' && (
           <Card>
             <CardHeader>
@@ -953,7 +938,7 @@ export default function ProductionSchedulePage() {
                             >
                               <div className="font-medium truncate">{s.product_name}</div>
                               <div className="text-muted-foreground">
-                                {Number(s.planned_qty).toLocaleString()}
+                                {Number(s.planned_qty).toLocaleString(locale)}
                               </div>
                               <div className="mt-1">{getStatusBadge(s.status)}</div>
                             </div>
@@ -968,7 +953,6 @@ export default function ProductionSchedulePage() {
           </Card>
         )}
 
-        {/* 甘特图视图 */}
         {viewMode === 'gantt' && (
           <Card>
             <CardHeader className="pb-3">
@@ -1166,7 +1150,6 @@ export default function ProductionSchedulePage() {
           </Card>
         )}
 
-        {/* 自动排程对话框 */}
         <Dialog open={isAutoScheduleOpen} onOpenChange={setIsAutoScheduleOpen}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
@@ -1291,7 +1274,6 @@ export default function ProductionSchedulePage() {
           </DialogContent>
         </Dialog>
 
-        {/* 产能分析对话框 */}
         <Dialog open={isCapacityOpen} onOpenChange={setIsCapacityOpen}>
           <DialogContent className="max-w-3xl">
             <DialogHeader>
@@ -1357,7 +1339,6 @@ export default function ProductionSchedulePage() {
           </DialogContent>
         </Dialog>
 
-        {/* 详情对话框 */}
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
           <DialogContent className="max-w-3xl">
             {selectedSchedule && (
@@ -1397,7 +1378,7 @@ export default function ProductionSchedulePage() {
                         <span className="text-muted-foreground">{t('workshopLabel')}:</span>
                         <span>{getWorkshopBadge(selectedSchedule.workshop)}</span>
                         <span className="text-muted-foreground">{t('plannedQuantity')}:</span>
-                        <span>{Number(selectedSchedule.planned_qty).toLocaleString()}</span>
+                        <span>{Number(selectedSchedule.planned_qty).toLocaleString(locale)}</span>
                       </div>
                     </div>
                   </div>
@@ -1468,7 +1449,6 @@ export default function ProductionSchedulePage() {
           </DialogContent>
         </Dialog>
 
-        {/* 编辑对话框 */}
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
           <DialogContent className="max-w-2xl">
             {selectedSchedule && (
