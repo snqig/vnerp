@@ -2,6 +2,10 @@ import { IInboundOrderRepository } from '@/domain/warehouse/repositories/IInboun
 import { InboundOrder, InboundOrderProps } from '@/domain/warehouse/aggregates/InboundOrder';
 import { IPurchaseOrderRepository } from '@/domain/purchase/repositories/IPurchaseOrderRepository';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
+import { CurrencyApplicationService } from './CurrencyApplicationService';
+import { CurrencySnapshot } from '@/domain/shared/value-objects/CurrencySnapshot';
+import { Money } from '@/domain/shared/value-objects/Money';
+import { getSystemConfig } from '@/lib/system-config';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { query, transaction } from '@/lib/db';
 import type { ResultSetHeader } from 'mysql2/promise';
@@ -27,6 +31,7 @@ export interface CreateInboundFromPOParams {
 export class InboundApplicationService {
   constructor(
     private readonly orderRepo: IInboundOrderRepository,
+    private readonly currencyService: CurrencyApplicationService,
     private readonly purchaseRepo?: IPurchaseOrderRepository
   ) {}
 
@@ -48,7 +53,28 @@ export class InboundApplicationService {
   }
 
   async createOrder(props: InboundOrderProps): Promise<{ id: number; orderNo: string }> {
-    const order = InboundOrder.create(props);
+    const baseCurrency = await getSystemConfig('finance.base_currency', 'CNY');
+    const currency = props.currency || 'CNY';
+    let exchangeRate = props.exchangeRate || 1.0;
+    if (currency !== baseCurrency) {
+      exchangeRate = await this.currencyService.getLatestRate(currency, baseCurrency);
+    }
+
+    const computedTotalAmount = props.items.reduce(
+      (sum, item) => sum + item.quantity * item.unitPrice,
+      0
+    );
+    const snapshot = CurrencySnapshot.create(currency, exchangeRate, baseCurrency);
+    const baseTotalAmount =
+      Math.round(snapshot.convert(Money.create(computedTotalAmount, currency)).amount * 100) / 100;
+
+    const order = InboundOrder.create({
+      ...props,
+      currency,
+      exchangeRate,
+      baseCurrency,
+      baseTotalAmount,
+    });
     const result = await this.orderRepo.save(order);
 
     if (order.id) {
@@ -92,6 +118,21 @@ export class InboundApplicationService {
       }
     }
 
+    const baseCurrency = await getSystemConfig('finance.base_currency', 'CNY');
+    const currency = purchaseOrder.currency || 'CNY';
+    let exchangeRate = purchaseOrder.exchangeRate || 1.0;
+    if (currency !== baseCurrency) {
+      exchangeRate = await this.currencyService.getLatestRate(currency, baseCurrency);
+    }
+
+    const computedTotalAmount = params.items.reduce(
+      (sum, item) => sum + item.quantity * item.unitPrice,
+      0
+    );
+    const snapshot = CurrencySnapshot.create(currency, exchangeRate, baseCurrency);
+    const baseTotalAmount =
+      Math.round(snapshot.convert(Money.create(computedTotalAmount, currency)).amount * 100) / 100;
+
     const props: InboundOrderProps = {
       warehouseId: params.warehouseId,
       supplierId: purchaseOrder.supplierId,
@@ -99,6 +140,10 @@ export class InboundApplicationService {
       poId: purchaseOrder.id,
       poNo: purchaseOrder.orderNo,
       orderType: 'purchase',
+      currency,
+      exchangeRate,
+      baseCurrency,
+      baseTotalAmount,
       items: params.items.map((item) => ({
         materialId: item.materialId,
         materialCode: item.materialCode || '',
@@ -126,20 +171,19 @@ export class InboundApplicationService {
   async approveOrder(id: number): Promise<{ id: number; status: string }> {
     const order = await this.getOrderById(id);
 
-    const warehouseRows = await query(
-      'SELECT warehouse_name FROM inv_warehouse WHERE id = ?',
-      [order.warehouseId]
-    );
+    const warehouseRows = await query('SELECT warehouse_name FROM inv_warehouse WHERE id = ?', [
+      order.warehouseId,
+    ]);
     const warehouseName = warehouseRows?.[0]?.warehouse_name || '';
 
     const previousStatus = order.status.value;
     order.approve(warehouseName);
 
     await transaction(async (conn) => {
-      const [result] = await conn.execute(
+      const [result] = (await conn.execute(
         "UPDATE inv_inbound_order SET status = 'approved', update_time = NOW() WHERE id = ? AND status = ?",
         [id, previousStatus === 'completed' ? 'approved' : previousStatus]
-      ) as [ResultSetHeader, any];
+      )) as [ResultSetHeader, any];
       if (result.affectedRows === 0) {
         throw new VersionConflictError();
       }

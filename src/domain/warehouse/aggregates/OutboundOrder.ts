@@ -27,6 +27,10 @@ export interface OutboundOrderProps {
   items: OutboundItemProps[];
   totalAmount?: number;
   totalQuantity?: number;
+  currency?: string;
+  exchangeRate?: number;
+  baseCurrency?: string;
+  baseTotalAmount?: number;
   financePosted?: boolean;
   auditStatus?: number;
   auditorId?: number;
@@ -57,6 +61,10 @@ export class OutboundOrder {
     private _items: OutboundItem[],
     private _totalAmount: Money,
     private _totalQuantity: number,
+    public readonly currency: string,
+    public readonly exchangeRate: number,
+    public readonly baseCurrency: string,
+    private _baseTotalAmount: number,
     private _financePosted: boolean,
     private _auditStatus: number,
     private _auditorId: number | undefined,
@@ -82,6 +90,10 @@ export class OutboundOrder {
       Money.zero()
     );
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseTotalAmount = props.baseTotalAmount ?? 0;
 
     const order = new OutboundOrder(
       props.id,
@@ -100,6 +112,10 @@ export class OutboundOrder {
       items,
       totalAmount,
       totalQuantity,
+      currency,
+      exchangeRate,
+      baseCurrency,
+      baseTotalAmount,
       false,
       0,
       undefined,
@@ -137,6 +153,10 @@ export class OutboundOrder {
       props.totalQuantity !== undefined
         ? props.totalQuantity
         : items.reduce((sum, item) => sum + item.quantity, 0);
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseTotalAmount = props.baseTotalAmount ?? 0;
 
     return new OutboundOrder(
       props.id,
@@ -155,6 +175,10 @@ export class OutboundOrder {
       items,
       totalAmount,
       totalQuantity,
+      currency,
+      exchangeRate,
+      baseCurrency,
+      baseTotalAmount,
       props.financePosted || false,
       props.auditStatus || 0,
       props.auditorId,
@@ -181,6 +205,10 @@ export class OutboundOrder {
 
   get totalQuantity(): number {
     return this._totalQuantity;
+  }
+
+  get baseTotalAmount(): number {
+    return this._baseTotalAmount;
   }
 
   get financePosted(): boolean {

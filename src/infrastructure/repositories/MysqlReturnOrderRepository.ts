@@ -20,7 +20,10 @@ interface SalReturnRow {
   delivery_no: string | null;
   reason: string;
   return_date: string | null;
+  currency: string | null;
+  exchange_rate: number | string | null;
   total_amount: number | string | null;
+  base_total_amount: number | string;
   approve_by: number | null;
   approve_time: string | null;
   complete_by: number | null;
@@ -51,20 +54,23 @@ interface SalReturnDetailRow {
   quantity: number | string;
   unit_price: number | string;
   amount: number | string;
+  base_unit_price: number | string;
+  base_amount: number | string;
   batch_no: string | null;
   remark: string | null;
   deleted: number;
 }
 
 const MAIN_COLUMNS = `id, return_no, status, order_id, order_no, customer_id, customer_name,
-                      warehouse_id, delivery_id, delivery_no, reason, return_date, total_amount,
+                      warehouse_id, delivery_id, delivery_no, reason, return_date,
+                      currency, exchange_rate, total_amount, base_total_amount,
                       approve_by, approve_time, complete_by, complete_time,
                       inbound_order_id, inbound_order_no, receivable_id, receivable_no,
                       remark, create_by, create_time, update_time`;
 
 const DETAIL_COLUMNS = `id, return_id, line_no, delivery_detail_id, order_detail_id,
                         material_id, material_code, material_name, material_spec,
-                        unit, quantity, unit_price, amount, batch_no, remark`;
+                        unit, quantity, unit_price, amount, base_unit_price, base_amount, batch_no, remark`;
 
 export class MysqlReturnOrderRepository implements IReturnOrderRepository {
   async findById(id: number): Promise<ReturnOrder | null> {
@@ -92,7 +98,9 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
       `SELECT ${MAIN_COLUMNS} FROM sal_return WHERE order_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [orderId]
     );
-    return Promise.all(rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l))));
+    return Promise.all(
+      rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l)))
+    );
   }
 
   async findByCustomerId(customerId: number): Promise<ReturnOrder[]> {
@@ -100,7 +108,9 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
       `SELECT ${MAIN_COLUMNS} FROM sal_return WHERE customer_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [customerId]
     );
-    return Promise.all(rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l))));
+    return Promise.all(
+      rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l)))
+    );
   }
 
   async findByStatus(status: number): Promise<ReturnOrder[]> {
@@ -108,7 +118,9 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
       `SELECT ${MAIN_COLUMNS} FROM sal_return WHERE status = ? AND deleted = 0 ORDER BY create_time DESC`,
       [status]
     );
-    return Promise.all(rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l))));
+    return Promise.all(
+      rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l)))
+    );
   }
 
   async save(returnOrder: ReturnOrder): Promise<number> {
@@ -118,9 +130,10 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
       const [result] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO sal_return
          (return_no, status, order_id, order_no, customer_id, customer_name,
-          warehouse_id, delivery_id, delivery_no, reason, return_date, total_amount,
+          warehouse_id, delivery_id, delivery_no, reason, return_date,
+          currency, exchange_rate, total_amount, base_total_amount,
           remark, create_by, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           returnNo,
           returnOrder.status.value,
@@ -133,7 +146,10 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
           returnOrder.deliveryNo || null,
           returnOrder.reason,
           returnOrder.returnDate,
+          returnOrder.currency,
+          returnOrder.exchangeRate,
           returnOrder.totalAmount,
+          returnOrder.baseTotalAmount,
           returnOrder.remark || null,
           returnOrder.createBy ?? null,
         ]
@@ -146,8 +162,8 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
           `INSERT INTO sal_return_detail
            (return_id, line_no, delivery_detail_id, order_detail_id, material_id,
             material_code, material_name, material_spec, unit, quantity, unit_price,
-            amount, batch_no, remark, create_time)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            amount, base_unit_price, base_amount, batch_no, remark, create_time)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
           [
             newId,
             line.lineNo,
@@ -161,6 +177,8 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
             line.quantity,
             line.unitPrice,
             line.amount,
+            line.baseUnitPrice,
+            line.baseAmount,
             line.batchNo || null,
             line.remark || null,
           ]
@@ -172,13 +190,18 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
   }
 
   async updateStatus(id: number, status: number): Promise<void> {
-    await execute(
-      `UPDATE sal_return SET status = ?, update_time = NOW() WHERE id = ?`,
-      [status, id]
-    );
+    await execute(`UPDATE sal_return SET status = ?, update_time = NOW() WHERE id = ?`, [
+      status,
+      id,
+    ]);
   }
 
-  async updateApproval(id: number, status: number, approveBy: number, approveTime: string): Promise<void> {
+  async updateApproval(
+    id: number,
+    status: number,
+    approveBy: number,
+    approveTime: string
+  ): Promise<void> {
     await execute(
       `UPDATE sal_return
        SET status = ?, approve_by = ?, approve_time = ?, update_time = NOW()
@@ -203,15 +226,21 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
            inbound_order_id = ?, inbound_order_no = ?,
            receivable_id = ?, receivable_no = ?, update_time = NOW()
        WHERE id = ?`,
-      [status, completeBy, completeTime, inboundOrderId, inboundOrderNo, receivableId, receivableNo, id]
+      [
+        status,
+        completeBy,
+        completeTime,
+        inboundOrderId,
+        inboundOrderNo,
+        receivableId,
+        receivableNo,
+        id,
+      ]
     );
   }
 
   async softDelete(id: number): Promise<void> {
-    await execute(
-      `UPDATE sal_return SET deleted = 1, update_time = NOW() WHERE id = ?`,
-      [id]
-    );
+    await execute(`UPDATE sal_return SET deleted = 1, update_time = NOW() WHERE id = ?`, [id]);
   }
 
   private async findLines(returnId: number): Promise<SalReturnDetailRow[]> {
@@ -236,6 +265,8 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
       quantity: Number(l.quantity),
       unitPrice: Number(l.unit_price || 0),
       amount: Number(l.amount || 0),
+      baseUnitPrice: Number(l.base_unit_price) || 0,
+      baseAmount: Number(l.base_amount) || 0,
       batchNo: l.batch_no || '',
       remark: l.remark || '',
     }));
@@ -253,12 +284,20 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
       deliveryNo: row.delivery_no || '',
       reason: row.reason || '',
       returnDate: row.return_date ? new Date(row.return_date).toISOString().slice(0, 10) : '',
+      currency: row.currency || 'CNY',
+      exchangeRate: Number(row.exchange_rate) || 1.0,
+      baseCurrency: 'CNY',
+      baseTotalAmount: Number(row.base_total_amount) || 0,
       totalAmount: Number(row.total_amount || 0),
       lines: lineProps,
       approveBy: row.approve_by ?? undefined,
-      approveTime: row.approve_time ? new Date(row.approve_time).toISOString().slice(0, 19).replace('T', ' ') : undefined,
+      approveTime: row.approve_time
+        ? new Date(row.approve_time).toISOString().slice(0, 19).replace('T', ' ')
+        : undefined,
       completeBy: row.complete_by ?? undefined,
-      completeTime: row.complete_time ? new Date(row.complete_time).toISOString().slice(0, 19).replace('T', ' ') : undefined,
+      completeTime: row.complete_time
+        ? new Date(row.complete_time).toISOString().slice(0, 19).replace('T', ' ')
+        : undefined,
       inboundOrderId: row.inbound_order_id ?? undefined,
       inboundOrderNo: row.inbound_order_no || undefined,
       receivableId: row.receivable_id ?? undefined,

@@ -12,7 +12,10 @@ interface FinPayableRow {
   source_id: number | null;
   source_no: string | null;
   supplier_id: number;
+  currency: string | null;
+  exchange_rate: number | string | null;
   amount: number | string;
+  base_amount: number | string;
   paid_amount: number | string | null;
   balance: number | string | null;
   due_date: string | null;
@@ -23,15 +26,14 @@ interface FinPayableRow {
 }
 
 const COLUMNS = `id, payable_no, source_type, source_id, source_no, supplier_id,
-                 amount, paid_amount, balance, due_date, status, remark,
-                 create_time, update_time`;
+                 currency, exchange_rate, amount, base_amount, paid_amount, balance,
+                 due_date, status, remark, create_time, update_time`;
 
 export class MysqlPayableRepository implements IPayableRepository {
   async findById(id: number): Promise<Payable | null> {
-    const rows = await query<FinPayableRow>(
-      `SELECT ${COLUMNS} FROM fin_payable WHERE id = ?`,
-      [id]
-    );
+    const rows = await query<FinPayableRow>(`SELECT ${COLUMNS} FROM fin_payable WHERE id = ?`, [
+      id,
+    ]);
     if (!rows || rows.length === 0) return null;
     return this.mapToAggregate(rows[0]);
   }
@@ -73,22 +75,25 @@ export class MysqlPayableRepository implements IPayableRepository {
   }
 
   async save(payable: Payable): Promise<number> {
-    const payableNo =
-      payable.payableNo || (await generateDocumentNo('payable'));
+    const payableNo = payable.payableNo || (await generateDocumentNo('payable'));
 
     return transaction(async (conn) => {
       const [result] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO fin_payable
          (payable_no, source_type, source_id, source_no, supplier_id,
-          amount, paid_amount, balance, due_date, status, remark)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          currency, exchange_rate, amount, base_amount, paid_amount, balance,
+          due_date, status, remark)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           payableNo,
           payable.sourceType,
           payable.sourceId ?? null,
           payable.sourceNo,
           payable.supplierId,
+          payable.currency,
+          payable.exchangeRate,
           payable.amount.amount,
+          payable.baseAmount,
           payable.paidAmount.amount,
           payable.balance.amount,
           payable.dueDate || null,
@@ -99,10 +104,7 @@ export class MysqlPayableRepository implements IPayableRepository {
 
       const newId = result.insertId;
       if (payable.id) {
-        await conn.execute(
-          `UPDATE fin_payable SET update_time = NOW() WHERE id = ?`,
-          [payable.id]
-        );
+        await conn.execute(`UPDATE fin_payable SET update_time = NOW() WHERE id = ?`, [payable.id]);
         return payable.id;
       }
       return newId;
@@ -124,10 +126,10 @@ export class MysqlPayableRepository implements IPayableRepository {
   }
 
   async updateStatus(id: number, status: number): Promise<void> {
-    await execute(
-      `UPDATE fin_payable SET status = ?, update_time = NOW() WHERE id = ?`,
-      [status, id]
-    );
+    await execute(`UPDATE fin_payable SET status = ?, update_time = NOW() WHERE id = ?`, [
+      status,
+      id,
+    ]);
   }
 
   async softDelete(id: number): Promise<void> {
@@ -144,7 +146,10 @@ export class MysqlPayableRepository implements IPayableRepository {
       sourceId: row.source_id ?? undefined,
       sourceNo: row.source_no || '',
       supplierId: row.supplier_id,
+      currency: row.currency || 'CNY',
+      exchangeRate: Number(row.exchange_rate) || 1.0,
       amount: Number(row.amount),
+      baseAmount: Number(row.base_amount) || 0,
       paidAmount: Number(row.paid_amount || 0),
       balance: row.balance !== null ? Number(row.balance) : undefined,
       dueDate: row.due_date || '',

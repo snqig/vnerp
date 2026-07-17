@@ -2,6 +2,9 @@ import { ISalesOrderRepository } from '@/domain/sales/repositories/ISalesOrderRe
 import { SalesOrder, SalesOrderProps } from '@/domain/sales/aggregates/SalesOrder';
 import { SalesOrderStatus } from '@/domain/sales/value-objects/SalesOrderStatus';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
+import { CurrencyApplicationService } from './CurrencyApplicationService';
+import { CurrencySnapshot } from '@/domain/shared/value-objects/CurrencySnapshot';
+import { Money } from '@/domain/shared/value-objects/Money';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
 import { InventoryValidationService } from '@/application/services/InventoryValidationService';
@@ -13,7 +16,10 @@ import {
 import type { ResultSetHeader } from 'mysql2/promise';
 
 export class SalesApplicationService {
-  constructor(private readonly orderRepo: ISalesOrderRepository) {}
+  constructor(
+    private readonly orderRepo: ISalesOrderRepository,
+    private readonly currencyService: CurrencyApplicationService
+  ) {}
 
   async getOrderById(id: number): Promise<SalesOrder> {
     const order = await this.orderRepo.findById(id);
@@ -49,6 +55,66 @@ export class SalesApplicationService {
         ...l,
         taxRate: l.taxRate ?? effectiveProps.taxRate,
       })),
+    };
+
+    const baseCurrency = await getSystemConfig('finance.base_currency', 'CNY');
+    let exchangeRate = effectiveProps.exchangeRate || 1.0;
+    if (effectiveProps.currency && effectiveProps.currency !== baseCurrency) {
+      exchangeRate = await this.currencyService.getLatestRate(
+        effectiveProps.currency,
+        baseCurrency
+      );
+    }
+
+    const snapshot = CurrencySnapshot.create(
+      effectiveProps.currency || 'CNY',
+      exchangeRate,
+      baseCurrency
+    );
+
+    const baseCurrencyDecimalPlaces = 2;
+    effectiveProps = {
+      ...effectiveProps,
+      exchangeRate,
+      lines: effectiveProps.lines.map((line) => {
+        const originalUnitPrice = line.unitPrice || 0;
+        const originalAmount = (line.orderQty || 0) * originalUnitPrice;
+        const originalTaxAmount =
+          (originalAmount * (line.taxRate ?? effectiveProps.taxRate ?? 13)) / 100;
+        const originalLineTotal = originalAmount + originalTaxAmount;
+
+        return {
+          ...line,
+          baseUnitPrice: snapshot.convert(
+            Money.create(originalUnitPrice, snapshot.currency),
+            baseCurrencyDecimalPlaces
+          ).amount,
+          baseAmount: snapshot.convert(
+            Money.create(originalAmount, snapshot.currency),
+            baseCurrencyDecimalPlaces
+          ).amount,
+          baseTaxAmount: snapshot.convert(
+            Money.create(originalTaxAmount, snapshot.currency),
+            baseCurrencyDecimalPlaces
+          ).amount,
+          baseLineTotal: snapshot.convert(
+            Money.create(originalLineTotal, snapshot.currency),
+            baseCurrencyDecimalPlaces
+          ).amount,
+        };
+      }),
+    };
+
+    const baseTotalAmount = effectiveProps.lines.reduce((sum, l) => sum + (l.baseAmount || 0), 0);
+    const baseTaxAmount = effectiveProps.lines.reduce((sum, l) => sum + (l.baseTaxAmount || 0), 0);
+    const baseGrandTotal = baseTotalAmount + baseTaxAmount;
+
+    effectiveProps = {
+      ...effectiveProps,
+      baseCurrency,
+      baseTotalAmount: Math.round(baseTotalAmount * 100) / 100,
+      baseTaxAmount: Math.round(baseTaxAmount * 100) / 100,
+      baseGrandTotal: Math.round(baseGrandTotal * 100) / 100,
     };
 
     const order = SalesOrder.create(effectiveProps);
@@ -92,10 +158,10 @@ export class SalesApplicationService {
     order.approve(auditBy);
 
     await transaction(async (conn) => {
-      const [result] = await conn.execute(
+      const [result] = (await conn.execute(
         'UPDATE sal_order SET status = ?, audit_by = ?, audit_time = NOW(), update_time = NOW() WHERE id = ? AND status = ?',
         [order.status.toDbCode(), auditBy, id, SalesOrderStatus.from(previousStatus).toDbCode()]
-      ) as [ResultSetHeader, any];
+      )) as [ResultSetHeader, any];
       if (result.affectedRows === 0) throw new VersionConflictError();
       await getDomainEventOutbox().saveEvents(conn, 'SalesOrder', id, order.getDomainEvents());
     });
@@ -126,10 +192,10 @@ export class SalesApplicationService {
 
     await transaction(async (conn) => {
       const currentDbStatus = SalesOrderStatus.from(previousStatus).toDbCode();
-      const [result] = await conn.execute(
+      const [result] = (await conn.execute(
         'UPDATE sal_order SET status = ?, update_time = NOW() WHERE id = ? AND status = ?',
         [order.status.toDbCode(), id, currentDbStatus]
-      ) as [ResultSetHeader, any];
+      )) as [ResultSetHeader, any];
       if (result.affectedRows === 0) throw new VersionConflictError();
 
       for (const line of order.lines) {

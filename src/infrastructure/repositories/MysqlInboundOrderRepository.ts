@@ -53,6 +53,10 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
       poNo: order.po_no,
       orderType: order.order_type,
       inboundDate: order.inbound_date,
+      currency: order.currency || 'CNY',
+      exchangeRate: Number(order.exchange_rate) || 1.0,
+      baseCurrency: 'CNY',
+      baseTotalAmount: Number(order.base_total_amount) || 0,
       remark: order.remark,
       items: items.map((item: any) => ({
         id: item.id,
@@ -83,7 +87,8 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
   ): Promise<PaginatedResult<InboundOrder>> {
     let sql = `SELECT o.id, o.order_no, o.inbound_date, o.supplier_name, o.supplier_id,
                o.po_id, o.po_no, o.warehouse_id, o.order_type, o.total_quantity,
-               o.total_amount, o.status, o.remark, o.create_time, o.update_time
+               o.currency, o.exchange_rate, o.total_amount, o.base_total_amount,
+               o.status, o.remark, o.create_time, o.update_time
                FROM inv_inbound_order o WHERE o.deleted = 0`;
     let countSql = `SELECT COUNT(*) as total FROM inv_inbound_order o WHERE o.deleted = 0`;
     const params: (string | number | null)[] = [];
@@ -153,6 +158,10 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
           poNo: o.po_no,
           orderType: o.order_type,
           inboundDate: o.inbound_date,
+          currency: o.currency || 'CNY',
+          exchangeRate: Number(o.exchange_rate) || 1.0,
+          baseCurrency: 'CNY',
+          baseTotalAmount: Number(o.base_total_amount) || 0,
           remark: o.remark,
           items: (o.items || []).map((item: any) => ({
             id: item.id,
@@ -185,8 +194,9 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
       const [orderResult] = await conn.execute(
         `INSERT INTO inv_inbound_order
          (order_no, order_type, warehouse_id, supplier_id, supplier_name, po_id, po_no,
-          total_amount, total_quantity, status, inbound_date, remark, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          currency, exchange_rate, total_amount, total_quantity,
+          base_total_amount, status, inbound_date, remark, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           orderNo,
           order.orderType || 'purchase',
@@ -195,8 +205,11 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
           order.supplierName || null,
           order.poId || null,
           order.poNo || null,
+          order.currency,
+          order.exchangeRate,
           order.totalAmount.amount,
           order.totalQuantity,
+          order.baseTotalAmount,
           DOMAIN_TO_DB_STATUS[order.status.value] || order.status.value,
           order.inboundDate || null,
           order.remark || null,

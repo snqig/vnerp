@@ -72,7 +72,9 @@ export class MysqlOutboundOrderRepository implements IOutboundOrderRepository {
   ): Promise<PaginatedResult<OutboundOrder>> {
     let sql = `SELECT o.id, o.order_no, o.order_date, o.outbound_type, o.warehouse_id,
                o.warehouse_name, o.customer_id, o.customer_name, o.work_order_id, o.work_order_no,
-               o.total_qty, o.total_amount, o.status, o.audit_status, o.finance_posted,
+               o.total_qty, o.total_amount,
+               o.currency, o.exchange_rate, o.base_total_amount,
+               o.status, o.audit_status, o.finance_posted,
                o.operator_id, o.operator_name, o.remark, o.create_time, o.update_time
                FROM inv_outbound_order o WHERE o.deleted = 0`;
     let countSql = `SELECT COUNT(*) as total FROM inv_outbound_order o WHERE o.deleted = 0`;
@@ -154,13 +156,15 @@ export class MysqlOutboundOrderRepository implements IOutboundOrderRepository {
     const items = order.items;
 
     return await transaction(async (conn) => {
-      const [orderResult] = await conn.execute(
+      const [orderResult] = (await conn.execute(
         `INSERT INTO inv_outbound_order
          (order_no, order_date, outbound_type, warehouse_id, warehouse_name,
            customer_id, customer_name, work_order_id, work_order_no,
-           total_qty, total_amount, status, audit_status, finance_posted,
+           total_qty, total_amount,
+           currency, exchange_rate, base_total_amount,
+           status, audit_status, finance_posted,
            operator_id, operator_name, remark, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           orderNo,
           order.orderDate,
@@ -173,6 +177,9 @@ export class MysqlOutboundOrderRepository implements IOutboundOrderRepository {
           order.workOrderNo || null,
           order.totalQuantity,
           order.totalAmount.amount,
+          order.currency,
+          order.exchangeRate,
+          order.baseTotalAmount,
           DOMAIN_TO_DB_STATUS[order.status.value] || order.status.value,
           order.auditStatus,
           order.financePosted ? 1 : 0,
@@ -180,7 +187,7 @@ export class MysqlOutboundOrderRepository implements IOutboundOrderRepository {
           order.operatorName || null,
           order.remark || null,
         ]
-      ) as [ResultSetHeader, any];
+      )) as [ResultSetHeader, any];
 
       const orderId = orderResult.insertId;
 
@@ -256,6 +263,10 @@ export class MysqlOutboundOrderRepository implements IOutboundOrderRepository {
       customerName: order.customer_name,
       workOrderId: order.work_order_id,
       workOrderNo: order.work_order_no,
+      currency: order.currency || 'CNY',
+      exchangeRate: Number(order.exchange_rate) || 1.0,
+      baseCurrency: 'CNY',
+      baseTotalAmount: Number(order.base_total_amount) || 0,
       operatorId: order.operator_id,
       operatorName: order.operator_name,
       financePosted: !!order.finance_posted,

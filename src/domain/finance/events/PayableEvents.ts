@@ -13,6 +13,9 @@ export class PayableCreatedEvent implements DomainEvent {
       supplierId: number;
       amount: number;
       dueDate?: string;
+      currency?: string;
+      exchangeRate?: number;
+      baseAmount?: number;
     }
   ) {}
 }

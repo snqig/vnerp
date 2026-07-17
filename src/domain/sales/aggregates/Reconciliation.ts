@@ -194,14 +194,6 @@ export class Reconciliation {
     const netAmount = roundMoney(props.netAmount ?? deliveryAmount - returnAmount);
     const discountAmount = roundMoney(props.discountAmount || 0);
     const receivedAmount = roundMoney(props.receivedAmount || 0);
-
-    let balanceAmount: number;
-    if (props.balanceAmount !== undefined && props.balanceAmount !== null) {
-      balanceAmount = roundMoney(props.balanceAmount);
-    } else {
-      balanceAmount = roundMoney(netAmount - discountAmount - receivedAmount);
-    }
-
     const currency = props.currency || 'CNY';
     const exchangeRate = props.exchangeRate || 1.0;
     const baseCurrency = props.baseCurrency || 'CNY';
@@ -211,6 +203,13 @@ export class Reconciliation {
     const baseDiscountAmount = props.baseDiscountAmount ?? 0;
     const baseReceivedAmount = props.baseReceivedAmount ?? 0;
     const baseBalanceAmount = props.baseBalanceAmount ?? 0;
+
+    let balanceAmount: number;
+    if (props.balanceAmount !== undefined && props.balanceAmount !== null) {
+      balanceAmount = roundMoney(props.balanceAmount);
+    } else {
+      balanceAmount = roundMoney(netAmount - discountAmount - receivedAmount);
+    }
 
     const writeOffRecords = (props.writeOffRecords || []).map((r) =>
       WriteOffRecord.reconstitute(r)

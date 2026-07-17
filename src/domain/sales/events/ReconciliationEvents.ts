@@ -12,6 +12,12 @@ export class ReconciliationCreatedEvent implements DomainEvent {
       deliveryAmount: number;
       returnAmount: number;
       netAmount: number;
+      currency?: string;
+      exchangeRate?: number;
+      baseCurrency?: string;
+      baseDeliveryAmount?: number;
+      baseReturnAmount?: number;
+      baseNetAmount?: number;
     }
   ) {}
 }

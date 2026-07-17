@@ -4,6 +4,8 @@ import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { InboundApplicationService } from '@/application/services/InboundApplicationService';
+import { CurrencyApplicationService } from '@/application/services/CurrencyApplicationService';
+import { MysqlCurrencyRepository } from '@/infrastructure/repositories/MysqlCurrencyRepository';
 import { RepositoryRegistry } from '@/infrastructure/RepositoryRegistry';
 import { registerEventHandlers } from '@/application/EventRegistry';
 
@@ -11,7 +13,11 @@ function getInboundService(): InboundApplicationService {
   registerEventHandlers();
   const orderRepo = RepositoryRegistry.getInboundOrderRepository();
   const purchaseRepo = RepositoryRegistry.getPurchaseOrderRepository();
-  return new InboundApplicationService(orderRepo, purchaseRepo);
+  return new InboundApplicationService(
+    orderRepo,
+    new CurrencyApplicationService(new MysqlCurrencyRepository()),
+    purchaseRepo
+  );
 }
 
 export const POST = withPermission(

@@ -21,12 +21,20 @@ interface SalReconciliationRow {
   customer_name: string | null;
   period_start: string | null;
   period_end: string | null;
+  currency: string | null;
+  exchange_rate: number | string | null;
   delivery_amount: number | string | null;
   return_amount: number | string | null;
   net_amount: number | string | null;
   discount_amount: number | string | null;
   received_amount: number | string | null;
   balance_amount: number | string | null;
+  base_delivery_amount: number | string;
+  base_return_amount: number | string;
+  base_net_amount: number | string;
+  base_discount_amount: number | string;
+  base_received_amount: number | string;
+  base_balance_amount: number | string;
   confirm_by: number | null;
   confirm_time: string | null;
   close_by: number | null;
@@ -65,8 +73,12 @@ interface SalReconciliationWriteoffRow {
 }
 
 const MAIN_COLUMNS = `id, reconciliation_no, status, customer_id, customer_name,
-                      period_start, period_end, delivery_amount, return_amount, net_amount,
+                      period_start, period_end,
+                      currency, exchange_rate,
+                      delivery_amount, return_amount, net_amount,
                       discount_amount, received_amount, balance_amount,
+                      base_delivery_amount, base_return_amount, base_net_amount,
+                      base_discount_amount, base_received_amount, base_balance_amount,
                       confirm_by, confirm_time, close_by, close_time,
                       remark, create_by, create_time, update_time`;
 
@@ -110,7 +122,10 @@ export class MysqlReconciliationRepository implements IReconciliationRepository 
     );
     return Promise.all(
       rows.map(async (r) => {
-        const [lines, writeOffs] = await Promise.all([this.findLines(r.id), this.findWriteOffs(r.id)]);
+        const [lines, writeOffs] = await Promise.all([
+          this.findLines(r.id),
+          this.findWriteOffs(r.id),
+        ]);
         return this.mapToAggregate(r, lines, writeOffs);
       })
     );
@@ -123,7 +138,10 @@ export class MysqlReconciliationRepository implements IReconciliationRepository 
     );
     return Promise.all(
       rows.map(async (r) => {
-        const [lines, writeOffs] = await Promise.all([this.findLines(r.id), this.findWriteOffs(r.id)]);
+        const [lines, writeOffs] = await Promise.all([
+          this.findLines(r.id),
+          this.findWriteOffs(r.id),
+        ]);
         return this.mapToAggregate(r, lines, writeOffs);
       })
     );
@@ -137,9 +155,13 @@ export class MysqlReconciliationRepository implements IReconciliationRepository 
       const [result] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO sal_reconciliation
          (reconciliation_no, status, customer_id, customer_name, period_start, period_end,
+          currency, exchange_rate,
           delivery_amount, return_amount, net_amount, discount_amount, received_amount,
-          balance_amount, remark, create_by, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          balance_amount,
+          base_delivery_amount, base_return_amount, base_net_amount,
+          base_discount_amount, base_received_amount, base_balance_amount,
+          remark, create_by, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           reconciliationNo,
           reconciliation.status.value,
@@ -147,12 +169,20 @@ export class MysqlReconciliationRepository implements IReconciliationRepository 
           reconciliation.customerName || null,
           reconciliation.periodStart,
           reconciliation.periodEnd,
+          reconciliation.currency,
+          reconciliation.exchangeRate,
           reconciliation.deliveryAmount,
           reconciliation.returnAmount,
           reconciliation.netAmount,
           reconciliation.discountAmount,
           reconciliation.receivedAmount,
           reconciliation.balanceAmount,
+          reconciliation.baseDeliveryAmount,
+          reconciliation.baseReturnAmount,
+          reconciliation.baseNetAmount,
+          reconciliation.baseDiscountAmount,
+          reconciliation.baseReceivedAmount,
+          reconciliation.baseBalanceAmount,
           reconciliation.remark || null,
           reconciliation.createBy ?? null,
         ]
@@ -165,14 +195,7 @@ export class MysqlReconciliationRepository implements IReconciliationRepository 
           `INSERT INTO sal_reconciliation_line
            (reconciliation_id, source_type, source_id, source_no, source_date, amount, create_time)
            VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-          [
-            newId,
-            line.sourceType,
-            line.sourceId,
-            line.sourceNo,
-            line.sourceDate,
-            line.amount,
-          ]
+          [newId, line.sourceType, line.sourceId, line.sourceNo, line.sourceDate, line.amount]
         );
       }
 
@@ -211,13 +234,18 @@ export class MysqlReconciliationRepository implements IReconciliationRepository 
   }
 
   async updateStatus(id: number, status: number): Promise<void> {
-    await execute(
-      `UPDATE sal_reconciliation SET status = ?, update_time = NOW() WHERE id = ?`,
-      [status, id]
-    );
+    await execute(`UPDATE sal_reconciliation SET status = ?, update_time = NOW() WHERE id = ?`, [
+      status,
+      id,
+    ]);
   }
 
-  async updateConfirmation(id: number, status: number, confirmBy: number, confirmTime: string): Promise<void> {
+  async updateConfirmation(
+    id: number,
+    status: number,
+    confirmBy: number,
+    confirmTime: string
+  ): Promise<void> {
     await execute(
       `UPDATE sal_reconciliation
        SET status = ?, confirm_by = ?, confirm_time = ?, update_time = NOW()
@@ -226,7 +254,12 @@ export class MysqlReconciliationRepository implements IReconciliationRepository 
     );
   }
 
-  async updateClosure(id: number, status: number, closeBy: number, closeTime: string): Promise<void> {
+  async updateClosure(
+    id: number,
+    status: number,
+    closeBy: number,
+    closeTime: string
+  ): Promise<void> {
     await execute(
       `UPDATE sal_reconciliation
        SET status = ?, close_by = ?, close_time = ?, update_time = NOW()
@@ -236,10 +269,9 @@ export class MysqlReconciliationRepository implements IReconciliationRepository 
   }
 
   async softDelete(id: number): Promise<void> {
-    await execute(
-      `UPDATE sal_reconciliation SET deleted = 1, update_time = NOW() WHERE id = ?`,
-      [id]
-    );
+    await execute(`UPDATE sal_reconciliation SET deleted = 1, update_time = NOW() WHERE id = ?`, [
+      id,
+    ]);
   }
 
   private async findLines(reconciliationId: number): Promise<SalReconciliationLineRow[]> {
@@ -292,16 +324,29 @@ export class MysqlReconciliationRepository implements IReconciliationRepository 
       customerName: row.customer_name || '',
       periodStart: row.period_start ? new Date(row.period_start).toISOString().slice(0, 10) : '',
       periodEnd: row.period_end ? new Date(row.period_end).toISOString().slice(0, 10) : '',
+      currency: row.currency || 'CNY',
+      exchangeRate: Number(row.exchange_rate) || 1.0,
+      baseCurrency: 'CNY',
       deliveryAmount: Number(row.delivery_amount || 0),
       returnAmount: Number(row.return_amount || 0),
       netAmount: Number(row.net_amount || 0),
       discountAmount: Number(row.discount_amount || 0),
       receivedAmount: Number(row.received_amount || 0),
       balanceAmount: Number(row.balance_amount || 0),
+      baseDeliveryAmount: Number(row.base_delivery_amount) || 0,
+      baseReturnAmount: Number(row.base_return_amount) || 0,
+      baseNetAmount: Number(row.base_net_amount) || 0,
+      baseDiscountAmount: Number(row.base_discount_amount) || 0,
+      baseReceivedAmount: Number(row.base_received_amount) || 0,
+      baseBalanceAmount: Number(row.base_balance_amount) || 0,
       confirmBy: row.confirm_by ?? undefined,
-      confirmTime: row.confirm_time ? new Date(row.confirm_time).toISOString().slice(0, 19).replace('T', ' ') : undefined,
+      confirmTime: row.confirm_time
+        ? new Date(row.confirm_time).toISOString().slice(0, 19).replace('T', ' ')
+        : undefined,
       closeBy: row.close_by ?? undefined,
-      closeTime: row.close_time ? new Date(row.close_time).toISOString().slice(0, 19).replace('T', ' ') : undefined,
+      closeTime: row.close_time
+        ? new Date(row.close_time).toISOString().slice(0, 19).replace('T', ' ')
+        : undefined,
       remark: row.remark || '',
       createBy: row.create_by ?? undefined,
       lines: lineProps,

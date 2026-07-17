@@ -19,7 +19,10 @@ interface SalDeliveryRow {
   delivery_date: string | null;
   logistics_company: string | null;
   tracking_no: string | null;
+  currency: string | null;
+  exchange_rate: number | string | null;
   total_amount: number | string | null;
+  base_total_amount: number | string;
   remark: string | null;
   create_by: number | null;
   ship_by: number | null;
@@ -45,6 +48,8 @@ interface SalDeliveryDetailRow {
   quantity: number | string;
   unit_price: number | string;
   amount: number | string;
+  base_unit_price: number | string;
+  base_amount: number | string;
   batch_no: string | null;
   remark: string | null;
   deleted: number;
@@ -52,12 +57,13 @@ interface SalDeliveryDetailRow {
 
 const MAIN_COLUMNS = `id, delivery_no, status, order_id, order_no, customer_id, customer_name,
                       warehouse_id, delivery_date, logistics_company, tracking_no,
-                      total_amount, remark, create_by, ship_by, ship_time, sign_by, sign_time,
+                      currency, exchange_rate, total_amount, base_total_amount,
+                      remark, create_by, ship_by, ship_time, sign_by, sign_time,
                       create_time, update_time`;
 
 const DETAIL_COLUMNS = `id, delivery_id, line_no, order_detail_id, material_id, material_code,
                         material_name, material_spec, unit, quantity, unit_price, amount,
-                        batch_no, remark`;
+                        base_unit_price, base_amount, batch_no, remark`;
 
 export class MysqlDeliveryRepository implements IDeliveryRepository {
   async findById(id: number): Promise<Delivery | null> {
@@ -85,7 +91,9 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
       `SELECT ${MAIN_COLUMNS} FROM sal_delivery WHERE order_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [orderId]
     );
-    return Promise.all(rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l))));
+    return Promise.all(
+      rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l)))
+    );
   }
 
   async findByCustomerId(customerId: number): Promise<Delivery[]> {
@@ -93,7 +101,9 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
       `SELECT ${MAIN_COLUMNS} FROM sal_delivery WHERE customer_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [customerId]
     );
-    return Promise.all(rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l))));
+    return Promise.all(
+      rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l)))
+    );
   }
 
   async findByStatus(status: number): Promise<Delivery[]> {
@@ -101,7 +111,9 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
       `SELECT ${MAIN_COLUMNS} FROM sal_delivery WHERE status = ? AND deleted = 0 ORDER BY create_time DESC`,
       [status]
     );
-    return Promise.all(rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l))));
+    return Promise.all(
+      rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l)))
+    );
   }
 
   async save(delivery: Delivery): Promise<number> {
@@ -112,8 +124,8 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
         `INSERT INTO sal_delivery
          (delivery_no, status, order_id, order_no, customer_id, customer_name,
           warehouse_id, delivery_date, logistics_company, tracking_no,
-          total_amount, remark, create_by, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          currency, exchange_rate, total_amount, base_total_amount, remark, create_by, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           deliveryNo,
           delivery.status.value,
@@ -125,7 +137,10 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
           delivery.deliveryDate || null,
           delivery.logisticsCompany || null,
           delivery.trackingNo || null,
+          delivery.currency,
+          delivery.exchangeRate,
           delivery.totalAmount,
+          delivery.baseTotalAmount,
           delivery.remark || null,
           delivery.createBy ?? null,
         ]
@@ -138,8 +153,8 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
           `INSERT INTO sal_delivery_detail
            (delivery_id, line_no, order_detail_id, material_id, material_code,
             material_name, material_spec, unit, quantity, unit_price, amount,
-            batch_no, remark, create_time)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            base_unit_price, base_amount, batch_no, remark, create_time)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
           [
             newId,
             line.lineNo,
@@ -152,6 +167,8 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
             line.quantity,
             line.unitPrice,
             line.amount,
+            line.baseUnitPrice,
+            line.baseAmount,
             line.batchNo || null,
             line.remark || null,
           ]
@@ -177,10 +194,10 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
         [status, logisticsCompany ?? null, trackingNo ?? null, id]
       );
     } else {
-      await execute(
-        `UPDATE sal_delivery SET status = ?, update_time = NOW() WHERE id = ?`,
-        [status, id]
-      );
+      await execute(`UPDATE sal_delivery SET status = ?, update_time = NOW() WHERE id = ?`, [
+        status,
+        id,
+      ]);
     }
   }
 
@@ -202,7 +219,12 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
     );
   }
 
-  async updateSign(id: number, status: number, signBy: number | null, signTime: string): Promise<void> {
+  async updateSign(
+    id: number,
+    status: number,
+    signBy: number | null,
+    signTime: string
+  ): Promise<void> {
     await execute(
       `UPDATE sal_delivery
        SET status = ?, sign_by = ?, sign_time = ?, update_time = NOW()
@@ -212,10 +234,7 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
   }
 
   async softDelete(id: number): Promise<void> {
-    await execute(
-      `UPDATE sal_delivery SET deleted = 1, update_time = NOW() WHERE id = ?`,
-      [id]
-    );
+    await execute(`UPDATE sal_delivery SET deleted = 1, update_time = NOW() WHERE id = ?`, [id]);
   }
 
   private async findLines(deliveryId: number): Promise<SalDeliveryDetailRow[]> {
@@ -239,6 +258,8 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
       quantity: Number(l.quantity),
       unitPrice: Number(l.unit_price || 0),
       amount: Number(l.amount || 0),
+      baseUnitPrice: Number(l.base_unit_price) || 0,
+      baseAmount: Number(l.base_amount) || 0,
       batchNo: l.batch_no || '',
       remark: l.remark || '',
     }));
@@ -255,14 +276,22 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
       deliveryDate: row.delivery_date ? new Date(row.delivery_date).toISOString().slice(0, 10) : '',
       logisticsCompany: row.logistics_company || '',
       trackingNo: row.tracking_no || '',
+      currency: row.currency || 'CNY',
+      exchangeRate: Number(row.exchange_rate) || 1.0,
+      baseCurrency: 'CNY',
+      baseTotalAmount: Number(row.base_total_amount) || 0,
       totalAmount: Number(row.total_amount || 0),
       lines: lineProps,
       remark: row.remark || '',
       createBy: row.create_by ?? undefined,
       shipBy: row.ship_by ?? undefined,
-      shipTime: row.ship_time ? new Date(row.ship_time).toISOString().slice(0, 19).replace('T', ' ') : undefined,
+      shipTime: row.ship_time
+        ? new Date(row.ship_time).toISOString().slice(0, 19).replace('T', ' ')
+        : undefined,
       signBy: row.sign_by ?? undefined,
-      signTime: row.sign_time ? new Date(row.sign_time).toISOString().slice(0, 19).replace('T', ' ') : undefined,
+      signTime: row.sign_time
+        ? new Date(row.sign_time).toISOString().slice(0, 19).replace('T', ' ')
+        : undefined,
       createTime: row.create_time ?? undefined,
       updateTime: row.update_time ?? undefined,
     };

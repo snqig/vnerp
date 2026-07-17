@@ -19,6 +19,9 @@ export interface ReceivableProps {
   amount: number;
   receivedAmount?: number;
   balance?: number;
+  currency?: string;
+  exchangeRate?: number;
+  baseAmount?: number;
   dueDate?: string;
   status?: number;
   remark?: string;
@@ -40,6 +43,9 @@ export class Receivable {
     private _amount: Money,
     private _receivedAmount: Money,
     private _balance: Money,
+    public readonly currency: string,
+    public readonly exchangeRate: number,
+    private _baseAmount: number,
     public readonly dueDate: string,
     private _status: ReceivableStatus,
     public readonly remark: string,
@@ -56,6 +62,9 @@ export class Receivable {
     }
 
     const amount = Money.create(props.amount);
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseAmount = props.baseAmount ?? 0;
     const receivable = new Receivable(
       props.id,
       props.receivableNo || '',
@@ -67,6 +76,9 @@ export class Receivable {
       amount,
       Money.zero(),
       amount,
+      currency,
+      exchangeRate,
+      baseAmount,
       props.dueDate || '',
       ReceivableStatus.unpaid(),
       props.remark || '',
@@ -85,6 +97,9 @@ export class Receivable {
           customerId: receivable.customerId,
           amount: receivable._amount.amount,
           dueDate: receivable.dueDate,
+          currency: receivable.currency,
+          exchangeRate: receivable.exchangeRate,
+          baseAmount: receivable.baseAmount,
         })
       );
     }
@@ -110,6 +125,9 @@ export class Receivable {
     }
 
     const amount = Money.redLetter(props.amount);
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseAmount = props.baseAmount ?? 0;
     const receivable = new Receivable(
       props.id,
       props.receivableNo || '',
@@ -121,6 +139,9 @@ export class Receivable {
       amount,
       Money.zero(),
       amount,
+      currency,
+      exchangeRate,
+      baseAmount,
       props.dueDate || '',
       ReceivableStatus.unpaid(),
       props.remark || '',
@@ -139,6 +160,9 @@ export class Receivable {
           customerId: receivable.customerId,
           amount: receivable._amount.amount,
           dueDate: receivable.dueDate,
+          currency: receivable.currency,
+          exchangeRate: receivable.exchangeRate,
+          baseAmount: receivable.baseAmount,
         })
       );
     }
@@ -147,6 +171,9 @@ export class Receivable {
   }
 
   static reconstitute(props: ReceivableProps): Receivable {
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseAmount = props.baseAmount ?? 0;
     return new Receivable(
       props.id,
       props.receivableNo || '',
@@ -158,6 +185,9 @@ export class Receivable {
       Money.create(props.amount),
       Money.create(props.receivedAmount || 0),
       Money.create(props.balance ?? props.amount),
+      currency,
+      exchangeRate,
+      baseAmount,
       props.dueDate || '',
       ReceivableStatus.from(props.status || 1),
       props.remark || '',
@@ -168,6 +198,10 @@ export class Receivable {
 
   get amount(): Money {
     return this._amount;
+  }
+
+  get baseAmount(): number {
+    return this._baseAmount;
   }
 
   get receivedAmount(): Money {

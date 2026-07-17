@@ -27,6 +27,10 @@ export interface InboundOrderProps {
   items: InboundItemProps[];
   totalAmount?: number;
   totalQuantity?: number;
+  currency?: string;
+  exchangeRate?: number;
+  baseCurrency?: string;
+  baseTotalAmount?: number;
   inspectionStatus?: number;
   financePosted?: boolean;
   createTime?: string;
@@ -52,6 +56,10 @@ export class InboundOrder {
     private _items: InboundItem[],
     private _totalAmount: Money,
     private _totalQuantity: number,
+    public readonly currency: string,
+    public readonly exchangeRate: number,
+    public readonly baseCurrency: string,
+    private _baseTotalAmount: number,
     private _inspectionStatus: number,
     private _financePosted: boolean,
     public readonly createTime: string | undefined,
@@ -72,6 +80,10 @@ export class InboundOrder {
       Money.zero()
     );
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseTotalAmount = props.baseTotalAmount ?? 0;
 
     const order = new InboundOrder(
       props.id,
@@ -89,6 +101,10 @@ export class InboundOrder {
       items,
       totalAmount,
       totalQuantity,
+      currency,
+      exchangeRate,
+      baseCurrency,
+      baseTotalAmount,
       0,
       false,
       props.createTime,
@@ -121,6 +137,10 @@ export class InboundOrder {
       props.totalQuantity !== undefined
         ? props.totalQuantity
         : items.reduce((sum, item) => sum + item.quantity, 0);
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseTotalAmount = props.baseTotalAmount ?? 0;
 
     return new InboundOrder(
       props.id,
@@ -138,6 +158,10 @@ export class InboundOrder {
       items,
       totalAmount,
       totalQuantity,
+      currency,
+      exchangeRate,
+      baseCurrency,
+      baseTotalAmount,
       props.inspectionStatus || 0,
       props.financePosted || false,
       props.createTime,
@@ -159,6 +183,10 @@ export class InboundOrder {
 
   get totalQuantity(): number {
     return this._totalQuantity;
+  }
+
+  get baseTotalAmount(): number {
+    return this._baseTotalAmount;
   }
 
   get inspectionStatus(): number {

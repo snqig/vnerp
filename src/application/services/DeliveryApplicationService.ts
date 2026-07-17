@@ -1,6 +1,11 @@
 import { IDeliveryRepository } from '@/domain/sales/repositories/IDeliveryRepository';
+import { ISalesOrderRepository } from '@/domain/sales/repositories/ISalesOrderRepository';
 import { Delivery, DeliveryProps } from '@/domain/sales/aggregates/Delivery';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
+import { CurrencyApplicationService } from './CurrencyApplicationService';
+import { CurrencySnapshot } from '@/domain/shared/value-objects/CurrencySnapshot';
+import { Money } from '@/domain/shared/value-objects/Money';
+import { getSystemConfig } from '@/lib/system-config';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
 import { InventoryValidationService } from '@/application/services/InventoryValidationService';
@@ -14,7 +19,11 @@ export interface ShipDeliveryInput {
 }
 
 export class DeliveryApplicationService {
-  constructor(private readonly deliveryRepo: IDeliveryRepository) {}
+  constructor(
+    private readonly deliveryRepo: IDeliveryRepository,
+    private readonly orderRepo: ISalesOrderRepository,
+    private readonly currencyService: CurrencyApplicationService
+  ) {}
 
   async getDeliveryById(id: number): Promise<Delivery> {
     const delivery = await this.deliveryRepo.findById(id);
@@ -23,7 +32,48 @@ export class DeliveryApplicationService {
   }
 
   async createDelivery(props: DeliveryProps): Promise<{ id: number; deliveryNo: string }> {
-    const delivery = Delivery.create(props);
+    let effectiveProps = { ...props };
+
+    const order = await this.orderRepo.findById(props.orderId);
+    if (order) {
+      if (!effectiveProps.currency) effectiveProps.currency = order.currency;
+      if (!effectiveProps.exchangeRate) effectiveProps.exchangeRate = order.exchangeRate;
+      if (!effectiveProps.baseCurrency) effectiveProps.baseCurrency = order.baseCurrency;
+    }
+
+    const baseCurrency =
+      effectiveProps.baseCurrency || (await getSystemConfig('finance.base_currency', 'CNY'));
+    const currency = effectiveProps.currency || 'CNY';
+    let exchangeRate = effectiveProps.exchangeRate || 1.0;
+    if (currency !== baseCurrency) {
+      exchangeRate = await this.currencyService.getLatestRate(currency, baseCurrency);
+    }
+
+    const snapshot = CurrencySnapshot.create(currency, exchangeRate, baseCurrency);
+    const decimalPlaces = 2;
+
+    effectiveProps = {
+      ...effectiveProps,
+      exchangeRate,
+      baseCurrency,
+      lines: effectiveProps.lines.map((line) => {
+        const originalAmount = (line.quantity || 0) * (line.unitPrice || 0);
+        return {
+          ...line,
+          baseUnitPrice: snapshot.convert(
+            Money.create(line.unitPrice || 0, currency),
+            decimalPlaces
+          ).amount,
+          baseAmount: snapshot.convert(Money.create(originalAmount, currency), decimalPlaces)
+            .amount,
+        };
+      }),
+    };
+
+    const baseTotalAmount = effectiveProps.lines.reduce((sum, l) => sum + (l.baseAmount || 0), 0);
+    effectiveProps.baseTotalAmount = Math.round(baseTotalAmount * 100) / 100;
+
+    const delivery = Delivery.create(effectiveProps);
     const id = await this.deliveryRepo.save(delivery);
     await this.persistAndPublishEvents('Delivery', id, delivery);
     return { id, deliveryNo: delivery.deliveryNo };

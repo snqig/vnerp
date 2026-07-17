@@ -5,11 +5,16 @@ import { Receivable, ReceivableProps } from '@/domain/finance/aggregates/Receiva
 import { Payable, PayableProps } from '@/domain/finance/aggregates/Payable';
 import { Voucher, VoucherProps } from '@/domain/finance/aggregates/Voucher';
 import { DomainError, DomainEvent, NotFoundError } from '@/domain/shared/DomainTypes';
+import { CurrencyApplicationService } from './CurrencyApplicationService';
+import { CurrencySnapshot } from '@/domain/shared/value-objects/CurrencySnapshot';
+import { Money } from '@/domain/shared/value-objects/Money';
+import { getSystemConfig } from '@/lib/system-config';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction, query, queryPaginated, PaginatedResult, type SqlValue } from '@/lib/db';
 import { MysqlReceivableRepository } from '@/infrastructure/repositories/MysqlReceivableRepository';
 import { MysqlPayableRepository } from '@/infrastructure/repositories/MysqlPayableRepository';
 import { MysqlVoucherRepository } from '@/infrastructure/repositories/MysqlVoucherRepository';
+import { MysqlCurrencyRepository } from '@/infrastructure/repositories/MysqlCurrencyRepository';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
 /** 应收款列表行类型 */
@@ -126,14 +131,16 @@ export class FinanceApplicationService {
   constructor(
     private readonly receivableRepo: IReceivableRepository,
     private readonly payableRepo: IPayableRepository,
-    private readonly voucherRepo: IVoucherRepository
+    private readonly voucherRepo: IVoucherRepository,
+    private readonly currencyService: CurrencyApplicationService
   ) {}
 
   static create(): FinanceApplicationService {
     return new FinanceApplicationService(
       new MysqlReceivableRepository(),
       new MysqlPayableRepository(),
-      new MysqlVoucherRepository()
+      new MysqlVoucherRepository(),
+      new CurrencyApplicationService(new MysqlCurrencyRepository())
     );
   }
 
@@ -294,7 +301,27 @@ export class FinanceApplicationService {
   }
 
   async createReceivable(props: ReceivableProps): Promise<{ id: number; receivableNo: string }> {
-    const receivable = Receivable.create(props);
+    const baseCurrency = await getSystemConfig('finance.base_currency', 'CNY');
+    const currency = props.currency || 'CNY';
+    let exchangeRate = props.exchangeRate || 1.0;
+    if (currency !== baseCurrency) {
+      exchangeRate = await this.currencyService.getLatestRate(currency, baseCurrency);
+    }
+    const snapshot = CurrencySnapshot.create(currency, exchangeRate, baseCurrency);
+    const decimalPlaces = 2;
+
+    const effectiveProps: ReceivableProps = {
+      ...props,
+      currency,
+      exchangeRate,
+      baseAmount:
+        props.baseAmount ??
+        Math.round(
+          snapshot.convert(Money.create(props.amount, currency), decimalPlaces).amount * 100
+        ) / 100,
+    };
+
+    const receivable = Receivable.create(effectiveProps);
     const id = await this.receivableRepo.save(receivable);
     await this.persistAndPublishEvents('Receivable', id, receivable);
     return { id, receivableNo: receivable.receivableNo };
@@ -385,7 +412,27 @@ export class FinanceApplicationService {
   }
 
   async createPayable(props: PayableProps): Promise<{ id: number; payableNo: string }> {
-    const payable = Payable.create(props);
+    const baseCurrency = await getSystemConfig('finance.base_currency', 'CNY');
+    const currency = props.currency || 'CNY';
+    let exchangeRate = props.exchangeRate || 1.0;
+    if (currency !== baseCurrency) {
+      exchangeRate = await this.currencyService.getLatestRate(currency, baseCurrency);
+    }
+    const snapshot = CurrencySnapshot.create(currency, exchangeRate, baseCurrency);
+    const decimalPlaces = 2;
+
+    const effectiveProps: PayableProps = {
+      ...props,
+      currency,
+      exchangeRate,
+      baseAmount:
+        props.baseAmount ??
+        Math.round(
+          snapshot.convert(Money.create(props.amount, currency), decimalPlaces).amount * 100
+        ) / 100,
+    };
+
+    const payable = Payable.create(effectiveProps);
     const id = await this.payableRepo.save(payable);
     await this.persistAndPublishEvents('Payable', id, payable);
     return { id, payableNo: payable.payableNo };

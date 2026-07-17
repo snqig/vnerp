@@ -9,10 +9,17 @@ import {
 import { withPermission } from '@/lib/api-permissions';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { DeliveryApplicationService } from '@/application/services/DeliveryApplicationService';
+import { CurrencyApplicationService } from '@/application/services/CurrencyApplicationService';
 import { MysqlDeliveryRepository } from '@/infrastructure/repositories/MysqlDeliveryRepository';
+import { MysqlCurrencyRepository } from '@/infrastructure/repositories/MysqlCurrencyRepository';
+import { RepositoryRegistry } from '@/infrastructure/RepositoryRegistry';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 
-const deliveryService = new DeliveryApplicationService(new MysqlDeliveryRepository());
+const deliveryService = new DeliveryApplicationService(
+  new MysqlDeliveryRepository(),
+  RepositoryRegistry.getSalesOrderRepository(),
+  new CurrencyApplicationService(new MysqlCurrencyRepository())
+);
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);

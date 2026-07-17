@@ -18,6 +18,9 @@ export interface PayableProps {
   amount: number;
   paidAmount?: number;
   balance?: number;
+  currency?: string;
+  exchangeRate?: number;
+  baseAmount?: number;
   dueDate?: string;
   status?: number;
   remark?: string;
@@ -39,6 +42,9 @@ export class Payable {
     private _amount: Money,
     private _paidAmount: Money,
     private _balance: Money,
+    public readonly currency: string,
+    public readonly exchangeRate: number,
+    private _baseAmount: number,
     public readonly dueDate: string,
     private _status: PayableStatus,
     public readonly remark: string,
@@ -55,6 +61,9 @@ export class Payable {
     }
 
     const amount = Money.create(props.amount);
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseAmount = props.baseAmount ?? 0;
     const payable = new Payable(
       props.id,
       props.payableNo || '',
@@ -66,6 +75,9 @@ export class Payable {
       amount,
       Money.zero(),
       amount,
+      currency,
+      exchangeRate,
+      baseAmount,
       props.dueDate || '',
       PayableStatus.unpaid(),
       props.remark || '',
@@ -84,6 +96,9 @@ export class Payable {
           supplierId: payable.supplierId,
           amount: payable._amount.amount,
           dueDate: payable.dueDate,
+          currency: payable.currency,
+          exchangeRate: payable.exchangeRate,
+          baseAmount: payable.baseAmount,
         })
       );
     }
@@ -92,6 +107,9 @@ export class Payable {
   }
 
   static reconstitute(props: PayableProps): Payable {
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseAmount = props.baseAmount ?? 0;
     return new Payable(
       props.id,
       props.payableNo || '',
@@ -103,6 +121,9 @@ export class Payable {
       Money.create(props.amount),
       Money.create(props.paidAmount || 0),
       Money.create(props.balance ?? props.amount),
+      currency,
+      exchangeRate,
+      baseAmount,
       props.dueDate || '',
       PayableStatus.from(props.status || 1),
       props.remark || '',
@@ -113,6 +134,10 @@ export class Payable {
 
   get amount(): Money {
     return this._amount;
+  }
+
+  get baseAmount(): number {
+    return this._baseAmount;
   }
 
   get paidAmount(): Money {

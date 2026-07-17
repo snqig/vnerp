@@ -1,6 +1,7 @@
 import { IReturnOrderRepository } from '@/domain/sales/repositories/IReturnOrderRepository';
 import { IInboundOrderRepository } from '@/domain/warehouse/repositories/IInboundOrderRepository';
 import { IReceivableRepository } from '@/domain/finance/repositories/IReceivableRepository';
+import { ISalesOrderRepository } from '@/domain/sales/repositories/ISalesOrderRepository';
 import {
   ReturnOrder,
   ReturnOrderProps,
@@ -11,6 +12,10 @@ import { InboundOrder, InboundOrderProps } from '@/domain/warehouse/aggregates/I
 import { InboundItemProps } from '@/domain/warehouse/entities/InboundItem';
 import { Receivable, ReceivableProps } from '@/domain/finance/aggregates/Receivable';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
+import { CurrencyApplicationService } from './CurrencyApplicationService';
+import { CurrencySnapshot } from '@/domain/shared/value-objects/CurrencySnapshot';
+import { Money } from '@/domain/shared/value-objects/Money';
+import { getSystemConfig } from '@/lib/system-config';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction, query } from '@/lib/db';
 
@@ -23,7 +28,9 @@ export class ReturnOrderApplicationService {
   constructor(
     private readonly returnRepo: IReturnOrderRepository,
     private readonly inboundRepo: IInboundOrderRepository,
-    private readonly receivableRepo: IReceivableRepository
+    private readonly receivableRepo: IReceivableRepository,
+    private readonly orderRepo: ISalesOrderRepository,
+    private readonly currencyService: CurrencyApplicationService
   ) {}
 
   async getReturnById(id: number): Promise<ReturnOrder> {
@@ -33,7 +40,50 @@ export class ReturnOrderApplicationService {
   }
 
   async createReturn(props: ReturnOrderProps): Promise<{ id: number; returnNo: string }> {
-    const ret = ReturnOrder.create(props);
+    let effectiveProps = { ...props };
+
+    if (effectiveProps.orderId) {
+      const order = await this.orderRepo.findById(effectiveProps.orderId);
+      if (order) {
+        if (!effectiveProps.currency) effectiveProps.currency = order.currency;
+        if (!effectiveProps.exchangeRate) effectiveProps.exchangeRate = order.exchangeRate;
+        if (!effectiveProps.baseCurrency) effectiveProps.baseCurrency = order.baseCurrency;
+      }
+    }
+
+    const baseCurrency =
+      effectiveProps.baseCurrency || (await getSystemConfig('finance.base_currency', 'CNY'));
+    const currency = effectiveProps.currency || 'CNY';
+    let exchangeRate = effectiveProps.exchangeRate || 1.0;
+    if (currency !== baseCurrency) {
+      exchangeRate = await this.currencyService.getLatestRate(currency, baseCurrency);
+    }
+
+    const snapshot = CurrencySnapshot.create(currency, exchangeRate, baseCurrency);
+    const decimalPlaces = 2;
+
+    effectiveProps = {
+      ...effectiveProps,
+      exchangeRate,
+      baseCurrency,
+      lines: effectiveProps.lines.map((line) => {
+        const originalAmount = (line.quantity || 0) * (line.unitPrice || 0);
+        return {
+          ...line,
+          baseUnitPrice: snapshot.convert(
+            Money.create(line.unitPrice || 0, currency),
+            decimalPlaces
+          ).amount,
+          baseAmount: snapshot.convert(Money.create(originalAmount, currency), decimalPlaces)
+            .amount,
+        };
+      }),
+    };
+
+    const baseTotalAmount = effectiveProps.lines.reduce((sum, l) => sum + (l.baseAmount || 0), 0);
+    effectiveProps.baseTotalAmount = Math.round(baseTotalAmount * 100) / 100;
+
+    const ret = ReturnOrder.create(effectiveProps);
     const id = await this.returnRepo.save(ret);
     await this.persistAndPublishEvents('ReturnOrder', id, ret);
     return { id, returnNo: ret.returnNo };
@@ -168,10 +218,9 @@ export class ReturnOrderApplicationService {
   }
 
   private async createInboundForReturn(ret: ReturnOrder): Promise<InboundResult> {
-    const warehouseRows = await query(
-      'SELECT warehouse_name FROM inv_warehouse WHERE id = ?',
-      [ret.warehouseId]
-    );
+    const warehouseRows = await query('SELECT warehouse_name FROM inv_warehouse WHERE id = ?', [
+      ret.warehouseId,
+    ]);
     const warehouseName = warehouseRows?.[0]?.warehouse_name || '';
 
     const items: InboundItemProps[] = ret.lines.map((line) => ({

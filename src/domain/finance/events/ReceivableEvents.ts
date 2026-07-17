@@ -13,6 +13,9 @@ export class ReceivableCreatedEvent implements DomainEvent {
       customerId: number;
       amount: number;
       dueDate?: string;
+      currency?: string;
+      exchangeRate?: number;
+      baseAmount?: number;
     }
   ) {}
 }

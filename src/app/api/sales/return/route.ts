@@ -10,15 +10,19 @@ import { withPermission } from '@/lib/api-permissions';
 import { query, transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { ReturnOrderApplicationService } from '@/application/services/ReturnOrderApplicationService';
+import { CurrencyApplicationService } from '@/application/services/CurrencyApplicationService';
 import { MysqlReturnOrderRepository } from '@/infrastructure/repositories/MysqlReturnOrderRepository';
 import { MysqlReceivableRepository } from '@/infrastructure/repositories/MysqlReceivableRepository';
+import { MysqlCurrencyRepository } from '@/infrastructure/repositories/MysqlCurrencyRepository';
 import { RepositoryRegistry } from '@/infrastructure/RepositoryRegistry';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 
 const returnService = new ReturnOrderApplicationService(
   new MysqlReturnOrderRepository(),
   RepositoryRegistry.getInboundOrderRepository(),
-  new MysqlReceivableRepository()
+  new MysqlReceivableRepository(),
+  RepositoryRegistry.getSalesOrderRepository(),
+  new CurrencyApplicationService(new MysqlCurrencyRepository())
 );
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {

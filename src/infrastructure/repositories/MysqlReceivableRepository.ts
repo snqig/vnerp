@@ -11,7 +11,10 @@ interface FinReceivableRow {
   source_type: number | null;
   source_no: string | null;
   customer_id: number;
+  currency: string | null;
+  exchange_rate: number | string | null;
   amount: number | string;
+  base_amount: number | string;
   received_amount: number | string | null;
   balance: number | string | null;
   due_date: string | null;
@@ -22,8 +25,8 @@ interface FinReceivableRow {
 }
 
 const COLUMNS = `id, receivable_no, source_type, source_no, customer_id,
-                 amount, received_amount, balance, due_date, status, remark,
-                 create_time, update_time`;
+                 currency, exchange_rate, amount, base_amount, received_amount, balance,
+                 due_date, status, remark, create_time, update_time`;
 
 export class MysqlReceivableRepository implements IReceivableRepository {
   async findById(id: number): Promise<Receivable | null> {
@@ -78,14 +81,18 @@ export class MysqlReceivableRepository implements IReceivableRepository {
       const [result] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO fin_receivable
          (receivable_no, source_type, source_no, customer_id,
-          amount, received_amount, balance, due_date, status, remark)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          currency, exchange_rate, amount, base_amount, received_amount, balance,
+          due_date, status, remark)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           receivableNo,
           receivable.sourceType,
           receivable.sourceNo,
           receivable.customerId,
+          receivable.currency,
+          receivable.exchangeRate,
           receivable.amount.amount,
+          receivable.baseAmount,
           receivable.receivedAmount.amount,
           receivable.balance.amount,
           receivable.dueDate || null,
@@ -137,7 +144,10 @@ export class MysqlReceivableRepository implements IReceivableRepository {
       sourceType: row.source_type ?? undefined,
       sourceNo: row.source_no || '',
       customerId: row.customer_id,
+      currency: row.currency || 'CNY',
+      exchangeRate: Number(row.exchange_rate) || 1.0,
       amount: Number(row.amount),
+      baseAmount: Number(row.base_amount) || 0,
       receivedAmount: Number(row.received_amount || 0),
       balance: row.balance !== null ? Number(row.balance) : undefined,
       dueDate: row.due_date || '',

@@ -1,7 +1,12 @@
 import { IReconciliationRepository } from '@/domain/sales/repositories/IReconciliationRepository';
 import { IReceivableRepository } from '@/domain/finance/repositories/IReceivableRepository';
+import { IDeliveryRepository } from '@/domain/sales/repositories/IDeliveryRepository';
 import { Reconciliation, ReconciliationProps } from '@/domain/sales/aggregates/Reconciliation';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
+import { CurrencyApplicationService } from './CurrencyApplicationService';
+import { CurrencySnapshot } from '@/domain/shared/value-objects/CurrencySnapshot';
+import { Money } from '@/domain/shared/value-objects/Money';
+import { getSystemConfig } from '@/lib/system-config';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
 
@@ -17,7 +22,9 @@ export interface WriteOffInput {
 export class ReconciliationApplicationService {
   constructor(
     private readonly reconciliationRepo: IReconciliationRepository,
-    private readonly receivableRepo: IReceivableRepository
+    private readonly receivableRepo: IReceivableRepository,
+    private readonly deliveryRepo: IDeliveryRepository,
+    private readonly currencyService: CurrencyApplicationService
   ) {}
 
   async getReconciliationById(id: number): Promise<Reconciliation> {
@@ -29,7 +36,86 @@ export class ReconciliationApplicationService {
   async createReconciliation(
     props: ReconciliationProps
   ): Promise<{ id: number; reconciliationNo: string }> {
-    const recon = Reconciliation.create(props);
+    if (props.lines && props.lines.length > 0) {
+      const currencies = new Set<string>();
+      for (const line of props.lines) {
+        if (line.sourceType === 1) {
+          const delivery = await this.deliveryRepo.findById(line.sourceId);
+          if (delivery) {
+            currencies.add(delivery.currency);
+          }
+        }
+      }
+      if (currencies.size > 1) {
+        throw new DomainError('对账单中包含了多种币种的发货单，无法创建统一对账单');
+      }
+    }
+
+    let effectiveProps = { ...props };
+
+    if (!effectiveProps.currency && props.lines && props.lines.length > 0) {
+      const firstLine = props.lines.find((l) => l.sourceType === 1);
+      if (firstLine) {
+        const delivery = await this.deliveryRepo.findById(firstLine.sourceId);
+        if (delivery) {
+          effectiveProps.currency = delivery.currency;
+          effectiveProps.exchangeRate = delivery.exchangeRate;
+          effectiveProps.baseCurrency = delivery.baseCurrency;
+        }
+      }
+    }
+
+    const baseCurrency =
+      effectiveProps.baseCurrency || (await getSystemConfig('finance.base_currency', 'CNY'));
+    const currency = effectiveProps.currency || 'CNY';
+    let exchangeRate = effectiveProps.exchangeRate || 1.0;
+    if (currency !== baseCurrency) {
+      exchangeRate = await this.currencyService.getLatestRate(currency, baseCurrency);
+    }
+
+    const snapshot = CurrencySnapshot.create(currency, exchangeRate, baseCurrency);
+    const decimalPlaces = 2;
+
+    effectiveProps = {
+      ...effectiveProps,
+      exchangeRate,
+      baseCurrency,
+      baseDeliveryAmount:
+        effectiveProps.baseDeliveryAmount ??
+        Math.round(
+          snapshot.convert(
+            Money.create(effectiveProps.deliveryAmount || 0, currency),
+            decimalPlaces
+          ).amount * 100
+        ) / 100,
+      baseReturnAmount:
+        effectiveProps.baseReturnAmount ??
+        Math.round(
+          snapshot.convert(Money.create(effectiveProps.returnAmount || 0, currency), decimalPlaces)
+            .amount * 100
+        ) / 100,
+      baseNetAmount:
+        effectiveProps.baseNetAmount ??
+        Math.round(
+          snapshot.convert(
+            Money.create(
+              (effectiveProps.deliveryAmount || 0) - (effectiveProps.returnAmount || 0),
+              currency
+            ),
+            decimalPlaces
+          ).amount * 100
+        ) / 100,
+      baseDiscountAmount:
+        effectiveProps.baseDiscountAmount ??
+        Math.round(
+          snapshot.convert(
+            Money.create(effectiveProps.discountAmount || 0, currency),
+            decimalPlaces
+          ).amount * 100
+        ) / 100,
+    };
+
+    const recon = Reconciliation.create(effectiveProps);
     const id = await this.reconciliationRepo.save(recon);
     await this.persistAndPublishEvents('Reconciliation', id, recon);
     return { id, reconciliationNo: recon.reconciliationNo };

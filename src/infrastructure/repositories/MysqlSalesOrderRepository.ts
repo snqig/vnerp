@@ -15,9 +15,14 @@ interface SalOrderRow {
   customer_name: string;
   order_date: string | null;
   delivery_date: string | null;
+  currency: string | null;
+  exchange_rate: number | string | null;
   total_amount: number | string;
   total_qty: number | string;
   shipped_qty: number | string;
+  base_total_amount: number | string;
+  base_tax_amount: number | string;
+  base_grand_total: number | string;
   status: number;
   warehouse_id: number | null;
   remark: string | null;
@@ -42,6 +47,10 @@ interface SalOrderDetailRow {
   shipped_qty: number | string;
   unit_price: number | string;
   amount: number | string;
+  base_unit_price: number | string;
+  base_amount: number | string;
+  base_tax_amount: number | string;
+  base_line_total: number | string;
   remark: string | null;
   create_time: string | null;
   update_time: string | null;
@@ -50,7 +59,10 @@ interface SalOrderDetailRow {
 
 export class MysqlSalesOrderRepository implements ISalesOrderRepository {
   async findById(id: number): Promise<SalesOrder | null> {
-    const orders = await query<SalOrderRow>('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [id]);
+    const orders = await query<SalOrderRow>(
+      'SELECT * FROM sal_order WHERE id = ? AND deleted = 0',
+      [id]
+    );
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
@@ -126,9 +138,7 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
     }
 
     return {
-      data: result.data.map((o) =>
-        SalesOrder.reconstitute(this.mapToProps(o, o._details || []))
-      ),
+      data: result.data.map((o) => SalesOrder.reconstitute(this.mapToProps(o, o._details || []))),
       pagination: result.pagination,
     };
   }
@@ -139,16 +149,23 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
     return await transaction(async (conn) => {
       const [orderResult] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO sal_order (order_no, customer_id, customer_name, order_date, delivery_date,
-          total_amount, total_qty, shipped_qty, status, warehouse_id, remark, create_by, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, NOW())`,
+          currency, exchange_rate, total_amount, total_qty, shipped_qty,
+          base_total_amount, base_tax_amount, base_grand_total,
+          status, warehouse_id, remark, create_by, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           orderNo,
           order.customerId,
           order.customerName,
           order.orderDate,
           order.deliveryDate || null,
+          order.currency,
+          order.exchangeRate,
           order.totalAmount,
           order.totalQuantity,
+          order.baseTotalAmount,
+          order.baseTaxAmount,
+          order.baseGrandTotal,
           order.status.toDbCode(),
           order.warehouseId,
           order.remark,
@@ -161,8 +178,9 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
       for (const line of order.lines) {
         await conn.execute(
           `INSERT INTO sal_order_detail (order_id, material_id, material_code, material_name,
-            specification, unit, quantity, shipped_qty, unit_price, amount, remark, create_time)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, NOW())`,
+            specification, unit, quantity, shipped_qty, unit_price, amount,
+            base_unit_price, base_amount, base_tax_amount, base_line_total, remark, create_time)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, NOW())`,
           [
             orderId,
             line.materialId,
@@ -173,6 +191,10 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
             line.orderQty,
             line.unitPrice,
             line.amount,
+            line.baseUnitPrice,
+            line.baseAmount,
+            line.baseTaxAmount,
+            line.baseLineTotal,
             line.remark || null,
           ]
         );
@@ -219,6 +241,12 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
       customerName: order.customer_name || '',
       orderDate: order.order_date || '',
       deliveryDate: order.delivery_date || '',
+      currency: order.currency || 'CNY',
+      exchangeRate: Number(order.exchange_rate) || 1.0,
+      baseCurrency: 'CNY',
+      baseTotalAmount: Number(order.base_total_amount) || 0,
+      baseTaxAmount: Number(order.base_tax_amount) || 0,
+      baseGrandTotal: Number(order.base_grand_total) || 0,
       totalAmount: Number(order.total_amount),
       totalQuantity: Number(order.total_qty),
       warehouseId: order.warehouse_id || 1,
@@ -239,6 +267,10 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
         shippedQty: Number(d.shipped_qty) || 0,
         unitPrice: Number(d.unit_price) || 0,
         amount: Number(d.amount) || 0,
+        baseUnitPrice: Number(d.base_unit_price) || 0,
+        baseAmount: Number(d.base_amount) || 0,
+        baseTaxAmount: Number(d.base_tax_amount) || 0,
+        baseLineTotal: Number(d.base_line_total) || 0,
         remark: d.remark ?? undefined,
       })),
       createTime: order.create_time ?? undefined,

@@ -9,14 +9,19 @@ import {
 import { withPermission } from '@/lib/api-permissions';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { ReconciliationApplicationService } from '@/application/services/ReconciliationApplicationService';
+import { CurrencyApplicationService } from '@/application/services/CurrencyApplicationService';
 import { MysqlReconciliationRepository } from '@/infrastructure/repositories/MysqlReconciliationRepository';
 import { MysqlReceivableRepository } from '@/infrastructure/repositories/MysqlReceivableRepository';
+import { MysqlDeliveryRepository } from '@/infrastructure/repositories/MysqlDeliveryRepository';
+import { MysqlCurrencyRepository } from '@/infrastructure/repositories/MysqlCurrencyRepository';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 import type { ReconciliationLineProps } from '@/domain/sales/aggregates/Reconciliation';
 
 const reconciliationService = new ReconciliationApplicationService(
   new MysqlReconciliationRepository(),
-  new MysqlReceivableRepository()
+  new MysqlReceivableRepository(),
+  new MysqlDeliveryRepository(),
+  new CurrencyApplicationService(new MysqlCurrencyRepository())
 );
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
