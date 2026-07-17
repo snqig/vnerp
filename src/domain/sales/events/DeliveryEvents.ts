@@ -10,6 +10,10 @@ export class DeliveryCreatedEvent implements DomainEvent {
       orderId: number;
       customerId: number;
       warehouseId: number;
+      currency?: string;
+      exchangeRate?: number;
+      baseCurrency?: string;
+      baseTotalAmount?: number;
       lines: Array<{
         materialId: number;
         materialCode: string;

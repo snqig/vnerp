@@ -21,6 +21,10 @@ export interface DeliveryProps {
   logisticsCompany?: string;
   trackingNo?: string;
   totalAmount?: number;
+  currency?: string;
+  exchangeRate?: number;
+  baseCurrency?: string;
+  baseTotalAmount?: number;
   lines: DeliveryLineProps[];
   remark?: string;
   createBy?: number;
@@ -48,6 +52,10 @@ export class Delivery {
     private _logisticsCompany: string,
     private _trackingNo: string,
     private _totalAmount: number,
+    public readonly currency: string,
+    public readonly exchangeRate: number,
+    public readonly baseCurrency: string,
+    private _baseTotalAmount: number,
     private _lines: DeliveryLine[],
     public readonly remark: string,
     public readonly createBy: number | undefined,
@@ -77,6 +85,10 @@ export class Delivery {
       DeliveryLine.create({ ...line, lineNo: line.lineNo || index + 1 })
     );
     const totalAmount = lines.reduce((sum, l) => sum + l.amount, 0);
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseTotalAmount = props.baseTotalAmount ?? 0;
 
     const delivery = new Delivery(
       props.id,
@@ -91,6 +103,10 @@ export class Delivery {
       props.logisticsCompany || '',
       props.trackingNo || '',
       Math.round(totalAmount * 100) / 100,
+      currency,
+      exchangeRate,
+      baseCurrency,
+      baseTotalAmount,
       lines,
       props.remark || '',
       props.createBy,
@@ -110,6 +126,10 @@ export class Delivery {
           orderId: delivery.orderId,
           customerId: delivery.customerId,
           warehouseId: delivery.warehouseId,
+          currency: delivery.currency,
+          exchangeRate: delivery.exchangeRate,
+          baseCurrency: delivery.baseCurrency,
+          baseTotalAmount: delivery.baseTotalAmount,
           lines: lines.map((l) => ({
             materialId: l.materialId,
             materialCode: l.materialCode,
@@ -127,6 +147,10 @@ export class Delivery {
 
   static reconstitute(props: DeliveryProps): Delivery {
     const lines = props.lines.map((line) => DeliveryLine.reconstitute(line));
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseTotalAmount = props.baseTotalAmount ?? 0;
     return new Delivery(
       props.id,
       props.deliveryNo || '',
@@ -140,6 +164,10 @@ export class Delivery {
       props.logisticsCompany || '',
       props.trackingNo || '',
       props.totalAmount || 0,
+      currency,
+      exchangeRate,
+      baseCurrency,
+      baseTotalAmount,
       lines,
       props.remark || '',
       props.createBy,
@@ -163,6 +191,9 @@ export class Delivery {
   }
   get totalAmount(): number {
     return this._totalAmount;
+  }
+  get baseTotalAmount(): number {
+    return this._baseTotalAmount;
   }
   get shipBy(): number | undefined {
     return this._shipBy;
