@@ -28,6 +28,9 @@ interface ReceivableRow {
   status: number;
   receivable_date: Date;
   due_date: Date;
+  currency: string;
+  exchange_rate: number;
+  base_amount: number;
   [key: string]: unknown;
 }
 
@@ -42,6 +45,9 @@ interface PayableRow {
   status: number;
   payable_date: Date;
   due_date: Date;
+  currency: string;
+  exchange_rate: number;
+  base_amount: number;
   [key: string]: unknown;
 }
 
@@ -66,6 +72,8 @@ export interface RecordReceiptInput {
   handlerId?: number;
   createBy?: number;
   remark?: string;
+  currency?: string;
+  exchangeRate?: number;
 }
 
 export interface RecordPaymentInput {
@@ -78,6 +86,8 @@ export interface RecordPaymentInput {
   handlerId?: number;
   createBy?: number;
   remark?: string;
+  currency?: string;
+  exchangeRate?: number;
 }
 
 export interface ReceivableListQuery {
@@ -337,8 +347,9 @@ export class FinanceApplicationService {
       await conn.execute(
         `INSERT INTO fin_receipt_record
          (receipt_no, receivable_id, customer_id, amount, receipt_date,
-          receipt_method, bank_account, reference_no, handler_id, remark, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          receipt_method, bank_account, reference_no, handler_id, remark,
+          currency, exchange_rate, base_amount, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           receiptNo,
           input.receivableId,
@@ -350,6 +361,10 @@ export class FinanceApplicationService {
           input.referenceNo || null,
           input.createBy ?? input.handlerId ?? null,
           input.remark || null,
+          input.currency || receivable.currency || 'CNY',
+          input.exchangeRate || receivable.exchangeRate || 1.0,
+          Math.round(input.amount * (input.exchangeRate || receivable.exchangeRate || 1.0) * 100) /
+            100,
         ]
       );
 
@@ -448,8 +463,9 @@ export class FinanceApplicationService {
       await conn.execute(
         `INSERT INTO fin_payment_record
          (payment_no, payable_id, supplier_id, amount, payment_date,
-          payment_method, bank_account, reference_no, handler_id, remark, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          payment_method, bank_account, reference_no, handler_id, remark,
+          currency, exchange_rate, base_amount, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           paymentNo,
           input.payableId,
@@ -461,6 +477,10 @@ export class FinanceApplicationService {
           input.referenceNo || null,
           input.createBy ?? input.handlerId ?? null,
           input.remark || null,
+          input.currency || payable.currency || 'CNY',
+          input.exchangeRate || payable.exchangeRate || 1.0,
+          Math.round(input.amount * (input.exchangeRate || payable.exchangeRate || 1.0) * 100) /
+            100,
         ]
       );
 

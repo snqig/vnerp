@@ -66,6 +66,8 @@ export function usePurchaseOrderSearch(setFormData: Dispatch<SetStateAction<Inbo
           ? String(firstLine.order_qty - (firstLine.received_qty || 0))
           : prev.quantity,
         unit: firstLine.unit || prev.unit,
+        currency: po.currency || prev.currency,
+        baseCurrency: po.base_currency || prev.baseCurrency,
       }));
       setPoDropdownVisible(false);
       setPoSearchResults([]);

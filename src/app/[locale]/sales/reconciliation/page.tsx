@@ -32,6 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { MoneyDisplay } from '@/components/ui/money-display';
 import { Plus, Search, RefreshCw, Calculator, Eye, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -49,6 +50,9 @@ interface Reconciliation {
   received_amount: number;
   balance_amount: number;
   status: number;
+  currency?: string;
+  source_currency?: string;
+  has_mismatch?: boolean;
   remark: string;
   create_time: string;
 }
@@ -303,7 +307,7 @@ export default function ReconciliationPage() {
                 <CardContent className="pt-4">
                   <div className="text-sm text-gray-500">{t('totalDelivery')}</div>
                   <div className="text-2xl font-bold text-blue-600">
-                    ¥{summary.totalDelivery.toFixed(2)}
+                    <MoneyDisplay amount={summary.totalDelivery} currency="CNY" />
                   </div>
                 </CardContent>
               </Card>
@@ -311,7 +315,7 @@ export default function ReconciliationPage() {
                 <CardContent className="pt-4">
                   <div className="text-sm text-gray-500">{t('totalReturn')}</div>
                   <div className="text-2xl font-bold text-red-600">
-                    ¥{summary.totalReturn.toFixed(2)}
+                    <MoneyDisplay amount={summary.totalReturn} currency="CNY" />
                   </div>
                 </CardContent>
               </Card>
@@ -319,7 +323,7 @@ export default function ReconciliationPage() {
                 <CardContent className="pt-4">
                   <div className="text-sm text-gray-500">{t('netAmount')}</div>
                   <div className="text-2xl font-bold text-green-600">
-                    ¥{summary.totalNet.toFixed(2)}
+                    <MoneyDisplay amount={summary.totalNet} currency="CNY" />
                   </div>
                 </CardContent>
               </Card>
@@ -327,7 +331,7 @@ export default function ReconciliationPage() {
                 <CardContent className="pt-4">
                   <div className="text-sm text-gray-500">{t('balanceAmount')}</div>
                   <div className="text-2xl font-bold text-orange-600">
-                    ¥{summary.totalBalance.toFixed(2)}
+                    <MoneyDisplay amount={summary.totalBalance} currency="CNY" />
                   </div>
                 </CardContent>
               </Card>
@@ -349,6 +353,7 @@ export default function ReconciliationPage() {
                     <TableHead>{t('netAmount')}</TableHead>
                     <TableHead>{t('receivedAmount')}</TableHead>
                     <TableHead>{tc('balance')}</TableHead>
+                    <TableHead>{tc('currency')}</TableHead>
                     <TableHead>{tc('status')}</TableHead>
                     <TableHead className="text-right">{tc('actions')}</TableHead>
                   </TableRow>
@@ -358,23 +363,46 @@ export default function ReconciliationPage() {
                     <TableRow key={r.id}>
                       <TableCell className="font-medium">{r.reconciliation_no}</TableCell>
                       <TableCell>{r.customer_name || '-'}</TableCell>
+                      {r.has_mismatch && (
+                        <TableCell colSpan={1} className="text-red-600 text-xs">
+                          {t('currencyMismatch')}
+                        </TableCell>
+                      )}
                       <TableCell className="text-xs">
                         {r.period_start} ~ {r.period_end}
                       </TableCell>
                       <TableCell className="text-blue-600">
-                        ¥{parseFloat(String(r.delivery_amount || 0)).toFixed(2)}
+                        <MoneyDisplay
+                          amount={parseFloat(String(r.delivery_amount || 0))}
+                          currency={r.currency || 'CNY'}
+                        />
                       </TableCell>
                       <TableCell className="text-red-600">
-                        ¥{parseFloat(String(r.return_amount || 0)).toFixed(2)}
+                        <MoneyDisplay
+                          amount={parseFloat(String(r.return_amount || 0))}
+                          currency={r.currency || 'CNY'}
+                        />
                       </TableCell>
                       <TableCell className="font-medium">
-                        ¥{parseFloat(String(r.net_amount || 0)).toFixed(2)}
+                        <MoneyDisplay
+                          amount={parseFloat(String(r.net_amount || 0))}
+                          currency={r.currency || 'CNY'}
+                        />
                       </TableCell>
                       <TableCell>
-                        ¥{parseFloat(String(r.received_amount || 0)).toFixed(2)}
+                        <MoneyDisplay
+                          amount={parseFloat(String(r.received_amount || 0))}
+                          currency={r.currency || 'CNY'}
+                        />
                       </TableCell>
                       <TableCell className="text-orange-600">
-                        ¥{parseFloat(String(r.balance_amount || 0)).toFixed(2)}
+                        <MoneyDisplay
+                          amount={parseFloat(String(r.balance_amount || 0))}
+                          currency={r.currency || 'CNY'}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {r.currency || <span className="text-muted-foreground">-</span>}
                       </TableCell>
                       <TableCell>
                         <Badge className={STATUS_MAP[r.status]?.color || 'bg-gray-100'}>
@@ -400,7 +428,7 @@ export default function ReconciliationPage() {
                   ))}
                   {list.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={11} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={12} className="text-center py-8 text-gray-500">
                         {tc('noData')}
                       </TableCell>
                     </TableRow>
@@ -506,13 +534,25 @@ export default function ReconciliationPage() {
                   <span className="text-gray-500">{t('reconciliationPeriod')}：</span>
                   {detailData.period_start} ~ {detailData.period_end}
                 </div>
+                <div>
+                  <span className="text-gray-500">{tc('currency')}：</span>
+                  {detailData.currency || 'CNY'}
+                </div>
               </div>
+              {detailData.has_mismatch && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+                  <span className="text-sm text-red-700">{t('currencyMismatch')}</span>
+                </div>
+              )}
               <div className="grid grid-cols-5 gap-3 text-center">
                 <Card>
                   <CardContent className="pt-3 pb-3">
                     <div className="text-xs text-gray-500">{t('deliveryAmount')}</div>
                     <div className="text-lg font-bold text-blue-600">
-                      ¥{parseFloat(String(detailData.delivery_amount || 0)).toFixed(2)}
+                      <MoneyDisplay
+                        amount={parseFloat(String(detailData.delivery_amount || 0))}
+                        currency={detailData.currency || 'CNY'}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -520,7 +560,10 @@ export default function ReconciliationPage() {
                   <CardContent className="pt-3 pb-3">
                     <div className="text-xs text-gray-500">{t('returnAmount')}</div>
                     <div className="text-lg font-bold text-red-600">
-                      ¥{parseFloat(String(detailData.return_amount || 0)).toFixed(2)}
+                      <MoneyDisplay
+                        amount={parseFloat(String(detailData.return_amount || 0))}
+                        currency={detailData.currency || 'CNY'}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -528,7 +571,10 @@ export default function ReconciliationPage() {
                   <CardContent className="pt-3 pb-3">
                     <div className="text-xs text-gray-500">{tc('discount')}</div>
                     <div className="text-lg font-bold">
-                      ¥{parseFloat(String(detailData.discount_amount || 0)).toFixed(2)}
+                      <MoneyDisplay
+                        amount={parseFloat(String(detailData.discount_amount || 0))}
+                        currency={detailData.currency || 'CNY'}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -536,7 +582,10 @@ export default function ReconciliationPage() {
                   <CardContent className="pt-3 pb-3">
                     <div className="text-xs text-gray-500">{t('netAmount')}</div>
                     <div className="text-lg font-bold text-green-600">
-                      ¥{parseFloat(String(detailData.net_amount || 0)).toFixed(2)}
+                      <MoneyDisplay
+                        amount={parseFloat(String(detailData.net_amount || 0))}
+                        currency={detailData.currency || 'CNY'}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -544,7 +593,10 @@ export default function ReconciliationPage() {
                   <CardContent className="pt-3 pb-3">
                     <div className="text-xs text-gray-500">{t('balanceAmount')}</div>
                     <div className="text-lg font-bold text-orange-600">
-                      ¥{parseFloat(String(detailData.balance_amount || 0)).toFixed(2)}
+                      <MoneyDisplay
+                        amount={parseFloat(String(detailData.balance_amount || 0))}
+                        currency={detailData.currency || 'CNY'}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -576,7 +628,10 @@ export default function ReconciliationPage() {
                           <TableCell
                             className={item.source_type === 1 ? 'text-blue-600' : 'text-red-600'}
                           >
-                            ¥{parseFloat(String(item.amount || 0)).toFixed(2)}
+                            <MoneyDisplay
+                              amount={parseFloat(String(item.amount || 0))}
+                              currency={detailData?.currency || 'CNY'}
+                            />
                           </TableCell>
                         </TableRow>
                       ))}

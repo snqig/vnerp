@@ -17,6 +17,7 @@ export const createInboundOrderSchema = z.object({
   warehouse_id: z.number().int().positive('仓库ID必须为正整数'),
   supplier_name: z.string().max(100, '供应商名称最长100字符').optional().default(''),
   inbound_date: z.string().optional(),
+  currency: z.string().max(10, '币种最长10字符').optional(),
   remark: z.string().max(500, '备注最长500字符').optional(),
   items: z.array(inboundItemSchema).min(1, '入库项不能为空').max(100, '单次入库项不超过100'),
 });

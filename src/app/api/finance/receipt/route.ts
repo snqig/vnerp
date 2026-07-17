@@ -21,6 +21,8 @@ export const POST = withPermission(
         amount: parseFloat(body.amount),
         receiptDate: body.receipt_date,
         receiptMethod: body.receipt_method || 'bank_transfer',
+        currency: body.currency,
+        exchangeRate: body.exchange_rate !== undefined ? parseFloat(body.exchange_rate) : undefined,
         remark: body.remark,
         createBy: userInfo.userId,
       });

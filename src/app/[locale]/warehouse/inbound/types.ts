@@ -42,6 +42,9 @@ export interface InboundRecord {
   create_time?: string;
   createTime?: string;
   total_quantity?: number;
+  currency?: string;
+  base_total_amount?: number;
+  base_currency?: string;
 }
 
 export interface Warehouse {
@@ -204,6 +207,8 @@ export interface InboundFormData {
   machineNo: string;
   width: string;
   isRawMaterial: boolean;
+  currency: string;
+  baseCurrency?: string;
 }
 
 export const INITIAL_FORM_DATA: InboundFormData = {
@@ -223,6 +228,8 @@ export const INITIAL_FORM_DATA: InboundFormData = {
   machineNo: '',
   width: '',
   isRawMaterial: false,
+  currency: 'CNY',
+  baseCurrency: '',
 };
 
 // 分切表单数据类型

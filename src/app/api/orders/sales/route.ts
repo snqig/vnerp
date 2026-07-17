@@ -57,6 +57,12 @@ export const GET = withPermission(async (request: NextRequest, user: UserInfo) =
     delivery_address: order.delivery_address,
     total_amount: parseFloat(order.total_amount || '0'),
     total_with_tax: parseFloat(order.total_with_tax || '0'),
+    currency: order.currency || 'CNY',
+    exchange_rate: parseFloat(order.exchange_rate || '1'),
+    base_currency: order.base_currency || 'CNY',
+    base_total_amount: parseFloat(order.base_total_amount || '0'),
+    base_tax_amount: parseFloat(order.base_tax_amount || '0'),
+    base_grand_total: parseFloat(order.base_grand_total || '0'),
     status: order.status,
     remark: order.remark,
     create_time: order.create_time,
@@ -77,6 +83,7 @@ export const POST = withPermission(
       remark,
       payment_terms,
       contract_no,
+      currency,
     } = body;
 
     if (!customer_id || !items || items.length === 0) {
@@ -89,8 +96,8 @@ export const POST = withPermission(
       `INSERT INTO sal_order (
       order_no, customer_id, order_date, delivery_date, status,
       salesman_id, payment_terms, contract_no, remark,
-      create_by, create_time, update_time, deleted
-    ) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
+      currency, create_by, create_time, update_time, deleted
+    ) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
       [
         order_no,
         customer_id,
@@ -100,6 +107,7 @@ export const POST = withPermission(
         payment_terms || null,
         contract_no || null,
         remark || null,
+        currency || null,
         user.userId,
       ]
     );
@@ -148,6 +156,13 @@ export const PUT = withPermission(
 
     if (!id) {
       return errorResponse('订单ID不能为空', 400, 400);
+    }
+
+    if (body.currency !== undefined) {
+      return errorResponse('币种创建后不可修改', 400, 400);
+    }
+    if (body.exchange_rate !== undefined) {
+      return errorResponse('汇率创建后不可修改', 400, 400);
     }
 
     const order: Loose = await queryOne('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [

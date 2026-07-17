@@ -53,6 +53,9 @@ export const GET = withPermission(
       order_type: order.orderType,
       total_quantity: order.totalQuantity,
       total_amount: order.totalAmount.amount,
+      currency: order.currency,
+      exchange_rate: order.exchangeRate,
+      base_total_amount: order.baseTotalAmount,
       status: order.status.value,
       remark: order.remark,
       create_time: order.createTime,
@@ -101,6 +104,7 @@ export const POST = withPermission(
       warehouseId: validated.warehouse_id,
       supplierName: validated.supplier_name || '',
       inboundDate: validated.inbound_date,
+      currency: validated.currency,
       remark: validated.remark,
       operatorId: userInfo.userId,
       items: validated.items.map((item: Loose) => ({

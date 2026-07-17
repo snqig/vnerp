@@ -32,6 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { MoneyDisplay } from '@/components/ui/money-display';
 import { Plus, Search, RefreshCw, Truck, Eye, Trash2, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
@@ -65,6 +66,9 @@ interface Shipment {
   total_qty?: number; // 总数量（API 返回）
   shipped_quantity: number; // 已发货数量
   total_amount?: number; // 总金额
+  currency?: string; // 币种
+  base_total_amount?: number; // 本位币总金额
+  base_currency?: string; // 本位币币种
   sign_status?: number; // 签收状态
   sign_person?: string; // 签收人
   sign_time?: string; // 签收时间
@@ -676,6 +680,7 @@ export default function DeliveryPage() {
                     <TableHead>{t('deliveryDate')}</TableHead>
                     <TableHead>{tc('totalQuantity')}</TableHead>
                     <TableHead>{tc('totalAmount')}</TableHead>
+                    <TableHead>{tc('currency')}</TableHead>
                     <TableHead>{t('signStatus')}</TableHead>
                     <TableHead>{t('documentStatus')}</TableHead>
                     <TableHead className="text-right">{tc('actions')}</TableHead>
@@ -689,7 +694,17 @@ export default function DeliveryPage() {
                       <TableCell>{d.customer_name || '-'}</TableCell>
                       <TableCell>{d.delivery_date || '-'}</TableCell>
                       <TableCell>{parseFloat(String(d.total_qty || 0)).toLocaleString()}</TableCell>
-                      <TableCell>¥{parseFloat(String(d.total_amount || 0)).toFixed(2)}</TableCell>
+                      <TableCell>
+                        <MoneyDisplay
+                          amount={parseFloat(String(d.total_amount || 0))}
+                          currency={d.currency || 'CNY'}
+                          baseAmount={d.base_total_amount}
+                          baseCurrency={d.base_currency}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {d.currency || <span className="text-muted-foreground">-</span>}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           className={SIGN_STATUS_MAP[d.sign_status ?? 0]?.color || 'bg-gray-100'}
@@ -740,7 +755,7 @@ export default function DeliveryPage() {
                   ))}
                   {list.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                         暂无数据
                       </TableCell>
                     </TableRow>
@@ -957,7 +972,7 @@ export default function DeliveryPage() {
                         />
                       </TableCell>
                       <TableCell className="font-medium">
-                        ¥{(item.amount || 0).toFixed(2)}
+                        <MoneyDisplay amount={item.amount || 0} currency="CNY" />
                       </TableCell>
                       <TableCell>
                         <Input
@@ -985,7 +1000,9 @@ export default function DeliveryPage() {
                 </span>
                 <span>
                   总金额:
-                  <strong className="text-blue-600">¥{calcTotal().toFixed(2)}</strong>
+                  <strong className="text-blue-600">
+                    <MoneyDisplay amount={calcTotal()} currency="CNY" />
+                  </strong>
                 </span>
               </div>
             </div>
@@ -1054,7 +1071,12 @@ export default function DeliveryPage() {
                   <div>
                     <div className="text-gray-500 text-sm">{tc('totalAmount')}</div>
                     <div className="text-xl font-bold text-blue-600">
-                      ¥{parseFloat(String(detailData.total_amount || 0)).toFixed(2)}
+                      <MoneyDisplay
+                        amount={parseFloat(String(detailData.total_amount || 0))}
+                        currency={detailData.currency || 'CNY'}
+                        baseAmount={detailData.base_total_amount}
+                        baseCurrency={detailData.base_currency}
+                      />
                     </div>
                   </div>
                   <div>

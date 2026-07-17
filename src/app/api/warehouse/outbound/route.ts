@@ -37,6 +37,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       o.total_qty as totalQty,
       o.total_amount as totalAmount,
       o.currency,
+      o.exchange_rate as exchangeRate,
+      o.base_total_amount as baseTotalAmount,
       o.status,
       o.remark,
       o.operator_name as operatorName,
@@ -97,6 +99,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         unit,
         unit_price,
         amount,
+        base_unit_price as baseUnitPrice,
+        base_amount as baseAmount,
         batch_no as batchNo,
         remark
       FROM inv_outbound_item
@@ -151,6 +155,7 @@ export const POST = withPermission(
       items,
       operatorId,
       operatorName,
+      currency,
     } = body;
 
     const orderNo = await generateDocumentNo('outbound');
@@ -173,8 +178,8 @@ export const POST = withPermission(
         `INSERT INTO inv_outbound_order (
         order_no, order_date, outbound_type,
         warehouse_id, warehouse_code, warehouse_name,
-        total_qty, total_amount, remark, operator_id, operator_name, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+        total_qty, total_amount, currency, remark, operator_id, operator_name, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
         [
           orderNo,
           orderDate,
@@ -184,6 +189,7 @@ export const POST = withPermission(
           warehouseName,
           totalQty,
           totalAmount,
+          currency || null,
           remark,
           operatorId,
           operatorName,

@@ -33,6 +33,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { MoneyDisplay } from '@/components/ui/money-display';
 import { Plus, Search, RefreshCw, RotateCcw, Eye, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -50,6 +51,9 @@ interface ReturnOrder {
   return_reason: string;
   total_qty: number;
   total_amount: number;
+  currency?: string;
+  base_total_amount?: number;
+  base_currency?: string;
   inspection_status: number;
   inspection_result: number;
   warehouse_id: number;
@@ -389,6 +393,7 @@ export default function ReturnPage() {
                     <TableHead>{t('returnType')}</TableHead>
                     <TableHead>{t('returnQty')}</TableHead>
                     <TableHead>{t('returnAmount')}</TableHead>
+                    <TableHead>{tc('currency')}</TableHead>
                     <TableHead>{t('inspectionStatus')}</TableHead>
                     <TableHead>{t('orderStatus')}</TableHead>
                     <TableHead className="text-right">{tc('actions')}</TableHead>
@@ -407,7 +412,17 @@ export default function ReturnPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>{parseFloat(String(r.total_qty || 0)).toLocaleString()}</TableCell>
-                      <TableCell>¥{parseFloat(String(r.total_amount || 0)).toFixed(2)}</TableCell>
+                      <TableCell>
+                        <MoneyDisplay
+                          amount={parseFloat(String(r.total_amount || 0))}
+                          currency={r.currency || 'CNY'}
+                          baseAmount={r.base_total_amount}
+                          baseCurrency={r.base_currency}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {r.currency || <span className="text-muted-foreground">-</span>}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           className={
@@ -467,7 +482,7 @@ export default function ReturnPage() {
                   ))}
                   {list.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={10} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={11} className="text-center py-8 text-gray-500">
                         {tc('noData')}
                       </TableCell>
                     </TableRow>
@@ -637,7 +652,7 @@ export default function ReturnPage() {
                         />
                       </TableCell>
                       <TableCell className="font-medium">
-                        ¥{(item.amount || 0).toFixed(2)}
+                        <MoneyDisplay amount={item.amount || 0} currency="CNY" />
                       </TableCell>
                       <TableCell>
                         <Input
@@ -664,7 +679,9 @@ export default function ReturnPage() {
                 </span>
                 <span>
                   {t('totalAmount')}:{' '}
-                  <strong className="text-red-600">¥{calcTotal().toFixed(2)}</strong>
+                  <strong className="text-red-600">
+                    <MoneyDisplay amount={calcTotal()} currency="CNY" />
+                  </strong>
                 </span>
               </div>
             </div>
@@ -731,7 +748,12 @@ export default function ReturnPage() {
                   <div>
                     <div className="text-gray-500 text-sm">{t('returnAmount')}</div>
                     <div className="text-xl font-bold text-red-600">
-                      ¥{parseFloat(String(detailData.total_amount || 0)).toFixed(2)}
+                      <MoneyDisplay
+                        amount={parseFloat(String(detailData.total_amount || 0))}
+                        currency={detailData.currency || 'CNY'}
+                        baseAmount={detailData.base_total_amount}
+                        baseCurrency={detailData.base_currency}
+                      />
                     </div>
                   </div>
                 </div>

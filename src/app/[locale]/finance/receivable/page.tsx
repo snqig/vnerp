@@ -29,7 +29,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Search, RefreshCw, Eye } from 'lucide-react';
+import { MoneyDisplay } from '@/components/ui/money-display';
+import { Search, RefreshCw, Eye, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { authFetch } from '@/lib/auth-fetch';
@@ -47,6 +48,9 @@ interface Receivable {
   due_date: string;
   status: number;
   remark: string;
+  currency?: string;
+  source_currency?: string;
+  source_amount?: number;
 }
 
 interface ReceivableDetail extends Receivable {
@@ -120,6 +124,9 @@ export default function ReceivablePage() {
           due_date: item.dueDate || item.due_date,
           status: item.status,
           remark: item.remark,
+          currency: item.currency,
+          source_currency: item.sourceCurrency || item.source_currency,
+          source_amount: item.sourceAmount || item.source_amount,
         }));
         setList(list);
         setTotal(rawData?.total || list.length || 0);
@@ -170,6 +177,7 @@ export default function ReceivablePage() {
   };
 
   const formatAmount = (amount: number) => ((amount || 0) / 100).toFixed(2);
+  const toAmount = (amount: number) => (amount || 0) / 100;
 
   return (
     <MainLayout>
@@ -221,6 +229,7 @@ export default function ReceivablePage() {
                   <TableHead className="text-right">{t('receivableAmount')}</TableHead>
                   <TableHead className="text-right">{t('receivedAmount')}</TableHead>
                   <TableHead className="text-right">{tc('balance')}</TableHead>
+                  <TableHead>{tc('currency')}</TableHead>
                   <TableHead>{t('dueDate')}</TableHead>
                   <TableHead>{tc('status')}</TableHead>
                   <TableHead>{tc('actions')}</TableHead>
@@ -229,7 +238,7 @@ export default function ReceivablePage() {
               <TableBody>
                 {list.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                       {t('noData')}
                     </TableCell>
                   </TableRow>
@@ -237,16 +246,36 @@ export default function ReceivablePage() {
                   list.map((r) => (
                     <TableRow key={r.id}>
                       <TableCell className="font-mono text-sm">{r.receivable_no}</TableCell>
-                      <TableCell className="font-mono text-sm">{r.source_no}</TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {r.source_currency && r.source_amount != null ? (
+                          <span title={`${t('sourceCurrency')}: ${r.source_currency}`}>
+                            <FileText className="w-3 h-3 inline mr-1 text-muted-foreground" />
+                            {r.source_no}
+                            <span className="text-xs text-muted-foreground ml-1">
+                              ({r.source_currency})
+                            </span>
+                          </span>
+                        ) : (
+                          r.source_no
+                        )}
+                      </TableCell>
                       <TableCell>{r.customer_name}</TableCell>
-                      <TableCell className="text-right">¥{formatAmount(r.amount)}</TableCell>
                       <TableCell className="text-right">
-                        ¥{formatAmount(r.received_amount)}
+                        <MoneyDisplay amount={toAmount(r.amount)} currency={r.currency || 'CNY'} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <MoneyDisplay
+                          amount={toAmount(r.received_amount)}
+                          currency={r.currency || 'CNY'}
+                        />
                       </TableCell>
                       <TableCell
                         className={`text-right ${Number(r.balance) > 0 ? 'text-red-600 font-medium' : ''}`}
                       >
-                        ¥{formatAmount(r.balance)}
+                        <MoneyDisplay amount={toAmount(r.balance)} currency={r.currency || 'CNY'} />
+                      </TableCell>
+                      <TableCell>
+                        {r.currency || <span className="text-muted-foreground">-</span>}
                       </TableCell>
                       <TableCell>{r.due_date ? r.due_date.slice(0, 10) : ''}</TableCell>
                       <TableCell>
@@ -306,16 +335,25 @@ export default function ReceivablePage() {
                     {detailItem.customer_name}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{t('receivableAmount')}：</span>¥
-                    {formatAmount(detailItem.amount)}
+                    <span className="text-muted-foreground">{t('receivableAmount')}：</span>
+                    <MoneyDisplay
+                      amount={toAmount(detailItem.amount)}
+                      currency={detailItem.currency || 'CNY'}
+                    />
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{t('receivedAmount')}：</span>¥
-                    {formatAmount(detailItem.received_amount)}
+                    <span className="text-muted-foreground">{t('receivedAmount')}：</span>
+                    <MoneyDisplay
+                      amount={toAmount(detailItem.received_amount)}
+                      currency={detailItem.currency || 'CNY'}
+                    />
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('balance')}：</span>¥
-                    {formatAmount(detailItem.balance)}
+                    <span className="text-muted-foreground">{tc('balance')}：</span>
+                    <MoneyDisplay
+                      amount={toAmount(detailItem.balance)}
+                      currency={detailItem.currency || 'CNY'}
+                    />
                   </div>
                   <div>
                     <span className="text-muted-foreground">{t('dueDate')}：</span>
@@ -362,7 +400,12 @@ export default function ReceivablePage() {
                     {detailItem.receipts.map((rc: Loose) => (
                       <div key={rc.id} className="flex justify-between text-sm py-1 border-b">
                         <span>{rc.receipt_date?.slice(0, 10)}</span>
-                        <span>¥{formatAmount(rc.amount)}</span>
+                        <span>
+                          <MoneyDisplay
+                            amount={toAmount(rc.amount)}
+                            currency={detailItem.currency || 'CNY'}
+                          />
+                        </span>
                         <span className="text-muted-foreground">{rc.remark || ''}</span>
                       </div>
                     ))}

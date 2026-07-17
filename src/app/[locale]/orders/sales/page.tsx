@@ -39,6 +39,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { MoneyDisplay } from '@/components/ui/money-display';
+import { CurrencySelect } from '@/components/ui/currency-select';
 import {
   Plus,
   MoreHorizontal,
@@ -82,12 +84,21 @@ interface Order {
   total_amount: number;
   total_with_tax?: number;
   status: number;
+  currency?: string;
+  base_currency?: string;
+  base_total_amount?: number;
+  base_tax_amount?: number;
+  base_grand_total?: number;
   items: {
     material_name: string;
     quantity: number;
     unit: string;
     unit_price: number;
     total_price: number;
+    base_unit_price?: number;
+    base_amount?: number;
+    base_tax_amount?: number;
+    base_line_total?: number;
   }[];
   remark?: string;
   create_time?: string;
@@ -175,6 +186,7 @@ export default function SalesOrdersPage() {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [currency, setCurrency] = useState('CNY');
 
   const fetchCustomers = async () => {
     try {
@@ -537,7 +549,7 @@ export default function SalesOrdersPage() {
           <td>${o.customer_name || '-'}</td>
           <td>${formatDate(o.order_date)}</td>
           <td>${formatDate(o.delivery_date)}</td>
-          <td style="text-align:right">¥${Number(o.total_amount || 0).toLocaleString()}</td>
+                          <td style="text-align:right">¥${Number(o.total_amount || 0).toLocaleString()}</td>
           <td>${statusLabels[o.status] || t('unknown')}</td>
           <td>${itemsStr}</td>
         </tr>`;
@@ -723,6 +735,7 @@ export default function SalesOrdersPage() {
         body: JSON.stringify({
           customer_id: parseInt(selectedCustomer),
           delivery_date: deliveryDate,
+          currency,
           items: validItems.map((item) => ({
             material_name: item.material_name,
             quantity: parseFloat(item.quantity),
@@ -756,6 +769,7 @@ export default function SalesOrdersPage() {
         body: JSON.stringify({
           customer_id: parseInt(selectedCustomer) || null,
           delivery_date: (document.getElementById('deliveryDate') as HTMLInputElement)?.value,
+          currency,
           items: orderItems.map((item) => ({
             material_name: item.material_name,
             quantity: parseFloat(item.quantity) || 0,
@@ -955,6 +969,10 @@ export default function SalesOrdersPage() {
                           <Label htmlFor="deliveryDate">{t('deliveryDate')} *</Label>
                           <Input type="date" id="deliveryDate" />
                         </div>
+                        <div className="space-y-2">
+                          <Label>{tc('currency')}</Label>
+                          <CurrencySelect value={currency} onChange={setCurrency} />
+                        </div>
                       </div>
 
                       <div className="space-y-2">
@@ -1045,12 +1063,13 @@ export default function SalesOrdersPage() {
                                     />
                                   </TableCell>
                                   <TableCell>
-                                    <span className="font-medium">
-                                      {(
+                                    <MoneyDisplay
+                                      amount={
                                         (parseFloat(item.quantity) || 0) *
                                         (parseFloat(item.unit_price) || 0)
-                                      ).toFixed(2)}
-                                    </span>
+                                      }
+                                      currency={currency}
+                                    />
                                   </TableCell>
                                   <TableCell>
                                     <Button
@@ -1183,6 +1202,8 @@ export default function SalesOrdersPage() {
                         {getSortIcon('total_amount')}
                       </span>
                     </TableHead>
+                    <TableHead className="text-right">{tc('currency')}</TableHead>
+                    <TableHead className="text-right">{t('baseAmount')}</TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted/50"
                       tabIndex={0}
@@ -1230,7 +1251,25 @@ export default function SalesOrdersPage() {
                           <TableCell>{formatDate(order.order_date)}</TableCell>
                           <TableCell>{formatDate(order.delivery_date)}</TableCell>
                           <TableCell className="text-right font-medium">
-                            ¥{Number(order.total_amount || 0).toLocaleString()}
+                            <MoneyDisplay
+                              amount={order.total_amount || 0}
+                              currency={order.currency || 'CNY'}
+                              baseAmount={order.base_total_amount}
+                              baseCurrency={order.base_currency}
+                            />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {order.currency || <span className="text-muted-foreground">-</span>}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {order.base_total_amount != null ? (
+                              <MoneyDisplay
+                                amount={order.base_total_amount}
+                                currency={order.base_currency || 'CNY'}
+                              />
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
                           </TableCell>
                           <TableCell>{getStatusBadge(order.status, t)}</TableCell>
                           <TableCell className="text-right">
@@ -1272,7 +1311,7 @@ export default function SalesOrdersPage() {
                         </TableRow>
                         {isExpanded && (
                           <TableRow key={`${order.id}-detail`}>
-                            <TableCell colSpan={9} className="p-0">
+                            <TableCell colSpan={11} className="p-0">
                               <div className="bg-slate-50 dark:bg-gray-800 border-t">
                                 <Table>
                                   <TableHeader>
@@ -1311,13 +1350,19 @@ export default function SalesOrdersPage() {
                                             {item.unit || '-'}
                                           </TableCell>
                                           <TableCell className="text-sm text-right">
-                                            {Number(item.unit_price || 0).toFixed(2)}
+                                            <MoneyDisplay
+                                              amount={item.unit_price || 0}
+                                              currency={order.currency || 'CNY'}
+                                            />
                                           </TableCell>
                                           <TableCell className="text-sm text-right font-medium">
-                                            {Number(
-                                              item.total_price ||
+                                            <MoneyDisplay
+                                              amount={
+                                                item.total_price ||
                                                 (item.quantity || 0) * (item.unit_price || 0)
-                                            ).toFixed(2)}
+                                              }
+                                              currency={order.currency || 'CNY'}
+                                            />
                                           </TableCell>
                                         </TableRow>
                                       ))
@@ -1375,7 +1420,12 @@ export default function SalesOrdersPage() {
                 <div>
                   <Label className="text-muted-foreground">{t('orderAmount')}</Label>
                   <p className="font-medium text-lg">
-                    ¥{Number(selectedOrder?.total_amount || 0).toLocaleString()}
+                    <MoneyDisplay
+                      amount={selectedOrder?.total_amount || 0}
+                      currency={selectedOrder?.currency || 'CNY'}
+                      baseAmount={selectedOrder?.base_total_amount}
+                      baseCurrency={selectedOrder?.base_currency}
+                    />
                   </p>
                 </div>
               </div>
@@ -1397,8 +1447,18 @@ export default function SalesOrdersPage() {
                         <TableCell>{item.material_name}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell>{item.unit}</TableCell>
-                        <TableCell>¥{Number(item.unit_price || 0).toFixed(2)}</TableCell>
-                        <TableCell>¥{Number(item.total_price || 0).toLocaleString()}</TableCell>
+                        <TableCell>
+                          <MoneyDisplay
+                            amount={item.unit_price || 0}
+                            currency={selectedOrder?.currency || 'CNY'}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <MoneyDisplay
+                            amount={item.total_price || 0}
+                            currency={selectedOrder?.currency || 'CNY'}
+                          />
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1462,8 +1522,18 @@ export default function SalesOrdersPage() {
                         <TableCell>{item.material_name}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell>{item.unit}</TableCell>
-                        <TableCell>¥{Number(item.unit_price || 0).toFixed(2)}</TableCell>
-                        <TableCell>¥{Number(item.total_price || 0).toLocaleString()}</TableCell>
+                        <TableCell>
+                          <MoneyDisplay
+                            amount={item.unit_price || 0}
+                            currency={selectedOrder?.currency || 'CNY'}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <MoneyDisplay
+                            amount={item.total_price || 0}
+                            currency={selectedOrder?.currency || 'CNY'}
+                          />
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

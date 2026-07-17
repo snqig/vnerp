@@ -68,6 +68,10 @@ interface OutboundRecord {
   width?: number;
   batchNo?: string;
   batch_no?: string;
+  total_amount?: number;
+  currency?: string;
+  base_total_amount?: number;
+  base_currency?: string;
 }
 import {
   Table,
@@ -94,6 +98,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { MainLayout } from '@/components/layout';
+import { MoneyDisplay } from '@/components/ui/money-display';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import {
   DropdownMenu,
@@ -1152,6 +1157,8 @@ export default function OutboundManagementPage() {
                       <TableHead>{tc('specification')}</TableHead>
                       <TableHead>{tc('quantity')}</TableHead>
                       <TableHead>{tc('unit')}</TableHead>
+                      <TableHead>{tc('amount')}</TableHead>
+                      <TableHead>{tc('currency')}</TableHead>
                       <TableHead>{tc('warehouse')}</TableHead>
                       <TableHead>{tc('batchNo')}</TableHead>
                       <TableHead>{tc('type')}</TableHead>
@@ -1180,6 +1187,21 @@ export default function OutboundManagementPage() {
                           <TableCell>{record.spec}</TableCell>
                           <TableCell>{record.quantity}</TableCell>
                           <TableCell>{record.unit}</TableCell>
+                          <TableCell>
+                            {record.total_amount != null ? (
+                              <MoneyDisplay
+                                amount={record.total_amount}
+                                currency={record.currency || 'CNY'}
+                                baseAmount={record.base_total_amount}
+                                baseCurrency={record.base_currency}
+                              />
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {record.currency || <span className="text-muted-foreground">-</span>}
+                          </TableCell>
                           <TableCell>{record.warehouse}</TableCell>
                           <TableCell className="font-mono text-xs">
                             {record.batchNo || record.batch_no || '-'}

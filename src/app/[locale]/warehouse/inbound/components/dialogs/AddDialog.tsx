@@ -23,6 +23,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { authFetch } from '@/lib/auth-fetch';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
+import { CurrencySelect } from '@/components/ui/currency-select';
 import type { InboundFormData, Supplier, PurchaseOrder } from '../../types';
 import { INITIAL_FORM_DATA } from '../../types';
 
@@ -77,6 +78,7 @@ export function AddDialog({
           warehouse_id: formData.warehouse || null,
           supplier_name: formData.supplier,
           inbound_date: new Date().toISOString().split('T')[0],
+          currency: formData.currency,
           remark: formData.remark,
           items: [
             {
@@ -285,6 +287,15 @@ export function AddDialog({
                 placeholder={t('enterBatchNo')}
               />
             </div>
+            <div className="space-y-2">
+              <Label>{tc('currency')}</Label>
+              <CurrencySelect
+                value={formData.currency}
+                onChange={(value) => setFormData((prev) => ({ ...prev, currency: value }))}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="add-remark">{tc('remark')}</Label>
               <Input
