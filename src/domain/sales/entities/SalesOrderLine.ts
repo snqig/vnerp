@@ -17,6 +17,10 @@ export interface SalesOrderLineProps {
   taxRate?: number;
   taxAmount?: number;
   lineTotal?: number;
+  baseUnitPrice?: number;
+  baseAmount?: number;
+  baseTaxAmount?: number;
+  baseLineTotal?: number;
   remark?: string;
 }
 
@@ -24,6 +28,10 @@ export class SalesOrderLine {
   private _taxRate: number;
   private _taxAmount: number;
   private _lineTotal: number;
+  private _baseUnitPrice: number;
+  private _baseAmount: number;
+  private _baseTaxAmount: number;
+  private _baseLineTotal: number;
 
   private constructor(
     public readonly id: number | undefined,
@@ -41,11 +49,19 @@ export class SalesOrderLine {
     taxRate: number,
     taxAmount: number,
     lineTotal: number,
+    baseUnitPrice: number,
+    baseAmount: number,
+    baseTaxAmount: number,
+    baseLineTotal: number,
     public readonly remark: string | undefined
   ) {
     this._taxRate = taxRate;
     this._taxAmount = taxAmount;
     this._lineTotal = lineTotal;
+    this._baseUnitPrice = baseUnitPrice;
+    this._baseAmount = baseAmount;
+    this._baseTaxAmount = baseTaxAmount;
+    this._baseLineTotal = baseLineTotal;
   }
 
   static create(props: SalesOrderLineProps): SalesOrderLine {
@@ -59,6 +75,10 @@ export class SalesOrderLine {
     const taxRate = props.taxRate ?? 0;
     const taxAmount = roundAmount(multiplyDecimal(amount, taxRate / 100));
     const lineTotal = roundAmount(amount + taxAmount);
+    const baseUnitPrice = props.baseUnitPrice ?? 0;
+    const baseAmount = props.baseAmount ?? 0;
+    const baseTaxAmount = props.baseTaxAmount ?? 0;
+    const baseLineTotal = props.baseLineTotal ?? 0;
     return new SalesOrderLine(
       props.id,
       props.orderId,
@@ -75,6 +95,10 @@ export class SalesOrderLine {
       taxRate,
       taxAmount,
       lineTotal,
+      baseUnitPrice,
+      baseAmount,
+      baseTaxAmount,
+      baseLineTotal,
       props.remark
     );
   }
@@ -84,6 +108,10 @@ export class SalesOrderLine {
     const taxRate = props.taxRate || 0;
     const taxAmount = props.taxAmount || 0;
     const lineTotal = props.lineTotal || amount;
+    const baseUnitPrice = props.baseUnitPrice ?? 0;
+    const baseAmount = props.baseAmount ?? 0;
+    const baseTaxAmount = props.baseTaxAmount ?? 0;
+    const baseLineTotal = props.baseLineTotal ?? 0;
     return new SalesOrderLine(
       props.id,
       props.orderId,
@@ -100,6 +128,10 @@ export class SalesOrderLine {
       taxRate,
       taxAmount,
       lineTotal,
+      baseUnitPrice,
+      baseAmount,
+      baseTaxAmount,
+      baseLineTotal,
       props.remark
     );
   }
@@ -124,6 +156,18 @@ export class SalesOrderLine {
   }
   get lineTotal(): number {
     return this._lineTotal;
+  }
+  get baseUnitPrice(): number {
+    return this._baseUnitPrice;
+  }
+  get baseAmount(): number {
+    return this._baseAmount;
+  }
+  get baseTaxAmount(): number {
+    return this._baseTaxAmount;
+  }
+  get baseLineTotal(): number {
+    return this._baseLineTotal;
   }
 
   get remainingQty(): number {

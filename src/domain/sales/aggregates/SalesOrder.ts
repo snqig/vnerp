@@ -26,6 +26,11 @@ export interface SalesOrderProps {
   discountAmount?: number;
   discountRate?: number;
   currency?: string;
+  exchangeRate?: number;
+  baseCurrency?: string;
+  baseTotalAmount?: number;
+  baseTaxAmount?: number;
+  baseGrandTotal?: number;
   paymentTerms?: string;
   warehouseId?: number;
   remark?: string;
@@ -56,6 +61,11 @@ export class SalesOrder {
     private _discountAmount: number,
     private _discountRate: number,
     public readonly currency: string,
+    public readonly exchangeRate: number,
+    public readonly baseCurrency: string,
+    private _baseTotalAmount: number,
+    private _baseTaxAmount: number,
+    private _baseGrandTotal: number,
     public readonly paymentTerms: string,
     public readonly warehouseId: number,
     public readonly remark: string,
@@ -86,6 +96,11 @@ export class SalesOrder {
     const taxableAmount = roundAmount(totalAmount - discountAmount);
     const taxAmount = props.taxAmount ?? roundAmount((taxableAmount * taxRate) / 100);
     const totalWithTax = roundAmount(taxableAmount + taxAmount);
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseTotalAmount = props.baseTotalAmount ?? 0;
+    const baseTaxAmount = props.baseTaxAmount ?? 0;
+    const baseGrandTotal = props.baseGrandTotal ?? 0;
 
     const order = new SalesOrder(
       props.id,
@@ -103,6 +118,11 @@ export class SalesOrder {
       discountAmount,
       discountRate,
       props.currency || 'CNY',
+      exchangeRate,
+      baseCurrency,
+      baseTotalAmount,
+      baseTaxAmount,
+      baseGrandTotal,
       props.paymentTerms || '',
       props.warehouseId || 1,
       props.remark || '',
@@ -122,6 +142,12 @@ export class SalesOrder {
           customerId: order.customerId,
           customerName: order.customerName,
           totalAmount: order.totalAmount,
+          currency: order.currency,
+          exchangeRate: order.exchangeRate,
+          baseCurrency: order.baseCurrency,
+          baseTotalAmount: order.baseTotalAmount,
+          baseTaxAmount: order.baseTaxAmount,
+          baseGrandTotal: order.baseGrandTotal,
         })
       );
     }
@@ -130,6 +156,11 @@ export class SalesOrder {
 
   static reconstitute(props: SalesOrderProps): SalesOrder {
     const lines = props.lines.map((line) => SalesOrderLine.reconstitute(line));
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseTotalAmount = props.baseTotalAmount ?? 0;
+    const baseTaxAmount = props.baseTaxAmount ?? 0;
+    const baseGrandTotal = props.baseGrandTotal ?? 0;
     return new SalesOrder(
       props.id,
       props.orderNo || '',
@@ -146,6 +177,11 @@ export class SalesOrder {
       props.discountAmount || 0,
       props.discountRate || 0,
       props.currency || 'CNY',
+      exchangeRate,
+      baseCurrency,
+      baseTotalAmount,
+      baseTaxAmount,
+      baseGrandTotal,
       props.paymentTerms || '',
       props.warehouseId || 1,
       props.remark || '',
@@ -184,6 +220,15 @@ export class SalesOrder {
   }
   get discountRate(): number {
     return this._discountRate;
+  }
+  get baseTotalAmount(): number {
+    return this._baseTotalAmount;
+  }
+  get baseTaxAmount(): number {
+    return this._baseTaxAmount;
+  }
+  get baseGrandTotal(): number {
+    return this._baseGrandTotal;
   }
   get auditBy(): number | undefined {
     return this._auditBy;

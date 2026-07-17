@@ -11,6 +11,8 @@ export interface DeliveryLineProps {
   quantity: number;
   unitPrice?: number;
   amount?: number;
+  baseUnitPrice?: number;
+  baseAmount?: number;
   batchNo?: string;
   remark?: string;
 }
@@ -28,6 +30,8 @@ export class DeliveryLine {
   public readonly quantity: number;
   public readonly unitPrice: number;
   public readonly amount: number;
+  public readonly baseUnitPrice: number;
+  public readonly baseAmount: number;
   public readonly batchNo: string;
   public readonly remark: string;
 
@@ -44,6 +48,8 @@ export class DeliveryLine {
     this.quantity = Math.round(props.quantity * 10000) / 10000;
     this.unitPrice = Math.round((props.unitPrice || 0) * 100) / 100;
     this.amount = Math.round((props.amount ?? this.quantity * this.unitPrice) * 100) / 100;
+    this.baseUnitPrice = Math.round((props.baseUnitPrice ?? 0) * 100) / 100;
+    this.baseAmount = Math.round((props.baseAmount ?? 0) * 100) / 100;
     this.batchNo = props.batchNo || '';
     this.remark = props.remark || '';
   }

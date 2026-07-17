@@ -41,6 +41,15 @@ export interface ReconciliationProps {
   discountAmount?: number;
   receivedAmount?: number;
   balanceAmount?: number;
+  currency?: string;
+  exchangeRate?: number;
+  baseCurrency?: string;
+  baseDeliveryAmount?: number;
+  baseReturnAmount?: number;
+  baseNetAmount?: number;
+  baseDiscountAmount?: number;
+  baseReceivedAmount?: number;
+  baseBalanceAmount?: number;
   lines?: ReconciliationLineProps[];
   writeOffRecords?: WriteOffRecordProps[];
   remark?: string;
@@ -70,6 +79,15 @@ export class Reconciliation {
     private _discountAmount: number,
     private _receivedAmount: number,
     private _balanceAmount: number,
+    public readonly currency: string,
+    public readonly exchangeRate: number,
+    public readonly baseCurrency: string,
+    private _baseDeliveryAmount: number,
+    private _baseReturnAmount: number,
+    private _baseNetAmount: number,
+    private _baseDiscountAmount: number,
+    private _baseReceivedAmount: number,
+    private _baseBalanceAmount: number,
     private _lines: ReconciliationLineProps[],
     private _writeOffRecords: WriteOffRecord[],
     public readonly remark: string,
@@ -103,6 +121,15 @@ export class Reconciliation {
     const netAmount = roundMoney(deliveryAmount - returnAmount);
     const discountAmount = roundMoney(props.discountAmount || 0);
     const balanceAmount = roundMoney(netAmount - discountAmount);
+    const currency = props.currency || 'CNY';
+    const exchangeRate = props.exchangeRate || 1.0;
+    const baseCurrency = props.baseCurrency || 'CNY';
+    const baseDeliveryAmount = props.baseDeliveryAmount ?? 0;
+    const baseReturnAmount = props.baseReturnAmount ?? 0;
+    const baseNetAmount = props.baseNetAmount ?? 0;
+    const baseDiscountAmount = props.baseDiscountAmount ?? 0;
+    const baseReceivedAmount = props.baseReceivedAmount ?? 0;
+    const baseBalanceAmount = props.baseBalanceAmount ?? 0;
 
     const order = new Reconciliation(
       props.id,
@@ -118,6 +145,15 @@ export class Reconciliation {
       discountAmount,
       0,
       balanceAmount,
+      currency,
+      exchangeRate,
+      baseCurrency,
+      baseDeliveryAmount,
+      baseReturnAmount,
+      baseNetAmount,
+      baseDiscountAmount,
+      baseReceivedAmount,
+      baseBalanceAmount,
       props.lines || [],
       [],
       props.remark || '',
@@ -140,6 +176,12 @@ export class Reconciliation {
           deliveryAmount: order._deliveryAmount,
           returnAmount: order._returnAmount,
           netAmount: order._netAmount,
+          currency: order.currency,
+          exchangeRate: order.exchangeRate,
+          baseCurrency: order.baseCurrency,
+          baseDeliveryAmount: order._baseDeliveryAmount,
+          baseReturnAmount: order._baseReturnAmount,
+          baseNetAmount: order._baseNetAmount,
         })
       );
     }
@@ -288,9 +330,7 @@ export class Reconciliation {
 
     const currentBalance = roundMoney(this._balanceAmount);
     if (roundedAmount > currentBalance) {
-      throw new DomainError(
-        `核销金额${roundedAmount}超过对账单余额${currentBalance}`
-      );
+      throw new DomainError(`核销金额${roundedAmount}超过对账单余额${currentBalance}`);
     }
 
     const record = WriteOffRecord.create({
@@ -302,9 +342,7 @@ export class Reconciliation {
     this._writeOffRecords.push(record);
 
     this._receivedAmount = roundMoney(this._receivedAmount + roundedAmount);
-    this._balanceAmount = roundMoney(
-      this._netAmount - this._discountAmount - this._receivedAmount
-    );
+    this._balanceAmount = roundMoney(this._netAmount - this._discountAmount - this._receivedAmount);
 
     if (roundMoney(this._balanceAmount) <= 0) {
       this._status = this._status.transitionTo(4);

@@ -10,6 +10,12 @@ export class SalesOrderCreatedEvent implements DomainEvent {
       customerId: number;
       customerName: string;
       totalAmount: number;
+      currency?: string;
+      exchangeRate?: number;
+      baseCurrency?: string;
+      baseTotalAmount?: number;
+      baseTaxAmount?: number;
+      baseGrandTotal?: number;
     }
   ) {}
 }
