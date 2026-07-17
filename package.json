@@ -38,7 +38,9 @@
     "backup": "npx tsx scripts/backup-database.ts",
     "backup:list": "npx tsx scripts/backup-database.ts list",
     "backup:restore": "npx tsx scripts/backup-database.ts restore",
-    "docs:api": "node scripts/generate-api-docs.js"
+    "docs:api": "node scripts/generate-api-docs.js",
+    "i18n:check": "node scripts/i18n-key-check.mjs",
+    "i18n:check:strict": "node scripts/i18n-key-check.mjs --strict"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,js,jsx}": [
