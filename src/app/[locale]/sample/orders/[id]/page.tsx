@@ -82,6 +82,7 @@ const sampleTypeColors: Record<string, string> = {
 export default function SampleOrderDetailPage() {
   // 翻译钩子
   const tc = useTranslations('Common');
+  const ts = useTranslations('SampleManagement');
 
   const router = useRouter();
   const params = useParams();
@@ -154,7 +155,7 @@ export default function SampleOrderDetailPage() {
     return (
       <MainLayout>
         <div className="container mx-auto py-6">
-          <div className="text-center py-12 text-muted-foreground">{tc('orderNotFound')}</div>
+          <div className="text-center py-12 text-muted-foreground">{ts('orderNotFound')}</div>
         </div>
       </MainLayout>
     );
@@ -198,11 +199,11 @@ export default function SampleOrderDetailPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('sampleNoLabel')}</div>
+                  <div className="text-sm text-muted-foreground">{ts('sampleNoLabel')}</div>
                   <div className="font-medium">{order.sample_no}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('sampleOrderNoLabel')}</div>
+                  <div className="text-sm text-muted-foreground">{ts('sampleOrderNoLabel')}</div>
                   <div className="font-medium">{order.sample_order_no || '-'}</div>
                 </div>
               </div>
@@ -236,7 +237,7 @@ export default function SampleOrderDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('orderTrackerLabel')}</div>
+                  <div className="text-sm text-muted-foreground">{ts('orderTrackerLabel')}</div>
                   <div className="font-medium">{order.order_tracker || '-'}</div>
                 </div>
               </div>
@@ -262,7 +263,7 @@ export default function SampleOrderDetailPage() {
                 <div className="font-medium">{order.size_spec || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">{tc('materialDescLabel')}</div>
+                <div className="text-sm text-muted-foreground">{ts('materialDescLabel')}</div>
                 <div className="text-sm">{order.material_desc || '-'}</div>
               </div>
             </CardContent>
@@ -280,7 +281,7 @@ export default function SampleOrderDetailPage() {
                   <div className="font-medium">{order.print_method || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('colorSequenceLabel')}</div>
+                  <div className="text-sm text-muted-foreground">{ts('colorSequenceLabel')}</div>
                   <div className="font-medium">{order.color_sequence || '-'}</div>
                 </div>
               </div>
@@ -305,29 +306,29 @@ export default function SampleOrderDetailPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('progressDetailLabel')}</div>
+                  <div className="text-sm text-muted-foreground">{ts('progressDetailLabel')}</div>
                   <div className="font-medium">{order.progress_detail || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('sampleCountLabel')}</div>
+                  <div className="text-sm text-muted-foreground">{ts('sampleCountLabel')}</div>
                   <div className="font-medium">
-                    {tc('countPrefix')}
+                    {ts('countPrefix')}
                     {order.sample_count}
-                    {tc('pieceUnit')}
+                    {ts('pieceUnit')}
                   </div>
                 </div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">{tc('sampleReasonLabel')}</div>
+                <div className="text-sm text-muted-foreground">{ts('sampleReasonLabel')}</div>
                 <div className="font-medium">{order.sample_reason || '-'}</div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('providedMaterialLabel')}</div>
+                  <div className="text-sm text-muted-foreground">{ts('providedMaterialLabel')}</div>
                   <div className="font-medium">{order.provided_material || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('receiveTimeLabel')}</div>
+                  <div className="text-sm text-muted-foreground">{ts('receiveTimeLabel')}</div>
                   <div className="font-medium">{order.receive_time || '-'}</div>
                 </div>
               </div>
@@ -350,7 +351,7 @@ export default function SampleOrderDetailPage() {
                   </span>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('isConfirmedLabel')}</div>
+                  <div className="text-sm text-muted-foreground">{ts('isConfirmedLabel')}</div>
                   <div className="font-medium">{order.is_confirmed ? tc('yes') : tc('no')}</div>
                 </div>
                 <div>
@@ -361,7 +362,7 @@ export default function SampleOrderDetailPage() {
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">
-                    {tc('isProduceTogetherLabel')}
+                    {ts('isProduceTogetherLabel')}
                   </div>
                   <div className="font-medium">
                     {order.is_produce_together ? tc('yes') : tc('no')}
@@ -370,11 +371,11 @@ export default function SampleOrderDetailPage() {
               </div>
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('mylarInfoLabel')}</div>
+                  <div className="text-sm text-muted-foreground">{ts('mylarInfoLabel')}</div>
                   <div className="font-medium">{order.mylar_info || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('sampleStockLabel')}</div>
+                  <div className="text-sm text-muted-foreground">{ts('sampleStockLabel')}</div>
                   <div className="font-medium">{order.sample_stock || '-'}</div>
                 </div>
                 <div>

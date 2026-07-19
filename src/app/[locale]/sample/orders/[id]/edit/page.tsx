@@ -58,6 +58,7 @@ interface SampleOrder {
 export default function EditSampleOrderPage() {
   // 翻译钩子
   const tc = useTranslations('Common');
+  const ts = useTranslations('SampleManagement');
 
   const router = useRouter();
   const params = useParams();
@@ -214,7 +215,7 @@ export default function EditSampleOrderPage() {
                 <FlaskConical className="h-6 w-6 text-blue-500" />
                 编辑打样单
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">{tc('editDesc')}</p>
+              <p className="text-sm text-muted-foreground mt-1">{ts('editDesc')}</p>
             </div>
           </div>
           <Button onClick={handleSave} disabled={isSaving}>
@@ -276,7 +277,7 @@ export default function EditSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{tc('sampleOrderNoLabel')}</Label>
+                <Label>{ts('sampleOrderNoLabel')}</Label>
                 <Input
                   placeholder="如: DY-A047-05914"
                   value={formData.sample_order_no}
@@ -285,7 +286,7 @@ export default function EditSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{tc('orderTrackerLabel')}</Label>
+                <Label>{ts('orderTrackerLabel')}</Label>
                 <Input
                   placeholder="请输入跟单人员"
                   value={formData.order_tracker}
@@ -329,7 +330,7 @@ export default function EditSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{tc('materialDescLabel')}</Label>
+                <Label>{ts('materialDescLabel')}</Label>
                 <Textarea
                   placeholder="请输入材料描述"
                   value={formData.material_desc}
@@ -364,7 +365,7 @@ export default function EditSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{tc('colorSequenceLabel')}</Label>
+                <Label>{ts('colorSequenceLabel')}</Label>
                 <Input
                   placeholder="如: 4色"
                   value={formData.color_sequence}
@@ -400,7 +401,7 @@ export default function EditSampleOrderPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>{tc('progressDetailLabel')}</Label>
+                <Label>{ts('progressDetailLabel')}</Label>
                 <Select
                   value={formData.progress_detail}
                   onValueChange={(v) => handleChange('progress_detail', v)}
@@ -424,7 +425,7 @@ export default function EditSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{tc('sampleCountLabel')}</Label>
+                <Label>{ts('sampleCountLabel')}</Label>
                 <Input
                   type="number"
                   min={1}
@@ -434,7 +435,7 @@ export default function EditSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{tc('sampleReasonLabel')}</Label>
+                <Label>{ts('sampleReasonLabel')}</Label>
                 <Input
                   placeholder="如: 变更内容及版本"
                   value={formData.sample_reason}
@@ -443,7 +444,7 @@ export default function EditSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{tc('providedMaterialLabel')}</Label>
+                <Label>{ts('providedMaterialLabel')}</Label>
                 <Select
                   value={formData.provided_material}
                   onValueChange={(v) => handleChange('provided_material', v)}
@@ -459,7 +460,7 @@ export default function EditSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{tc('receiveTimeLabel')}</Label>
+                <Label>{ts('receiveTimeLabel')}</Label>
                 <Input
                   type="time"
                   value={formData.receive_time}
@@ -477,7 +478,7 @@ export default function EditSampleOrderPage() {
             <CardContent>
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div className="space-y-2">
-                  <Label>{tc('mylarInfoLabel')}</Label>
+                  <Label>{ts('mylarInfoLabel')}</Label>
                   <Input
                     placeholder="如: 内贴*2"
                     value={formData.mylar_info}
@@ -485,7 +486,7 @@ export default function EditSampleOrderPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{tc('sampleStockLabel')}</Label>
+                  <Label>{ts('sampleStockLabel')}</Label>
                   <Input
                     value={formData.sample_stock}
                     onChange={(e) => handleChange('sample_stock', e.target.value)}
@@ -507,7 +508,7 @@ export default function EditSampleOrderPage() {
                     checked={formData.is_confirmed}
                     onCheckedChange={(checked) => handleChange('is_confirmed', checked)}
                   />
-                  <Label htmlFor="is_confirmed">{tc('isConfirmedLabel')}</Label>
+                  <Label htmlFor="is_confirmed">{ts('isConfirmedLabel')}</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -525,7 +526,7 @@ export default function EditSampleOrderPage() {
                     checked={formData.is_produce_together}
                     onCheckedChange={(checked) => handleChange('is_produce_together', checked)}
                   />
-                  <Label htmlFor="is_produce_together">{tc('isProduceTogetherLabel')}</Label>
+                  <Label htmlFor="is_produce_together">{ts('isProduceTogetherLabel')}</Label>
                 </div>
               </div>
 
