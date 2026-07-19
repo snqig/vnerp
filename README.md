@@ -138,6 +138,14 @@ src/
 
 **开发约束**：UI 文本必须通过 `useTranslations` Hook 读取，禁止硬编码中文。ESLint 自定义规则 `i18n/no-chinese-hardcode` 会在提交时自动检测，详见 [docs/11-开发指南/i18n规范.md](docs/11-开发指南/i18n规范.md)。
 
+**i18n key 校验**：项目内置了 key 完整性校验脚本，CI 中自动执行：
+```bash
+node scripts/i18n-key-check.mjs    # 检查代码引用的 key 是否在 messages 中存在
+node scripts/i18n-key-check.mjs --strict   # CI 卡点模式
+node scripts/i18n-key-check.mjs --unused   # 同时报告未使用的孤立 key
+```
+修改 locale 文件或新增翻译引用后，请运行此脚本确认无缺失 key。所有 locale 文件（`messages/*.json`）已通过 `text_xxxxxx` 占位符清除和 misbound key 修复达到 0 缺失状态。
+
 ## 提交规范与 CI/CD
 
 ### 提交规范
