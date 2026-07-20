@@ -57,7 +57,11 @@ pnpm dev
 | `pnpm setup:db --seed` | 数据库初始化 + 种子数据                             |
 | `pnpm setup:db`        | 数据库初始化（建表 + 种子数据）                     |
 | `pnpm migrate`         | 执行数据库迁移                                      |
+| `pnpm migrate:status`  | 查看迁移状态                                        |
 | `pnpm db:studio`       | Drizzle Studio 可视化管理                           |
+| `pnpm i18n:check`      | i18n key 缺失校验                                   |
+| `pnpm i18n:check:strict` | i18n key 校验（CI 卡点模式，缺失则失败）          |
+| `pnpm backup`          | 数据库备份                                          |
 
 ## 技术栈
 
@@ -111,19 +115,31 @@ src/
 | 模块     | 路径前缀        | 说明                                         |
 | -------- | --------------- | -------------------------------------------- |
 | 看板中心 | `/dashboard`  | 综合仪表盘、CEO/生产/财务/质量/销售/仓库看板 |
-| 仓储管理 | `/warehouse`  | 入库、出库、库存、调拨、盘点、批次追溯       |
+| 仓储管理 | `/warehouse`  | 入库、出库、库存、调拨、盘点、批次追溯（多币种） |
 | 生产管理 | `/production` | 工单、排产、领料、退料、MRP                  |
-| 销售管理 | `/sales`      | 发货、对账、退货                             |
-| 采购管理 | `/purchase`   | 采购订单、申请、供应商、退换货               |
+| 销售管理 | `/sales`      | 发货、对账、退货（多币种）                   |
+| 采购管理 | `/purchase`   | 采购订单、申请、供应商、退换货（多币种）     |
 | 印前管理 | `/dcprint`    | 刀模、油墨、网版、工艺卡、追溯               |
 | 质量管理 | `/quality`    | 来料/过程/成品检验、SPC、SGS、客诉           |
 | 设备管理 | `/equipment`  | 校准、维护、维修、报废                       |
-| 财务管理 | `/finance`    | 应收应付、成本、报表                         |
+| 财务管理 | `/finance`    | 应收应付、成本、报表（多币种）               |
 | 人力资源 | `/hr`         | 员工、考勤、薪资、培训                       |
 | 打样管理 | `/sample`     | 样品订单、标准色卡                           |
-| 系统设置 | `/settings`   | 组织架构、用户、角色、菜单、字典、配置、日志 |
+| 系统设置 | `/settings`   | 组织架构、用户、角色、菜单、字典、配置、日志、币种、汇率 |
 
 完整接口清单见 [docs/10-接口文档/API.md](docs/10-接口文档/API.md)。
+
+### 多币种支持
+
+系统支持多币种业务处理（Phase 2b 已完成），覆盖采购、销售、仓储、财务四大模块：
+
+- **币种管理**：`/settings/currency` — 币种 CRUD（代码、名称、符号、小数位）
+- **汇率管理**：`/settings/exchange-rate` — 汇率 CRUD 与历史记录
+- **双币种显示**：`MoneyDisplay` 组件同时展示原币种与本位币金额
+- **领域层**：`CurrencySnapshot` 不可变值对象，记录下单时的汇率快照
+- **数据迁移**：迁移脚本 064-068 已添加多币种字段并回填历史数据
+
+设计文档详见 [docs/superpowers/specs/](docs/superpowers/specs/)。
 
 ## i18n 国际化
 
@@ -144,7 +160,7 @@ node scripts/i18n-key-check.mjs    # 检查代码引用的 key 是否在 message
 node scripts/i18n-key-check.mjs --strict   # CI 卡点模式
 node scripts/i18n-key-check.mjs --unused   # 同时报告未使用的孤立 key
 ```
-修改 locale 文件或新增翻译引用后，请运行此脚本确认无缺失 key。所有 locale 文件（`messages/*.json`）已通过 `text_xxxxxx` 占位符清除和 misbound key 修复达到 0 缺失状态。
+修改 locale 文件或新增翻译引用后，请运行此脚本确认无缺失 key。所有 locale 文件（`messages/*.json`）已通过 `text_xxxxxx` 占位符清除和 282 个 misbound key 修复，达到 0 缺失状态。
 
 ## 提交规范与 CI/CD
 
@@ -242,6 +258,8 @@ docker-compose -f docker-compose.prod.yml up -d
 
 完整项目文档位于 [docs/](docs/)，入口索引见 [docs/README.md](docs/README.md)。
 
+工具脚本说明见 [scripts/README.md](scripts/README.md)，涵盖数据库管理、i18n 工具、部署脚本、诊断调试等 9 大类脚本。
+
 ## 个人微信
 
 扫码加入微信交流群，获取最新动态与技术支持：
@@ -258,4 +276,4 @@ docker-compose -f docker-compose.prod.yml up -d
 - **生成日期：** 2026-07-07
 - **项目名称：** 印刷生产经营信息管理系统 Print MIS
 
-> 最后更新：2026-07-07
+> 最后更新：2026-07-17
