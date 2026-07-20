@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ErrorInfo, Component } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,9 +15,61 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LaborCostChart } from '@/components/hr/charts/LaborCostChart';
-import { ChevronLeft, ChevronRight, DollarSign, Users, TrendingUp, Building2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, DollarSign, Users, TrendingUp, Building2, AlertCircle } from 'lucide-react';
 import { format, subMonths } from 'date-fns';
 import { useTranslations } from 'next-intl';
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+  errorInfo?: ErrorInfo;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(_error: Error): ErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('[LaborCostPage Error]', error, errorInfo);
+    this.setState({ error, errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <MainLayout>
+          <div className="container mx-auto py-6">
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+              <AlertCircle className="h-16 w-16 mb-4 text-red-500" />
+              <p className="text-lg font-medium text-red-500">页面加载失败</p>
+              <p className="text-sm mt-2 text-muted-foreground">
+                {this.state.error?.message || '发生未知错误'}
+              </p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => this.setState({ hasError: false })}
+              >
+                重试
+              </Button>
+            </div>
+          </div>
+        </MainLayout>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 interface LaborCostData {
   totalCost: number;
@@ -104,8 +156,9 @@ export default function LaborCostReportPage() {
   }
 
   return (
-    <MainLayout>
-      <div className="container mx-auto py-6 space-y-6">
+    <ErrorBoundary>
+      <MainLayout>
+        <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">{t('laborCost') || '人力成本分析'}</h1>
           <div className="flex items-center gap-2">
@@ -228,5 +281,6 @@ export default function LaborCostReportPage() {
         </Card>
       </div>
     </MainLayout>
+    </ErrorBoundary>
   );
 }
