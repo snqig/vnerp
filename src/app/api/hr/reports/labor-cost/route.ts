@@ -21,9 +21,12 @@ export const GET = withPermission(async (request: NextRequest) => {
   if (!calcMonth) {
     return successResponse({
       totalCost: 0,
+      avgCost: 0,
+      headcount: 0,
+      costTrend: 0,
       byDepartment: [],
       byType: [],
-      kpi: { avgCostPerHead: 0, productivity: 0 },
+      monthlyTrend: [],
     });
   }
 
@@ -46,6 +49,8 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   const t = totals;
   const grandTotal = Number(t.totalCost);
+  const headcount = Number(t.headcount);
+  const avgCost = headcount > 0 ? Number((grandTotal / headcount).toFixed(2)) : 0;
 
   const deptRows = await db.execute(sql`
     SELECT
@@ -59,30 +64,62 @@ export const GET = withPermission(async (request: NextRequest) => {
     ORDER BY cost DESC
   `) as unknown as { dept_name: string; headcount: number; cost: number }[];
 
+  const deptTotal = deptRows.reduce((s, d) => s + Number(d.cost), 0);
+
   const typeItems = [
-    { type: 'base', amount: Number(t.totalBase) },
-    { type: 'piece', amount: Number(t.totalPiece) },
-    { type: 'overtime', amount: Number(t.totalOvertime) },
-    { type: 'performance', amount: Number(t.totalPerformance) },
-    { type: 'insurance', amount: Number(t.totalInsurance) },
+    { type: 'base', cost: Number(t.totalBase) },
+    { type: 'piece', cost: Number(t.totalPiece) },
+    { type: 'overtime', cost: Number(t.totalOvertime) },
+    { type: 'performance', cost: Number(t.totalPerformance) },
+    { type: 'insurance', cost: Number(t.totalInsurance) },
   ];
 
-  const byTypeTotal = typeItems.reduce((s, i) => s + i.amount, 0);
+  const byTypeTotal = typeItems.reduce((s, i) => s + i.cost, 0);
+
+  const lastMonth = `${parseInt(calcMonth.split('-')[0])}-${String(parseInt(calcMonth.split('-')[1]) - 1).padStart(2, '0')}`;
+  const [lastMonthTotal] = await db.execute(sql`
+    SELECT COALESCE(SUM(gross_pay), 0) as totalCost FROM hr_salary_calculation
+    WHERE calc_month = ${lastMonth} AND status = 'confirmed'
+  `) as unknown as { totalCost: number }[];
+  const costTrend = lastMonthTotal && lastMonthTotal.totalCost > 0
+    ? Number((((grandTotal - Number(lastMonthTotal.totalCost)) / Number(lastMonthTotal.totalCost)) * 100).toFixed(2))
+    : 0;
+
+  const monthlyTrend = await db.execute(sql`
+    SELECT
+      calc_month as month,
+      COALESCE(SUM(base_salary), 0) as base,
+      COALESCE(SUM(piece_salary), 0) as piece,
+      COALESCE(SUM(overtime_salary), 0) as overtime,
+      COALESCE(SUM(performance_salary), 0) as performance,
+      COALESCE(SUM(social_insurance_personal + housing_fund_personal), 0) as insurance
+    FROM hr_salary_calculation
+    WHERE calc_month >= DATE_SUB(${calcMonth}, INTERVAL 5 MONTH) AND status = 'confirmed'
+    GROUP BY calc_month
+    ORDER BY calc_month
+  `) as unknown as { month: string; base: number; piece: number; overtime: number; performance: number; insurance: number }[];
 
   return successResponse({
     totalCost: grandTotal,
+    avgCost,
+    headcount,
+    costTrend,
     byDepartment: deptRows.map(d => ({
-      deptName: d.dept_name,
-      headcount: d.headcount,
+      dept_name: d.dept_name,
       cost: Number(d.cost),
+      percentage: deptTotal > 0 ? Number(((Number(d.cost) / deptTotal) * 100).toFixed(2)) : 0,
     })),
     byType: typeItems.map(i => ({
       ...i,
-      percentage: byTypeTotal > 0 ? Number(((i.amount / byTypeTotal) * 100).toFixed(2)) : 0,
+      percentage: byTypeTotal > 0 ? Number(((i.cost / byTypeTotal) * 100).toFixed(2)) : 0,
     })),
-    kpi: {
-      avgCostPerHead: t.headcount > 0 ? Number((grandTotal / t.headcount).toFixed(2)) : 0,
-      productivity: 0,
-    },
+    monthlyTrend: monthlyTrend.map(m => ({
+      month: m.month,
+      base: Number(m.base),
+      piece: Number(m.piece),
+      overtime: Number(m.overtime),
+      performance: Number(m.performance),
+      insurance: Number(m.insurance),
+    })),
   });
 }, { errorMessage: '获取人力成本报表失败' });

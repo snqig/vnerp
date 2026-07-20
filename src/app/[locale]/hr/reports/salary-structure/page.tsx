@@ -42,10 +42,13 @@ export default function SalaryStructurePage() {
     try {
       const res = await authFetch(`/api/hr/reports/salary-structure?month=${month}`);
       const json = await res.json();
-      if (json.success) {
+      if (json.code === 200) {
         setData(json.data);
+      } else {
+        setData({ avgSalary: 0, medianSalary: 0, componentBreakdown: [], distribution: [] });
       }
     } catch {
+      setData({ avgSalary: 0, medianSalary: 0, componentBreakdown: [], distribution: [] });
     } finally {
       setLoading(false);
     }
@@ -95,7 +98,7 @@ export default function SalaryStructurePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ¥{data?.avgSalary.toLocaleString() || '0'}
+                ¥{data?.avgSalary?.toLocaleString() ?? '0'}
               </div>
             </CardContent>
           </Card>
@@ -106,7 +109,7 @@ export default function SalaryStructurePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ¥{data?.medianSalary.toLocaleString() || '0'}
+                ¥{data?.medianSalary?.toLocaleString() ?? '0'}
               </div>
             </CardContent>
           </Card>

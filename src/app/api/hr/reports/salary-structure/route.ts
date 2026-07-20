@@ -6,6 +6,8 @@ import { successResponse } from '@/lib/api-response';
 
 const db = getDrizzleDb();
 
+const COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#eab308'];
+
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const month = searchParams.get('month');
@@ -20,8 +22,9 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   if (!calcMonth) {
     return successResponse({
-      labels: [], values: [],
-      averageSalary: 0, medianSalary: 0, distribution: [],
+      avgSalary: 0, medianSalary: 0,
+      componentBreakdown: [],
+      distribution: [],
     });
   }
 
@@ -39,6 +42,14 @@ export const GET = withPermission(async (request: NextRequest) => {
     avgBase: number; avgPiece: number; avgOvertime: number;
     avgPerformance: number; avgAllowances: number; avgNetPay: number;
   }[];
+
+  const componentBreakdown = [
+    { name: 'baseSalary', value: Number(avgs.avgBase), color: COLORS[0] },
+    { name: 'pieceSalary', value: Number(avgs.avgPiece), color: COLORS[1] },
+    { name: 'overtimeSalary', value: Number(avgs.avgOvertime), color: COLORS[2] },
+    { name: 'performanceSalary', value: Number(avgs.avgPerformance), color: COLORS[3] },
+    { name: 'allowances', value: Number(avgs.avgAllowances), color: COLORS[4] },
+  ].filter(c => c.value > 0);
 
   const netPays = await db.execute(sql`
     SELECT net_pay FROM hr_salary_calculation
@@ -63,24 +74,15 @@ export const GET = withPermission(async (request: NextRequest) => {
   for (let start = 0; start <= maxSalary; start += bucketSize) {
     const end = start + bucketSize;
     const bucketCount = salaries.filter(s => s >= start && s < end).length;
-    distribution.push({
-      range: `${start}-${end}`,
-      count: bucketCount,
-    });
+    if (bucketCount > 0) {
+      distribution.push({ range: `${start.toLocaleString()}-${end.toLocaleString()}`, count: bucketCount });
+    }
   }
 
-  const a = avgs;
   return successResponse({
-    labels: ['基本工资', '计件工资', '加班工资', '绩效', '津贴'],
-    values: [
-      Number(a.avgBase),
-      Number(a.avgPiece),
-      Number(a.avgOvertime),
-      Number(a.avgPerformance),
-      Number(a.avgAllowances),
-    ],
-    averageSalary: Number(a.avgNetPay),
+    avgSalary: Number(avgs.avgNetPay),
     medianSalary: Math.round(medianSalary),
+    componentBreakdown,
     distribution,
   });
 }, { errorMessage: '获取薪资结构报表失败' });

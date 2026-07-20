@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   PieChart,
   Pie,
@@ -21,15 +22,26 @@ interface SalaryStructureChartProps {
 }
 
 export function SalaryStructureChart({ data }: SalaryStructureChartProps) {
+  const t = useTranslations('Hr');
+
+  const labelMap: Record<string, string> = {
+    baseSalary: t('baseSalary') || '基本工资',
+    pieceSalary: t('pieceSalary') || '计件工资',
+    overtimeSalary: t('overtimeSalary') || '加班工资',
+    performanceSalary: t('performanceSalary') || '绩效奖金',
+    allowances: t('allowances') || '津贴补贴',
+  };
+
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-[400px] text-muted-foreground">
-        暂无数据
+        {t('noData') || '暂无数据'}
       </div>
     );
   }
 
   const total = data.reduce((sum, d) => sum + d.value, 0);
+  const chartData = data.map(d => ({ ...d, name: labelMap[d.name] || d.name }));
 
   const renderCenterLabel = useCallback(
     ({ viewBox }: { viewBox?: { cx: number; cy: number } }) => {
@@ -38,7 +50,7 @@ export function SalaryStructureChart({ data }: SalaryStructureChartProps) {
       return (
         <g>
           <text x={cx} y={cy - 8} textAnchor="middle" className="fill-muted-foreground text-xs">
-            总金额
+            {t('total') || '总金额'}
           </text>
           <text
             x={cx}
@@ -51,14 +63,14 @@ export function SalaryStructureChart({ data }: SalaryStructureChartProps) {
         </g>
       );
     },
-    [total]
+    [total, t]
   );
 
   return (
     <ResponsiveContainer width="100%" height={400}>
       <PieChart>
         <Pie
-          data={data}
+          data={chartData}
           cx="50%"
           cy="50%"
           innerRadius={60}
@@ -67,7 +79,7 @@ export function SalaryStructureChart({ data }: SalaryStructureChartProps) {
           dataKey="value"
           labelLine
         >
-          {data.map((entry, index) => (
+          {chartData.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={entry.color} />
           ))}
         </Pie>

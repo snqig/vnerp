@@ -89,6 +89,20 @@ export default function LaborCostReportPage() {
     );
   }
 
+  if (!data) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto py-6">
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+            <DollarSign className="h-16 w-16 mb-4 opacity-50" />
+            <p className="text-lg">{tc('noData') || '暂无数据'}</p>
+            <p className="text-sm mt-2">{tc('pleaseSelectMonth') || '请选择月份或进行薪资核算'}</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="container mx-auto py-6 space-y-6">
@@ -113,7 +127,7 @@ export default function LaborCostReportPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ¥{data?.totalCost.toLocaleString() || '0'}
+                ¥{(data?.totalCost ?? 0).toLocaleString()}
               </div>
             </CardContent>
           </Card>
@@ -124,7 +138,7 @@ export default function LaborCostReportPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ¥{data?.avgCost.toLocaleString() || '0'}
+                ¥{(data?.avgCost ?? 0).toLocaleString()}
               </div>
             </CardContent>
           </Card>
@@ -165,11 +179,11 @@ export default function LaborCostReportPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data?.byDepartment.map((dept, i) => (
+                  {(data?.byDepartment || []).map((dept, i) => (
                     <TableRow key={i}>
                       <TableCell className="font-medium">{dept.dept_name}</TableCell>
-                      <TableCell className="text-right">¥{dept.cost.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{dept.percentage}%</TableCell>
+                      <TableCell className="text-right">¥{(dept.cost ?? 0).toLocaleString()}</TableCell>
+                      <TableCell className="text-right">{dept.percentage || 0}%</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -191,11 +205,11 @@ export default function LaborCostReportPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data?.byType.map((t, i) => (
+                  {(data?.byType || []).map((t, i) => (
                     <TableRow key={i}>
                       <TableCell className="font-medium">{typeLabels[t.type] || t.type}</TableCell>
-                      <TableCell className="text-right">¥{t.cost.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{t.percentage}%</TableCell>
+                      <TableCell className="text-right">¥{(t.cost ?? 0).toLocaleString()}</TableCell>
+                      <TableCell className="text-right">{t.percentage || 0}%</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
