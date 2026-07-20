@@ -28,21 +28,43 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
       for (const menu of topLevelMenus) {
         const [existing]: Loose = await conn.execute(
-          'SELECT id FROM sys_menu WHERE menu_code = ? AND parent_id = 0',
+          'SELECT id, parent_id FROM sys_menu WHERE menu_code = ?',
           [menu.menu_code]
         );
         if (existing && existing.length > 0) {
-          await conn.execute(
-            'UPDATE sys_menu SET menu_name = ?, icon = ?, sort_order = ?, path = ? WHERE menu_code = ? AND parent_id = 0',
-            [
-              menu.menu_name,
-              menu.icon,
-              menu.sort_order,
-              menu.menu_code === 'dashboard_center' ? '/dashboard_center' : `/${menu.menu_code}`,
-              menu.menu_code,
-            ]
-          );
-          results.push(`${menu.menu_code}: 已更新`);
+          const existingMenu = existing[0];
+          if (existingMenu.parent_id === 0) {
+            await conn.execute(
+              'UPDATE sys_menu SET menu_name = ?, icon = ?, sort_order = ?, path = ? WHERE menu_code = ?',
+              [
+                menu.menu_name,
+                menu.icon,
+                menu.sort_order,
+                menu.menu_code === 'dashboard_center' ? '/dashboard_center' : `/${menu.menu_code}`,
+                menu.menu_code,
+              ]
+            );
+            results.push(`${menu.menu_code}: 已更新`);
+          } else {
+            await conn.execute('DELETE FROM sys_role_menu WHERE menu_id = ?', [existingMenu.id]);
+            await conn.execute('DELETE FROM sys_menu WHERE id = ?', [existingMenu.id]);
+            await conn.execute(
+              'INSERT INTO sys_menu (parent_id, menu_name, menu_code, menu_type, icon, path, component, permission, sort_order, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+              [
+                0,
+                menu.menu_name,
+                menu.menu_code,
+                1,
+                menu.icon,
+                menu.menu_code === 'dashboard_center' ? '/dashboard_center' : `/${menu.menu_code}`,
+                null,
+                `${menu.menu_code}:*`,
+                menu.sort_order,
+                1,
+              ]
+            );
+            results.push(`${menu.menu_code}: 重复菜单已删除并重建为顶级菜单`);
+          }
         } else {
           await conn.execute(
             'INSERT INTO sys_menu (parent_id, menu_name, menu_code, menu_type, icon, path, component, permission, sort_order, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
