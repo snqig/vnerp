@@ -44,6 +44,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { ClientOnly } from '@/components/ClientOnly';
 import { useRouter } from 'next/navigation';
 import { NavigationMode } from '@/hooks/useSnowAdminTheme';
 import { cn } from '@/lib/utils';
@@ -305,92 +306,98 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
       </div>
 
       <div className="flex items-center gap-2">
-        <LanguageSwitcher />
+        <ClientOnly fallback={<Button variant="ghost" size="icon" className="w-9 h-9"><Globe className="h-4 w-4" /></Button>}>
+          <LanguageSwitcher />
+        </ClientOnly>
         <ThemeToggle />
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
-              <Bell className="h-4 w-4" aria-hidden="true" />
-              {unreadCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </Badge>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <div className="flex items-center justify-between px-2">
-              <DropdownMenuLabel className="p-0">{ts('notice')}</DropdownMenuLabel>
-              {unreadCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs"
-                  onClick={handleMarkAllRead}
-                >
-                  {tc('markAllRead')}
-                </Button>
-              )}
-            </div>
-            <DropdownMenuSeparator />
-            {notifications.length === 0 ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">{tc('noData')}</div>
-            ) : (
-              notifications.slice(0, 5).map((n) => (
-                <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-1 py-3">
-                  <div className="flex items-center gap-2">
-                    {!n.read && <span className="h-2 w-2 rounded-full bg-primary" />}
-                    <span className="font-medium">{n.title}</span>
-                    <span className="text-xs text-muted-foreground ml-auto">{n.type}</span>
-                  </div>
-                  {n.content && (
-                    <span className="text-xs text-muted-foreground line-clamp-2">{n.content}</span>
-                  )}
-                  <span className="text-xs text-muted-foreground">{n.time}</span>
-                </DropdownMenuItem>
-              ))
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-center text-primary justify-center"
-              onClick={handleViewAllNotifications}
-            >
-              {tc('view')}
-              {ts('notice')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full" aria-label="User menu">
-              <User className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>
-              <div className="flex flex-col">
-                <span>{userInfo.username}</span>
-                <span className="text-xs text-muted-foreground">{userInfo.email}</span>
+        <ClientOnly fallback={<Button variant="ghost" size="icon" className="relative" aria-label="Notifications"><Bell className="h-4 w-4" /></Button>}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
+                <Bell className="h-4 w-4" aria-hidden="true" />
+                {unreadCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <div className="flex items-center justify-between px-2">
+                <DropdownMenuLabel className="p-0">{ts('notice')}</DropdownMenuLabel>
+                {unreadCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs"
+                    onClick={handleMarkAllRead}
+                  >
+                    {tc('markAllRead')}
+                  </Button>
+                )}
               </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handlePersonalSettings}>
-              <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
-              {ts('config')}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleSwitchWarehouse}>
-              <Warehouse className="mr-2 h-4 w-4" aria-hidden="true" />
-              {tc('switchWarehouse')}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
-              {ta('logout')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuSeparator />
+              {notifications.length === 0 ? (
+                <div className="py-6 text-center text-sm text-muted-foreground">{tc('noData')}</div>
+              ) : (
+                notifications.slice(0, 5).map((n) => (
+                  <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-1 py-3">
+                    <div className="flex items-center gap-2">
+                      {!n.read && <span className="h-2 w-2 rounded-full bg-primary" />}
+                      <span className="font-medium">{n.title}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">{n.type}</span>
+                    </div>
+                    {n.content && (
+                      <span className="text-xs text-muted-foreground line-clamp-2">{n.content}</span>
+                    )}
+                    <span className="text-xs text-muted-foreground">{n.time}</span>
+                  </DropdownMenuItem>
+                ))
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-center text-primary justify-center"
+                onClick={handleViewAllNotifications}
+              >
+                {tc('view')}
+                {ts('notice')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </ClientOnly>
+
+        <ClientOnly fallback={<Button variant="ghost" size="icon" className="rounded-full" aria-label="User menu"><User className="h-4 w-4" /></Button>}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full" aria-label="User menu">
+                <User className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>
+                <div className="flex flex-col">
+                  <span>{userInfo.username}</span>
+                  <span className="text-xs text-muted-foreground">{userInfo.email}</span>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handlePersonalSettings}>
+                <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
+                {ts('config')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSwitchWarehouse}>
+                <Warehouse className="mr-2 h-4 w-4" aria-hidden="true" />
+                {tc('switchWarehouse')}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
+                {ta('logout')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </ClientOnly>
       </div>
     </header>
   );

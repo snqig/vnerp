@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useCompanyName } from './useCompanyName';
 
-const DEFAULT_NAME = '越南达昌科技有限公司';
+const DEFAULT_NAME = '公司名称';
 
 // 构造符合 hook fetchWithRetry 校验（res.ok / res.status / res.headers）的响应
 const mockJsonResponse = (data: any, opts: { ok?: boolean; status?: number } = {}) => ({

@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * Playwright 测试配置文件
- * 越南达昌科技有限公司系统自动化测试
+ * VNERP 系统自动化测试
  */
 export default defineConfig({
   testDir: './tests',

@@ -30,7 +30,7 @@ export function createCompanyNameConfig(): ConfigFixture {
     id: 1,
     config_name: '公司名称',
     config_key: 'company_name',
-    config_value: '越南达昌科技有限公司',
+    config_value: '测试公司名称',
     description: '系统显示的公司全称',
   });
 }

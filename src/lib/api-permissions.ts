@@ -78,6 +78,8 @@ export const API_PERMISSIONS = {
   HR_SALARY: 'hr:salary',
   HR_TRAINING: 'hr:training',
   HR_DEPARTMENT: 'hr:department',
+  HR_REPORT: 'hr:report',
+  HR_SYNC: 'hr:sync',
 
   // 设备管理
   EQUIPMENT_VIEW: 'equipment:view',
@@ -483,6 +485,16 @@ export const ROUTE_PERMISSIONS: Record<
     POST: API_PERMISSIONS.HR_DEPARTMENT,
     PUT: API_PERMISSIONS.HR_DEPARTMENT,
   },
+  '/api/hr/reports/labor-cost': { GET: API_PERMISSIONS.HR_REPORT },
+  '/api/hr/reports/salary-structure': { GET: API_PERMISSIONS.HR_REPORT },
+  '/api/hr/reports/turnover': { GET: API_PERMISSIONS.HR_REPORT },
+  '/api/hr/mes-sync/piece-work': {
+    GET: API_PERMISSIONS.HR_SYNC,
+    POST: API_PERMISSIONS.HR_SYNC,
+  },
+  '/api/hr/quality-sync/defect-rate': { GET: API_PERMISSIONS.HR_EMPLOYEE },
+  '/api/hr/finance-sync/salary-transfer': { POST: API_PERMISSIONS.HR_SALARY },
+  '/api/hr/finance-sync/insurance': { POST: API_PERMISSIONS.HR_SALARY },
 
   // === 组织管理 ===
   '/api/organization': {

@@ -46,20 +46,20 @@ interface Item {
   status: number;
 }
 const typeMap: Record<number, string> = {
-  1: '安全培训',
-  2: '技能培训',
-  3: '质量培训',
-  4: '管理培训',
-  5: '新员工培训',
+  1: 'safetyTraining',
+  2: 'skillTraining',
+  3: 'qualityTraining',
+  4: 'managementTraining',
+  5: 'newEmployeeTraining',
 };
 const statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  0: { label: '待开始', variant: 'outline' },
-  1: { label: '进行中', variant: 'default' },
-  2: { label: '已完成', variant: 'secondary' },
-  3: { label: '已取消', variant: 'destructive' },
+  0: { label: 'pending', variant: 'outline' },
+  1: { label: 'inProgress', variant: 'default' },
+  2: { label: 'completed', variant: 'secondary' },
+  3: { label: 'cancelled', variant: 'destructive' },
 };
 
 const formatDate = (dateStr: string) => {
@@ -204,7 +204,7 @@ export default function TrainingPage() {
                       <TableCell className="text-xs font-mono">{item.training_no}</TableCell>
                       <TableCell className="text-xs">{item.training_name}</TableCell>
                       <TableCell className="text-xs">
-                        {typeMap[item.training_type] || '-'}
+                        {t(typeMap[item.training_type] || 'unknown')}
                       </TableCell>
                       <TableCell className="text-xs">{formatDate(item.training_date)}</TableCell>
                       <TableCell className="text-xs">{item.training_hours || '-'}h</TableCell>

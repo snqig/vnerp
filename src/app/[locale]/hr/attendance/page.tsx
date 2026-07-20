@@ -70,19 +70,18 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
 
-// 部门选项
 const departmentOptions = [
-  { value: 'all', label: '全部部门' },
-  { value: '管理部', label: '管理部' },
-  { value: '业务部', label: '业务部' },
-  { value: '生产部', label: '生产部' },
-  { value: '打样中心', label: '打样中心' },
-  { value: '采购部', label: '采购部' },
-  { value: '品质部', label: '品质部' },
-  { value: '模切', label: '模切' },
-  { value: '商标', label: '商标' },
-  { value: '其他', label: '其他' },
-  { value: '采购', label: '采购' },
+  { value: 'all', label: 'allDepartments' },
+  { value: '管理部', label: 'adminDept' },
+  { value: '业务部', label: 'businessDept' },
+  { value: '生产部', label: 'productionDept' },
+  { value: '打样中心', label: 'samplingDept' },
+  { value: '采购部', label: 'purchaseDept' },
+  { value: '品质部', label: 'qualityDept' },
+  { value: '模切', label: 'dieCutDept' },
+  { value: '商标', label: 'trademarkDept' },
+  { value: '其他', label: 'otherDept' },
+  { value: '采购', label: 'procurementDept' },
 ];
 
 // 考勤记录接口
@@ -645,12 +644,12 @@ export default function AttendancePage() {
                 <SelectValue placeholder={tc('selectDepartment')} />
               </SelectTrigger>
               <SelectContent>
-                {departmentOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
+                  {departmentOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {tc(option.label)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
             </Select>
           </div>
 
@@ -903,7 +902,7 @@ export default function AttendancePage() {
                       .filter((opt) => opt.value !== 'all')
                       .map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                          {option.label}
+                          {tc(option.label)}
                         </SelectItem>
                       ))}
                   </SelectContent>
@@ -1041,7 +1040,7 @@ export default function AttendancePage() {
                       .filter((opt) => opt.value !== 'all')
                       .map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                          {option.label}
+                          {tc(option.label)}
                         </SelectItem>
                       ))}
                   </SelectContent>

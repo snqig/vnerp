@@ -42,7 +42,7 @@ async function getCompanyName(locale: string): Promise<string> {
     if (cachedCompanyName) return cachedCompanyName;
   }
   const messages = await getMessagesByLocale(locale);
-  return messages?.Common?.companyName || '越南达昌科技有限公司';
+  return messages?.Common?.companyName || '公司名称';
 }
 
 /**

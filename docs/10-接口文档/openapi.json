@@ -1,11 +1,11 @@
-﻿{
+{
     "openapi":  "3.0.0",
     "info":  {
                  "title":  "Print MIS API",
                  "version":  "0.1.0",
                  "description":  "印刷生产经营信息管理系统 Print MIS API - 基于 Next.js 16 App Router。详细端点说明见 API.md。由 scripts/generate-api-docs.js 维护，可通过 pnpm docs:api 重新生成。",
                  "contact":  {
-                                 "name":  "越南达昌科技有限公司",
+                                 "name":  "公司名称",
                                  "url":  "http://localhost:5000"
                              }
              },
