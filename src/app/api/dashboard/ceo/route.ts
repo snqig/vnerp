@@ -66,7 +66,10 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
 
     try {
       const rows: Loose = await query(
-        `SELECT COALESCE(SUM(stock_qty * unit_price), 0) as total FROM inv_material WHERE deleted = 0 AND status = 1`
+        `SELECT COALESCE(SUM(i.available_qty * m.purchase_price), 0) as total 
+         FROM inv_material m 
+         LEFT JOIN inv_inventory i ON m.id = i.material_id
+         WHERE m.deleted = 0 AND m.status = 1 AND i.deleted = 0`
       );
       if (Array.isArray(rows) && rows.length > 0)
         overview.inventoryValue = Number(rows[0].total || 0);
@@ -254,13 +257,19 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     const inventory: Loose = { totalItems: 0, lowStock: 0, totalValue: 0, warehouseUtilization: 0 };
     try {
       const rows: Loose = await query(`
-        SELECT COUNT(*) as total,
-          SUM(CASE WHEN stock_qty <= min_stock THEN 1 ELSE 0 END) as low_stock
-        FROM inv_material WHERE deleted = 0 AND status = 1
+        SELECT m.id, COALESCE(SUM(i.available_qty), 0) as total_qty, COALESCE(m.min_stock, m.safety_stock, 0) as threshold
+        FROM inv_material m
+        LEFT JOIN inv_inventory i ON m.id = i.material_id AND i.deleted = 0
+        WHERE m.deleted = 0 AND m.status = 1
+        GROUP BY m.id, m.min_stock, m.safety_stock
       `);
       if (Array.isArray(rows) && rows.length > 0) {
-        inventory.totalItems = Number(rows[0].total || 0);
-        inventory.lowStock = Number(rows[0].low_stock || 0);
+        inventory.totalItems = rows.length;
+        inventory.lowStock = rows.filter((r: Loose) => {
+          const qty = Number(r.total_qty || 0);
+          const threshold = Number(r.threshold || 0);
+          return threshold > 0 && qty <= threshold;
+        }).length;
       }
     } catch (e) {
       logger.error({ module: 'dashboard', action: 'ceo' }, 'Dashboard query failed', {
@@ -270,7 +279,10 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
 
     try {
       const rows: Loose = await query(
-        `SELECT COALESCE(SUM(stock_qty * unit_price), 0) as total FROM inv_material WHERE deleted = 0 AND status = 1`
+        `SELECT COALESCE(SUM(i.available_qty * m.purchase_price), 0) as total 
+         FROM inv_material m 
+         LEFT JOIN inv_inventory i ON m.id = i.material_id AND i.deleted = 0
+         WHERE m.deleted = 0 AND m.status = 1`
       );
       if (Array.isArray(rows) && rows.length > 0) inventory.totalValue = Number(rows[0].total || 0);
     } catch (e) {

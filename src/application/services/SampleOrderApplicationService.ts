@@ -5,10 +5,17 @@ import { SampleOrderProps } from '@/domain/sample/aggregates/SampleOrder';
 import { SampleFeedback } from '@/domain/sample/entities/SampleFeedback';
 import { SampleFeedbackProps } from '@/domain/sample/entities/SampleFeedback';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
+import { DomainEvent } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction, query } from '@/lib/db';
 import type { PoolConnection, ResultSetHeader } from 'mysql2/promise';
 import { logger, generateTraceId } from '@/lib/logger';
+
+interface DomainEventAggregate {
+  domainEvents: DomainEvent[];
+  clearDomainEvents(): void;
+  constructor: { name: string };
+}
 
 export class SampleOrderApplicationService {
   constructor(
@@ -357,7 +364,7 @@ export class SampleOrderApplicationService {
    */
   private async persistEvents(
     aggregateId: number,
-    aggregate: any,
+    aggregate: DomainEventAggregate,
     parentCtx?: Record<string, unknown>,
     conn?: PoolConnection
   ): Promise<void> {
@@ -371,7 +378,7 @@ export class SampleOrderApplicationService {
     logger.info(ctx, '持久化领域事件', {
       aggregateId,
       eventCount: events.length,
-      eventTypes: events.map((e: any) => e.eventType),
+      eventTypes: events.map((e: DomainEvent) => e.eventType),
     });
     const aggregateType = aggregate.constructor.name;
     if (conn) {

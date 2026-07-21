@@ -36,7 +36,7 @@ const mockInventory = [
 ];
 
 // 模拟冻结记录
-let freezeRecords: any[] = [];
+let freezeRecords: unknown[] = [];
 let nextFreezeId = 1;
 
 // ============================================================
@@ -226,7 +226,7 @@ describe('集成测试 - 业务流程', () => {
       const result = simulateInventoryQuery({ keyword: '油墨' });
       expect(result.success).toBe(true);
       expect(result.data.list.length).toBeGreaterThan(0);
-      result.data.list.forEach((item: any) => {
+      result.data.list.forEach((item: unknown) => {
         expect(item.material_name).toContain('油墨');
       });
     });
@@ -235,7 +235,7 @@ describe('集成测试 - 业务流程', () => {
       const result = simulateInventoryQuery({ keyword: 'INK' });
       expect(result.success).toBe(true);
       expect(result.data.list.length).toBeGreaterThan(0);
-      result.data.list.forEach((item: any) => {
+      result.data.list.forEach((item: unknown) => {
         expect(item.material_code).toContain('INK');
       });
     });
@@ -243,7 +243,7 @@ describe('集成测试 - 业务流程', () => {
     it('仓库筛选：只返回指定仓库', () => {
       const result = simulateInventoryQuery({ warehouseId: '2' });
       expect(result.success).toBe(true);
-      result.data.list.forEach((item: any) => {
+      result.data.list.forEach((item: unknown) => {
         expect(item.warehouse_id).toBe(2);
       });
     });
@@ -251,7 +251,7 @@ describe('集成测试 - 业务流程', () => {
     it('状态筛选：只返回冻结状态', () => {
       const result = simulateInventoryQuery({ status: 'frozen' });
       expect(result.success).toBe(true);
-      result.data.list.forEach((item: any) => {
+      result.data.list.forEach((item: unknown) => {
         expect(item.status).toBe('frozen');
       });
     });
@@ -259,7 +259,7 @@ describe('集成测试 - 业务流程', () => {
     it('组合筛选：关键词+仓库+状态', () => {
       const result = simulateInventoryQuery({ keyword: '油墨', warehouseId: '1', status: 'normal' });
       expect(result.success).toBe(true);
-      result.data.list.forEach((item: any) => {
+      result.data.list.forEach((item: unknown) => {
         expect(item.material_name).toContain('油墨');
         expect(item.warehouse_id).toBe(1);
         expect(item.status).toBe('normal');
@@ -282,21 +282,21 @@ describe('集成测试 - 业务流程', () => {
     it('高级搜索：按有效期范围筛选', () => {
       const result = simulateInventoryQuery({ expiry_date_start: '2026-01-01', expiry_date_end: '2026-06-30' });
       expect(result.success).toBe(true);
-      result.data.list.forEach((item: any) => {
+      result.data.list.forEach((item: unknown) => {
         expect(item.expire_date).not.toBeNull();
-        expect(item.expire_date >= '2026-01-01').toBe(true);
-        expect(item.expire_date <= '2026-06-30').toBe(true);
+        expect((item as Record<string, unknown>).expire_date >= '2026-01-01').toBe(true);
+        expect((item as Record<string, unknown>).expire_date <= '2026-06-30').toBe(true);
       });
     });
 
     it('预警级别计算：零库存为critical', () => {
       const result = simulateInventoryQuery({ material_code: 'INK-008' });
-      expect((result.data.list[0] as any).alertLevel).toBe('critical');
+      expect((result.data.list[0] as Record<string, unknown>).alertLevel).toBe('critical');
     });
 
     it('预警级别计算：库存<=50%安全库存为critical', () => {
       const result = simulateInventoryQuery({ material_code: 'INK-006' });
-      expect((result.data.list[0] as any).alertLevel).toBe('critical');
+      expect((result.data.list[0] as Record<string, unknown>).alertLevel).toBe('critical');
     });
 
     it('预警级别计算：库存在50%-100%安全库存为warning', () => {
@@ -392,7 +392,7 @@ describe('集成测试 - 业务流程', () => {
       expect(normalInkItems.length).toBeGreaterThan(0);
 
       // Step 4: 批量冻结搜索结果
-      const idsToFreeze = normalInkItems.map((item: any) => item.id).slice(0, 3);
+      const idsToFreeze = normalInkItems.map((item: unknown) => (item as Record<string, unknown>).id as number).slice(0, 3);
       const freezeResult = simulateFreeze(idsToFreeze, 'freeze');
       expect(freezeResult.data.successCount).toBeGreaterThan(0);
 
@@ -416,22 +416,22 @@ describe('集成测试 - 业务流程', () => {
 
       // Step 2: 查询低库存预警
       const allInventory = simulateInventoryQuery({});
-      const alertItems = allInventory.data.list.filter((item: any) =>
-        item.alertLevel === 'warning' || item.alertLevel === 'critical'
+      const alertItems = allInventory.data.list.filter((item: unknown) =>
+        (item as Record<string, unknown>).alertLevel === 'warning' || (item as Record<string, unknown>).alertLevel === 'critical'
       );
       expect(alertItems.length).toBeGreaterThan(0);
 
       // Step 3: 按预警级别排序 - critical优先
-      const sorted = [...alertItems].sort((a: any, b: any) => {
+      const sorted = [...alertItems].sort((a: unknown, b: unknown) => {
         const levelOrder: Record<string, number> = { critical: 0, warning: 1, normal: 2 };
-        return levelOrder[a.alertLevel] - levelOrder[b.alertLevel];
+        return levelOrder[(a as Record<string, unknown>).alertLevel as string] - levelOrder[(b as Record<string, unknown>).alertLevel as string];
       });
       expect((sorted[0] as any).alertLevel).toBe('critical');
 
       // Step 4: 处理critical级别 - 冻结防止超卖
       const criticalIds = sorted
-        .filter((item: any) => item.alertLevel === 'critical' && item.status === 'normal' && item.stock_qty > 0)
-        .map((item: any) => item.id);
+        .filter((item: unknown) => (item as Record<string, unknown>).alertLevel === 'critical' && (item as Record<string, unknown>).status === 'normal' && (item as Record<string, unknown>).stock_qty as number > 0)
+        .map((item: unknown) => (item as Record<string, unknown>).id as number);
       if (criticalIds.length > 0) {
         const freezeResult = simulateFreeze(criticalIds, 'freeze');
         expect(freezeResult.data.successCount).toBeGreaterThan(0);

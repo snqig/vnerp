@@ -1,5 +1,5 @@
 import { execute, query, getPool } from '@/lib/db';
-import type { PoolConnection } from 'mysql2/promise';
+import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
 import type { DomainEvent } from '@/domain/shared/DomainTypes';
 import type {
   IDomainEventOutboxRepository,
@@ -17,6 +17,20 @@ import { secureLog } from '@/lib/logger';
  *
  * 兼容性：原 DomainEventOutbox 静态类保持运行，本类供 1.6 任务依赖注入切换使用。
  */
+interface EventOutboxRow {
+  id: number;
+  event_type: string;
+  aggregate_type: string;
+  aggregate_id: number;
+  payload: string | Buffer;
+  status: string;
+  retry_count: number;
+  error_message: string | null;
+  next_execute_at: Date | null;
+  create_time: Date;
+  processed_at: Date | null;
+}
+
 export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepository {
   /**
    * 在外部事务连接内保存事件
@@ -78,7 +92,7 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
          LIMIT ?
          FOR UPDATE SKIP LOCKED`,
         [limit]
-      ) as [any[], any];
+      ) as [RowDataPacket[], RowDataPacket];
 
       if (rows.length === 0) {
         await conn.commit();
@@ -201,7 +215,7 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
   }
 
   // 将数据库行映射为 EventOutboxRecord
-  private toRecord(row: any): EventOutboxRecord {
+  private toRecord(row: EventOutboxRow): EventOutboxRecord {
     return {
       id: row.id,
       eventType: row.event_type,

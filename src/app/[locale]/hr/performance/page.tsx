@@ -44,7 +44,7 @@ export default function PerformancePage() {
       const json = await res.json();
       if (json.code === 200) {
         const list = Array.isArray(json.data) ? json.data : json.data?.list || [];
-        setScores(list.map((item: any) => ({
+        setScores(list.map((item: unknown) => ({
           id: item.id,
           employeeName: item.employeeName || item.employee_name,
           employeeNo: item.employeeNo || item.employee_no,

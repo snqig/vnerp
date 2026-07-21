@@ -4,6 +4,7 @@ import { successResponse, errorResponse, commonErrors } from '@/lib/api-response
 import { getIcPrefix, generateDocNo, getConfig } from '@/lib/global-config';
 
 import { withPermission } from '@/lib/api-permissions';
+import { STOCKTAKING_TYPE_LABEL, STOCKTAKING_STATUS_LABEL } from '@/lib/status-labels';
 interface InventoryCheck {
   id: number;
   check_no: string;
@@ -38,19 +39,8 @@ interface InventoryCheckItem {
   status: number;
 }
 
-const TYPE_MAP: Record<number, string> = {
-  1: '定期盘点',
-  2: '不定期盘点',
-  3: '循环盘点',
-  4: '抽盘',
-};
-
-const STATUS_MAP: Record<number, string> = {
-  1: '进行中',
-  2: '待审批',
-  3: '已完成',
-  4: '已取消',
-};
+const TYPE_MAP = STOCKTAKING_TYPE_LABEL;
+const STATUS_MAP = STOCKTAKING_STATUS_LABEL;
 
 function generateCheckNo(): string {
   return generateDocNo(getIcPrefix());

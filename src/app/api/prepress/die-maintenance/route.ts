@@ -8,13 +8,9 @@ import {
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { FieldMapper } from '@/domain/prepress/value-objects/FieldMapping';
+import { MAINTENANCE_TYPE_LABEL } from '@/lib/status-labels';
 
-const MAINTENANCE_TYPE_MAP: Record<string, string> = {
-  routine: '常规保养',
-  grinding: '磨刃/修版',
-  re_rule: '重做/翻新',
-  replace: '更换',
-};
+const MAINTENANCE_TYPE_MAP = MAINTENANCE_TYPE_LABEL;
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);

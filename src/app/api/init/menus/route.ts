@@ -1,17 +1,17 @@
 import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
-
 import { withPermission } from '@/lib/api-permissions';
+import { logger } from '@/lib/logger';
 export const POST = withPermission(async (_request: NextRequest) => {
   const startTime = Date.now();
-  console.log('[MENU_INIT] ==================== 菜单初始化开始 ====================');
-  console.log('[MENU_INIT] 时间:', new Date().toISOString());
+  logger.info('[MENU_INIT] ==================== 菜单初始化开始 ====================');
+  logger.info('[MENU_INIT] 时间:', new Date().toISOString());
 
   try {
     const result = await transaction(async (conn) => {
       const results: string[] = [];
-      console.log('[MENU_INIT] 步骤1: 开始处理顶级菜单...');
+      logger.info('[MENU_INIT] 步骤1: 开始处理顶级菜单...');
 
       const topLevelMenus = [
         { menu_name: '看板中心', menu_code: 'dashboard_center', icon: 'BarChart3', sort_order: 1 },
@@ -84,7 +84,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           results.push(`${menu.menu_code}: 创建成功`);
         }
       }
-      console.log('[MENU_INIT] 步骤1完成: 顶级菜单处理完毕, 数量:', topLevelMenus.length);
+      logger.info('[MENU_INIT] 步骤1完成: 顶级菜单处理完毕, 数量:', topLevelMenus.length);
 
       const menuMigrations: { from: string; to: string; new_name?: string }[] = [
         { from: 'dashboard', to: 'dashboard_center', new_name: '看板中心' },
@@ -141,7 +141,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           results.push(`${mig.from} -> ${mig.to}: 无需迁移`);
         }
       }
-      console.log('[MENU_INIT] 步骤2完成: 菜单迁移处理完毕, 迁移数:', menuMigrations.length);
+      logger.info('[MENU_INIT] 步骤2完成: 菜单迁移处理完毕, 迁移数:', menuMigrations.length);
 
       const duplicateDeletes = [
         'dashboard',
@@ -165,7 +165,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           results.push(`${code}: 已删除重复菜单`);
         }
       }
-      console.log('[MENU_INIT] 步骤3完成: 重复菜单删除完毕');
+      logger.info('[MENU_INIT] 步骤3完成: 重复菜单删除完毕');
 
       const [pathDups]: Loose = await conn.execute(
         `SELECT m1.id, m1.menu_code, m1.menu_name, m1.path
@@ -178,7 +178,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         await conn.execute('DELETE FROM sys_menu WHERE id = ?', [dup.id]);
         results.push(`${dup.menu_code}(${dup.menu_name}): 路径重复删除, path=${dup.path}`);
       }
-      console.log('[MENU_INIT] 步骤4完成: 路径重复菜单删除完毕, 删除数:', pathDups.length || 0);
+      logger.info('[MENU_INIT] 步骤4完成: 路径重复菜单删除完毕, 删除数:', pathDups.length || 0);
 
       const moveMenusToEngineering = ['dcprint_ink', 'dcprint_process_cards', 'dcprint_labels'];
 
@@ -201,9 +201,9 @@ export const POST = withPermission(async (_request: NextRequest) => {
           }
         }
       }
-      console.log('[MENU_INIT] 步骤5完成: 菜单移动完毕');
+      logger.info('[MENU_INIT] 步骤5完成: 菜单移动完毕');
 
-      console.log('[MENU_INIT] 步骤6: 开始处理二级菜单项...');
+      logger.info('[MENU_INIT] 步骤6: 开始处理二级菜单项...');
       const newMenus = [
         {
           parent_code: 'dashboard_center',
@@ -1288,7 +1288,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           menu_type: 2,
           icon: null,
           path: '/settings/warehouse-category',
-          component: '/settings/organization',
+          component: '/settings/warehouse-category',
           permission: 'settings:warehouse-category:*',
           sort_order: 5,
         },
@@ -1357,6 +1357,17 @@ export const POST = withPermission(async (_request: NextRequest) => {
           component: '/settings/oper-log',
           permission: 'settings:oper-log:*',
           sort_order: 11,
+        },
+        {
+          parent_code: 'settings',
+          menu_name: '跨模块一致性监控',
+          menu_code: 'settings_consistency_monitor',
+          menu_type: 2,
+          icon: 'Activity',
+          path: '/monitoring/consistency',
+          component: '/monitoring/consistency',
+          permission: 'settings:consistency-monitor:*',
+          sort_order: 12,
         },
       ];
 
@@ -1432,9 +1443,9 @@ export const POST = withPermission(async (_request: NextRequest) => {
           }
         }
       }
-      console.log('[MENU_INIT] 步骤6完成: 二级菜单项处理完毕, 总数:', newMenus.length);
+      logger.info('[MENU_INIT] 步骤6完成: 二级菜单项处理完毕, 总数:', newMenus.length);
 
-      console.log('[MENU_INIT] 步骤7: 开始更新系统管理员菜单权限...');
+      logger.info('[MENU_INIT] 步骤7: 开始更新系统管理员菜单权限...');
       const [roles]: Loose = await conn.execute(
         "SELECT id FROM sys_role WHERE role_code = 'super_admin' LIMIT 1"
       );
@@ -1456,22 +1467,22 @@ export const POST = withPermission(async (_request: NextRequest) => {
         }
         results.push('系统管理员菜单权限已更新');
       }
-      console.log('[MENU_INIT] 步骤7完成: 系统管理员菜单权限更新完毕');
+      logger.info('[MENU_INIT] 步骤7完成: 系统管理员菜单权限更新完毕');
 
       return results;
     });
 
     const endTime = Date.now();
-    console.log('[MENU_INIT] ==================== 菜单初始化完成 ====================');
-    console.log('[MENU_INIT] 耗时:', (endTime - startTime) / 1000, '秒');
-    console.log('[MENU_INIT] 结果记录数:', result.length);
+    logger.info('[MENU_INIT] ==================== 菜单初始化完成 ====================');
+    logger.info('[MENU_INIT] 耗时:', (endTime - startTime) / 1000, '秒');
+    logger.info('[MENU_INIT] 结果记录数:', result.length);
 
     return successResponse(result, '菜单优化初始化成功');
   } catch (error) {
     const endTime = Date.now();
-    console.error('[MENU_INIT] ==================== 菜单初始化失败 ====================');
-    console.error('[MENU_INIT] 耗时:', (endTime - startTime) / 1000, '秒');
-    console.error('[MENU_INIT] 错误:', error);
+    logger.error('[MENU_INIT] ==================== 菜单初始化失败 ====================');
+    logger.error('[MENU_INIT] 耗时:', (endTime - startTime) / 1000, '秒');
+    logger.error('[MENU_INIT] 错误:', error);
 
     return errorResponse('菜单初始化失败: ' + (error as Error).message, 500);
   }

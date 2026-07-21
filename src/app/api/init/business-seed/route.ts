@@ -1,5 +1,5 @@
 ﻿import { NextRequest } from 'next/server';
-import { transaction } from '@/lib/db';
+import { transaction, type SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
@@ -14,7 +14,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     };
 
     // 安全 INSERT：字段不匹配时跳过，不阻断全局
-    const safeInsert = async (sql: string, params: any[], statKey?: string) => {
+    const safeInsert = async (sql: string, params: SqlValue[], statKey?: string) => {
       try {
         await conn.execute(sql, params);
         if (statKey) stats[statKey] = (stats[statKey] || 0) + 1;
@@ -967,7 +967,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const [matRows2]: Loose = await conn.execute(
       'SELECT id, material_name FROM inv_material WHERE deleted = 0 ORDER BY id LIMIT 5'
     );
-    const matList: Array<{ id: number; material_name: string }> = matRows2 as any;
+    const matList: Array<{ id: number; material_name: string }> = matRows2;
     for (const bom of boms) {
       await safeInsert(
         `INSERT INTO prd_bom (bom_name, product_id, version, total_cost, status, remark, create_time, update_time, deleted) VALUES (?, ?, '1.0', ?, 1, ?, NOW(), NOW(), 0)`,

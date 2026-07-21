@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { EQUIPMENT_MAINT_TYPE_LABEL, EQUIPMENT_CYCLE_TYPE_LABEL, EQUIPMENT_PLAN_STATUS_LABEL } from '@/lib/status-labels';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -103,24 +104,14 @@ interface MaintenanceRecord {
   remark: string;
 }
 
-const MAINT_TYPE: Record<number, string> = {
-  1: '日常保养',
-  2: '一级保养',
-  3: '二级保养',
-  4: '三级保养',
-};
-const CYCLE_TYPE: Record<number, string> = {
-  1: '天',
-  2: '周',
-  3: '月',
-  4: '季',
-  5: '年',
-};
+const MAINT_TYPE = EQUIPMENT_MAINT_TYPE_LABEL;
+const CYCLE_TYPE = EQUIPMENT_CYCLE_TYPE_LABEL;
+
 const PLAN_STATUS: Record<number, { label: string; color: string }> = {
-  1: { label: '待执行', color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: '执行中', color: 'bg-blue-100 text-blue-800' },
-  3: { label: '已完成', color: 'bg-green-100 text-green-800' },
-  4: { label: '已逾期', color: 'bg-red-100 text-red-800' },
+  1: { label: EQUIPMENT_PLAN_STATUS_LABEL[1], color: 'bg-yellow-100 text-yellow-800' },
+  2: { label: EQUIPMENT_PLAN_STATUS_LABEL[2], color: 'bg-blue-100 text-blue-800' },
+  3: { label: EQUIPMENT_PLAN_STATUS_LABEL[3], color: 'bg-green-100 text-green-800' },
+  4: { label: EQUIPMENT_PLAN_STATUS_LABEL[4], color: 'bg-red-100 text-red-800' },
 };
 export default function EquipmentMaintenancePage() {
   // 翻译钩子

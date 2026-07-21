@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { SignJWT } from 'jose';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { storeRefreshToken } from '@/lib/token-blacklist';
 import { logger, generateTraceId } from '@/lib/logger';
@@ -424,7 +425,8 @@ export async function POST(request: NextRequest) {
     setCsrfCookie(response, csrfToken);
 
     return response;
-  } catch {
+  } catch (error) {
+    logger.error({ ctx, error }, `[auth.login] 登录异常: ${(error as Error).message}`);
     return NextResponse.json(
       {
         success: false,

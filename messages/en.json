@@ -3031,10 +3031,10 @@
     "units.sheet": "Sheet",
     "units.roll": "Roll",
     "units.piece": "Piece",
-    "error": "操作失败",
-    "success": "操作成功",
-    "statusUpdated": "状态已更新为：{status}",
-    "currentStatus": "目前状态"
+    "error": "Operation Failed",
+    "success": "Operation Successful",
+    "statusUpdated": "Status updated to: {status}",
+    "currentStatus": "Current Status"
   },
   "Dcprint": {
     "title": "Prepress Management",
@@ -5734,5 +5734,53 @@
     "overdueUsing": "Overdue In Use",
     "sampleCompleted": "Completed",
     "sampleCancelled": "Cancelled"
+  },
+  "Monitoring": {
+    "consistency": {
+      "title": "Cross-Module Consistency Monitoring",
+      "description": "Monitor execution status and consistency of cross-module transactions across Production-Inventory-Finance-HR",
+      "total": "Total",
+      "pending": "Pending",
+      "executing": "Executing",
+      "success": "Success",
+      "failed": "Failed",
+      "compensated": "Compensated",
+      "sagaList": "Saga Transaction List",
+      "sagaListDesc": "View execution status of all cross-module transactions",
+      "noData": "No Saga records",
+      "type": "Type",
+      "sagaId": "Saga ID",
+      "businessId": "Business ID",
+      "status": "Status",
+      "steps": "Steps",
+      "createdAt": "Created At",
+      "sagaDetail": "Saga Detail",
+      "businessData": "Business Data",
+      "compensate": "Compensate",
+      "page": "Page",
+      "prevPage": "Previous",
+      "nextPage": "Next",
+      "statusLabels": {
+        "pending": "Pending",
+        "executing": "Executing",
+        "success": "Success",
+        "compensating": "Compensating",
+        "compensated": "Compensated",
+        "failed": "Failed"
+      },
+      "stepStatus": {
+        "pending": "Pending",
+        "success": "Success",
+        "failed": "Failed",
+        "compensating": "Compensating",
+        "compensated": "Compensated"
+      },
+      "typeLabels": {
+        "workorder_completion": "Work Order Completion",
+        "material_issue": "Material Issue",
+        "work_report": "Work Report",
+        "hr_payroll_calculation": "Payroll Calculation"
+      }
+    }
   }
 }

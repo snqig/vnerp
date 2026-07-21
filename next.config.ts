@@ -23,6 +23,20 @@ const nextConfig: NextConfig = {
   compress: true,
   output: process.env.VERCEL ? undefined : 'standalone',
   serverExternalPackages: ['ioredis', 'mysql2'],
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        dns: false,
+        net: false,
+        tls: false,
+        fs: false,
+        child_process: false,
+        cluster: false,
+      };
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       {

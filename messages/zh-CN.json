@@ -88,6 +88,7 @@
     "pageLoadFailed": "页面载入失败",
     "pleaseRetry": "请稍后重试",
     "retry": "重试",
+    "pleaseSelectMonth": "请选择月份或进行薪资核算",
     "backToHome": "返回首页",
     "noDataToPrint": "没有可列印的资料",
     "noDataToExport": "没有可汇出的资料",
@@ -5685,5 +5686,53 @@
     "sampleCount": "打样数",
     "sampleTopCustomer": "客户排行",
     "customer": "客户"
+  },
+  "Monitoring": {
+    "consistency": {
+      "title": "跨模块一致性监控",
+      "description": "监控生产-库存-财务-HR 跨模块事务的执行状态和一致性",
+      "total": "总数",
+      "pending": "待处理",
+      "executing": "执行中",
+      "success": "成功",
+      "failed": "失败",
+      "compensated": "已补偿",
+      "sagaList": "Saga 事务列表",
+      "sagaListDesc": "查看所有跨模块事务的执行状态",
+      "noData": "暂无 Saga 记录",
+      "type": "事务类型",
+      "sagaId": "Saga ID",
+      "businessId": "业务 ID",
+      "status": "状态",
+      "steps": "步骤",
+      "createdAt": "创建时间",
+      "sagaDetail": "Saga 详情",
+      "businessData": "业务数据",
+      "compensate": "补偿",
+      "statusLabels": {
+        "pending": "待处理",
+        "executing": "执行中",
+        "success": "成功",
+        "compensating": "补偿中",
+        "compensated": "已补偿",
+        "failed": "失败"
+      },
+      "stepStatus": {
+        "pending": "待执行",
+        "success": "成功",
+        "failed": "失败",
+        "compensating": "补偿中",
+        "compensated": "已补偿"
+      },
+      "typeLabels": {
+        "workorder_completion": "工单完工",
+        "material_issue": "领料",
+        "work_report": "报工",
+        "hr_payroll_calculation": "薪资计算"
+      },
+      "page": "页",
+      "prevPage": "上一页",
+      "nextPage": "下一页"
+    }
   }
 }

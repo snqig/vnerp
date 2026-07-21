@@ -10,13 +10,13 @@ vi.mock('@/lib/auth-fetch', () => ({
 import { usePurchaseOrderSearch } from '../hooks/usePurchaseOrderSearch';
 import { authFetch } from '@/lib/auth-fetch';
 
-const mockJsonResponse = (data: any, ok = true) =>
+const mockJsonResponse = (data: unknown, ok = true) =>
   ({
     ok,
     status: 200,
     headers: new Headers({ 'content-type': 'application/json' }),
     json: async () => data,
-  }) as any;
+  }) as Response;
 
 describe('usePurchaseOrderSearch', () => {
   beforeEach(() => {

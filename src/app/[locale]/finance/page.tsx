@@ -1,6 +1,7 @@
-﻿'use client';
+'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { PAYMENT_METHOD_LABEL, RECEIVABLE_STATUS_LABEL, PAYABLE_STATUS_LABEL } from '@/lib/status-labels';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -105,26 +106,20 @@ interface PaymentRecord {
   create_time: string;
 }
 
+
 const RECEIVABLE_STATUS: Record<number, { label: string; color: string }> = {
-  1: { label: '未收款', color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: '部分收款', color: 'bg-blue-100 text-blue-800' },
-  3: { label: '已收款', color: 'bg-green-100 text-green-800' },
+  1: { label: RECEIVABLE_STATUS_LABEL[1], color: 'bg-yellow-100 text-yellow-800' },
+  2: { label: RECEIVABLE_STATUS_LABEL[2], color: 'bg-blue-100 text-blue-800' },
+  3: { label: RECEIVABLE_STATUS_LABEL[3], color: 'bg-green-100 text-green-800' },
 };
 
 const PAYABLE_STATUS: Record<number, { label: string; color: string }> = {
-  1: { label: '未付款', color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: '部分付款', color: 'bg-blue-100 text-blue-800' },
-  3: { label: '已付款', color: 'bg-green-100 text-green-800' },
+  1: { label: PAYABLE_STATUS_LABEL[1], color: 'bg-yellow-100 text-yellow-800' },
+  2: { label: PAYABLE_STATUS_LABEL[2], color: 'bg-blue-100 text-blue-800' },
+  3: { label: PAYABLE_STATUS_LABEL[3], color: 'bg-green-100 text-green-800' },
 };
 
-const PAYMENT_METHODS: Record<string, string> = {
-  bank_transfer: '银行转账',
-  cash: '现金',
-  check: '支票',
-  alipay: '支付宝',
-  wechat: '微信',
-  other: '其他',
-};
+const PAYMENT_METHODS = PAYMENT_METHOD_LABEL;
 
 export default function FinancePage() {
   // 翻译钩子

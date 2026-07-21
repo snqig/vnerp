@@ -2,7 +2,46 @@ import { IWorkOrderRepository } from '@/domain/production/repositories/IWorkOrde
 import { WorkOrder, WorkOrderProps } from '@/domain/production/aggregates/WorkOrder';
 import { WorkOrderStatusVO } from '@/domain/production/value-objects/WorkOrderStatus';
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
+import type { ResultSetHeader } from 'mysql2/promise';
 import { generateDocumentNo } from '@/lib/document-numbering';
+
+interface WorkOrderRow {
+  id: number;
+  work_order_no: string;
+  status: number;
+  product_id: number;
+  product_name: string;
+  product_code: string;
+  order_type: number;
+  process_id: number | null;
+  process_name: string | null;
+  warehouse_id: number;
+  planned_qty: number;
+  completed_qty: number;
+  planned_start_date: Date | null;
+  planned_end_date: Date | null;
+  actual_start_date: Date | null;
+  actual_end_date: Date | null;
+  remark: string;
+  create_by: number | null;
+  create_time: Date;
+  update_time: Date | null;
+  deleted: number;
+}
+
+interface WorkOrderMaterialRow {
+  id: number;
+  work_order_id: number;
+  material_id: number;
+  material_code: string;
+  material_name: string;
+  specification: string;
+  unit: string;
+  required_qty: number;
+  issued_qty: number;
+  returned_qty: number;
+  warehouse_id: number;
+}
 
 export class MysqlWorkOrderRepository implements IWorkOrderRepository {
   async findById(id: number): Promise<WorkOrder | null> {
@@ -69,7 +108,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
     const result = await queryPaginated(sql, countSql, params, pagination);
 
     return {
-      data: result.data.map((o: any) => WorkOrder.reconstitute(this.mapToProps(o, []))),
+      data: result.data.map((o: WorkOrderRow) => WorkOrder.reconstitute(this.mapToProps(o, []))),
       pagination: result.pagination,
     };
   }
@@ -99,7 +138,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
           order.remark,
           order.createBy || null,
         ]
-      ) as any;
+      ) as ResultSetHeader;
 
       const orderId = result.insertId;
 
@@ -138,7 +177,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
     await execute('UPDATE prod_work_order SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
   }
 
-  private mapToProps(order: any, materials: any[]): WorkOrderProps {
+  private mapToProps(order: WorkOrderRow, materials: WorkOrderMaterialRow[]): WorkOrderProps {
     return {
       id: order.id,
       workOrderNo: order.work_order_no,
@@ -158,7 +197,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
       actualEndDate: order.actual_end_date,
       remark: order.remark || '',
       createBy: order.create_by,
-      materialRequirements: (materials || []).map((m: any) => ({
+      materialRequirements: (materials || []).map((m: WorkOrderMaterialRow) => ({
         id: m.id,
         materialId: m.material_id,
         materialCode: m.material_code || '',

@@ -11,13 +11,129 @@ import {
 } from '@/domain/standard-card/repositories/IStandardCardRepository';
 import type { ResultSetHeader } from 'mysql2/promise';
 
+interface StandardCardRow {
+  id: number;
+  code: string;
+  version: string;
+  name: string;
+  type: string;
+  material_id: number;
+  material_name: string;
+  customer_id: number | null;
+  customer_name: string;
+  spec: string;
+  status: string;
+  effective_date: string | null;
+  expiry_date: string | null;
+  parent_version_id: number | null;
+  is_current: number;
+  is_obsolete: number;
+  is_locked: number;
+  change_description: string | null;
+  obsolete_reason: string | null;
+  obsolete_by: number | null;
+  obsolete_at: string | null;
+  create_time: string | null;
+  update_time: string | null;
+  deleted: number;
+}
+
+interface ColorStandardItemRow {
+  id: number;
+  standard_card_id: number;
+  color_name: string;
+  pantone_code: string | null;
+  cmyk_value: string | null;
+  rgb_value: string | null;
+  color_sample_image: string | null;
+  tolerance: string | null;
+  remark: string | null;
+}
+
+interface ProcessStandardItemRow {
+  id: number;
+  standard_card_id: number;
+  process_id: number | null;
+  process_name: string;
+  process_order: number;
+  parameter_name: string | null;
+  standard_value: string | null;
+  tolerance: string | null;
+  unit: string | null;
+  standard_time: number | null;
+  machine_type: string | null;
+  description: string | null;
+  remark: string | null;
+}
+
+interface QualityStandardItemRow {
+  id: number;
+  standard_card_id: number;
+  inspection_item: string;
+  standard_value: string | null;
+  tolerance: string | null;
+  inspection_method: string | null;
+  is_key: number;
+  defect_level: string | null;
+  remark: string | null;
+}
+
+interface StandardCardMaterialRow {
+  id: number;
+  standard_card_id: number;
+  material_id: number;
+  spec: string | null;
+  unit_consumption: number;
+  loss_rate: number;
+  remark: string | null;
+}
+
+interface StandardCardInkRow {
+  id: number;
+  standard_card_id: number;
+  ink_id: number;
+  ratio: number;
+  unit_consumption: number;
+  remark: string | null;
+}
+
+interface StandardCardToolingRow {
+  id: number;
+  standard_card_id: number;
+  die_mold_id: number | null;
+  screen_plate_id: number | null;
+  remark: string | null;
+}
+
+interface StandardCardAttachmentRow {
+  id: number;
+  standard_card_id: number;
+  version: string;
+  file_name: string;
+  file_path: string;
+  file_size: number | null;
+  remark: string | null;
+  uploaded_by: number | null;
+}
+
+interface VersionChangeLogRow {
+  id: number;
+  standard_card_id: number;
+  version: string;
+  change_type: string;
+  change_content: string;
+  changed_by: number;
+  changed_at: string | null;
+  changed_by_name: string | null;
+}
+
 export class MysqlStandardCardRepository implements IStandardCardRepository {
   async findById(id: number): Promise<StandardCard | null> {
     const rows = await db.query('SELECT * FROM prd_standard_card WHERE id = ? AND deleted = 0', [
       id,
     ]);
     if (rows.length === 0) return null;
-    return this.mapToEntity(rows[0]);
+    return this.mapToEntity(rows[0] as StandardCardRow);
   }
 
   async findByCode(code: string): Promise<StandardCard | null> {
@@ -25,7 +141,7 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
       code,
     ]);
     if (rows.length === 0) return null;
-    return this.mapToEntity(rows[0]);
+    return this.mapToEntity(rows[0] as StandardCardRow);
   }
 
   async findByMaterialId(materialId: number, includeObsolete = false): Promise<StandardCard[]> {
@@ -36,7 +152,7 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
     }
     sql += ' AND deleted = 0 ORDER BY is_current DESC, version DESC, create_time DESC';
     const rows = await db.query(sql, params);
-    return rows.map((row) => this.mapToEntity(row));
+    return rows.map((row) => this.mapToEntity(row as StandardCardRow));
   }
 
   async findCurrentByMaterialId(materialId: number): Promise<StandardCard | null> {
@@ -45,7 +161,7 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
       [materialId]
     );
     if (rows.length === 0) return null;
-    return this.mapToEntity(rows[0]);
+    return this.mapToEntity(rows[0] as StandardCardRow);
   }
 
   async findByFilters(
@@ -112,7 +228,7 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
     );
 
     return {
-      list: rows.map((row) => this.mapToEntity(row)),
+      list: rows.map((row) => this.mapToEntity(row as StandardCardRow)),
       total,
     };
   }
@@ -224,7 +340,7 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
     return `${datePrefix}${nextSeq}`;
   }
 
-  private mapToEntity(row: any): StandardCard {
+  private mapToEntity(row: StandardCardRow): StandardCard {
     const props: StandardCardProps = {
       id: row.id,
       code: row.code,
@@ -262,24 +378,24 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
 }
 
 export class ColorStandardItemRepository {
-  async findByStandardCardId(standardCardId: number): Promise<any[]> {
+  async findByStandardCardId(standardCardId: number): Promise<ColorStandardItemRow[]> {
     return await db.query('SELECT * FROM prd_color_standard_item WHERE standard_card_id = ?', [
       standardCardId,
     ]);
   }
 
-  async saveBatch(standardCardId: number, items: any[]): Promise<void> {
+  async saveBatch(standardCardId: number, items: ColorStandardItemRow[]): Promise<void> {
     await db.execute('DELETE FROM prd_color_standard_item WHERE standard_card_id = ?', [
       standardCardId,
     ]);
     for (const item of items) {
       await db.insert('prd_color_standard_item', {
         standard_card_id: standardCardId,
-        color_name: item.colorName,
-        pantone_code: item.pantoneCode,
-        cmyk_value: item.cmykValue,
-        rgb_value: item.rgbValue,
-        color_sample_image: item.colorSampleImage,
+        color_name: item.color_name,
+        pantone_code: item.pantone_code,
+        cmyk_value: item.cmyk_value,
+        rgb_value: item.rgb_value,
+        color_sample_image: item.color_sample_image,
         tolerance: item.tolerance,
         remark: item.remark,
       });
@@ -294,29 +410,29 @@ export class ColorStandardItemRepository {
 }
 
 export class ProcessStandardItemRepository {
-  async findByStandardCardId(standardCardId: number): Promise<any[]> {
+  async findByStandardCardId(standardCardId: number): Promise<ProcessStandardItemRow[]> {
     return await db.query(
       'SELECT * FROM prd_process_standard_item WHERE standard_card_id = ? ORDER BY process_order',
       [standardCardId]
     );
   }
 
-  async saveBatch(standardCardId: number, items: any[]): Promise<void> {
+  async saveBatch(standardCardId: number, items: ProcessStandardItemRow[]): Promise<void> {
     await db.execute('DELETE FROM prd_process_standard_item WHERE standard_card_id = ?', [
       standardCardId,
     ]);
     for (const item of items) {
       await db.insert('prd_process_standard_item', {
         standard_card_id: standardCardId,
-        process_id: item.processId,
-        process_name: item.processName,
-        process_order: item.processOrder,
-        parameter_name: item.parameterName,
-        standard_value: item.standardValue,
+        process_id: item.process_id,
+        process_name: item.process_name,
+        process_order: item.process_order,
+        parameter_name: item.parameter_name,
+        standard_value: item.standard_value,
         tolerance: item.tolerance,
         unit: item.unit,
-        standard_time: item.standardTime,
-        machine_type: item.machineType,
+        standard_time: item.standard_time,
+        machine_type: item.machine_type,
         description: item.description,
         remark: item.remark,
       });
@@ -331,25 +447,25 @@ export class ProcessStandardItemRepository {
 }
 
 export class QualityStandardItemRepository {
-  async findByStandardCardId(standardCardId: number): Promise<any[]> {
+  async findByStandardCardId(standardCardId: number): Promise<QualityStandardItemRow[]> {
     return await db.query('SELECT * FROM prd_quality_standard_item WHERE standard_card_id = ?', [
       standardCardId,
     ]);
   }
 
-  async saveBatch(standardCardId: number, items: any[]): Promise<void> {
+  async saveBatch(standardCardId: number, items: QualityStandardItemRow[]): Promise<void> {
     await db.execute('DELETE FROM prd_quality_standard_item WHERE standard_card_id = ?', [
       standardCardId,
     ]);
     for (const item of items) {
       await db.insert('prd_quality_standard_item', {
         standard_card_id: standardCardId,
-        inspection_item: item.inspectionItem,
-        standard_value: item.standardValue,
+        inspection_item: item.inspection_item,
+        standard_value: item.standard_value,
         tolerance: item.tolerance,
-        inspection_method: item.inspectionMethod,
-        is_key: item.isKey ? 1 : 0,
-        defect_level: item.defectLevel,
+        inspection_method: item.inspection_method,
+        is_key: item.is_key ? 1 : 0,
+        defect_level: item.defect_level,
         remark: item.remark,
       });
     }
@@ -363,7 +479,7 @@ export class QualityStandardItemRepository {
 }
 
 export class StandardCardMaterialRepository {
-  async findByStandardCardId(standardCardId: number): Promise<any[]> {
+  async findByStandardCardId(standardCardId: number): Promise<StandardCardMaterialRow[]> {
     return await db.query(
       `SELECT scm.*, im.material_code, im.material_name 
        FROM prd_standard_card_material scm
@@ -373,17 +489,17 @@ export class StandardCardMaterialRepository {
     );
   }
 
-  async saveBatch(standardCardId: number, materials: any[]): Promise<void> {
+  async saveBatch(standardCardId: number, materials: StandardCardMaterialRow[]): Promise<void> {
     await db.execute('DELETE FROM prd_standard_card_material WHERE standard_card_id = ?', [
       standardCardId,
     ]);
     for (const m of materials) {
       await db.insert('prd_standard_card_material', {
         standard_card_id: standardCardId,
-        material_id: m.materialId,
+        material_id: m.material_id,
         spec: m.spec,
-        unit_consumption: m.unitConsumption,
-        loss_rate: m.lossRate ?? 0,
+        unit_consumption: m.unit_consumption,
+        loss_rate: m.loss_rate ?? 0,
         remark: m.remark,
       });
     }
@@ -397,7 +513,7 @@ export class StandardCardMaterialRepository {
 }
 
 export class StandardCardInkRepository {
-  async findByStandardCardId(standardCardId: number): Promise<any[]> {
+  async findByStandardCardId(standardCardId: number): Promise<StandardCardInkRow[]> {
     return await db.query(
       `SELECT sci.*, di.ink_code, di.ink_name, di.color_name
        FROM prd_standard_card_ink sci
@@ -407,16 +523,16 @@ export class StandardCardInkRepository {
     );
   }
 
-  async saveBatch(standardCardId: number, inks: any[]): Promise<void> {
+  async saveBatch(standardCardId: number, inks: StandardCardInkRow[]): Promise<void> {
     await db.execute('DELETE FROM prd_standard_card_ink WHERE standard_card_id = ?', [
       standardCardId,
     ]);
     for (const ink of inks) {
       await db.insert('prd_standard_card_ink', {
         standard_card_id: standardCardId,
-        ink_id: ink.inkId,
+        ink_id: ink.ink_id,
         ratio: ink.ratio,
-        unit_consumption: ink.unitConsumption,
+        unit_consumption: ink.unit_consumption,
         remark: ink.remark,
       });
     }
@@ -430,21 +546,21 @@ export class StandardCardInkRepository {
 }
 
 export class StandardCardToolingRepository {
-  async findByStandardCardId(standardCardId: number): Promise<any[]> {
+  async findByStandardCardId(standardCardId: number): Promise<StandardCardToolingRow[]> {
     return await db.query('SELECT * FROM prd_standard_card_tooling WHERE standard_card_id = ?', [
       standardCardId,
     ]);
   }
 
-  async saveBatch(standardCardId: number, toolings: any[]): Promise<void> {
+  async saveBatch(standardCardId: number, toolings: StandardCardToolingRow[]): Promise<void> {
     await db.execute('DELETE FROM prd_standard_card_tooling WHERE standard_card_id = ?', [
       standardCardId,
     ]);
     for (const t of toolings) {
       await db.insert('prd_standard_card_tooling', {
         standard_card_id: standardCardId,
-        die_mold_id: t.dieMoldId,
-        screen_plate_id: t.screenPlateId,
+        die_mold_id: t.die_mold_id,
+        screen_plate_id: t.screen_plate_id,
         remark: t.remark,
       });
     }
@@ -458,21 +574,21 @@ export class StandardCardToolingRepository {
 }
 
 export class StandardCardAttachmentRepository {
-  async findByStandardCardId(standardCardId: number): Promise<any[]> {
+  async findByStandardCardId(standardCardId: number): Promise<StandardCardAttachmentRow[]> {
     return await db.query('SELECT * FROM prd_standard_card_attachment WHERE standard_card_id = ?', [
       standardCardId,
     ]);
   }
 
-  async save(standardCardId: number, attachment: any): Promise<number> {
+  async save(standardCardId: number, attachment: StandardCardAttachmentRow): Promise<number> {
     const result = await db.insert('prd_standard_card_attachment', {
       standard_card_id: standardCardId,
       version: attachment.version,
-      file_name: attachment.fileName,
-      file_path: attachment.filePath,
-      file_size: attachment.fileSize,
+      file_name: attachment.file_name,
+      file_path: attachment.file_path,
+      file_size: attachment.file_size,
       remark: attachment.remark,
-      uploaded_by: attachment.uploadedBy,
+      uploaded_by: attachment.uploaded_by,
     });
     return result.insertId;
   }
@@ -489,7 +605,7 @@ export class StandardCardAttachmentRepository {
 }
 
 export class VersionChangeLogRepository {
-  async findByStandardCardId(standardCardId: number): Promise<any[]> {
+  async findByStandardCardId(standardCardId: number): Promise<VersionChangeLogRow[]> {
     return await db.query(
       `SELECT vcl.*, u.user_name as changed_by_name
        FROM prd_standard_card_version_log vcl
@@ -500,13 +616,13 @@ export class VersionChangeLogRepository {
     );
   }
 
-  async save(log: any): Promise<void> {
+  async save(log: VersionChangeLogRow): Promise<void> {
     await db.insert('prd_standard_card_version_log', {
-      standard_card_id: log.standardCardId,
+      standard_card_id: log.standard_card_id,
       version: log.version,
-      change_type: log.changeType,
-      change_content: log.changeContent,
-      changed_by: log.changedBy,
+      change_type: log.change_type,
+      change_content: log.change_content,
+      changed_by: log.changed_by,
     });
   }
 }

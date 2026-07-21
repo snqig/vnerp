@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { PERMISSION_MODULES } from '@/lib/permissions-catalog';
 
 // 权限类型
 export interface Permission {
@@ -25,75 +26,12 @@ interface StoredUser {
 }
 
 // 全局权限配置
-const permissionModules = [
-  {
-    id: 'dashboard',
-    name: '仪表盘',
-    permissions: [{ id: 'dashboard:view', name: '查看仪表盘' }],
-  },
-  {
-    id: 'order',
-    name: '订单管理',
-    permissions: [
-      { id: 'order:view', name: '查看订单' },
-      { id: 'order:create', name: '创建订单' },
-      { id: 'order:edit', name: '编辑订单' },
-      { id: 'order:delete', name: '删除订单' },
-      { id: 'order:approve', name: '审核订单' },
-    ],
-  },
-  {
-    id: 'production',
-    name: '生产管理',
-    permissions: [
-      { id: 'production:view', name: '查看生产' },
-      { id: 'production:create', name: '创建生产单' },
-      { id: 'production:edit', name: '编辑生产单' },
-      { id: 'production:delete', name: '删除生产单' },
-      { id: 'production:approve', name: '审核生产单' },
-    ],
-  },
-  {
-    id: 'warehouse',
-    name: '仓库管理',
-    permissions: [
-      { id: 'warehouse:view', name: '查看仓库' },
-      { id: 'warehouse:in', name: '入库操作' },
-      { id: 'warehouse:out', name: '出库操作' },
-      { id: 'warehouse:transfer', name: '调拨操作' },
-    ],
-  },
-  {
-    id: 'quality',
-    name: '质量管理',
-    permissions: [
-      { id: 'quality:view', name: '查看质量' },
-      { id: 'quality:inspect', name: '检验操作' },
-      { id: 'quality:approve', name: '审核检验' },
-    ],
-  },
-  {
-    id: 'standard-card',
-    name: '标准卡管理',
-    permissions: [
-      { id: 'standard-card:view', name: '查看标准卡' },
-      { id: 'standard-card:create', name: '创建标准卡' },
-      { id: 'standard-card:edit', name: '编辑标准卡' },
-      { id: 'standard-card:delete', name: '删除标准卡' },
-      { id: 'standard-card:approve', name: '审核标准卡' },
-    ],
-  },
-  {
-    id: 'system',
-    name: '系统管理',
-    permissions: [
-      { id: 'system:user', name: '用户管理' },
-      { id: 'system:role', name: '角色管理' },
-      { id: 'system:menu', name: '菜单管理' },
-      { id: 'system:config', name: '系统配置' },
-    ],
-  },
-];
+//
+// 单一数据源：直接引用 `@/lib/permissions-catalog` 中的 `PERMISSION_MODULES`。
+// 该常量的每个权限 id 都来自 API 网关实际校验的 `API_PERMISSIONS`，
+// 因此角色权限勾选界面可授予的权限与后端强制校验的权限始终一致，
+// 不会再出现历史上 `warehouse:in` / `production:view` 等无法生效的“幽灵权限码”。
+const permissionModules = PERMISSION_MODULES;
 
 // 安全获取 localStorage
 function safeGetUser(): StoredUser | null {

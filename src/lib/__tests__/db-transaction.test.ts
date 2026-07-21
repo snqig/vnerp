@@ -2,14 +2,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 async function transactionWithRetry<T>(
-  transactionFn: (conn: any) => Promise<T>,
+  transactionFn: (conn: unknown) => Promise<T>,
   maxRetries: number = 3
 ): Promise<T> {
   let lastError: Error | null = null;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await transactionFn({});
-    } catch (error: any) {
+    } catch (error: unknown) {
       lastError = error;
       const isOptimisticLockError =
         error.message?.includes('已被其他操作修改') ||

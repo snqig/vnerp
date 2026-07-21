@@ -88,6 +88,7 @@
     "pageLoadFailed": "頁面載入失敗",
     "pleaseRetry": "請稍後重試",
     "retry": "重試",
+    "pleaseSelectMonth": "請選擇月份或進行薪資核算",
     "backToHome": "返回首頁",
     "noDataToPrint": "沒有可列印的資料",
     "noDataToExport": "沒有可匯出的資料",
@@ -5595,5 +5596,53 @@
     "sampleCount": "打樣數",
     "sampleTopCustomer": "客戶排行",
     "customer": "客戶"
+  },
+  "Monitoring": {
+    "consistency": {
+      "title": "跨模組一致性監控",
+      "description": "監控生產-庫存-財務-HR 跨模組事務的執行狀態和一致性",
+      "total": "總數",
+      "pending": "待處理",
+      "executing": "執行中",
+      "success": "成功",
+      "failed": "失敗",
+      "compensated": "已補償",
+      "sagaList": "Saga 事務列表",
+      "sagaListDesc": "查看所有跨模組事務的執行狀態",
+      "noData": "暫無 Saga 記錄",
+      "type": "事務類型",
+      "sagaId": "Saga ID",
+      "businessId": "業務 ID",
+      "status": "狀態",
+      "steps": "步驟",
+      "createdAt": "建立時間",
+      "sagaDetail": "Saga 詳情",
+      "businessData": "業務資料",
+      "compensate": "補償",
+      "page": "頁",
+      "prevPage": "上一頁",
+      "nextPage": "下一頁",
+      "statusLabels": {
+        "pending": "待處理",
+        "executing": "執行中",
+        "success": "成功",
+        "compensating": "補償中",
+        "compensated": "已補償",
+        "failed": "失敗"
+      },
+      "stepStatus": {
+        "pending": "待執行",
+        "success": "成功",
+        "failed": "失敗",
+        "compensating": "補償中",
+        "compensated": "已補償"
+      },
+      "typeLabels": {
+        "workorder_completion": "工單完工",
+        "material_issue": "領料",
+        "work_report": "報工",
+        "hr_payroll_calculation": "薪資計算"
+      }
+    }
   }
 }

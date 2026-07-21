@@ -10,6 +10,52 @@ import {
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
+interface StocktakingOrderRow {
+  id: number;
+  check_no: string;
+  type: number;
+  warehouse_id: number;
+  warehouse_name: string;
+  scope: string | null;
+  status: number;
+  applicant_id: number | null;
+  applicant_name: string | null;
+  approver_id: number | null;
+  approver_name: string | null;
+  approve_time: string | null;
+  approve_remark: string | null;
+  total_items: number;
+  diff_items: number;
+  total_diff_amount: number;
+  version: number;
+  remark: string | null;
+  create_time: string;
+  update_time: string;
+  deleted: number;
+}
+
+interface StocktakingItemRow {
+  id: number;
+  taking_id: number;
+  material_id: number;
+  material_code: string;
+  material_name: string;
+  batch_no: string | null;
+  warehouse_id: number | null;
+  location: string | null;
+  book_qty: number;
+  actual_qty: number;
+  diff_qty: number;
+  unit: string;
+  unit_price: number;
+  diff_amount: number;
+  scan_time: string | null;
+  scan_operator: string | null;
+  status: number;
+  remark: string | null;
+  deleted: number;
+}
+
 const ITEM_COLUMNS = `id, taking_id, material_id, material_code, material_name, batch_no,
                       warehouse_id, location, book_qty, actual_qty, diff_qty,
                       unit, unit_price, diff_amount, scan_time, scan_operator, status, remark`;
@@ -22,13 +68,13 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
     );
     if (!orders || orders.length === 0) return null;
 
-    const order = orders[0];
+    const order = orders[0] as StocktakingOrderRow;
     const items = await query(
       `SELECT ${ITEM_COLUMNS} FROM inv_stocktaking_item WHERE taking_id = ? AND deleted = 0`,
       [id]
     );
 
-    return StocktakingOrder.reconstitute(this.mapRowToProps(order, items));
+    return StocktakingOrder.reconstitute(this.mapRowToProps(order, items as StocktakingItemRow[]));
   }
 
   async findByCheckNo(checkNo: string): Promise<StocktakingOrder | null> {
@@ -38,13 +84,13 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
     );
     if (!orders || orders.length === 0) return null;
 
-    const order = orders[0];
+    const order = orders[0] as StocktakingOrderRow;
     const items = await query(
       `SELECT ${ITEM_COLUMNS} FROM inv_stocktaking_item WHERE taking_id = ? AND deleted = 0`,
       [order.id]
     );
 
-    return StocktakingOrder.reconstitute(this.mapRowToProps(order, items));
+    return StocktakingOrder.reconstitute(this.mapRowToProps(order, items as StocktakingItemRow[]));
   }
 
   async findByStatus(
@@ -105,31 +151,31 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
 
     sql += ` ORDER BY s.create_time DESC`;
 
-    const result = await queryPaginated(sql, countSql, params, pagination);
+    const result = await queryPaginated<StocktakingOrderRow>(sql, countSql, params, pagination);
 
     if (result.data.length > 0) {
-      const orderIds = result.data.map((s: any) => s.id);
+      const orderIds = result.data.map((s) => s.id);
       const placeholders = orderIds.map(() => '?').join(',');
       const items = await query(
         `SELECT ${ITEM_COLUMNS} FROM inv_stocktaking_item WHERE taking_id IN (${placeholders}) AND deleted = 0`,
         orderIds
       );
 
-      const itemsMap = new Map<number, any[]>();
-      for (const item of items as any[]) {
+      const itemsMap = new Map<number, StocktakingItemRow[]>();
+      for (const item of items as StocktakingItemRow[]) {
         if (!itemsMap.has(item.taking_id)) {
           itemsMap.set(item.taking_id, []);
         }
         itemsMap.get(item.taking_id)!.push(item);
       }
 
-      for (const order of result.data as any[]) {
+      for (const order of result.data) {
         order.items = itemsMap.get(order.id) || [];
       }
     }
 
     return {
-      data: result.data.map((s: any) =>
+      data: result.data.map((s) =>
         StocktakingOrder.reconstitute(this.mapRowToProps(s, s.items || []))
       ),
       pagination: result.pagination,
@@ -162,7 +208,7 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
           order.version,
           order.remark || null,
         ]
-      ) as any;
+      );
 
       const orderId = orderResult.insertId;
 
@@ -246,7 +292,7 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
     await execute('UPDATE inv_stocktaking SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
   }
 
-  private mapRowToProps(order: any, items: any[]): StocktakingOrderProps {
+  private mapRowToProps(order: StocktakingOrderRow, items: StocktakingItemRow[]): StocktakingOrderProps {
     return {
       id: order.id,
       checkNo: order.check_no,
@@ -262,7 +308,7 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
       approveTime: order.approve_time,
       approveRemark: order.approve_remark,
       remark: order.remark,
-      items: items.map((item: any) => ({
+      items: items.map((item) => ({
         id: item.id,
         takingId: item.taking_id,
         materialId: item.material_id,

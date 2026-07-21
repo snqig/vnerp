@@ -93,6 +93,7 @@ export default function LaborCostReportPage() {
   const tc = useTranslations('Common');
   const [data, setData] = useState<LaborCostData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [month, setMonth] = useState(format(new Date(), 'yyyy-MM'));
 
   useEffect(() => {
@@ -102,12 +103,14 @@ export default function LaborCostReportPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
+      setError(null);
       const res = await authFetch(`/api/hr/reports/labor-cost?month=${month}`);
       const json = await res.json();
       if (json.success) {
         setData(json.data);
       }
-    } catch {
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch data');
     } finally {
       setLoading(false);
     }
@@ -136,6 +139,23 @@ export default function LaborCostReportPage() {
             {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32" />)}
           </div>
           <Skeleton className="h-80" />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto py-6">
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+            <AlertCircle className="h-16 w-16 mb-4 text-red-500" />
+            <p className="text-lg font-medium text-red-500">{tc('error') || '操作失败'}</p>
+            <p className="text-sm mt-2 text-muted-foreground">{error}</p>
+            <Button variant="outline" className="mt-4" onClick={fetchData}>
+              {tc('retry') || '重试'}
+            </Button>
+          </div>
         </div>
       </MainLayout>
     );

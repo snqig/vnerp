@@ -88,6 +88,7 @@
     "pageLoadFailed": "Tải trang thất bại",
     "pleaseRetry": "Vui lòng thử lại sau",
     "retry": "Thử lại",
+    "pleaseSelectMonth": "Vui lòng chọn tháng hoặc chạy tính lương",
     "backToHome": "Về trang chủ",
     "noDataToPrint": "Không có dữ liệu để in",
     "noDataToExport": "Không có dữ liệu để xuất",
@@ -5685,5 +5686,53 @@
     "sampleCount": "Số mẫu",
     "sampleTopCustomer": "Xếp hạng khách hàng",
     "customer": "Khách hàng"
+  },
+  "Monitoring": {
+    "consistency": {
+      "title": "Giám sát nhất quán liên mô-đun",
+      "description": "Giám sát trạng thái thực thi và tính nhất quán của giao dịch liên mô-đun Production-Inventory-Finance-HR",
+      "total": "Tổng số",
+      "pending": "Đang chờ",
+      "executing": "Đang thực thi",
+      "success": "Thành công",
+      "failed": "Thất bại",
+      "compensated": "Đã bù đắp",
+      "sagaList": "Danh sách giao dịch Saga",
+      "sagaListDesc": "Xem trạng thái thực thi của tất cả giao dịch liên mô-đun",
+      "noData": "Không có bản ghi Saga",
+      "type": "Loại giao dịch",
+      "sagaId": "Saga ID",
+      "businessId": "Mã nghiệp vụ",
+      "status": "Trạng thái",
+      "steps": "Các bước",
+      "createdAt": "Thời gian tạo",
+      "sagaDetail": "Chi tiết Saga",
+      "businessData": "Dữ liệu nghiệp vụ",
+      "compensate": "Bù đắp",
+      "page": "Trang",
+      "prevPage": "Trước",
+      "nextPage": "Tiếp",
+      "statusLabels": {
+        "pending": "Đang chờ",
+        "executing": "Đang thực thi",
+        "success": "Thành công",
+        "compensating": "Đang bù đắp",
+        "compensated": "Đã bù đắp",
+        "failed": "Thất bại"
+      },
+      "stepStatus": {
+        "pending": "Chờ thực thi",
+        "success": "Thành công",
+        "failed": "Thất bại",
+        "compensating": "Đang bù đắp",
+        "compensated": "Đã bù đắp"
+      },
+      "typeLabels": {
+        "workorder_completion": "Hoàn thành đơn hàng",
+        "material_issue": "Cấp vật liệu",
+        "work_report": "Báo cáo công việc",
+        "hr_payroll_calculation": "Tính lương"
+      }
+    }
   }
 }

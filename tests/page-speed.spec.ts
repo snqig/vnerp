@@ -165,7 +165,6 @@ test.describe('页面加载速度测试', () => {
       { path: '/zh-CN/settings/roles', label: '角色管理' },
       { path: '/zh-CN/settings/menus', label: '菜单管理' },
       { path: '/zh-CN/settings/system', label: '系统设置' },
-      { path: '/zh-CN/settings/permissions', label: '权限管理' },
       { path: '/zh-CN/settings/organization', label: '组织管理' },
     ];
 

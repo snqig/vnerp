@@ -1,4 +1,4 @@
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
 import { successResponse, errorResponse, logOperation } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -8,11 +8,14 @@ import {
   executeFIFODeductionWithRetry,
   executeSpecifiedBatchDeduction,
 } from '@/lib/fifo-allocation';
+import { logger } from '@/lib/logger';
 
 export const POST = withPermission(
   async (request: NextRequest) => {
     const body = await request.json();
     const { id, operatorId, operatorName, remark } = body;
+
+    logger.debug(`[OUTBOUND] Confirm outbound request received - id: ${id}, operatorId: ${operatorId}, operatorName: ${operatorName}`);
 
     if (!id) {
       return errorResponse('出库单ID不能为空', 400);
@@ -21,6 +24,8 @@ export const POST = withPermission(
     const deductionDetails: Loose[] = [];
 
     await transaction(async (connection) => {
+      logger.debug(`[OUTBOUND] Starting transaction for outbound order: ${id}`);
+
       const [orderRows]: Loose = await connection.execute(
         `SELECT id, order_no, status, warehouse_id, warehouse_code, warehouse_name, version
        FROM inv_outbound_order WHERE id = ? AND deleted = 0 FOR UPDATE`,
@@ -32,6 +37,7 @@ export const POST = withPermission(
       }
 
       const orderRow = orderRows[0];
+      logger.debug(`[OUTBOUND] Found order: id=${orderRow.id}, order_no=${orderRow.order_no}, status=${orderRow.status}, warehouse_id=${orderRow.warehouse_id}`);
 
       if (!WarehouseStateMachine.canConfirmOutbound(orderRow.status)) {
         throw new Error(
@@ -40,23 +46,27 @@ export const POST = withPermission(
       }
 
       const [itemRows]: Loose = await connection.execute(
-        `SELECT id, material_id, material_code, material_name, batch_no, qty, unit, location_code
+        `SELECT id, material_id, material_name, batch_no, quantity, unit
        FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
         [id]
       );
+
+      logger.debug(`[OUTBOUND] Found ${itemRows.length} items for order: ${id}`);
 
       if (!itemRows || itemRows.length === 0) {
         throw new Error('BAD_REQUEST:出库单没有明细，不能确认');
       }
 
       for (const item of itemRows) {
-        const requiredQty = parseFloat(String(item.qty));
+        const requiredQty = parseFloat(String(item.quantity));
+        logger.debug(`[OUTBOUND] Processing item: id=${item.id}, material_id=${item.material_id}, material_name=${item.material_name}, qty=${requiredQty}, batch_no=${item.batch_no}`);
 
         if (item.batch_no) {
+          logger.debug(`[OUTBOUND] Using specified batch deduction for item ${item.id}, batch_no=${item.batch_no}`);
           const { deductionDetail } = await executeSpecifiedBatchDeduction(connection, {
             batchNo: item.batch_no,
             materialId: item.material_id,
-            materialCode: item.material_code,
+            materialCode: '',
             materialName: item.material_name,
             warehouseId: orderRow.warehouse_id,
             warehouseCode: orderRow.warehouse_code,
@@ -68,7 +78,9 @@ export const POST = withPermission(
             operatorName: operatorName || null,
           });
           deductionDetails.push(deductionDetail);
+          logger.debug(`[OUTBOUND] Specified batch deduction completed - batch_no=${item.batch_no}, deducted_qty=${deductionDetail.deducted_qty}`);
         } else {
+          logger.debug(`[OUTBOUND] Using FIFO allocation for item ${item.id}, material_id=${item.material_id}, requiredQty=${requiredQty}`);
           const allocation = await allocateFIFO(
             connection,
             item.material_id,
@@ -76,12 +88,15 @@ export const POST = withPermission(
             requiredQty
           );
 
+          logger.debug(`[OUTBOUND] FIFO allocation result - allocated_qty=${allocation.allocated_qty}, shortage=${allocation.shortage}, total_available=${allocation.total_available}`);
+
           if (allocation.shortage > 0) {
             throw new Error(
               `物料 ${item.material_name} 库存不足: 需要 ${requiredQty}, 可用 ${allocation.total_available}, 缺少 ${allocation.shortage}`
             );
           }
 
+          logger.debug(`[OUTBOUND] Executing FIFO deduction with ${allocation.allocations.length} allocations`);
           const { deductionDetails: fifoDetails } = await executeFIFODeductionWithRetry(
             connection,
             allocation,
@@ -97,11 +112,14 @@ export const POST = withPermission(
           );
 
           deductionDetails.push(...fifoDetails);
+          logger.debug(`[OUTBOUND] FIFO deduction completed - ${fifoDetails.length} batches deducted`);
 
+          const batchNos = allocation.allocations.map((a: Loose) => a.batch_no).join(',');
           await connection.execute(`UPDATE inv_outbound_item SET batch_no = ? WHERE id = ?`, [
-            allocation.allocations.map((a: Loose) => a.batch_no).join(','),
+            batchNos,
             item.id,
           ]);
+          logger.debug(`[OUTBOUND] Updated item ${item.id} with batch_no: ${batchNos}`);
         }
 
         await connection.execute(
@@ -112,6 +130,7 @@ export const POST = withPermission(
         WHERE material_id = ? AND warehouse_id = ?`,
           [requiredQty, requiredQty, item.material_id, orderRow.warehouse_id]
         );
+        logger.debug(`[OUTBOUND] Updated inv_inventory - material_id=${item.material_id}, warehouse_id=${orderRow.warehouse_id}, deducted_qty=${requiredQty}`);
       }
 
       await connection.execute(
@@ -260,7 +279,7 @@ export const PUT = withPermission(
       }
 
       const [itemRows]: Loose = await connection.execute(
-        `SELECT material_id, batch_no, qty FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
+        `SELECT material_id, batch_no, quantity FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
         [id]
       );
 
@@ -280,7 +299,7 @@ export const PUT = withPermission(
             version = version + 1,
             update_time = NOW()
           WHERE batch_no = ? AND material_id = ? AND warehouse_id = ?`,
-            [item.qty, item.qty, item.batch_no, item.material_id, order.warehouse_id]
+            [item.quantity, item.quantity, item.batch_no, item.material_id, order.warehouse_id]
           );
 
           if (updateResult.affectedRows === 0) {
@@ -313,7 +332,7 @@ export const PUT = withPermission(
               );
             }
           } else {
-            const qtyPerBatch = item.qty / batchNos.length;
+            const qtyPerBatch = item.quantity / batchNos.length;
             for (const bNo of batchNos) {
               await connection.execute(
                 `UPDATE inv_inventory_batch SET
@@ -334,7 +353,7 @@ export const PUT = withPermission(
           available_qty = available_qty + ?,
           update_time = NOW()
         WHERE material_id = ? AND warehouse_id = ?`,
-          [item.qty, item.qty, item.material_id, order.warehouse_id]
+          [item.quantity, item.quantity, item.material_id, order.warehouse_id]
         );
 
         await connection.execute(
@@ -348,7 +367,7 @@ export const PUT = withPermission(
             item.batch_no,
             item.material_id,
             order.warehouse_id,
-            item.qty,
+            item.quantity,
             order.order_no,
             operatorId,
             `撤销出库: ${remark || ''}`,

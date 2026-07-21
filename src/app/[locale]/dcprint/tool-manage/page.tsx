@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { TOOL_TYPE_LABEL, TOOL_STATUS_LABEL } from '@/lib/status-labels';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -73,16 +74,16 @@ interface Tool {
   create_time: string;
 }
 
-const TOOL_TYPE_MAP: Record<number, string> = { 1: '刀模', 2: '网版' };
+const TOOL_TYPE_MAP = TOOL_TYPE_LABEL;
 const STATUS_MAP: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: '待用', variant: 'secondary' },
-  2: { label: '在用', variant: 'default' },
-  3: { label: '维修', variant: 'outline' },
-  4: { label: '预警', variant: 'destructive' },
-  5: { label: '报废', variant: 'destructive' },
+  1: { label: TOOL_STATUS_LABEL[1], variant: 'secondary' },
+  2: { label: TOOL_STATUS_LABEL[2], variant: 'default' },
+  3: { label: TOOL_STATUS_LABEL[3], variant: 'outline' },
+  4: { label: TOOL_STATUS_LABEL[4], variant: 'destructive' },
+  5: { label: TOOL_STATUS_LABEL[5], variant: 'destructive' },
 };
 
 export default function ToolManagePage() {

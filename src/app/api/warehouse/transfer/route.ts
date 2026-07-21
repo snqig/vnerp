@@ -3,6 +3,7 @@ import { query, execute, queryOne } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { getTrPrefix, generateDocNo } from '@/lib/global-config';
+import { TRANSFER_TYPE_LABEL, TRANSFER_STATUS_LABEL } from '@/lib/status-labels';
 
 interface Transfer {
   id: number;
@@ -34,18 +35,8 @@ interface TransferItem {
   batch_no: string | null;
 }
 
-const TYPE_MAP: Record<number, string> = {
-  1: '库位调拨',
-  2: '仓库调拨',
-};
-
-const STATUS_MAP: Record<number, string> = {
-  0: '草稿',
-  1: '待审批',
-  2: '已出库',
-  3: '已入库',
-  4: '已取消',
-};
+const TYPE_MAP = TRANSFER_TYPE_LABEL;
+const STATUS_MAP = TRANSFER_STATUS_LABEL;
 
 function generateTransferNo(): string {
   return generateDocNo(getTrPrefix());

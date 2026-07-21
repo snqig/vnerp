@@ -2,18 +2,10 @@ import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
 import { successResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { SPLIT_FLAG_LABEL, STOCKTAKING_ITEM_STATUS_LABEL } from '@/lib/status-labels';
 
-const SPLIT_FLAG_MAP: Record<number, string> = {
-  0: '整料',
-  1: '小料',
-  2: '余料',
-};
-
-const STATUS_MAP: Record<number, string> = {
-  0: '未盘点',
-  1: '已盘点',
-  2: '已调整',
-};
+const SPLIT_FLAG_MAP = SPLIT_FLAG_LABEL;
+const STATUS_MAP = STOCKTAKING_ITEM_STATUS_LABEL;
 
 export const GET = withPermission(
   async (request: NextRequest, userInfo, { params }: { params: Promise<{ id: string }> }) => {

@@ -14,8 +14,6 @@ export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== 'nodejs') {
     return;
   }
-  // eslint-disable-next-line no-console
-  console.log(
-    '[instrumentation] Server started. OutboxPoller will auto-start on first API request.'
-  );
+  const { logger } = await import('@/lib/logger');
+  logger.info('[instrumentation] Server started. OutboxPoller will auto-start on first API request.');
 }

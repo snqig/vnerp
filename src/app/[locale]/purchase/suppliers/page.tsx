@@ -176,14 +176,6 @@ export default function SuppliersPage() {
     setLoading(true);
     try {
       if (USE_MOCK) {
-        console.log(
-          '[Supplier] fetchData using mock data, keyword:',
-          debouncedKeyword,
-          'status:',
-          statusFilter,
-          'grade:',
-          gradeFilter
-        );
         let data = [...mockSuppliers].map((s) => ({
           ...s,
           status: typeof s.status === 'string' ? parseInt(s.status) : s.status,
@@ -207,12 +199,6 @@ export default function SuppliersPage() {
         const start = (page - 1) * pageSize;
         const end = start + pageSize;
         const paginatedData = data.slice(start, end);
-        console.log('[Supplier] fetchData mock result:', {
-          total: data.length,
-          pageSize,
-          page,
-          count: paginatedData.length,
-        });
         setList(paginatedData);
         setTotal(data.length);
       } else {
@@ -238,7 +224,6 @@ export default function SuppliersPage() {
         }
       }
     } catch (error) {
-      console.error('[Supplier] fetchData exception:', error);
     } finally {
       setLoading(false);
     }
@@ -276,27 +261,14 @@ export default function SuppliersPage() {
   };
 
   const handleSave = async () => {
-    console.log(
-      '[Supplier] handleSave called, editId:',
-      editId,
-      'form:',
-      JSON.stringify(form),
-      'USE_MOCK:',
-      USE_MOCK
-    );
     if (!form.supplier_code || !form.supplier_name) {
-      console.log(
-        '[Supplier] handleSave validation failed: supplier_code or supplier_name is empty'
-      );
       toast({ title: t('supplierCodeNameRequired'), variant: 'destructive' });
       return;
     }
     setSaving(true);
     try {
       if (USE_MOCK) {
-        console.log('[Supplier] handleSave mock mode:', editId ? 'update' : 'create');
         await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('[Supplier] handleSave mock success:', editId ? 'update' : 'create');
         toast({ title: editId ? tc('updateSuccess') : tc('createSuccess') });
         setShowDialog(false);
         fetchData();
@@ -304,30 +276,20 @@ export default function SuppliersPage() {
         const url = '/api/purchase/suppliers';
         const method = editId ? 'PUT' : 'POST';
         const body = editId ? { id: editId, ...form } : form;
-        console.log('[Supplier] handleSave sending request:', {
-          url,
-          method,
-          body: JSON.stringify(body),
-        });
         const res = await authFetch(url, {
           method,
           body: JSON.stringify(body),
         });
-        console.log('[Supplier] handleSave response status:', res.status, 'ok:', res.ok);
         const result = await res.json();
-        console.log('[Supplier] handleSave response data:', JSON.stringify(result));
         if (result.success) {
-          console.log('[Supplier] handleSave success:', editId ? 'update' : 'create');
           toast({ title: editId ? tc('updateSuccess') : tc('createSuccess') });
           setShowDialog(false);
           fetchData();
         } else {
-          console.log('[Supplier] handleSave failed:', result.message);
           toast({ title: result.message || tc('error'), variant: 'destructive' });
         }
       }
     } catch (error) {
-      console.error('[Supplier] handleSave exception:', error);
       toast({ title: tc('saveFailed'), variant: 'destructive' });
     } finally {
       setSaving(false);
@@ -335,36 +297,26 @@ export default function SuppliersPage() {
   };
 
   const handleDelete = async (id: number) => {
-    console.log('[Supplier] handleDelete called, id:', id, 'USE_MOCK:', USE_MOCK);
     if (!confirm(tc('confirmDelete'))) {
-      console.log('[Supplier] handleDelete cancelled by user');
       return;
     }
     try {
       if (USE_MOCK) {
-        console.log('[Supplier] handleDelete mock mode');
         await new Promise((resolve) => setTimeout(resolve, 300));
-        console.log('[Supplier] handleDelete mock success');
         toast({ title: tc('deleteSuccess') });
         fetchData();
       } else {
         const url = `/api/purchase/suppliers?id=${id}`;
-        console.log('[Supplier] handleDelete sending request:', { url, method: 'DELETE' });
         const res = await authFetch(url, { method: 'DELETE' });
-        console.log('[Supplier] handleDelete response status:', res.status, 'ok:', res.ok);
         const result = await res.json();
-        console.log('[Supplier] handleDelete response data:', JSON.stringify(result));
         if (result.success) {
-          console.log('[Supplier] handleDelete success');
           toast({ title: tc('deleteSuccess') });
           fetchData();
         } else {
-          console.log('[Supplier] handleDelete failed:', result.message);
           toast({ title: result.message || tc('deleteFailed'), variant: 'destructive' });
         }
       }
     } catch (error) {
-      console.error('[Supplier] handleDelete exception:', error);
       toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };

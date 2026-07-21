@@ -68,33 +68,21 @@ export default function PayslipsPage() {
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
 
   useEffect(() => {
-    console.log('[PayslipsPage] 初始化完成 - 默认月份:', month);
-    console.log('[Hydration Check] 工资条页面翻译值验证:');
-    console.log('  t("payslip") =', t('payslip'));
-    console.log('  t("basicSalary") =', t('basicSalary'));
-    console.log('  tc("name") =', tc('name'));
-    console.log('  tc("department") =', tc('department'));
-  }, [t, tc, month]);
 
   const fetchPayslip = async () => {
     if (!employeeId) {
       toast.error(t('enterEmployeeId') || '请输入员工ID');
       return;
     }
-    console.log('[PayslipsPage] 开始查询工资条 - employeeId:', employeeId, ', month:', month);
     setLoading(true);
     try {
-      const res = await authFetch(`/api/hr/salary/payslip?employeeId=${employeeId}&month=${month}`);
-      const json = await res.json();
-      console.log('[PayslipsPage] 查询结果 - code:', json.code, ', data:', JSON.stringify(json.data));
+      const result = await res.json();
       if (json.code === 200) {
         setData(json.data);
       } else {
-        console.log('[PayslipsPage] API返回非200，使用模拟数据');
         setData({ ...mockPayslip, month, employeeName: `员工#${employeeId}` });
       }
     } catch (error) {
-      console.error('[PayslipsPage] 查询请求失败:', error, '，使用模拟数据');
       setData({ ...mockPayslip, month, employeeName: `员工#${employeeId}` });
     } finally {
       setLoading(false);

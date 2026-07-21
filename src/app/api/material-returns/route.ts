@@ -4,11 +4,9 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { generateDocNo } from '@/lib/global-config';
 
 import { withPermission } from '@/lib/api-permissions';
-const STATUS_MAP: Record<number, string> = {
-  1: '待确认',
-  2: '已入库',
-  3: '已取消',
-};
+import { MATERIAL_RETURN_STATUS_LABEL } from '@/lib/status-labels';
+
+const STATUS_MAP = MATERIAL_RETURN_STATUS_LABEL;
 
 function generateReturnNo(): string {
   return generateDocNo('RT');

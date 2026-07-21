@@ -5,9 +5,18 @@ import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { authFetch } from '@/lib/auth-fetch';
 
+interface ProfitRow {
+  productId: number | string;
+  revenue: number;
+  directCost: number;
+  overhead: number;
+  grossMargin: number;
+  netMargin: number;
+}
+
 export default function CostAnalysisPage() {
   const [activeTab, setActiveTab] = useState('profit');
-  const [profitData, setProfitData] = useState<any[]>([]);
+  const [profitData, setProfitData] = useState<ProfitRow[]>([]);
   const [abcData, setAbcData] = useState<{ A: number[]; B: number[]; C: number[] }>({
     A: [],
     B: [],
@@ -78,7 +87,7 @@ export default function CostAnalysisPage() {
                 </tr>
               </thead>
               <tbody>
-                {profitData.map((p: any) => (
+                {profitData.map((p: ProfitRow) => (
                   <tr key={p.productId} className="border-b">
                     <td className="p-2">#{p.productId}</td>
                     <td className="text-right p-2">¥{Number(p.revenue).toLocaleString()}</td>

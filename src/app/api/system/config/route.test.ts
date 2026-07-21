@@ -7,8 +7,8 @@ vi.mock('@/lib/db', () => ({
 }));
 
 vi.mock('@/lib/api-response', () => ({
-  withErrorHandler: (handler: any) => handler,
-  successResponse: (data: any, message = '操作成功') => ({
+  withErrorHandler: (handler: unknown) => handler,
+  successResponse: (data: unknown, message = '操作成功') => ({
     json: async () => ({ success: true, message, data }),
     status: 200,
   }),
@@ -17,7 +17,7 @@ vi.mock('@/lib/api-response', () => ({
 // route.ts 的处理器被 withPermission 包装，测试不携带认证 token，
 // 因此 mock withPermission 透传 handler，避免触发 withAuthAndErrorHandler 的认证链路。
 vi.mock('@/lib/api-permissions', () => ({
-  withPermission: (handler: any) => handler,
+  withPermission: (handler: unknown) => handler,
 }));
 
 import { query, execute } from '@/lib/db';
@@ -41,7 +41,7 @@ describe('系统配置API测试', () => {
         .mockResolvedValueOnce(mockConfigs);
 
       const request = new Request('http://localhost/api/system/config?page=1&pageSize=20');
-      const response = await GET(request as any);
+      const response = await GET(request as unknown);
       const data = await response.json();
 
       expect(data.success).toBe(true);
@@ -55,7 +55,7 @@ describe('系统配置API测试', () => {
         .mockResolvedValueOnce([{ id: 1, config_name: '公司名称' }]);
 
       const request = new Request('http://localhost/api/system/config?configName=公司');
-      const response = await GET(request as any);
+      const response = await GET(request as unknown);
       await response.json();
 
       expect(query).toHaveBeenCalledWith(
@@ -70,7 +70,7 @@ describe('系统配置API测试', () => {
         .mockResolvedValueOnce([{ id: 1, config_key: 'company_name' }]);
 
       const request = new Request('http://localhost/api/system/config?configKey=company');
-      const response = await GET(request as any);
+      const response = await GET(request as unknown);
       await response.json();
 
       expect(query).toHaveBeenCalledWith(
@@ -85,7 +85,7 @@ describe('系统配置API测试', () => {
         .mockResolvedValueOnce([]);
 
       const request = new Request('http://localhost/api/system/config');
-      await GET(request as any);
+      await GET(request as unknown);
 
       expect(query).toHaveBeenCalledWith(
         expect.stringContaining('LIMIT ? OFFSET ?'),
@@ -110,7 +110,7 @@ describe('系统配置API测试', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const response = await POST(request as any);
+      const response = await POST(request as unknown);
       const data = await response.json();
 
       expect(data.success).toBe(true);
@@ -134,7 +134,7 @@ describe('系统配置API测试', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      await POST(request as any);
+      await POST(request as unknown);
 
       expect(execute).toHaveBeenCalledWith(
         expect.any(String),
@@ -166,7 +166,7 @@ describe('系统配置API测试', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const response = await PUT(request as any);
+      const response = await PUT(request as unknown);
       const data = await response.json();
 
       expect(data.success).toBe(true);
@@ -186,7 +186,7 @@ describe('系统配置API测试', () => {
         method: 'DELETE',
       });
 
-      const response = await DELETE(request as any);
+      const response = await DELETE(request as unknown);
       const data = await response.json();
 
       expect(data.success).toBe(true);
@@ -203,7 +203,7 @@ describe('系统配置API测试', () => {
         method: 'DELETE',
       });
 
-      const response = await DELETE(request as any);
+      const response = await DELETE(request as unknown);
       const data = await response.json();
 
       expect(response.status).toBe(400);

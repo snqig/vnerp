@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { STOCKTAKING_TYPE_LABEL, SPLIT_FLAG_LABEL } from '@/lib/status-labels';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -79,18 +80,8 @@ interface InventoryCheckItem {
   unit?: string;
 }
 
-const TYPE_MAP: Record<number, string> = {
-  1: '定期盘点',
-  2: '不定期盘点',
-  3: '循环盘点',
-  4: '抽盘',
-};
-
-const SPLIT_FLAG_MAP: Record<number, string> = {
-  0: '整料',
-  1: '小料',
-  2: '余料',
-};
+const TYPE_MAP = STOCKTAKING_TYPE_LABEL;
+const SPLIT_FLAG_MAP = SPLIT_FLAG_LABEL;
 
 export default function StocktakingPage() {
   // 翻译钩子

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { MainLayout } from '@/components/layout/main-layout';
+import { useToastContext } from '@/components/ui/toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,14 +26,11 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Plus,
   Search,
@@ -40,17 +38,10 @@ import {
   MoreHorizontal,
   Eye,
   Edit,
-  Trash2,
   Copy,
   CheckCircle,
   XCircle,
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { authFetch } from '@/lib/auth-fetch';
 
 interface InkColor {
@@ -91,6 +82,7 @@ export default function InkFormulaPage() {
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
   const router = useRouter();
+  const { addToast: toast } = useToastContext();
 
   const [colors, setColors] = useState<InkColor[]>([]);
   const [selectedColor, setSelectedColor] = useState<InkColor | null>(null);
@@ -118,7 +110,7 @@ export default function InkFormulaPage() {
         setColors(data.data?.list || data.data || []);
       }
     } catch {
-      toast.error('加载色号失败');
+      toast({ title: '错误', description: '加载色号失败', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -132,7 +124,7 @@ export default function InkFormulaPage() {
         setVersions(data.data?.list || data.data || []);
       }
     } catch {
-      toast.error('加载配方版本失败');
+      toast({ title: '错误', description: '加载配方版本失败', variant: 'destructive' });
     }
   }, []);
 
@@ -145,7 +137,7 @@ export default function InkFormulaPage() {
 
   const handleSaveColor = async () => {
     if (!colorForm.color_code || !colorForm.color_name) {
-      toast.warning('色号编码和名称不能为空');
+      toast({ title: '警告', description: '色号编码和名称不能为空', variant: 'destructive' });
       return;
     }
     try {
@@ -160,7 +152,7 @@ export default function InkFormulaPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(editingColor ? '更新成功' : '创建成功');
+        toast({ title: '成功', description: editingColor ? '更新成功' : '创建成功' });
         setIsColorDialogOpen(false);
         setEditingColor(null);
         setColorForm({
@@ -172,10 +164,10 @@ export default function InkFormulaPage() {
         });
         fetchColors();
       } else {
-        toast.error(data.message || '操作失败');
+        toast({ title: '错误', description: data.message || '操作失败', variant: 'destructive' });
       }
     } catch {
-      toast.error('操作失败');
+      toast({ title: '错误', description: '操作失败', variant: 'destructive' });
     }
   };
 
@@ -186,13 +178,13 @@ export default function InkFormulaPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('配方版本已生效');
+        toast({ title: '成功', description: '配方版本已生效' });
         if (selectedColor) fetchVersions(selectedColor.id);
       } else {
-        toast.error(data.message || '操作失败');
+        toast({ title: '错误', description: data.message || '操作失败', variant: 'destructive' });
       }
     } catch {
-      toast.error('操作失败');
+      toast({ title: '错误', description: '操作失败', variant: 'destructive' });
     }
   };
 
@@ -203,13 +195,13 @@ export default function InkFormulaPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('配方版本已作废');
+        toast({ title: '成功', description: '配方版本已作废' });
         if (selectedColor) fetchVersions(selectedColor.id);
       } else {
-        toast.error(data.message || '操作失败');
+        toast({ title: '错误', description: data.message || '操作失败', variant: 'destructive' });
       }
     } catch {
-      toast.error('操作失败');
+      toast({ title: '错误', description: '操作失败', variant: 'destructive' });
     }
   };
 
@@ -220,13 +212,13 @@ export default function InkFormulaPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('新版本已创建');
+        toast({ title: '成功', description: '新版本已创建' });
         if (selectedColor) fetchVersions(selectedColor.id);
       } else {
-        toast.error(data.message || '操作失败');
+        toast({ title: '错误', description: data.message || '操作失败', variant: 'destructive' });
       }
     } catch {
-      toast.error('操作失败');
+      toast({ title: '错误', description: '操作失败', variant: 'destructive' });
     }
   };
 

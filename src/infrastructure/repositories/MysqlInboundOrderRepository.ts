@@ -9,6 +9,44 @@ import { generateDocumentNo } from '@/lib/document-numbering';
 import type { InboundStatus } from '@/domain/warehouse/value-objects/OrderStatus';
 import type { ResultSetHeader } from 'mysql2/promise';
 
+interface InboundOrderRow {
+  id: number;
+  order_no: string;
+  inbound_date: string | null;
+  supplier_name: string;
+  supplier_id: number | null;
+  po_id: number | null;
+  po_no: string | null;
+  warehouse_id: number;
+  order_type: string;
+  total_quantity: number;
+  currency: string;
+  exchange_rate: number;
+  total_amount: number;
+  base_total_amount: number;
+  status: string;
+  remark: string | null;
+  create_time: string;
+  update_time: string;
+  deleted: number;
+}
+
+interface InboundOrderItemRow {
+  id: number;
+  order_id: number;
+  material_id: number;
+  material_name: string;
+  material_spec: string | null;
+  batch_no: string;
+  quantity: number;
+  unit: string;
+  unit_price: number;
+  total_price: number;
+  warehouse_location: string | null;
+  produce_date: string | null;
+  create_time: string;
+}
+
 const DB_TO_DOMAIN_STATUS: Record<string, string> = {
   draft: 'draft',
   pending: 'pending',
@@ -29,7 +67,7 @@ const ITEM_COLUMNS = `id, order_id, material_id, material_name, material_spec,
 
 export class MysqlInboundOrderRepository implements IInboundOrderRepository {
   async findById(id: number): Promise<InboundOrder | null> {
-    const orders = await query<any>(
+    const orders = await query<InboundOrderRow>(
       'SELECT * FROM inv_inbound_order WHERE id = ? AND deleted = 0',
       [id]
     );
@@ -37,7 +75,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
-    const items = await query<any>(
+    const items = await query<InboundOrderItemRow>(
       `SELECT ${ITEM_COLUMNS} FROM inv_inbound_item WHERE order_id = ?`,
       [id]
     );
@@ -58,7 +96,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
       baseCurrency: 'CNY',
       baseTotalAmount: Number(order.base_total_amount) || 0,
       remark: order.remark,
-      items: items.map((item: any) => ({
+      items: items.map((item) => ({
         id: item.id,
         orderId: item.order_id,
         materialId: item.material_id,
@@ -94,7 +132,6 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
     const params: (string | number | null)[] = [];
 
     if (filters?.keyword) {
-      // T401: keyword 同时匹配入库单号、供应商名称、关联采购单号（po_no）
       const condition = ` AND (o.order_no LIKE ? OR o.supplier_name LIKE ? OR o.po_no LIKE ?)`;
       sql += condition;
       countSql += condition;
@@ -122,31 +159,31 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
 
     sql += ` ORDER BY o.create_time DESC`;
 
-    const result = await queryPaginated(sql, countSql, params, pagination);
+    const result = await queryPaginated<InboundOrderRow>(sql, countSql, params, pagination);
 
     if (result.data.length > 0) {
-      const orderIds = result.data.map((o: any) => o.id);
+      const orderIds = result.data.map((o) => o.id);
       const placeholders = orderIds.map(() => '?').join(',');
       const items = await query(
         `SELECT ${ITEM_COLUMNS} FROM inv_inbound_item WHERE order_id IN (${placeholders})`,
         orderIds
       );
 
-      const itemsMap = new Map<number, any>();
-      for (const item of items as any[]) {
+      const itemsMap = new Map<number, InboundOrderItemRow[]>();
+      for (const item of items as InboundOrderItemRow[]) {
         if (!itemsMap.has(item.order_id)) {
           itemsMap.set(item.order_id, []);
         }
         itemsMap.get(item.order_id)!.push(item);
       }
 
-      for (const order of result.data as any[]) {
+      for (const order of result.data) {
         order.items = itemsMap.get(order.id) || [];
       }
     }
 
     return {
-      data: result.data.map((o: any) =>
+      data: result.data.map((o) =>
         InboundOrder.reconstitute({
           id: o.id,
           orderNo: o.order_no,
@@ -163,7 +200,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
           baseCurrency: 'CNY',
           baseTotalAmount: Number(o.base_total_amount) || 0,
           remark: o.remark,
-          items: (o.items || []).map((item: any) => ({
+          items: (o.items || []).map((item) => ({
             id: item.id,
             orderId: item.order_id,
             materialId: item.material_id,

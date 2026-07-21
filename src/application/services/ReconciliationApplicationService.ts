@@ -3,6 +3,7 @@ import { IReceivableRepository } from '@/domain/finance/repositories/IReceivable
 import { IDeliveryRepository } from '@/domain/sales/repositories/IDeliveryRepository';
 import { Reconciliation, ReconciliationProps } from '@/domain/sales/aggregates/Reconciliation';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
+import { DomainEvent } from '@/domain/shared/DomainEvent';
 import { CurrencyApplicationService } from './CurrencyApplicationService';
 import { CurrencySnapshot } from '@/domain/shared/value-objects/CurrencySnapshot';
 import { Money } from '@/domain/shared/value-objects/Money';
@@ -252,7 +253,7 @@ export class ReconciliationApplicationService {
   private async persistAndPublishEvents(
     aggregateType: string,
     aggregateId: number,
-    aggregate: { getDomainEvents(): any[]; clearDomainEvents(): void }
+    aggregate: { getDomainEvents(): DomainEvent[]; clearDomainEvents(): void }
   ): Promise<void> {
     const events = aggregate.getDomainEvents();
     if (events.length === 0) return;

@@ -25,7 +25,7 @@ import {
   MysqlInkColorRepository,
 } from '@/infrastructure/repositories/MysqlFormulaVersionRepository';
 import { MaterialCostProvider } from '@/infrastructure/providers/MaterialCostProvider';
-import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
 
 // ===== DTO 类型定义（保持与 API 路由兼容）=====
 
@@ -366,10 +366,10 @@ export async function activateVersion(id: number, operatorId: number): Promise<v
     // 计算成本快照
     await calculateAndSnapshotCost(conn, id);
 
-    const [costRows] = await conn.execute(
+    const [costRows] = await conn.execute<RowDataPacket[]>(
       'SELECT theoretical_cost FROM dcprint_ink_formula_version WHERE id = ?',
       [id]
-    ) as [RowDataPacket[], any];
+    );
     await getDomainEventOutbox().saveEvents(conn, 'InkFormulaVersion', id, [
       new FormulaVersionActivatedEvent({
         versionId: id,
@@ -582,7 +582,7 @@ export async function compareVersions(leftId: number, rightId: number): Promise<
  * 理论成本 = Σ (配比比例% × 原料单位成本)
  * 成本取值：优先 inv_material.weighted_avg_cost，降级 base_ink.unit_price
  */
-async function calculateAndSnapshotCost(conn: any, versionId: number): Promise<void> {
+async function calculateAndSnapshotCost(conn: PoolConnection, versionId: number): Promise<void> {
   const items = await query(
     `SELECT fi.*, bi.unit_price
      FROM dcprint_ink_formula_item fi

@@ -4,17 +4,10 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { getMrPrefix, generateDocNo } from '@/lib/global-config';
 
 import { withPermission } from '@/lib/api-permissions';
-const ISSUE_TYPE_MAP: Record<number, string> = {
-  1: '正常领料',
-  2: '超领',
-  3: '补料',
-};
+import { ISSUE_TYPE_LABEL, MATERIAL_REQUISITION_STATUS_LABEL } from '@/lib/status-labels';
 
-const STATUS_MAP: Record<number, string> = {
-  1: '待出库',
-  2: '已出库',
-  3: '已取消',
-};
+const ISSUE_TYPE_MAP = ISSUE_TYPE_LABEL;
+const STATUS_MAP = MATERIAL_REQUISITION_STATUS_LABEL;
 
 function generateIssueNo(): string {
   return generateDocNo(getMrPrefix());

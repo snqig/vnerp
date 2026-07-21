@@ -10,7 +10,7 @@ import { DomainError, NotFoundError, VersionConflictError } from '@/domain/share
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction, execute, query } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
-import type { ResultSetHeader, RowDataPacket } from 'mysql2';
+import type { ResultSetHeader } from 'mysql2';
 
 export class ProductionApplicationService {
   constructor(
@@ -309,7 +309,7 @@ export class ProductionApplicationService {
     return map[status] || 1;
   }
 
-  private async persistAndPublishEvents(aggregateId: number, aggregate: any): Promise<void> {
+  private async persistAndPublishEvents(aggregateId: number, aggregate: { getDomainEvents(): unknown[]; clearDomainEvents(): void }): Promise<void> {
     const events = aggregate.getDomainEvents ? aggregate.getDomainEvents() : [];
     if (events.length === 0) return;
     await transaction(async (conn) => {

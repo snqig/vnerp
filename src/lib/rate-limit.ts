@@ -40,6 +40,8 @@ export interface RateLimitResult {
  *
  * Redis 模式使用 INCR + EXPIRE 实现固定窗口计数器，多实例共享。
  * REDIS_URL 缺失或 Redis 操作异常时自动降级到内存 Map（仅单实例有效）。
+ *
+ * 生产环境（NODE_ENV === 'production'）强制使用 Redis，降级逻辑仅在开发/测试环境生效。
  */
 export async function checkRateLimit(
   identifier: string,
@@ -50,6 +52,44 @@ export async function checkRateLimit(
   const windowSeconds = Math.ceil(options.windowMs / 1000);
 
   const redis = getRedisClientIfAvailable();
+
+  // 生产环境强制 Redis：未配置或不可用时直接抛错
+  if (process.env.NODE_ENV === 'production') {
+    if (!redis) {
+      throw new Error(
+        'Rate limit requires Redis in production, but REDIS_URL is not configured or Redis is unavailable'
+      );
+    }
+    try {
+      const redisKey = `rate:${key}`;
+      const count = await redis.incr(redisKey);
+      if (count === 1) {
+        await redis.expire(redisKey, windowSeconds);
+      }
+      const ttl = await redis.ttl(redisKey);
+      const resetTime = now + Math.max(ttl, 0) * 1000;
+
+      if (count > options.maxRequests) {
+        return {
+          allowed: false,
+          remaining: 0,
+          resetTime,
+          retryAfterMs: Math.max(resetTime - now, 0),
+        };
+      }
+
+      return {
+        allowed: true,
+        remaining: options.maxRequests - count,
+        resetTime,
+        retryAfterMs: 0,
+      };
+    } catch {
+      throw new Error('Rate limit Redis operation failed in production');
+    }
+  }
+
+  // 开发/测试环境：Redis 优先，异常降级到内存
   if (redis) {
     try {
       const redisKey = `rate:${key}`;

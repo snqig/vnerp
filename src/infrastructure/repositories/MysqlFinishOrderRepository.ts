@@ -6,6 +6,20 @@ import {
 } from '@/domain/production/repositories/IFinishOrderRepository';
 import type { ResultSetHeader } from 'mysql2/promise';
 
+interface FinishOrderRow {
+  id: number;
+  finish_no: string;
+  work_order_id: number;
+  warehouse_id: number;
+  qualified_qty: number;
+  defective_qty: number;
+  status: number;
+  create_by: number | null;
+  create_time: Date;
+  update_time: Date | null;
+  deleted: number;
+}
+
 export class MysqlFinishOrderRepository implements IFinishOrderRepository {
   async findById(id: number): Promise<FinishOrder | null> {
     const rows = await query('SELECT * FROM prd_finish_order WHERE id = ? AND deleted = 0', [id]);
@@ -26,7 +40,7 @@ export class MysqlFinishOrderRepository implements IFinishOrderRepository {
       'SELECT * FROM prd_finish_order WHERE work_order_id = ? AND deleted = 0 ORDER BY id DESC',
       [workOrderId]
     );
-    return rows.map((r: any) => this.mapToEntity(r));
+    return rows.map((r: FinishOrderRow) => this.mapToEntity(r));
   }
 
   async findByFilters(
@@ -63,7 +77,7 @@ export class MysqlFinishOrderRepository implements IFinishOrderRepository {
       [...params, pageSize, offset]
     );
 
-    const list = rows.map((r: any) => this.mapToEntity(r));
+    const list = rows.map((r: FinishOrderRow) => this.mapToEntity(r));
     return { list, total };
   }
 
@@ -99,7 +113,7 @@ export class MysqlFinishOrderRepository implements IFinishOrderRepository {
     ]);
   }
 
-  private mapToEntity(row: any): FinishOrder {
+  private mapToEntity(row: FinishOrderRow): FinishOrder {
     const props: FinishOrderProps = {
       id: row.id,
       finishNo: row.finish_no,

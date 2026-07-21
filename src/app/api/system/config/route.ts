@@ -1,5 +1,5 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { query, execute } from '@/lib/db';
+import { query, execute, type SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { clearSystemConfigCache } from '@/lib/system-config';
 import { withPermission } from '@/lib/api-permissions';
@@ -318,7 +318,7 @@ async function ensureConfigTable(): Promise<boolean> {
 async function seedDefaultConfigs(): Promise<number> {
   let count = 0;
   try {
-    const rows: any = await query(`SELECT COUNT(*) as total FROM sys_config`);
+    const rows: { total: number }[] = await query(`SELECT COUNT(*) as total FROM sys_config`);
     if (rows[0]?.total === 0) {
       for (const cfg of DEFAULT_CONFIGS) {
         try {
@@ -347,7 +347,7 @@ export const GET = withPermission(
     const configKey = searchParams.get('configKey') || '';
 
     let where = 'WHERE 1=1 AND deleted = 0';
-    const params: any[] = [];
+    const params: SqlValue[] = [];
     if (configName) {
       where += ' AND config_name LIKE ?';
       params.push(`%${configName}%`);
@@ -357,10 +357,10 @@ export const GET = withPermission(
       params.push(`%${configKey}%`);
     }
 
-    const totalRows: any = await query(`SELECT COUNT(*) as total FROM sys_config ${where}`, params);
+    const totalRows: { total: number }[] = await query(`SELECT COUNT(*) as total FROM sys_config ${where}`, params);
     const total = totalRows[0]?.total || 0;
 
-    const rows: any = await query(
+    const rows: Record<string, unknown>[] = await query(
       `SELECT * FROM sys_config ${where} ORDER BY id ASC LIMIT ? OFFSET ?`,
       [...params, pageSize, (page - 1) * pageSize]
     );

@@ -47,21 +47,13 @@ export default function SalaryCalculatePage() {
   const [batchResults, setBatchResults] = useState<SalaryResult[]>([]);
 
   useEffect(() => {
-    console.log('[Hydration Check] 客户端翻译值验证:');
-    console.log('  t("salaryCalculation") =', t('salaryCalculation'));
-    console.log('  t("calculationMonth") =', t('calculationMonth'));
-    console.log('  t("employeeId") =', t('employeeId'));
-    console.log('  tc("save") =', tc('save'));
-    console.log('  tc("companyName") =', tc('companyName'));
-  }, [t, tc]);
 
   useEffect(() => {
-    console.log('[SalaryCalculatePage] 初始化完成 - 默认月份:', month);
+    // initialized - month defaults
   }, []);
 
   const handleCalculate = async () => {
     if (!employeeId || !month) { toast.error(t('fillEmployeeIdAndMonth')); return; }
-    console.log('[SalaryCalculatePage] 开始计算薪资 - employeeId:', employeeId, ', month:', month);
     setLoading(true);
     try {
       const res = await authFetch('/api/hr/salary/calculate', {
@@ -69,7 +61,6 @@ export default function SalaryCalculatePage() {
         body: JSON.stringify({ employeeId: parseInt(employeeId), month }),
       });
       const json = await res.json();
-      console.log('[SalaryCalculatePage] 计算结果 - code:', json.code, ', data:', JSON.stringify(json.data));
       if (json.code === 200) {
         setResult(json.data);
         toast.success(t('calculationCompleted'));
@@ -77,7 +68,6 @@ export default function SalaryCalculatePage() {
         toast.error(json.message || t('calculationFailed'));
       }
     } catch (error) {
-      console.error('[SalaryCalculatePage] 计算请求失败:', error);
       toast.error(t('calculationRequestFailed'));
     }
     setLoading(false);
@@ -85,7 +75,6 @@ export default function SalaryCalculatePage() {
 
   const handleBatchCalculate = async () => {
     if (!month) { toast.error(t('selectMonth')); return; }
-    console.log('[SalaryCalculatePage] 开始批量计算薪资 - month:', month);
     setLoading(true);
     try {
       const res = await authFetch('/api/hr/salary/calculate', {
@@ -93,7 +82,6 @@ export default function SalaryCalculatePage() {
         body: JSON.stringify({ employeeIds: [], month }),
       });
       const json = await res.json();
-      console.log('[SalaryCalculatePage] 批量计算结果 - code:', json.code, ', succeeded:', json.data?.succeeded, ', results count:', (json.data?.results || []).length);
       if (json.code === 200) {
         setBatchResults(json.data.results || []);
         toast.success(t('batchCalculationCompleted', { count: json.data.succeeded }));
@@ -101,7 +89,6 @@ export default function SalaryCalculatePage() {
         toast.error(json.message || t('batchCalculationFailed'));
       }
     } catch (error) {
-      console.error('[SalaryCalculatePage] 批量计算请求失败:', error);
       toast.error(t('batchCalculationRequestFailed'));
     }
     setLoading(false);

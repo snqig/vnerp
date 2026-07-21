@@ -14,7 +14,7 @@ export interface QRCodeData {
   productionDate?: string;
   expireDate?: string;
   traceUrl?: string;
-  extraData?: Record<string, any>;
+  extraData?: Record<string, string | number>;
 }
 
 export interface QRCodeRecord {
@@ -82,7 +82,7 @@ export class QRCodeService {
   }
 
   static buildQRContent(data: QRCodeData): string {
-    const content: Record<string, any> = {
+    const content: Record<string, string | number> = {
       v: '1',
       t: data.type,
       id: data.id,
@@ -147,7 +147,7 @@ export class QRCodeService {
     const qrCode = `MAT${materialId}${Date.now()}`;
 
     return await transaction(async (conn) => {
-      const [result] = await (conn.execute as any)(
+      const [result] = await conn.execute(
         `INSERT INTO inv_qr_code (qr_code, qr_type, source_type, source_id, source_no, material_id, material_code, material_name, warehouse_id, production_date, expire_date, trace_url, create_time)
          VALUES (?, 'material', 'material', ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
@@ -197,7 +197,7 @@ export class QRCodeService {
     }
   ): Promise<{ qrCode: string; qrImageUrl: string; qrId: number }> {
     return await transaction(async (conn) => {
-      const [result] = await (conn.execute as any)(
+      const [result] = await conn.execute(
         `INSERT INTO inv_qr_code (qr_code, qr_type, source_type, source_id, source_no, material_id, material_code, material_name, batch_no, warehouse_id, production_date, expire_date, trace_url, create_time)
          VALUES (?, 'batch', 'batch', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
@@ -248,7 +248,7 @@ export class QRCodeService {
     }
   ): Promise<{ qrCode: string; qrImageUrl: string; qrId: number }> {
     return await transaction(async (conn) => {
-      const [result] = await (conn.execute as any)(
+      const [result] = await conn.execute(
         `INSERT INTO inv_qr_code (qr_code, qr_type, source_type, source_id, source_no, work_order_no, trace_url, create_time)
          VALUES (?, 'workorder', 'workorder', ?, ?, ?, ?, NOW())`,
         [
@@ -345,7 +345,7 @@ export class QRCodeService {
     sql += ` ORDER BY h.create_time ASC`;
 
     const rows = await query(sql, params);
-    return (rows || []).map((r: any) => ({
+    return (rows || []).map((r: Record<string, unknown>) => ({
       timestamp: r.timestamp,
       event: this.getEventLabel(r.event),
       eventType: r.eventType,

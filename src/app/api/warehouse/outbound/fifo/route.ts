@@ -1,7 +1,13 @@
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { successResponse, errorResponse, logOperation } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import {
+  allocateFIFO,
+  planFIFOAllocation,
+  executeFIFODeductionWithRetry,
+  executeSpecifiedBatchDeduction,
+} from '@/lib/fifo-allocation';
 
 interface FIFOAllocationItem {
   batch_id: number;
@@ -26,76 +32,6 @@ interface FIFOAllocationResult {
   allocations: FIFOAllocationItem[];
 }
 
-async function allocateFIFO(
-  conn: Loose,
-  materialId: number,
-  warehouseId: number,
-  requiredQty: number
-): Promise<FIFOAllocationResult> {
-  const [batches]: Loose = await conn.query(
-    `SELECT 
-      id, batch_no, material_id, material_code, material_name,
-      available_qty, unit_price, inbound_date, unit, expire_date, version
-    FROM inv_inventory_batch 
-    WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 1
-    ORDER BY
-      CASE
-        WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 30 THEN 0
-        WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 60 THEN 1
-        ELSE 2
-      END,
-      inbound_date ASC,
-      expire_date ASC,
-      id ASC
-    FOR UPDATE`,
-    [materialId, warehouseId]
-  );
-
-  const result: FIFOAllocationResult = {
-    material_id: materialId,
-    material_code: batches.length > 0 ? batches[0].material_code : '',
-    material_name: batches.length > 0 ? batches[0].material_name : '',
-    required_qty: requiredQty,
-    total_available: 0,
-    allocated_qty: 0,
-    shortage: 0,
-    allocations: [],
-  };
-
-  result.total_available = batches.reduce(
-    (sum: number, b: Loose) => sum + parseFloat(b.available_qty),
-    0
-  );
-
-  let remaining = requiredQty;
-
-  for (const batch of batches) {
-    if (remaining <= 0) break;
-
-    const availableQty = parseFloat(batch.available_qty);
-    const allocateQty = Math.min(remaining, availableQty);
-
-    result.allocations.push({
-      batch_id: batch.id,
-      batch_no: batch.batch_no,
-      material_id: batch.material_id,
-      material_code: batch.material_code,
-      material_name: batch.material_name,
-      allocate_qty: allocateQty,
-      available_qty_before: availableQty,
-      unit_cost: parseFloat(batch.unit_price) || 0,
-      inbound_date: batch.inbound_date,
-    });
-
-    remaining -= allocateQty;
-    result.allocated_qty += allocateQty;
-  }
-
-  result.shortage = Math.max(0, remaining);
-
-  return result;
-}
-
 export const GET = withPermission(
   async (request: NextRequest, _userInfo) => {
     const { searchParams } = new URL(request.url);
@@ -109,20 +45,17 @@ export const GET = withPermission(
 
     const batches = await query(
       `SELECT 
-      id, batch_no, material_id, material_code, material_name,
-      quantity, available_qty, locked_qty, unit, unit_price,
-      inbound_date, produce_date, expire_date, status
-    FROM inv_inventory_batch 
-    WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 1
-    ORDER BY
-      CASE
-        WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 30 THEN 0
-        WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 60 THEN 1
-        ELSE 2
-      END,
-      inbound_date ASC,
-      expire_date ASC,
-      id ASC`,
+        id, batch_no, material_id, material_code, material_name,
+        quantity, available_qty, locked_qty, unit, unit_price,
+        inbound_date, produce_date, expire_date, status
+      FROM inv_inventory_batch 
+      WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 1
+      ORDER BY
+        CASE WHEN split_flag = 2 THEN 0 ELSE 1 END ASC,
+        CASE WHEN opened_at IS NOT NULL THEN 0 ELSE 1 END ASC,
+        expire_date ASC,
+        inbound_date ASC,
+        id ASC`,
       [materialId, warehouseId]
     );
 
@@ -135,25 +68,27 @@ export const GET = withPermission(
     let shortage = 0;
 
     if (requiredQty > 0) {
-      let remaining = requiredQty;
-      for (const batch of batches as Loose[]) {
-        if (remaining <= 0) break;
-        const availableQty = parseFloat(batch.available_qty);
-        const allocateQty = Math.min(remaining, availableQty);
-        allocationPlan.push({
-          batch_id: batch.id,
-          batch_no: batch.batch_no,
-          material_id: batch.material_id,
-          material_code: batch.material_code,
-          material_name: batch.material_name,
-          allocate_qty: allocateQty,
-          available_qty_before: availableQty,
-          unit_cost: parseFloat(batch.unit_price) || 0,
-          inbound_date: batch.inbound_date,
-        });
-        remaining -= allocateQty;
-      }
-      shortage = Math.max(0, remaining);
+      const allocation = await planFIFOAllocation(
+        { query },
+        parseInt(materialId),
+        parseInt(warehouseId),
+        requiredQty
+      );
+
+      allocationPlan.push(
+        ...allocation.allocations.map((a) => ({
+          batch_id: a.batch_id,
+          batch_no: a.batch_no,
+          material_id: a.material_id,
+          material_code: a.material_code,
+          material_name: a.material_name,
+          allocate_qty: a.allocate_qty,
+          available_qty_before: a.available_qty_before,
+          unit_cost: a.unit_cost,
+          inbound_date: a.inbound_date,
+        }))
+      );
+      shortage = allocation.shortage;
     }
 
     return successResponse({
@@ -405,19 +340,20 @@ export const PATCH = withPermission(
             );
           }
 
-          const [batchUpdateResult]: Loose = await conn.execute(
-            `UPDATE inv_inventory_batch SET
-            quantity = quantity - ?,
-            available_qty = available_qty - ?,
-            version = version + 1,
-            update_time = NOW()
-          WHERE id = ? AND version = ?`,
-            [requiredQty, requiredQty, batch[0].id, batch[0].version]
-          );
-
-          if (batchUpdateResult.affectedRows === 0) {
-            throw new Error(`批次 ${item.batch_no} 已被其他操作修改，请重试`);
-          }
+          await executeSpecifiedBatchDeduction(conn, {
+            batchNo: item.batch_no,
+            materialId: item.material_id,
+            materialCode: '',
+            materialName: item.material_name,
+            warehouseId: order.warehouse_id,
+            warehouseCode: order.warehouse_code || '',
+            requiredQty,
+            sourceType: 'outbound_order',
+            sourceId: orderId,
+            sourceNo: order.order_no,
+            operatorId: operatorId || null,
+            operatorName: operatorName || '',
+          });
 
           deductionDetails.push({
             batch_id: batch[0].id,
@@ -440,21 +376,17 @@ export const PATCH = withPermission(
             );
           }
 
+          await executeFIFODeductionWithRetry(conn, allocation, {
+            sourceType: 'outbound_order',
+            sourceId: orderId,
+            sourceNo: order.order_no,
+            warehouseId: order.warehouse_id,
+            warehouseCode: order.warehouse_code || '',
+            operatorId: operatorId || null,
+            operatorName: operatorName || '',
+          });
+
           for (const alloc of allocation.allocations) {
-            const [fifoUpdateResult]: Loose = await conn.execute(
-              `UPDATE inv_inventory_batch SET
-              quantity = quantity - ?,
-              available_qty = available_qty - ?,
-              version = version + 1,
-              update_time = NOW()
-            WHERE id = ? AND version = ?`,
-              [alloc.allocate_qty, alloc.allocate_qty, alloc.batch_id, (alloc as Loose).version]
-            );
-
-            if (fifoUpdateResult.affectedRows === 0) {
-              throw new Error(`批次 ${alloc.batch_no} 已被其他操作修改，请重试`);
-            }
-
             deductionDetails.push({
               batch_id: alloc.batch_id,
               batch_no: alloc.batch_no,
@@ -464,40 +396,6 @@ export const PATCH = withPermission(
             });
           }
         }
-
-        await conn.execute(
-          `UPDATE inv_inventory SET
-          quantity = quantity - ?,
-          available_qty = available_qty - ?,
-          update_time = NOW()
-        WHERE material_id = ? AND warehouse_id = ?`,
-          [requiredQty, requiredQty, item.material_id, order.warehouse_id]
-        );
-
-        const [currentInv]: Loose = await conn.execute(
-          'SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0',
-          [item.material_id, order.warehouse_id]
-        );
-        const afterQty = currentInv.length > 0 ? parseFloat(currentInv[0].quantity) : 0;
-        const beforeQty = afterQty + requiredQty;
-
-        await conn.execute(
-          `INSERT INTO inv_inventory_log (
-          material_id, warehouse_id, batch_no, operation_type, operation_qty,
-          before_qty, after_qty, business_type, business_no, remark, operator_id, create_time
-        ) VALUES (?, ?, ?, 2, ?, ?, ?, 'outbound_order', ?, ?, ?, NOW())`,
-          [
-            item.material_id,
-            order.warehouse_id,
-            item.batch_no || null,
-            requiredQty,
-            beforeQty,
-            afterQty,
-            order.order_no,
-            remark || '',
-            operatorId || null,
-          ]
-        );
       }
 
       await conn.execute(

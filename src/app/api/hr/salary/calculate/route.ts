@@ -6,6 +6,7 @@ import { SalaryCalculationRepository } from '@/domain/hr/infrastructure/SalaryCa
 import { getDrizzleDb } from '@/lib/db';
 import { sysEmployee } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
 
 const db = getDrizzleDb();
 const calcRepo = new SalaryCalculationRepository();
@@ -48,7 +49,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
     const employees = await db.select({ id: sysEmployee.id }).from(sysEmployee)
       .where(eq(sysEmployee.status, 1));
     targetIds = employees.map(e => e.id);
-    console.log(`[BatchSalaryCalc] 自动获取员工列表: ${targetIds.length} 人`);
+    logger.debug(`[BatchSalaryCalc] 自动获取员工列表: ${targetIds.length} 人`);
   }
 
   if (!targetIds.length) {

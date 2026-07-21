@@ -76,7 +76,9 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   const byTypeTotal = typeItems.reduce((s, i) => s + i.cost, 0);
 
-  const lastMonth = `${parseInt(calcMonth.split('-')[0])}-${String(parseInt(calcMonth.split('-')[1]) - 1).padStart(2, '0')}`;
+  const [calcYear, calcMonthNum] = calcMonth.split('-').map(Number);
+  const lastMonthDate = new Date(calcYear, calcMonthNum - 2, 1);
+  const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
   const [lastMonthTotal] = await db.execute(sql`
     SELECT COALESCE(SUM(gross_pay), 0) as totalCost FROM hr_salary_calculation
     WHERE calc_month = ${lastMonth} AND status = 'confirmed'

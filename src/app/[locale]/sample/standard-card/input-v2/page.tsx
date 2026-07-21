@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SAMPLE_CARD_STATUS_LABEL } from '@/lib/status-labels';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -95,10 +96,10 @@ const STATUS_MAP: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: '草稿', variant: 'secondary' },
-  2: { label: '打样中', variant: 'default' },
-  3: { label: '已确认', variant: 'default' },
-  4: { label: '已作废', variant: 'outline' },
+  1: { label: SAMPLE_CARD_STATUS_LABEL[1], variant: 'secondary' },
+  2: { label: SAMPLE_CARD_STATUS_LABEL[2], variant: 'default' },
+  3: { label: SAMPLE_CARD_STATUS_LABEL[3], variant: 'default' },
+  4: { label: SAMPLE_CARD_STATUS_LABEL[4], variant: 'outline' },
 };
 
 export default function SampleCardInputV2Page() {

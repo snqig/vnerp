@@ -75,12 +75,15 @@ let globalCache: CacheManager | null = null;
  * - REDIS_URL 存在 → RedisCacheManager（多实例共享）
  * - 未配置或连接失败 → InMemoryCacheManager（单实例降级，仅开发环境友好）
  *
- * 注意：Redis 连接为异步过程，构造时若 Redis 不可达，RedisCacheManager 内部
- * 会记录 error 日志但不会抛出，调用方读到 null 时应感知是降级状态。
+ * 生产环境（NODE_ENV === 'production'）强制要求 REDIS_URL，缺失时直接抛错。
  */
 export function getCacheManager(): CacheManager {
   if (!globalCache) {
     const redisUrl = process.env.REDIS_URL;
+    // 生产环境强制 Redis
+    if (process.env.NODE_ENV === 'production' && !redisUrl) {
+      throw new Error('CacheManager: 生产环境必须配置 REDIS_URL');
+    }
     if (redisUrl) {
       try {
         globalCache = new RedisCacheManager(redisUrl);
@@ -91,6 +94,10 @@ export function getCacheManager(): CacheManager {
           message: e.message,
           stack: e.stack,
         });
+        // 生产环境 Redis 初始化失败也应抛错
+        if (process.env.NODE_ENV === 'production') {
+          throw new Error(`CacheManager: Redis 初始化失败: ${e.message}`);
+        }
         globalCache = new InMemoryCacheManager();
       }
     } else {

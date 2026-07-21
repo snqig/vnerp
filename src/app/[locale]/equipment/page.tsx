@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { EQUIPMENT_TYPE_LABEL, EQUIPMENT_STATUS_LABEL } from '@/lib/status-labels';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -56,30 +57,13 @@ interface Equipment {
   remark: string;
 }
 
-const EQUIPMENT_TYPES: Record<number, string> = {
-  1: '印刷机',
-  2: '覆膜机',
-  3: '模切机',
-  4: '全检机',
-  5: '其他',
-};
+const EQUIPMENT_TYPES = EQUIPMENT_TYPE_LABEL;
+
 const CURRENT_STATUS: Record<number, { label: string; color: string }> = {
-  1: {
-    label: '运行',
-    color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  },
-  2: {
-    label: '待机',
-    color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  },
-  3: {
-    label: '维修',
-    color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-  },
-  4: {
-    label: '停机',
-    color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
-  },
+  1: { label: EQUIPMENT_STATUS_LABEL[1], color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
+  2: { label: EQUIPMENT_STATUS_LABEL[2], color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' },
+  3: { label: EQUIPMENT_STATUS_LABEL[3], color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
+  4: { label: EQUIPMENT_STATUS_LABEL[4], color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
 };
 
 export default function EquipmentPage() {

@@ -49,7 +49,7 @@ export default function BankReportPage() {
       const json = await res.json();
       if (json.code === 200) {
         const list = Array.isArray(json.data) ? json.data : json.data?.list || [];
-        const mapped = list.map((item: any) => ({
+        const mapped = list.map((item: unknown) => ({
           employeeName: item.employeeName || item.employee_name || item.name,
           bankCardNo: item.bankCardNo || item.bank_card_no || item.bankCard || '-',
           netPay: item.netPay ?? item.actualSalary ?? item.actual_salary ?? item.netPay ?? 0,

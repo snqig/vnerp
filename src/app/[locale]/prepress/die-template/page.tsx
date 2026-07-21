@@ -38,17 +38,13 @@ import {
   Search,
   RefreshCw,
   AlertTriangle,
-  Shield,
   Lock,
   Unlock,
   Eye,
   Edit,
   Trash2,
   Wrench,
-  QrCode,
   Activity,
-  BarChart3,
-  Clock,
   WrenchIcon,
   RotateCcw,
   ArrowUpDown,
@@ -57,15 +53,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  TableExportToolbar,
-  printTable,
-  exportTableToPDF,
-  exportTableToXLS,
-  exportTableToWORD,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 import { useTranslations } from 'next-intl';
 import type { DieApiResponse, DashboardStatsResponse } from '@/domain/prepress';
 

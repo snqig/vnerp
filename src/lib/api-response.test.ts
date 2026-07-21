@@ -11,7 +11,7 @@ import {
 
 vi.mock('next/server', () => ({
   NextResponse: {
-    json: (data: any, init?: ResponseInit) => ({
+    json: (data: unknown, init?: ResponseInit) => ({
       ...data,
       status: init?.status || 200,
       json: async () => data,
@@ -23,7 +23,7 @@ vi.mock('@/lib/db', () => ({
   execute: vi.fn().mockResolvedValue({}),
 }));
 
-type AnyResponse = Record<string, any>;
+type AnyResponse = Record<string, unknown>;
 
 describe('API响应工具测试', () => {
   describe('successResponse - 成功响应', () => {

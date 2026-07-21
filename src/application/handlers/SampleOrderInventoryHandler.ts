@@ -1,7 +1,7 @@
 import { query, execute } from '@/lib/db';
 
 export class SampleOrderInventoryHandler {
-  async handle(event: { eventType: string; payload: any }): Promise<void> {
+  async handle(event: { eventType: string; payload: { sampleOrderId: number } }): Promise<void> {
     const { payload } = event;
 
     if (event.eventType === 'SampleOrderCompleted') {

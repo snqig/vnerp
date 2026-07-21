@@ -8,20 +8,10 @@ import {
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { FieldMapper } from '@/domain/prepress/value-objects/FieldMapping';
+import { ASSET_TYPE_LABEL, DIE_STATUS_LABEL } from '@/lib/status-labels';
 
-const ASSET_TYPE_MAP: Record<string, string> = {
-  die: '刀模',
-  flexo_plate: '柔印版',
-  screen_mesh: '丝网版',
-};
-
-const DIE_STATUS_MAP: Record<string, string> = {
-  available: '可用',
-  in_use: '使用中',
-  maintenance_needed: '需保养',
-  re_rule_needed: '需重做',
-  scrap: '已报废',
-};
+const ASSET_TYPE_MAP = ASSET_TYPE_LABEL;
+const DIE_STATUS_MAP = DIE_STATUS_LABEL;
 
 function computeDieStatus(
   cumulative: number,

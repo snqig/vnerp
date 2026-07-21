@@ -35,7 +35,7 @@ ROUTES = [
     "/sample/standard-card/input-v2", "/sample/standard-card/print", "/settings/announcement",
     "/settings/basics", "/settings/config", "/settings/dict", "/settings/login-log",
     "/settings/menus", "/settings/notice", "/settings/oper-log", "/settings/organization",
-    "/settings/permissions", "/settings/profile", "/settings/roles", "/settings/scheduler",
+    "/settings/profile", "/settings/roles", "/settings/scheduler",
     "/settings/seed-data", "/settings/system", "/settings/user", "/settings/users",
     "/settings/warehouse-category", "/srm/evaluation", "/warehouse", "/warehouse/batch",
     "/warehouse/cost", "/warehouse/inbound", "/warehouse/inbound-simple",

@@ -7,6 +7,7 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PROCESS_CARD_STATUS_LABEL } from '@/lib/status-labels';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -16,14 +17,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import {
   Plus,
@@ -36,7 +29,6 @@ import {
   CheckCircle,
   XCircle,
   Send,
-  Copy,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -65,10 +57,10 @@ const STATUS_MAP: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: '草稿', variant: 'secondary' },
-  2: { label: '打样中', variant: 'default' },
-  3: { label: '已确认', variant: 'outline' },
-  4: { label: '已作废', variant: 'destructive' },
+  1: { label: PROCESS_CARD_STATUS_LABEL[1], variant: 'secondary' },
+  2: { label: PROCESS_CARD_STATUS_LABEL[2], variant: 'default' },
+  3: { label: PROCESS_CARD_STATUS_LABEL[3], variant: 'outline' },
+  4: { label: PROCESS_CARD_STATUS_LABEL[4], variant: 'destructive' },
 };
 
 export default function ProcessCardPage() {

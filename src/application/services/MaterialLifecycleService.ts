@@ -1,5 +1,5 @@
 import { db, type SqlValue } from '@/lib/db';
-import { getCacheManager } from '@/lib/cache';
+import { getCacheManager, type CacheManager } from '@/lib/cache';
 
 export interface MaterialLifecycleStats {
   totalMaterials: number;
@@ -202,11 +202,18 @@ interface UserRow {
 }
 
 export class MaterialLifecycleService {
-  private cache = getCacheManager();
+  private cache: CacheManager | null = null;
+
+  private getCache(): CacheManager {
+    if (!this.cache) {
+      this.cache = getCacheManager() as CacheManager;
+    }
+    return this.cache;
+  }
 
   async getStats(): Promise<MaterialLifecycleStats> {
     const cacheKey = 'material_lifecycle_stats';
-    const cached = await this.cache.get<MaterialLifecycleStats>(cacheKey);
+    const cached = await this.getCache().get<MaterialLifecycleStats>(cacheKey);
     if (cached) return cached;
 
     const stats = await db.query<StatsRow>(
@@ -230,7 +237,7 @@ export class MaterialLifecycleService {
       lowStockMaterials: Number(stats[0]?.low_stock_materials || 0),
     };
 
-    await this.cache.set(cacheKey, result, 300);
+    await this.getCache().set(cacheKey, result, 300);
     return result;
   }
 
@@ -414,7 +421,7 @@ export class MaterialLifecycleService {
       );
     }
 
-    await this.cache.delete('material_lifecycle_stats');
+    await this.getCache().delete('material_lifecycle_stats');
 
     return result.insertId;
   }
@@ -477,7 +484,7 @@ export class MaterialLifecycleService {
       );
     }
 
-    await this.cache.delete('material_lifecycle_stats');
+    await this.getCache().delete('material_lifecycle_stats');
   }
 
   async getConsumeLog(
@@ -647,7 +654,7 @@ export class MaterialLifecycleService {
       }
     }
 
-    await this.cache.delete('material_lifecycle_stats');
+    await this.getCache().delete('material_lifecycle_stats');
 
     return { processed, notified, expired };
   }

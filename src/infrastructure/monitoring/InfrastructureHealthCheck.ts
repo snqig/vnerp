@@ -43,7 +43,7 @@ export interface HealthStatus {
  */
 export class InfrastructureHealthCheck {
   static async check(): Promise<HealthStatus> {
-    const checks: HealthStatus['checks'] = {} as HealthStatus['checks'];
+    const checks = {} as HealthStatus['checks'];
 
     checks.database = await this.checkDatabase();
     checks.redis = await this.checkRedis();

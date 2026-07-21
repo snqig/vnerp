@@ -1,22 +1,61 @@
 import { IScheduleRepository } from '@/domain/production/repositories/IScheduleRepository';
 import { query, execute, queryPaginated } from '@/lib/db';
 
+interface ScheduleRow {
+  id: number;
+  schedule_no: string;
+  work_order_id: number | null;
+  order_id: number | null;
+  order_no: string | null;
+  product_id: number | null;
+  product_code: string | null;
+  product_name: string | null;
+  workshop: string | null;
+  planned_qty: number | null;
+  completed_qty: number | null;
+  planned_start: Date | null;
+  planned_end: Date | null;
+  actual_start: Date | null;
+  actual_end: Date | null;
+  priority: number | null;
+  status: number | null;
+  scheduler: string | null;
+  remark: string | null;
+  deleted: number;
+}
+
+interface ScheduleDetailRow {
+  id: number;
+  schedule_id: number;
+  work_order_id: number | null;
+  color_seq_no: number | null;
+  color_name: string | null;
+  equipment_id: number | null;
+  equipment_name: string | null;
+  planned_start: Date | null;
+  planned_end: Date | null;
+  actual_start: Date | null;
+  actual_end: Date | null;
+  duration_hours: number | null;
+  status: number | null;
+}
+
 export class MysqlScheduleRepository implements IScheduleRepository {
-  async findById(id: number): Promise<any | null> {
+  async findById(id: number): Promise<ScheduleRow | null> {
     const rows = await query('SELECT * FROM prd_schedule WHERE id = ? AND deleted = 0', [
       id,
     ]);
     return rows.length > 0 ? rows[0] : null;
   }
 
-  async findDetailsByScheduleId(scheduleId: number): Promise<any[]> {
+  async findDetailsByScheduleId(scheduleId: number): Promise<ScheduleDetailRow[]> {
     return await query(
       'SELECT * FROM prd_schedule_detail WHERE schedule_id = ? AND deleted = 0 ORDER BY color_seq_no ASC',
       [scheduleId]
     );
   }
 
-  async findByWorkOrderId(workOrderId: number): Promise<any | null> {
+  async findByWorkOrderId(workOrderId: number): Promise<ScheduleRow | null> {
     const rows = await query(
       'SELECT * FROM prd_schedule WHERE work_order_id = ? AND deleted = 0 ORDER BY create_time DESC LIMIT 1',
       [workOrderId]
@@ -31,7 +70,7 @@ export class MysqlScheduleRepository implements IScheduleRepository {
     status?: number;
     keyword?: string;
   }): Promise<{
-    data: any[];
+    data: ScheduleRow[];
     pagination: { page: number; pageSize: number; total: number; totalPages: number };
   }> {
     let sql = 'SELECT * FROM prd_schedule WHERE deleted = 0';

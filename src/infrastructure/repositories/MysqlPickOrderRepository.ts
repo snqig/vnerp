@@ -6,11 +6,41 @@ import {
 } from '@/domain/production/repositories/IPickOrderRepository';
 import type { ResultSetHeader } from 'mysql2/promise';
 
+interface PickOrderRow {
+  id: number;
+  pick_no: string;
+  work_order_id: number;
+  warehouse_id: number;
+  picker_name: string;
+  total_qty: number;
+  status: string;
+  remark: string | null;
+  create_by: number | null;
+  create_time: string;
+  update_time: string;
+  deleted: number;
+}
+
+interface PickOrderItemRow {
+  id: number;
+  pick_order_id: number;
+  material_id: number;
+  material_name: string;
+  material_spec: string | null;
+  required_qty: number;
+  actual_qty: number;
+  batch_no: string | null;
+  unit_cost: number;
+  line_amount: number;
+  unit: string;
+  remark: string | null;
+}
+
 export class MysqlPickOrderRepository implements IPickOrderRepository {
   async findById(id: number): Promise<PickOrder | null> {
     const rows = await query('SELECT * FROM prd_pick_order WHERE id = ? AND deleted = 0', [id]);
     if (!rows || rows.length === 0) return null;
-    return this.mapToEntity(rows[0]);
+    return this.mapToEntity(rows[0] as PickOrderRow);
   }
 
   async findByPickNo(pickNo: string): Promise<PickOrder | null> {
@@ -18,7 +48,7 @@ export class MysqlPickOrderRepository implements IPickOrderRepository {
       pickNo,
     ]);
     if (!rows || rows.length === 0) return null;
-    return this.mapToEntity(rows[0]);
+    return this.mapToEntity(rows[0] as PickOrderRow);
   }
 
   async findByWorkOrderId(workOrderId: number): Promise<PickOrder[]> {
@@ -26,7 +56,7 @@ export class MysqlPickOrderRepository implements IPickOrderRepository {
       'SELECT * FROM prd_pick_order WHERE work_order_id = ? AND deleted = 0 ORDER BY id DESC',
       [workOrderId]
     );
-    return Promise.all(rows.map((r: any) => this.mapToEntity(r)));
+    return Promise.all(rows.map((r) => this.mapToEntity(r as PickOrderRow)));
   }
 
   async findByFilters(
@@ -63,7 +93,7 @@ export class MysqlPickOrderRepository implements IPickOrderRepository {
       [...params, pageSize, offset]
     );
 
-    const list = await Promise.all(rows.map((r: any) => this.mapToEntity(r)));
+    const list = await Promise.all(rows.map((r) => this.mapToEntity(r as PickOrderRow)));
     return { list, total };
   }
 
@@ -120,7 +150,7 @@ export class MysqlPickOrderRepository implements IPickOrderRepository {
     await execute('UPDATE prd_pick_order SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
   }
 
-  private async mapToEntity(row: any): Promise<PickOrder> {
+  private async mapToEntity(row: PickOrderRow): Promise<PickOrder> {
     const items = await query('SELECT * FROM prd_pick_order_item WHERE pick_order_id = ?', [
       row.id,
     ]);
@@ -135,19 +165,22 @@ export class MysqlPickOrderRepository implements IPickOrderRepository {
       createBy: row.create_by,
       createTime: row.create_time,
       updateTime: row.update_time,
-      items: (items || []).map((i: any) => ({
-        id: i.id,
-        materialId: i.material_id,
-        materialName: i.material_name,
-        materialSpec: i.material_spec,
-        requiredQty: Number(i.required_qty || 0),
-        actualQty: Number(i.actual_qty || 0),
-        batchNo: i.batch_no,
-        unitCost: Number(i.unit_cost || 0),
-        lineAmount: Number(i.line_amount || 0),
-        unit: i.unit || 'pcs',
-        remark: i.remark,
-      })),
+      items: (items || []).map((i) => {
+        const itemRow = i as PickOrderItemRow;
+        return {
+          id: itemRow.id,
+          materialId: itemRow.material_id,
+          materialName: itemRow.material_name,
+          materialSpec: itemRow.material_spec,
+          requiredQty: Number(itemRow.required_qty || 0),
+          actualQty: Number(itemRow.actual_qty || 0),
+          batchNo: itemRow.batch_no,
+          unitCost: Number(itemRow.unit_cost || 0),
+          lineAmount: Number(itemRow.line_amount || 0),
+          unit: itemRow.unit || 'pcs',
+          remark: itemRow.remark,
+        };
+      }),
     };
     return PickOrder.reconstitute(props);
   }

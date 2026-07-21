@@ -1595,35 +1595,35 @@ export const POST = withPermission(
       await conn.execute(`CREATE TABLE IF NOT EXISTS sys_dict_type (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       dict_name VARCHAR(100) NOT NULL COMMENT '字典名称',
-      dict_type VARCHAR(100) NOT NULL COMMENT '字典类型',
+      dict_code VARCHAR(100) NOT NULL COMMENT '字典编码',
+      description VARCHAR(500) COMMENT '描述',
       status TINYINT DEFAULT 1 COMMENT '状态: 0-停用, 1-启用',
-      remark VARCHAR(500) COMMENT '备注',
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       create_by BIGINT UNSIGNED,
-      deleted TINYINT DEFAULT 0,
+      update_by BIGINT UNSIGNED,
+      deleted TINYINT NOT NULL DEFAULT 0,
       PRIMARY KEY (id),
-      UNIQUE KEY uk_dict_type (dict_type)
+      UNIQUE KEY uk_dict_code (dict_code)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典类型表'`);
       results.push('sys_dict_type');
 
       await conn.execute(`CREATE TABLE IF NOT EXISTS sys_dict_data (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-      dict_type VARCHAR(100) NOT NULL COMMENT '字典类型',
+      dict_type_id BIGINT UNSIGNED NOT NULL COMMENT '字典类型ID',
       dict_label VARCHAR(200) NOT NULL COMMENT '字典标签',
       dict_value VARCHAR(200) NOT NULL COMMENT '字典值',
-      dict_sort INT DEFAULT 0 COMMENT '排序',
-      css_class VARCHAR(100) COMMENT '样式属性',
-      list_class VARCHAR(100) COMMENT '表格回显样式',
-      is_default TINYINT DEFAULT 0 COMMENT '是否默认: 0-否, 1-是',
+      sort_order INT DEFAULT 0 COMMENT '排序',
       status TINYINT DEFAULT 1 COMMENT '状态: 0-停用, 1-启用',
       remark VARCHAR(500) COMMENT '备注',
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       create_by BIGINT UNSIGNED,
-      deleted TINYINT DEFAULT 0,
+      update_by BIGINT UNSIGNED,
+      deleted TINYINT NOT NULL DEFAULT 0,
       PRIMARY KEY (id),
-      KEY idx_dict_type (dict_type)
+      KEY idx_dict_type (dict_type_id),
+      KEY idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典数据表'`);
       results.push('sys_dict_data');
 

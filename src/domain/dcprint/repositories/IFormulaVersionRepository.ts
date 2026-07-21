@@ -54,19 +54,26 @@ export interface IFormulaVersionRepository {
   exists(id: number): Promise<boolean>;
 }
 
+export interface InkColor {
+  id: number;
+  code: string;
+  name: string;
+  status?: number;
+}
+
 /**
  * 色号仓储接口
  */
 export interface IInkColorRepository {
-  findById(id: number): Promise<any | null>;
-  findByCode(code: string): Promise<any | null>;
+  findById(id: number): Promise<InkColor | null>;
+  findByCode(code: string): Promise<InkColor | null>;
   findList(params: {
     page: number;
     pageSize: number;
     keyword?: string;
     status?: number;
-  }): Promise<{ list: any[]; total: number }>;
-  save(data: any, operatorId: number): Promise<number>;
-  update(id: number, data: any, operatorId: number): Promise<void>;
+  }): Promise<{ list: InkColor[]; total: number }>;
+  save(data: Partial<InkColor>, operatorId: number): Promise<number>;
+  update(id: number, data: Partial<InkColor>, operatorId: number): Promise<void>;
   softDelete(id: number): Promise<void>;
 }

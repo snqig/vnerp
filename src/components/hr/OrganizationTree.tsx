@@ -1,10 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  ChevronRight, ChevronDown, Building2, Landmark, Factory, Wrench, Users, Briefcase,
-  Plus, Pencil, Trash2,
-} from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +13,10 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { authFetch } from '@/lib/auth-fetch';
+import {
+  ChevronRight, ChevronDown, Building2, Landmark, Factory, Wrench, Users, Briefcase,
+  Plus, Pencil, Trash2,
+} from 'lucide-react';
 
 interface OrgNode {
   id: number;
@@ -45,7 +46,7 @@ interface EditForm {
   baseSalaryRange?: string;
 }
 
-const typeConfig: Record<string, { icon: any; label: string; color: string }> = {
+const typeConfig: Record<string, { icon: LucideIcon; label: string; color: string }> = {
   group: { icon: Building2, label: 'orgGroup', color: 'text-blue-600' },
   legal_entity: { icon: Landmark, label: 'orgLegalEntity', color: 'text-purple-600' },
   factory: { icon: Factory, label: 'orgFactory', color: 'text-green-600' },

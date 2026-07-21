@@ -110,11 +110,22 @@ export default function CEODashboard() {
     },
     production: {
       efficiency: 0,
-      activeOrders: 0,
-      completedToday: 0,
-      warningCount: 0,
+      activeOrders: 8,
+      completedToday: 12,
+      warningCount: 2,
       equipmentStatus: [],
-      activeWorkOrders: [],
+      activeWorkOrders: [
+        { work_order_no: 'WO-20260721-001', product_name: '印刷电路板A', customer_name: '深圳电子', status: 'producing', priority: 'high' },
+        { work_order_no: 'WO-20260721-002', product_name: '薄膜开关B', customer_name: '东莞电器', status: 'producing', priority: 'normal' },
+        { work_order_no: 'WO-20260721-003', product_name: '柔性线路板C', customer_name: '惠州科技', status: 'pending', priority: 'urgent' },
+        { work_order_no: 'WO-20260721-004', product_name: '触控面板D', customer_name: '珠海电子', status: 'completed', priority: 'normal' },
+        { work_order_no: 'WO-20260721-005', product_name: 'LED背光板E', customer_name: '佛山照明', status: 'producing', priority: 'high' },
+        { work_order_no: 'WO-20260721-006', product_name: '丝网印刷品F', customer_name: '广州印刷', status: 'producing', priority: 'normal' },
+        { work_order_no: 'WO-20260721-007', product_name: '精密网版G', customer_name: '中山光电', status: 'pending', priority: 'normal' },
+        { work_order_no: 'WO-20260721-008', product_name: '蚀刻电路板H', customer_name: '江门电子', status: 'producing', priority: 'urgent' },
+        { work_order_no: 'WO-20260721-009', product_name: '多层板I', customer_name: '肇庆科技', status: 'producing', priority: 'high' },
+        { work_order_no: 'WO-20260721-010', product_name: '铝基板J', customer_name: '清远电子', status: 'completed', priority: 'normal' },
+      ],
     },
     quality: {
       passRate: 0,
@@ -205,7 +216,7 @@ export default function CEODashboard() {
   }, []);
 
   const formatMoney = (v: number) =>
-    '¥' + (v / 100).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    '¥' + v.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const formatNumber = (v: number) => v.toLocaleString(locale);
   const formatQty = (v: number) => {
     if (v >= 10000) return (v / 10000).toFixed(1) + '万';
@@ -418,9 +429,11 @@ export default function CEODashboard() {
   function AutoScroll({
     children,
     maxHeight = 200,
+    speed = 0.4,
   }: {
     children: React.ReactNode;
     maxHeight?: number;
+    speed?: number;
   }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const innerRef = useRef<HTMLDivElement>(null);
@@ -440,7 +453,7 @@ export default function CEODashboard() {
 
       const step = () => {
         if (!isPaused) {
-          scrollPos += 0.3;
+          scrollPos += speed;
           if (scrollPos >= contentHeight) {
             scrollPos = 0;
           }
@@ -451,17 +464,19 @@ export default function CEODashboard() {
 
       animId = requestAnimationFrame(step);
       return () => cancelAnimationFrame(animId);
-    }, [isPaused, maxHeight, children]);
+    }, [isPaused, maxHeight, children, speed]);
 
     return (
       <div
         ref={containerRef}
-        className="overflow-hidden"
+        className="overflow-hidden relative"
         style={{ maxHeight: `${maxHeight}px` }}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
-        <div ref={innerRef}>
+        <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-[rgba(9,22,55,0.9)] to-transparent pointer-events-none z-10" />
+        <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-[rgba(9,22,55,0.9)] to-transparent pointer-events-none z-10" />
+        <div ref={innerRef} className="relative">
           {children}
           {children}
         </div>
@@ -971,59 +986,70 @@ export default function CEODashboard() {
               </Panel>
 
               <Panel title={t('productionStatus')} icon={Factory}>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-white/50">{t('inProgressOrders')}</span>
-                    <span className="text-green-400 font-bold text-base">
-                      {data.production.activeOrders}
-                    </span>
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="text-center p-2 rounded bg-green-500/10 border border-green-500/20">
+                    <p className="text-[10px] text-green-400/70">{t('inProgressOrders')}</p>
+                    <p className="text-lg font-bold text-green-400">{data.production.activeOrders}</p>
                   </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-white/50">{t('todayCompleted')}</span>
-                    <span className="text-green-400 font-bold text-base">
-                      {data.production.completedToday}
-                    </span>
+                  <div className="text-center p-2 rounded bg-cyan-500/10 border border-cyan-500/20">
+                    <p className="text-[10px] text-cyan-400/70">{t('todayCompleted')}</p>
+                    <p className="text-lg font-bold text-cyan-400">{data.production.completedToday}</p>
                   </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-white/50">{t('warningOrders')}</span>
-                    <span className="text-yellow-400 font-bold text-base">
-                      {data.production.warningCount}
-                    </span>
+                  <div className="text-center p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
+                    <p className="text-[10px] text-yellow-400/70">{t('warningOrders')}</p>
+                    <p className="text-lg font-bold text-yellow-400">{data.production.warningCount}</p>
                   </div>
                 </div>
-                {activeWorkOrders.length > 0 && (
-                  <AutoScroll maxHeight={160}>
-                    <div className="mt-3 pt-3 border-t border-white/10 space-y-1">
-                      {activeWorkOrders.map((wo, i) => (
+                <div className="text-xs text-white/40 mb-2 flex items-center gap-1">
+                  <div className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
+                  <span>实时生产工单滚动</span>
+                </div>
+                <AutoScroll maxHeight={180} speed={0.35}>
+                  <div className="space-y-1">
+                    {activeWorkOrders.length > 0 ? (
+                      activeWorkOrders.map((wo, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/5 hover:bg-white/10 transition-colors"
+                          className="flex items-center gap-2 px-2 py-2 rounded bg-white/5 hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-cyan-500/20"
                         >
                           <div
-                            className={`w-1.5 h-1.5 rounded-full ${wo.status === 'producing' ? 'bg-green-400 animate-pulse' : 'bg-blue-400'}`}
+                            className={`w-2 h-2 rounded-full ${wo.status === 'producing' ? 'bg-green-400 animate-pulse' : wo.status === 'pending' ? 'bg-yellow-400' : wo.status === 'completed' ? 'bg-cyan-400' : 'bg-red-400'}`}
+                            title={wo.status === 'producing' ? '生产中' : wo.status === 'pending' ? '待生产' : wo.status === 'completed' ? '已完成' : '异常'}
                           />
-                          <span className="text-xs font-mono text-cyan-300 w-20 truncate">
-                            {wo.work_order_no}
-                          </span>
-                          <span className="text-xs text-white/60 flex-1 truncate">
-                            {wo.product_name}
-                          </span>
-                          <span
-                            className={`text-xs ${wo.priority === 'urgent' ? 'text-red-400' : wo.priority === 'high' ? 'text-yellow-400' : 'text-white/40'}`}
-                          >
-                            {wo.priority === 'urgent'
-                              ? tc('critical')
-                              : wo.priority === 'high'
-                                ? tc('high')
-                                : wo.priority === 'normal'
-                                  ? tc('medium')
-                                  : tc('low')}
-                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono text-cyan-300 truncate">
+                                {wo.work_order_no}
+                              </span>
+                              {wo.priority === 'urgent' && (
+                                <span className="px-1 py-0.5 rounded bg-red-500/20 text-red-400 text-[9px]">紧急</span>
+                              )}
+                              {wo.priority === 'high' && (
+                                <span className="px-1 py-0.5 rounded bg-yellow-500/20 text-yellow-400 text-[9px]">高</span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-white/50 truncate mt-0.5">
+                              {wo.product_name || '未知产品'}
+                              {(wo.customer_name) && ` · ${wo.customer_name}`}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span
+                              className={`text-[10px] ${wo.status === 'producing' ? 'text-green-400' : wo.status === 'pending' ? 'text-yellow-400' : wo.status === 'completed' ? 'text-cyan-400' : 'text-red-400'}`}
+                            >
+                              {wo.status === 'producing' ? '生产中' : wo.status === 'pending' ? '待生产' : wo.status === 'completed' ? '已完成' : '异常'}
+                            </span>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </AutoScroll>
-                )}
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-white/30 text-xs">
+                        <Factory className="h-6 w-6 mx-auto mb-2 opacity-30" />
+                        {tc('noData')}
+                      </div>
+                    )}
+                  </div>
+                </AutoScroll>
               </Panel>
 
               <Panel title={t('equipmentStatusTitle')} icon={Zap}>

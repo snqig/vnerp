@@ -6,6 +6,8 @@ export function isDemoMode(): boolean {
   return demo;
 }
 
+import { logger } from '@/lib/logger';
+
 export const demoUser = {
   id: 1,
   username: 'admin',
@@ -102,7 +104,7 @@ export function demoQuery(sql: string, _values?: unknown[]): unknown[] {
     return [{ config_key: 'demo', config_value: 'demo' }];
   }
   if (process.env.NODE_ENV === 'development') {
-    console.log('[demoQuery] unhandled SQL:', sql.substring(0, 200));
+    logger.debug('[demoQuery] unhandled SQL:', sql.substring(0, 200));
   }
   // catch-all: return a safe default result with common field names
   if (/\bFROM\b/i.test(sql)) {

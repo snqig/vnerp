@@ -1,7 +1,7 @@
 'use client';
 
 import { MainLayout } from '@/components/layout';
-import { WarehouseCategoryManager } from '../organization/warehouse-category';
+import { WarehouseCategoryManager } from './warehouse-category-manager';
 
 export default function WarehouseCategoryPage() {
   return (

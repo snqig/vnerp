@@ -1,8 +1,8 @@
-export interface DomainEvent {
+export interface DomainEvent<T = unknown> {
   eventId: string;
   eventType: string;
   occurredAt: Date;
-  payload: any;
+  payload: T;
 }
 
 export class StandardCardCreatedEvent implements DomainEvent {

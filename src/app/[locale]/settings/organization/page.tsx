@@ -42,11 +42,9 @@ import {
   Shield,
   Save,
   RefreshCw,
-  Warehouse,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DepartmentTable } from './department-table';
-import { WarehouseCategoryManager } from './warehouse-category';
 import { authFetch } from '@/lib/auth-fetch';
 
 // 企业信息接口
@@ -650,7 +648,6 @@ export default function OrganizationPage() {
     { key: 'company', label: tc('companyInfo'), icon: Building2 },
     { key: 'department', label: tc('deptManagement'), icon: Users },
     { key: 'role', label: tc('rolePermission'), icon: Shield },
-    { key: 'warehouse', label: tc('warehouseCategory'), icon: Warehouse },
   ];
 
   return (
@@ -981,11 +978,6 @@ export default function OrganizationPage() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* 仓库分类 */}
-          <TabsContent value="warehouse">
-            <WarehouseCategoryManager />
           </TabsContent>
         </Tabs>
       </div>

@@ -2,12 +2,9 @@ import { NextRequest } from 'next/server';
 import { execute, queryOne } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { SPLIT_FLAG_LABEL, STOCKTAKING_STATUS_LABEL } from '@/lib/status-labels';
 
-const SPLIT_FLAG_MAP: Record<number, string> = {
-  0: '整料',
-  1: '小料',
-  2: '余料',
-};
+const SPLIT_FLAG_MAP = SPLIT_FLAG_LABEL;
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo, { params }: { params: Promise<{ id: string }> }) => {
@@ -34,14 +31,7 @@ export const POST = withPermission(
     }
 
     if (check.status !== 1) {
-      const statusMap: Record<number, string> = {
-        0: '草稿',
-        1: '进行中',
-        2: '待审批',
-        3: '已完成',
-        4: '已取消',
-      };
-      return errorResponse(`当前状态为"${statusMap[check.status]}"，不能执行盘点操作`, 400, 400);
+      return errorResponse(`当前状态为"${STOCKTAKING_STATUS_LABEL[check.status]}"，不能执行盘点操作`, 400, 400);
     }
 
     const inventoryItem: Loose = await queryOne(

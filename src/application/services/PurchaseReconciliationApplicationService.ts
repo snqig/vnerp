@@ -150,7 +150,7 @@ export class PurchaseReconciliationApplicationService {
           input.reconciliationId,
           originalBalance,
         ]
-      )) as [ResultSetHeader, any];
+      )) as [ResultSetHeader, { affectedRows: number }];
       if (updateResult.affectedRows === 0) {
         throw new VersionConflictError();
       }
@@ -205,7 +205,7 @@ export class PurchaseReconciliationApplicationService {
   private async persistAndPublishEvents(
     aggregateType: string,
     aggregateId: number,
-    aggregate: { getDomainEvents(): any[]; clearDomainEvents(): void }
+    aggregate: { getDomainEvents(): unknown[]; clearDomainEvents(): void }
   ): Promise<void> {
     const events = aggregate.getDomainEvents();
     if (events.length === 0) return;

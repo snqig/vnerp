@@ -68,7 +68,7 @@ export async function allocateFIFO(
       // FIFO未启用，返回所有可用批次
       const allBatches: Loose = await query(
         `SELECT * FROM inv_inventory_batch
-         WHERE material_id = ? AND remaining_quantity > 0 AND status = 1
+         WHERE material_id = ? AND available_qty > 0 AND status = 1
          ${warehouseId ? 'AND warehouse_id = ?' : ''}
          ORDER BY inbound_date ASC, id ASC`,
         warehouseId ? [materialId, warehouseId] : [materialId]
@@ -80,7 +80,7 @@ export async function allocateFIFO(
     // FIFO启用：余料优先 → 入库时间 → 效期
     const batches: Loose = await query(
       `SELECT * FROM inv_inventory_batch
-       WHERE material_id = ? AND remaining_quantity > 0 AND status = 1
+       WHERE material_id = ? AND available_qty > 0 AND status = 1
        ${warehouseId ? 'AND warehouse_id = ?' : ''}
        ORDER BY
          CASE WHEN split_flag = 2 THEN 0 ELSE 1 END ASC,  -- 余料优先
@@ -115,7 +115,7 @@ function allocateFromBatches(batches: Loose[], quantity: number): FIFOAllocation
   for (const batch of batches) {
     if (remainingNeed <= 0) break;
 
-    const availableQty = parseFloat(batch.remaining_quantity);
+    const availableQty = parseFloat(batch.available_qty);
     const allocateQty = Math.min(remainingNeed, availableQty);
 
     allocations.push({
@@ -259,14 +259,15 @@ export async function splitMaterial(
       const smallMaterialQR = `SM-${parentQRCode}-${Date.now()}`;
       await conn.execute(
         `INSERT INTO inv_inventory_batch (
-          material_id, batch_no, qr_code, quantity, remaining_quantity,
+          material_id, batch_no, qr_code, quantity, available_qty, remaining_quantity,
           unit_cost, warehouse_id, location, split_flag, parent_qr_code,
           inbound_date, expire_date, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 1)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 1)`,
         [
           materialId,
           splitNo,
           smallMaterialQR,
+          splitCount * standardSplitQty,
           splitCount * standardSplitQty,
           splitCount * standardSplitQty,
           unitCost,
@@ -284,14 +285,15 @@ export async function splitMaterial(
         remainderQR = `RM-${parentQRCode}-${Date.now()}`;
         await conn.execute(
           `INSERT INTO inv_inventory_batch (
-            material_id, batch_no, qr_code, quantity, remaining_quantity,
+            material_id, batch_no, qr_code, quantity, available_qty, remaining_quantity,
             unit_cost, warehouse_id, location, split_flag, parent_qr_code,
             inbound_date, expire_date, status
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 2, ?, ?, ?, 1)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 2, ?, ?, ?, 1)`,
           [
             materialId,
             `${splitNo}-RM`,
             remainderQR,
+            remainderQty,
             remainderQty,
             remainderQty,
             unitCost,
@@ -502,13 +504,15 @@ export async function queryMaterialBatches(
     FROM inv_inventory_batch b
     LEFT JOIN inv_material m ON b.material_id = m.id
     LEFT JOIN inv_warehouse w ON b.warehouse_id = w.id
-    WHERE b.material_id = ? AND b.remaining_quantity > 0
+    WHERE b.material_id = ? AND b.available_qty > 0
       AND b.status = 1 AND b.deleted = 0
       ${warehouseId ? 'AND b.warehouse_id = ?' : ''}
     ORDER BY
       CASE WHEN b.split_flag = 2 THEN 0 ELSE 1 END ASC,
+      CASE WHEN b.opened_at IS NOT NULL THEN 0 ELSE 1 END ASC,
       b.expire_date ASC,
-      b.inbound_date ASC`,
+      b.inbound_date ASC,
+      b.id ASC`,
     warehouseId ? [materialId, warehouseId] : [materialId]
   );
 
@@ -528,7 +532,7 @@ export async function queryExpiringMaterials(days: number = 30): Promise<Loose[]
       DATEDIFF(b.expire_date, CURDATE()) as days_remaining
     FROM inv_inventory_batch b
     LEFT JOIN inv_material m ON b.material_id = m.id
-    WHERE b.status = 1 AND b.remaining_quantity > 0
+    WHERE b.status = 1 AND b.available_qty > 0
       AND b.expire_date IS NOT NULL
       AND DATEDIFF(b.expire_date, CURDATE()) <= ?
       AND DATEDIFF(b.expire_date, CURDATE()) >= 0
@@ -552,7 +556,7 @@ export async function queryObsoleteMaterials(days: number = 90): Promise<Loose[]
       DATEDIFF(CURDATE(), b.inbound_date) as days_in_stock
     FROM inv_inventory_batch b
     LEFT JOIN inv_material m ON b.material_id = m.id
-    WHERE b.status = 1 AND b.remaining_quantity > 0
+    WHERE b.status = 1 AND b.available_qty > 0
       AND DATEDIFF(CURDATE(), b.inbound_date) >= ?
     ORDER BY days_in_stock DESC`,
     [days]

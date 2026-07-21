@@ -63,7 +63,7 @@ export async function getSystemConfigs(keys: string[]): Promise<Record<string, s
         missing
       );
       const found: Record<string, string> = {};
-      rows.forEach((row: any) => {
+      rows.forEach((row: Record<string, unknown>) => {
         found[row.config_key] = String(row.config_value ?? '');
       });
       for (const key of missing) {

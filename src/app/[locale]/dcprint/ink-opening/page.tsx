@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { INK_TYPE_LABEL, INK_STATUS_LABEL } from '@/lib/status-labels';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -69,33 +70,15 @@ interface InkOpeningRecord {
 }
 
 const INK_TYPE_MAP: Record<string, { label: string; color: string }> = {
-  solvent: {
-    label: '溶剂型',
-    color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-  },
-  uv: {
-    label: 'UV型',
-    color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  },
-  water: {
-    label: '水性',
-    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  },
+  solvent: { label: INK_TYPE_LABEL['solvent'], color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
+  uv: { label: INK_TYPE_LABEL['uv'], color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' },
+  water: { label: INK_TYPE_LABEL['water'], color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
 };
 
 const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: {
-    label: '使用中',
-    color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  },
-  2: {
-    label: '已过期',
-    color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-  },
-  3: {
-    label: '已报废',
-    color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
-  },
+  1: { label: INK_STATUS_LABEL[1], color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
+  2: { label: INK_STATUS_LABEL[2], color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
+  3: { label: INK_STATUS_LABEL[3], color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
 };
 
 const EXPIRE_HOURS_OPTIONS = [

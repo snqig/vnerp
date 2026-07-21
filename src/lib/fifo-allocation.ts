@@ -6,6 +6,7 @@
  */
 import { query, transaction } from './db';
 import Decimal from 'decimal.js';
+import { logger } from '@/lib/logger';
 
 /**
  * FIFO 分配明细项接口，记录单个批次的分配详情。
@@ -75,6 +76,35 @@ export const DEFAULT_RETRY_ATTEMPTS = 3;
 export const DEFAULT_RETRY_DELAY_MS = 100;
 
 /**
+ * FIFO 统一排序策略常量
+ * 排序规则优先级：
+ * 1. 余料优先 (split_flag = 2)
+ * 2. 已开封优先 (opened_at IS NOT NULL)
+ * 3. 临期优先 (expire_date ASC)
+ * 4. 入库时间优先 (inbound_date ASC)
+ * 5. 批次ID (id ASC)
+ */
+export const FIFO_POLICY = {
+  ORDER_BY_CLAUSE: `
+    CASE WHEN split_flag = 2 THEN 0 ELSE 1 END ASC,
+    CASE WHEN opened_at IS NOT NULL THEN 0 ELSE 1 END ASC,
+    expire_date ASC,
+    inbound_date ASC,
+    id ASC
+  `,
+};
+
+/**
+ * FIFO 分配选项接口
+ */
+export interface FIFOPlanOptions {
+  allowExpired?: boolean;
+  excludeBatchIds?: number[];
+  respectFifoEnabled?: boolean;
+  policy?: typeof FIFO_POLICY;
+}
+
+/**
  * 按先进先出（FIFO）策略分配库存批次数量。
  *
  * 算法逻辑：
@@ -95,22 +125,23 @@ export const DEFAULT_RETRY_DELAY_MS = 100;
  * @param options.excludeBatchIds - 要排除的批次 ID 列表，用于跳过已分配失败的批次
  * @returns FIFO 分配结果，包含需求量、总可用量、已分配量、缺料信息及各批次分配明细
  */
-export async function allocateFIFO(
-  conn: Loose,
+/**
+ * 构建批次查询 SQL（纯查询，不加锁）
+ * 包含统一排序策略和过滤条件
+ */
+function buildBatchQuery(
   materialId: number,
   warehouseId: number,
-  requiredQty: number,
-  options?: {
-    allowExpired?: boolean;
-    excludeBatchIds?: number[];
-  }
-): Promise<FIFOAllocationResult> {
-  const allowExpired = options?.allowExpired ?? false;
-  const excludeBatchIds = options?.excludeBatchIds ?? [];
+  options: FIFOPlanOptions = {}
+): { sql: string; params: unknown[] } {
+  const allowExpired = options.allowExpired ?? false;
+  const excludeBatchIds = options.excludeBatchIds ?? [];
+  const policy = options.policy ?? FIFO_POLICY;
 
   let sql = `SELECT
       id, batch_no, material_id, material_code, material_name,
-      available_qty, unit_price, inbound_date, unit, expire_date, opened_at, version
+      available_qty, unit_price, inbound_date, unit, expire_date,
+      opened_at, split_flag, qr_code, location, version
     FROM inv_inventory_batch
     WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 1`;
 
@@ -122,16 +153,19 @@ export async function allocateFIFO(
     sql += ` AND id NOT IN (${excludeBatchIds.map(() => '?').join(',')})`;
   }
 
-  // 排序策略：已开封批次优先（opened_at），否则按入库时间；再按过期日期优先消耗即将过期批次
-  sql += ` ORDER BY
-      CASE WHEN opened_at IS NOT NULL THEN opened_at ELSE inbound_date END ASC,
-      expire_date ASC,
-      inbound_date ASC,
-      id ASC
-    FOR UPDATE`;
+  sql += ` ORDER BY ${policy.ORDER_BY_CLAUSE}`;
 
-  const [batches]: Loose = await conn.query(sql, [materialId, warehouseId, ...excludeBatchIds]);
+  return { sql, params: [materialId, warehouseId, ...excludeBatchIds] };
+}
 
+/**
+ * FIFO 分配计算核心逻辑（纯计算，无副作用）
+ */
+function calculateAllocation(
+  batches: Loose[],
+  materialId: number,
+  requiredQty: number
+): FIFOAllocationResult {
   const result: FIFOAllocationResult = {
     material_id: materialId,
     material_code: batches.length > 0 ? batches[0].material_code : '',
@@ -144,23 +178,27 @@ export async function allocateFIFO(
     allocations: [],
   };
 
-  // 使用 Decimal 汇总所有批次的可用量，避免浮点精度丢失
   const totalAvailableDecimal = batches.reduce(
     (sum: Decimal, b: Loose) => sum.plus(new Decimal(b.available_qty)),
     new Decimal(0)
   );
   result.total_available = totalAvailableDecimal.toNumber();
 
-  // 剩余需求量初始化为总需求数量
+  logger.debug(`[FIFO] calculateAllocation start - materialId: ${materialId}, requiredQty: ${requiredQty}`);
+  logger.debug(`[FIFO] batches found: ${batches.length}`);
+  batches.forEach((b, idx) => {
+    logger.debug(`[FIFO]   batch[${idx}]: id=${b.id}, batch_no=${b.batch_no}, available_qty=${b.available_qty}, inbound_date=${b.inbound_date}, expire_date=${b.expire_date}, opened_at=${b.opened_at}, split_flag=${b.split_flag}, version=${b.version}`);
+  });
+
   let remainingDecimal = new Decimal(requiredQty);
 
   for (const batch of batches) {
-    // 需求已全部满足，跳出循环
     if (remainingDecimal.lessThanOrEqualTo(0)) break;
 
     const availableQtyDecimal = new Decimal(batch.available_qty);
-    // 每批分配量 = min(剩余需求, 该批可用量)，确保不超扣
     const allocateQtyDecimal = Decimal.min(remainingDecimal, availableQtyDecimal);
+
+    logger.debug(`[FIFO]   allocating: batch_no=${batch.batch_no}, available=${availableQtyDecimal.toNumber()}, remaining=${remainingDecimal.toNumber()}, allocate=${allocateQtyDecimal.toNumber()}`);
 
     result.allocations.push({
       batch_id: batch.id,
@@ -177,16 +215,70 @@ export async function allocateFIFO(
       version: batch.version,
     });
 
-    // 从剩余需求中扣除本批分配量
     remainingDecimal = remainingDecimal.minus(allocateQtyDecimal);
     result.allocated_qty = result.allocated_qty + allocateQtyDecimal.toNumber();
   }
 
-  // 缺料量 = max(仍未满足的需求, 0)；缺料百分比 = 缺料量 / 需求量 × 100
   result.shortage = Decimal.max(remainingDecimal, 0).toNumber();
   result.shortage_percentage =
     requiredQty > 0 ? new Decimal(result.shortage).dividedBy(requiredQty).times(100).toNumber() : 0;
 
+  logger.debug(`[FIFO] calculateAllocation end - materialId: ${materialId}, total_available: ${result.total_available}, allocated_qty: ${result.allocated_qty}, shortage: ${result.shortage}, allocations_count: ${result.allocations.length}`);
+
+  return result;
+}
+
+/**
+ * FIFO 分配计划（纯计算，不加锁）
+ * 用于只读场景：推荐批次、库存查询等
+ */
+export async function planFIFOAllocation(
+  conn: Loose,
+  materialId: number,
+  warehouseId: number,
+  requiredQty: number,
+  options: FIFOPlanOptions = {}
+): Promise<FIFOAllocationResult> {
+  logger.debug(`[FIFO] planFIFOAllocation - materialId: ${materialId}, warehouseId: ${warehouseId}, requiredQty: ${requiredQty}`);
+  const { sql, params } = buildBatchQuery(materialId, warehouseId, options);
+  logger.debug(`[FIFO] planFIFOAllocation SQL: ${sql}`);
+  const [batches]: Loose = await conn.query(sql, params);
+  logger.debug(`[FIFO] planFIFOAllocation got ${batches.length} batches`);
+  return calculateAllocation(batches, materialId, requiredQty);
+}
+
+/**
+ * 按先进先出（FIFO）策略分配库存批次数量。
+ *
+ * 算法逻辑：
+ * 1. 调用 planFIFOAllocation 获取分配计划（只读计算）；
+ * 2. 使用 FOR UPDATE 锁定选中行，防止并发修改；
+ * 3. 返回分配结果，包含各批次分配明细。
+ */
+export async function allocateFIFO(
+  conn: Loose,
+  materialId: number,
+  warehouseId: number,
+  requiredQty: number,
+  options?: {
+    allowExpired?: boolean;
+    excludeBatchIds?: number[];
+  }
+): Promise<FIFOAllocationResult> {
+  logger.debug(`[FIFO] allocateFIFO (with lock) - materialId: ${materialId}, warehouseId: ${warehouseId}, requiredQty: ${requiredQty}, options: ${JSON.stringify(options)}`);
+  const planOptions: FIFOPlanOptions = {
+    allowExpired: options?.allowExpired,
+    excludeBatchIds: options?.excludeBatchIds,
+  };
+
+  const { sql, params } = buildBatchQuery(materialId, warehouseId, planOptions);
+  const lockedSql = sql.replace(/ORDER BY/, 'FOR UPDATE ORDER BY');
+  logger.debug(`[FIFO] allocateFIFO locked SQL: ${lockedSql}`);
+
+  const [batches]: Loose = await conn.query(lockedSql, params);
+  logger.debug(`[FIFO] allocateFIFO locked query got ${batches.length} batches`);
+  const result = calculateAllocation(batches, materialId, requiredQty);
+  logger.debug(`[FIFO] allocateFIFO result - allocated: ${result.allocated_qty}, shortage: ${result.shortage}`);
   return result;
 }
 
@@ -287,25 +379,33 @@ export async function executeFIFODeductionWithRetry(
   },
   maxRetries: number = DEFAULT_RETRY_ATTEMPTS
 ): Promise<{ deductionDetails: Loose[]; totalCost: number; attempts: number }> {
+  logger.debug(`[FIFO] executeFIFODeductionWithRetry start - sourceType: ${params.sourceType}, sourceNo: ${params.sourceNo}, materialId: ${allocation.material_id}, sourceId: ${params.sourceId}, maxRetries: ${maxRetries}`);
+  logger.debug(`[FIFO] executeFIFODeductionWithRetry allocation summary - required_qty: ${allocation.required_qty}, allocated_qty: ${allocation.allocated_qty}, shortage: ${allocation.shortage}, allocations_count: ${allocation.allocations.length}`);
+
   let attempts = 0;
   let lastError: string = '';
 
   while (attempts < maxRetries) {
     attempts++;
+    logger.debug(`[FIFO] executeFIFODeductionWithRetry attempt ${attempts}/${maxRetries}`);
     try {
       const result = await executeFIFODeductionInternal(conn, allocation, params);
+      logger.debug(`[FIFO] executeFIFODeductionWithRetry success after ${attempts} attempts - totalCost: ${result.totalCost}, deductionDetails: ${result.deductionDetails.length}`);
       return { ...result, attempts };
     } catch (error) {
       lastError = (error as Error).message;
+      logger.debug(`[FIFO] executeFIFODeductionWithRetry attempt ${attempts} failed: ${lastError}`);
       if (
         attempts < maxRetries &&
         (lastError.includes('已被其他操作修改') ||
           lastError.includes('version') ||
           lastError.includes('affectedRows'))
       ) {
+        logger.debug(`[FIFO] executeFIFODeductionWithRetry retrying after ${DEFAULT_RETRY_DELAY_MS * attempts}ms delay...`);
         await new Promise((resolve) => setTimeout(resolve, DEFAULT_RETRY_DELAY_MS * attempts));
         continue;
       }
+      logger.debug(`[FIFO] executeFIFODeductionWithRetry throwing error (not retryable)`);
       throw error;
     }
   }
@@ -343,10 +443,13 @@ async function executeFIFODeductionInternal(
     operatorName: string | null;
   }
 ): Promise<{ deductionDetails: Loose[]; totalCost: number }> {
+  logger.debug(`[FIFO] executeFIFODeductionInternal start - materialId: ${allocation.material_id}, sourceNo: ${params.sourceNo}`);
   const deductionDetails: Loose[] = [];
   const totalCostDecimal = new Decimal(0);
 
   for (const alloc of allocation.allocations) {
+    logger.debug(`[FIFO]   processing batch: batch_id=${alloc.batch_id}, batch_no=${alloc.batch_no}, allocate_qty=${alloc.allocate_qty}, available_qty_before=${alloc.available_qty_before}, version=${alloc.version}, unit_cost=${alloc.unit_cost}`);
+
     // 使用乐观锁更新：WHERE 条件包含 version 字段，防止并发修改导致超扣
     const [updateResult]: Loose = await conn.execute(
       `UPDATE inv_inventory_batch SET
@@ -358,12 +461,15 @@ async function executeFIFODeductionInternal(
       [alloc.allocate_qty, alloc.allocate_qty, alloc.batch_id, alloc.allocate_qty, alloc.version]
     );
 
+    logger.debug(`[FIFO]   batch ${alloc.batch_no} UPDATE result - affectedRows: ${updateResult.affectedRows}`);
+
     if (updateResult.affectedRows === 0) {
       // 乐观锁冲突：查询当前批次实际状态，用于生成详细错误信息
       const [currentBatch]: Loose = await conn.query(
         'SELECT version, available_qty FROM inv_inventory_batch WHERE id = ?',
         [alloc.batch_id]
       );
+      logger.debug(`[FIFO]   batch ${alloc.batch_no} optimistic lock conflict - currentBatch: ${JSON.stringify(currentBatch)}`);
       if (currentBatch.length > 0) {
         throw new Error(
           `批次${alloc.batch_no}乐观锁冲突: 期望版本${alloc.version}, ` +
@@ -376,6 +482,7 @@ async function executeFIFODeductionInternal(
     // 行成本 = 分配数量 × 单价（Decimal 运算避免浮点误差）
     const lineCostDecimal = new Decimal(alloc.allocate_qty).times(alloc.unit_cost);
     totalCostDecimal.plus(lineCostDecimal);
+    logger.debug(`[FIFO]   batch ${alloc.batch_no} cost calculated - line_cost: ${lineCostDecimal.toNumber()}, totalCost so far: ${totalCostDecimal.toNumber()}`);
 
     deductionDetails.push({
       batch_id: alloc.batch_id,
@@ -396,6 +503,8 @@ async function executeFIFODeductionInternal(
     const beforeQty = currentInv.length > 0 ? parseFloat(currentInv[0].quantity) : 0;
     const afterQty = beforeQty - alloc.allocate_qty;
 
+    logger.debug(`[FIFO]   batch ${alloc.batch_no} inventory log - before_qty: ${beforeQty}, after_qty: ${afterQty}`);
+
     await conn.execute(
       `INSERT INTO inv_inventory_log (
         material_id, warehouse_id, batch_no, operation_type, operation_qty,
@@ -414,8 +523,11 @@ async function executeFIFODeductionInternal(
         params.operatorId,
       ]
     );
+
+    logger.debug(`[FIFO]   batch ${alloc.batch_no} deduction completed successfully`);
   }
 
+  logger.debug(`[FIFO] executeFIFODeductionInternal end - totalCost: ${totalCostDecimal.toNumber()}, deductionDetails: ${deductionDetails.length} items`);
   return { deductionDetails, totalCost: totalCostDecimal.toNumber() };
 }
 

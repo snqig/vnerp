@@ -1,5 +1,13 @@
 import { StandardCard } from '../aggregates/StandardCard';
 import { StandardCardType } from '../value-objects/StandardCardType';
+import { ColorStandardItem } from '../entities/ColorStandardItem';
+import { ProcessStandardItem } from '../entities/ProcessStandardItem';
+import { QualityStandardItem } from '../entities/QualityStandardItem';
+import { StandardCardMaterial } from '../entities/StandardCardMaterial';
+import { StandardCardInk } from '../entities/StandardCardInk';
+import { StandardCardTooling } from '../entities/StandardCardTooling';
+import { StandardCardAttachment } from '../entities/StandardCardAttachment';
+import { VersionChangeLog } from '../entities/VersionChangeLog';
 
 export interface StandardCardFilters {
   code?: string;
@@ -33,49 +41,49 @@ export interface IStandardCardRepository {
 }
 
 export interface IColorStandardItemRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  saveBatch(standardCardId: number, items: any[]): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<ColorStandardItem[]>;
+  saveBatch(standardCardId: number, items: ColorStandardItem[]): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IProcessStandardItemRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  saveBatch(standardCardId: number, items: any[]): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<ProcessStandardItem[]>;
+  saveBatch(standardCardId: number, items: ProcessStandardItem[]): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IQualityStandardItemRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  saveBatch(standardCardId: number, items: any[]): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<QualityStandardItem[]>;
+  saveBatch(standardCardId: number, items: QualityStandardItem[]): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IStandardCardMaterialRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  saveBatch(standardCardId: number, materials: any[]): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<StandardCardMaterial[]>;
+  saveBatch(standardCardId: number, materials: StandardCardMaterial[]): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IStandardCardInkRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  saveBatch(standardCardId: number, inks: any[]): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<StandardCardInk[]>;
+  saveBatch(standardCardId: number, inks: StandardCardInk[]): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IStandardCardToolingRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  saveBatch(standardCardId: number, toolings: any[]): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<StandardCardTooling[]>;
+  saveBatch(standardCardId: number, toolings: StandardCardTooling[]): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IStandardCardAttachmentRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  save(standardCardId: number, attachment: any): Promise<number>;
+  findByStandardCardId(standardCardId: number): Promise<StandardCardAttachment[]>;
+  save(standardCardId: number, attachment: StandardCardAttachment): Promise<number>;
   delete(id: number): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IVersionChangeLogRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  save(log: any): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<VersionChangeLog[]>;
+  save(log: VersionChangeLog): Promise<void>;
 }

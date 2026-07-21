@@ -31,13 +31,13 @@ import { useCutting } from '../hooks/useCutting';
 import { authFetch } from '@/lib/auth-fetch';
 import { toast } from 'sonner';
 
-const mockJsonResponse = (data: any, ok = true) =>
+const mockJsonResponse = (data: unknown, ok = true) =>
   ({
     ok,
     status: 200,
     headers: new Headers({ 'content-type': 'application/json' }),
     json: async () => data,
-  }) as any;
+  }) as Response;
 
 const makeLabel = (overrides: Partial<PrintLabel> = {}): PrintLabel => ({
   id: '1-0',

@@ -1,0 +1,506 @@
+{
+  "domains": {
+    "warehouse": [
+      {
+        "name": "invMaterial",
+        "start": 34,
+        "end": 70
+      },
+      {
+        "name": "invInventoryBatch",
+        "start": 73,
+        "end": 109
+      },
+      {
+        "name": "invInboundOrders",
+        "start": 112,
+        "end": 149
+      },
+      {
+        "name": "invInboundItems",
+        "start": 152,
+        "end": 179
+      },
+      {
+        "name": "invWarehouse",
+        "start": 182,
+        "end": 207
+      },
+      {
+        "name": "invInventory",
+        "start": 210,
+        "end": 243
+      },
+      {
+        "name": "invOutboundOrders",
+        "start": 246,
+        "end": 280
+      },
+      {
+        "name": "invOutboundItems",
+        "start": 283,
+        "end": 306
+      },
+      {
+        "name": "invTransferOrders",
+        "start": 309,
+        "end": 347
+      },
+      {
+        "name": "invStocktaking",
+        "start": 350,
+        "end": 373
+      }
+    ],
+    "sales": [
+      {
+        "name": "salOrder",
+        "start": 378,
+        "end": 414
+      },
+      {
+        "name": "salOrderDetail",
+        "start": 417,
+        "end": 447
+      },
+      {
+        "name": "salDelivery",
+        "start": 450,
+        "end": 491
+      },
+      {
+        "name": "salReturnOrder",
+        "start": 494,
+        "end": 530
+      },
+      {
+        "name": "salReconciliation",
+        "start": 533,
+        "end": 581
+      }
+    ],
+    "procurement": [
+      {
+        "name": "purPurchaseOrder",
+        "start": 586,
+        "end": 638
+      },
+      {
+        "name": "purPurchaseOrderLine",
+        "start": 641,
+        "end": 681
+      },
+      {
+        "name": "purPurchaseReturn",
+        "start": 684,
+        "end": 726
+      },
+      {
+        "name": "purPurchaseReturnLine",
+        "start": 729,
+        "end": 758
+      },
+      {
+        "name": "purPurchaseReconciliation",
+        "start": 761,
+        "end": 815
+      },
+      {
+        "name": "purSupplier",
+        "start": 818,
+        "end": 854
+      }
+    ],
+    "finance": [
+      {
+        "name": "finReceivable",
+        "start": 859,
+        "end": 894
+      },
+      {
+        "name": "finPayable",
+        "start": 897,
+        "end": 926
+      }
+    ],
+    "production": [
+      {
+        "name": "prdWorkOrder",
+        "start": 931,
+        "end": 965
+      },
+      {
+        "name": "prdSchedule",
+        "start": 1197,
+        "end": 1230
+      },
+      {
+        "name": "prdScheduleDetail",
+        "start": 1232,
+        "end": 1256
+      },
+      {
+        "name": "prdPickOrder",
+        "start": 1463,
+        "end": 1484
+      },
+      {
+        "name": "prdPickOrderItem",
+        "start": 1487,
+        "end": 1508
+      },
+      {
+        "name": "prdReturnOrder",
+        "start": 1511,
+        "end": 1532
+      },
+      {
+        "name": "prdReturnOrderItem",
+        "start": 1535,
+        "end": 1553
+      },
+      {
+        "name": "prdWorkReport",
+        "start": 1556,
+        "end": 1584
+      },
+      {
+        "name": "prdFinishOrder",
+        "start": 1587,
+        "end": 1607
+      },
+      {
+        "name": "prdStandardCard",
+        "start": 1612,
+        "end": 1717
+      },
+      {
+        "name": "prdProductLabel",
+        "start": 1720,
+        "end": 1743
+      },
+      {
+        "name": "prdBom",
+        "start": 1746,
+        "end": 1765
+      },
+      {
+        "name": "prdBomDetail",
+        "start": 1768,
+        "end": 1788
+      },
+      {
+        "name": "prdBomStd",
+        "start": 1791,
+        "end": 1818
+      },
+      {
+        "name": "prdBomLineStd",
+        "start": 1821,
+        "end": 1842
+      },
+      {
+        "name": "prdProcessCard",
+        "start": 1983,
+        "end": 2011
+      },
+      {
+        "name": "prdProcessCardMaterial",
+        "start": 2014,
+        "end": 2036
+      },
+      {
+        "name": "prdProcessRoute",
+        "start": 2039,
+        "end": 2059
+      },
+      {
+        "name": "prdProcessRouteStep",
+        "start": 2062,
+        "end": 2082
+      },
+      {
+        "name": "prdWorkOrderColorSeq",
+        "start": 2085,
+        "end": 2109
+      },
+      {
+        "name": "prdWorkOrderBom",
+        "start": 2214,
+        "end": 2241
+      }
+    ],
+    "workorder": [
+      {
+        "name": "prodWorkOrder",
+        "start": 970,
+        "end": 1003
+      },
+      {
+        "name": "prodWorkOrderItem",
+        "start": 1006,
+        "end": 1023
+      },
+      {
+        "name": "prodWorkOrderMaterialReq",
+        "start": 1026,
+        "end": 1041
+      }
+    ],
+    "quote": [
+      {
+        "name": "salQuote",
+        "start": 1046,
+        "end": 1080
+      },
+      {
+        "name": "salQuoteItem",
+        "start": 1083,
+        "end": 1101
+      }
+    ],
+    "process": [
+      {
+        "name": "sampleProcessTemplate",
+        "start": 1106,
+        "end": 1149
+      },
+      {
+        "name": "sampleProcessTemplateItem",
+        "start": 1152,
+        "end": 1173
+      },
+      {
+        "name": "sampleProcessTemplateStep",
+        "start": 1176,
+        "end": 1193
+      }
+    ],
+    "sample": [
+      {
+        "name": "dcprintSampleProcessCard",
+        "start": 2114,
+        "end": 2164
+      },
+      {
+        "name": "dcprintSampleProcessItem",
+        "start": 2167,
+        "end": 2189
+      },
+      {
+        "name": "dcprintSampleProcessStep",
+        "start": 2192,
+        "end": 2210
+      },
+      {
+        "name": "sampleOrder",
+        "start": 2246,
+        "end": 2298
+      },
+      {
+        "name": "salSampleFeedback",
+        "start": 2301,
+        "end": 2319
+      },
+      {
+        "name": "salSampleQuotation",
+        "start": 2322,
+        "end": 2351
+      }
+    ],
+    "prepress": [
+      {
+        "name": "dcprintInkColor",
+        "start": 1261,
+        "end": 1282
+      },
+      {
+        "name": "dcprintInkFormulaVersion",
+        "start": 1285,
+        "end": 1320
+      },
+      {
+        "name": "dcprintInkFormulaItem",
+        "start": 1323,
+        "end": 1346
+      }
+    ],
+    "tooling": [
+      {
+        "name": "dcprintTool",
+        "start": 1351,
+        "end": 1408
+      },
+      {
+        "name": "dcprintToolUsage",
+        "start": 1411,
+        "end": 1432
+      },
+      {
+        "name": "dcprintToolMaintenance",
+        "start": 1435,
+        "end": 1458
+      },
+      {
+        "name": "prdDie",
+        "start": 1845,
+        "end": 1873
+      },
+      {
+        "name": "prdDieTemplate",
+        "start": 1876,
+        "end": 1918
+      },
+      {
+        "name": "prdInk",
+        "start": 1921,
+        "end": 1947
+      },
+      {
+        "name": "prdScreenPlate",
+        "start": 1950,
+        "end": 1980
+      }
+    ],
+    "hr": [
+      {
+        "name": "hrAttendance",
+        "start": 2593,
+        "end": 2617
+      },
+      {
+        "name": "hrTraining",
+        "start": 2620,
+        "end": 2642
+      },
+      {
+        "name": "hrTrainingParticipant",
+        "start": 2645,
+        "end": 2660
+      },
+      {
+        "name": "hrSalaryStandard",
+        "start": 2663,
+        "end": 2686
+      },
+      {
+        "name": "hrPieceRate",
+        "start": 2689,
+        "end": 2710
+      },
+      {
+        "name": "hrSalaryProfile",
+        "start": 2713,
+        "end": 2735
+      },
+      {
+        "name": "hrSalaryCalculation",
+        "start": 2738,
+        "end": 2771
+      },
+      {
+        "name": "hrPieceWorkDetail",
+        "start": 2774,
+        "end": 2799
+      },
+      {
+        "name": "hrAttendanceException",
+        "start": 2802,
+        "end": 2823
+      },
+      {
+        "name": "hrShift",
+        "start": 2827,
+        "end": 2844
+      },
+      {
+        "name": "hrSchedule",
+        "start": 2846,
+        "end": 2859
+      },
+      {
+        "name": "orgGroup",
+        "start": 2863,
+        "end": 2873
+      },
+      {
+        "name": "orgLegalEntity",
+        "start": 2875,
+        "end": 2888
+      },
+      {
+        "name": "orgFactory",
+        "start": 2890,
+        "end": 2904
+      },
+      {
+        "name": "orgWorkshop",
+        "start": 2906,
+        "end": 2918
+      },
+      {
+        "name": "orgTeam",
+        "start": 2920,
+        "end": 2932
+      },
+      {
+        "name": "orgPosition",
+        "start": 2934,
+        "end": 2947
+      },
+      {
+        "name": "hrEmployeePosition",
+        "start": 2949,
+        "end": 2958
+      },
+      {
+        "name": "hrSkillMatrix",
+        "start": 2961,
+        "end": 2985
+      },
+      {
+        "name": "hrCertificate",
+        "start": 2988,
+        "end": 3013
+      },
+      {
+        "name": "hrPayrollSnapshot",
+        "start": 3037,
+        "end": 3053
+      }
+    ],
+    "crm": [],
+    "common": [
+      {
+        "name": "sysCurrency",
+        "start": 2453,
+        "end": 2472
+      },
+      {
+        "name": "sysExchangeRate",
+        "start": 2474,
+        "end": 2495
+      },
+      {
+        "name": "sysDepartment",
+        "start": 2500,
+        "end": 2518
+      },
+      {
+        "name": "sysEmployee",
+        "start": 2521,
+        "end": 2563
+      },
+      {
+        "name": "sysSalary",
+        "start": 2566,
+        "end": 2590
+      },
+      {
+        "name": "sagaLog",
+        "start": 3017,
+        "end": 3035
+      }
+    ]
+  }
+}

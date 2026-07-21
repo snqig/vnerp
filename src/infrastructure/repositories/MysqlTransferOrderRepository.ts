@@ -7,6 +7,50 @@ import { TransferOrder, TransferOrderProps } from '@/domain/warehouse/aggregates
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
+interface TransferOrderRow {
+  id: number;
+  transfer_no: string;
+  type: number;
+  from_warehouse_id: number;
+  to_warehouse_id: number;
+  from_location: string | null;
+  to_location: string | null;
+  status: number;
+  applicant_id: number | null;
+  applicant_name: string | null;
+  approver_id: number | null;
+  approver_name: string | null;
+  operator_id: number | null;
+  operator_name: string | null;
+  out_time: string | null;
+  in_time: string | null;
+  total_qty: number;
+  total_amount: number;
+  version: number;
+  remark: string | null;
+  create_time: string;
+  update_time: string;
+  deleted: number;
+}
+
+interface TransferItemRow {
+  id: number;
+  transfer_id: number;
+  material_id: number;
+  material_code: string;
+  material_name: string;
+  qr_code: string | null;
+  batch_no: string | null;
+  quantity: number;
+  out_quantity: number;
+  in_quantity: number;
+  unit: string;
+  unit_price: number;
+  amount: number;
+  remark: string | null;
+  deleted: number;
+}
+
 const ITEM_COLUMNS = `id, transfer_id, material_id, material_code, material_name,
                       qr_code, batch_no, quantity, out_quantity, in_quantity,
                       unit, unit_price, amount, remark`;
@@ -19,13 +63,13 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
     );
     if (!orders || orders.length === 0) return null;
 
-    const order = orders[0];
+    const order = orders[0] as TransferOrderRow;
     const items = await query(
       `SELECT ${ITEM_COLUMNS} FROM inv_transfer_item WHERE transfer_id = ? AND deleted = 0`,
       [id]
     );
 
-    return TransferOrder.reconstitute(this.mapRowToProps(order, items));
+    return TransferOrder.reconstitute(this.mapRowToProps(order, items as TransferItemRow[]));
   }
 
   async findByTransferNo(transferNo: string): Promise<TransferOrder | null> {
@@ -35,13 +79,13 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
     );
     if (!orders || orders.length === 0) return null;
 
-    const order = orders[0];
+    const order = orders[0] as TransferOrderRow;
     const items = await query(
       `SELECT ${ITEM_COLUMNS} FROM inv_transfer_item WHERE transfer_id = ? AND deleted = 0`,
       [order.id]
     );
 
-    return TransferOrder.reconstitute(this.mapRowToProps(order, items));
+    return TransferOrder.reconstitute(this.mapRowToProps(order, items as TransferItemRow[]));
   }
 
   async findByStatus(
@@ -110,31 +154,31 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
 
     sql += ` ORDER BY t.create_time DESC`;
 
-    const result = await queryPaginated(sql, countSql, params, pagination);
+    const result = await queryPaginated<TransferOrderRow>(sql, countSql, params, pagination);
 
     if (result.data.length > 0) {
-      const orderIds = result.data.map((t: any) => t.id);
+      const orderIds = result.data.map((t) => t.id);
       const placeholders = orderIds.map(() => '?').join(',');
       const items = await query(
         `SELECT ${ITEM_COLUMNS} FROM inv_transfer_item WHERE transfer_id IN (${placeholders}) AND deleted = 0`,
         orderIds
       );
 
-      const itemsMap = new Map<number, any[]>();
-      for (const item of items as any[]) {
+      const itemsMap = new Map<number, TransferItemRow[]>();
+      for (const item of items as TransferItemRow[]) {
         if (!itemsMap.has(item.transfer_id)) {
           itemsMap.set(item.transfer_id, []);
         }
         itemsMap.get(item.transfer_id)!.push(item);
       }
 
-      for (const order of result.data as any[]) {
+      for (const order of result.data) {
         order.items = itemsMap.get(order.id) || [];
       }
     }
 
     return {
-      data: result.data.map((t: any) =>
+      data: result.data.map((t) =>
         TransferOrder.reconstitute(this.mapRowToProps(t, t.items || []))
       ),
       pagination: result.pagination,
@@ -169,7 +213,7 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
           order.version,
           order.remark || null,
         ]
-      ) as any;
+      );
 
       const orderId = orderResult.insertId;
 
@@ -236,7 +280,7 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
     ]);
   }
 
-  private mapRowToProps(order: any, items: any[]): TransferOrderProps {
+  private mapRowToProps(order: TransferOrderRow, items: TransferItemRow[]): TransferOrderProps {
     return {
       id: order.id,
       transferNo: order.transfer_no,
@@ -255,7 +299,7 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
       outTime: order.out_time,
       inTime: order.in_time,
       remark: order.remark,
-      items: items.map((item: any) => ({
+      items: items.map((item) => ({
         id: item.id,
         transferId: item.transfer_id,
         materialId: item.material_id,

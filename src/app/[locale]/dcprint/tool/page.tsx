@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { TOOL_TYPE_LABEL, TOOL_STATUS_LABEL } from '@/lib/status-labels';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -111,14 +112,14 @@ const STATUS_MAP: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: '闲置', variant: 'secondary' },
-  2: { label: '在用', variant: 'default' },
-  3: { label: '维修中', variant: 'outline' },
-  4: { label: '预警', variant: 'destructive' },
-  5: { label: '已报废', variant: 'destructive' },
+  1: { label: TOOL_STATUS_LABEL[1], variant: 'secondary' },
+  2: { label: TOOL_STATUS_LABEL[2], variant: 'default' },
+  3: { label: TOOL_STATUS_LABEL[3], variant: 'outline' },
+  4: { label: TOOL_STATUS_LABEL[4], variant: 'destructive' },
+  5: { label: TOOL_STATUS_LABEL[5], variant: 'destructive' },
 };
 
-const TYPE_MAP: Record<number, string> = { 1: '刀模', 2: '网版' };
+const TYPE_MAP = TOOL_TYPE_LABEL;
 
 export default function ToolManagementPage() {
   const { toast } = useToast();

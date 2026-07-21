@@ -2,6 +2,7 @@
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { OPERATION_TYPE_LABEL } from '@/lib/status-labels';
 
 export const GET = withPermission(
   async (request: NextRequest) => {
@@ -68,15 +69,7 @@ export const GET = withPermission(
       };
     }> = [];
 
-    const OPERATION_TYPE_LABELS: Record<number, string> = {
-      1: '入库',
-      2: '出库',
-      3: '调整',
-      4: '调拨',
-      5: '领料',
-      6: '退料',
-      7: '退货',
-    };
+    const OPERATION_TYPE_LABELS = OPERATION_TYPE_LABEL;
 
     for (const log of logRows) {
       const entry: Loose = {

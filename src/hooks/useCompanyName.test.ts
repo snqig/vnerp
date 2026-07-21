@@ -5,7 +5,7 @@ import { useCompanyName } from './useCompanyName';
 const DEFAULT_NAME = '公司名称';
 
 // 构造符合 hook fetchWithRetry 校验（res.ok / res.status / res.headers）的响应
-const mockJsonResponse = (data: any, opts: { ok?: boolean; status?: number } = {}) => ({
+const mockJsonResponse = (data: unknown, opts: { ok?: boolean; status?: number } = {}) => ({
   ok: opts.ok !== false,
   status: opts.status ?? 200,
   headers: new Headers({ 'content-type': 'application/json' }),

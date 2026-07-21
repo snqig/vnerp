@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { SALES_RETURN_STATUS_LABEL } from '@/lib/status-labels';
 import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -109,10 +110,10 @@ export default function ReturnPage() {
   };
 
   const STATUS_MAP: Record<number, { label: string; color: string }> = {
-    1: { label: tc('pending'), color: 'bg-yellow-100 text-yellow-800' },
-    2: { label: tc('approved'), color: 'bg-blue-100 text-blue-800' },
-    3: { label: t('returned'), color: 'bg-green-100 text-green-800' },
-    9: { label: tc('cancelled'), color: 'bg-red-100 text-red-800' },
+    1: { label: SALES_RETURN_STATUS_LABEL[1], color: 'bg-yellow-100 text-yellow-800' },
+    2: { label: SALES_RETURN_STATUS_LABEL[2], color: 'bg-blue-100 text-blue-800' },
+    3: { label: SALES_RETURN_STATUS_LABEL[3], color: 'bg-green-100 text-green-800' },
+    9: { label: SALES_RETURN_STATUS_LABEL[9], color: 'bg-red-100 text-red-800' },
   };
 
   const [list, setList] = useState<ReturnOrder[]>([]);

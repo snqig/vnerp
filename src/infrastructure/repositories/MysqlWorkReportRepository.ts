@@ -1,9 +1,30 @@
+import type { ResultSetHeader } from 'mysql2/promise';
 import { query, execute } from '@/lib/db';
 import { WorkReport, WorkReportProps } from '@/domain/production/aggregates/WorkReport';
 import {
   IWorkReportRepository,
   WorkReportFilters,
 } from '@/domain/production/repositories/IWorkReportRepository';
+
+interface WorkReportRow {
+  id: number;
+  report_no: string;
+  work_order_id: number;
+  process_name: string;
+  equipment_id: number | null;
+  equipment_name: string;
+  shift: string;
+  operator_name: string;
+  qualified_qty: number;
+  defective_qty: number;
+  defect_reason: string | null;
+  work_hours: number;
+  report_date: string;
+  status: number;
+  create_by: number | null;
+  create_time: Date;
+  update_time: Date | null;
+}
 
 export class MysqlWorkReportRepository implements IWorkReportRepository {
   async findById(id: number): Promise<WorkReport | null> {
@@ -25,7 +46,7 @@ export class MysqlWorkReportRepository implements IWorkReportRepository {
       'SELECT * FROM prd_work_report WHERE work_order_id = ? AND deleted = 0 ORDER BY id DESC',
       [workOrderId]
     );
-    return rows.map((r: any) => this.mapToEntity(r));
+    return rows.map((r: WorkReportRow) => this.mapToEntity(r));
   }
 
   async findByFilters(
@@ -70,7 +91,7 @@ export class MysqlWorkReportRepository implements IWorkReportRepository {
       [...params, pageSize, offset]
     );
 
-    const list = rows.map((r: any) => this.mapToEntity(r));
+    const list = rows.map((r: WorkReportRow) => this.mapToEntity(r));
     return { list, total };
   }
 
@@ -94,7 +115,7 @@ export class MysqlWorkReportRepository implements IWorkReportRepository {
         report.createBy,
       ]
     );
-    return (result as any).insertId;
+    return (result as ResultSetHeader).insertId;
   }
 
   async update(report: WorkReport): Promise<void> {
@@ -119,7 +140,7 @@ export class MysqlWorkReportRepository implements IWorkReportRepository {
     await execute('UPDATE prd_work_report SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
   }
 
-  private mapToEntity(row: any): WorkReport {
+  private mapToEntity(row: WorkReportRow): WorkReport {
     const props: WorkReportProps = {
       id: row.id,
       reportNo: row.report_no,
