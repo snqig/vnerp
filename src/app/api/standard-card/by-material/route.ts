@@ -5,7 +5,7 @@ import { StandardCardApplicationService } from '@/application/services/StandardC
 
 const service = new StandardCardApplicationService();
 
-async function getHandler(request: NextRequest, user: UserInfo) {
+async function getHandler(request: NextRequest, _user: UserInfo) {
   try {
     const { searchParams } = new URL(request.url);
     const materialId = searchParams.get('materialId');

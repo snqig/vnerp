@@ -4,7 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -49,7 +49,7 @@ export default function SchedulesPage() {
   const tc = useTranslations('Common');
 
   const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [_employees, _setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [search, setSearch] = useState('');

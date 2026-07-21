@@ -171,19 +171,19 @@ export default function ContractReviewPage() {
       status_label: statusMap[item.status]?.label || tc('unknown'),
     }));
 
-  const handlePrint = () => {
+  const _handlePrint = () => {
     printTable(getExportData(), exportColumns, '合同评审管理');
   };
 
-  const handleExportPDF = () => {
+  const _handleExportPDF = () => {
     exportTableToPDF(getExportData(), '合同评审管理', exportColumns, '合同评审管理');
   };
 
-  const handleExportXLS = () => {
+  const _handleExportXLS = () => {
     exportTableToXLS(getExportData(), '合同评审管理', exportColumns);
   };
 
-  const handleExportWORD = () => {
+  const _handleExportWORD = () => {
     exportTableToWORD(getExportData(), '合同评审管理', exportColumns, '合同评审管理');
   };
 

@@ -5,39 +5,6 @@ import { getIcPrefix, generateDocNo, getConfig } from '@/lib/global-config';
 
 import { withPermission } from '@/lib/api-permissions';
 import { STOCKTAKING_TYPE_LABEL, STOCKTAKING_STATUS_LABEL } from '@/lib/status-labels';
-interface InventoryCheck {
-  id: number;
-  check_no: string;
-  type: string;
-  warehouse_id: number;
-  status: number;
-  start_time: string | null;
-  end_time: string | null;
-  checker_id: number | null;
-  approver_id: number | null;
-  total_items: number;
-  diff_items: number;
-  diff_amount: number;
-  remark: string | null;
-  create_time: string;
-  update_time: string;
-}
-
-interface InventoryCheckItem {
-  id: number;
-  check_id: number;
-  material_id: number;
-  qr_code: string | null;
-  batch_no: string | null;
-  warehouse_location: string | null;
-  split_flag: number;
-  parent_qr_code: string | null;
-  book_quantity: number;
-  actual_quantity: number;
-  difference: number;
-  difference_reason: string | null;
-  status: number;
-}
 
 const TYPE_MAP = STOCKTAKING_TYPE_LABEL;
 const STATUS_MAP = STOCKTAKING_STATUS_LABEL;
@@ -212,7 +179,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
         return errorResponse(`盘点项目未完成，还有 ${uncheckedCount.count} 项未盘点`, 400, 400);
       }
 
-      const diffStats: Loose = await queryOne(
+      const _diffStats: Loose = await queryOne(
         `SELECT
           COUNT(*) as diff_items,
           COALESCE(SUM(ABS(diff_qty)), 0) as diff_amount

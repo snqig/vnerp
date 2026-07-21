@@ -10,7 +10,7 @@ import {
 } from '@/domain/sales/events/SalesOrderEvents';
 import { secureLog } from '@/lib/logger';
 
-export const GET = withPermission(async (request: NextRequest, user: UserInfo) => {
+export const GET = withPermission(async (request: NextRequest, _user: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
@@ -76,7 +76,7 @@ export const POST = withPermission(
     const body = await request.json();
     const {
       customer_id,
-      customer_name,
+      customer_name: _customer_name,
       order_date,
       delivery_date,
       items,

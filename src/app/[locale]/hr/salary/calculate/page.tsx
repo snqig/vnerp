@@ -11,7 +11,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
-import { Calculator, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Calculator, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { authFetch } from '@/lib/auth-fetch';
@@ -38,15 +38,13 @@ interface SalaryResult {
 
 export default function SalaryCalculatePage() {
   const t = useTranslations('Hr');
-  const tc = useTranslations('Common');
+  const _tc = useTranslations('Common');
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const [employeeId, setEmployeeId] = useState('');
   const [result, setResult] = useState<SalaryResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
   const [batchResults, setBatchResults] = useState<SalaryResult[]>([]);
-
-  useEffect(() => {
 
   useEffect(() => {
     // initialized - month defaults
@@ -67,28 +65,28 @@ export default function SalaryCalculatePage() {
       } else {
         toast.error(json.message || t('calculationFailed'));
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('calculationRequestFailed'));
     }
     setLoading(false);
   };
 
   const handleBatchCalculate = async () => {
-    if (!month) { toast.error(t('selectMonth')); return; }
+    if (!month) { toast.error(t('fillMonth')); return; }
     setLoading(true);
     try {
       const res = await authFetch('/api/hr/salary/calculate', {
-        method: 'PUT',
-        body: JSON.stringify({ employeeIds: [], month }),
+        method: 'POST',
+        body: JSON.stringify({ month, batch: true }),
       });
       const json = await res.json();
       if (json.code === 200) {
         setBatchResults(json.data.results || []);
-        toast.success(t('batchCalculationCompleted', { count: json.data.succeeded }));
+        toast.success(t('batchCalculationCompleted'));
       } else {
         toast.error(json.message || t('batchCalculationFailed'));
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('batchCalculationRequestFailed'));
     }
     setLoading(false);

@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
 import { withPermission } from '@/lib/api-permissions';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { query } from '@/lib/db';
 import { getDrizzleDb } from '@/lib/db';
 import { eq, and } from 'drizzle-orm';
 import { hrPieceWorkDetail } from '@/lib/db/schema';
@@ -27,8 +26,8 @@ export const GET = withPermission(async (request: NextRequest) => {
   }
 
   const [year, mon] = month.split('-');
-  const startDate = `${year}-${mon}-01`;
-  const endDate = `${year}-${mon}-31`;
+  const _startDate = `${year}-${mon}-01`;
+  const _endDate = `${year}-${mon}-31`;
 
   const conditions = [
     eq(hrPieceWorkDetail.employeeId, empId),

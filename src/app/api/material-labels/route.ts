@@ -176,7 +176,7 @@ export const POST = withPermission(async (request: NextRequest) => {
 });
 
 async function handleCut(body: Loose) {
-  const { parentLabelId, cutWidths, operatorName } = body;
+  const { parentLabelId, cutWidths, operatorName: _operatorName } = body;
 
   if (!parentLabelId || !cutWidths || !Array.isArray(cutWidths) || cutWidths.length === 0) {
     return errorResponse('缺少必要参数', 400);

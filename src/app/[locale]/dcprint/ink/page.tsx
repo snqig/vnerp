@@ -183,19 +183,19 @@ export default function InkManagementPage() {
       status_label: statusMap[item.status]?.label || '-',
     }));
 
-  const handlePrint = () => {
+  const _handlePrint = () => {
     printTable(getExportData(), exportColumns, t('inkManagement'));
   };
 
-  const handleExportPDF = () => {
+  const _handleExportPDF = () => {
     exportTableToPDF(getExportData(), t('inkManagement'), exportColumns, t('inkManagement'));
   };
 
-  const handleExportXLS = () => {
+  const _handleExportXLS = () => {
     exportTableToXLS(getExportData(), t('inkManagement'), exportColumns);
   };
 
-  const handleExportWORD = () => {
+  const _handleExportWORD = () => {
     exportTableToWORD(getExportData(), t('inkManagement'), exportColumns, t('inkManagement'));
   };
 

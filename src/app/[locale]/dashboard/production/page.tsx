@@ -86,11 +86,11 @@ const PRIORITY_MAP: Record<string, { labelKey: string; className: string }> = {
 function AutoScroll({
   children,
   maxHeight = 320,
-  speed = 50,
+  _speed = 50,
 }: {
   children: React.ReactNode;
   maxHeight?: number;
-  speed?: number;
+  _speed?: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);

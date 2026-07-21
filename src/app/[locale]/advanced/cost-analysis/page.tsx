@@ -15,7 +15,7 @@ interface ProfitRow {
 }
 
 export default function CostAnalysisPage() {
-  const [activeTab, setActiveTab] = useState('profit');
+  const [_activeTab, _setActiveTab] = useState('profit');
   const [profitData, setProfitData] = useState<ProfitRow[]>([]);
   const [abcData, setAbcData] = useState<{ A: number[]; B: number[]; C: number[] }>({
     A: [],

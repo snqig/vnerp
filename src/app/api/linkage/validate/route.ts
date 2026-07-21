@@ -14,7 +14,7 @@ const BIZ_ORDER_STATUS = {
   CLOSED: 90,
 } as const;
 
-const PR_STATUS = {
+const _PR_STATUS = {
   DRAFT: 10,
   PENDING_APPROVAL: 20,
   APPROVED: 30,
@@ -23,7 +23,7 @@ const PR_STATUS = {
   CANCELLED: 90,
 } as const;
 
-const PO_STATUS = {
+const _PO_STATUS = {
   DRAFT: 10,
   PENDING_APPROVAL: 20,
   APPROVED: 30,

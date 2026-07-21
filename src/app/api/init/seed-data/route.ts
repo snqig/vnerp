@@ -30,16 +30,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const [existingWorkOrders]: Loose = await conn.execute(
       'SELECT id, order_no FROM prod_work_order LIMIT 10'
     );
-    const [existingDieTemplates]: Loose = await conn.execute(
+    const [_existingDieTemplates]: Loose = await conn.execute(
       'SELECT id, template_code, template_name FROM prd_die_template LIMIT 10'
     );
-    const [existingProcessRoutes]: Loose = await conn.execute(
+    const [_existingProcessRoutes]: Loose = await conn.execute(
       'SELECT id, route_code, route_name FROM prd_process_route LIMIT 10'
     );
-    const [existingBoms]: Loose = await conn.execute(
+    const [_existingBoms]: Loose = await conn.execute(
       'SELECT id, bom_name, product_id FROM prd_bom LIMIT 10'
     );
-    const [existingBomDetails]: Loose = await conn.execute(
+    const [_existingBomDetails]: Loose = await conn.execute(
       'SELECT id, bom_id, material_id FROM prd_bom_detail LIMIT 20'
     );
     const [existingBomLines]: Loose = await conn.execute(
@@ -51,7 +51,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const [existingLocations]: Loose = await conn.execute(
       'SELECT id, location_code, location_name FROM inv_location LIMIT 10'
     );
-    const [existingUsers]: Loose = await conn.execute('SELECT id, username FROM sys_user LIMIT 10');
+    const [_existingUsers]: Loose = await conn.execute('SELECT id, username FROM sys_user LIMIT 10');
     const [existingVehicles]: Loose = await conn.execute(
       'SELECT id, vehicle_no FROM delivery_vehicle LIMIT 10'
     );

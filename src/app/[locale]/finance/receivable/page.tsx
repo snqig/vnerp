@@ -176,7 +176,7 @@ export default function ReceivablePage() {
     }
   };
 
-  const formatAmount = (amount: number) => ((amount || 0) / 100).toFixed(2);
+  const _formatAmount = (amount: number) => ((amount || 0) / 100).toFixed(2);
   const toAmount = (amount: number) => (amount || 0) / 100;
 
   return (

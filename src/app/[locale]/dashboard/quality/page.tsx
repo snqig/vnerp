@@ -18,6 +18,10 @@ import {
   AlertCircle,
   ClipboardCheck,
   Calendar,
+  Factory,
+  ShoppingCart,
+  Truck,
+  Package,
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 
@@ -157,7 +161,7 @@ function LineChart({
 
       {data
         .filter((_, i) => i % Math.ceil(data.length / 6) === 0 || i === data.length - 1)
-        .map((d, i, arr) => {
+        .map((d, i, _arr) => {
           const idx = data.indexOf(d);
           return (
             <text
@@ -341,44 +345,57 @@ export default function QualityDashboard() {
         </div>
         <div className="absolute inset-0 tech-grid-bg pointer-events-none" />
 
-        <div className="relative z-10 flex items-center justify-between mb-6">
-          <div className="flex-1" />
-          <div className="tech-title-wrapper">
-            <div className="tech-title-row">
-              <div className="tech-title-line-left" />
-              <div className="text-center">
-                <h1 className="text-2xl font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
-                  {companyName}
-                </h1>
-                <p className="text-xs text-white/50 mt-0.5">{t('qualityMonitor')}</p>
-              </div>
-              <div className="tech-title-line-right" />
+        <header className="relative z-20 flex items-center justify-between px-6 h-14 mb-6" style={{ borderBottom: '1px solid rgba(192,208,224,0.15)' }}>
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #22d3ee, #3b82f6)', boxShadow: '0 0 20px rgba(34,211,238,0.25)' }}
+            >
+              <Factory className="h-5 w-5 text-white" />
             </div>
-            <div className="tech-title-bottom-line" />
+            <div>
+              <h1 className="text-base font-bold tracking-wide" style={{ color: '#C0D0E0' }}>{companyName}</h1>
+              <p className="text-[10px]" style={{ color: 'rgba(192,208,224,0.4)' }}>质量监控中心</p>
+            </div>
           </div>
 
-          <div className="flex-1 flex justify-end items-center gap-4">
-            <div className="text-right">
-              <div className="text-lg font-mono font-bold text-cyan-400">
-                {currentTime && formatTime(currentTime)}
+          <div className="flex items-center gap-6">
+            {[
+              { icon: ClipboardCheck, label: t('totalInspections'), val: data.overview.totalInspections, color: '#22d3ee' },
+              { icon: CheckCircle, label: t('overallPassRate'), val: `${data.overview.passRate}%`, color: '#22c55e' },
+              { icon: AlertTriangle, label: t('defectRate'), val: `${data.overview.defectRate}%`, color: '#f59e0b' },
+              { icon: Calendar, label: t('todayInspections'), val: data.overview.todayInspections, color: '#FF6B35' },
+            ].map((m, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <m.icon className="h-4 w-4" style={{ color: m.color }} />
+                <span className="text-xs" style={{ color: 'rgba(192,208,224,0.6)' }}>{m.label}</span>
+                <span className="text-sm font-bold" style={{ color: m.color }}>{m.val}</span>
               </div>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#22c55e', boxShadow: '0 0 6px #22c55e' }} />
+              <span className="text-xs" style={{ color: '#22c55e' }}>实时</span>
             </div>
-            <button
-              onClick={toggleFullscreen}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-              title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
-            >
-              {isFullscreen ? (
-                <Minimize className="h-4 w-4 text-cyan-400" />
-              ) : (
-                <Maximize className="h-4 w-4 text-cyan-400" />
-              )}
+            <button onClick={toggleFullscreen} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+              {isFullscreen ? <Minimize className="h-4 w-4" style={{ color: '#22d3ee' }} /> : <Maximize className="h-4 w-4" style={{ color: '#22d3ee' }} />}
             </button>
-            <div className="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-xs text-cyan-300">
-              {loading ? tc('loading') : '● ' + t('realtime')}
+            <div className="text-right">
+              {currentTime && (
+                <>
+                  <div className="text-base font-mono font-bold" style={{ color: '#22d3ee' }}>
+                    {currentTime.toLocaleTimeString(locale)}
+                  </div>
+                  <div className="text-xs font-mono" style={{ color: 'rgba(192,208,224,0.4)' }}>
+                    {currentTime.toLocaleDateString(locale)}
+                  </div>
+                </>
+              )}
             </div>
           </div>
-        </div>
+        </header>
 
         <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[

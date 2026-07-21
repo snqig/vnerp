@@ -115,7 +115,7 @@ export default function ReconciliationPage() {
     period_end: '',
     remark: '',
   });
-  const [total, setTotal] = useState(0);
+  const [_total, setTotal] = useState(0);
   const [summary, setSummary] = useState({
     totalDelivery: 0,
     totalReturn: 0,

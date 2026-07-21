@@ -226,6 +226,6 @@ async function executeDataCleanup(config: string | null): Promise<string> {
   return `数据清理完成，删除 ${result.affectedRows || 0} 条过期日志`;
 }
 
-async function executeReportGeneration(config: string | null): Promise<string> {
+async function executeReportGeneration(_config: string | null): Promise<string> {
   return '报表生成任务已触发（异步执行中）';
 }

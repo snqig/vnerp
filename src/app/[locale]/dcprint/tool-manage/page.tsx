@@ -31,20 +31,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import {
   Plus,
   Search,
   Wrench,
   MoreHorizontal,
-  Eye,
   Edit,
-  Trash2,
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Settings,
 } from 'lucide-react';
 import {
   DropdownMenu,

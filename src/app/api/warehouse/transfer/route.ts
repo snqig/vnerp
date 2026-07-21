@@ -5,36 +5,6 @@ import { withPermission } from '@/lib/api-permissions';
 import { getTrPrefix, generateDocNo } from '@/lib/global-config';
 import { TRANSFER_TYPE_LABEL, TRANSFER_STATUS_LABEL } from '@/lib/status-labels';
 
-interface Transfer {
-  id: number;
-  transfer_no: string;
-  type: number;
-  from_warehouse_id: number;
-  to_warehouse_id: number;
-  from_location: string | null;
-  to_location: string | null;
-  status: number;
-  operator_id: number | null;
-  approver_id: number | null;
-  out_time: string | null;
-  in_time: string | null;
-  remark: string | null;
-  create_time: string;
-  update_time: string;
-}
-
-interface TransferItem {
-  id: number;
-  transfer_id: number;
-  material_id: number;
-  qr_code: string | null;
-  quantity: number;
-  out_quantity: number;
-  in_quantity: number;
-  unit: string | null;
-  batch_no: string | null;
-}
-
 const TYPE_MAP = TRANSFER_TYPE_LABEL;
 const STATUS_MAP = TRANSFER_STATUS_LABEL;
 

@@ -482,7 +482,7 @@ export default function SalesOrdersPage() {
     }
   };
 
-  const handleExport = (format: string) => {
+  const _handleExport = (format: string) => {
     const dataToExport =
       selectedOrders.length > 0
         ? filteredOrders.filter((o) => selectedOrders.includes(o.id))

@@ -53,7 +53,7 @@ const RETURN_STATUS_CONFIG: Record<
 export default function MaterialReturnPage() {
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
-  const locale = useLocale();
+  const _locale = useLocale();
 
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);

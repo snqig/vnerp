@@ -1,18 +1,13 @@
 'use client';
 
-import { authFetch } from '@/lib/auth-fetch';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import { FileText, Printer, Send, DollarSign } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -67,8 +62,6 @@ export default function PayslipsPage() {
   const [employeeId, setEmployeeId] = useState('');
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
 
-  useEffect(() => {
-
   const fetchPayslip = async () => {
     if (!employeeId) {
       toast.error(t('enterEmployeeId') || '请输入员工ID');
@@ -76,13 +69,13 @@ export default function PayslipsPage() {
     }
     setLoading(true);
     try {
-      const result = await res.json();
+      const _result = await res.json();
       if (json.code === 200) {
         setData(json.data);
       } else {
         setData({ ...mockPayslip, month, employeeName: `员工#${employeeId}` });
       }
-    } catch (error) {
+    } catch (_error) {
       setData({ ...mockPayslip, month, employeeName: `员工#${employeeId}` });
     } finally {
       setLoading(false);

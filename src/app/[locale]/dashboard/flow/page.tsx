@@ -31,7 +31,6 @@ import {
   Shield,
   CheckSquare,
   Workflow,
-  Box,
   BarChart3,
   Wrench,
   Users,

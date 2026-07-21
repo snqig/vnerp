@@ -5,7 +5,7 @@ import { StandardCardApplicationService } from '@/application/services/StandardC
 
 const service = new StandardCardApplicationService();
 
-async function getHandler(request: NextRequest, user: UserInfo) {
+async function getHandler(request: NextRequest, _user: UserInfo) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const code = searchParams.get('code');
@@ -133,7 +133,7 @@ async function putHandler(request: NextRequest, user: UserInfo) {
   }
 }
 
-async function deleteHandler(request: NextRequest, user: UserInfo) {
+async function deleteHandler(request: NextRequest, _user: UserInfo) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

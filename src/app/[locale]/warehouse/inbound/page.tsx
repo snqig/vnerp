@@ -106,8 +106,8 @@ export default function InboundManagementPage() {
 
   // 二维码状态
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
-  const [qrCodeLabelId, setQrCodeLabelId] = useState<string>('');
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [_qrCodeLabelId, _setQrCodeLabelId] = useState<string>('');
+  const [_scanResult, _setScanResult] = useState<ScanResult | null>(null);
 
   // 删除确认对话框状态
   const [deleteTarget, setDeleteTarget] = useState<InboundRecord | null>(null);

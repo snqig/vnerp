@@ -13,8 +13,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
-import { useReactFlow, useNodesState, useEdgesState } from '@xyflow/react';
 import { useTranslations } from 'next-intl';
 
 /* eslint-disable @next/next/no-img-element */
@@ -84,7 +82,7 @@ export default function DbRelationsPage() {
         setData(data);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch((_err) => {
         setLoading(false);
       });
   }, []);

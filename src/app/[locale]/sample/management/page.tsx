@@ -86,7 +86,7 @@ const statusLabelMap: Record<string, string> = {
   signed: 'signed',
 };
 
-const deliveryStatusLabelMap: Record<number, string> = {
+const _deliveryStatusLabelMap: Record<number, string> = {
   0: 'notDelivered',
   1: 'partialDelivered',
   2: 'delivered',

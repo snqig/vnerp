@@ -112,10 +112,9 @@ export default function DieTemplatePage() {
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({} as DashboardStats);
   const [maintenanceList, setMaintenanceList] = useState<MaintenanceRecord[]>([]);
   const [usageLogList, setUsageLogList] = useState<UsageLog[]>([]);
-  const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, _setStatusFilter] = useState('all');
   const [dieStatusFilter, setDieStatusFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('list');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -265,30 +264,6 @@ export default function DieTemplatePage() {
     if (selectedIds.size === sortedList.length) setSelectedIds(new Set());
     else setSelectedIds(new Set(sortedList.map((s) => s.id)));
   };
-
-  const exportColumns = [
-    { key: 'template_code', header: td('code') },
-    { key: 'template_name', header: tc('name') },
-    { key: 'asset_type_label', header: td('assetType') },
-    { key: 'specification', header: td('specification') },
-    { key: 'usage_info', header: td('cumulativeMax') },
-    { key: 'usage_rate', header: td('usageRate') },
-    { key: 'lifecycle_status', header: td('lifeCycle') },
-    { key: 'storage_location', header: td('storageLocation') },
-  ];
-
-  const getExportData = () =>
-    sortedList.map((item) => ({
-      template_code: item.template_code,
-      template_name: item.template_name,
-      asset_type_label:
-        (ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.label || '-',
-      specification: item.specification || '-',
-      usage_info: `${item.cumulative_impressions || item.current_usage} / ${item.max_impressions || item.max_usage}`,
-      usage_rate: `${getUsagePercent(item)}%`,
-      lifecycle_status: (DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label || '-',
-      storage_location: item.storage_location || '-',
-    }));
 
   const handleCreate = async () => {
     if (!form.template_code || !form.template_name) {
@@ -536,22 +511,6 @@ export default function DieTemplatePage() {
       }
     } catch {
       toast({ title: td('scrapFailed'), variant: 'destructive' });
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm(td('confirmDelete'))) return;
-    try {
-      const res = await authFetch(`/api/prepress/die-template?id=${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (data.success) {
-        toast({ title: 'td("deleteSuccess")' });
-        fetchList();
-      } else {
-        toast({ title: data.message || td('deleteFailed'), variant: 'destructive' });
-      }
-    } catch {
-      toast({ title: td('deleteFailed'), variant: 'destructive' });
     }
   };
 

@@ -6,7 +6,7 @@ import { Building2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 export default function OrganizationPage() {
-  const t = useTranslations('Common');
+  const _t = useTranslations('Common');
   const th = useTranslations('Hr');
 
   return (

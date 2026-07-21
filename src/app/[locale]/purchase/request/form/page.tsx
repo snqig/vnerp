@@ -54,14 +54,6 @@ interface Employee {
   position?: string;
 }
 
-interface MaterialRef {
-  material_id: number;
-  material_code: string;
-  material_name: string;
-  specification: string;
-  unit: string;
-  purchase_price: number;
-}
 
 interface PurchaseItem {
   id: number;

@@ -86,8 +86,8 @@ export default function ProcessCardsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [showDetail, setShowDetail] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<ProcessCard | null>(null);
+  const [_showDetail, _setShowDetail] = useState(false);
+  const [_selectedCard, _setSelectedCard] = useState<ProcessCard | null>(null);
   const qrInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {

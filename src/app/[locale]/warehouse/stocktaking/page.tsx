@@ -690,7 +690,7 @@ export default function StocktakingPage() {
             <div className="space-y-4">
               <div>
                 <Label>{tc('approver')}</Label>
-                <UserSelect value="" onChange={(v) => {}} />
+                <UserSelect value="" onChange={(_v) => {}} />
               </div>
               <div className="flex gap-2">
                 <Button

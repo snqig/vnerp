@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Save, Printer } from 'lucide-react';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { useTranslations } from 'next-intl';
-import { type CardData, type PrintSequence } from './input-card/utils';
 import { useStandardCardForm } from '@/hooks/useStandardCardForm';
 
 const EditableCell = ({
@@ -66,7 +65,7 @@ export function InputCardForm() {
     loading,
     saving,
     error,
-    customers,
+    customers: _customers,
     customerSearch,
     setCustomerSearch,
     showCustomerDropdown,

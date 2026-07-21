@@ -147,7 +147,7 @@ export const POST = withPermission(async (request: NextRequest) => {
 
 export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
-  const { id, action, operatorId, operatorName } = body;
+  const { id, action, operatorId: _operatorId, operatorName: _operatorName } = body;
 
   if (!id) {
     return errorResponse('缺少退料单ID', 400, 400);

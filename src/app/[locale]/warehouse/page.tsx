@@ -59,7 +59,7 @@ export default function WarehousePage() {
   const tc = useTranslations('Common');
 
   const [batches, setBatches] = useState<BatchInventory[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -201,7 +201,7 @@ export default function WarehousePage() {
     }
   };
 
-  const fetchAvailableBatches = async (materialId: number, warehouseId: number, index: number) => {
+  const fetchAvailableBatches = async (materialId: number, warehouseId: number, _index: number) => {
     try {
       const res = await authFetch('/api/warehouse/batch-inventory', {
         method: 'POST',

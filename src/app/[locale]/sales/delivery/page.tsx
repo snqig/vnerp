@@ -162,34 +162,13 @@ export default function DeliveryPage() {
     },
   };
 
-  const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> = {
-    normal: {
-      label: t('normalShip'),
-      color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-    },
-    partial: {
-      label: t('partialShip'),
-      color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-    },
-    return: {
-      label: t('returnShip'),
-      color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-    },
-    re_ship: {
-      label: t('reShip'),
-      color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-    },
-  };
-
   const [list, setList] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [typeFilter, _setTypeFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [shipDialogOpen, setShipDialogOpen] = useState(false); // 扫码发货对话框
-  const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Shipment> & { items: ShipmentItem[] }>({
     type: 'normal',
     items: [
@@ -204,19 +183,11 @@ export default function DeliveryPage() {
     ],
   });
   const [detailData, setDetailData] = useState<Shipment | null>(null);
-  const [detailItems, setDetailItems] = useState<ShipmentItem[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [salesOrders, setSalesOrders] = useState<
     Array<{ id: number; order_no: string; customer_id: number; customer_name: string }>
   >([]);
   const [total, setTotal] = useState(0);
-  const [shipForm, setShipForm] = useState<{
-    // 扫码发货表单
-    shipment_id?: number;
-    items: Array<{ material_id: number; qr_code: string; quantity: number }>;
-    logistics_company: string;
-    tracking_no: string;
-  }>({ items: [], logistics_company: '', tracking_no: '' });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -376,136 +347,6 @@ export default function DeliveryPage() {
     }
   };
 
-  // 扫码发货功能（符合设计文档 5.2 节）
-  const openShipDialog = (shipment: Shipment) => {
-    setDetailData(shipment);
-    setShipForm({
-      shipment_id: shipment.id,
-      items:
-        (shipment as Loose).items?.map((item: ShipmentItem) => ({
-          material_id: item.material_id,
-          qr_code: '',
-          quantity: item.quantity - item.shipped_quantity,
-        })) || [],
-      logistics_company: shipment.logistics_company || '',
-      tracking_no: shipment.tracking_no || '',
-    });
-    setShipDialogOpen(true);
-  };
-
-  const addShipItem = () => {
-    setShipForm((prev) => ({
-      ...prev,
-      items: [...prev.items, { material_id: 0, qr_code: '', quantity: 1 }],
-    }));
-  };
-
-  const updateShipItem = (index: number, field: string, value: Loose) => {
-    setShipForm((prev) => {
-      const items = [...prev.items];
-      items[index] = { ...items[index], [field]: value };
-      return { ...prev, items };
-    });
-  };
-
-  const removeShipItem = (index: number) => {
-    setShipForm((prev) => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index),
-    }));
-  };
-
-  const executeShipping = async () => {
-    if (!shipForm.items.length || shipForm.items.some((i) => !i.qr_code || !i.quantity)) {
-      toast.error(t('fillQRCodeInfo'));
-      return;
-    }
-
-    try {
-      const res = await authFetch(`/api/sales/delivery/${shipForm.shipment_id}/ship`, {
-        method: 'POST',
-        body: JSON.stringify({
-          items: shipForm.items,
-          logistics_company: shipForm.logistics_company,
-          tracking_no: shipForm.tracking_no,
-        }),
-      });
-      const result = await res.json();
-      if (result.success) {
-        toast.success(t('shipSuccess', { quantity: result.data.shipped_quantity }));
-        setShipDialogOpen(false);
-        fetchData();
-      } else {
-        toast.error(result.message || t('shipFailed'));
-      }
-    } catch {
-      toast.error(t('executeShipFailed'));
-    }
-  };
-
-  // 提交部分发货申请（符合设计文档 5.3 节）
-  const submitPartialShipment = async () => {
-    const salesOrderId = prompt(t('enterSalesOrderId'));
-    if (!salesOrderId) return;
-
-    const quantity = prompt(t('enterPartialQty'));
-    if (!quantity || parseFloat(quantity) <= 0) {
-      toast.error(t('qtyMustBePositive'));
-      return;
-    }
-
-    try {
-      const res = await authFetch('/api/sales/delivery/partial', {
-        method: 'POST',
-        body: JSON.stringify({
-          sales_order_id: parseInt(salesOrderId),
-          quantity: parseFloat(quantity),
-          remark: `${t('partialShipment')}`,
-        }),
-      });
-      const result = await res.json();
-      if (result.success) {
-        toast.success(t('partialShipApplied'));
-        fetchData();
-      } else {
-        toast.error(result.message || t('applyFailed'));
-      }
-    } catch {
-      toast.error(t('applyPartialFailed'));
-    }
-  };
-
-  // 提交补发申请（符合设计文档 5.4 节）
-  const submitReShip = async (parentShipmentId: number) => {
-    const quantity = prompt(t('enterReShipQty'));
-    if (!quantity || parseFloat(quantity) <= 0) {
-      toast.error(t('qtyMustBePositive'));
-      return;
-    }
-
-    const reason = prompt(t('enterReShipReason')) || '';
-
-    try {
-      const res = await authFetch('/api/sales/delivery/re-ship', {
-        method: 'POST',
-        body: JSON.stringify({
-          parent_shipment_id: parentShipmentId,
-          quantity: parseFloat(quantity),
-          reason,
-        }),
-      });
-      const result = await res.json();
-      if (result.success) {
-        toast.success(t('reShipApplied'));
-        fetchData();
-      } else {
-        toast.error(result.message || t('applyFailed'));
-      }
-    } catch {
-      toast.error(t('applyReShipFailed'));
-    }
-  };
-
   const updateStatus = async (id: number, status: number) => {
     try {
       const res = await authFetch('/api/sales/delivery', {
@@ -546,7 +387,6 @@ export default function DeliveryPage() {
       const result = await res.json();
       if (result.success) {
         setDetailData(result.data);
-        setDetailItems(result.data?.items || []);
         setDetailOpen(true);
       }
     } catch {
@@ -595,7 +435,6 @@ export default function DeliveryPage() {
                   ],
                   delivery_date: new Date().toISOString().split('T')[0],
                 });
-                setEditing(false);
                 setDialogOpen(true);
               }}
               className="bg-blue-600 hover:bg-blue-700"

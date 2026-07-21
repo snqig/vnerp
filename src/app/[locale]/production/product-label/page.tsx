@@ -2,7 +2,7 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,15 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  TableExportToolbar,
-  printTable,
-  exportTableToPDF,
-  exportTableToXLS,
-  exportTableToWORD,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 import { Plus, Search, Edit, Trash2, Printer, QrCode } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import QRCode from 'qrcode';
@@ -71,18 +63,6 @@ const LABEL_STATUS_CONFIG: Record<
 export default function ProductLabelPage() {
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
-  const locale = useLocale();
-
-  const exportColumns = [
-    { key: 'label_no', header: t('labelNo') },
-    { key: 'work_order_no', header: t('workOrderNo') },
-    { key: 'material_code', header: t('materialCode') },
-    { key: 'material_name', header: t('materialName') },
-    { key: 'quantity', header: tc('quantity') },
-    { key: 'batch_no', header: t('batchNo') },
-    { key: 'qc_result', header: t('qcResult') },
-    { key: 'status_label', header: tc('status') },
-  ];
 
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
@@ -263,30 +243,6 @@ export default function ProductLabelPage() {
     };
     return labels[status] || tc('unknown');
   };
-  const getExportData = () =>
-    list.map((item) => ({
-      ...item,
-      status_label: getExportLabel(item.status),
-    }));
-
-  const handlePrint = () => printTable(getExportData(), exportColumns, t('productLabelTitle'));
-  const handleExportPDF = () =>
-    exportTableToPDF(
-      getExportData(),
-      t('productLabelTitle'),
-      exportColumns,
-      t('productLabelTitle')
-    );
-  const handleExportXLS = () =>
-    exportTableToXLS(getExportData(), t('productLabelTitle'), exportColumns);
-  const handleExportWORD = () =>
-    exportTableToWORD(
-      getExportData(),
-      t('productLabelTitle'),
-      exportColumns,
-      t('productLabelTitle')
-    );
-
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
@@ -318,7 +274,7 @@ export default function ProductLabelPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('allStatus')}</SelectItem>
-                  {Object.entries(LABEL_STATUS_CONFIG).map(([k, v]) => (
+                  {Object.entries(LABEL_STATUS_CONFIG).map(([k, _v]) => (
                     <SelectItem key={k} value={k}>
                       {t(
                         k === '1'

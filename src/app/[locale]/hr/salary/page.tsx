@@ -115,7 +115,7 @@ interface Department {
 }
 
 // 模拟薪资数据
-const mockSalaries: Salary[] = [
+const _mockSalaries: Salary[] = [
   {
     id: 1,
     employee_no: 'EMP2024001',
@@ -263,7 +263,7 @@ const mockSalaries: Salary[] = [
 ];
 
 // 模拟部门数据
-const mockDepartments: Department[] = [
+const _mockDepartments: Department[] = [
   { id: 1, dept_name: '生产部', dept_code: 'PROD', parent_id: 0 },
   { id: 2, dept_name: '品质部', dept_code: 'QUAL', parent_id: 0 },
   { id: 3, dept_name: '技术部', dept_code: 'TECH', parent_id: 0 },
@@ -613,7 +613,7 @@ export default function HRSalaryPage() {
   };
 
   // 导出Excel
-  const handleExport = () => {
+  const _handleExport = () => {
     const csvContent = [
       [
         t('employeeNo'),

@@ -20,7 +20,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   return successResponse(result, `同步完成: ${result.synced}条成功, ${result.skipped}条跳过, ${result.errors.length}条失败`);
 }, { errorMessage: 'MES计件同步失败' });
 
-export const GET = withPermission(async (request: NextRequest) => {
+export const GET = withPermission(async (_request: NextRequest) => {
   const rows = await query(
     `SELECT * FROM hr_piece_work_detail WHERE sync_status > 0 ORDER BY create_time DESC LIMIT 50`
   );

@@ -171,7 +171,7 @@ export default function OutsourceOrderPage() {
     }
   };
 
-  const formatAmount = (amount: number) => {
+  const _formatAmount = (amount: number) => {
     return ((amount || 0) / 100).toFixed(2);
   };
 

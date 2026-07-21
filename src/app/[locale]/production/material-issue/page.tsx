@@ -66,7 +66,7 @@ const TYPE_MAP: Record<number, string> = {
 export default function MaterialIssuePage() {
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
-  const locale = useLocale();
+  const _locale = useLocale();
 
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);

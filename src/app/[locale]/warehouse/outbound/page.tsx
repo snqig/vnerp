@@ -373,7 +373,7 @@ export default function OutboundManagementPage() {
     [t]
   );
 
-  const [activeTab, setActiveTab] = useState('records');
+  const [_activeTab, _setActiveTab] = useState('records');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState('all');

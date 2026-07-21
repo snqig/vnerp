@@ -127,7 +127,7 @@ export default function PurchaseReturnPage() {
     base_currency: '',
   });
   const [items, setItems] = useState<ReturnItem[]>([]);
-  const [detailItems, setDetailItems] = useState<Loose[]>([]);
+  const [_detailItems, _setDetailItems] = useState<Loose[]>([]);
   const [detailOrder, setDetailOrder] = useState<ReturnOrder | null>(null);
 
   // 采购订单列表（用于选择）
@@ -181,7 +181,7 @@ export default function PurchaseReturnPage() {
         base_currency: order.base_currency || '',
       });
       // 自动填充退货明细
-      const orderItems: ReturnItem[] = (order.lines || []).map((line: Loose, idx: number) => ({
+      const orderItems: ReturnItem[] = (order.lines || []).map((line: Loose, _idx: number) => ({
         material_id: line.material_id,
         material_code: line.material_code,
         material_name: line.material_name,

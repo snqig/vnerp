@@ -46,7 +46,7 @@ export const POST = withPermission(
     let minLength = 6;
     let requireSpecialChar = false;
     let requireUpperCase = false;
-    let passwordExpireDays = 0;
+    const _passwordExpireDays = 0;
     try {
       const configs: Loose = await query(
         'SELECT config_key, config_value FROM sys_config WHERE config_key IN (?, ?, ?, ?)',
@@ -65,7 +65,7 @@ export const POST = withPermission(
         if (cfg.config_key === 'system.password_require_uppercase')
           requireUpperCase = cfg.config_value === 'true';
         if (cfg.config_key === 'system.password_expire_days')
-          passwordExpireDays = parseInt(cfg.config_value) || 0;
+          _passwordExpireDays = parseInt(cfg.config_value) || 0;
       }
     } catch {
       // 使用默认值

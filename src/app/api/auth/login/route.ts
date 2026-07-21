@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 检查异地登录
-    let isAbnormalLogin = false;
+    let _isAbnormalLogin = false;
     logger.branch(ctx, '密码验证', '密码正确', true, { userId: user.id });
     try {
       const lastLogin = await query<{ last_login_ip: string }>(
@@ -258,7 +258,7 @@ export async function POST(request: NextRequest) {
         const lastIP = lastLogin[0].last_login_ip;
         const currentIP = getClientIP(request);
         if (lastIP !== currentIP && currentIP !== '127.0.0.1') {
-          isAbnormalLogin = true;
+          _isAbnormalLogin = true;
           logger.branch(ctx, '异地登录', 'IP地址变化', true, { lastIP, currentIP });
           // 记录异地登录告警
           await execute(
@@ -449,7 +449,7 @@ async function logLogin(username: string, request: NextRequest, success: boolean
   } catch {}
 }
 
-function parseBrowser(ua: string): string {
+function _parseBrowser(ua: string): string {
   if (ua.includes('Edg/')) return 'Edge';
   if (ua.includes('Chrome/')) return 'Chrome';
   if (ua.includes('Firefox/')) return 'Firefox';
@@ -457,7 +457,7 @@ function parseBrowser(ua: string): string {
   return 'Unknown';
 }
 
-function parseOS(ua: string): string {
+function _parseOS(ua: string): string {
   if (ua.includes('Windows')) return 'Windows';
   if (ua.includes('Mac OS')) return 'macOS';
   if (ua.includes('Linux')) return 'Linux';

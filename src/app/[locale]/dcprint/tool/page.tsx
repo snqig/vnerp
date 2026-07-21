@@ -125,10 +125,10 @@ export default function ToolManagementPage() {
   const { toast } = useToast();
 
   const [tools, setTools] = useState<Tool[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+  const [_total, _setTotal] = useState(0);
+  const [page, _setPage] = useState(1);
   const [pageSize] = useState(20);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [keyword, setKeyword] = useState('');

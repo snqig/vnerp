@@ -337,7 +337,7 @@ export default function PurchaseRequestPage() {
     printWindow.document.close();
   };
 
-  const handleExportXLS = () => {
+  const _handleExportXLS = () => {
     const recordsToExport =
       selectedIds.length > 0 ? requests.filter((r) => selectedIds.includes(r.id)) : requests;
     if (recordsToExport.length === 0) {
@@ -376,7 +376,7 @@ export default function PurchaseRequestPage() {
     toast.success(t('xlsExportSuccess'));
   };
 
-  const handleExportPDF = () => {
+  const _handleExportPDF = () => {
     const recordsToExport =
       selectedIds.length > 0 ? requests.filter((r) => selectedIds.includes(r.id)) : requests;
     if (recordsToExport.length === 0) {

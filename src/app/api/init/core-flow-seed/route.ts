@@ -339,7 +339,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     }));
     const rawWh = { id: whMap['Y01'], warehouse_code: 'Y01' };
     const finishedWh = { id: whMap['C01'], warehouse_code: 'C01' };
-    const fieldWh = { id: whMap['X01'], warehouse_code: 'X01' };
+    const _fieldWh = { id: whMap['X01'], warehouse_code: 'X01' };
     const customers = cusIds.map((id, i) => ({
       id,
       customer_name: `东莞${industries[i % industries.length]}有限公司`,
@@ -836,7 +836,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     // ===== 7. 扫码发料 (prd_material_issue + prd_material_issue_item) =====
     for (let i = 1; i <= 30; i++) {
       const wo = woData[(i - 1) % woData.length];
-      const card = cardData[(i - 1) % cardData.length];
+      const _card = cardData[(i - 1) % cardData.length];
       const mainLabel = labelData[(i - 1) % labelData.length];
       const issueDate = randomDate(yearStart, now);
       const issueQty = Math.round(mainLabel.qty * randomAmount(0.3, 0.8));

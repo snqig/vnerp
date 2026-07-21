@@ -28,7 +28,7 @@ interface SalaryStructureData {
 
 export default function SalaryStructurePage() {
   const t = useTranslations('Hr');
-  const tc = useTranslations('Common');
+  const _tc = useTranslations('Common');
   const [data, setData] = useState<SalaryStructureData | null>(null);
   const [loading, setLoading] = useState(true);
   const [month, setMonth] = useState(format(new Date(), 'yyyy-MM'));

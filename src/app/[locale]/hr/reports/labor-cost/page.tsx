@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LaborCostChart } from '@/components/hr/charts/LaborCostChart';
 import { ChevronLeft, ChevronRight, DollarSign, Users, TrendingUp, Building2, AlertCircle } from 'lucide-react';
-import { format, subMonths } from 'date-fns';
+import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 
 interface ErrorBoundaryProps {

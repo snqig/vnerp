@@ -99,7 +99,7 @@ export default function InkOpeningPage() {
   const { toast } = useToast();
   const [records, setRecords] = useState<InkOpeningRecord[]>([]);
   const [overdueList, setOverdueList] = useState<InkOpeningRecord[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [inkTypeFilter, setInkTypeFilter] = useState('all');
@@ -128,7 +128,7 @@ export default function InkOpeningPage() {
     remark: '',
   });
 
-  const [materials, setMaterials] = useState<Loose[]>([]);
+  const [_materials, setMaterials] = useState<Loose[]>([]);
 
   const fetchRecords = useCallback(async () => {
     setLoading(true);
@@ -235,7 +235,7 @@ export default function InkOpeningPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const _handleDelete = async (id: number) => {
     if (!confirm('确定删除此记录？')) return;
     try {
       const res = await authFetch(`/api/dcprint/ink-opening?id=${id}`, { method: 'DELETE' });

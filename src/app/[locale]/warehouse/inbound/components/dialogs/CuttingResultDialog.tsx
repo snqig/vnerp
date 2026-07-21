@@ -32,7 +32,7 @@ export function CuttingResultDialog({
   const tc = useTranslations('Common');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const buildLabelsHtml = async (forPrint: boolean): Promise<string[]> => {
+  const buildLabelsHtml = async (_forPrint: boolean): Promise<string[]> => {
     return Promise.all(
       printLabels.map(async (label) => {
         const qrContent = `${label.labelNo}@001:type:CUT`;

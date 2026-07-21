@@ -71,7 +71,7 @@ interface Cert {
   items?: CertItem[];
 }
 
-const certTypeMap: Record<string, string> = {
+const _certTypeMap: Record<string, string> = {
   RoHS: 'RoHS',
   REACH: 'REACH',
   FDA: 'FDA',

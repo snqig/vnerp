@@ -25,7 +25,6 @@ import {
   Download,
   Upload,
   Eye,
-  Edit,
   Trash2,
   ArrowLeft,
   Sparkles,
@@ -58,7 +57,7 @@ function StandardCardPageContent() {
   const [mode, setMode] = useState<'list' | 'v2' | 'card'>(
     urlMode === 'v2' ? 'v2' : urlMode === 'card' ? 'card' : 'list'
   );
-  const editId = searchParams.get('id');
+  const _editId = searchParams.get('id');
   const isEdit = searchParams.get('edit') === 'true';
 
   const [list, setList] = useState<Loose[]>([]);

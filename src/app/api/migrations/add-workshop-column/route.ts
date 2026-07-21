@@ -15,7 +15,7 @@ async function addColumnIfNotExists(table: string, column: string, definition: s
   return false;
 }
 
-async function createTableIfNotExists(sql: string) {
+async function _createTableIfNotExists(sql: string) {
   try {
     await query(sql);
     return true;

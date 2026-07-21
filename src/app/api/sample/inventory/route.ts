@@ -1,10 +1,9 @@
 import { NextRequest } from 'next/server';
-import { query, queryPaginated, execute } from '@/lib/db';
+import { queryPaginated, execute } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
   errorResponse,
-  commonErrors,
   validateRequestBody,
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';

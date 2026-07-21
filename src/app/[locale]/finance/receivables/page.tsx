@@ -46,8 +46,8 @@ export default function ReceivablesPage() {
 
   const [receivables, setReceivables] = useState<Receivable[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [_page, _setPage] = useState(1);
+  const [_total, setTotal] = useState(0);
 
   const [showReceipt, setShowReceipt] = useState(false);
   const [selectedRec, setSelectedRec] = useState<Receivable | null>(null);

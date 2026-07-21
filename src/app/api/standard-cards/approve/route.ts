@@ -30,7 +30,7 @@ const STATUS_FLOW: Record<ApproveType, { from: number; to: number }> = {
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
     const body = await request.json();
-    const { id, type, userId, userName, remark } = body;
+    const { id, type, userId: _userId, userName: _userName, remark: _remark } = body;
 
     if (!id) {
       return errorResponse('标准卡ID不能为空', 400);
@@ -40,7 +40,7 @@ export const POST = withPermission(
       return errorResponse('审核类型无效', 400);
     }
 
-    if (!userId || !userName) {
+    if (!_userId || !_userName) {
       return errorResponse('审核人信息不能为空', 400);
     }
 
@@ -122,7 +122,7 @@ export const POST = withPermission(
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
     const body = await request.json();
-    const { id, type, userId, userName, remark } = body;
+    const { id, type, userId: _userId, userName: _userName, remark: _remark } = body;
 
     if (!id) {
       return errorResponse('标准卡ID不能为空', 400);

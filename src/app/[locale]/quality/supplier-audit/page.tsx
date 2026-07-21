@@ -75,7 +75,7 @@ const auditResultMap: Record<
   rejected: { label: 'unqualified', variant: 'destructive' },
   pending: { label: 'pendingJudgment', variant: 'outline' },
 };
-const statusMap: Record<
+const _statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {

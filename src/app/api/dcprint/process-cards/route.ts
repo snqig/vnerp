@@ -242,7 +242,7 @@ export const PUT = withPermission(
 
 // 添加辅料到流程卡
 async function addMaterialToCard(cardIdentifier: string | number, data: Loose) {
-  const { labelId, labelNo, createUserId, createUserName } = data;
+  const { labelId, labelNo, createUserId: _createUserId, createUserName: _createUserName } = data;
 
   // 获取流程卡信息
   const card = await queryOne<Loose>(

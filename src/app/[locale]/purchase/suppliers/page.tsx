@@ -223,7 +223,7 @@ export default function SuppliersPage() {
           setTotal(result.pagination?.total || result.data?.total || data.length);
         }
       }
-    } catch (error) {
+    } catch (_error) {
     } finally {
       setLoading(false);
     }
@@ -289,7 +289,7 @@ export default function SuppliersPage() {
           toast({ title: result.message || tc('error'), variant: 'destructive' });
         }
       }
-    } catch (error) {
+    } catch (_error) {
       toast({ title: tc('saveFailed'), variant: 'destructive' });
     } finally {
       setSaving(false);
@@ -316,7 +316,7 @@ export default function SuppliersPage() {
           toast({ title: result.message || tc('deleteFailed'), variant: 'destructive' });
         }
       }
-    } catch (error) {
+    } catch (_error) {
       toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
@@ -362,7 +362,7 @@ export default function SuppliersPage() {
     };
     const rows = recordsToPrint
       .map((s) => {
-        const grade = creditLevelMap[s.credit_level] || creditLevelMap.B;
+        const _grade = creditLevelMap[s.credit_level] || creditLevelMap.B;
         const status = statusMap[s.status] || statusMap[1];
         return `<tr>
         <td>${s.supplier_code}</td>
@@ -399,126 +399,6 @@ export default function SuppliersPage() {
       </body></html>`;
     printWindow.document.write(html);
     printWindow.document.close();
-  };
-
-  const handleExportXLS = () => {
-    const recordsToExport =
-      selectedIds.length > 0 ? list.filter((s) => selectedIds.includes(s.id)) : list;
-    if (recordsToExport.length === 0) {
-      toast({ title: tc('noDataToExport'), variant: 'destructive' });
-      return;
-    }
-    const typeLabels: Record<number, string> = {
-      1: t('supplierTypeRaw'),
-      2: t('supplierTypeInk'),
-      3: t('supplierTypeAuxiliary'),
-      4: t('supplierTypePackaging'),
-      5: t('supplierTypeEquipment'),
-      6: t('supplierTypeOutsource'),
-    };
-    const headers = [
-      t('supplierCode'),
-      t('supplierName'),
-      tc('type'),
-      tc('grade'),
-      tc('status'),
-      tc('contact'),
-      tc('phone'),
-      tc('email'),
-      tc('address'),
-    ];
-    const rows = recordsToExport.map((s) => [
-      s.supplier_code,
-      s.supplier_name,
-      typeLabels[s.supplier_type] || '',
-      s.credit_level,
-      (statusMap[s.status] || statusMap[1]).label,
-      s.contact_name || '',
-      s.contact_phone || '',
-      s.contact_email || '',
-      s.address || '',
-    ]);
-    const BOM = '\uFEFF';
-    const csvContent =
-      BOM + [headers.join(','), ...rows.map((r) => r.map((c) => `"${c}"`).join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${t('supplierManagement')}_${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
-    toast({ title: tc('exportSuccess') });
-  };
-
-  const handleExportPDF = () => {
-    const recordsToExport =
-      selectedIds.length > 0 ? list.filter((s) => selectedIds.includes(s.id)) : list;
-    if (recordsToExport.length === 0) {
-      toast({ title: tc('noDataToExport'), variant: 'destructive' });
-      return;
-    }
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast({ title: tc('cannotOpenPrintWindow'), variant: 'destructive' });
-      return;
-    }
-    const typeLabels: Record<number, string> = {
-      1: t('supplierTypeRaw'),
-      2: t('supplierTypeInk'),
-      3: t('supplierTypeAuxiliary'),
-      4: t('supplierTypePackaging'),
-      5: t('supplierTypeEquipment'),
-      6: t('supplierTypeOutsource'),
-    };
-    const levelLabels: Record<string, string> = {
-      S: tc('strategic'),
-      A: tc('preferred'),
-      B: tc('qualified'),
-      C: tc('conditional'),
-      D: tc('disqualified'),
-    };
-    const rows = recordsToExport
-      .map((s) => {
-        const grade = creditLevelMap[s.credit_level] || creditLevelMap.B;
-        const status = statusMap[s.status] || statusMap[1];
-        return `<tr>
-        <td>${s.supplier_code}</td>
-        <td>${s.supplier_name}</td>
-        <td>${typeLabels[s.supplier_type] || '-'}</td>
-        <td>${s.credit_level} - ${levelLabels[s.credit_level] || '-'}</td>
-        <td>${status.label}</td>
-        <td>${s.contact_name || '-'}</td>
-        <td>${s.contact_phone || '-'}</td>
-        <td>${s.contact_email || '-'}</td>
-        <td>${s.address || '-'}</td>
-      </tr>`;
-      })
-      .join('');
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${t('supplierManagement')}</title>
-      <style>
-        @page { size: A4; margin: 15mm; }
-        body { font-family: "Microsoft YaHei", Arial, sans-serif; padding: 20px; color: #333; }
-        h1 { text-align: center; border-bottom: 2px solid #1a56db; padding-bottom: 10px; color: #1a56db; }
-        .info { text-align: center; color: #666; margin-bottom: 15px; font-size: 13px; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th, td { border: 1px solid #999; padding: 5px 6px; text-align: center; }
-        th { background-color: #f0f4ff; font-weight: bold; color: #1a56db; }
-        .footer { margin-top: 20px; text-align: right; color: #999; font-size: 11px; }
-        @media print { body { padding: 0; } }
-      </style></head>
-      <body>
-        <h1>${t('supplierManagement')}</h1>
-        <div class="info">${tc('exportTime')}：${new Date().toLocaleString()} | ${tc('total')} ${recordsToExport.length} ${tc('records')}</div>
-        <table>
-          <thead><tr><th>${tc('code')}</th><th>${tc('name')}</th><th>${tc('type')}</th><th>${tc('grade')}</th><th>${tc('status')}</th><th>${tc('contact')}</th><th>${tc('phone')}</th><th>${tc('email')}</th><th>${tc('address')}</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <div class="footer">${companyName}</div>
-        <script>window.onload=function(){window.print();}</script>
-      </body></html>`;
-    printWindow.document.write(html);
-    printWindow.document.close();
-    toast({ title: tc('exportPdfSuccess') });
   };
 
   const stats = {

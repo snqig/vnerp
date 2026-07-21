@@ -49,9 +49,9 @@ export default function MaterialRequisitionsPage() {
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [searchNo, setSearchNo] = useState('');
+  const [_page, _setPage] = useState(1);
+  const [_total, setTotal] = useState(0);
+  const [_searchNo, _setSearchNo] = useState('');
 
   // 弹窗状态
   const [showAutoGen, setShowAutoGen] = useState(false);

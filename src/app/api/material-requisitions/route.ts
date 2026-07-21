@@ -162,7 +162,7 @@ export const POST = withPermission(async (request: NextRequest) => {
 
 export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
-  const { id, action, items, approverId, approverName } = body;
+  const { id, action, items, approverId: _approverId, approverName: _approverName } = body;
 
   if (!id) {
     return errorResponse('缺少领料单ID', 400, 400);

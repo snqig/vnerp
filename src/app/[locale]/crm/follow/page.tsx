@@ -76,7 +76,7 @@ export default function CustomerFollowPage() {
   const [records, setRecords] = useState<FollowRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [searchName, setSearchName] = useState('');
   const [searchType, setSearchType] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);

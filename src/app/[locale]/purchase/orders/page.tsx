@@ -424,9 +424,9 @@ export default function PurchaseOrdersPage() {
   };
 
   const handleStatusChange = async (orderId: number, action: string) => {
-    let newStatus = 0;
-    if (action === 'submit') newStatus = PO_STATUS.PENDING_APPROVAL;
-    else if (action === 'approve') newStatus = PO_STATUS.APPROVED;
+    let _newStatus = 0;
+    if (action === 'submit') _newStatus = PO_STATUS.PENDING_APPROVAL;
+    else if (action === 'approve') _newStatus = PO_STATUS.APPROVED;
     else return;
 
     try {
@@ -451,7 +451,7 @@ export default function PurchaseOrdersPage() {
     fetchOrders(keyword);
   };
 
-  const handleExport = (format: string) => {
+  const _handleExport = (format: string) => {
     const statusMap: Record<number, string> = {
       10: tc('draft'),
       20: tc('pending'),
@@ -639,7 +639,7 @@ export default function PurchaseOrdersPage() {
     }
 
     const orderSections = dataToPrint
-      .map((o, orderIndex) => {
+      .map((o, _orderIndex) => {
         const lines = o.lines || [];
         const lineRows =
           lines.length > 0

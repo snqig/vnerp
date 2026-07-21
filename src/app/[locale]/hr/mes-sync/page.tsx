@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, Database, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+import { RefreshCw, Database, CheckCircle2, Clock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface SyncRecord {

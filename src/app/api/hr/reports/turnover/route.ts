@@ -6,7 +6,7 @@ import { successResponse } from '@/lib/api-response';
 
 const db = getDrizzleDb();
 
-export const GET = withPermission(async (request: NextRequest) => {
+export const GET = withPermission(async (_request: NextRequest) => {
   const [totals] = await db.execute(sql`
     SELECT
       COUNT(*) as totalEmployees,

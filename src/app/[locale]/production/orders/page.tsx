@@ -167,7 +167,7 @@ export default function WorkOrdersPage() {
   };
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<(typeof workOrders)[0] | null>(null);
+  const [_selectedOrder, _setSelectedOrder] = useState<(typeof workOrders)[0] | null>(null);
 
   return (
     <MainLayout title={t('workOrders')}>
@@ -377,7 +377,7 @@ export default function WorkOrdersPage() {
                   <div className="lg:w-64 flex-shrink-0">
                     <div className="text-sm font-medium mb-2">{t('processProgress')}</div>
                     <div className="space-y-1">
-                      {processes.map((process, idx) => (
+                      {processes.map((process, _idx) => (
                         <div
                           key={process.code}
                           className={`flex items-center gap-2 text-xs p-2 rounded ${

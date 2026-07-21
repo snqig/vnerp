@@ -1419,7 +1419,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
               ]
             );
             results.push(`${menu.menu_code}: 创建成功(含is_visible)`);
-          } catch (insertErr) {
+          } catch (_insertErr) {
             try {
               await conn.execute(
                 'INSERT INTO sys_menu (parent_id, menu_name, menu_code, menu_type, icon, path, component, permission, sort_order, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',

@@ -123,7 +123,7 @@ export default function TransferPage() {
   const [showOutboundDialog, setShowOutboundDialog] = useState(false);
   const [showInboundDialog, setShowInboundDialog] = useState(false);
   const [currentTransferId, setCurrentTransferId] = useState<number | null>(null);
-  const [transferItems, setTransferItems] = useState<TransferItem[]>([]);
+  const [_transferItems, _setTransferItems] = useState<TransferItem[]>([]);
   const [scanItems, setScanItems] = useState<
     { material_id: number; qr_code: string; quantity: number }[]
   >([]);

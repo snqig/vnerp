@@ -23,7 +23,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     return errorResponse('该月份无薪资计算数据', 404, 404);
   }
 
-  const employeeIds = [...new Set(calculations.map(c => c.employeeId))];
+  const _employeeIds = [...new Set(calculations.map(c => c.employeeId))];
   const employees = await db.select({
     id: sysEmployee.id,
     name: sysEmployee.name,

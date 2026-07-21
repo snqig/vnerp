@@ -55,7 +55,7 @@ export default function DictPage() {
 
   const [dictTypes, setDictTypes] = useState<DictType[]>([]);
   const [selectedType, setSelectedType] = useState<DictType | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [typeDialogOpen, setTypeDialogOpen] = useState(false);
   const [dataDialogOpen, setDataDialogOpen] = useState(false);
   const [typeForm, setTypeForm] = useState({ dict_name: '', dict_type: '', status: 1, remark: '' });

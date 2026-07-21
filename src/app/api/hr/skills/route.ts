@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getDrizzleDb } from '@/lib/db';
-import { eq, and, like, desc, count } from 'drizzle-orm';
+import { eq, and, desc, count } from 'drizzle-orm';
 import { hrSkillMatrix } from '@/lib/db/schema';
 import { withPermission } from '@/lib/api-permissions';
 import { successResponse, errorResponse } from '@/lib/api-response';

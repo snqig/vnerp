@@ -206,7 +206,7 @@ export const PUT = withPermission(
         if (rc.status.value !== 1) {
           return errorResponse('仅草稿状态可修改折扣', 400, 400);
         }
-        const { query: q, execute } = await import('@/lib/db');
+        const { query: _q, execute } = await import('@/lib/db');
         const discount = parseFloat(body.discount_amount) || 0;
         const netAmount = rc.netAmount;
         const receivedAmount = rc.receivedAmount;

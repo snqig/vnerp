@@ -4,30 +4,6 @@ import { successResponse, errorResponse, commonErrors } from '@/lib/api-response
 import { generateDocumentNo } from '@/lib/document-numbering';
 
 import { withPermission } from '@/lib/api-permissions';
-// 订单项接口
-interface OrderItem {
-  product: string;
-  quantity: number;
-  unit: string;
-  unitPrice: number;
-  amount: number;
-}
-
-// 订单接口
-interface Order {
-  id: string;
-  customer: string;
-  customerId?: string;
-  orderDate: string;
-  deliveryDate: string;
-  status: 'draft' | 'confirmed' | 'producing' | 'shipped' | 'completed' | 'cancelled';
-  totalAmount: number;
-  items: OrderItem[];
-  remarks?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 // GET - 获取订单列表/详情
 export const GET = withPermission(
   async (request: NextRequest) => {

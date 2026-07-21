@@ -376,7 +376,7 @@ export default function SampleOrdersPage() {
       [tc('status')]: t(lifecycleStatusMap[s.status]?.label || s.status),
     }));
 
-  const handlePrint = () => {
+  const _handlePrint = () => {
     const items =
       selectedIds.size > 0 ? sortedOrders.filter((o) => selectedIds.has(o.id)) : sortedOrders;
     if (items.length === 0) {

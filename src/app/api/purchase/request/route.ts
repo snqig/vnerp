@@ -59,7 +59,7 @@ interface RequestItem {
 }
 
 // 生成采购申请单号
-function generateRequestNoSync(): string {
+function _generateRequestNoSync(): string {
   const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const randomStr = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
   return `PR${dateStr}${randomStr}`;

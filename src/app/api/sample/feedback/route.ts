@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 import {
   successResponse,
   errorResponse,
-  commonErrors,
   validateRequestBody,
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';

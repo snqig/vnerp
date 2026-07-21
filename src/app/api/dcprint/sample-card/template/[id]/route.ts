@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { successResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { SampleProcessTemplateService } from '@/application/services/SampleProcessTemplateService';
 

@@ -135,7 +135,7 @@ export const POST = withPermission(
       const allOutboundItems: Loose[] = [];
 
       for (const item of items) {
-        const { material_id, material_code, material_name, qty, unit, batch_no, batch_id } = item;
+        const { material_id, material_code, material_name, qty, unit: _unit, batch_no, batch_id } = item;
         const requiredQty = parseFloat(qty);
 
         if (batch_id || batch_no) {

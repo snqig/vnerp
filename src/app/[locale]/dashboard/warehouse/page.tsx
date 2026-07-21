@@ -226,7 +226,7 @@ export default function WarehouseDashboard() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
-  const [warehouseHistory, setWarehouseHistory] = useState<number[]>([65, 68, 70, 72, 69, 73]);
+  const [warehouseHistory] = useState<number[]>([65, 68, 70, 72, 69, 73]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -303,7 +303,7 @@ export default function WarehouseDashboard() {
     return baseUrl + encodeURIComponent(prompt) + '&image_size=square';
   }, [data.categoryDistribution]);
 
-  const occupancyChartUrls = useMemo(() => {
+  const _occupancyChartUrls = useMemo(() => {
     if (data.warehouseOccupancy.length === 0) return [];
     return data.warehouseOccupancy.map((w) => {
       const occupancy = w.capacity ? (w.total_qty / w.capacity) * 100 : avgOccupancy;

@@ -37,7 +37,7 @@ interface TurnoverData {
 
 export default function TurnoverPage() {
   const t = useTranslations('Hr');
-  const tc = useTranslations('Common');
+  const _tc = useTranslations('Common');
   const [data, setData] = useState<TurnoverData | null>(null);
   const [loading, setLoading] = useState(true);
 

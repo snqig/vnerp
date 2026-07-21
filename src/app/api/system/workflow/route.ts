@@ -5,7 +5,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { WorkflowEngine } from '@/application/workflow/WorkflowEngine';
 
-const workflowEngine = new WorkflowEngine();
+const _workflowEngine = new WorkflowEngine();
 
 // 获取所有审批流程配置
 export const GET = withPermission(async (request: NextRequest) => {
@@ -104,7 +104,7 @@ export const POST = withPermission(async (request: NextRequest, user: UserInfo) 
 });
 
 // 更新审批流程配置
-export const PUT = withPermission(async (request: NextRequest, user: UserInfo) => {
+export const PUT = withPermission(async (request: NextRequest, _user: UserInfo) => {
   const body = await request.json();
   const { workflowId, workflowName, description, nodes, isActive, priority } = body;
 

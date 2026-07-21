@@ -83,7 +83,7 @@ function InputCardPageContent() {
 
   const [data, setData] = useState<CardData>(createEmptyData);
   const [loading, setLoading] = useState(isEditMode);
-  const [saving, setSaving] = useState(false);
+  const [_saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -231,7 +231,7 @@ function InputCardPageContent() {
     }
   };
 
-  const handleSaveAndPreview = async () => {
+  const _handleSaveAndPreview = async () => {
     await handleSave();
     const id = searchParams.get('id');
     if (id) {

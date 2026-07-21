@@ -114,7 +114,7 @@ export default function TracePage() {
   const [records, setRecords] = useState<TraceRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [keyword, setKeyword] = useState('');
+  const [_keyword, _setKeyword] = useState('');
   const [traceTypeFilter, setTraceTypeFilter] = useState('all');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { sortField, sortDirection, handleSort, sortedData } = useTableSort(records, 'trace_no');

@@ -85,7 +85,7 @@ export default function EcoPage() {
   const [records, setRecords] = useState<EcoRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [searchEcoNo, setSearchEcoNo] = useState('');
   const [searchType, setSearchType] = useState('');
   const [searchStatus, setSearchStatus] = useState('');

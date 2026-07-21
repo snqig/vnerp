@@ -47,8 +47,8 @@ export default function CostsPage() {
 
   const [costs, setCosts] = useState<CostRecord[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [_page, _setPage] = useState(1);
+  const [_total, setTotal] = useState(0);
 
   const [showCalc, setShowCalc] = useState(false);
   const [calcWorkOrderId, setCalcWorkOrderId] = useState('');

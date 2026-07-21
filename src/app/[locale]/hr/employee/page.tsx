@@ -51,7 +51,6 @@ import { EmployeeFormDialog } from './components/dialogs/EmployeeFormDialog';
 import { PrintDialog } from './components/dialogs/PrintDialog';
 import { BatchPrintDialog } from './components/dialogs/BatchPrintDialog';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 
 export default function EmployeePage() {
   // 翻译钩子
@@ -59,7 +58,7 @@ export default function EmployeePage() {
   const tc = useTranslations('Common');
 
   const { companyName } = useCompanyName();
-  const { hasPermission } = usePermission();
+  const { _hasPermission } = usePermission();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -166,7 +165,7 @@ export default function EmployeePage() {
       if (USE_MOCK_HR_DATA) {
         // 使用模拟数据
         logger.info({ module: 'Hr', action: 'fetchEmployees' }, '使用 mock 数据');
-        const mockResponse = mockApiListResponse(mockEmployees);
+        const _mockResponse = mockApiListResponse(mockEmployees);
         employeeList = mockEmployees;
       } else {
         const url = debouncedSearch

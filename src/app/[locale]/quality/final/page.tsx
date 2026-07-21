@@ -40,15 +40,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  TableExportToolbar,
-  exportTableToXLS,
-  exportTableToPDF,
-  exportTableToWORD,
-  printTable,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import {
   Search,
@@ -66,12 +58,10 @@ import {
   Clock,
   Shield,
   Award,
-  Package,
   Percent,
   Download,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
 import { mockQualityFinal, USE_MOCK } from '@/lib/mock-data';
@@ -104,16 +94,6 @@ interface FinalInspect {
   packing_type?: string;
   slice_per_box?: string;
   slice_per_bundle?: string;
-}
-
-// 统计数据类型
-interface FinalStats {
-  pending: number;
-  inspecting: number;
-  passed: number;
-  today: number;
-  week: number;
-  passRate: number;
 }
 
 // 终检项目
@@ -312,7 +292,7 @@ export default function QualityFinalPage() {
     sortField,
     sortDirection,
     handleSort,
-    sortedData: sortedFinalInspects,
+    sortedData: _sortedFinalInspects,
   } = useTableSort(filteredFinals, 'id');
 
   // 查看详情
@@ -814,17 +794,17 @@ export default function QualityFinalPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       {selectedFinal.process_flow1
                         ?.split('-')
-                        .map((step: string, index: number, arr: string[]) => (
+                        .map((step: string, index: number, _arr: string[]) => (
                           <div key={index} className="flex items-center">
                             <Badge variant="outline">{step}</Badge>
-                            {index < arr.length - 1 && (
+                            {index < _arr.length - 1 && (
                               <span className="mx-1 text-muted-foreground">→</span>
                             )}
                           </div>
                         ))}
                       {selectedFinal.process_flow2
                         ?.split('-')
-                        .map((step: string, index: number, arr: string[]) => (
+                        .map((step: string, index: number, _arr: string[]) => (
                           <div key={`2-${index}`} className="flex items-center">
                             <span className="mx-1 text-muted-foreground">→</span>
                             <Badge variant="outline">{step}</Badge>

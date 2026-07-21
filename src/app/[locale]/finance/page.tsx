@@ -41,7 +41,6 @@ import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  AlertTriangle,
   Eye,
   Trash2,
 } from 'lucide-react';
@@ -132,7 +131,7 @@ export default function FinancePage() {
   const [payables, setPayables] = useState<Payable[]>([]);
   const [receipts, setReceipts] = useState<ReceiptRecord[]>([]);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 

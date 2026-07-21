@@ -31,7 +31,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -41,15 +40,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  TableExportToolbar,
-  exportTableToXLS,
-  exportTableToPDF,
-  exportTableToWORD,
-  printTable,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import {
   Search,
@@ -67,10 +58,8 @@ import {
   Clock,
   Shield,
   Award,
-  AlertCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
 import { USE_MOCK } from '@/lib/mock-data';
@@ -574,7 +563,7 @@ export default function QualityProcessPage() {
     sortField,
     sortDirection,
     handleSort,
-    sortedData: sortedProcesses,
+    sortedData: _sortedProcesses,
   } = useTableSort(filteredProcesses, 'id');
 
   // 查看详情
@@ -1068,15 +1057,15 @@ export default function QualityProcessPage() {
                       {t('processFlow')}
                     </h4>
                     <div className="flex items-center gap-2 flex-wrap">
-                      {selectedProcess.process_flow1?.split('-').map((step, index, arr) => (
+                      {selectedProcess.process_flow1?.split('-').map((step, index, _arr) => (
                         <div key={index} className="flex items-center">
                           <Badge variant="outline">{step}</Badge>
-                          {index < arr.length - 1 && (
+                          {index < _arr.length - 1 && (
                             <span className="mx-1 text-muted-foreground">→</span>
                           )}
                         </div>
                       ))}
-                      {selectedProcess.process_flow2?.split('-').map((step, index, arr) => (
+                      {selectedProcess.process_flow2?.split('-').map((step, index, _arr) => (
                         <div key={`2-${index}`} className="flex items-center">
                           <span className="mx-1 text-muted-foreground">→</span>
                           <Badge variant="outline">{step}</Badge>

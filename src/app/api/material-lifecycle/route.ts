@@ -5,7 +5,7 @@ import { MaterialLifecycleService } from '@/application/services/MaterialLifecyc
 
 const service = new MaterialLifecycleService();
 
-async function getHandler(request: NextRequest, user: UserInfo) {
+async function getHandler(request: NextRequest, _user: UserInfo) {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
 

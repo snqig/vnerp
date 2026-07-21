@@ -33,7 +33,6 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 import { useStandardCardForm } from '@/hooks/useStandardCardForm';
-import { type PrintSequence } from './input-card/utils';
 
 // 现代化录入表单组件（不含 MainLayout/Suspense 包装，由父页面统一提供）
 export function InputV2Form() {
@@ -43,11 +42,11 @@ export function InputV2Form() {
 
   const {
     data,
-    loading,
+    _loading,
     saving,
-    error,
+    _error,
     savedCardId,
-    customerSearch,
+    _customerSearch,
     setCustomerSearch,
     showCustomerDropdown,
     setShowCustomerDropdown,
@@ -56,7 +55,7 @@ export function InputV2Form() {
     editId,
     updateField,
     updateSequence,
-    handleToggleMultiValue,
+    _handleToggleMultiValue,
     handleSelectCustomer,
     handleSave,
     handleSaveAndPreview,

@@ -11,12 +11,6 @@ function getSecretKey(): string {
   return 'demo-mode-jwt-secret-key-2024';
 }
 
-// 菜单排序项接口
-interface MenuSortItem {
-  id: number;
-  sort_order: number;
-}
-
 // 验证JWT Token
 async function verifyToken(token: string) {
   try {
