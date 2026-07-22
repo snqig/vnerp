@@ -154,3 +154,6 @@ agency-agents
 tests/concurrency/reports/
 
 i18n-key-check.result.json
+
+# Git worktrees
+worktrees/
