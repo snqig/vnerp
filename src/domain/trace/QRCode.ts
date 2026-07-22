@@ -1,6 +1,4 @@
 import { DomainError } from '@/domain/shared/DomainTypes';
-import type { DomainEvent } from '@/domain/shared/DomainTypes';
-import { QRCodeGeneratedEvent, QRCodeScannedEvent, QRCodeSplitEvent } from './events/QRCodeEvents';
 
 export enum SourceType {
   INBOUND = 1,
@@ -24,8 +22,6 @@ export interface QRCodeProps {
 }
 
 export class QRCode {
-  private _domainEvents: DomainEvent[] = [];
-
   public readonly id: number | undefined;
   public readonly qrContent: string;
   public readonly parentQrId: number | null;
@@ -56,8 +52,7 @@ export class QRCode {
     if (!props.qrContent) throw new DomainError('二维码内容不能为空');
     if (!props.sourceType) throw new DomainError('来源类型不能为空');
     if (props.quantity !== undefined && props.quantity < 0) throw new DomainError('数量不能为负数');
-    const entity = new QRCode(props);
-    return entity;
+    return new QRCode(props);
   }
 
   static reconstitute(props: QRCodeProps): QRCode {
@@ -69,7 +64,7 @@ export class QRCode {
     if (quantity > this._quantity) throw new DomainError('拆分数量不能超过父码剩余数量');
     if (index <= 0) throw new DomainError('拆分子码索引必须大于0');
     if (index > totalSplits) throw new DomainError('拆分子码索引不能超过总数');
-    const child = new QRCode({
+    return new QRCode({
       qrContent: `${this.qrContent}-S${index}`,
       parentQrId: this.id ?? null,
       splitFlag: 1,
@@ -80,27 +75,12 @@ export class QRCode {
       materialId: this.materialId,
       materialName: this.materialName,
     });
-    this._domainEvents.push(
-      new QRCodeSplitEvent({
-        parentQrId: this.id!,
-        parentQrContent: this.qrContent,
-        childQrIds: [],
-        childQrContents: [child.qrContent],
-        splitCount: 1,
-      })
-    );
-    return child;
   }
 
-  markScanned(operator: string, location: string): void {
-    this._domainEvents.push(
-      new QRCodeScannedEvent({
-        qrId: this.id!,
-        qrContent: this.qrContent,
-        operator,
-        location,
-      })
-    );
+  reduceQuantity(amount: number): void {
+    if (amount < 0) throw new DomainError('扣减数量不能为负数');
+    if (amount > this._quantity) throw new DomainError('扣减数量不能超过当前数量');
+    this._quantity -= amount;
   }
 
   bindBatch(batchNo: string): void {
@@ -113,13 +93,5 @@ export class QRCode {
 
   get status(): number {
     return this._status;
-  }
-
-  getDomainEvents(): DomainEvent[] {
-    return [...this._domainEvents];
-  }
-
-  clearDomainEvents(): void {
-    this._domainEvents = [];
   }
 }
