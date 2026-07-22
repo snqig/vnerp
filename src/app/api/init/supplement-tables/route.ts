@@ -962,6 +962,10 @@ export const POST = withPermission(async (_request: NextRequest) => {
       "TINYINT DEFAULT 1 COMMENT '是否可见: 0-隐藏, 1-可见'"
     );
 
+    await addColumn('qrcode_record', 'parent_qr_code', "VARCHAR(100) COMMENT '父二维码编码'");
+    await addColumn('qrcode_record', 'split_flag', "TINYINT DEFAULT 0 COMMENT '是否拆分: 0-否, 1-是'");
+    await addColumn('qrcode_record', 'split_index', "INT DEFAULT 0 COMMENT '拆分序号'");
+
     await createTable(
       'qms_sgs_cert',
       `CREATE TABLE IF NOT EXISTS qms_sgs_cert (
@@ -1489,6 +1493,39 @@ export const POST = withPermission(async (_request: NextRequest) => {
       KEY idx_order (order_id),
       KEY idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合同评审表'`
+    );
+
+    await createTable(
+      'print_log',
+      `CREATE TABLE IF NOT EXISTS print_log (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      qr_id BIGINT UNSIGNED NOT NULL COMMENT '二维码ID',
+      template_id BIGINT UNSIGNED COMMENT '标签模板ID',
+      print_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '打印时间',
+      operator VARCHAR(50) COMMENT '操作人',
+      paper_type VARCHAR(20) DEFAULT 'thermal' COMMENT '纸张类型',
+      print_count INT DEFAULT 1 COMMENT '打印次数',
+      PRIMARY KEY (id),
+      KEY idx_qr_id (qr_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='打印日志表'`
+    );
+
+    await createTable(
+      'label_template',
+      `CREATE TABLE IF NOT EXISTS label_template (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      name VARCHAR(100) NOT NULL COMMENT '模板名称',
+      scenario VARCHAR(30) NOT NULL COMMENT '使用场景: inbound-入库, split-分切, finished-成品',
+      html_template TEXT NOT NULL COMMENT 'HTML模板内容',
+      width_mm INT DEFAULT 60 COMMENT '标签宽度(mm)',
+      height_mm INT DEFAULT 40 COMMENT '标签高度(mm)',
+      qr_size_mm INT DEFAULT 20 COMMENT '二维码尺寸(mm)',
+      status TINYINT DEFAULT 1 COMMENT '状态: 1-启用, 0-停用',
+      create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+      update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      KEY idx_scenario (scenario)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标签模板表'`
     );
 
     return results;

@@ -2579,7 +2579,9 @@
     "selectedLabelsCount": "已選 {count} 個標籤",
     "selectedRecordsCount": "已選 {count} 筆記錄",
     "stockInsufficient": "庫存不足",
-    "unfreeze": "解凍"
+    "unfreeze": "解凍",
+    "qrCodeGenerated": "二維碼生成成功",
+    "generateQrOnApprove": "審核通過時同步生成二維碼"
   },
   "Production": {
     "title": "生產管理",
@@ -4046,7 +4048,7 @@
   },
   "Hr": {
     "title": "人事管理",
-    "employee": "員工管理",
+    "employee": "員工",
     "department": "部門管理",
     "attendance": "考勤管理",
     "salary": "薪資管理",
@@ -4096,7 +4098,7 @@
     "enterEmployeeNo": "請輸入工號",
     "enterRemark": "輸入備註資訊...",
     "fillAttendanceInfo": "填寫考勤記錄資訊，帶 * 為必填項",
-    "housingFund": "公積金",
+    "housingFund": "公積金(個人)",
     "late": "遲到",
     "lateRecord": "遲到記錄",
     "lateRecords": "條遲到記錄",
@@ -4134,7 +4136,7 @@
     "salaryTable": "薪資表",
     "saveFailed": "儲存失敗",
     "saveRetry": "儲存失敗，請重試",
-    "saveSuccess": "考勤記錄儲存成功",
+    "saveSuccess": "保存成功",
     "selectDepartment": "選擇部門",
     "selectToPrint": "請先選擇要列印的記錄",
     "selectedRecords": "已選擇 {count} 條記錄",
@@ -4176,7 +4178,7 @@
     "exportSuccess": "汇出成功",
     "operationFailed": "操作失败",
     "organization": "組織架構",
-    "shift": "班次管理",
+    "shift": "班次",
     "shiftName": "班次名稱",
     "startTime": "開始時間",
     "endTime": "結束時間",
@@ -4266,10 +4268,9 @@
     "performanceSalary": "績效獎金",
     "allowances": "津貼補貼",
     "socialInsurance": "社保(個人)",
-    "housingFund": "公積金(個人)",
     "individualTax": "個人所得稅",
     "attendanceDeduction": "考勤扣款",
-    "grossPay": "應發合計",
+    "grossPay": "應發工資",
     "totalDeduction": "應扣合計",
     "netPay": "實發工資",
     "draft": "草稿",
@@ -4322,11 +4323,7 @@
     "calculating": "計算中...",
     "executeCalculation": "執行計算",
     "batchCalculationResults": "批量計算結果 ({count} 人)",
-    "employee": "員工",
     "employeeId": "員工ID",
-    "status": "狀態",
-    "grossPay": "應發工資",
-    "performanceBonus": "績效獎金",
     "deductions": "應扣款項",
     "socialInsurancePersonal": "社保(個人)",
     "housingFundPersonal": "公積金(個人)",
@@ -4341,7 +4338,6 @@
     "totalCount": "共",
     "records": "條",
     "addSchedule": "新增排班",
-    "shift": "班次",
     "selectShift": "選擇班次",
     "syncTypePieceWork": "計件產量",
     "syncTypeQuality": "質量數據",
@@ -4368,7 +4364,6 @@
     "addShift": "新增班次",
     "editShift": "編輯班次",
     "enterShiftName": "請輸入班次名稱",
-    "saveSuccess": "保存成功",
     "deleteConfirm": "確認刪除?",
     "lateThreshold": "遲到閾值(分鐘)",
     "earlyLeaveThreshold": "早退閾值(分鐘)",
@@ -5643,6 +5638,57 @@
         "work_report": "報工",
         "hr_payroll_calculation": "薪資計算"
       }
+    }
+  },
+  "trace": {
+    "scan": {
+      "title": "二维码追溯",
+      "input_placeholder": "输入或扫描二维码编码",
+      "scan_button": "扫码识别",
+      "scanning": "正在识别...",
+      "query": "查询",
+      "camera_error": "摄像头识别失败",
+      "input_empty": "请输入二维码编码",
+      "subtitle": "输入或扫描二维码编码，查询全链路追溯历史",
+      "query_failed": "追溯查询失败",
+      "export_pdf": "导出 PDF 报告",
+      "export_success": "PDF 导出成功",
+      "loading": "加载追溯数据...",
+      "back_to_query": "返回查询"
+    },
+    "timeline": {
+      "title": "追溯时间线",
+      "no_data": "暂无追溯数据",
+      "doc_no": "单据号",
+      "operator": "操作人",
+      "material": "物料",
+      "batch": "批次",
+      "quantity": "数量",
+      "process": "工序"
+    },
+    "print": {
+      "print_button": "打印标签",
+      "printing": "打印中...",
+      "popup_blocked": "请允许弹出窗口以打印标签"
+    },
+    "label": {
+      "title": "标签模板配置",
+      "subtitle": "管理打印标签模板，支持变量填充和实时预览",
+      "name": "模板名称",
+      "scenario": "使用场景",
+      "size": "尺寸",
+      "preview": "预览",
+      "template": "标签模板",
+      "edit_desc": "编辑模板 HTML，使用 {变量名} 进行数据填充",
+      "html_template": "HTML 模板",
+      "width": "宽度(mm)",
+      "height": "高度(mm)",
+      "qr_size": "二维码尺寸(mm)",
+      "preview_hint": "预览使用示例数据填充",
+      "load_failed": "加载标签模板失败",
+      "scenario_inbound": "原料入库",
+      "scenario_split": "分切子码",
+      "scenario_finished": "成品标签"
     }
   }
 }

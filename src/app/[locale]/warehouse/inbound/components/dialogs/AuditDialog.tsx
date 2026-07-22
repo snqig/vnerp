@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { authFetch } from '@/lib/auth-fetch';
@@ -24,6 +27,7 @@ interface AuditDialogProps {
 export function AuditDialog({ open, onOpenChange, currentRecord, onSuccess }: AuditDialogProps) {
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
+  const [generateQr, setGenerateQr] = useState(true);
 
   const handleReject = async () => {
     if (!currentRecord) return;
@@ -57,6 +61,30 @@ export function AuditDialog({ open, onOpenChange, currentRecord, onSuccess }: Au
         toast.success(t('auditApproved'));
         onOpenChange(false);
         onSuccess();
+
+        if (generateQr && currentRecord.items?.length) {
+          try {
+            const qrRes = await authFetch('/api/trace/qr/generate', {
+              method: 'POST',
+              body: JSON.stringify({
+                items: currentRecord.items.map((item: Loose) => ({
+                  materialId: item.material_id,
+                  materialName: item.material_name,
+                  batchNo: item.batch_no || currentRecord.batch_no || '',
+                  quantity: item.quantity || 0,
+                  count: 1,
+                })),
+                operator: currentRecord.operator_name || '系统管理员',
+              }),
+            });
+            const qrResult = await qrRes.json();
+            if (qrResult.success) {
+              toast.success(t('qrCodeGenerated'));
+            }
+          } catch {
+            toast.error(t('qrCodeGenerateFailed'));
+          }
+        }
       } else {
         toast.error(result.message || tc('error'));
       }
@@ -97,6 +125,10 @@ export function AuditDialog({ open, onOpenChange, currentRecord, onSuccess }: Au
               </div>
             </div>
           )}
+        </div>
+        <div className="flex items-center gap-2 py-2">
+          <Checkbox id="generateQr" checked={generateQr} onCheckedChange={(v) => setGenerateQr(!!v)} />
+          <Label htmlFor="generateQr" className="text-sm cursor-pointer">{t('generateQrOnApprove')}</Label>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

@@ -814,6 +814,17 @@ export const POST = withPermission(async (_request: NextRequest) => {
           permission: 'warehouse:sales-outbound:*',
           sort_order: 9,
         },
+        {
+          parent_code: 'warehouse',
+          menu_name: '二维码追溯',
+          menu_code: 'warehouse_trace',
+          menu_type: 2,
+          icon: null,
+          path: '/warehouse/trace',
+          component: '/warehouse/trace',
+          permission: 'trace:qr:view',
+          sort_order: 10,
+        },
 
         {
           parent_code: 'purchase',
@@ -1368,6 +1379,17 @@ export const POST = withPermission(async (_request: NextRequest) => {
           component: '/monitoring/consistency',
           permission: 'settings:consistency-monitor:*',
           sort_order: 12,
+        },
+        {
+          parent_code: 'settings',
+          menu_name: '标签模板配置',
+          menu_code: 'settings_label_template',
+          menu_type: 2,
+          icon: null,
+          path: '/settings/label-template',
+          component: '/settings/label-template',
+          permission: 'trace:label:template',
+          sort_order: 13,
         },
       ];
 

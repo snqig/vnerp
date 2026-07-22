@@ -24,6 +24,7 @@ export { dcprintInkColor, dcprintInkFormulaVersion, dcprintInkFormulaItem } from
 export { dcprintTool, dcprintToolUsage, dcprintToolMaintenance, prdDie, prdDieTemplate, prdInk, prdScreenPlate } from './schemas/tooling';
 export { hrAttendance, hrTraining, hrTrainingParticipant, hrSalaryStandard, hrPieceRate, hrSalaryProfile, hrSalaryCalculation, hrPieceWorkDetail, hrAttendanceException, hrShift, hrSchedule, orgGroup, orgLegalEntity, orgFactory, orgWorkshop, orgTeam, orgPosition, hrEmployeePosition, hrSkillMatrix, hrCertificate, hrPayrollSnapshot } from './schemas/hr';
 export { sysCurrency, sysExchangeRate, sysDepartment, sysEmployee, sysSalary, sagaLog } from './schemas/common';
+export { qrcodeRecord, qrcodeScanLog, printLog, labelTemplate } from './schemas/trace';
 
 export type { InvMaterial, InvInventoryBatch, InvInboundOrder, InvInboundItem, InvWarehouse, InvInventory, InvOutboundOrder, InvOutboundItem, InvTransferOrder, InvStocktaking } from './schemas/warehouse';
 export type { SalOrder, SalOrderDetail, SalDelivery, SalReturnOrder, SalReconciliation } from './schemas/sales';
@@ -37,3 +38,4 @@ export type { DcprintSampleProcessCard, DcprintSampleProcessItem, DcprintSampleP
 export type { DcprintInkColor, DcprintInkFormulaVersion, DcprintInkFormulaItem } from './schemas/prepress';
 export type { DcprintTool, DcprintToolUsage, DcprintToolMaintenance, PrdDie, PrdDieTemplate, PrdInk, PrdScreenPlate } from './schemas/tooling';
 export type { HrAttendance, HrTraining, HrTrainingParticipant, HrSalaryStandard, HrPieceRate, HrSalaryProfile, HrSalaryCalculation, HrPieceWorkDetail, HrAttendanceException, HrShift, HrSchedule, OrgGroup, OrgLegalEntity, OrgFactory, OrgWorkshop, OrgTeam, OrgPosition, HrEmployeePosition, HrSkillMatrix, HrCertificate, HrPayrollSnapshot } from './schemas/hr';
+export type { QrcodeRecord, QrcodeScanLog, PrintLog, LabelTemplate } from './schemas/trace';
