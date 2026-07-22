@@ -223,8 +223,8 @@ export class PurchaseApplicationService {
    * 再通过 PUT /api/warehouse/inbound?action=approve 审核入库单完成收货。
    */
   async receiveGoods(
-    id: number,
-    lineReceives: Array<{ lineNo: number; quantity: number; batchNo: string; warehouseId: number }>
+    _id: number,
+    _lineReceives: Array<{ lineNo: number; quantity: number; batchNo: string; warehouseId: number }>
   ): Promise<{ id: number; status: string }> {
     throw new DomainError(
       '收货功能已迁移至入库单流程，请使用 POST /api/warehouse/inbound/from-po 创建入库单'

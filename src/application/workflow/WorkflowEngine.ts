@@ -147,7 +147,7 @@ export class WorkflowEngine {
       return { instanceId: 0, message: '该模块未配置审批流程' };
     }
 
-    const startNode = workflow.nodes.find((n: WorkflowNode) => n.node_type === 'start');
+    const _startNode = workflow.nodes.find((n: WorkflowNode) => n.node_type === 'start');
     const firstApproveNode = workflow.nodes.find((n: WorkflowNode) => n.node_type === 'approve');
 
     if (!firstApproveNode) {
@@ -482,8 +482,8 @@ export class WorkflowEngine {
   }
 
   private async getAdditionalApprovers(
-    node: WorkflowNode,
-    amount?: number
+    _node: WorkflowNode,
+    _amount?: number
   ): Promise<Array<{ id: number; name: string }>> {
     return [];
   }

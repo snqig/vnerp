@@ -1,10 +1,15 @@
-import { query, execute } from '@/lib/db';
+import { query as _query, execute } from '@/lib/db';
+import { DomainEvent } from '@/domain/shared/DomainTypes';
 
 export class SampleOrderConversionHandler {
-  async handle(event: { eventType: string; payload: { sampleOrderId: number; salesOrderId: number; userId: number } }): Promise<void> {
+  async handle(event: DomainEvent): Promise<void> {
     if (event.eventType !== 'SampleOrderConverted') return;
 
-    const { sampleOrderId, salesOrderId, userId } = event.payload;
+    const { sampleOrderId, salesOrderId, userId } = event.payload as {
+      sampleOrderId: number;
+      salesOrderId: number;
+      userId: number;
+    };
 
     await execute(
       `UPDATE sal_sample_order SET

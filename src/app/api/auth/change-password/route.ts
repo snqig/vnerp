@@ -46,7 +46,7 @@ export const POST = withPermission(
     let minLength = 6;
     let requireSpecialChar = false;
     let requireUpperCase = false;
-    const _passwordExpireDays = 0;
+    let _passwordExpireDays = 0;
     try {
       const configs: Loose = await query(
         'SELECT config_key, config_value FROM sys_config WHERE config_key IN (?, ?, ?, ?)',

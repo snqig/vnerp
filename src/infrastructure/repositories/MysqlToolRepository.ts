@@ -1,4 +1,4 @@
-import { query, execute, transaction, type SqlValue } from '@/lib/db';
+import { query, execute, type SqlValue } from '@/lib/db';
 import { IToolRepository } from '@/domain/dcprint/repositories/IToolRepository';
 import { Tool } from '@/domain/dcprint/aggregates/Tool';
 

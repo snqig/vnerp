@@ -307,7 +307,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
   async updateInspectionAndFinance(
     id: number,
     inspectionStatus: number,
-    financePosted: boolean
+    _financePosted: boolean
   ): Promise<void> {
     // 使用 Drizzle 更新 qc_status
     await getDrizzleDb()

@@ -1,9 +1,5 @@
 import { ISampleProcessTemplateRepository } from '@/domain/dcprint/repositories/ISampleProcessTemplateRepository';
-import {
-  SampleProcessTemplate,
-  TemplateItemProps,
-  TemplateStepProps,
-} from '@/domain/dcprint/aggregates/SampleProcessTemplate';
+import { SampleProcessTemplate } from '@/domain/dcprint/aggregates/SampleProcessTemplate';
 import { query, execute, type SqlValue } from '@/lib/db';
 import type { RowDataPacket } from 'mysql2';
 

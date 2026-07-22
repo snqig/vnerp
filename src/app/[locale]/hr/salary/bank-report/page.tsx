@@ -6,13 +6,22 @@ import { toast } from 'sonner';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { Download, FileText } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -48,7 +57,7 @@ export default function BankReportPage() {
       const json = await res.json();
       if (json.code === 200) {
         const list = Array.isArray(json.data) ? json.data : json.data?.list || [];
-        const mapped = list.map((item: unknown) => ({
+        const mapped = list.map((item: Record<string, unknown>) => ({
           employeeName: item.employeeName || item.employee_name || item.name,
           bankCardNo: item.bankCardNo || item.bank_card_no || item.bankCard || '-',
           netPay: item.netPay ?? item.actualSalary ?? item.actual_salary ?? item.netPay ?? 0,
@@ -64,7 +73,9 @@ export default function BankReportPage() {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const totalAmount = data.reduce((s, item) => s + item.netPay, 0);
 
@@ -91,7 +102,8 @@ export default function BankReportPage() {
             <h1 className="text-2xl font-bold">{t('bankReport')}</h1>
           </div>
           <Button onClick={generateBankFile} className="bg-green-600 hover:bg-green-700">
-            <Download className="h-4 w-4 mr-2" />{t('generateBankFile')}
+            <Download className="h-4 w-4 mr-2" />
+            {t('generateBankFile')}
           </Button>
         </div>
 
@@ -100,7 +112,12 @@ export default function BankReportPage() {
             <div className="flex flex-wrap items-end gap-4">
               <div className="space-y-1">
                 <Label className="text-xs">{t('month')}</Label>
-                <Input type="month" className="w-40" value={month} onChange={(e) => setMonth(e.target.value)} />
+                <Input
+                  type="month"
+                  className="w-40"
+                  value={month}
+                  onChange={(e) => setMonth(e.target.value)}
+                />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">{tc('status')}</Label>
@@ -135,13 +152,19 @@ export default function BankReportPage() {
                   <TableRow key={idx}>
                     <TableCell className="font-medium">{item.employeeName}</TableCell>
                     <TableCell className="font-mono">{item.bankCardNo}</TableCell>
-                    <TableCell className="text-right font-medium">¥{item.netPay.toLocaleString()}</TableCell>
+                    <TableCell className="text-right font-medium">
+                      ¥{item.netPay.toLocaleString()}
+                    </TableCell>
                   </TableRow>
                 ))}
                 {data.length > 0 && (
                   <TableRow className="bg-muted/50 font-bold">
-                    <TableCell colSpan={2} className="text-right">{tc('total')}</TableCell>
-                    <TableCell className="text-right text-lg">¥{totalAmount.toLocaleString()}</TableCell>
+                    <TableCell colSpan={2} className="text-right">
+                      {tc('total')}
+                    </TableCell>
+                    <TableCell className="text-right text-lg">
+                      ¥{totalAmount.toLocaleString()}
+                    </TableCell>
                   </TableRow>
                 )}
                 {data.length === 0 && (

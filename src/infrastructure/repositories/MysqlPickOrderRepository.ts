@@ -4,8 +4,6 @@ import {
   IPickOrderRepository,
   PickOrderFilters,
 } from '@/domain/production/repositories/IPickOrderRepository';
-import type { ResultSetHeader } from 'mysql2/promise';
-
 interface PickOrderRow {
   id: number;
   pick_no: string;
@@ -161,8 +159,8 @@ export class MysqlPickOrderRepository implements IPickOrderRepository {
       warehouseId: row.warehouse_id,
       pickerName: row.picker_name,
       totalQty: Number(row.total_qty || 0),
-      remark: row.remark,
-      createBy: row.create_by,
+      remark: row.remark ?? undefined,
+      createBy: row.create_by ?? undefined,
       createTime: row.create_time,
       updateTime: row.update_time,
       items: (items || []).map((i) => {
@@ -171,14 +169,14 @@ export class MysqlPickOrderRepository implements IPickOrderRepository {
           id: itemRow.id,
           materialId: itemRow.material_id,
           materialName: itemRow.material_name,
-          materialSpec: itemRow.material_spec,
+          materialSpec: itemRow.material_spec ?? '',
           requiredQty: Number(itemRow.required_qty || 0),
           actualQty: Number(itemRow.actual_qty || 0),
-          batchNo: itemRow.batch_no,
+          batchNo: itemRow.batch_no ?? undefined,
           unitCost: Number(itemRow.unit_cost || 0),
           lineAmount: Number(itemRow.line_amount || 0),
           unit: itemRow.unit || 'pcs',
-          remark: itemRow.remark,
+          remark: itemRow.remark ?? undefined,
         };
       }),
     };

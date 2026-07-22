@@ -104,7 +104,7 @@ export function demoQuery(sql: string, _values?: unknown[]): unknown[] {
     return [{ config_key: 'demo', config_value: 'demo' }];
   }
   if (process.env.NODE_ENV === 'development') {
-    logger.debug('[demoQuery] unhandled SQL:', sql.substring(0, 200));
+    logger.debug({ sql: sql.substring(0, 200) }, '[demoData] unhandled SQL');
   }
   // catch-all: return a safe default result with common field names
   if (/\bFROM\b/i.test(sql)) {

@@ -32,6 +32,7 @@ interface StocktakingOrderRow {
   create_time: string;
   update_time: string;
   deleted: number;
+  items?: StocktakingItemRow[];
 }
 
 interface StocktakingItemRow {
@@ -62,10 +63,7 @@ const ITEM_COLUMNS = `id, taking_id, material_id, material_code, material_name, 
 
 export class MysqlStocktakingOrderRepository implements IStocktakingOrderRepository {
   async findById(id: number): Promise<StocktakingOrder | null> {
-    const orders = await query(
-      'SELECT * FROM inv_stocktaking WHERE id = ? AND deleted = 0',
-      [id]
-    );
+    const orders = await query('SELECT * FROM inv_stocktaking WHERE id = ? AND deleted = 0', [id]);
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0] as StocktakingOrderRow;
@@ -78,10 +76,9 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
   }
 
   async findByCheckNo(checkNo: string): Promise<StocktakingOrder | null> {
-    const orders = await query(
-      'SELECT * FROM inv_stocktaking WHERE check_no = ? AND deleted = 0',
-      [checkNo]
-    );
+    const orders = await query('SELECT * FROM inv_stocktaking WHERE check_no = ? AND deleted = 0', [
+      checkNo,
+    ]);
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0] as StocktakingOrderRow;
@@ -210,7 +207,7 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
         ]
       );
 
-      const orderId = orderResult.insertId;
+      const orderId = (orderResult as unknown as { insertId: number }).insertId;
 
       for (const item of items) {
         await conn.execute(
@@ -292,7 +289,10 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
     await execute('UPDATE inv_stocktaking SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
   }
 
-  private mapRowToProps(order: StocktakingOrderRow, items: StocktakingItemRow[]): StocktakingOrderProps {
+  private mapRowToProps(
+    order: StocktakingOrderRow,
+    items: StocktakingItemRow[]
+  ): StocktakingOrderProps {
     return {
       id: order.id,
       checkNo: order.check_no,
@@ -300,33 +300,33 @@ export class MysqlStocktakingOrderRepository implements IStocktakingOrderReposit
       type: order.type,
       warehouseId: order.warehouse_id,
       warehouseName: order.warehouse_name,
-      scope: order.scope,
-      applicantId: order.applicant_id,
-      applicantName: order.applicant_name,
-      approverId: order.approver_id,
-      approverName: order.approver_name,
-      approveTime: order.approve_time,
-      approveRemark: order.approve_remark,
-      remark: order.remark,
+      scope: order.scope ?? undefined,
+      applicantId: order.applicant_id ?? undefined,
+      applicantName: order.applicant_name ?? undefined,
+      approverId: order.approver_id ?? undefined,
+      approverName: order.approver_name ?? undefined,
+      approveTime: order.approve_time ?? undefined,
+      approveRemark: order.approve_remark ?? undefined,
+      remark: order.remark ?? undefined,
       items: items.map((item) => ({
         id: item.id,
         takingId: item.taking_id,
         materialId: item.material_id,
         materialCode: item.material_code,
         materialName: item.material_name,
-        batchNo: item.batch_no || '',
-        warehouseId: item.warehouse_id,
-        location: item.location,
+        batchNo: item.batch_no ?? undefined,
+        warehouseId: item.warehouse_id ?? undefined,
+        location: item.location ?? undefined,
         bookQty: item.book_qty,
         actualQty: item.actual_qty,
         diffQty: item.diff_qty,
         unit: item.unit,
         unitPrice: item.unit_price,
         diffAmount: item.diff_amount,
-        scanTime: item.scan_time,
-        scanOperator: item.scan_operator,
+        scanTime: item.scan_time ?? undefined,
+        scanOperator: item.scan_operator ?? undefined,
         status: item.status,
-        remark: item.remark,
+        remark: item.remark ?? undefined,
       })),
       totalItems: order.total_items,
       diffItems: order.diff_items,

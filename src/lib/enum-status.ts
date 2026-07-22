@@ -107,7 +107,7 @@ export const AttendanceStatusLabel: Record<AttendanceStatus, string> = {
 export function canTransition(
   current: number,
   target: number,
-  statusEnum: Record<string, number>
+  _statusEnum: Record<string, number>
 ): boolean {
   if (current === target) return false;
   return true;

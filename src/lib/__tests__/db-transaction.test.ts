@@ -5,16 +5,17 @@ async function transactionWithRetry<T>(
   transactionFn: (conn: unknown) => Promise<T>,
   maxRetries: number = 3
 ): Promise<T> {
-  let lastError: Error | null = null;
+  let lastError: unknown = null;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await transactionFn({});
     } catch (error: unknown) {
       lastError = error;
+      const err = error instanceof Error ? error : new Error(String(error));
       const isOptimisticLockError =
-        error.message?.includes('已被其他操作修改') ||
-        error.message?.includes('affectedRows') ||
-        error.message?.includes('version');
+        err.message?.includes('已被其他操作修改') ||
+        err.message?.includes('affectedRows') ||
+        err.message?.includes('version');
       if (!isOptimisticLockError || attempt >= maxRetries - 1) {
         throw error;
       }

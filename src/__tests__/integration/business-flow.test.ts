@@ -1,12 +1,12 @@
 /**
  * 集成测试脚本 - 模拟真实用户操作流程
- * 
+ *
  * 测试覆盖：
  * 1. 登录认证流程（成功/失败/锁定）
  * 2. 库存查询与高级搜索
  * 3. 批量操作（冻结/解冻）
  * 4. 错误处理与边界条件
- * 
+ *
  * 运行方式: npx vitest run src/__tests__/integration/business-flow.test.ts
  */
 
@@ -18,21 +18,157 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 
 // 模拟用户数据
 const mockUsers = [
-  { id: 1, username: 'admin', password: '$2a$10$hashed_admin', real_name: '管理员', status: 1, login_fail_count: 0, lock_time: null },
-  { id: 2, username: 'locked_user', password: '$2a$10$hashed_locked', real_name: '被锁定用户', status: 1, login_fail_count: 5, lock_time: new Date().toISOString() },
-  { id: 3, username: 'disabled_user', password: '$2a$10$hashed_disabled', real_name: '禁用用户', status: 0, login_fail_count: 0, lock_time: null },
+  {
+    id: 1,
+    username: 'admin',
+    password: '$2a$10$hashed_admin',
+    real_name: '管理员',
+    status: 1,
+    login_fail_count: 0,
+    lock_time: null,
+  },
+  {
+    id: 2,
+    username: 'locked_user',
+    password: '$2a$10$hashed_locked',
+    real_name: '被锁定用户',
+    status: 1,
+    login_fail_count: 5,
+    lock_time: new Date().toISOString(),
+  },
+  {
+    id: 3,
+    username: 'disabled_user',
+    password: '$2a$10$hashed_disabled',
+    real_name: '禁用用户',
+    status: 0,
+    login_fail_count: 0,
+    lock_time: null,
+  },
 ];
 
 // 模拟库存数据
 const mockInventory = [
-  { id: 1, material_code: 'INK-001', material_name: '四色黑油墨', specification: '1kg/罐', warehouse_id: 1, warehouse_name: '主仓库', stock_qty: 200, frozen_qty: 0, safety_stock: 50, cost_price: 92.50, status: 'normal', batch_no: 'BATCH-001', expire_date: '2026-01-15' },
-  { id: 2, material_code: 'INK-002', material_name: '专色红油墨', specification: '2kg/罐', warehouse_id: 1, warehouse_name: '主仓库', stock_qty: 120, frozen_qty: 10, safety_stock: 30, cost_price: 98.00, status: 'normal', batch_no: 'BATCH-002', expire_date: '2026-02-10' },
-  { id: 3, material_code: 'INK-003', material_name: 'UV光油', specification: '5kg/桶', warehouse_id: 2, warehouse_name: '原料仓', stock_qty: 80, frozen_qty: 0, safety_stock: 20, cost_price: 155.00, status: 'normal', batch_no: 'BATCH-003', expire_date: '2025-12-15' },
-  { id: 4, material_code: 'PAPER-001', material_name: '铜版纸157g', specification: '889×1194mm', warehouse_id: 1, warehouse_name: '主仓库', stock_qty: 35, frozen_qty: 0, safety_stock: 50, cost_price: 0.88, status: 'normal', batch_no: 'BATCH-004', expire_date: null },
-  { id: 5, material_code: 'INK-006', material_name: '四色黄油墨', specification: '1kg/罐', warehouse_id: 1, warehouse_name: '主仓库', stock_qty: 15, frozen_qty: 0, safety_stock: 50, cost_price: 90.00, status: 'normal', batch_no: 'BATCH-005', expire_date: '2026-04-01' },
-  { id: 6, material_code: 'INK-009', material_name: '过期油墨-A', specification: '1kg/罐', warehouse_id: 1, warehouse_name: '主仓库', stock_qty: 30, frozen_qty: 30, safety_stock: 0, cost_price: 80.00, status: 'frozen', batch_no: 'BATCH-006', expire_date: '2025-06-01' },
-  { id: 7, material_code: 'INK-010', material_name: '过期UV油墨', specification: '2kg/罐', warehouse_id: 2, warehouse_name: '原料仓', stock_qty: 15, frozen_qty: 0, safety_stock: 0, cost_price: 120.00, status: 'expired', batch_no: 'BATCH-007', expire_date: '2025-06-01' },
-  { id: 8, material_code: 'INK-008', material_name: '荧光油墨-绿', specification: '1kg/罐', warehouse_id: 1, warehouse_name: '主仓库', stock_qty: 0, frozen_qty: 0, safety_stock: 10, cost_price: 185.00, status: 'normal', batch_no: '-', expire_date: '2026-08-01' },
+  {
+    id: 1,
+    material_code: 'INK-001',
+    material_name: '四色黑油墨',
+    specification: '1kg/罐',
+    warehouse_id: 1,
+    warehouse_name: '主仓库',
+    stock_qty: 200,
+    frozen_qty: 0,
+    safety_stock: 50,
+    cost_price: 92.5,
+    status: 'normal',
+    batch_no: 'BATCH-001',
+    expire_date: '2026-01-15',
+  },
+  {
+    id: 2,
+    material_code: 'INK-002',
+    material_name: '专色红油墨',
+    specification: '2kg/罐',
+    warehouse_id: 1,
+    warehouse_name: '主仓库',
+    stock_qty: 120,
+    frozen_qty: 10,
+    safety_stock: 30,
+    cost_price: 98.0,
+    status: 'normal',
+    batch_no: 'BATCH-002',
+    expire_date: '2026-02-10',
+  },
+  {
+    id: 3,
+    material_code: 'INK-003',
+    material_name: 'UV光油',
+    specification: '5kg/桶',
+    warehouse_id: 2,
+    warehouse_name: '原料仓',
+    stock_qty: 80,
+    frozen_qty: 0,
+    safety_stock: 20,
+    cost_price: 155.0,
+    status: 'normal',
+    batch_no: 'BATCH-003',
+    expire_date: '2025-12-15',
+  },
+  {
+    id: 4,
+    material_code: 'PAPER-001',
+    material_name: '铜版纸157g',
+    specification: '889×1194mm',
+    warehouse_id: 1,
+    warehouse_name: '主仓库',
+    stock_qty: 35,
+    frozen_qty: 0,
+    safety_stock: 50,
+    cost_price: 0.88,
+    status: 'normal',
+    batch_no: 'BATCH-004',
+    expire_date: null,
+  },
+  {
+    id: 5,
+    material_code: 'INK-006',
+    material_name: '四色黄油墨',
+    specification: '1kg/罐',
+    warehouse_id: 1,
+    warehouse_name: '主仓库',
+    stock_qty: 15,
+    frozen_qty: 0,
+    safety_stock: 50,
+    cost_price: 90.0,
+    status: 'normal',
+    batch_no: 'BATCH-005',
+    expire_date: '2026-04-01',
+  },
+  {
+    id: 6,
+    material_code: 'INK-009',
+    material_name: '过期油墨-A',
+    specification: '1kg/罐',
+    warehouse_id: 1,
+    warehouse_name: '主仓库',
+    stock_qty: 30,
+    frozen_qty: 30,
+    safety_stock: 0,
+    cost_price: 80.0,
+    status: 'frozen',
+    batch_no: 'BATCH-006',
+    expire_date: '2025-06-01',
+  },
+  {
+    id: 7,
+    material_code: 'INK-010',
+    material_name: '过期UV油墨',
+    specification: '2kg/罐',
+    warehouse_id: 2,
+    warehouse_name: '原料仓',
+    stock_qty: 15,
+    frozen_qty: 0,
+    safety_stock: 0,
+    cost_price: 120.0,
+    status: 'expired',
+    batch_no: 'BATCH-007',
+    expire_date: '2025-06-01',
+  },
+  {
+    id: 8,
+    material_code: 'INK-008',
+    material_name: '荧光油墨-绿',
+    specification: '1kg/罐',
+    warehouse_id: 1,
+    warehouse_name: '主仓库',
+    stock_qty: 0,
+    frozen_qty: 0,
+    safety_stock: 10,
+    cost_price: 185.0,
+    status: 'normal',
+    batch_no: '-',
+    expire_date: '2026-08-01',
+  },
 ];
 
 // 模拟冻结记录
@@ -44,14 +180,19 @@ let nextFreezeId = 1;
 // ============================================================
 
 function simulateLogin(username: string, password: string) {
-  const user = mockUsers.find(u => u.username === username);
+  const user = mockUsers.find((u) => u.username === username);
   if (!user) return { success: false, message: '用户名或密码错误', code: 'LOGIN_FAILED' };
-  if (user.status === 0) return { success: false, message: '账号已被禁用，请联系管理员', code: 'ACCOUNT_DISABLED' };
+  if (user.status === 0)
+    return { success: false, message: '账号已被禁用，请联系管理员', code: 'ACCOUNT_DISABLED' };
   if (user.lock_time) {
     const lockTime = new Date(user.lock_time);
     const diffMinutes = (Date.now() - lockTime.getTime()) / 60000;
     if (diffMinutes < 15) {
-      return { success: false, message: `账号已锁定，请${Math.ceil(15 - diffMinutes)}分钟后再试`, code: 'ACCOUNT_LOCKED' };
+      return {
+        success: false,
+        message: `账号已锁定，请${Math.ceil(15 - diffMinutes)}分钟后再试`,
+        code: 'ACCOUNT_LOCKED',
+      };
     }
   }
   // 模拟密码验证（开发环境允许admin/521223）
@@ -60,13 +201,29 @@ function simulateLogin(username: string, password: string) {
     user.login_fail_count = (user.login_fail_count || 0) + 1;
     if (user.login_fail_count >= 5) {
       user.lock_time = new Date().toISOString();
-      return { success: false, message: '密码错误次数过多，账号已锁定15分钟', code: 'ACCOUNT_LOCKED' };
+      return {
+        success: false,
+        message: '密码错误次数过多，账号已锁定15分钟',
+        code: 'ACCOUNT_LOCKED',
+      };
     }
-    return { success: false, message: `用户名或密码错误，还剩${5 - user.login_fail_count}次尝试机会`, code: 'LOGIN_FAILED' };
+    return {
+      success: false,
+      message: `用户名或密码错误，还剩${5 - user.login_fail_count}次尝试机会`,
+      code: 'LOGIN_FAILED',
+    };
   }
   user.login_fail_count = 0;
   user.lock_time = null;
-  return { success: true, data: { userId: user.id, username: user.username, realName: user.real_name, token: 'mock-jwt-token' } };
+  return {
+    success: true,
+    data: {
+      userId: user.id,
+      username: user.username,
+      realName: user.real_name,
+      token: 'mock-jwt-token',
+    },
+  };
 }
 
 function simulateInventoryQuery(filters: Record<string, string>) {
@@ -74,29 +231,36 @@ function simulateInventoryQuery(filters: Record<string, string>) {
 
   if (filters.keyword) {
     const kw = filters.keyword.toLowerCase();
-    result = result.filter(i => i.material_code.toLowerCase().includes(kw) || i.material_name.toLowerCase().includes(kw));
+    result = result.filter(
+      (i) =>
+        i.material_code.toLowerCase().includes(kw) || i.material_name.toLowerCase().includes(kw)
+    );
   }
   if (filters.warehouseId && filters.warehouseId !== 'all') {
-    result = result.filter(i => i.warehouse_id === Number(filters.warehouseId));
+    result = result.filter((i) => i.warehouse_id === Number(filters.warehouseId));
   }
   if (filters.status && filters.status !== 'all') {
-    result = result.filter(i => i.status === filters.status);
+    result = result.filter((i) => i.status === filters.status);
   }
   if (filters.material_code) {
-    result = result.filter(i => i.material_code.toLowerCase().includes(filters.material_code.toLowerCase()));
+    result = result.filter((i) =>
+      i.material_code.toLowerCase().includes(filters.material_code.toLowerCase())
+    );
   }
   if (filters.batch_no) {
-    result = result.filter(i => i.batch_no.toLowerCase().includes(filters.batch_no.toLowerCase()));
+    result = result.filter((i) =>
+      i.batch_no.toLowerCase().includes(filters.batch_no.toLowerCase())
+    );
   }
   if (filters.expiry_date_start) {
-    result = result.filter(i => i.expire_date && i.expire_date >= filters.expiry_date_start!);
+    result = result.filter((i) => i.expire_date && i.expire_date >= filters.expiry_date_start!);
   }
   if (filters.expiry_date_end) {
-    result = result.filter(i => i.expire_date && i.expire_date <= filters.expiry_date_end!);
+    result = result.filter((i) => i.expire_date && i.expire_date <= filters.expiry_date_end!);
   }
 
   // 计算预警级别
-  result = result.map(item => {
+  result = result.map((item) => {
     let alertLevel = 'normal';
     if (item.safety_stock > 0) {
       if (item.stock_qty <= 0) alertLevel = 'critical';
@@ -113,7 +277,7 @@ function simulateFreeze(inventoryIds: number[], action: 'freeze' | 'unfreeze') {
   const results: { id: number; success: boolean; message: string }[] = [];
 
   for (const id of inventoryIds) {
-    const item = mockInventory.find(i => i.id === id);
+    const item = mockInventory.find((i) => i.id === id);
     if (!item) {
       results.push({ id, success: false, message: '库存记录不存在' });
       continue;
@@ -153,10 +317,14 @@ function simulateFreeze(inventoryIds: number[], action: 'freeze' | 'unfreeze') {
     }
   }
 
-  const allSuccess = results.every(r => r.success);
+  const allSuccess = results.every((r) => r.success);
   return {
     success: allSuccess,
-    data: { results, successCount: results.filter(r => r.success).length, failCount: results.filter(r => !r.success).length },
+    data: {
+      results,
+      successCount: results.filter((r) => r.success).length,
+      failCount: results.filter((r) => !r.success).length,
+    },
     message: allSuccess ? '操作成功' : '部分操作失败',
   };
 }
@@ -166,7 +334,6 @@ function simulateFreeze(inventoryIds: number[], action: 'freeze' | 'unfreeze') {
 // ============================================================
 
 describe('集成测试 - 业务流程', () => {
-
   describe('流程1: 用户登录认证', () => {
     it('正常登录成功', () => {
       const result = simulateLogin('admin', '521223');
@@ -183,7 +350,15 @@ describe('集成测试 - 业务流程', () => {
 
     it('密码错误累计锁定', () => {
       // 重置用户状态
-      const testUser = { id: 99, username: 'test_lock', password: 'hashed', real_name: '测试', status: 1, login_fail_count: 0, lock_time: null };
+      const testUser = {
+        id: 99,
+        username: 'test_lock',
+        password: 'hashed',
+        real_name: '测试',
+        status: 1,
+        login_fail_count: 0,
+        lock_time: null,
+      };
       mockUsers.push(testUser);
 
       // 连续5次错误
@@ -226,7 +401,7 @@ describe('集成测试 - 业务流程', () => {
       const result = simulateInventoryQuery({ keyword: '油墨' });
       expect(result.success).toBe(true);
       expect(result.data.list.length).toBeGreaterThan(0);
-      result.data.list.forEach((item: unknown) => {
+      result.data.list.forEach((item: Record<string, unknown>) => {
         expect(item.material_name).toContain('油墨');
       });
     });
@@ -235,7 +410,7 @@ describe('集成测试 - 业务流程', () => {
       const result = simulateInventoryQuery({ keyword: 'INK' });
       expect(result.success).toBe(true);
       expect(result.data.list.length).toBeGreaterThan(0);
-      result.data.list.forEach((item: unknown) => {
+      result.data.list.forEach((item: Record<string, unknown>) => {
         expect(item.material_code).toContain('INK');
       });
     });
@@ -243,7 +418,7 @@ describe('集成测试 - 业务流程', () => {
     it('仓库筛选：只返回指定仓库', () => {
       const result = simulateInventoryQuery({ warehouseId: '2' });
       expect(result.success).toBe(true);
-      result.data.list.forEach((item: unknown) => {
+      result.data.list.forEach((item: Record<string, unknown>) => {
         expect(item.warehouse_id).toBe(2);
       });
     });
@@ -251,15 +426,19 @@ describe('集成测试 - 业务流程', () => {
     it('状态筛选：只返回冻结状态', () => {
       const result = simulateInventoryQuery({ status: 'frozen' });
       expect(result.success).toBe(true);
-      result.data.list.forEach((item: unknown) => {
+      result.data.list.forEach((item: Record<string, unknown>) => {
         expect(item.status).toBe('frozen');
       });
     });
 
     it('组合筛选：关键词+仓库+状态', () => {
-      const result = simulateInventoryQuery({ keyword: '油墨', warehouseId: '1', status: 'normal' });
+      const result = simulateInventoryQuery({
+        keyword: '油墨',
+        warehouseId: '1',
+        status: 'normal',
+      });
       expect(result.success).toBe(true);
-      result.data.list.forEach((item: unknown) => {
+      result.data.list.forEach((item: Record<string, unknown>) => {
         expect(item.material_name).toContain('油墨');
         expect(item.warehouse_id).toBe(1);
         expect(item.status).toBe('normal');
@@ -280,12 +459,15 @@ describe('集成测试 - 业务流程', () => {
     });
 
     it('高级搜索：按有效期范围筛选', () => {
-      const result = simulateInventoryQuery({ expiry_date_start: '2026-01-01', expiry_date_end: '2026-06-30' });
+      const result = simulateInventoryQuery({
+        expiry_date_start: '2026-01-01',
+        expiry_date_end: '2026-06-30',
+      });
       expect(result.success).toBe(true);
-      result.data.list.forEach((item: unknown) => {
+      result.data.list.forEach((item: Record<string, unknown>) => {
         expect(item.expire_date).not.toBeNull();
-        expect((item as Record<string, unknown>).expire_date >= '2026-01-01').toBe(true);
-        expect((item as Record<string, unknown>).expire_date <= '2026-06-30').toBe(true);
+        expect((item.expire_date as string) >= '2026-01-01').toBe(true);
+        expect((item.expire_date as string) <= '2026-06-30').toBe(true);
       });
     });
 
@@ -325,8 +507,8 @@ describe('集成测试 - 业务流程', () => {
       expect(result.data.successCount).toBe(2);
 
       // 验证状态已变更
-      const item1 = mockInventory.find(i => i.id === 1);
-      const item3 = mockInventory.find(i => i.id === 3);
+      const item1 = mockInventory.find((i) => i.id === 1);
+      const item3 = mockInventory.find((i) => i.id === 3);
       expect(item1?.status).toBe('frozen');
       expect(item3?.status).toBe('frozen');
     });
@@ -344,8 +526,8 @@ describe('集成测试 - 业务流程', () => {
       expect(result.data.successCount).toBe(2);
 
       // 验证状态已恢复
-      const item1 = mockInventory.find(i => i.id === 1);
-      const item3 = mockInventory.find(i => i.id === 3);
+      const item1 = mockInventory.find((i) => i.id === 1);
+      const item3 = mockInventory.find((i) => i.id === 3);
       expect(item1?.status).toBe('normal');
       expect(item3?.status).toBe('normal');
     });
@@ -392,7 +574,9 @@ describe('集成测试 - 业务流程', () => {
       expect(normalInkItems.length).toBeGreaterThan(0);
 
       // Step 4: 批量冻结搜索结果
-      const idsToFreeze = normalInkItems.map((item: unknown) => (item as Record<string, unknown>).id as number).slice(0, 3);
+      const idsToFreeze = normalInkItems
+        .map((item: unknown) => (item as Record<string, unknown>).id as number)
+        .slice(0, 3);
       const freezeResult = simulateFreeze(idsToFreeze, 'freeze');
       expect(freezeResult.data.successCount).toBeGreaterThan(0);
 
@@ -416,21 +600,31 @@ describe('集成测试 - 业务流程', () => {
 
       // Step 2: 查询低库存预警
       const allInventory = simulateInventoryQuery({});
-      const alertItems = allInventory.data.list.filter((item: unknown) =>
-        (item as Record<string, unknown>).alertLevel === 'warning' || (item as Record<string, unknown>).alertLevel === 'critical'
+      const alertItems = allInventory.data.list.filter(
+        (item: unknown) =>
+          (item as Record<string, unknown>).alertLevel === 'warning' ||
+          (item as Record<string, unknown>).alertLevel === 'critical'
       );
       expect(alertItems.length).toBeGreaterThan(0);
 
       // Step 3: 按预警级别排序 - critical优先
       const sorted = [...alertItems].sort((a: unknown, b: unknown) => {
         const levelOrder: Record<string, number> = { critical: 0, warning: 1, normal: 2 };
-        return levelOrder[(a as Record<string, unknown>).alertLevel as string] - levelOrder[(b as Record<string, unknown>).alertLevel as string];
+        return (
+          levelOrder[(a as Record<string, unknown>).alertLevel as string] -
+          levelOrder[(b as Record<string, unknown>).alertLevel as string]
+        );
       });
       expect((sorted[0] as any).alertLevel).toBe('critical');
 
       // Step 4: 处理critical级别 - 冻结防止超卖
       const criticalIds = sorted
-        .filter((item: unknown) => (item as Record<string, unknown>).alertLevel === 'critical' && (item as Record<string, unknown>).status === 'normal' && (item as Record<string, unknown>).stock_qty as number > 0)
+        .filter(
+          (item: unknown) =>
+            (item as Record<string, unknown>).alertLevel === 'critical' &&
+            (item as Record<string, unknown>).status === 'normal' &&
+            ((item as Record<string, unknown>).stock_qty as number) > 0
+        )
         .map((item: unknown) => (item as Record<string, unknown>).id as number);
       if (criticalIds.length > 0) {
         const freezeResult = simulateFreeze(criticalIds, 'freeze');
@@ -442,8 +636,11 @@ describe('集成测试 - 业务流程', () => {
   describe('流程5: 错误处理与边界条件', () => {
     it('并发冻结同一库存：第二次应失败', () => {
       // 先确保id=2是normal状态
-      const item2 = mockInventory.find(i => i.id === 2);
-      if (item2) { item2.status = 'normal'; item2.frozen_qty = 10; }
+      const item2 = mockInventory.find((i) => i.id === 2);
+      if (item2) {
+        item2.status = 'normal';
+        item2.frozen_qty = 10;
+      }
 
       const result1 = simulateFreeze([2], 'freeze');
       if (result1.success) {

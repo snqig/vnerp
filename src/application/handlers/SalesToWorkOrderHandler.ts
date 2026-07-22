@@ -23,7 +23,14 @@ export interface WorkOrderCreationResult {
 
 export class SalesToWorkOrderHandler implements EventHandler<SalesOrderApprovedEvent> {
   async handle(event: SalesOrderApprovedEvent): Promise<void> {
-    const { orderId, orderNo, customerId, customerName, lines, totalAmount } = event.payload;
+    const {
+      orderId,
+      orderNo,
+      customerId,
+      customerName,
+      lines,
+      totalAmount: _totalAmount,
+    } = event.payload;
 
     secureLog('info', 'Sales order approved, processing work order creation', {
       orderId,

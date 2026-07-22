@@ -64,7 +64,7 @@ interface BOMLineRow {
   loss_rate: number;
 }
 
-interface MaterialInfoRow {
+interface _MaterialInfoRow {
   id: number;
   material_code: string;
   material_name: string;
@@ -199,7 +199,7 @@ export async function explodeBOM(
 
       const childCircularKey = `${line.material_id}:${childPath}`;
 
-      const matInfoRows: Loose = await conn.query(
+      const _matInfoRows: Loose = await conn.query(
         `SELECT id, material_code, material_name FROM inv_material WHERE id = ?`,
         [line.material_id]
       );
@@ -794,7 +794,7 @@ export async function generatePlannedOrders(
 
       const woIds = netRequirements
         .filter((r) => r.material_id === req.material_id)
-        .flatMap((r) => {
+        .flatMap((_r) => {
           return workOrderIds;
         });
       const uniqueWoIds = Array.from(new Set(woIds));
@@ -834,7 +834,7 @@ export async function generatePurchaseRequestsFromMRP(
   conn: Loose,
   plannedOrders: PlannedOrder[],
   operatorId: number | null,
-  operatorName: string
+  _operatorName: string
 ): Promise<{ request_no: string; item_count: number }[]> {
   if (!plannedOrders || plannedOrders.length === 0) {
     return [];

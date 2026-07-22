@@ -723,8 +723,8 @@ export class GeneralLedger {
    * @returns 利润表项目数组，按报表顺序排列
    */
   async generateIncomeStatement(periodCode: string): Promise<IncomeStatementItem[]> {
-    const [yearStr, monthStr] = periodCode.split('-');
-    const firstPeriod = `${yearStr}-01`;
+    const [yearStr, _monthStr] = periodCode.split('-');
+    const _firstPeriod = `${yearStr}-01`;
     const balances = await this.calculatePeriodBalances(periodCode);
     const balanceMap = new Map<string, AccountBalance>();
     for (const b of balances) {

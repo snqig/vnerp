@@ -11,7 +11,7 @@ import {
 
 vi.mock('next/server', () => ({
   NextResponse: {
-    json: (data: unknown, init?: ResponseInit) => ({
+    json: (data: Record<string, unknown>, init?: ResponseInit) => ({
       ...data,
       status: init?.status || 200,
       json: async () => data,
@@ -72,10 +72,11 @@ describe('API响应工具测试', () => {
       expect(response.code).toBe(200);
       expect(response.success).toBe(true);
       // paginatedResponse 将数据包裹在 data.list 内
-      expect(response.data.list).toEqual(data);
-      expect(response.data.total).toBe(2);
-      expect(response.data.page).toBe(1);
-      expect(response.data.pageSize).toBe(10);
+      const d = response.data as Record<string, unknown>;
+      expect(d.list).toEqual(data);
+      expect(d.total).toBe(2);
+      expect(d.page).toBe(1);
+      expect(d.pageSize).toBe(10);
       expect(response.pagination).toEqual(pagination);
     });
   });

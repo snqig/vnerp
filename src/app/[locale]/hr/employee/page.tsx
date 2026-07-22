@@ -58,7 +58,7 @@ export default function EmployeePage() {
   const tc = useTranslations('Common');
 
   const { companyName } = useCompanyName();
-  const { _hasPermission } = usePermission();
+  const { hasPermission: _hasPermission } = usePermission();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);

@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable @next/next/no-img-element */
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo as _useMemo } from 'react';
 import { Link, usePathname } from '@/i18n/navigation';
 import {
   LayoutDashboard,
@@ -227,7 +227,14 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const [orderedMenus, setOrderedMenus] = useState<MenuItem[]>([]);
   const [activeParentCode, setActiveParentCode] = useState<string | null>(null);
-  const { menus, isLoading, user, isAuthenticated, logout, isHydrated } = useAuth();
+  const {
+    menus,
+    isLoading,
+    user,
+    isAuthenticated: _isAuthenticated,
+    logout,
+    isHydrated,
+  } = useAuth();
   const { companyName } = useCompanyName();
   const t = useTranslations('Auth');
   const tc = useTranslations('Common');

@@ -41,20 +41,13 @@ export const PREFETCH_CONFIG = {
   ENABLED: true,
   HOVER_DELAY_MS: 100,
   VIEWPORT_MARGIN: '100px',
-  PRIORITY_ROUTES: [
-    '/dashboard',
-    '/orders',
-    '/inventory',
-    '/production',
-  ],
+  PRIORITY_ROUTES: ['/dashboard', '/orders', '/inventory', '/production'],
 } as const;
 
 export function shouldPrefetch(href: string): boolean {
   if (!PREFETCH_CONFIG.ENABLED) return false;
-  
-  return PREFETCH_CONFIG.PRIORITY_ROUTES.some(route => 
-    href.startsWith(route)
-  );
+
+  return PREFETCH_CONFIG.PRIORITY_ROUTES.some((route) => href.startsWith(route));
 }
 
 export const LAZY_LOAD_CONFIG = {
@@ -82,13 +75,13 @@ export class PerformanceMonitor {
     return Promise.resolve().then(() => {
       const start = performance.now();
       const result = fn();
-      
+
       if (result instanceof Promise) {
         return result.then(() => {
           this.record(name, performance.now() - start);
         });
       }
-      
+
       this.record(name, performance.now() - start);
     });
   }
@@ -96,11 +89,11 @@ export class PerformanceMonitor {
   private record(name: string, duration: number): void {
     const samples = this.metrics.get(name) || [];
     samples.push(duration);
-    
+
     if (samples.length > this.MAX_SAMPLES) {
       samples.shift();
     }
-    
+
     this.metrics.set(name, samples);
   }
 
@@ -137,17 +130,17 @@ export class PerformanceMonitor {
 
 export const performanceMonitor = new PerformanceMonitor();
 
-export function measureRender(componentName: string) {
+export function measureRender(_componentName: string) {
   if (process.env.NODE_ENV === 'development') {
     const start = performance.now();
-    
+
     return () => {
       const duration = performance.now() - start;
       if (duration > 16) {
       }
     };
   }
-  
+
   return () => {};
 }
 
@@ -165,12 +158,12 @@ export function createDebounceCallback<T extends (...args: unknown[]) => unknown
   delay: number
 ): T {
   let timeoutId: NodeJS.Timeout | null = null;
-  
+
   return ((...args: Parameters<T>) => {
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
-    
+
     timeoutId = setTimeout(() => {
       callback(...args);
     }, delay);
@@ -190,7 +183,7 @@ export function getWebVitalStatus(
   value: number
 ): 'good' | 'needs-improvement' | 'poor' {
   const thresholds = WEB_VITALS_CONFIG[metric];
-  
+
   if (value <= thresholds.good) return 'good';
   if (value <= thresholds.needsImprovement) return 'needs-improvement';
   return 'poor';

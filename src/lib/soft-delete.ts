@@ -151,7 +151,7 @@ export async function cancelDocument(options: SoftDeleteOptions): Promise<Cancel
     recordId,
     recordNo,
     documentType,
-    module,
+    module: _module,
     cancelReason,
     cancelledBy,
     cancelledById,
@@ -250,7 +250,7 @@ export async function restoreDocument(
   tableName: string,
   recordId: number,
   restoredBy?: string,
-  restoredById?: number
+  _restoredById?: number
 ): Promise<CancelResult> {
   try {
     assertValidIdentifier(tableName);

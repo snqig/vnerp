@@ -79,7 +79,7 @@ export const POST = withPermission(
       ${field} = ?,
       update_time = NOW()
     WHERE id = ?`,
-      [userName, id]
+      [_userName, id]
     );
 
     // 如果是最后核准环节，更新状态为已启用
@@ -109,7 +109,7 @@ export const POST = withPermission(
       {
         id,
         type,
-        userName,
+        _userName,
         status: approveType === 'approve' ? 3 : approveType === 'reject' ? 1 : 2,
       },
       approveType === 'reject' ? '驳回成功，已回退到草稿' : `${getApproveTypeName(approveType)}成功`

@@ -19,9 +19,9 @@ import {
   ClipboardCheck,
   Calendar,
   Factory,
-  ShoppingCart,
-  Truck,
-  Package,
+  ShoppingCart as _ShoppingCart,
+  Truck as _Truck,
+  Package as _Package,
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 
@@ -257,7 +257,7 @@ export default function QualityDashboard() {
     recentInspections: [],
     processQuality: [],
   });
-  const [loading, setLoading] = useState(true);
+  const [_loading, _setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
@@ -317,7 +317,7 @@ export default function QualityDashboard() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  const formatTime = (date: Date) => {
+  const _formatTime = (date: Date) => {
     return date.toLocaleString(locale, {
       year: 'numeric',
       month: '2-digit',
@@ -345,42 +345,88 @@ export default function QualityDashboard() {
         </div>
         <div className="absolute inset-0 tech-grid-bg pointer-events-none" />
 
-        <header className="relative z-20 flex items-center justify-between px-6 h-14 mb-6" style={{ borderBottom: '1px solid rgba(192,208,224,0.15)' }}>
+        <header
+          className="relative z-20 flex items-center justify-between px-6 h-14 mb-6"
+          style={{ borderBottom: '1px solid rgba(192,208,224,0.15)' }}
+        >
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #22d3ee, #3b82f6)', boxShadow: '0 0 20px rgba(34,211,238,0.25)' }}
+              style={{
+                background: 'linear-gradient(135deg, #22d3ee, #3b82f6)',
+                boxShadow: '0 0 20px rgba(34,211,238,0.25)',
+              }}
             >
               <Factory className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-base font-bold tracking-wide" style={{ color: '#C0D0E0' }}>{companyName}</h1>
-              <p className="text-[10px]" style={{ color: 'rgba(192,208,224,0.4)' }}>质量监控中心</p>
+              <h1 className="text-base font-bold tracking-wide" style={{ color: '#C0D0E0' }}>
+                {companyName}
+              </h1>
+              <p className="text-[10px]" style={{ color: 'rgba(192,208,224,0.4)' }}>
+                质量监控中心
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-6">
             {[
-              { icon: ClipboardCheck, label: t('totalInspections'), val: data.overview.totalInspections, color: '#22d3ee' },
-              { icon: CheckCircle, label: t('overallPassRate'), val: `${data.overview.passRate}%`, color: '#22c55e' },
-              { icon: AlertTriangle, label: t('defectRate'), val: `${data.overview.defectRate}%`, color: '#f59e0b' },
-              { icon: Calendar, label: t('todayInspections'), val: data.overview.todayInspections, color: '#FF6B35' },
+              {
+                icon: ClipboardCheck,
+                label: t('totalInspections'),
+                val: data.overview.totalInspections,
+                color: '#22d3ee',
+              },
+              {
+                icon: CheckCircle,
+                label: t('overallPassRate'),
+                val: `${data.overview.passRate}%`,
+                color: '#22c55e',
+              },
+              {
+                icon: AlertTriangle,
+                label: t('defectRate'),
+                val: `${data.overview.defectRate}%`,
+                color: '#f59e0b',
+              },
+              {
+                icon: Calendar,
+                label: t('todayInspections'),
+                val: data.overview.todayInspections,
+                color: '#FF6B35',
+              },
             ].map((m, i) => (
               <div key={i} className="flex items-center gap-2">
                 <m.icon className="h-4 w-4" style={{ color: m.color }} />
-                <span className="text-xs" style={{ color: 'rgba(192,208,224,0.6)' }}>{m.label}</span>
-                <span className="text-sm font-bold" style={{ color: m.color }}>{m.val}</span>
+                <span className="text-xs" style={{ color: 'rgba(192,208,224,0.6)' }}>
+                  {m.label}
+                </span>
+                <span className="text-sm font-bold" style={{ color: m.color }}>
+                  {m.val}
+                </span>
               </div>
             ))}
           </div>
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#22c55e', boxShadow: '0 0 6px #22c55e' }} />
-              <span className="text-xs" style={{ color: '#22c55e' }}>实时</span>
+              <div
+                className="w-2 h-2 rounded-full animate-pulse"
+                style={{ background: '#22c55e', boxShadow: '0 0 6px #22c55e' }}
+              />
+              <span className="text-xs" style={{ color: '#22c55e' }}>
+                实时
+              </span>
             </div>
-            <button onClick={toggleFullscreen} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
-              {isFullscreen ? <Minimize className="h-4 w-4" style={{ color: '#22d3ee' }} /> : <Maximize className="h-4 w-4" style={{ color: '#22d3ee' }} />}
+            <button
+              onClick={toggleFullscreen}
+              className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+            >
+              {isFullscreen ? (
+                <Minimize className="h-4 w-4" style={{ color: '#22d3ee' }} />
+              ) : (
+                <Maximize className="h-4 w-4" style={{ color: '#22d3ee' }} />
+              )}
             </button>
             <div className="text-right">
               {currentTime && (

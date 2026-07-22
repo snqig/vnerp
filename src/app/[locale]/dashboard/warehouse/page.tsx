@@ -20,10 +20,8 @@ import {
   PieChart as PieChartIcon,
   TrendingDown,
 } from 'lucide-react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Text, OrbitControls, Box } from '@react-three/drei';
-import * as THREE from 'three';
 import { useTranslations, useLocale } from 'next-intl';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface WarehouseData {
   overview: {
@@ -59,78 +57,6 @@ interface WarehouseData {
     total_qty: number;
     capacity?: number;
   }[];
-}
-
-function Warehouse3D({
-  warehouses,
-}: {
-  warehouses: { name: string; occupancy: number; color: string }[];
-}) {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.2) * 0.1;
-    }
-  });
-
-  return (
-    <group ref={groupRef}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
-        <planeGeometry args={[20, 10]} />
-        <meshStandardMaterial color="#1e293b" transparent opacity={0.5} />
-      </mesh>
-
-      {warehouses.map((w, i) => {
-        const x = (i - (warehouses.length - 1) / 2) * 3;
-        const height = Math.max(0.5, (w.occupancy / 100) * 4);
-        const color = w.occupancy > 80 ? '#ef4444' : w.occupancy > 50 ? '#f59e0b' : '#10b981';
-
-        return (
-          <group key={i} position={[x, 0, 0]}>
-            <Box args={[2, height, 1.5]} position={[0, height / 2 - 0.5, 0]}>
-              <meshStandardMaterial
-                color={color}
-                transparent
-                opacity={0.8}
-                metalness={0.3}
-                roughness={0.7}
-              />
-            </Box>
-
-            <Box args={[2.05, height + 0.05, 1.55]} position={[0, height / 2 - 0.5, 0]}>
-              <meshStandardMaterial color="#06b6d4" wireframe />
-            </Box>
-
-            <Text
-              position={[0, height + 0.3, 0]}
-              fontSize={0.25}
-              color="#06b6d4"
-              anchorX="center"
-              anchorY="middle"
-            >
-              {w.name}
-            </Text>
-
-            <Text
-              position={[0, height / 2 - 0.5, 1]}
-              fontSize={0.3}
-              color="white"
-              anchorX="center"
-              anchorY="middle"
-            >
-              {w.occupancy.toFixed(0)}%
-            </Text>
-          </group>
-        );
-      })}
-
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[5, 5, 5]} intensity={1} />
-      <pointLight position={[-5, 3, 0]} intensity={0.5} color="#06b6d4" />
-      <pointLight position={[5, 3, 0]} intensity={0.5} color="#3b82f6" />
-    </group>
-  );
 }
 
 function AutoScroll({
@@ -435,23 +361,61 @@ export default function WarehouseDashboard() {
               <Warehouse className="h-4 w-4 text-cyan-400" />
               <span className="text-sm font-medium text-white/80">{t('warehouseUtilization')}</span>
             </div>
-            <div className="p-4">
+            <div className="p-4 h-[300px]">
               {data.warehouseOccupancy.length === 0 ? (
                 <p className="text-white/40 text-center py-8">{tc('noData')}</p>
               ) : (
-                <div className="h-[300px]">
-                  <Canvas camera={{ position: [0, 3, 8], fov: 50 }}>
-                    <Warehouse3D warehouses={warehouses3D} />
-                    <OrbitControls
-                      enableZoom={true}
-                      enablePan={false}
-                      maxPolarAngle={Math.PI / 2.5}
-                      minPolarAngle={Math.PI / 6}
-                      autoRotate
-                      autoRotateSpeed={0.5}
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={warehouses3D}
+                    layout="vertical"
+                    margin={{ left: 10, right: 10, top: 5, bottom: 5 }}
+                  >
+                    <XAxis
+                      type="number"
+                      domain={[0, 100]}
+                      tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 10 }}
                     />
-                  </Canvas>
-                </div>
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={80}
+                      tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 11 }}
+                      tickLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                    />
+                    <Tooltip
+                      formatter={(value: number) => [`${value.toFixed(1)}%`, '利用率']}
+                      contentStyle={{
+                        backgroundColor: 'rgba(15,23,42,0.95)',
+                        borderColor: 'rgba(6,182,212,0.3)',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        fontSize: '12px',
+                      }}
+                    />
+                    <Bar
+                      dataKey="occupancy"
+                      radius={[0, 4, 4, 0]}
+                      barSize={24}
+                      fill="#06b6d4"
+                      stroke="#06b6d4"
+                      strokeWidth={1}
+                    >
+                      {warehouses3D.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            entry.occupancy > 80
+                              ? '#ef4444'
+                              : entry.occupancy > 50
+                                ? '#f59e0b'
+                                : '#10b981'
+                          }
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               )}
             </div>
           </div>

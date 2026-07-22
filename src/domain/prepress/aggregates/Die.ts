@@ -2,9 +2,9 @@ import { DomainEvent, DomainError } from '@/domain/shared/DomainTypes';
 import { DieSpecification, DieSpecificationProps } from '../value-objects/DieSpecification';
 import {
   DieCreatedEvent,
-  DieStatusChangedEvent,
+  DieStatusChangedEvent as _DieStatusChangedEvent,
   DieUsageRecordedEvent,
-  DieMaintenanceCreatedEvent,
+  DieMaintenanceCreatedEvent as _DieMaintenanceCreatedEvent,
   DieMaintenanceCompletedEvent,
   DieScrappedEvent,
 } from '../events/DieEvents';
@@ -161,7 +161,7 @@ export class Die {
     else if (newCumulative >= this.specification.maxImpressions) this.statusCode = 3;
     else if (this.status === 'maintenance_needed') this.statusCode = 2;
     else this.statusCode = 1;
-    const prevCumulative = newCumulative - impressions;
+    const _prevCumulative = newCumulative - impressions;
     this._events.push(
       new DieUsageRecordedEvent({
         id: this.id,

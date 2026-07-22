@@ -1,12 +1,26 @@
 import { IWorkOrderRepository } from '@/domain/production/repositories/IWorkOrderRepository';
-import { IPickOrderRepository, PickOrderFilters } from '@/domain/production/repositories/IPickOrderRepository';
-import { IWorkReportRepository, WorkReportFilters } from '@/domain/production/repositories/IWorkReportRepository';
-import { IFinishOrderRepository, FinishOrderFilters } from '@/domain/production/repositories/IFinishOrderRepository';
+import {
+  IPickOrderRepository,
+  PickOrderFilters,
+} from '@/domain/production/repositories/IPickOrderRepository';
+import {
+  IWorkReportRepository,
+  WorkReportFilters,
+} from '@/domain/production/repositories/IWorkReportRepository';
+import {
+  IFinishOrderRepository,
+  FinishOrderFilters,
+} from '@/domain/production/repositories/IFinishOrderRepository';
 import { WorkOrder, WorkOrderProps } from '@/domain/production/aggregates/WorkOrder';
 import { PickOrder, PickOrderProps } from '@/domain/production/aggregates/PickOrder';
 import { WorkReport, WorkReportProps } from '@/domain/production/aggregates/WorkReport';
 import { FinishOrder, FinishOrderProps } from '@/domain/production/aggregates/FinishOrder';
-import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
+import {
+  DomainError,
+  NotFoundError,
+  VersionConflictError,
+  DomainEvent,
+} from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction, execute, query } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
@@ -173,7 +187,7 @@ export class ProductionApplicationService {
     return { id, reportNo };
   }
 
-  async approveWorkReport(id: number, userId: number, workOrderNo: string): Promise<void> {
+  async approveWorkReport(id: number, userId: number, _workOrderNo: string): Promise<void> {
     const report = await this.loadWorkReport(id);
     // Set the work order no in the event
     report.approve(userId);
@@ -309,12 +323,20 @@ export class ProductionApplicationService {
     return map[status] || 1;
   }
 
-  private async persistAndPublishEvents(aggregateId: number, aggregate: { getDomainEvents(): unknown[]; clearDomainEvents(): void }): Promise<void> {
+  private async persistAndPublishEvents(
+    aggregateId: number,
+    aggregate: { getDomainEvents(): unknown[]; clearDomainEvents(): void }
+  ): Promise<void> {
     const events = aggregate.getDomainEvents ? aggregate.getDomainEvents() : [];
     if (events.length === 0) return;
     await transaction(async (conn) => {
       const aggregateType = aggregate.constructor.name;
-      await getDomainEventOutbox().saveEvents(conn, aggregateType, aggregateId, events);
+      await getDomainEventOutbox().saveEvents(
+        conn,
+        aggregateType,
+        aggregateId,
+        events as DomainEvent[]
+      );
     });
     if (aggregate.clearDomainEvents) aggregate.clearDomainEvents();
   }

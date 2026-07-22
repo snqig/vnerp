@@ -1,4 +1,7 @@
-import { ISampleOrderRepository, SampleOrderFilters } from '@/domain/sample/repositories/ISampleOrderRepository';
+import {
+  ISampleOrderRepository,
+  SampleOrderFilters,
+} from '@/domain/sample/repositories/ISampleOrderRepository';
 import { ISampleFeedbackRepository } from '@/domain/sample/repositories/ISampleFeedbackRepository';
 import { SampleOrder } from '@/domain/sample/aggregates/SampleOrder';
 import { SampleOrderProps } from '@/domain/sample/aggregates/SampleOrder';
@@ -12,7 +15,7 @@ import type { PoolConnection, ResultSetHeader } from 'mysql2/promise';
 import { logger, generateTraceId } from '@/lib/logger';
 
 interface DomainEventAggregate {
-  domainEvents: DomainEvent[];
+  readonly domainEvents: readonly DomainEvent[];
   clearDomainEvents(): void;
   constructor: { name: string };
 }
@@ -289,7 +292,10 @@ export class SampleOrderApplicationService {
           return newId;
         });
 
-        logger.stepEnd(ctx, 'Create sales order from sample', { salesOrderId: newSalesOrderId, orderNo });
+        logger.stepEnd(ctx, 'Create sales order from sample', {
+          salesOrderId: newSalesOrderId,
+          orderNo,
+        });
         return newSalesOrderId;
       } catch (error) {
         const dbErr = error as { code?: string };
@@ -368,7 +374,7 @@ export class SampleOrderApplicationService {
     parentCtx?: Record<string, unknown>,
     conn?: PoolConnection
   ): Promise<void> {
-    const events = aggregate.domainEvents || [];
+    const events = [...(aggregate.domainEvents || [])];
     if (events.length === 0) return;
     const ctx = {
       module: 'sample',

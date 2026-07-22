@@ -144,7 +144,7 @@ export default function InboundManagementPage() {
           margin: 1,
         });
         setQrCodeDataUrl(dataUrl);
-        setQrCodeLabelId(labelId);
+        _setQrCodeLabelId(labelId);
         setIsQRCodeDialogOpen(true);
       } catch {
         toast.error(t('qrCodeGenerateFailed'));
@@ -164,7 +164,7 @@ export default function InboundManagementPage() {
         const result = await response.json();
         if (result.success) {
           setQrCodeDataUrl(result.data?.qrCode || '');
-          setQrCodeLabelId(label.id);
+          _setQrCodeLabelId(label.id);
           setIsQRCodeDialogOpen(true);
         } else {
           toast.error(t('scanQueryFailed'));
@@ -716,7 +716,7 @@ export default function InboundManagementPage() {
           setIsPrintPreviewOpen={setIsPrintPreviewOpen}
           isQRScanDialogOpen={isQRScanDialogOpen}
           setIsQRScanDialogOpen={setIsQRScanDialogOpen}
-          scanResult={scanResult}
+          scanResult={_scanResult}
           isGenerateDialogOpen={isGenerateDialogOpen}
           setIsGenerateDialogOpen={setIsGenerateDialogOpen}
           labelSupplier={labelSupplier}

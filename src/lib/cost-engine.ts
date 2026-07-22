@@ -550,8 +550,8 @@ export class CostEngine {
   private async calculateMaterialCost(
     conn: PoolConnection,
     productId: number,
-    period: string,
-    workOrderId?: number
+    _period: string,
+    _workOrderId?: number
   ): Promise<number> {
     let totalMaterialCost = 0;
 
@@ -609,8 +609,8 @@ export class CostEngine {
   private async calculateLaborCost(
     conn: PoolConnection,
     productId: number,
-    period: string,
-    workOrderId?: number
+    _period: string,
+    _workOrderId?: number
   ): Promise<number> {
     let totalLaborCost = 0;
 
@@ -648,8 +648,8 @@ export class CostEngine {
   private async calculateManufacturingCost(
     conn: PoolConnection,
     productId: number,
-    period: string,
-    workOrderId?: number
+    _period: string,
+    _workOrderId?: number
   ): Promise<number> {
     let totalMfgCost = 0;
 

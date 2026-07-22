@@ -76,7 +76,7 @@ export interface BomExpansionResult {
 /**
  * BOM节点（用于递归计算）
  */
-interface BomNode {
+interface _BomNode {
   id: number;
   code: string;
   name: string;
@@ -222,7 +222,7 @@ async function expandBomRecursive(
     const actualQuantity = baseQuantity * (1 + currentAccumulatedLossRate / 100);
 
     // 检查物料是否有BOM（是否为半成品）
-    const { hasBom, bomId } = await checkMaterialHasBom(line.materialId);
+    const { hasBom, bomId: _bomId } = await checkMaterialHasBom(line.materialId);
 
     // 获取对应的产品ID（如果有）
     const relatedProductId = await getProductIdByMaterialId(line.materialId);

@@ -49,7 +49,7 @@ export default function MaterialRequisitionsPage() {
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
-  const [_page, _setPage] = useState(1);
+  const [page, _setPage] = useState(1);
   const [_total, setTotal] = useState(0);
   const [_searchNo, _setSearchNo] = useState('');
 

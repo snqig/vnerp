@@ -53,7 +53,7 @@ export class ScreenPlateCostHandler implements EventHandler<WorkOrderCompletedEv
   private async calculateScreenPlateCost(
     workOrderId: number,
     workOrderNo: string,
-    completedQty: number
+    _completedQty: number
   ): Promise<ScreenPlateCostResult> {
     const plateUsages: ScreenPlateUsageRecord[] = [];
 

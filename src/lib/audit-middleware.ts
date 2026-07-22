@@ -79,7 +79,7 @@ function getClientIp(request: NextRequest): string {
   return 'unknown';
 }
 
-function truncateString(str: string, maxLength: number = 1000): string {
+function _truncateString(str: string, maxLength: number = 1000): string {
   if (!str || str.length <= maxLength) return str;
   return str.substring(0, maxLength) + '... [truncated]';
 }

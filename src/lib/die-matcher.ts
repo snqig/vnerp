@@ -85,7 +85,7 @@ function parseSpecification(spec: string): { width: number; height: number } {
   return { width: 0, height: 0 };
 }
 
-function deriveShapeType(width: number, height: number, assetType: string): string {
+function deriveShapeType(width: number, height: number, _assetType: string): string {
   if (width > 0 && height > 0 && Math.abs(width - height) < 1) {
     return 'square';
   }

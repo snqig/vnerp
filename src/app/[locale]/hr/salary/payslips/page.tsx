@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { authFetch } from '@/lib/auth-fetch';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,7 +70,8 @@ export default function PayslipsPage() {
     }
     setLoading(true);
     try {
-      const _result = await res.json();
+      const res = await authFetch('/api/salary/payslips/' + employeeId);
+      const json = await res.json();
       if (json.code === 200) {
         setData(json.data);
       } else {
@@ -85,7 +87,10 @@ export default function PayslipsPage() {
   const handlePrint = () => {
     if (!data) return;
     const printWindow = window.open('', '_blank');
-    if (!printWindow) { toast.error(t('allowPopup') || '请允许弹窗'); return; }
+    if (!printWindow) {
+      toast.error(t('allowPopup') || '请允许弹窗');
+      return;
+    }
 
     const rows = [
       { label: t('basicSalary') || '基本工资', value: data.basicSalary },
@@ -126,13 +131,13 @@ export default function PayslipsPage() {
       <h3>${t('incomeItems') || '收入项'}</h3>
       <table>
         <tr><th>${t('item') || '项目'}</th><th class="text-right">${t('amount') || '金额'}</th></tr>
-        ${rows.map(r => `<tr><td>${r.label}</td><td class="text-right">¥${r.value.toLocaleString()}</td></tr>`).join('')}
+        ${rows.map((r) => `<tr><td>${r.label}</td><td class="text-right">¥${r.value.toLocaleString()}</td></tr>`).join('')}
         <tr style="background:#f0fdf4"><td><strong>${t('grossPay') || '应发合计'}</strong></td><td class="text-right"><strong>¥${data.grossPay.toLocaleString()}</strong></td></tr>
       </table>
       <h3>${t('deductionItems') || '扣款项'}</h3>
       <table>
         <tr><th>${t('item') || '项目'}</th><th class="text-right">${t('amount') || '金额'}</th></tr>
-        ${deductions.map(r => `<tr><td>${r.label}</td><td class="text-right">¥${r.value.toLocaleString()}</td></tr>`).join('')}
+        ${deductions.map((r) => `<tr><td>${r.label}</td><td class="text-right">¥${r.value.toLocaleString()}</td></tr>`).join('')}
         <tr style="background:#fef2f2"><td><strong>${t('totalDeduction') || '扣款合计'}</strong></td><td class="text-right"><strong>¥${data.totalDeduction.toLocaleString()}</strong></td></tr>
       </table>
       <div class="total">${t('netPay') || '实发工资'}: <span class="net">¥${data.netPay.toLocaleString()}</span></div>
@@ -158,23 +163,34 @@ export default function PayslipsPage() {
             <div className="flex flex-wrap items-end gap-4">
               <div className="space-y-1">
                 <Label className="text-xs">{t('employeeId') || '员工ID'}</Label>
-                <Input className="w-36" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}
-                  placeholder={t('enterEmployeeId') || '输入员工ID'} />
+                <Input
+                  className="w-36"
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                  placeholder={t('enterEmployeeId') || '输入员工ID'}
+                />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">{t('month') || '月份'}</Label>
-                <Input type="month" className="w-40" value={month} onChange={(e) => setMonth(e.target.value)} />
+                <Input
+                  type="month"
+                  className="w-40"
+                  value={month}
+                  onChange={(e) => setMonth(e.target.value)}
+                />
               </div>
               <Button onClick={fetchPayslip} disabled={loading}>
-                {loading ? (tc('loading') || '查询中...') : (tc('query') || '查询')}
+                {loading ? tc('loading') || '查询中...' : tc('query') || '查询'}
               </Button>
               {data && (
                 <>
                   <Button variant="outline" onClick={handlePrint}>
-                    <Printer className="h-4 w-4 mr-2" />{t('print') || '打印'}
+                    <Printer className="h-4 w-4 mr-2" />
+                    {t('print') || '打印'}
                   </Button>
                   <Button variant="outline" onClick={handleSend}>
-                    <Send className="h-4 w-4 mr-2" />{t('sendPayslip') || '发送'}
+                    <Send className="h-4 w-4 mr-2" />
+                    {t('sendPayslip') || '发送'}
                   </Button>
                 </>
               )}
@@ -192,16 +208,29 @@ export default function PayslipsPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div><span className="text-muted-foreground">{t('employeeNo') || '工号'}:</span> {data.employeeNo}</div>
-                <div><span className="text-muted-foreground">{tc('department')}:</span> {data.department}</div>
-                <div><span className="text-muted-foreground">{tc('position')}:</span> {data.position}</div>
-                <div><span className="text-muted-foreground">{t('month') || '月份'}:</span> {data.month}</div>
+                <div>
+                  <span className="text-muted-foreground">{t('employeeNo') || '工号'}:</span>{' '}
+                  {data.employeeNo}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{tc('department')}:</span>{' '}
+                  {data.department}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{tc('position')}:</span> {data.position}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('month') || '月份'}:</span>{' '}
+                  {data.month}
+                </div>
               </div>
 
               <Separator />
 
               <div>
-                <h3 className="font-semibold text-muted-foreground mb-3">{t('incomeItems') || '收入项'}</h3>
+                <h3 className="font-semibold text-muted-foreground mb-3">
+                  {t('incomeItems') || '收入项'}
+                </h3>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { label: t('basicSalary') || '基本工资', value: data.basicSalary },
@@ -225,13 +254,18 @@ export default function PayslipsPage() {
               <Separator />
 
               <div>
-                <h3 className="font-semibold text-muted-foreground mb-3">{t('deductionItems') || '扣款项'}</h3>
+                <h3 className="font-semibold text-muted-foreground mb-3">
+                  {t('deductionItems') || '扣款项'}
+                </h3>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { label: t('socialInsurance') || '社保', value: data.socialInsurance },
                     { label: t('housingFund') || '公积金', value: data.housingFund },
                     { label: t('individualTax') || '个税', value: data.individualTax },
-                    { label: t('attendanceDeduction') || '考勤扣款', value: data.attendanceDeduction },
+                    {
+                      label: t('attendanceDeduction') || '考勤扣款',
+                      value: data.attendanceDeduction,
+                    },
                     { label: t('otherDeduction') || '其他扣款', value: data.otherDeduction },
                   ].map((item) => (
                     <div key={item.label} className="flex justify-between p-2 rounded bg-red-50">
@@ -250,7 +284,9 @@ export default function PayslipsPage() {
 
               <div className="flex justify-between items-center p-4 rounded-lg bg-blue-50">
                 <span className="text-lg font-semibold">{t('netPay') || '实发工资'}</span>
-                <span className="text-3xl font-bold text-blue-600">¥{data.netPay.toLocaleString()}</span>
+                <span className="text-3xl font-bold text-blue-600">
+                  ¥{data.netPay.toLocaleString()}
+                </span>
               </div>
             </CardContent>
           </Card>

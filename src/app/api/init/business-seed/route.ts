@@ -1,5 +1,5 @@
 ﻿import { NextRequest } from 'next/server';
-import { transaction, type SqlValue } from '@/lib/db';
+import { transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
@@ -14,9 +14,9 @@ export const POST = withPermission(async (_request: NextRequest) => {
     };
 
     // 安全 INSERT：字段不匹配时跳过，不阻断全局
-    const safeInsert = async (sql: string, params: SqlValue[], statKey?: string) => {
+    const safeInsert = async (sql: string, params: unknown[], statKey?: string) => {
       try {
-        await conn.execute(sql, params);
+        await conn.execute(sql, params as any);
         if (statKey) stats[statKey] = (stats[statKey] || 0) + 1;
       } catch (_e) {}
     };

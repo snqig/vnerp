@@ -64,7 +64,7 @@ export class Employee {
     return emp;
   }
 
-  confirm(confirmedBy: number): void {
+  confirm(_confirmedBy: number): void {
     if (this.status !== EmployeeStatus.PROBATION && this.status !== EmployeeStatus.ONBOARDING) {
       throw new Error('只有试用期员工可转正');
     }

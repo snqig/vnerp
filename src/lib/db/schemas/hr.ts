@@ -1,4 +1,16 @@
-import { bigint, date, datetime, decimal, index, int, mysqlTable, text, tinyint, uniqueIndex, varchar } from 'drizzle-orm/mysql-core';
+import {
+  bigint,
+  date,
+  datetime,
+  decimal,
+  index,
+  int,
+  mysqlTable,
+  text,
+  tinyint,
+  uniqueIndex,
+  varchar,
+} from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 export const hrAttendance = mysqlTable(
   'hr_attendance',
@@ -122,7 +134,9 @@ export const hrSalaryProfile = mysqlTable(
     employeeId: bigint('employee_id', { mode: 'number', unsigned: true }).notNull(),
     salaryType: varchar('salary_type', { length: 20 }).default('mixed'),
     baseSalary: decimal('base_salary', { precision: 10, scale: 2 }).default('0.00'),
-    socialInsuranceBase: decimal('social_insurance_base', { precision: 10, scale: 2 }).default('0.00'),
+    socialInsuranceBase: decimal('social_insurance_base', { precision: 10, scale: 2 }).default(
+      '0.00'
+    ),
     housingFundRate: decimal('housing_fund_rate', { precision: 5, scale: 2 }).default('0.00'),
     taxDeduction: decimal('tax_deduction', { precision: 10, scale: 2 }).default('0.00'),
     bankAccount: varchar('bank_account', { length: 50 }),
@@ -152,10 +166,17 @@ export const hrSalaryCalculation = mysqlTable(
     performanceSalary: decimal('performance_salary', { precision: 10, scale: 2 }).default('0.00'),
     allowances: decimal('allowances', { precision: 10, scale: 2 }).default('0.00'),
 
-    socialInsurancePersonal: decimal('social_insurance_personal', { precision: 10, scale: 2 }).default('0.00'),
-    housingFundPersonal: decimal('housing_fund_personal', { precision: 10, scale: 2 }).default('0.00'),
+    socialInsurancePersonal: decimal('social_insurance_personal', {
+      precision: 10,
+      scale: 2,
+    }).default('0.00'),
+    housingFundPersonal: decimal('housing_fund_personal', { precision: 10, scale: 2 }).default(
+      '0.00'
+    ),
     individualTax: decimal('individual_tax', { precision: 10, scale: 2 }).default('0.00'),
-    attendanceDeduction: decimal('attendance_deduction', { precision: 10, scale: 2 }).default('0.00'),
+    attendanceDeduction: decimal('attendance_deduction', { precision: 10, scale: 2 }).default(
+      '0.00'
+    ),
     otherDeduction: decimal('other_deduction', { precision: 10, scale: 2 }).default('0.00'),
 
     grossPay: decimal('gross_pay', { precision: 10, scale: 2 }).default('0.00'),
@@ -243,20 +264,24 @@ export const hrShift = mysqlTable('hr_shift', {
   deleted: tinyint('deleted').default(0),
 });
 
-export const hrSchedule = mysqlTable('hr_schedule', {
-  id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
-  employeeId: bigint('employee_id', { mode: 'number', unsigned: true }).notNull(),
-  scheduleDate: date('schedule_date').notNull(),
-  shiftId: bigint('shift_id', { mode: 'number', unsigned: true }),
-  scheduleType: varchar('schedule_type', { length: 20 }).default('normal'),
-  source: varchar('source', { length: 20 }).default('manual'),
-  status: tinyint('status').default(1),
-  createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
-  updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
-}, (table) => ({
-  empDateUk: uniqueIndex('uk_sc_emp_date').on(table.employeeId, table.scheduleDate),
-  dateIdx: index('idx_sc_date').on(table.scheduleDate),
-}));
+export const hrSchedule = mysqlTable(
+  'hr_schedule',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    employeeId: bigint('employee_id', { mode: 'number', unsigned: true }).notNull(),
+    scheduleDate: date('schedule_date').notNull(),
+    shiftId: bigint('shift_id', { mode: 'number', unsigned: true }),
+    scheduleType: varchar('schedule_type', { length: 20 }).default('normal'),
+    source: varchar('source', { length: 20 }).default('manual'),
+    status: tinyint('status').default(1),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    empDateUk: uniqueIndex('uk_sc_emp_date').on(table.employeeId, table.scheduleDate),
+    dateIdx: index('idx_sc_date').on(table.scheduleDate),
+  })
+);
 
 export const orgGroup = mysqlTable('org_group', {
   id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
@@ -424,4 +449,26 @@ export const hrPayrollSnapshot = mysqlTable(
     payrollIdx: index('idx_ps_payroll').on(table.payrollId),
     employeePeriodIdx: index('idx_ps_employee_period').on(table.employeeId, table.periodMonth),
   })
-);
+);
+
+export type HrAttendance = typeof hrAttendance.$inferSelect;
+export type HrTraining = typeof hrTraining.$inferSelect;
+export type HrTrainingParticipant = typeof hrTrainingParticipant.$inferSelect;
+export type HrSalaryStandard = typeof hrSalaryStandard.$inferSelect;
+export type HrPieceRate = typeof hrPieceRate.$inferSelect;
+export type HrSalaryProfile = typeof hrSalaryProfile.$inferSelect;
+export type HrSalaryCalculation = typeof hrSalaryCalculation.$inferSelect;
+export type HrPieceWorkDetail = typeof hrPieceWorkDetail.$inferSelect;
+export type HrAttendanceException = typeof hrAttendanceException.$inferSelect;
+export type HrShift = typeof hrShift.$inferSelect;
+export type HrSchedule = typeof hrSchedule.$inferSelect;
+export type OrgGroup = typeof orgGroup.$inferSelect;
+export type OrgLegalEntity = typeof orgLegalEntity.$inferSelect;
+export type OrgFactory = typeof orgFactory.$inferSelect;
+export type OrgWorkshop = typeof orgWorkshop.$inferSelect;
+export type OrgTeam = typeof orgTeam.$inferSelect;
+export type OrgPosition = typeof orgPosition.$inferSelect;
+export type HrEmployeePosition = typeof hrEmployeePosition.$inferSelect;
+export type HrSkillMatrix = typeof hrSkillMatrix.$inferSelect;
+export type HrCertificate = typeof hrCertificate.$inferSelect;
+export type HrPayrollSnapshot = typeof hrPayrollSnapshot.$inferSelect;

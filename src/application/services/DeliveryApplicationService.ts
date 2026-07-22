@@ -1,7 +1,7 @@
 import { IDeliveryRepository } from '@/domain/sales/repositories/IDeliveryRepository';
 import { ISalesOrderRepository } from '@/domain/sales/repositories/ISalesOrderRepository';
 import { Delivery, DeliveryProps } from '@/domain/sales/aggregates/Delivery';
-import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
+import { DomainError, NotFoundError, DomainEvent } from '@/domain/shared/DomainTypes';
 import { CurrencyApplicationService } from './CurrencyApplicationService';
 import { CurrencySnapshot } from '@/domain/shared/value-objects/CurrencySnapshot';
 import { Money } from '@/domain/shared/value-objects/Money';
@@ -159,7 +159,7 @@ export class DeliveryApplicationService {
     aggregateId: number,
     aggregate: { getDomainEvents(): unknown[]; clearDomainEvents(): void }
   ): Promise<void> {
-    const events = aggregate.getDomainEvents();
+    const events = aggregate.getDomainEvents() as DomainEvent[];
     if (events.length === 0) return;
 
     await transaction(async (conn) => {

@@ -51,7 +51,7 @@ export class CostAnalysis {
   }> {
     const totalOverhead = products.reduce((sum, p) => sum + p.overheadAllocation, 0);
     const totalRevenue = products.reduce((sum, p) => sum + p.revenue, 0);
-    const overheadRate = totalRevenue > 0 ? totalOverhead / totalRevenue : 0;
+    const _overheadRate = totalRevenue > 0 ? totalOverhead / totalRevenue : 0;
     return products.map((p) => ({
       productId: p.productId,
       revenue: p.revenue,

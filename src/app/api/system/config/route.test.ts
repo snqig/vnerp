@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { NextRequest } from 'next/server';
 import { GET, POST, PUT, DELETE } from './route';
 
 vi.mock('@/lib/db', () => ({
@@ -41,7 +42,7 @@ describe('系统配置API测试', () => {
         .mockResolvedValueOnce(mockConfigs);
 
       const request = new Request('http://localhost/api/system/config?page=1&pageSize=20');
-      const response = await GET(request as unknown);
+      const response = await GET(request as unknown as NextRequest);
       const data = await response.json();
 
       expect(data.success).toBe(true);
@@ -55,7 +56,7 @@ describe('系统配置API测试', () => {
         .mockResolvedValueOnce([{ id: 1, config_name: '公司名称' }]);
 
       const request = new Request('http://localhost/api/system/config?configName=公司');
-      const response = await GET(request as unknown);
+      const response = await GET(request as unknown as NextRequest);
       await response.json();
 
       expect(query).toHaveBeenCalledWith(
@@ -70,7 +71,7 @@ describe('系统配置API测试', () => {
         .mockResolvedValueOnce([{ id: 1, config_key: 'company_name' }]);
 
       const request = new Request('http://localhost/api/system/config?configKey=company');
-      const response = await GET(request as unknown);
+      const response = await GET(request as unknown as NextRequest);
       await response.json();
 
       expect(query).toHaveBeenCalledWith(
@@ -85,7 +86,7 @@ describe('系统配置API测试', () => {
         .mockResolvedValueOnce([]);
 
       const request = new Request('http://localhost/api/system/config');
-      await GET(request as unknown);
+      await GET(request as unknown as NextRequest);
 
       expect(query).toHaveBeenCalledWith(
         expect.stringContaining('LIMIT ? OFFSET ?'),
@@ -110,7 +111,7 @@ describe('系统配置API测试', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const response = await POST(request as unknown);
+      const response = await POST(request as unknown as NextRequest);
       const data = await response.json();
 
       expect(data.success).toBe(true);
@@ -134,7 +135,7 @@ describe('系统配置API测试', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      await POST(request as unknown);
+      await POST(request as unknown as NextRequest);
 
       expect(execute).toHaveBeenCalledWith(
         expect.any(String),
@@ -166,7 +167,7 @@ describe('系统配置API测试', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const response = await PUT(request as unknown);
+      const response = await PUT(request as unknown as NextRequest);
       const data = await response.json();
 
       expect(data.success).toBe(true);
@@ -186,7 +187,7 @@ describe('系统配置API测试', () => {
         method: 'DELETE',
       });
 
-      const response = await DELETE(request as unknown);
+      const response = await DELETE(request as unknown as NextRequest);
       const data = await response.json();
 
       expect(data.success).toBe(true);
@@ -203,7 +204,7 @@ describe('系统配置API测试', () => {
         method: 'DELETE',
       });
 
-      const response = await DELETE(request as unknown);
+      const response = await DELETE(request as unknown as NextRequest);
       const data = await response.json();
 
       expect(response.status).toBe(400);

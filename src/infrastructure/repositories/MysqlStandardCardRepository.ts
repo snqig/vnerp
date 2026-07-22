@@ -9,8 +9,6 @@ import {
   IStandardCardRepository,
   StandardCardFilters,
 } from '@/domain/standard-card/repositories/IStandardCardRepository';
-import type { ResultSetHeader } from 'mysql2/promise';
-
 interface StandardCardRow {
   id: number;
   code: string;
@@ -33,6 +31,13 @@ interface StandardCardRow {
   obsolete_reason: string | null;
   obsolete_by: number | null;
   obsolete_at: string | null;
+  quality_requirement: string | null;
+  material_requirement: string | null;
+  ink_requirement: string | null;
+  tooling_requirement: string | null;
+  process_requirement: string | null;
+  create_user: number | null;
+  remark: string | null;
   create_time: string | null;
   update_time: string | null;
   deleted: number;
@@ -206,11 +211,19 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
     }
     if (filters.effectiveDateFrom) {
       conditions.push('effective_date >= ?');
-      params.push(filters.effectiveDateFrom instanceof Date ? filters.effectiveDateFrom.toISOString().slice(0, 10) : filters.effectiveDateFrom);
+      params.push(
+        filters.effectiveDateFrom instanceof Date
+          ? filters.effectiveDateFrom.toISOString().slice(0, 10)
+          : filters.effectiveDateFrom
+      );
     }
     if (filters.effectiveDateTo) {
       conditions.push('effective_date <= ?');
-      params.push(filters.effectiveDateTo instanceof Date ? filters.effectiveDateTo.toISOString().slice(0, 10) : filters.effectiveDateTo);
+      params.push(
+        filters.effectiveDateTo instanceof Date
+          ? filters.effectiveDateTo.toISOString().slice(0, 10)
+          : filters.effectiveDateTo
+      );
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -349,29 +362,29 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
       type: row.type as StandardCardType,
       materialId: row.material_id,
       materialName: row.material_name,
-      customerId: row.customer_id,
+      customerId: row.customer_id ?? undefined,
       customerName: row.customer_name,
       spec: row.spec,
       status: row.status as StandardCardStatus,
       effectiveDate: row.effective_date ? new Date(row.effective_date) : undefined,
       expiryDate: row.expiry_date ? new Date(row.expiry_date) : undefined,
-      parentVersionId: row.parent_version_id,
+      parentVersionId: row.parent_version_id ?? undefined,
       isCurrent: row.is_current === 1,
       isObsolete: row.is_obsolete === 1,
       isLocked: row.is_locked === 1,
-      changeDescription: row.change_description,
-      obsoleteReason: row.obsolete_reason,
-      obsoleteBy: row.obsolete_by,
+      changeDescription: row.change_description ?? undefined,
+      obsoleteReason: row.obsolete_reason ?? undefined,
+      obsoleteBy: row.obsolete_by ?? undefined,
       obsoleteAt: row.obsolete_at ? new Date(row.obsolete_at) : undefined,
-      qualityRequirement: row.quality_requirement,
-      materialRequirement: row.material_requirement,
-      inkRequirement: row.ink_requirement,
-      toolingRequirement: row.tooling_requirement,
-      processRequirement: row.process_requirement,
-      createUser: row.create_user,
+      qualityRequirement: row.quality_requirement ?? undefined,
+      materialRequirement: row.material_requirement ?? undefined,
+      inkRequirement: row.ink_requirement ?? undefined,
+      toolingRequirement: row.tooling_requirement ?? undefined,
+      processRequirement: row.process_requirement ?? undefined,
+      createUser: row.create_user ?? undefined,
       createTime: row.create_time ? new Date(row.create_time) : undefined,
       updateTime: row.update_time ? new Date(row.update_time) : undefined,
-      remark: row.remark,
+      remark: row.remark ?? undefined,
     };
     return new StandardCard(props);
   }

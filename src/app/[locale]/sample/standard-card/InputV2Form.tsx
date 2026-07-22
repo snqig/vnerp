@@ -42,11 +42,11 @@ export function InputV2Form() {
 
   const {
     data,
-    _loading,
+    loading: _loading,
     saving,
-    _error,
+    error: _error,
     savedCardId,
-    _customerSearch,
+    customerSearch: _customerSearch,
     setCustomerSearch,
     showCustomerDropdown,
     setShowCustomerDropdown,
@@ -55,7 +55,7 @@ export function InputV2Form() {
     editId,
     updateField,
     updateSequence,
-    _handleToggleMultiValue,
+    handleToggleMultiValue: _handleToggleMultiValue,
     handleSelectCustomer,
     handleSave,
     handleSaveAndPreview,

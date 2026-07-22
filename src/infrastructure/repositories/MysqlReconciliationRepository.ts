@@ -10,8 +10,6 @@ import { ReconciliationStatusValue } from '@/domain/sales/value-objects/Reconcil
 import { query, execute, transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
-type SqlValue = string | number | null | boolean | Date;
-
 /** sal_reconciliation 表行类型 */
 interface SalReconciliationRow {
   id: number;

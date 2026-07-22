@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef as _useRef } from 'react';
 import { Link, usePathname } from '@/i18n/navigation';
 import {
   Bell,
@@ -306,12 +306,24 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
       </div>
 
       <div className="flex items-center gap-2">
-        <ClientOnly fallback={<Button variant="ghost" size="icon" className="w-9 h-9"><Globe className="h-4 w-4" /></Button>}>
+        <ClientOnly
+          fallback={
+            <Button variant="ghost" size="icon" className="w-9 h-9">
+              <Globe className="h-4 w-4" />
+            </Button>
+          }
+        >
           <LanguageSwitcher />
         </ClientOnly>
         <ThemeToggle />
 
-        <ClientOnly fallback={<Button variant="ghost" size="icon" className="relative" aria-label="Notifications"><Bell className="h-4 w-4" /></Button>}>
+        <ClientOnly
+          fallback={
+            <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
+              <Bell className="h-4 w-4" />
+            </Button>
+          }
+        >
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
@@ -349,7 +361,9 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
                       <span className="text-xs text-muted-foreground ml-auto">{n.type}</span>
                     </div>
                     {n.content && (
-                      <span className="text-xs text-muted-foreground line-clamp-2">{n.content}</span>
+                      <span className="text-xs text-muted-foreground line-clamp-2">
+                        {n.content}
+                      </span>
                     )}
                     <span className="text-xs text-muted-foreground">{n.time}</span>
                   </DropdownMenuItem>
@@ -367,7 +381,13 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
           </DropdownMenu>
         </ClientOnly>
 
-        <ClientOnly fallback={<Button variant="ghost" size="icon" className="rounded-full" aria-label="User menu"><User className="h-4 w-4" /></Button>}>
+        <ClientOnly
+          fallback={
+            <Button variant="ghost" size="icon" className="rounded-full" aria-label="User menu">
+              <User className="h-4 w-4" />
+            </Button>
+          }
+        >
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full" aria-label="User menu">

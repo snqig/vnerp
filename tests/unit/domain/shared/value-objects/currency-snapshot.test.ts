@@ -44,7 +44,7 @@ describe('CurrencySnapshot', () => {
   describe('convert', () => {
     it('should short-circuit return same amount for same currency', () => {
       const snapshot = CurrencySnapshot.create('CNY', 1, 'CNY');
-      const money = new Money(100, 'CNY');
+      const money = Money.create(100, 'CNY');
       const result = snapshot.convert(money);
       expect(result.amount).toBe(100);
       expect(result.currency).toBe('CNY');
@@ -52,7 +52,7 @@ describe('CurrencySnapshot', () => {
 
     it('should convert by the locked exchange rate for cross-currency', () => {
       const snapshot = CurrencySnapshot.create('USD', 7.25, 'CNY');
-      const money = new Money(100, 'USD');
+      const money = Money.create(100, 'USD');
       const result = snapshot.convert(money);
       expect(result.amount).toBe(725);
       expect(result.currency).toBe('CNY');
@@ -60,7 +60,7 @@ describe('CurrencySnapshot', () => {
 
     it('should convert VND with 0 decimal places', () => {
       const snapshot = CurrencySnapshot.create('VND', 0.0003, 'CNY');
-      const money = new Money(1000000, 'VND');
+      const money = Money.create(1000000, 'VND');
       const result = snapshot.convert(money, 0);
       expect(result.amount).toBe(300);
       expect(result.currency).toBe('CNY');
@@ -68,7 +68,7 @@ describe('CurrencySnapshot', () => {
 
     it('should throw for negative amounts', () => {
       const snapshot = CurrencySnapshot.create('USD', 7.25, 'CNY');
-      expect(() => snapshot.convert(new Money(-100, 'USD'))).toThrow();
+      expect(() => snapshot.convert(Money.create(-100, 'USD'))).toThrow();
     });
   });
 });

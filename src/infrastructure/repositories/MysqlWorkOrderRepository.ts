@@ -45,10 +45,7 @@ interface WorkOrderMaterialRow {
 
 export class MysqlWorkOrderRepository implements IWorkOrderRepository {
   async findById(id: number): Promise<WorkOrder | null> {
-    const orders = await query(
-      'SELECT * FROM prod_work_order WHERE id = ? AND deleted = 0',
-      [id]
-    );
+    const orders = await query('SELECT * FROM prod_work_order WHERE id = ? AND deleted = 0', [id]);
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
@@ -117,7 +114,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
     const workOrderNo = await generateDocumentNo('work_order');
 
     return await transaction(async (conn) => {
-      const [result] = await conn.execute(
+      const [result] = (await conn.execute(
         `INSERT INTO prod_work_order (work_order_no, product_id, product_name, product_code, planned_qty, completed_qty,
           order_type, process_id, process_name, warehouse_id, planned_start_date, planned_end_date, status, remark, create_by, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
@@ -138,7 +135,7 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
           order.remark,
           order.createBy || null,
         ]
-      ) as ResultSetHeader;
+      )) as unknown as [ResultSetHeader];
 
       const orderId = result.insertId;
 
@@ -188,15 +185,31 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
       orderType: order.order_type || 0,
       plannedQty: order.planned_qty,
       completedQty: order.completed_qty || 0,
-      processId: order.process_id,
-      processName: order.process_name,
+      processId: order.process_id ?? undefined,
+      processName: order.process_name ?? undefined,
       warehouseId: order.warehouse_id || 1,
-      plannedStartDate: order.planned_start_date,
-      plannedEndDate: order.planned_end_date,
-      actualStartDate: order.actual_start_date,
-      actualEndDate: order.actual_end_date,
+      plannedStartDate: order.planned_start_date
+        ? typeof order.planned_start_date === 'string'
+          ? order.planned_start_date
+          : order.planned_start_date.toISOString()
+        : undefined,
+      plannedEndDate: order.planned_end_date
+        ? typeof order.planned_end_date === 'string'
+          ? order.planned_end_date
+          : order.planned_end_date.toISOString()
+        : undefined,
+      actualStartDate: order.actual_start_date
+        ? typeof order.actual_start_date === 'string'
+          ? order.actual_start_date
+          : order.actual_start_date.toISOString()
+        : undefined,
+      actualEndDate: order.actual_end_date
+        ? typeof order.actual_end_date === 'string'
+          ? order.actual_end_date
+          : order.actual_end_date.toISOString()
+        : undefined,
       remark: order.remark || '',
-      createBy: order.create_by,
+      createBy: order.create_by ?? undefined,
       materialRequirements: (materials || []).map((m: WorkOrderMaterialRow) => ({
         id: m.id,
         materialId: m.material_id,
@@ -209,8 +222,13 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
         returnedQty: m.returned_qty || 0,
         warehouseId: m.warehouse_id || 1,
       })),
-      createTime: order.create_time,
-      updateTime: order.update_time,
+      createTime:
+        typeof order.create_time === 'string' ? order.create_time : order.create_time.toISOString(),
+      updateTime: order.update_time
+        ? typeof order.update_time === 'string'
+          ? order.update_time
+          : order.update_time.toISOString()
+        : undefined,
     };
   }
 }

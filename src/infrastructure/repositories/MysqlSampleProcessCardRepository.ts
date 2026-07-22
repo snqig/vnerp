@@ -4,7 +4,7 @@ import {
   SampleProcessItemProps,
   SampleProcessStepProps,
 } from '@/domain/dcprint/aggregates/SampleProcessCard';
-import { query, execute, transaction, type SqlValue } from '@/lib/db';
+import { query, execute, type SqlValue } from '@/lib/db';
 import type { RowDataPacket } from 'mysql2';
 
 export class MysqlSampleProcessCardRepository implements ISampleProcessCardRepository {

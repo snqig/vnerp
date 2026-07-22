@@ -155,7 +155,7 @@ export function GlobalExportToolbar({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          {formats.map((fmt, idx) => (
+          {formats.map((fmt, _idx) => (
             <DropdownMenuItem
               key={fmt}
               onClick={() => handleExport(fmt)}

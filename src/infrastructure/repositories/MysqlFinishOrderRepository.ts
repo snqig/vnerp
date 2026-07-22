@@ -4,8 +4,6 @@ import {
   IFinishOrderRepository,
   FinishOrderFilters,
 } from '@/domain/production/repositories/IFinishOrderRepository';
-import type { ResultSetHeader } from 'mysql2/promise';
-
 interface FinishOrderRow {
   id: number;
   finish_no: string;
@@ -121,9 +119,12 @@ export class MysqlFinishOrderRepository implements IFinishOrderRepository {
       warehouseId: row.warehouse_id,
       qualifiedQty: Number(row.qualified_qty || 0),
       defectiveQty: Number(row.defective_qty || 0),
-      createBy: row.create_by,
-      createTime: row.create_time,
-      updateTime: row.update_time,
+      createBy: row.create_by ?? undefined,
+      createTime: row.create_time instanceof Date ? row.create_time.toISOString() : row.create_time,
+      updateTime:
+        row.update_time instanceof Date
+          ? row.update_time.toISOString()
+          : (row.update_time ?? undefined),
     };
     return FinishOrder.reconstitute(props);
   }

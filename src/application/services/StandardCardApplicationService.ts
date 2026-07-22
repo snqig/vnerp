@@ -220,7 +220,7 @@ export class StandardCardApplicationService {
 
     const id = await repo.save(card);
     // id 字段为 readonly，直接使用 toProps 创建新实例
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     // (card as any).id = id; // 不需要，下方通过 toProps 创建新实例
 
     await this.saveDetailItems(id, dto);
@@ -372,12 +372,12 @@ export class StandardCardApplicationService {
       await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const logRepo = new VersionChangeLogRepository();
     await logRepo.save({
-      standardCardId: id,
+      standard_card_id: id,
       version: card.version,
-      changeType: 'update',
-      changeContent: '总经理审批通过',
-      changedBy: userId,
-    });
+      change_type: 'update',
+      change_content: '总经理审批通过',
+      changed_by: userId,
+    } as any);
 
     card.confirm(userId);
     await repo.update(card);
@@ -443,14 +443,15 @@ export class StandardCardApplicationService {
       await colorRepo.saveBatch(
         newId,
         colorItems.map((item) => ({
-          colorName: item.color_name,
-          pantoneCode: item.pantone_code,
-          cmykValue: item.cmyk_value,
-          rgbValue: item.rgb_value,
-          colorSampleImage: item.color_sample_image,
-          tolerance: item.tolerance,
-          remark: item.remark,
-        }))
+          standard_card_id: newId,
+          color_name: item.color_name,
+          pantone_code: item.pantone_code ?? null,
+          cmyk_value: item.cmyk_value ?? null,
+          rgb_value: item.rgb_value ?? null,
+          color_sample_image: item.color_sample_image ?? null,
+          tolerance: item.tolerance ?? null,
+          remark: item.remark ?? null,
+        })) as any
       );
     }
 
@@ -579,7 +580,7 @@ export class StandardCardApplicationService {
     ]);
 
     return {
-      colorItems: (colorItems as ColorItemRow[]).map((item) => ({
+      colorItems: (colorItems as unknown as ColorItemRow[]).map((item) => ({
         id: item.id,
         colorName: item.color_name,
         pantoneCode: item.pantone_code,
@@ -589,7 +590,7 @@ export class StandardCardApplicationService {
         tolerance: item.tolerance,
         remark: item.remark,
       })),
-      processItems: (processItems as ProcessItemRow[]).map((item) => ({
+      processItems: (processItems as unknown as ProcessItemRow[]).map((item) => ({
         id: item.id,
         processId: item.process_id,
         processName: item.process_name,
@@ -603,7 +604,7 @@ export class StandardCardApplicationService {
         description: item.description,
         remark: item.remark,
       })),
-      qualityItems: (qualityItems as QualityItemRow[]).map((item) => ({
+      qualityItems: (qualityItems as unknown as QualityItemRow[]).map((item) => ({
         id: item.id,
         inspectionItem: item.inspection_item,
         standardValue: item.standard_value,
@@ -613,7 +614,7 @@ export class StandardCardApplicationService {
         defectLevel: item.defect_level,
         remark: item.remark,
       })),
-      materials: (materials as MaterialRow[]).map((item) => ({
+      materials: (materials as unknown as MaterialRow[]).map((item) => ({
         id: item.id,
         materialId: item.material_id,
         materialCode: item.material_code,
@@ -623,7 +624,7 @@ export class StandardCardApplicationService {
         lossRate: item.loss_rate,
         remark: item.remark,
       })),
-      inks: (inks as InkRow[]).map((item) => ({
+      inks: (inks as unknown as InkRow[]).map((item) => ({
         id: item.id,
         inkId: item.ink_id,
         inkCode: item.ink_code,
@@ -633,13 +634,13 @@ export class StandardCardApplicationService {
         unitConsumption: item.unit_consumption,
         remark: item.remark,
       })),
-      toolings: (toolings as ToolingRow[]).map((item) => ({
+      toolings: (toolings as unknown as ToolingRow[]).map((item) => ({
         id: item.id,
         dieMoldId: item.die_mold_id,
         screenPlateId: item.screen_plate_id,
         remark: item.remark,
       })),
-      attachments: (attachments as AttachmentRow[]).map((item) => ({
+      attachments: (attachments as unknown as AttachmentRow[]).map((item) => ({
         id: item.id,
         fileName: item.file_name,
         filePath: item.file_path,
@@ -649,7 +650,7 @@ export class StandardCardApplicationService {
         uploadedBy: item.uploaded_by,
         uploadedAt: item.uploaded_at,
       })),
-      versionLogs: (versionLogs as VersionLogRow[]).map((item) => ({
+      versionLogs: (versionLogs as unknown as VersionLogRow[]).map((item) => ({
         id: item.id,
         version: item.version,
         changeType: item.change_type,
@@ -686,12 +687,83 @@ export class StandardCardApplicationService {
       tooling: new StandardCardToolingRepository(),
     };
 
-    if (dto.colorItems) await repos.color.saveBatch(standardCardId, dto.colorItems);
-    if (dto.processItems) await repos.process.saveBatch(standardCardId, dto.processItems);
-    if (dto.qualityItems) await repos.quality.saveBatch(standardCardId, dto.qualityItems);
-    if (dto.materials) await repos.material.saveBatch(standardCardId, dto.materials);
-    if (dto.inks) await repos.ink.saveBatch(standardCardId, dto.inks);
-    if (dto.toolings) await repos.tooling.saveBatch(standardCardId, dto.toolings);
+    if (dto.colorItems)
+      await repos.color.saveBatch(
+        standardCardId,
+        dto.colorItems.map((item) => ({
+          standard_card_id: standardCardId,
+          color_name: item.colorName,
+          pantone_code: item.pantoneCode ?? null,
+          cmyk_value: item.cmykValue ?? null,
+          rgb_value: item.rgbValue ?? null,
+          color_sample_image: item.colorSampleImage ?? null,
+          tolerance: item.tolerance ?? null,
+          remark: item.remark ?? null,
+        })) as any
+      );
+    if (dto.processItems)
+      await repos.process.saveBatch(
+        standardCardId,
+        dto.processItems.map((item) => ({
+          standard_card_id: standardCardId,
+          process_id: item.processId ?? null,
+          process_name: item.processName,
+          process_order: item.processOrder,
+          parameter_name: item.parameterName ?? null,
+          standard_value: item.standardValue ?? null,
+          tolerance: item.tolerance ?? null,
+          unit: item.unit ?? null,
+          standard_time: item.standardTime ?? null,
+          machine_type: item.machineType ?? null,
+          description: item.description ?? null,
+          remark: item.remark ?? null,
+        })) as any
+      );
+    if (dto.qualityItems)
+      await repos.quality.saveBatch(
+        standardCardId,
+        dto.qualityItems.map((item) => ({
+          standard_card_id: standardCardId,
+          inspection_item: item.inspectionItem,
+          standard_value: item.standardValue ?? null,
+          tolerance: item.tolerance ?? null,
+          inspection_method: item.inspectionMethod ?? null,
+          is_key: item.isKey ? 1 : 0,
+          defect_level: item.defectLevel ?? null,
+          remark: item.remark ?? null,
+        })) as any
+      );
+    if (dto.materials)
+      await repos.material.saveBatch(
+        standardCardId,
+        dto.materials.map((item) => ({
+          standard_card_id: standardCardId,
+          material_id: item.materialId,
+          unit_consumption: item.unitConsumption,
+          loss_rate: item.lossRate ?? 0,
+          remark: item.remark ?? null,
+        })) as any
+      );
+    if (dto.inks)
+      await repos.ink.saveBatch(
+        standardCardId,
+        dto.inks.map((item) => ({
+          standard_card_id: standardCardId,
+          ink_id: item.inkId,
+          unit_consumption: item.unitConsumption,
+          remark: item.remark ?? null,
+        })) as any
+      );
+    if (dto.toolings)
+      await repos.tooling.saveBatch(
+        standardCardId,
+        dto.toolings.map((item) => ({
+          standard_card_id: standardCardId,
+          die_mold_id: item.dieMoldId ?? null,
+          screen_plate_id: item.screenPlateId ?? null,
+          remark: item.remark ?? null,
+        })) as any
+      );
   }
 
   private async saveVersionLogs(card: StandardCard): Promise<void> {
@@ -701,12 +773,12 @@ export class StandardCardApplicationService {
 
     for (const log of card.versionLogsNew) {
       await repo.save({
-        standardCardId: card.id!,
+        standard_card_id: card.id!,
         version: log.version,
-        changeType: log.changeType,
-        changeContent: log.changeContent,
-        changedBy: log.changedBy,
-      });
+        change_type: log.changeType,
+        change_content: log.changeContent,
+        changed_by: log.changedBy,
+      } as any);
     }
   }
 }

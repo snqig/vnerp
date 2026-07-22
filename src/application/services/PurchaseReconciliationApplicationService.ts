@@ -9,7 +9,12 @@ import { MysqlPayableRepository } from '@/infrastructure/repositories/MysqlPayab
 import { IInboundOrderRepository } from '@/domain/warehouse/repositories/IInboundOrderRepository';
 import { MysqlInboundOrderRepository } from '@/infrastructure/repositories/MysqlInboundOrderRepository';
 import { MysqlCurrencyRepository } from '@/infrastructure/repositories/MysqlCurrencyRepository';
-import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
+import {
+  DomainError,
+  NotFoundError,
+  VersionConflictError,
+  DomainEvent,
+} from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
 import { getSystemConfig } from '@/lib/system-config';
@@ -139,7 +144,7 @@ export class PurchaseReconciliationApplicationService {
       );
 
       // 乐观锁：仅当余额未被其他事务修改时才更新（WHERE balance_amount = 原始余额）
-      const [updateResult] = (await conn.execute(
+      const [updateResult] = await conn.execute(
         `UPDATE pur_purchase_reconciliation
          SET paid_amount = ?, balance_amount = ?, status = ?, update_time = NOW()
          WHERE id = ? AND balance_amount = ?`,
@@ -150,8 +155,8 @@ export class PurchaseReconciliationApplicationService {
           input.reconciliationId,
           originalBalance,
         ]
-      )) as [ResultSetHeader, { affectedRows: number }];
-      if (updateResult.affectedRows === 0) {
+      );
+      if ((updateResult as ResultSetHeader).affectedRows === 0) {
         throw new VersionConflictError();
       }
 
@@ -207,7 +212,7 @@ export class PurchaseReconciliationApplicationService {
     aggregateId: number,
     aggregate: { getDomainEvents(): unknown[]; clearDomainEvents(): void }
   ): Promise<void> {
-    const events = aggregate.getDomainEvents();
+    const events = aggregate.getDomainEvents() as DomainEvent[];
     if (events.length === 0) return;
 
     await transaction(async (conn) => {

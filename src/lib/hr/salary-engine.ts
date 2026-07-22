@@ -1,6 +1,10 @@
 import { getDrizzleDb } from '@/lib/db';
 import { eq, and } from 'drizzle-orm';
-import { hrSalaryProfile, hrSalaryCalculation, sysEmployee } from '@/lib/db/schema';
+import {
+  hrSalaryProfile,
+  hrSalaryCalculation as _hrSalaryCalculation,
+  sysEmployee,
+} from '@/lib/db/schema';
 
 const db = getDrizzleDb();
 import { calculatePieceSalary } from './piece-calculator';
@@ -63,17 +67,18 @@ export async function calculateMonthlySalary(
   } = options;
 
   // 1. 获取员工信息和薪资档案
-  const emp = await db.select().from(sysEmployee)
+  const emp = await db
+    .select()
+    .from(sysEmployee)
     .where(and(eq(sysEmployee.id, employeeId), eq(sysEmployee.deleted, 0)))
-    .then(rows => rows[0]);
+    .then((rows) => rows[0]);
   if (!emp) throw new Error(`员工 ${employeeId} 不存在`);
 
-  const profile = await db.select().from(hrSalaryProfile)
-    .where(and(
-      eq(hrSalaryProfile.employeeId, employeeId),
-      eq(hrSalaryProfile.status, 1),
-    ))
-    .then(rows => rows[0]);
+  const profile = await db
+    .select()
+    .from(hrSalaryProfile)
+    .where(and(eq(hrSalaryProfile.employeeId, employeeId), eq(hrSalaryProfile.status, 1)))
+    .then((rows) => rows[0]);
 
   const baseSalary = profile ? Number(profile.baseSalary) : Number(emp.remark || 0) || 0;
   const insuranceBase = profile ? Number(profile.socialInsuranceBase) : baseSalary;
@@ -91,20 +96,25 @@ export async function calculateMonthlySalary(
   const kpiScore = includePerformance ? calculateKpiScore(0.95, 0.98, 0.85, 85) : 0;
   const performanceBase = 500; // 默认绩效基数，可从薪资标准表获取
   const performanceResult = includePerformance
-    ? calculatePerformanceBonus(performanceBase, [
-        { name: '产量达成率', weight: 40, score: kpiScore },
-        { name: '质量合格率', weight: 30, score: 95 },
-        { name: '设备稼动率', weight: 15, score: 85 },
-        { name: '5S现场管理', weight: 15, score: 85 },
-      ], 0.98)
+    ? calculatePerformanceBonus(
+        performanceBase,
+        [
+          { name: '产量达成率', weight: 40, score: kpiScore },
+          { name: '质量合格率', weight: 30, score: 95 },
+          { name: '设备稼动率', weight: 15, score: 85 },
+          { name: '5S现场管理', weight: 15, score: 85 },
+        ],
+        0.98
+      )
     : { finalAmount: 0 };
 
   // 4. 应发合计
-  const grossPay = baseSalary
-    + Number(pieceResult.totalAmount || 0)
-    + Number(overtimeResult.totalAmount || 0)
-    + Number(performanceResult.finalAmount || 0)
-    + 0; // allowances placeholder
+  const grossPay =
+    baseSalary +
+    Number(pieceResult.totalAmount || 0) +
+    Number(overtimeResult.totalAmount || 0) +
+    Number(performanceResult.finalAmount || 0) +
+    0; // allowances placeholder
 
   // 5. 社保公积金
   const insurance = includeInsurance
@@ -120,10 +130,11 @@ export async function calculateMonthlySalary(
     : { monthlyTax: 0 };
 
   // 7. 应扣合计
-  const totalDeduction = Number(insurance.personal.total)
-    + Number(fund.personal)
-    + Number(monthlyTax.monthlyTax)
-    + Number(attendanceDeductions);
+  const totalDeduction =
+    Number(insurance.personal.total) +
+    Number(fund.personal) +
+    Number(monthlyTax.monthlyTax) +
+    Number(attendanceDeductions);
 
   // 8. 实发
   const netPay = Math.max(0, Math.round((grossPay - totalDeduction) * 100) / 100);
@@ -180,10 +191,7 @@ export async function calculateMonthlySalary(
   return result;
 }
 
-async function calculateAttendanceDeductions(
-  employeeId: number,
-  month: string
-): Promise<number> {
+async function calculateAttendanceDeductions(_employeeId: number, _month: string): Promise<number> {
   // 考勤扣款 = 迟到扣款 + 早退扣款 + 旷工扣款
   // 从 hr_attendance_exception 表获取统计数据
   // 简化实现：默认返回0

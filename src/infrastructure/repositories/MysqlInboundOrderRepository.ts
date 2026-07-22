@@ -29,6 +29,7 @@ interface InboundOrderRow {
   create_time: string;
   update_time: string;
   deleted: number;
+  items?: InboundOrderItemRow[];
 }
 
 interface InboundOrderItemRow {
@@ -86,28 +87,28 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
       status: (DB_TO_DOMAIN_STATUS[order.status] || order.status) as InboundStatus,
       warehouseId: order.warehouse_id,
       supplierName: order.supplier_name || '',
-      supplierId: order.supplier_id,
-      poId: order.po_id,
-      poNo: order.po_no,
+      supplierId: order.supplier_id ?? undefined,
+      poId: order.po_id ?? undefined,
+      poNo: order.po_no ?? undefined,
       orderType: order.order_type,
-      inboundDate: order.inbound_date,
+      inboundDate: order.inbound_date ?? undefined,
       currency: order.currency || 'CNY',
       exchangeRate: Number(order.exchange_rate) || 1.0,
       baseCurrency: 'CNY',
       baseTotalAmount: Number(order.base_total_amount) || 0,
-      remark: order.remark,
+      remark: order.remark ?? undefined,
       items: items.map((item) => ({
         id: item.id,
         orderId: item.order_id,
         materialId: item.material_id,
         materialName: item.material_name,
-        materialSpec: item.material_spec,
+        materialSpec: item.material_spec ?? undefined,
         batchNo: item.batch_no || '',
         quantity: item.quantity,
         unit: item.unit,
         unitPrice: item.unit_price,
-        warehouseLocation: item.warehouse_location,
-        produceDate: item.produce_date,
+        warehouseLocation: item.warehouse_location ?? undefined,
+        produceDate: item.produce_date ?? undefined,
       })),
       totalAmount: order.total_amount,
       totalQuantity: order.total_quantity,
@@ -190,28 +191,28 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
           status: (DB_TO_DOMAIN_STATUS[o.status] || o.status) as InboundStatus,
           warehouseId: o.warehouse_id,
           supplierName: o.supplier_name || '',
-          supplierId: o.supplier_id,
-          poId: o.po_id,
-          poNo: o.po_no,
+          supplierId: o.supplier_id ?? undefined,
+          poId: o.po_id ?? undefined,
+          poNo: o.po_no ?? undefined,
           orderType: o.order_type,
-          inboundDate: o.inbound_date,
+          inboundDate: o.inbound_date ?? undefined,
           currency: o.currency || 'CNY',
           exchangeRate: Number(o.exchange_rate) || 1.0,
           baseCurrency: 'CNY',
           baseTotalAmount: Number(o.base_total_amount) || 0,
-          remark: o.remark,
-          items: (o.items || []).map((item) => ({
+          remark: o.remark ?? undefined,
+          items: (o.items || []).map((item: InboundOrderItemRow) => ({
             id: item.id,
             orderId: item.order_id,
             materialId: item.material_id,
             materialName: item.material_name,
-            materialSpec: item.material_spec,
+            materialSpec: item.material_spec ?? undefined,
             batchNo: item.batch_no || '',
             quantity: item.quantity,
             unit: item.unit,
             unitPrice: item.unit_price,
-            warehouseLocation: item.warehouse_location,
-            produceDate: item.produce_date,
+            warehouseLocation: item.warehouse_location ?? undefined,
+            produceDate: item.produce_date ?? undefined,
           })),
           totalAmount: o.total_amount,
           totalQuantity: o.total_quantity,
@@ -293,7 +294,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
   async updateInspectionAndFinance(
     id: number,
     inspectionStatus: number,
-    financePosted: boolean
+    _financePosted: boolean
   ): Promise<void> {
     try {
       await execute('UPDATE inv_inbound_order SET qc_status = ? WHERE id = ?', [

@@ -184,8 +184,8 @@ export default function ProcessCardsPage() {
             setSuccess(t('workOrderSwitchSuccess'));
           } else if (type === '4') {
             // 查看流程卡详情
-            setSelectedCard(data);
-            setShowDetail(true);
+            _setSelectedCard(data);
+            _setShowDetail(true);
           }
         }
       } else {

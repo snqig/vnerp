@@ -31,6 +31,7 @@ interface TransferOrderRow {
   create_time: string;
   update_time: string;
   deleted: number;
+  items?: TransferItemRow[];
 }
 
 interface TransferItemRow {
@@ -57,10 +58,9 @@ const ITEM_COLUMNS = `id, transfer_id, material_id, material_code, material_name
 
 export class MysqlTransferOrderRepository implements ITransferOrderRepository {
   async findById(id: number): Promise<TransferOrder | null> {
-    const orders = await query(
-      'SELECT * FROM inv_transfer_order WHERE id = ? AND deleted = 0',
-      [id]
-    );
+    const orders = await query('SELECT * FROM inv_transfer_order WHERE id = ? AND deleted = 0', [
+      id,
+    ]);
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0] as TransferOrderRow;
@@ -215,7 +215,7 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
         ]
       );
 
-      const orderId = orderResult.insertId;
+      const orderId = (orderResult as unknown as { insertId: number }).insertId;
 
       for (const item of items) {
         await conn.execute(
@@ -288,31 +288,31 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
       type: order.type,
       fromWarehouseId: order.from_warehouse_id,
       toWarehouseId: order.to_warehouse_id,
-      fromLocation: order.from_location,
-      toLocation: order.to_location,
-      applicantId: order.applicant_id,
-      applicantName: order.applicant_name,
-      approverId: order.approver_id,
-      approverName: order.approver_name,
-      operatorId: order.operator_id,
-      operatorName: order.operator_name,
-      outTime: order.out_time,
-      inTime: order.in_time,
-      remark: order.remark,
+      fromLocation: order.from_location ?? undefined,
+      toLocation: order.to_location ?? undefined,
+      applicantId: order.applicant_id ?? undefined,
+      applicantName: order.applicant_name ?? undefined,
+      approverId: order.approver_id ?? undefined,
+      approverName: order.approver_name ?? undefined,
+      operatorId: order.operator_id ?? undefined,
+      operatorName: order.operator_name ?? undefined,
+      outTime: order.out_time ?? undefined,
+      inTime: order.in_time ?? undefined,
+      remark: order.remark ?? undefined,
       items: items.map((item) => ({
         id: item.id,
         transferId: item.transfer_id,
         materialId: item.material_id,
         materialCode: item.material_code,
         materialName: item.material_name,
-        qrCode: item.qr_code,
-        batchNo: item.batch_no || '',
+        qrCode: item.qr_code ?? undefined,
+        batchNo: item.batch_no ?? undefined,
         quantity: item.quantity,
         outQuantity: item.out_quantity,
         inQuantity: item.in_quantity,
         unit: item.unit,
         unitPrice: item.unit_price,
-        remark: item.remark,
+        remark: item.remark ?? undefined,
       })),
       totalQuantity: order.total_qty,
       totalAmount: order.total_amount,

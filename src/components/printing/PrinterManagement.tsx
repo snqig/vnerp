@@ -71,7 +71,7 @@ export interface PrintQueueItem {
 export const PrinterManagement: React.FC = () => {
   const [printers, setPrinters] = useState<PrinterConfig[]>(DEFAULT_PRINTERS);
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [queue, setQueue] = useState<PrintQueueItem[]>([]);
+  const [queue, _setQueue] = useState<PrintQueueItem[]>([]);
 
   const togglePrinterActive = (id: string) => {
     setPrinters((prev) => prev.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p)));

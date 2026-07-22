@@ -1,3 +1,4 @@
+import mysql from 'mysql2/promise';
 import QRCode from 'qrcode';
 import { query, execute, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
@@ -164,7 +165,7 @@ export class QRCodeService {
         ]
       );
 
-      const qrId = result.insertId;
+      const qrId = (result as mysql.ResultSetHeader).insertId;
       const qrContent = this.buildQRContent({
         type: 'material',
         id: materialId,
@@ -215,7 +216,7 @@ export class QRCodeService {
         ]
       );
 
-      const qrId = result.insertId;
+      const qrId = (result as mysql.ResultSetHeader).insertId;
       const qrContent = this.buildQRContent({
         type: 'batch',
         id: materialId,
@@ -241,8 +242,8 @@ export class QRCodeService {
   static async generateWorkOrderQRCode(
     workOrderId: number,
     workOrderNo: string,
-    productName: string,
-    options?: {
+    _productName: string,
+    _options?: {
       plannedQty?: number;
       plannedEndDate?: string;
     }
@@ -260,7 +261,7 @@ export class QRCodeService {
         ]
       );
 
-      const qrId = result.insertId;
+      const qrId = (result as mysql.ResultSetHeader).insertId;
       const qrContent = this.buildQRContent({
         type: 'workorder',
         id: workOrderId,
@@ -346,19 +347,19 @@ export class QRCodeService {
 
     const rows = await query(sql, params);
     return (rows || []).map((r: Record<string, unknown>) => ({
-      timestamp: r.timestamp,
-      event: this.getEventLabel(r.event),
-      eventType: r.eventType,
-      sourceType: r.sourceType,
-      sourceId: r.sourceId,
-      sourceNo: r.sourceNo,
-      operatorId: r.operatorId,
-      operatorName: r.operatorName,
-      warehouseId: r.warehouseId,
-      warehouseName: r.warehouseName,
-      quantity: r.quantity,
-      batchNo: r.batchNo,
-      remark: r.remark,
+      timestamp: String(r.timestamp ?? ''),
+      event: this.getEventLabel(String(r.event ?? '')),
+      eventType: String(r.eventType ?? ''),
+      sourceType: String(r.sourceType ?? ''),
+      sourceId: Number(r.sourceId ?? 0),
+      sourceNo: String(r.sourceNo ?? ''),
+      operatorId: r.operatorId != null ? Number(r.operatorId) : undefined,
+      operatorName: r.operatorName != null ? String(r.operatorName) : undefined,
+      warehouseId: r.warehouseId != null ? Number(r.warehouseId) : undefined,
+      warehouseName: r.warehouseName != null ? String(r.warehouseName) : undefined,
+      quantity: r.quantity != null ? Number(r.quantity) : undefined,
+      batchNo: r.batchNo != null ? String(r.batchNo) : undefined,
+      remark: r.remark != null ? String(r.remark) : undefined,
     }));
   }
 

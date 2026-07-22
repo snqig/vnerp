@@ -78,10 +78,11 @@ export class Validator {
     }
 
     if (type === 'number' || typeof value === 'number') {
-      if (min !== undefined && value < min) {
+      const numValue = Number(value);
+      if (min !== undefined && numValue < min) {
         return message || `${field} 不能小于 ${min}`;
       }
-      if (max !== undefined && value > max) {
+      if (max !== undefined && numValue > max) {
         return message || `${field} 不能大于 ${max}`;
       }
     }
@@ -108,7 +109,7 @@ export class Validator {
       return message || `${field} 格式不正确`;
     }
 
-    if (enumValues && !enumValues.includes(value)) {
+    if (enumValues && !enumValues.includes(value as string | number)) {
       return message || `${field} 必须是以下值之一: ${enumValues.join(', ')}`;
     }
 
@@ -150,7 +151,7 @@ export class Validator {
         if (!phoneRegex.test(String(value))) return `${field} 必须是有效的手机号码`;
         break;
       case 'date':
-        const date = new Date(value);
+        const date = new Date(value as string | number | Date);
         if (isNaN(date.getTime())) return `${field} 必须是有效的日期`;
         break;
     }
@@ -243,13 +244,17 @@ export const ValidationPresets = {
     required,
     type: 'number',
     min,
-    custom: (value) => {
-      const decimalPlaces = (value.toString().split('.')[1] || '').length;
+    custom: (value: unknown) => {
+      const decimalPlaces = (String(value).split('.')[1] || '').length;
       return decimalPlaces <= 2 || `${field} 最多只能有2位小数`;
     },
   }),
 
-  status: (field = 'status', required = true, enumValues: (string | number)[] = [0, 1]): ValidationRule => ({
+  status: (
+    field = 'status',
+    required = true,
+    enumValues: (string | number)[] = [0, 1]
+  ): ValidationRule => ({
     field,
     required,
     type: 'number',

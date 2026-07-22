@@ -12,11 +12,11 @@ import { MysqlPurchaseOrderRepository } from '@/infrastructure/repositories/Mysq
 import { DomainError, DomainEvent, NotFoundError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { query, transaction } from '@/lib/db';
-import { getSystemConfig } from '@/lib/system-config';
+import { getSystemConfig as _getSystemConfig } from '@/lib/system-config';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { CurrencyApplicationService } from './CurrencyApplicationService';
 import { MysqlCurrencyRepository } from '@/infrastructure/repositories/MysqlCurrencyRepository';
-import type { ResultSetHeader, RowDataPacket } from 'mysql2';
+import type { ResultSetHeader, RowDataPacket as _RowDataPacket } from 'mysql2';
 
 export class PurchaseReturnApplicationService {
   constructor(

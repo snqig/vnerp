@@ -247,7 +247,7 @@ export default function TransferPage() {
         const transferitemsList = Array.isArray(result.data)
           ? result.data
           : result.data?.list || [];
-        setTransferItems(transferitemsList);
+        _setTransferItems(transferitemsList);
         setScanItems([]);
         setShowOutboundDialog(true);
       }
@@ -288,7 +288,7 @@ export default function TransferPage() {
         const transferitemsList = Array.isArray(result.data)
           ? result.data
           : result.data?.list || [];
-        setTransferItems(transferitemsList);
+        _setTransferItems(transferitemsList);
         setScanItems([]);
         setShowInboundDialog(true);
       }

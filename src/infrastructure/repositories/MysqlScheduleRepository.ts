@@ -1,4 +1,8 @@
 import { IScheduleRepository } from '@/domain/production/repositories/IScheduleRepository';
+import type {
+  ProductionSchedule,
+  ProductionScheduleDetail,
+} from '@/domain/production/entities/ProductionSchedule';
 import { query, execute, queryPaginated } from '@/lib/db';
 
 interface ScheduleRow {
@@ -41,26 +45,25 @@ interface ScheduleDetailRow {
 }
 
 export class MysqlScheduleRepository implements IScheduleRepository {
-  async findById(id: number): Promise<ScheduleRow | null> {
-    const rows = await query('SELECT * FROM prd_schedule WHERE id = ? AND deleted = 0', [
-      id,
-    ]);
-    return rows.length > 0 ? rows[0] : null;
+  async findById(id: number): Promise<ProductionSchedule | null> {
+    const rows = await query('SELECT * FROM prd_schedule WHERE id = ? AND deleted = 0', [id]);
+    return rows.length > 0 ? this.toSchedule(rows[0] as ScheduleRow) : null;
   }
 
-  async findDetailsByScheduleId(scheduleId: number): Promise<ScheduleDetailRow[]> {
-    return await query(
+  async findDetailsByScheduleId(scheduleId: number): Promise<ProductionScheduleDetail[]> {
+    const rows = await query<ScheduleDetailRow>(
       'SELECT * FROM prd_schedule_detail WHERE schedule_id = ? AND deleted = 0 ORDER BY color_seq_no ASC',
       [scheduleId]
     );
+    return rows.map((r) => this.toScheduleDetail(r));
   }
 
-  async findByWorkOrderId(workOrderId: number): Promise<ScheduleRow | null> {
+  async findByWorkOrderId(workOrderId: number): Promise<ProductionSchedule | null> {
     const rows = await query(
       'SELECT * FROM prd_schedule WHERE work_order_id = ? AND deleted = 0 ORDER BY create_time DESC LIMIT 1',
       [workOrderId]
     );
-    return rows.length > 0 ? rows[0] : null;
+    return rows.length > 0 ? this.toSchedule(rows[0] as ScheduleRow) : null;
   }
 
   async findPaginated(params: {
@@ -70,7 +73,7 @@ export class MysqlScheduleRepository implements IScheduleRepository {
     status?: number;
     keyword?: string;
   }): Promise<{
-    data: ScheduleRow[];
+    data: ProductionSchedule[];
     pagination: { page: number; pageSize: number; total: number; totalPages: number };
   }> {
     let sql = 'SELECT * FROM prd_schedule WHERE deleted = 0';
@@ -103,7 +106,7 @@ export class MysqlScheduleRepository implements IScheduleRepository {
     });
 
     return {
-      data: result.data,
+      data: result.data.map((r: ScheduleRow) => this.toSchedule(r)),
       pagination: result.pagination,
     };
   }
@@ -280,6 +283,48 @@ export class MysqlScheduleRepository implements IScheduleRepository {
       result[row.status] = row.count;
     }
     return result;
+  }
+
+  private toSchedule(row: ScheduleRow): ProductionSchedule {
+    return {
+      id: row.id,
+      scheduleNo: row.schedule_no,
+      workOrderId: row.work_order_id,
+      orderId: row.order_id,
+      orderNo: row.order_no,
+      productId: row.product_id,
+      productCode: row.product_code,
+      productName: row.product_name,
+      workshop: row.workshop,
+      plannedQty: row.planned_qty,
+      completedQty: row.completed_qty,
+      plannedStart: row.planned_start,
+      plannedEnd: row.planned_end,
+      actualStart: row.actual_start,
+      actualEnd: row.actual_end,
+      priority: row.priority,
+      status: row.status,
+      scheduler: row.scheduler,
+      remark: row.remark,
+    };
+  }
+
+  private toScheduleDetail(row: ScheduleDetailRow): ProductionScheduleDetail {
+    return {
+      id: row.id,
+      scheduleId: row.schedule_id,
+      workOrderId: row.work_order_id,
+      colorSeqNo: row.color_seq_no,
+      colorName: row.color_name,
+      equipmentId: row.equipment_id,
+      equipmentName: row.equipment_name,
+      plannedStart: row.planned_start,
+      plannedEnd: row.planned_end,
+      actualStart: row.actual_start,
+      actualEnd: row.actual_end,
+      durationHours: row.duration_hours,
+      status: row.status,
+    };
   }
 
   async getConflictCount(params: {

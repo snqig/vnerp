@@ -1,4 +1,4 @@
-import { DomainEvent } from '@/domain/shared/DomainEvent';
+import { DomainEvent as _DomainEvent } from '@/domain/shared/DomainEvent';
 
 export enum SGSCertStatus {
   VALID = 1,

@@ -108,7 +108,7 @@ export async function query<T = any>(sql: string, values?: SqlValue[]): Promise<
     try {
       const pool = getPool();
       if (DEBUG_DB) {
-        const sqlStr = typeof sql === 'string' ? sql : String(sql);
+        const _sqlStr = typeof sql === 'string' ? sql : String(sql);
       }
       const [rows] = await pool.query(sql, values);
       if (DEBUG_DB) {

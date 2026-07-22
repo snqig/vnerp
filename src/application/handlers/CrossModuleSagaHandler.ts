@@ -1,8 +1,16 @@
-import { SagaLogRepository, SagaStatus, SagaStepStatus } from '@/infrastructure/repositories/SagaLogRepository';
+import {
+  SagaLogRepository,
+  SagaStatus as _SagaStatus,
+  SagaStepStatus as _SagaStepStatus,
+} from '@/infrastructure/repositories/SagaLogRepository';
 import { InMemoryEventBus } from '@/infrastructure/event-bus/EventBus';
-import { transaction } from '@/lib/db';
+import { transaction as _transaction } from '@/lib/db';
 
-export type SagaType = 'workorder_completion' | 'material_issue' | 'work_report' | 'hr_payroll_calculation';
+export type SagaType =
+  | 'workorder_completion'
+  | 'material_issue'
+  | 'work_report'
+  | 'hr_payroll_calculation';
 
 export class CrossModuleSagaHandler {
   constructor(
@@ -57,14 +65,18 @@ export class CrossModuleSagaHandler {
         occurredAt: new Date(),
         payload: { sagaId, sagaType: 'workorder_completion', payload },
       });
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       await this.sagaLogRepository.updateStatusWithError(sagaId, 'failed', errorMessage);
       await this.eventBus.publish({
         eventType: 'saga.failed',
         occurredAt: new Date(),
-        payload: { sagaId, sagaType: 'workorder_completion', failedStep: await this.getLastFailedStep(sagaId), errorMessage },
+        payload: {
+          sagaId,
+          sagaType: 'workorder_completion',
+          failedStep: await this.getLastFailedStep(sagaId),
+          errorMessage,
+        },
       });
 
       await this.triggerCompensation(sagaId);
@@ -111,14 +123,18 @@ export class CrossModuleSagaHandler {
         occurredAt: new Date(),
         payload: { sagaId, sagaType: 'material_issue', payload },
       });
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       await this.sagaLogRepository.updateStatusWithError(sagaId, 'failed', errorMessage);
       await this.eventBus.publish({
         eventType: 'saga.failed',
         occurredAt: new Date(),
-        payload: { sagaId, sagaType: 'material_issue', failedStep: await this.getLastFailedStep(sagaId), errorMessage },
+        payload: {
+          sagaId,
+          sagaType: 'material_issue',
+          failedStep: await this.getLastFailedStep(sagaId),
+          errorMessage,
+        },
       });
 
       await this.triggerCompensation(sagaId);
@@ -165,14 +181,18 @@ export class CrossModuleSagaHandler {
         occurredAt: new Date(),
         payload: { sagaId, sagaType: 'work_report', payload },
       });
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       await this.sagaLogRepository.updateStatusWithError(sagaId, 'failed', errorMessage);
       await this.eventBus.publish({
         eventType: 'saga.failed',
         occurredAt: new Date(),
-        payload: { sagaId, sagaType: 'work_report', failedStep: await this.getLastFailedStep(sagaId), errorMessage },
+        payload: {
+          sagaId,
+          sagaType: 'work_report',
+          failedStep: await this.getLastFailedStep(sagaId),
+          errorMessage,
+        },
       });
 
       await this.triggerCompensation(sagaId);
@@ -180,7 +200,11 @@ export class CrossModuleSagaHandler {
     }
   }
 
-  private async executeStep(sagaId: string, stepName: string, action: () => Promise<void>): Promise<void> {
+  private async executeStep(
+    sagaId: string,
+    stepName: string,
+    action: () => Promise<void>
+  ): Promise<void> {
     await this.sagaLogRepository.addStep(sagaId, stepName);
     await this.sagaLogRepository.updateStepStatus(sagaId, stepName, 'pending');
 

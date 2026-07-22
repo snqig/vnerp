@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 export const POST = withPermission(async (_request: NextRequest) => {
   const startTime = Date.now();
   logger.info('[MENU_INIT] ==================== 菜单初始化开始 ====================');
-  logger.info('[MENU_INIT] 时间:', new Date().toISOString());
+  logger.info(`[MENU_INIT] 时间: ${new Date().toISOString()}`);
 
   try {
     const result = await transaction(async (conn) => {
@@ -84,7 +84,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           results.push(`${menu.menu_code}: 创建成功`);
         }
       }
-      logger.info('[MENU_INIT] 步骤1完成: 顶级菜单处理完毕, 数量:', topLevelMenus.length);
+      logger.info(`[MENU_INIT] 步骤1完成: 顶级菜单处理完毕, 数量: ${topLevelMenus.length}`);
 
       const menuMigrations: { from: string; to: string; new_name?: string }[] = [
         { from: 'dashboard', to: 'dashboard_center', new_name: '看板中心' },
@@ -141,7 +141,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           results.push(`${mig.from} -> ${mig.to}: 无需迁移`);
         }
       }
-      logger.info('[MENU_INIT] 步骤2完成: 菜单迁移处理完毕, 迁移数:', menuMigrations.length);
+      logger.info(`[MENU_INIT] 步骤2完成: 菜单迁移处理完毕, 迁移数: ${menuMigrations.length}`);
 
       const duplicateDeletes = [
         'dashboard',
@@ -1443,7 +1443,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           }
         }
       }
-      logger.info('[MENU_INIT] 步骤6完成: 二级菜单项处理完毕, 总数:', newMenus.length);
+      logger.info(`[MENU_INIT] 步骤6完成: 二级菜单项处理完毕, 总数: ${newMenus.length}`);
 
       logger.info('[MENU_INIT] 步骤7: 开始更新系统管理员菜单权限...');
       const [roles]: Loose = await conn.execute(
@@ -1474,15 +1474,15 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     const endTime = Date.now();
     logger.info('[MENU_INIT] ==================== 菜单初始化完成 ====================');
-    logger.info('[MENU_INIT] 耗时:', (endTime - startTime) / 1000, '秒');
-    logger.info('[MENU_INIT] 结果记录数:', result.length);
+    logger.info(`[MENU_INIT] 耗时: ${(endTime - startTime) / 1000} 秒`);
+    logger.info(`[MENU_INIT] 结果记录数: ${result.length}`);
 
     return successResponse(result, '菜单优化初始化成功');
   } catch (error) {
     const endTime = Date.now();
     logger.error('[MENU_INIT] ==================== 菜单初始化失败 ====================');
-    logger.error('[MENU_INIT] 耗时:', (endTime - startTime) / 1000, '秒');
-    logger.error('[MENU_INIT] 错误:', error);
+    logger.error(`[MENU_INIT] 耗时: ${(endTime - startTime) / 1000} 秒`);
+    logger.error(`[MENU_INIT] 错误: ${error}`);
 
     return errorResponse('菜单初始化失败: ' + (error as Error).message, 500);
   }

@@ -37,7 +37,7 @@ export interface VoucherResult {
   error?: string;
 }
 
-const VOUCHER_SOURCE_LABELS: Record<VoucherSource, string> = {
+const _VOUCHER_SOURCE_LABELS: Record<VoucherSource, string> = {
   sales_outbound: '销售出库',
   purchase_inbound: '采购入库',
   production_inbound: '生产入库',
@@ -61,7 +61,7 @@ export class FinanceVoucherHandler {
     }>,
     customerId?: number,
     customerName?: string,
-    warehouseId?: number
+    _warehouseId?: number
   ): Promise<VoucherResult> {
     try {
       const voucherNo = await this.generateVoucherNo('FV');
@@ -387,7 +387,7 @@ export class FinanceVoucherHandler {
   static async reverseVoucher(
     voucherId: number,
     reason: string,
-    operatorName: string
+    _operatorName: string
   ): Promise<VoucherResult> {
     try {
       const [voucherRows]: Loose = await query(

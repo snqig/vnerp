@@ -1,5 +1,5 @@
 import { EventHandler } from '@/infrastructure/event-bus/EventBus';
-import { DomainEvent } from '@/domain/standard-card/events/StandardCardEvents';
+import { DomainEvent } from '@/domain/shared/DomainTypes';
 import { db } from '@/lib/db';
 import { getCacheManager } from '@/lib/cache';
 import { logger } from '@/lib/logger';
@@ -31,7 +31,7 @@ export class StandardCardNotificationHandler implements EventHandler {
     }
   }
 
-  private async handleCreated(event: DomainEvent): Promise<void> {}
+  private async handleCreated(_event: DomainEvent): Promise<void> {}
 
   private async handleSubmitted(event: DomainEvent): Promise<void> {
     const { standardCardId, code, version, userId } = event.payload as {
@@ -40,7 +40,13 @@ export class StandardCardNotificationHandler implements EventHandler {
       version: string;
       userId: number;
     };
-    const ctx = { module: 'standard-card', action: 'handleSubmitted', userId, standardCardId };
+    const ctx = {
+      module: 'standard-card',
+      action: 'handleSubmitted',
+      traceId: '',
+      userId,
+      standardCardId,
+    };
     logger.stepStart(ctx, '通知流程开始', { code, version });
 
     try {
@@ -99,7 +105,13 @@ export class StandardCardNotificationHandler implements EventHandler {
   }
 
   private async handleConfirmed(event: DomainEvent): Promise<void> {
-    const { standardCardId, code, version, materialId, userId } = event.payload;
+    const { standardCardId, code, version, materialId, userId } = event.payload as {
+      standardCardId: number;
+      code: string;
+      version: string;
+      materialId: number;
+      userId: number;
+    };
 
     await db.insert('sys_notification', {
       title: '标准卡已生效',
@@ -116,7 +128,19 @@ export class StandardCardNotificationHandler implements EventHandler {
   }
 
   private async handleObsoleted(event: DomainEvent): Promise<void> {
-    const { standardCardId, code, version, reason, userId } = event.payload;
+    const {
+      standardCardId,
+      code: _code,
+      version: _version,
+      reason: _reason,
+      userId: _userId,
+    } = event.payload as {
+      standardCardId: number;
+      code: string;
+      version: string;
+      reason: string;
+      userId: number;
+    };
 
     await getCacheManager().delete(`standard_card_${standardCardId}`);
     await getCacheManager().delete(`standard_card_list`);
@@ -146,7 +170,12 @@ export class StandardCardNotificationHandler implements EventHandler {
   }
 
   private async handleNewVersionCreated(event: DomainEvent): Promise<void> {
-    const { parentStandardCardId, parentVersion, newVersion, code } = event.payload as {
+    const {
+      parentStandardCardId,
+      parentVersion: _parentVersion,
+      newVersion: _newVersion,
+      code: _code,
+    } = event.payload as {
       parentStandardCardId: number;
       parentVersion: string;
       newVersion: string;

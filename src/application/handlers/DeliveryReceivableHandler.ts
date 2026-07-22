@@ -5,7 +5,7 @@ import { logger, secureLog } from '@/lib/logger';
 
 export class DeliveryReceivableHandler implements EventHandler<DeliveryShippedEvent> {
   async handle(event: DeliveryShippedEvent): Promise<void> {
-    const { deliveryId, deliveryNo, orderId, customerId, totalAmount } = event.payload;
+    const { deliveryId, deliveryNo, orderId: _orderId, customerId, totalAmount } = event.payload;
     const ctx = { module: 'delivery-receivable', action: 'create', deliveryId, deliveryNo };
     let phase = 'init';
 

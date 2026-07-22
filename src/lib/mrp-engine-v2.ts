@@ -242,7 +242,7 @@ export function applyLotSizing(
   lotSizing: LotSizingType,
   fixedLotSize: number = 0,
   eoq: number = 0,
-  periodSupplyDays: number = 0
+  _periodSupplyDays: number = 0
 ): number {
   if (netRequirement <= 0) return 0;
 
@@ -855,7 +855,7 @@ export class MRPEngine {
     materialId: number,
     startDate: string,
     horizonDays: number,
-    warehouseId?: number
+    _warehouseId?: number
   ): Promise<Map<string, number>> {
     const receiptMap = new Map<string, number>();
 
@@ -963,7 +963,7 @@ export class MRPEngine {
     horizonDays: number
   ): Promise<CapacityLoad[]> {
     const capacityMap = new Map<string, CapacityLoad>();
-    const buckets = generateBucketDates(startDate, horizonDays, this.config.bucketSize);
+    const _buckets = generateBucketDates(startDate, horizonDays, this.config.bucketSize);
 
     const productMaterials = materials.filter((m) => m.materialType !== 'material');
 

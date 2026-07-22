@@ -1,4 +1,4 @@
-import { DomainError } from '@/domain/shared/DomainTypes';
+import { DomainError as _DomainError } from '@/domain/shared/DomainTypes';
 import { FieldMapper, assertField } from './FieldMapping';
 
 export interface InkSpecificationProps {

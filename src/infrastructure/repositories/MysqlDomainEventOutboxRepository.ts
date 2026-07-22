@@ -82,7 +82,7 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
     try {
       await conn.beginTransaction();
 
-      const [rows] = await conn.query(
+      const [rows] = (await conn.query(
         `SELECT id, event_type, aggregate_type, aggregate_id, payload, status,
                 retry_count, error_message, next_execute_at, create_time, processed_at
          FROM domain_event_outbox
@@ -92,7 +92,7 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
          LIMIT ?
          FOR UPDATE SKIP LOCKED`,
         [limit]
-      ) as [RowDataPacket[], RowDataPacket];
+      )) as [RowDataPacket[], RowDataPacket];
 
       if (rows.length === 0) {
         await conn.commit();
@@ -108,7 +108,7 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
       );
 
       await conn.commit();
-      return rows.map(this.toRecord);
+      return rows.map((r: RowDataPacket) => this.toRecord(r as EventOutboxRow));
     } catch (err) {
       await conn.rollback();
       throw err;
@@ -222,7 +222,7 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
       aggregateType: row.aggregate_type,
       aggregateId: row.aggregate_id,
       payload: typeof row.payload === 'string' ? row.payload : JSON.stringify(row.payload),
-      status: row.status,
+      status: row.status as EventOutboxRecord['status'],
       retryCount: row.retry_count || 0,
       errorMessage: row.error_message,
       nextExecuteAt: row.next_execute_at ? new Date(row.next_execute_at) : null,

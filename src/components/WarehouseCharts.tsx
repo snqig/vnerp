@@ -70,7 +70,7 @@ export function ChartImage({ url, title, loading = false, onError }: ChartProps)
 }
 
 export function ChartPlaceholder({
-  title,
+  title: _title,
   type = 'loading',
 }: {
   title?: string;

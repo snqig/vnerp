@@ -309,7 +309,7 @@ export async function createMultiColorWorkOrder(
   salesOrderId: number,
   planQty: number,
   printArea: number,
-  substrateType: string = 'paper'
+  _substrateType: string = 'paper'
 ): Promise<{
   success: boolean;
   workOrderId?: number;

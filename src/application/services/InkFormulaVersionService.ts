@@ -212,7 +212,10 @@ export async function listColors(params: {
     status: params.status ? Number(params.status) : undefined,
   });
   return {
-    list: result.list as (InkColor & { active_version_no: string | null; version_count: number })[],
+    list: result.list as unknown as (InkColor & {
+      active_version_no: string | null;
+      version_count: number;
+    })[],
     total: result.total,
   };
 }
@@ -221,7 +224,10 @@ export async function createColor(
   data: Omit<InkColor, 'id' | 'create_time' | 'update_time' | 'create_by' | 'update_by'>,
   operatorId: number
 ): Promise<number> {
-  return colorRepo.save(data, operatorId);
+  return (colorRepo as { save(data: unknown, operatorId: number): Promise<number> }).save(
+    data,
+    operatorId
+  );
 }
 
 export async function updateColor(
@@ -229,7 +235,9 @@ export async function updateColor(
   data: Partial<InkColor>,
   operatorId: number
 ): Promise<void> {
-  await colorRepo.update(id, data, operatorId);
+  await (
+    colorRepo as { update(id: number, data: unknown, operatorId: number): Promise<void> }
+  ).update(id, data, operatorId);
 }
 
 export async function deleteColor(id: number): Promise<void> {
@@ -251,19 +259,20 @@ export async function getVersionDetail(id: number): Promise<FormulaVersion | nul
   const dto = aggregateToDTO(agg);
   const color = await colorRepo.findById(agg.colorId);
   if (color) {
+    const c = color as unknown as Record<string, unknown>;
     dto.color = {
       id: color.id,
-      color_code: color.color_code,
-      color_name: color.color_name,
-      color_series: color.color_series,
-      base_ink_type: color.base_ink_type,
-      pantone_code: color.pantone_code,
-      remark: color.remark,
-      status: color.status,
-      create_by: color.create_by,
-      create_time: color.create_time,
-      update_by: color.update_by,
-      update_time: color.update_time,
+      color_code: (c.color_code as string) ?? color.code,
+      color_name: (c.color_name as string) ?? color.name,
+      color_series: (c.color_series as string | null) ?? null,
+      base_ink_type: (c.base_ink_type as string | null) ?? null,
+      pantone_code: (c.pantone_code as string | null) ?? null,
+      remark: (c.remark as string | null) ?? null,
+      status: color.status ?? 0,
+      create_by: (c.create_by as number | null) ?? null,
+      create_time: (c.create_time as string) ?? '',
+      update_by: (c.update_by as number | null) ?? null,
+      update_time: (c.update_time as string) ?? '',
     };
   }
   return dto;

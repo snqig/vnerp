@@ -206,7 +206,7 @@ export default function ToolManagementPage() {
       const data = await res.json();
       if (data.success) {
         setTools(data.data?.list || []);
-        setTotal(data.data?.total || 0);
+        _setTotal(data.data?.total || 0);
       }
     } finally {
       setLoading(false);

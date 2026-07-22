@@ -9,6 +9,7 @@ import { FormulaItemVO } from '@/domain/dcprint/value-objects/FormulaItemVO';
 import {
   IFormulaVersionRepository,
   IInkColorRepository,
+  InkColor,
 } from '@/domain/dcprint/repositories/IFormulaVersionRepository';
 import type { ResultSetHeader, PoolConnection } from 'mysql2/promise';
 
@@ -101,7 +102,7 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
       [id]
     );
     if (!rows || rows.length === 0) return null;
-    return InkFormulaVersion.fromRow(rows[0]);
+    return InkFormulaVersion.fromRow(rows[0] as unknown as Record<string, unknown>);
   }
 
   async findByIdWithItems(id: number): Promise<InkFormulaVersion | null> {
@@ -120,7 +121,7 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
     );
 
     const itemVOs = items.map((row) => this.mapItemRowToVO(row));
-    return InkFormulaVersion.fromRow(rows[0], itemVOs);
+    return InkFormulaVersion.fromRow(rows[0] as unknown as Record<string, unknown>, itemVOs);
   }
 
   async findByColorId(colorId: number): Promise<InkFormulaVersion[]> {
@@ -130,7 +131,7 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
        ORDER BY v.status ASC, v.create_time DESC`,
       [colorId]
     );
-    return rows.map((row) => InkFormulaVersion.fromRow(row));
+    return rows.map((row) => InkFormulaVersion.fromRow(row as unknown as Record<string, unknown>));
   }
 
   async getActiveVersion(colorId: number): Promise<InkFormulaVersion | null> {
@@ -141,7 +142,7 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
       [colorId]
     );
     if (!rows || rows.length === 0) return null;
-    return InkFormulaVersion.fromRow(rows[0]);
+    return InkFormulaVersion.fromRow(rows[0] as unknown as Record<string, unknown>);
   }
 
   async getVersionNos(colorId: number): Promise<string[]> {
@@ -284,7 +285,11 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
     return rows && rows.length > 0;
   }
 
-  private async saveItems(conn: PoolConnection, versionId: number, items: FormulaItemVO[]): Promise<void> {
+  private async saveItems(
+    conn: PoolConnection,
+    versionId: number,
+    items: FormulaItemVO[]
+  ): Promise<void> {
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       await conn.execute(
@@ -330,20 +335,32 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
 }
 
 export class MysqlInkColorRepository implements IInkColorRepository {
-  async findById(id: number): Promise<InkColorRow | null> {
+  async findById(id: number): Promise<InkColor | null> {
     const rows = await query<InkColorRow>(
       'SELECT * FROM dcprint_ink_color WHERE id = ? AND is_deleted = 0',
       [id]
     );
-    return rows?.[0] ?? null;
+    if (!rows || rows.length === 0) return null;
+    return {
+      id: rows[0].id,
+      code: rows[0].color_code,
+      name: rows[0].color_name,
+      status: rows[0].status ?? undefined,
+    };
   }
 
-  async findByCode(code: string): Promise<InkColorRow | null> {
+  async findByCode(code: string): Promise<InkColor | null> {
     const rows = await query<InkColorRow>(
       'SELECT * FROM dcprint_ink_color WHERE color_code = ? AND is_deleted = 0',
       [code]
     );
-    return rows?.[0] ?? null;
+    if (!rows || rows.length === 0) return null;
+    return {
+      id: rows[0].id,
+      code: rows[0].color_code,
+      name: rows[0].color_name,
+      status: rows[0].status ?? undefined,
+    };
   }
 
   async findList(params: {
@@ -351,7 +368,7 @@ export class MysqlInkColorRepository implements IInkColorRepository {
     pageSize: number;
     keyword?: string;
     status?: number;
-  }): Promise<{ list: InkColorRow[]; total: number }> {
+  }): Promise<{ list: InkColor[]; total: number }> {
     const { page, pageSize, keyword, status } = params;
     let where = 'WHERE c.is_deleted = 0';
     const sqlParams: (string | number)[] = [];
@@ -385,45 +402,39 @@ export class MysqlInkColorRepository implements IInkColorRepository {
       [...sqlParams, pageSize, (page - 1) * pageSize]
     );
 
-    return { list: rows, total };
+    return {
+      list: rows.map((r) => ({
+        id: r.id,
+        code: r.color_code,
+        name: r.color_name,
+        status: r.status ?? undefined,
+      })),
+      total,
+    };
   }
 
-  async save(data: InkColorRow, operatorId: number): Promise<number> {
+  async save(data: Partial<InkColor>, operatorId: number): Promise<number> {
     const result = await execute(
-      `INSERT INTO dcprint_ink_color (color_code, color_name, color_series, base_ink_type, pantone_code, remark, status, create_by, update_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        data.color_code,
-        data.color_name,
-        data.color_series || null,
-        data.base_ink_type || null,
-        data.pantone_code || null,
-        data.remark || null,
-        data.status || 1,
-        operatorId,
-        operatorId,
-      ]
+      `INSERT INTO dcprint_ink_color (color_code, color_name, status, create_by, update_by)
+       VALUES (?, ?, ?, ?, ?)`,
+      [data.code, data.name, data.status ?? 1, operatorId, operatorId]
     );
     return result.insertId;
   }
 
-  async update(id: number, data: InkColorRow, operatorId: number): Promise<void> {
+  async update(id: number, data: Partial<InkColor>, operatorId: number): Promise<void> {
+    const colMap: Record<string, string> = {
+      code: 'color_code',
+      name: 'color_name',
+      status: 'status',
+    };
     const fields: string[] = [];
     const values: (string | number | null)[] = [];
 
-    const editable = [
-      'color_code',
-      'color_name',
-      'color_series',
-      'base_ink_type',
-      'pantone_code',
-      'remark',
-      'status',
-    ];
-    for (const f of editable) {
-      if ((data as Record<string, unknown>)[f] !== undefined) {
-        fields.push(`${f} = ?`);
-        values.push((data as Record<string, unknown>)[f] as string | number | null);
+    for (const [key, col] of Object.entries(colMap)) {
+      if ((data as Record<string, unknown>)[key] !== undefined) {
+        fields.push(`${col} = ?`);
+        values.push((data as Record<string, unknown>)[key] as string | number | null);
       }
     }
     if (fields.length === 0) return;

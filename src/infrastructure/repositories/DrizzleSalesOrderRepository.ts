@@ -16,7 +16,7 @@
  *   默认 REPOSITORY_IMPL=mysql 时不会被调用。
  */
 
-import { eq, and, like, or, gte, lte, desc, inArray, sql, count } from 'drizzle-orm';
+import { eq, and, like, or, gte, lte, desc, inArray, count } from 'drizzle-orm';
 import { getDrizzleDb } from '@/lib/db';
 import { salOrder, salOrderDetail } from '@/lib/db/schema';
 import { transaction } from '@/lib/db';
@@ -24,7 +24,7 @@ import { ISalesOrderRepository } from '@/domain/sales/repositories/ISalesOrderRe
 import { SalesOrder, SalesOrderProps } from '@/domain/sales/aggregates/SalesOrder';
 import { SalesOrderStatus, SalesStatus } from '@/domain/sales/value-objects/SalesOrderStatus';
 import { generateDocumentNo } from '@/lib/document-numbering';
-import type { ResultSetHeader, FieldPacket } from 'mysql2/promise';
+import type { ResultSetHeader } from 'mysql2/promise';
 
 type SalOrderRow = typeof salOrder.$inferSelect;
 type SalOrderDetailRow = typeof salOrderDetail.$inferSelect;
@@ -246,7 +246,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
         `[DrizzleSalesRepo] save (entry)\n  TABLE: sal_order (INSERT)\n  CONDITIONS: N/A (new row)\n  SQL: ${orderSql}\n  PARAMS: ${JSON.stringify(orderParams)}`
       );
 
-      const [orderResult]: [ResultSetHeader, FieldPacket[]] = await conn.execute(
+      const [orderResult] = await conn.execute(
         `INSERT INTO sal_order
          (order_no, order_date, customer_id, contact_name, contact_phone, delivery_address,
           salesman_id, total_amount, tax_amount, total_with_tax, discount_amount,

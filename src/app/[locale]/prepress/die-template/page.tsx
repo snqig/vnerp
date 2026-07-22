@@ -113,6 +113,7 @@ export default function DieTemplatePage() {
   const [maintenanceList, setMaintenanceList] = useState<MaintenanceRecord[]>([]);
   const [usageLogList, setUsageLogList] = useState<UsageLog[]>([]);
   const [keyword, setKeyword] = useState('');
+  const [_loading, setLoading] = useState(false);
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, _setStatusFilter] = useState('all');
   const [dieStatusFilter, setDieStatusFilter] = useState('all');

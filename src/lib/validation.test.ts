@@ -101,7 +101,7 @@ describe('验证工具测试', () => {
     it('应该支持自定义验证函数', () => {
       const result = Validator.validateValue(5, {
         field: 'number',
-        custom: (value) => value > 10 || '必须大于10',
+        custom: (value: unknown) => Number(value) > 10 || '必须大于10',
       });
       expect(result).toBe('必须大于10');
     });
@@ -109,7 +109,7 @@ describe('验证工具测试', () => {
     it('应该通过自定义验证', () => {
       const result = Validator.validateValue(15, {
         field: 'number',
-        custom: (value) => value > 10 || '必须大于10',
+        custom: (value: unknown) => Number(value) > 10 || '必须大于10',
       });
       expect(result).toBeNull();
     });

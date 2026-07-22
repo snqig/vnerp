@@ -67,8 +67,8 @@ function calculateCost(
   items: SampleProcessItemInput[],
   steps: SampleProcessStepInput[],
   lossRate: number,
-  dieToolId?: number | null,
-  screenPlateId?: number | null
+  _dieToolId?: number | null,
+  _screenPlateId?: number | null
 ): CostBreakdown {
   const lossMultiplier = 1 + (lossRate || 0) / 100;
   const materialCost = items.reduce((sum, item) => {

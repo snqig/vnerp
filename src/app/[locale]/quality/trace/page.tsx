@@ -122,7 +122,7 @@ export default function TracePage() {
   const fetchRecords = useCallback(async () => {
     try {
       const params = new URLSearchParams();
-      if (keyword) params.set('keyword', keyword);
+      if (_keyword) params.set('keyword', _keyword);
       if (traceTypeFilter !== 'all') params.set('traceType', traceTypeFilter);
       params.set('pageSize', '20');
       const res = await authFetch(`/api/dcprint/trace?${params}`);
@@ -150,7 +150,7 @@ export default function TracePage() {
         setRecords(list);
       }
     } catch {}
-  }, [keyword, traceTypeFilter]);
+  }, [_keyword, traceTypeFilter]);
 
   useEffect(() => {
     fetchRecords();

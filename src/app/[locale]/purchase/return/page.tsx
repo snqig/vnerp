@@ -276,11 +276,11 @@ export default function PurchaseReturnPage() {
       if (result.success) {
         const data = result.data?.list || result.data || [];
         const found = data.find((r: Loose) => r.id === order.id);
-        if (found?.items) setDetailItems(found.items);
-        else setDetailItems([]);
+        if (found?.items) _setDetailItems(found.items);
+        else _setDetailItems([]);
       }
     } catch {
-      setDetailItems([]);
+      _setDetailItems([]);
     }
     setDetailOpen(true);
   };

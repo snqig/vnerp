@@ -222,7 +222,7 @@ export class TransferOrder {
     );
   }
 
-  shipOut(operatorId?: number, operatorName?: string): void {
+  shipOut(_operatorId?: number, _operatorName?: string): void {
     this._status = this._status.transitionTo(TransferStatusEnum.SHIPPED);
     this._outTime = new Date().toISOString();
 
@@ -243,7 +243,7 @@ export class TransferOrder {
     );
   }
 
-  receiveIn(operatorId?: number, operatorName?: string): void {
+  receiveIn(_operatorId?: number, _operatorName?: string): void {
     this._status = this._status.transitionTo(TransferStatusEnum.RECEIVED);
     this._inTime = new Date().toISOString();
 

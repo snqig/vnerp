@@ -50,7 +50,7 @@ export default function PayablesPage() {
 
   const [payables, setPayables] = useState<Payable[]>([]);
   const [loading, setLoading] = useState(false);
-  const [_page, _setPage] = useState(1);
+  const [page, _setPage] = useState(1);
   const [_total, setTotal] = useState(0);
 
   const [showPayment, setShowPayment] = useState(false);

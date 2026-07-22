@@ -13,7 +13,7 @@
  *   默认 REPOSITORY_IMPL=mysql 时走 MysqlPurchaseOrderRepository。
  */
 
-import { eq, and, like, or, gte, lte, desc, inArray, sql, count } from 'drizzle-orm';
+import { eq, and, like, or, gte, lte, desc, inArray, count } from 'drizzle-orm';
 import { getDrizzleDb } from '@/lib/db';
 import { purPurchaseOrder, purPurchaseOrderLine } from '@/lib/db/schema';
 import { transaction } from '@/lib/db';
@@ -28,7 +28,7 @@ import {
   PurchaseStatus,
 } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
 import { generateDocumentNo } from '@/lib/document-numbering';
-import type { ResultSetHeader, FieldPacket } from 'mysql2/promise';
+import type { ResultSetHeader } from 'mysql2/promise';
 
 type PurPurchaseOrderRow = typeof purPurchaseOrder.$inferSelect;
 type PurPurchaseOrderLineRow = typeof purPurchaseOrderLine.$inferSelect;

@@ -1,8 +1,9 @@
 import { query, execute } from '@/lib/db';
+import { DomainEvent } from '@/domain/shared/DomainTypes';
 
 export class SampleOrderInventoryHandler {
-  async handle(event: { eventType: string; payload: { sampleOrderId: number } }): Promise<void> {
-    const { payload } = event;
+  async handle(event: DomainEvent): Promise<void> {
+    const payload = event.payload as { sampleOrderId: number };
 
     if (event.eventType === 'SampleOrderCompleted') {
       const order = await query('SELECT * FROM sal_sample_order WHERE id = ?', [

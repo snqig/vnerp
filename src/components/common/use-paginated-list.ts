@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-interface UsePaginatedListOptions<T> {
+interface UsePaginatedListOptions<_T> {
   fetchUrl: string;
   searchKey?: string;
   pageSize?: number;
