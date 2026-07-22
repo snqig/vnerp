@@ -109,6 +109,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       'qrcode_record',
       'qrcode_scan_log',
       'label_template',
+      'print_log',
     ];
 
     let clearedCount = 0;

@@ -1,4 +1,4 @@
-import { QRCode, SourceType } from '@/domain/trace/QRCode';
+import { QRCode, QR_TYPE, type QRCodeProps } from '@/domain/trace/QRCode';
 import type { IQRCodeRepository, TraceTimelineItem } from '@/domain/trace/repositories/IQRCodeRepository';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
@@ -15,40 +15,55 @@ export class QRCodeApplicationService {
   ) {}
 
   async generateBatchQr(
-    materialId: number | null,
-    materialName: string | null,
-    batchNo: string | null,
-    quantity: number,
-    count: number,
-    sourceType: number = SourceType.INBOUND
-  ): Promise<{ ids: number[]; qrContents: string[] }> {
-    if (count <= 0) throw new DomainError('生成数量必须大于0');
-    if (quantity <= 0) throw new DomainError('数量必须大于0');
+    props: {
+      qrType?: string;
+      batchNo?: string | null;
+      quantity: number;
+      count: number;
+      materialId?: number | null;
+      materialCode?: string | null;
+      materialName?: string | null;
+      unit?: string | null;
+      warehouseId?: number | null;
+      warehouseName?: string | null;
+      refId?: number | null;
+      refNo?: string | null;
+    }
+  ): Promise<{ ids: number[]; qrCodes: string[] }> {
+    if (props.count <= 0) throw new DomainError('生成数量必须大于0');
+    if (props.quantity <= 0) throw new DomainError('数量必须大于0');
 
-    const qrCodeProps = [];
-    for (let i = 0; i < count; i++) {
-      const qrContent = `${batchNo || 'QR'}-${Date.now()}-${i}`;
-      qrCodeProps.push(QRCode.create({
-        qrContent,
-        sourceType,
-        batchNo,
-        quantity,
-        materialId,
-        materialName,
+    const qrType = props.qrType || QR_TYPE.MATERIAL;
+    const qrCodes: QRCode[] = [];
+    for (let i = 0; i < props.count; i++) {
+      const qrCodeValue = `${props.batchNo || 'QR'}-${Date.now()}-${i}`;
+      qrCodes.push(QRCode.create({
+        qrCode: qrCodeValue,
+        qrType,
+        batchNo: props.batchNo ?? null,
+        quantity: props.quantity,
+        materialId: props.materialId ?? null,
+        materialCode: props.materialCode ?? null,
+        materialName: props.materialName ?? null,
+        unit: props.unit ?? null,
+        warehouseId: props.warehouseId ?? null,
+        warehouseName: props.warehouseName ?? null,
+        refId: props.refId ?? null,
+        refNo: props.refNo ?? null,
       }));
     }
 
-    const ids = await this.qrCodeRepo.createBatch(qrCodeProps);
+    const ids = await this.qrCodeRepo.createBatch(qrCodes);
 
     for (let i = 0; i < ids.length; i++) {
       const event = new QRCodeGeneratedEvent({
         qrId: ids[i],
-        qrContent: qrCodeProps[i].qrContent,
-        materialId,
-        batchNo,
-        quantity,
-        sourceType,
-        count,
+        qrCode: qrCodes[i].qrCode,
+        materialId: props.materialId ?? null,
+        batchNo: props.batchNo ?? null,
+        quantity: props.quantity,
+        qrType,
+        count: props.count,
       });
       await transaction(async (conn) => {
         await getDomainEventOutbox().saveEvents(conn, 'QRCode', ids[i], [event]);
@@ -57,15 +72,15 @@ export class QRCodeApplicationService {
 
     return {
       ids,
-      qrContents: qrCodeProps.map((q) => q.qrContent),
+      qrCodes: qrCodes.map((q) => q.qrCode),
     };
   }
 
   async splitParentQr(
-    parentQrContent: string,
+    parentQrCode: string,
     splits: SplitInput[]
-  ): Promise<{ childIds: number[]; childContents: string[] }> {
-    const parent = await this.qrCodeRepo.findByContent(parentQrContent);
+  ): Promise<{ childIds: number[]; childCodes: string[] }> {
+    const parent = await this.qrCodeRepo.findByContent(parentQrCode);
     if (!parent) throw new NotFoundError('父二维码不存在');
     if (parent.status !== 1) throw new DomainError('父二维码已失效');
 
@@ -73,29 +88,32 @@ export class QRCodeApplicationService {
     if (totalQuantity > parent.quantity) throw new DomainError('拆分总量超过父码剩余数量');
 
     const childIds: number[] = [];
-    const childContents: string[] = [];
+    const childCodes: string[] = [];
 
     await transaction(async (conn) => {
       let childIndex = 1;
       for (const split of splits) {
         const childQr = parent.split(split.quantity, splits.length, childIndex);
         const [result] = (await conn.execute(
-          `INSERT INTO qrcode_record (qr_content, parent_qr_id, split_flag, split_index, source_type, batch_no, quantity, material_id, material_name, status, create_time, update_time)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())`,
+          `INSERT INTO qrcode_record (qr_code, qr_type, parent_qr_code, split_flag, split_index, batch_no, material_id, material_code, material_name, quantity, unit, warehouse_id, status, create_time, update_time)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())`,
           [
-            childQr.qrContent,
-            parent.id,
+            childQr.qrCode,
+            QR_TYPE.SPLIT,
+            parent.qrCode,
             1,
             childIndex,
-            SourceType.SPLIT,
             parent.batchNo,
-            split.quantity,
             parent.materialId,
+            parent.materialCode,
             parent.materialName,
+            split.quantity,
+            parent.unit,
+            parent.warehouseId,
           ]
         )) as unknown as [{ insertId: number }];
         childIds.push(Number(result.insertId));
-        childContents.push(childQr.qrContent);
+        childCodes.push(childQr.qrCode);
         childIndex++;
       }
 
@@ -107,34 +125,40 @@ export class QRCodeApplicationService {
 
       const splitEvent = new QRCodeSplitEvent({
         parentQrId: parent.id!,
-        parentQrContent: parent.qrContent,
+        parentQrCode: parent.qrCode,
         childQrIds: childIds,
-        childQrContents: childContents,
+        childQrCodes: childCodes,
         splitCount: splits.length,
       });
       await getDomainEventOutbox().saveEvents(conn, 'QRCode', parent.id!, [splitEvent]);
     });
 
-    return { childIds, childContents };
+    return { childIds, childCodes };
   }
 
   async recordScan(
-    qrContent: string,
+    qrCode: string,
     operator: string,
     location: string
   ): Promise<void> {
-    const qr = await this.qrCodeRepo.findByContent(qrContent);
+    const qr = await this.qrCodeRepo.findByContent(qrCode);
     if (!qr) throw new NotFoundError('二维码不存在');
 
     await transaction(async (conn) => {
       await conn.execute(
-        `INSERT INTO qrcode_scan_log (qr_content, operator, location, scan_time) VALUES (?, ?, ?, NOW())`,
-        [qrContent, operator, location]
+        `INSERT INTO qrcode_scan_log (qr_code, qr_type, scan_type, operator_name, scan_result, scan_message, create_time)
+         VALUES (?, ?, ?, ?, 'success', ?, NOW())`,
+        [qrCode, qr.qrType, 'trace', operator, `扫码位置: ${location}`]
+      );
+
+      await conn.execute(
+        'UPDATE qrcode_record SET scan_count = scan_count + 1, last_scan_time = NOW() WHERE id = ?',
+        [qr.id]
       );
 
       const event = new QRCodeScannedEvent({
         qrId: qr.id!,
-        qrContent: qr.qrContent,
+        qrCode: qr.qrCode,
         operator,
         location,
       });
@@ -142,10 +166,10 @@ export class QRCodeApplicationService {
     });
   }
 
-  async getTraceTimeline(qrContent: string): Promise<TraceTimelineItem[]> {
-    const qr = await this.qrCodeRepo.findByContent(qrContent);
+  async getTraceTimeline(qrCode: string): Promise<TraceTimelineItem[]> {
+    const qr = await this.qrCodeRepo.findByContent(qrCode);
     if (!qr) throw new NotFoundError('二维码不存在');
-    return this.qrCodeRepo.queryTraceTimeline(qrContent);
+    return this.qrCodeRepo.queryTraceTimeline(qrCode);
   }
 
   async recordPrint(
@@ -161,6 +185,10 @@ export class QRCodeApplicationService {
       `INSERT INTO print_log (qr_id, template_id, print_time, operator, paper_type, print_count)
        VALUES (?, ?, NOW(), ?, ?, ?)`,
       [qrId, templateId, operator, paperType, printCount]
+    );
+    await execute(
+      'UPDATE qrcode_record SET print_count = print_count + ?, last_print_time = NOW() WHERE id = ?',
+      [printCount, qrId]
     );
   }
 }

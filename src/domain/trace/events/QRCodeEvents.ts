@@ -7,11 +7,11 @@ export class QRCodeGeneratedEvent implements DomainEvent {
   constructor(
     public readonly payload: {
       qrId: number;
-      qrContent: string;
+      qrCode: string;
       materialId: number | null;
       batchNo: string | null;
       quantity: number;
-      sourceType: number;
+      qrType: string;
       count: number;
     }
   ) {}
@@ -24,9 +24,9 @@ export class QRCodeSplitEvent implements DomainEvent {
   constructor(
     public readonly payload: {
       parentQrId: number;
-      parentQrContent: string;
+      parentQrCode: string;
       childQrIds: number[];
-      childQrContents: string[];
+      childQrCodes: string[];
       splitCount: number;
     }
   ) {}
@@ -39,7 +39,7 @@ export class QRCodeScannedEvent implements DomainEvent {
   constructor(
     public readonly payload: {
       qrId: number;
-      qrContent: string;
+      qrCode: string;
       operator: string;
       location: string;
     }
@@ -53,7 +53,7 @@ export class QRCodePrintedEvent implements DomainEvent {
   constructor(
     public readonly payload: {
       qrId: number;
-      qrContent: string;
+      qrCode: string;
       templateId: number | null;
       operator: string;
       paperType: string;

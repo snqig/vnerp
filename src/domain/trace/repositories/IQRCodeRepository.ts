@@ -13,12 +13,12 @@ export interface TraceTimelineItem {
 }
 
 export interface IQRCodeRepository {
-  findByContent(qrContent: string): Promise<QRCode | null>;
+  findByContent(qrCode: string): Promise<QRCode | null>;
   findById(id: number): Promise<QRCode | null>;
-  findByParentId(parentId: number): Promise<QRCode[]>;
+  findByParentQrCode(parentQrCode: string): Promise<QRCode[]>;
   findByBatchNo(batchNo: string): Promise<QRCode[]>;
   create(qrCode: QRCode): Promise<number>;
   createBatch(qrCodes: QRCode[]): Promise<number[]>;
   updateQuantity(id: number, quantity: number): Promise<void>;
-  queryTraceTimeline(qrContent: string): Promise<TraceTimelineItem[]>;
+  queryTraceTimeline(qrCode: string): Promise<TraceTimelineItem[]>;
 }

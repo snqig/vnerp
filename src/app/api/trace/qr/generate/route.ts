@@ -10,18 +10,24 @@ const service = new QRCodeApplicationService(repo);
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
     const body = await request.json();
-    const { materialId, materialName, batchNo, quantity, count, sourceType } = body;
+    const { qrType, batchNo, quantity, count, materialId, materialCode, materialName, unit, warehouseId, warehouseName, refId, refNo } = body;
     if (!quantity || !count) {
       return errorResponse('缺少必填字段: quantity, count', 400, 400);
     }
-    const result = await service.generateBatchQr(
-      materialId ?? null,
-      materialName ?? null,
-      batchNo ?? null,
-      Number(quantity),
-      Number(count),
-      sourceType ?? undefined
-    );
+    const result = await service.generateBatchQr({
+      qrType,
+      batchNo: batchNo ?? null,
+      quantity: Number(quantity),
+      count: Number(count),
+      materialId: materialId ?? null,
+      materialCode: materialCode ?? null,
+      materialName: materialName ?? null,
+      unit: unit ?? null,
+      warehouseId: warehouseId ?? null,
+      warehouseName: warehouseName ?? null,
+      refId: refId ?? null,
+      refNo: refNo ?? null,
+    });
     return successResponse(result, '二维码生成成功');
   },
   { logTitle: '批量生成二维码' }
