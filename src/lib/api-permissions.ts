@@ -838,6 +838,20 @@ export const ROUTE_PERMISSIONS: Record<
   '/api/dashboard/finance': { GET: API_PERMISSIONS.DASHBOARD_VIEW },
   '/api/dashboard/ceo': { GET: API_PERMISSIONS.DASHBOARD_VIEW },
   '/api/dashboard/quality': { GET: API_PERMISSIONS.DASHBOARD_VIEW },
+
+  // === 二维码溯源（批次8） ===
+  '/api/trace/qr': {
+    GET: API_PERMISSIONS.TRACE_QR_VIEW,
+    POST: API_PERMISSIONS.TRACE_QR_GENERATE,
+  },
+  '/api/trace/qr/split': { POST: API_PERMISSIONS.TRACE_QR_SPLIT },
+  '/api/trace/qr/scan': { POST: API_PERMISSIONS.TRACE_QR_SCAN },
+  '/api/trace/label': {
+    GET: API_PERMISSIONS.TRACE_LABEL_TEMPLATE,
+    POST: API_PERMISSIONS.TRACE_LABEL_TEMPLATE,
+    PUT: API_PERMISSIONS.TRACE_LABEL_TEMPLATE,
+    DELETE: API_PERMISSIONS.TRACE_LABEL_TEMPLATE,
+  },
 };
 
 /**
