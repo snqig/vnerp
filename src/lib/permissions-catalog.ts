@@ -152,8 +152,13 @@ export const API_PERMISSIONS = {
   MATERIAL_RETURN: 'material:return',
   MATERIAL_LABEL: 'material:label',
 
-  // 二维码
+  // 二维码溯源
   QRCODE_VIEW: 'qrcode:view',
+  TRACE_QR_VIEW: 'trace:qr:view',
+  TRACE_QR_GENERATE: 'trace:qr:generate',
+  TRACE_QR_SPLIT: 'trace:qr:split',
+  TRACE_QR_SCAN: 'trace:qr:scan',
+  TRACE_LABEL_TEMPLATE: 'trace:label:template',
 
   // 组织管理
   ORG_DEPARTMENT: 'organization:department',
@@ -523,6 +528,17 @@ export const PERMISSION_MODULES: Array<{
     permissions: [
       { id: API_PERMISSIONS.WORKFLOW_TASK, name: '工作流任务' },
       { id: API_PERMISSIONS.WORKFLOW_PROCESS, name: '工作流流程' },
+    ],
+  },
+  {
+    id: 'trace',
+    name: '二维码溯源',
+    permissions: [
+      { id: API_PERMISSIONS.TRACE_QR_VIEW, name: '查看溯源' },
+      { id: API_PERMISSIONS.TRACE_QR_GENERATE, name: '生成二维码' },
+      { id: API_PERMISSIONS.TRACE_QR_SPLIT, name: '拆分二维码' },
+      { id: API_PERMISSIONS.TRACE_QR_SCAN, name: '扫码登记' },
+      { id: API_PERMISSIONS.TRACE_LABEL_TEMPLATE, name: '标签模板' },
     ],
   },
   {
