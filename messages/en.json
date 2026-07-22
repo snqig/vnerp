@@ -4234,7 +4234,7 @@
   },
   "Hr": {
     "title": "HR Management",
-    "employee": "Employees",
+    "employee": "Employee",
     "department": "Departments",
     "attendance": "Attendance",
     "salary": "Salary",
@@ -4275,7 +4275,7 @@
     "editAttendance": "Edit Attendance Record",
     "deleteAttendance": "Delete Attendance Record",
     "confirmDelete": "Confirm to delete this attendance record?",
-    "saveSuccess": "Attendance record saved successfully",
+    "saveSuccess": "Saved successfully",
     "updateSuccess": "Attendance record updated successfully",
     "deleteSuccess": "Attendance record deleted successfully",
     "saveFailed": "Save failed",
@@ -4320,7 +4320,7 @@
     "overtimePay": "Overtime Pay",
     "otherBonus": "Other Bonus",
     "socialSecurity": "Social Security",
-    "housingFund": "Housing Fund",
+    "housingFund": "Housing Fund (Personal)",
     "personalTax": "Personal Tax",
     "otherDeduction": "Other Deduction",
     "actualSalary": "Actual Salary",
@@ -4352,11 +4352,11 @@
     "uploadImageOnly": "Only image files allowed",
     "imageSizeLimit": "Image size cannot exceed 2MB",
     "uploadPhotoFailed": "Failed to upload photo",
-    "deleteConfirm": "Confirm delete this employee?",
+    "deleteConfirm": "Confirm delete?",
     "selectEmployeesFirst": "Please select employees first",
     "allowPopupPdf": "Please allow pop-up to export PDF",
     "preparingPdf": "Preparing PDF export…",
-    "allowPopup": "Please allow pop-up",
+    "allowPopup": "Please allow popups",
     "printWindowOpened": "Print window opened",
     "generateQRFailed": "Failed to generate QR code",
     "overtimeHoursPlaceholder": "请输入加班时数",
@@ -4378,7 +4378,7 @@
     "exportSuccess": "汇出成功",
     "operationFailed": "操作失败",
     "organization": "Organization",
-    "shift": "Shift Management",
+    "shift": "Shift",
     "shiftName": "Shift Name",
     "startTime": "Start Time",
     "endTime": "End Time",
@@ -4468,7 +4468,6 @@
     "performanceSalary": "Performance Bonus",
     "allowances": "Allowances",
     "socialInsurance": "Social Insurance (Personal)",
-    "housingFund": "Housing Fund (Personal)",
     "individualTax": "Individual Income Tax",
     "attendanceDeduction": "Attendance Deduction",
     "grossPay": "Gross Pay",
@@ -4524,11 +4523,7 @@
     "calculating": "Calculating...",
     "executeCalculation": "Execute Calculation",
     "batchCalculationResults": "Batch Calculation Results ({count} employees)",
-    "employee": "Employee",
     "employeeId": "Employee ID",
-    "status": "Status",
-    "grossPay": "Gross Pay",
-    "performanceBonus": "Performance Bonus",
     "deductions": "Deductions",
     "socialInsurancePersonal": "Social Insurance (Personal)",
     "housingFundPersonal": "Housing Fund (Personal)",
@@ -4543,7 +4538,6 @@
     "totalCount": "Total",
     "records": "records",
     "addSchedule": "Add Schedule",
-    "shift": "Shift",
     "selectShift": "Select Shift",
     "syncTypePieceWork": "Piecework",
     "syncTypeQuality": "Quality Data",
@@ -4570,8 +4564,6 @@
     "addShift": "Add Shift",
     "editShift": "Edit Shift",
     "enterShiftName": "Please enter shift name",
-    "saveSuccess": "Saved successfully",
-    "deleteConfirm": "Confirm delete?",
     "lateThreshold": "Late Threshold (minutes)",
     "earlyLeaveThreshold": "Early Leave Threshold (minutes)",
     "searchEmployee": "Search employee name...",
@@ -4581,7 +4573,6 @@
     "siteManagement15": "5S Management (15%)",
     "totalScore": "Total Score",
     "fillRequired": "Please fill in all fields",
-    "allowPopup": "Please allow popups",
     "incomeItems": "Income Items",
     "deductionItems": "Deduction Items",
     "item": "Item",
@@ -5781,6 +5772,32 @@
         "work_report": "Work Report",
         "hr_payroll_calculation": "Payroll Calculation"
       }
+    }
+  },
+  "trace": {
+    "scan": {
+      "title": "二维码追溯",
+      "input_placeholder": "输入或扫描二维码编码",
+      "scan_button": "扫码识别",
+      "scanning": "正在识别...",
+      "query": "查询",
+      "camera_error": "摄像头识别失败",
+      "input_empty": "请输入二维码编码"
+    },
+    "timeline": {
+      "title": "追溯时间线",
+      "no_data": "暂无追溯数据",
+      "doc_no": "单据号",
+      "operator": "操作人",
+      "material": "物料",
+      "batch": "批次",
+      "quantity": "数量",
+      "process": "工序"
+    },
+    "print": {
+      "print_button": "打印标签",
+      "printing": "打印中...",
+      "popup_blocked": "请允许弹出窗口以打印标签"
     }
   }
 }
