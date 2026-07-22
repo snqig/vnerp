@@ -2579,7 +2579,9 @@
     "selectedLabelsCount": "已選 {count} 個標籤",
     "selectedRecordsCount": "已選 {count} 筆記錄",
     "stockInsufficient": "庫存不足",
-    "unfreeze": "解凍"
+    "unfreeze": "解凍",
+    "qrCodeGenerated": "二維碼生成成功",
+    "generateQrOnApprove": "審核通過時同步生成二維碼"
   },
   "Production": {
     "title": "生產管理",
@@ -5646,7 +5648,13 @@
       "scanning": "正在识别...",
       "query": "查询",
       "camera_error": "摄像头识别失败",
-      "input_empty": "请输入二维码编码"
+      "input_empty": "请输入二维码编码",
+      "subtitle": "输入或扫描二维码编码，查询全链路追溯历史",
+      "query_failed": "追溯查询失败",
+      "export_pdf": "导出 PDF 报告",
+      "export_success": "PDF 导出成功",
+      "loading": "加载追溯数据...",
+      "back_to_query": "返回查询"
     },
     "timeline": {
       "title": "追溯时间线",
@@ -5662,6 +5670,25 @@
       "print_button": "打印标签",
       "printing": "打印中...",
       "popup_blocked": "请允许弹出窗口以打印标签"
+    },
+    "label": {
+      "title": "标签模板配置",
+      "subtitle": "管理打印标签模板，支持变量填充和实时预览",
+      "name": "模板名称",
+      "scenario": "使用场景",
+      "size": "尺寸",
+      "preview": "预览",
+      "template": "标签模板",
+      "edit_desc": "编辑模板 HTML，使用 {变量名} 进行数据填充",
+      "html_template": "HTML 模板",
+      "width": "宽度(mm)",
+      "height": "高度(mm)",
+      "qr_size": "二维码尺寸(mm)",
+      "preview_hint": "预览使用示例数据填充",
+      "load_failed": "加载标签模板失败",
+      "scenario_inbound": "原料入库",
+      "scenario_split": "分切子码",
+      "scenario_finished": "成品标签"
     }
   }
 }

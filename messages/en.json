@@ -2595,7 +2595,9 @@
     "selectedLabelsCount": "{count} labels selected",
     "selectedRecordsCount": "{count} records selected",
     "stockInsufficient": "Insufficient stock",
-    "unfreeze": "Unfreeze"
+    "unfreeze": "Unfreeze",
+    "qrCodeGenerated": "QR code generated",
+    "generateQrOnApprove": "Generate QR code on approval"
   },
   "Production": {
     "title": "Production Management",
@@ -5782,7 +5784,13 @@
       "scanning": "正在识别...",
       "query": "查询",
       "camera_error": "摄像头识别失败",
-      "input_empty": "请输入二维码编码"
+      "input_empty": "请输入二维码编码",
+      "subtitle": "Enter or scan QR code to trace full chain history",
+      "query_failed": "Trace query failed",
+      "export_pdf": "Export PDF Report",
+      "export_success": "PDF exported",
+      "loading": "Loading trace data...",
+      "back_to_query": "Back to query"
     },
     "timeline": {
       "title": "追溯时间线",
@@ -5798,6 +5806,25 @@
       "print_button": "打印标签",
       "printing": "打印中...",
       "popup_blocked": "请允许弹出窗口以打印标签"
+    },
+    "label": {
+      "title": "Label Templates",
+      "subtitle": "Manage print label templates with variable binding and live preview",
+      "name": "Template Name",
+      "scenario": "Scenario",
+      "size": "Size",
+      "preview": "Preview",
+      "template": "Label Template",
+      "edit_desc": "Edit template HTML, use {variableName} for data binding",
+      "html_template": "HTML Template",
+      "width": "Width (mm)",
+      "height": "Height (mm)",
+      "qr_size": "QR Size (mm)",
+      "preview_hint": "Preview uses sample data",
+      "load_failed": "Failed to load label templates",
+      "scenario_inbound": "Inbound",
+      "scenario_split": "Split",
+      "scenario_finished": "Finished"
     }
   }
 }

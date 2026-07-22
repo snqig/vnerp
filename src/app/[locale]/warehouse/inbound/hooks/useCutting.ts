@@ -163,6 +163,31 @@ export function useCutting(deps: UseCuttingDeps) {
         setIsCuttingDialogOpen(false);
         setCuttingForm((prev) => ({ ...prev, cutWidths: '', remark: '' }));
 
+        // 生成子 QR 码
+        try {
+          const parentQrContent = currentLabel.batch_no || currentLabel.labelNo || '';
+          const splits = result.data?.newLabels?.map((nl: Loose, i: number) => ({
+            materialId: currentLabel.material_id || 0,
+            materialName: currentLabel.materialName || currentLabel.material_name || '',
+            batchNo: nl.batch_no || currentLabel.batch_no || '',
+            quantity: nl.cutQty || nl.quantity || 0,
+            splitIndex: i + 1,
+          })) || [];
+          if (splits.length > 0 && parentQrContent) {
+            await authFetch('/api/trace/qr/split', {
+              method: 'POST',
+              body: JSON.stringify({
+                parentQrContent,
+                splits,
+                operator: cuttingForm.operatorName || '系统管理员',
+              }),
+            });
+            logger.info(ctx, '子QR码生成完成', { splitCount: splits.length });
+          }
+        } catch (qrErr) {
+          logger.warn(ctx, '子QR码生成失败(不影响主流程)', { error: (qrErr as Error).message });
+        }
+
         // 刷新入库单列表
         logger.info(ctx, '开始刷新入库单列表');
         await fetchInboundRecords();
