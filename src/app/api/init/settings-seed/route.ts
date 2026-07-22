@@ -108,6 +108,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       'hr_training_participant',
       'qrcode_record',
       'qrcode_scan_log',
+      'label_template',
     ];
 
     let clearedCount = 0;
@@ -1850,6 +1851,37 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       } catch (_e) {}
     }
     stats.sys_operation_log = operationLogs.length;
+
+    const labelTemplates = [
+      {
+        name: '原料入库标签（默认）',
+        scenario: 'inbound',
+        width_mm: 60, height_mm: 40, qr_size_mm: 20,
+        html_template: '<div style="text-align:center;font-family:sans-serif;padding:4px"><img src="{qrDataUrl}" style="width:40mm;height:40mm"/><p style="font-size:10px;margin:2px 0">{materialName}</p><p style="font-size:9px;margin:2px 0">{batchNo}</p><p style="font-size:8px;margin:2px 0">{quantity} {unit}</p></div>',
+        status: 1,
+      },
+      {
+        name: '分切子码标签',
+        scenario: 'split',
+        width_mm: 50, height_mm: 30, qr_size_mm: 20,
+        html_template: '<div style="text-align:center;font-family:sans-serif;padding:2px"><img src="{qrDataUrl}" style="width:28mm;height:28mm"/><p style="font-size:9px;margin:1px 0">{materialName}</p><p style="font-size:8px;margin:1px 0">{splitIndex}/{totalSplits}</p></div>',
+        status: 1,
+      },
+      {
+        name: '成品标签',
+        scenario: 'finished',
+        width_mm: 80, height_mm: 50, qr_size_mm: 20,
+        html_template: '<div style="text-align:center;font-family:sans-serif;padding:4px"><img src="{qrDataUrl}" style="width:40mm;height:40mm"/><p style="font-size:12px;margin:2px 0;font-weight:bold">{productName}</p><p style="font-size:9px;margin:2px 0">{batchNo}</p><p style="font-size:9px;margin:2px 0">{quantity} {unit}</p></div>',
+        status: 1,
+      },
+    ];
+    for (const tpl of labelTemplates) {
+      await conn.execute(
+        `INSERT IGNORE INTO label_template (name, scenario, html_template, width_mm, height_mm, qr_size_mm, status, create_time, update_time) VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW())`,
+        [tpl.name, tpl.scenario, tpl.html_template, tpl.width_mm, tpl.height_mm, tpl.qr_size_mm]
+      );
+    }
+    stats.label_template = labelTemplates.length;
 
     return stats;
   });
