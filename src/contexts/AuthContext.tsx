@@ -81,7 +81,7 @@ const MENU_CACHE_TS_KEY = 'cached_menus_ts';
 const MENU_CACHE_TTL = 30 * 60 * 1000;
 
 /** 从 localStorage 读取缓存的菜单数据 */
-function loadCachedMenus(): { menus: Menu[]; permissions: string[] } | null {
+function _loadCachedMenus(): { menus: Menu[]; permissions: string[] } | null {
   try {
     const ts = localStorage.getItem(MENU_CACHE_TS_KEY);
     if (!ts) return null;
@@ -329,7 +329,7 @@ export function AuthProvider({
             isLoading: true,
           });
 
-          fetchMenus(result.data.token, true, false).catch((e) => {});
+          fetchMenus(result.data.token, true, false).catch((_e) => {});
           return { success: true };
         } else {
           return { success: false, message: result.message };

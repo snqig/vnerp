@@ -36,13 +36,17 @@ export async function calculateOvertimeSalary(
   const startDate = `${year}-${mon}-01`;
   const endDate = `${year}-${mon}-31`;
 
-  const records = await db.select().from(hrAttendance)
-    .where(and(
-      eq(hrAttendance.employeeId, employeeId),
-      gte(hrAttendance.attendanceDate, new Date(startDate)),
-      lte(hrAttendance.attendanceDate, new Date(endDate)),
-      eq(hrAttendance.deleted, 0),
-    ));
+  const records = await db
+    .select()
+    .from(hrAttendance)
+    .where(
+      and(
+        eq(hrAttendance.employeeId, employeeId),
+        gte(hrAttendance.attendanceDate, new Date(startDate)),
+        lte(hrAttendance.attendanceDate, new Date(endDate)),
+        eq(hrAttendance.deleted, 0)
+      )
+    );
 
   // 计算小时工资
   const hourlyRate = baseSalary / MONTHLY_WORK_DAYS / DAILY_WORK_HOURS;
@@ -50,15 +54,17 @@ export async function calculateOvertimeSalary(
   // 获取班次信息（如果指定了班次）
   let shiftOvertimeRate = 1.5;
   if (shiftId) {
-    const shift = await db.select().from(hrShift)
+    const shift = await db
+      .select()
+      .from(hrShift)
       .where(eq(hrShift.id, shiftId))
-      .then(rows => rows[0]);
+      .then((rows) => rows[0]);
     if (shift) shiftOvertimeRate = Number(shift.overtimeRate);
   }
 
   let weekdayHours = 0;
   let weekendHours = 0;
-  let holidayHours = 0;
+  const holidayHours = 0;
 
   for (const r of records) {
     const overtimeHours = Number(r.overtimeHours || 0);

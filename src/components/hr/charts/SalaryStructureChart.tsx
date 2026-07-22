@@ -1,15 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface SalaryStructureData {
   name: string;
@@ -19,6 +11,24 @@ interface SalaryStructureData {
 
 interface SalaryStructureChartProps {
   data: SalaryStructureData[];
+}
+
+function renderCenterLabel(t: (key: string) => string, total: number) {
+  function CenterLabel({ viewBox }: { viewBox?: { cx: number; cy: number } }) {
+    if (!viewBox) return null;
+    const { cx, cy } = viewBox;
+    return (
+      <g>
+        <text x={cx} y={cy - 8} textAnchor="middle" className="fill-muted-foreground text-xs">
+          {t('total') || '总金额'}
+        </text>
+        <text x={cx} y={cy + 16} textAnchor="middle" className="fill-foreground text-lg font-bold">
+          ¥{total.toLocaleString()}
+        </text>
+      </g>
+    );
+  }
+  return CenterLabel;
 }
 
 export function SalaryStructureChart({ data }: SalaryStructureChartProps) {
@@ -41,30 +51,8 @@ export function SalaryStructureChart({ data }: SalaryStructureChartProps) {
   }
 
   const total = data.reduce((sum, d) => sum + d.value, 0);
-  const chartData = data.map(d => ({ ...d, name: labelMap[d.name] || d.name }));
-
-  const renderCenterLabel = useCallback(
-    ({ viewBox }: { viewBox?: { cx: number; cy: number } }) => {
-      if (!viewBox) return null;
-      const { cx, cy } = viewBox;
-      return (
-        <g>
-          <text x={cx} y={cy - 8} textAnchor="middle" className="fill-muted-foreground text-xs">
-            {t('total') || '总金额'}
-          </text>
-          <text
-            x={cx}
-            y={cy + 16}
-            textAnchor="middle"
-            className="fill-foreground text-lg font-bold"
-          >
-            ¥{total.toLocaleString()}
-          </text>
-        </g>
-      );
-    },
-    [total, t]
-  );
+  const chartData = data.map((d) => ({ ...d, name: labelMap[d.name] || d.name }));
+  const centerLabel = renderCenterLabel(t, total);
 
   return (
     <ResponsiveContainer width="100%" height={400}>
@@ -89,13 +77,10 @@ export function SalaryStructureChart({ data }: SalaryStructureChartProps) {
             border: '1px solid hsl(var(--border))',
             borderRadius: 'var(--radius)',
           }}
-          formatter={(value: number, name: string) => [
-            `¥${value.toLocaleString()}`,
-            name,
-          ]}
+          formatter={(value: number, name: string) => [`¥${value.toLocaleString()}`, name]}
         />
         <Legend />
-        {renderCenterLabel({ viewBox: { cx: 200, cy: 200 } } as any)}
+        {centerLabel({ viewBox: { cx: 200, cy: 200 } } as any)}
       </PieChart>
     </ResponsiveContainer>
   );

@@ -1,8 +1,5 @@
-import {
-  DemandForecaster,
-  ForecastingMethod as _ForecastingMethod,
-} from '@/lib/forecasting/demand-forecaster';
-import { query, execute, queryOne as _queryOne } from '@/lib/db';
+import { DemandForecaster, ForecastingMethod } from '@/lib/forecasting/demand-forecaster';
+import { query } from '@/lib/db';
 
 export class DemandForecastingService {
   async forecastMonthlyDemand(

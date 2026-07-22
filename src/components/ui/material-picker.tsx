@@ -24,7 +24,7 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
   const [keyword, setKeyword] = useState('');
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
+  const [_page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [highlightIdx, setHighlightIdx] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);

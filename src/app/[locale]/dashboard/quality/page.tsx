@@ -286,7 +286,7 @@ export default function QualityDashboard() {
         if (result.success && result.data) setData(result.data);
       } catch {
       } finally {
-        setLoading(false);
+        _setLoading(false);
       }
     };
     fetchData();

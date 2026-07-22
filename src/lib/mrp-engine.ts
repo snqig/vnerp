@@ -199,7 +199,7 @@ export async function explodeBOM(
 
       const childCircularKey = `${line.material_id}:${childPath}`;
 
-      const _matInfoRows: Loose = await conn.query(
+      const matInfoRows: Loose = await conn.query(
         `SELECT id, material_code, material_name FROM inv_material WHERE id = ?`,
         [line.material_id]
       );
@@ -294,7 +294,7 @@ export async function calculateTimeBuckets(
   }
 
   const defaultLeadTime = await CalcParamService.getInt('mrp.default_lead_time_days', 7);
-  const matInfoRows: Loose = await conn.query(
+  const _matInfoRows: Loose = await conn.query(
     `SELECT id FROM inv_material WHERE id = ? AND deleted = 0`,
     [materialId]
   );

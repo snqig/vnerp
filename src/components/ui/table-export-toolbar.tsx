@@ -24,8 +24,8 @@ interface TableExportToolbarProps {
 export function TableExportToolbar({
   selectedCount,
   totalCount,
-  onSelectAll,
-  onDeselectAll,
+  onSelectAll: _onSelectAll,
+  onDeselectAll: _onDeselectAll,
   onPrint,
   onExportPDF,
   onExportXLS,
