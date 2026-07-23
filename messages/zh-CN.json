@@ -2000,6 +2000,7 @@
     "qrCode": "二维码",
     "cut": "切割",
     "cuttingDesc": "切割说明",
+    "cuttingNoLabelSelected": "请先在标签管理中选择要分切的标签，点击标签卡片上的「分切」按钮",
     "sourceLabelInfo": "源标签信息",
     "labelNo": "标签编号",
     "originalSpec": "原始规格",

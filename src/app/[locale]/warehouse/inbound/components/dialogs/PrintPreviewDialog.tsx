@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
 import {
   Dialog,
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Printer } from 'lucide-react';
+import { Printer, Loader2, QrCode } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { PrintLabel } from '../../types';
@@ -27,6 +27,38 @@ export function PrintPreviewDialog({ open, onOpenChange, printLabels }: PrintPre
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [qrDataUrls, setQrDataUrls] = useState<Record<string, string>>({});
+  const [qrLoading, setQrLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setQrDataUrls({});
+      return;
+    }
+    let cancelled = false;
+    setQrLoading(true);
+    (async () => {
+      const map: Record<string, string> = {};
+      for (const label of printLabels) {
+        if (cancelled) return;
+        const key = label.id || label.labelNo;
+        if (map[key]) continue;
+        try {
+          const qrContent = `${label.labelNo || label.orderNo}@001:type:IN`;
+          map[key] = await QRCode.toDataURL(qrContent, { width: 120, margin: 1 });
+        } catch {
+          /* ignore */
+        }
+      }
+      if (!cancelled) {
+        setQrDataUrls(map);
+        setQrLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, printLabels]);
 
   const handlePrint = async () => {
     const printWindow = window.open('', '_blank');
@@ -121,9 +153,7 @@ export function PrintPreviewDialog({ open, onOpenChange, printLabels }: PrintPre
             <Printer className="h-5 w-5" />
             {t('qrCodeLabelPrintPreview')}
           </DialogTitle>
-          <DialogDescription>
-            {t('labelsToPrint', { count: printLabels.length })}
-          </DialogDescription>
+          <DialogDescription>{t('labelsToPrint', { count: printLabels.length })}</DialogDescription>
         </DialogHeader>
         <div id="print-area" className="py-4">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -175,6 +205,19 @@ export function PrintPreviewDialog({ open, onOpenChange, printLabels }: PrintPre
                           : '-'}
                       </span>
                     </div>
+                  </div>
+                  <div className="mt-2 flex justify-center">
+                    {qrLoading ? (
+                      <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
+                    ) : qrDataUrls[label.id || label.labelNo] ? (
+                      <img
+                        src={qrDataUrls[label.id || label.labelNo]}
+                        alt="QR"
+                        className="w-16 h-16"
+                      />
+                    ) : (
+                      <QrCode className="h-12 w-12 text-muted-foreground/40" />
+                    )}
                   </div>
                 </div>
               );

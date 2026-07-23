@@ -133,9 +133,7 @@ export function CuttingDialog({
                           {isValid ? (
                             <Badge className="bg-green-100 text-green-700">{tc('valid')}</Badge>
                           ) : (
-                            <Badge className="bg-red-100 text-red-700">
-                              {t('widthExceeded')}
-                            </Badge>
+                            <Badge className="bg-red-100 text-red-700">{t('widthExceeded')}</Badge>
                           )}
                         </div>
                         <div className="space-y-1">
@@ -147,9 +145,7 @@ export function CuttingDialog({
                             const cutQty =
                               specWidth > 0
                                 ? Math.round(
-                                    (currentLabel.quantity ||
-                                      currentLabel.item?.quantity ||
-                                      0) *
+                                    (currentLabel.quantity || currentLabel.item?.quantity || 0) *
                                       (w / specWidth) *
                                       100
                                   ) / 100
@@ -178,9 +174,7 @@ export function CuttingDialog({
                               const remQty =
                                 specWidth > 0
                                   ? Math.round(
-                                      (currentLabel.quantity ||
-                                        currentLabel.item?.quantity ||
-                                        0) *
+                                      (currentLabel.quantity || currentLabel.item?.quantity || 0) *
                                         (remainWidth / specWidth) *
                                         100
                                     ) / 100
@@ -230,6 +224,12 @@ export function CuttingDialog({
               </div>
             );
           })()}
+        {!currentLabel && (
+          <div className="py-8 text-center text-muted-foreground">
+            <Scissors className="h-12 w-12 mx-auto mb-3 opacity-30" />
+            <p>{t('cuttingNoLabelSelected')}</p>
+          </div>
+        )}
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {tc('cancel')}

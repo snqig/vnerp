@@ -801,19 +801,14 @@ export default function OutboundManagementPage() {
           className="flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#1677ff' }}
-            >
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-600">
               <ArrowUpRight className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold" style={{ color: '#1f2329' }}>
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {t('outboundManagement')}
               </h1>
-              <p className="text-sm" style={{ color: '#86909c' }}>
-                {t('outboundDesc')}
-              </p>
+              <p className="text-sm text-gray-400 dark:text-gray-500">{t('outboundDesc')}</p>
             </div>
           </div>
         </motion.div>
@@ -823,18 +818,9 @@ export default function OutboundManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="flex flex-wrap items-center gap-3 rounded-lg p-4 border"
-          style={{
-            backgroundColor: '#ffffff',
-            borderColor: '#eeeeee',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          }}
+          className="flex flex-wrap items-center gap-3 rounded-lg p-4 border bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-700 shadow-sm"
         >
-          <Button
-            onClick={handleAdd}
-            className="gap-2"
-            style={{ backgroundColor: '#1677ff', borderColor: '#1677ff' }}
-          >
+          <Button onClick={handleAdd} className="gap-2 bg-blue-600 border-blue-600">
             <Plus className="w-4 h-4" />
             {tc('add')}
           </Button>
@@ -874,16 +860,11 @@ export default function OutboundManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex flex-wrap items-center gap-4 rounded-lg p-4 border"
-          style={{
-            backgroundColor: '#ffffff',
-            borderColor: '#eeeeee',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          }}
+          className="flex flex-wrap items-center gap-4 rounded-lg p-4 border bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-700 shadow-sm"
         >
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4" style={{ color: '#86909c' }} />
-            <span className="text-sm font-medium" style={{ color: '#4e5969' }}>
+            <Filter className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
               {t('statusFilter')}：
             </span>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -901,8 +882,8 @@ export default function OutboundManagementPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Search className="w-4 h-4" style={{ color: '#86909c' }} />
-            <span className="text-sm font-medium" style={{ color: '#4e5969' }}>
+            <Search className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
               {tc('keyword')}：
             </span>
             <Input
@@ -914,8 +895,8 @@ export default function OutboundManagementPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" style={{ color: '#86909c' }} />
-            <span className="text-sm font-medium" style={{ color: '#4e5969' }}>
+            <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
               {tc('time')}：
             </span>
             <Select value={dateRange} onValueChange={setDateRange}>
@@ -956,20 +937,15 @@ export default function OutboundManagementPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm" style={{ color: '#86909c' }}>
-                      {t('todayOutbound')}
-                    </p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">{t('todayOutbound')}</p>
                     <p className="text-xl font-semibold mt-1" style={{ color: '#1677ff' }}>
                       {totalOutboundToday.toLocaleString()}
                     </p>
-                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>
+                    <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">
                       {t('unitPiecesM')}
                     </p>
                   </div>
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: '#f5f7fa' }}
-                  >
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
                     <TrendingDown className="w-5 h-5" style={{ color: '#1677ff' }} />
                   </div>
                 </div>
@@ -993,20 +969,17 @@ export default function OutboundManagementPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm" style={{ color: '#86909c' }}>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">
                       {t('monthOutboundTotal')}
                     </p>
                     <p className="text-xl font-semibold mt-1" style={{ color: '#52c41a' }}>
                       {totalOutboundMonth.toLocaleString()}
                     </p>
-                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>
+                    <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">
                       {t('unitPiecesM')}
                     </p>
                   </div>
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: '#f5f7fa' }}
-                  >
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
                     <Boxes className="w-5 h-5" style={{ color: '#52c41a' }} />
                   </div>
                 </div>
@@ -1030,9 +1003,7 @@ export default function OutboundManagementPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm" style={{ color: '#86909c' }}>
-                      {tc('pending')}
-                    </p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">{tc('pending')}</p>
                     <p className="text-xl font-semibold mt-1" style={{ color: '#faad14' }}>
                       {
                         outboundRecords.filter(
@@ -1040,14 +1011,11 @@ export default function OutboundManagementPage() {
                         ).length
                       }
                     </p>
-                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>
+                    <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">
                       {t('pendingCount')}
                     </p>
                   </div>
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: '#f5f7fa' }}
-                  >
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
                     <Clock className="w-5 h-5" style={{ color: '#faad14' }} />
                   </div>
                 </div>
@@ -1071,21 +1039,16 @@ export default function OutboundManagementPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm" style={{ color: '#86909c' }}>
-                      {t('outboundTotal')}
-                    </p>
-                    <p className="text-xl font-semibold mt-1" style={{ color: '#1f2329' }}>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">{t('outboundTotal')}</p>
+                    <p className="text-xl font-semibold mt-1 text-gray-900 dark:text-gray-100">
                       {outboundRecords.length}
                     </p>
-                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>
+                    <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">
                       {t('monthTotal')}
                     </p>
                   </div>
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: '#f5f7fa' }}
-                  >
-                    <FileText className="w-5 h-5" style={{ color: '#4e5969' }} />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+                    <FileText className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                   </div>
                 </div>
               </CardContent>
@@ -1111,11 +1074,11 @@ export default function OutboundManagementPage() {
               className="flex flex-row items-center justify-between border-b"
               style={{ borderColor: '#eeeeee' }}
             >
-              <CardTitle className="text-base font-semibold" style={{ color: '#1f2329' }}>
+              <CardTitle className="text-base font-semibold text-gray-900 dark:text-gray-100">
                 {t('outboundRecords')}
               </CardTitle>
               <div className="flex items-center gap-2">
-                <span className="text-sm" style={{ color: '#86909c' }}>
+                <span className="text-sm text-gray-400 dark:text-gray-500">
                   {t('totalRecordsCount', { count: filteredRecords.length })}
                 </span>
               </div>
@@ -1250,13 +1213,10 @@ export default function OutboundManagementPage() {
               </div>
               {filteredRecords.length === 0 && (
                 <div className="text-center py-12">
-                  <div
-                    className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                    style={{ backgroundColor: '#f5f7fa' }}
-                  >
-                    <List className="w-8 h-8" style={{ color: '#86909c' }} />
+                  <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-gray-50 dark:bg-gray-800">
+                    <List className="w-8 h-8 text-gray-400 dark:text-gray-500" />
                   </div>
-                  <p className="text-sm" style={{ color: '#86909c' }}>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">
                     {t('noOutboundRecords')}
                   </p>
                 </div>
@@ -1539,10 +1499,7 @@ export default function OutboundManagementPage() {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               {tc('cancel')}
             </Button>
-            <Button
-              onClick={handleUpdate}
-              style={{ backgroundColor: '#1677ff', borderColor: '#1677ff' }}
-            >
+            <Button onClick={handleUpdate} className="bg-blue-600 border-blue-600">
               {tc('update')}
             </Button>
           </DialogFooter>
@@ -1622,9 +1579,7 @@ export default function OutboundManagementPage() {
           {fifoLoading ? (
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="w-8 h-8 text-blue-600 animate-spin" />
-              <span className="ml-3" style={{ color: '#86909c' }}>
-                {t('calculatingFifo')}
-              </span>
+              <span className="ml-3 text-gray-400 dark:text-gray-500">{t('calculatingFifo')}</span>
             </div>
           ) : fifoAllocation ? (
             <div className="space-y-4">
@@ -1676,7 +1631,7 @@ export default function OutboundManagementPage() {
               {/* 分配明细表 */}
               {fifoAllocation.allocation_plan && fifoAllocation.allocation_plan.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium mb-2" style={{ color: '#4e5969' }}>
+                  <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
                     {t('allocationDetails')}
                   </h4>
                   <div className="border rounded-lg overflow-hidden">
@@ -1729,7 +1684,7 @@ export default function OutboundManagementPage() {
                 fifoAllocation.batches.length > 0 &&
                 !fifoAllocation.allocation_plan?.length && (
                   <div>
-                    <h4 className="text-sm font-medium mb-2" style={{ color: '#4e5969' }}>
+                    <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
                       {t('availableBatches')}
                     </h4>
                     <div className="border rounded-lg overflow-hidden">
@@ -1787,8 +1742,8 @@ export default function OutboundManagementPage() {
                   fifoAllocation.allocation_plan.length === 0) && (
                   <div className="text-center py-8">
                     <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
-                    <p style={{ color: '#4e5969' }}>{t('noAvailableBatch')}</p>
-                    <p className="text-sm mt-1" style={{ color: '#86909c' }}>
+                    <p className="text-gray-600 dark:text-gray-300">{t('noAvailableBatch')}</p>
+                    <p className="text-sm mt-1 text-gray-400 dark:text-gray-500">
                       {t('pleaseInboundFirst')}
                     </p>
                   </div>
@@ -1796,9 +1751,7 @@ export default function OutboundManagementPage() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-sm" style={{ color: '#86909c' }}>
-                {t('cannotGetAllocation')}
-              </p>
+              <p className="text-sm text-gray-400 dark:text-gray-500">{t('cannotGetAllocation')}</p>
             </div>
           )}
 

@@ -228,7 +228,6 @@ export default function InboundManagementPage() {
           onOpenAddDialog={() => setIsAddDialogOpen(true)}
           onOpenMixedAddDialog={() => setIsMixedAddDialogOpen(true)}
           onOpenGenerateDialog={() => setIsGenerateDialogOpen(true)}
-          onOpenCuttingDialog={() => setIsCuttingDialogOpen(true)}
           onOpenQRScanDialog={() => setIsQRScanDialogOpen(true)}
           onPrintLabels={setPrintLabels}
           onOpenPrintPreview={() => setIsPrintPreviewOpen(true)}
