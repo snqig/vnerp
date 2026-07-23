@@ -23,12 +23,61 @@ function generateLabelNo(): string {
   return `LBL${dateStr}${random}`;
 }
 
-// GET - 获取分切记录列表
+// GET - 获取分切记录列表 / 校验单个标签（?labelNo=xxx）
 export const GET = withPermission(
   async (request: NextRequest) => {
     const { searchParams } = new URL(request.url);
+    const labelNo = searchParams.get('labelNo');
+
+    // 如果提供 labelNo，执行单标签校验
+    if (labelNo) {
+      const label = await queryOne<Loose>(
+        `SELECT * FROM inv_material_label WHERE label_no = ? AND deleted = 0`,
+        [labelNo]
+      );
+
+      if (!label) {
+        return errorResponse('码不存在', 404, 404);
+      }
+
+      if (label.is_cut === 1) {
+        return errorResponse('物料已分切', 400, 400);
+      }
+
+      if (label.is_used === 1) {
+        return errorResponse('物料已使用', 400, 400);
+      }
+
+      if (label.label_type !== 1) {
+        return errorResponse('非母材请在采购进货中作业', 400, 400);
+      }
+
+      const currentQty = parseFloat(label.quantity) || 0;
+      if (currentQty <= 0) {
+        return errorResponse('该标签库存量为零或负数，无法分切', 400, 400);
+      }
+
+      return successResponse({
+        id: label.id,
+        labelNo: label.label_no,
+        materialName: label.material_name,
+        materialCode: label.material_code,
+        specification: label.specification,
+        quantity: label.quantity,
+        unit: label.unit,
+        width: label.width,
+        supplierName: label.supplier_name,
+        batchNo: label.batch_no,
+        purchaseOrderNo: label.purchase_order_no,
+        labelType: label.label_type,
+        isUsed: label.is_used,
+        isCut: label.is_cut,
+      });
+    }
+
+    // 否则返回分页分切记录列表
     const keyword = searchParams.get('keyword') || '';
-    const sourceLabelNo = searchParams.get('sourceLabelNo') || '';
+    const sourceLabelNoQ = searchParams.get('sourceLabelNo') || '';
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
@@ -40,13 +89,13 @@ export const GET = withPermission(
       params.push(`%${keyword}%`, `%${keyword}%`);
     }
 
-    if (sourceLabelNo) {
+    if (sourceLabelNoQ) {
       if (whereClause) {
         whereClause += ` AND r.source_label_no = ?`;
       } else {
         whereClause += `WHERE r.source_label_no = ?`;
       }
-      params.push(sourceLabelNo);
+      params.push(sourceLabelNoQ);
     }
 
     const result = await queryPaginated(
@@ -79,7 +128,7 @@ export const GET = withPermission(
 
     return successResponse(result);
   },
-  { errorMessage: '获取分切记录列表失败' }
+  { errorMessage: '操作失败' }
 );
 
 // POST - 执行分切操作
@@ -129,15 +178,20 @@ export const POST = withPermission(
     }
 
     if (!sourceLabel) {
-      return errorResponse(
-        `标签不存在: ${sourceLabelNo || (orderNo ? `${orderNo}-1` : '')}`,
-        404,
-        404
-      );
+      return errorResponse('码不存在', 404, 404);
     }
 
     if (sourceLabel.is_cut === 1) {
-      return errorResponse('该标签已经过分切，不能重复分切', 400, 400);
+      return errorResponse('物料已分切', 400, 400);
+    }
+
+    if (sourceLabel.is_used === 1) {
+      return errorResponse('物料已使用', 400, 400);
+    }
+
+    // 仅 label_type=1（原材料/母材）允许分切
+    if (sourceLabel.label_type !== 1) {
+      return errorResponse('非母材请在采购进货中作业', 400, 400);
     }
 
     const currentQty = parseFloat(sourceLabel.quantity) || 0;
@@ -171,6 +225,11 @@ export const POST = withPermission(
         400,
         400
       );
+    }
+
+    // 库存校验（按数量）：现有库存是否满足分切后剩余 >= 0
+    if (currentQty < cutTotalWidth) {
+      return errorResponse('库存不足，现有库存无法满足分切需求', 400, 400);
     }
 
     const recordNo = generateRecordNo();

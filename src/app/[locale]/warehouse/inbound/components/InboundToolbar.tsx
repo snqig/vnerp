@@ -1,7 +1,16 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Plus, RefreshCw, RotateCcw, Printer, Barcode, Beaker, ScanLine } from 'lucide-react';
+import {
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Printer,
+  Barcode,
+  Beaker,
+  ScanLine,
+  Scissors,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
@@ -18,6 +27,7 @@ interface InboundToolbarProps {
   onOpenMixedAddDialog: () => void;
   onOpenGenerateDialog: () => void;
   onOpenQRScanDialog: () => void;
+  onOpenSourceLabelQuery: () => void;
   onPrintLabels: (labels: PrintLabel[]) => void;
   onOpenPrintPreview: () => void;
 }
@@ -32,6 +42,7 @@ export function InboundToolbar({
   onOpenMixedAddDialog,
   onOpenGenerateDialog,
   onOpenQRScanDialog,
+  onOpenSourceLabelQuery,
   onPrintLabels,
   onOpenPrintPreview,
 }: InboundToolbarProps) {
@@ -76,6 +87,14 @@ export function InboundToolbar({
       <Button onClick={onOpenQRScanDialog} variant="outline" className="gap-2">
         <ScanLine className="w-4 h-4" />
         {t('qrCodeQuery')}
+      </Button>
+      <Button
+        onClick={onOpenSourceLabelQuery}
+        variant="outline"
+        className="gap-2 text-orange-600 border-orange-200 hover:bg-orange-50"
+      >
+        <Scissors className="w-4 h-4" />
+        {t('materialCutting')}
       </Button>
       <div className="w-px h-8 bg-slate-200 dark:bg-slate-600 mx-2" />
       <Button onClick={handlePrintAll} className="gap-2 bg-blue-600 hover:bg-blue-700">

@@ -99,12 +99,12 @@ const statusOptions = [
   {
     value: 'all',
     labelKey: 'all',
-    color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    color: 'bg-muted text-muted-foreground',
   },
   {
     value: 'draft',
     labelKey: 'draft',
-    color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    color: 'bg-muted text-muted-foreground',
   },
   {
     value: 'pending',
@@ -223,86 +223,6 @@ const _materials = [
   },
 ];
 
-// 出库记录数据
-const initialOutboundRecords: OutboundRecord[] = [
-  {
-    id: 'CK20250303001',
-    date: '2025-03-03',
-    materialName: '厚0.3热缩套管',
-    spec: 'Ф32',
-    quantity: 500,
-    unit: 'M',
-    warehouse: '原材料仓',
-    location: 'A-01-01',
-    operator: '张三',
-    status: 'completed',
-    auditStatus: 'approved',
-    type: '生产出库',
-    remark: '生产车间领用',
-    isRawMaterial: true,
-    materialCode: 'RSG-0.3-32',
-    width: 32,
-    batchNo: 'B20250303001',
-  },
-  {
-    id: 'CK20250303002',
-    date: '2025-03-03',
-    materialName: 'PE管',
-    spec: '25',
-    quantity: 200,
-    unit: 'M',
-    warehouse: '原材料仓',
-    location: 'A-01-02',
-    operator: '张三',
-    status: 'completed',
-    auditStatus: 'approved',
-    type: '生产出库',
-    remark: '生产车间领用',
-    isRawMaterial: true,
-    materialCode: 'PE-25',
-    width: 25,
-    batchNo: 'B20250303002',
-  },
-  {
-    id: 'CK20250302001',
-    date: '2025-03-02',
-    materialName: '厚0.2热缩套管',
-    spec: '22',
-    quantity: 300,
-    unit: 'M',
-    warehouse: '原材料仓',
-    location: 'A-01-03',
-    operator: '李四',
-    status: 'completed',
-    auditStatus: 'approved',
-    type: '销售出库',
-    remark: '客户订单发货',
-    isRawMaterial: true,
-    materialCode: 'RSG-0.2-22',
-    width: 22,
-    batchNo: 'B20250302001',
-  },
-  {
-    id: 'CK20250301001',
-    date: '2025-03-01',
-    materialName: '厚0.3热缩套管',
-    spec: 'Ф32',
-    quantity: 1000,
-    unit: 'M',
-    warehouse: '原材料仓',
-    location: 'A-01-01',
-    operator: '张三',
-    status: 'pending',
-    auditStatus: 'draft',
-    type: '生产出库',
-    remark: '月度生产计划领用',
-    isRawMaterial: true,
-    materialCode: 'RSG-0.3-32',
-    width: 32,
-    batchNo: 'B20250301001',
-  },
-];
-
 const statusConfig: Record<
   string,
   { labelKey: string; color: string; icon: React.ComponentType<Loose> }
@@ -380,7 +300,7 @@ export default function OutboundManagementPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   // 数据状态
-  const [outboundRecords, setOutboundRecords] = useState(initialOutboundRecords);
+  const [outboundRecords, setOutboundRecords] = useState<OutboundRecord[]>([]);
   const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
   const [warehouses, setWarehouses] = useState<Loose[]>([]);
 
@@ -456,10 +376,11 @@ export default function OutboundManagementPage() {
     } catch {}
   }, []);
 
-  // 初始加载仓库数据
+  // 初始加载仓库和出库数据
   useEffect(() => {
     fetchWarehouses();
-  }, [fetchWarehouses]);
+    fetchOutboundRecords();
+  }, [fetchWarehouses, fetchOutboundRecords]);
 
   // 重置筛选
   const handleReset = useCallback(() => {
@@ -801,14 +722,12 @@ export default function OutboundManagementPage() {
           className="flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-600">
-              <ArrowUpRight className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-primary">
+              <ArrowUpRight className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {t('outboundManagement')}
-              </h1>
-              <p className="text-sm text-gray-400 dark:text-gray-500">{t('outboundDesc')}</p>
+              <h1 className="text-lg font-semibold text-foreground">{t('outboundManagement')}</h1>
+              <p className="text-sm text-muted-foreground">{t('outboundDesc')}</p>
             </div>
           </div>
         </motion.div>
@@ -818,38 +737,22 @@ export default function OutboundManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="flex flex-wrap items-center gap-3 rounded-lg p-4 border bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-700 shadow-sm"
+          className="flex flex-wrap items-center gap-3 rounded-lg p-4 border bg-background border-border shadow-sm"
         >
-          <Button onClick={handleAdd} className="gap-2 bg-blue-600 border-blue-600">
+          <Button onClick={handleAdd} className="gap-2 bg-primary border-blue-600">
             <Plus className="w-4 h-4" />
             {tc('add')}
           </Button>
-          <Button
-            onClick={handlePrint}
-            variant="outline"
-            className="gap-2"
-            style={{ color: '#4e5969', borderColor: '#dcdfe6' }}
-          >
+          <Button onClick={handlePrint} variant="outline" className="gap-2">
             <Printer className="w-4 h-4" />
             {tc('print')}
           </Button>
-          <div className="w-px h-8 mx-2" style={{ backgroundColor: '#eeeeee' }} />
-          <Button
-            onClick={handleRefresh}
-            variant="outline"
-            className="gap-2"
-            disabled={isLoading}
-            style={{ color: '#4e5969', borderColor: '#dcdfe6' }}
-          >
+          <div className="w-px h-8 mx-2 bg-border" />
+          <Button onClick={handleRefresh} variant="outline" className="gap-2" disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             {t('refresh')}
           </Button>
-          <Button
-            onClick={handleReset}
-            variant="outline"
-            className="gap-2"
-            style={{ color: '#4e5969', borderColor: '#dcdfe6' }}
-          >
+          <Button onClick={handleReset} variant="outline" className="gap-2">
             <RotateCcw className="w-4 h-4" />
             {t('reset')}
           </Button>
@@ -860,13 +763,11 @@ export default function OutboundManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex flex-wrap items-center gap-4 rounded-lg p-4 border bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-700 shadow-sm"
+          className="flex flex-wrap items-center gap-4 rounded-lg p-4 border bg-background border-border shadow-sm"
         >
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              {t('statusFilter')}：
-            </span>
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">{t('statusFilter')}：</span>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder={t('selectStatus')} />
@@ -882,10 +783,8 @@ export default function OutboundManagementPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              {tc('keyword')}：
-            </span>
+            <Search className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">{tc('keyword')}：</span>
             <Input
               placeholder={t('searchPlaceholder')}
               value={searchQuery}
@@ -895,10 +794,8 @@ export default function OutboundManagementPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              {tc('time')}：
-            </span>
+            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">{tc('time')}：</span>
             <Select value={dateRange} onValueChange={setDateRange}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder={t('timeRange')} />
@@ -926,27 +823,18 @@ export default function OutboundManagementPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card
-              className="border rounded-lg"
-              style={{
-                borderColor: '#eeeeee',
-                backgroundColor: '#ffffff',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              }}
-            >
+            <Card className="border rounded-lg border-border bg-background shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400 dark:text-gray-500">{t('todayOutbound')}</p>
-                    <p className="text-xl font-semibold mt-1" style={{ color: '#1677ff' }}>
+                    <p className="text-sm text-muted-foreground">{t('todayOutbound')}</p>
+                    <p className="text-xl font-semibold mt-1 text-blue-500">
                       {totalOutboundToday.toLocaleString()}
                     </p>
-                    <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">
-                      {t('unitPiecesM')}
-                    </p>
+                    <p className="text-xs mt-1 text-muted-foreground">{t('unitPiecesM')}</p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
-                    <TrendingDown className="w-5 h-5" style={{ color: '#1677ff' }} />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-muted">
+                    <TrendingDown className="w-5 h-5 text-blue-500" />
                   </div>
                 </div>
               </CardContent>
@@ -958,29 +846,18 @@ export default function OutboundManagementPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card
-              className="border rounded-lg"
-              style={{
-                borderColor: '#eeeeee',
-                backgroundColor: '#ffffff',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              }}
-            >
+            <Card className="border rounded-lg border-border bg-background shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400 dark:text-gray-500">
-                      {t('monthOutboundTotal')}
-                    </p>
-                    <p className="text-xl font-semibold mt-1" style={{ color: '#52c41a' }}>
+                    <p className="text-sm text-muted-foreground">{t('monthOutboundTotal')}</p>
+                    <p className="text-xl font-semibold mt-1 text-green-500">
                       {totalOutboundMonth.toLocaleString()}
                     </p>
-                    <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">
-                      {t('unitPiecesM')}
-                    </p>
+                    <p className="text-xs mt-1 text-muted-foreground">{t('unitPiecesM')}</p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
-                    <Boxes className="w-5 h-5" style={{ color: '#52c41a' }} />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-muted">
+                    <Boxes className="w-5 h-5 text-green-500" />
                   </div>
                 </div>
               </CardContent>
@@ -992,31 +869,22 @@ export default function OutboundManagementPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card
-              className="border rounded-lg"
-              style={{
-                borderColor: '#eeeeee',
-                backgroundColor: '#ffffff',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              }}
-            >
+            <Card className="border rounded-lg border-border bg-background shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400 dark:text-gray-500">{tc('pending')}</p>
-                    <p className="text-xl font-semibold mt-1" style={{ color: '#faad14' }}>
+                    <p className="text-sm text-muted-foreground">{tc('pending')}</p>
+                    <p className="text-xl font-semibold mt-1 text-yellow-500">
                       {
                         outboundRecords.filter(
                           (r) => r.auditStatus === 'draft' || r.auditStatus === 'pending'
                         ).length
                       }
                     </p>
-                    <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">
-                      {t('pendingCount')}
-                    </p>
+                    <p className="text-xs mt-1 text-muted-foreground">{t('pendingCount')}</p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
-                    <Clock className="w-5 h-5" style={{ color: '#faad14' }} />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-muted">
+                    <Clock className="w-5 h-5 text-yellow-500" />
                   </div>
                 </div>
               </CardContent>
@@ -1028,27 +896,18 @@ export default function OutboundManagementPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card
-              className="border rounded-lg"
-              style={{
-                borderColor: '#eeeeee',
-                backgroundColor: '#ffffff',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              }}
-            >
+            <Card className="border rounded-lg border-border bg-background shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400 dark:text-gray-500">{t('outboundTotal')}</p>
-                    <p className="text-xl font-semibold mt-1 text-gray-900 dark:text-gray-100">
+                    <p className="text-sm text-muted-foreground">{t('outboundTotal')}</p>
+                    <p className="text-xl font-semibold mt-1 text-foreground">
                       {outboundRecords.length}
                     </p>
-                    <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">
-                      {t('monthTotal')}
-                    </p>
+                    <p className="text-xs mt-1 text-muted-foreground">{t('monthTotal')}</p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
-                    <FileText className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-muted">
+                    <FileText className="w-5 h-5 text-muted-foreground" />
                   </div>
                 </div>
               </CardContent>
@@ -1062,23 +921,13 @@ export default function OutboundManagementPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card
-            className="border rounded-lg"
-            style={{
-              borderColor: '#eeeeee',
-              backgroundColor: '#ffffff',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            }}
-          >
-            <CardHeader
-              className="flex flex-row items-center justify-between border-b"
-              style={{ borderColor: '#eeeeee' }}
-            >
-              <CardTitle className="text-base font-semibold text-gray-900 dark:text-gray-100">
+          <Card className="border rounded-lg border-border bg-background shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border">
+              <CardTitle className="text-base font-semibold text-foreground">
                 {t('outboundRecords')}
               </CardTitle>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400 dark:text-gray-500">
+                <span className="text-sm text-muted-foreground">
                   {t('totalRecordsCount', { count: filteredRecords.length })}
                 </span>
               </div>
@@ -1117,10 +966,7 @@ export default function OutboundManagementPage() {
                     {filteredRecords.map((record) => {
                       const StatusIcon = statusConfig[record.status]?.icon || FileText;
                       return (
-                        <TableRow
-                          key={record.id}
-                          className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                        >
+                        <TableRow key={record.id} className="hover:bg-muted/50">
                           <TableCell>
                             <Checkbox
                               checked={selectedRecords.includes(record.id)}
@@ -1213,12 +1059,10 @@ export default function OutboundManagementPage() {
               </div>
               {filteredRecords.length === 0 && (
                 <div className="text-center py-12">
-                  <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-gray-50 dark:bg-gray-800">
-                    <List className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                  <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-muted">
+                    <List className="w-8 h-8 text-muted-foreground" />
                   </div>
-                  <p className="text-sm text-gray-400 dark:text-gray-500">
-                    {t('noOutboundRecords')}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{t('noOutboundRecords')}</p>
                 </div>
               )}
             </CardContent>
@@ -1359,7 +1203,7 @@ export default function OutboundManagementPage() {
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
               {tc('cancel')}
             </Button>
-            <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={handleSave} className="bg-primary hover:bg-primary/90">
               {tc('save')}
             </Button>
           </DialogFooter>
@@ -1499,7 +1343,7 @@ export default function OutboundManagementPage() {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               {tc('cancel')}
             </Button>
-            <Button onClick={handleUpdate} className="bg-blue-600 border-blue-600">
+            <Button onClick={handleUpdate} className="bg-primary border-blue-600">
               {tc('update')}
             </Button>
           </DialogFooter>
@@ -1547,10 +1391,10 @@ export default function OutboundManagementPage() {
             </Button>
             <Button
               onClick={confirmAudit}
-              style={
+              className={
                 currentRecord?.auditAction === 'approve'
-                  ? { backgroundColor: '#52c41a', borderColor: '#52c41a' }
-                  : { backgroundColor: '#faad14', borderColor: '#faad14' }
+                  ? 'bg-green-500 hover:bg-green-600'
+                  : 'bg-yellow-500 hover:bg-yellow-600'
               }
             >
               {currentRecord?.auditAction === 'approve' ? t('auditApprove') : t('auditReject')}
@@ -1564,7 +1408,7 @@ export default function OutboundManagementPage() {
         <DialogContent className="sm:max-w-2xl max-h-[80vh]" resizable>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Layers className="w-5 h-5" style={{ color: '#1677ff' }} />
+              <Layers className="w-5 h-5 text-blue-500" />
               {t('fifoAllocationTitle')}
             </DialogTitle>
             <DialogDescription>
@@ -1579,38 +1423,34 @@ export default function OutboundManagementPage() {
           {fifoLoading ? (
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="w-8 h-8 text-blue-600 animate-spin" />
-              <span className="ml-3 text-gray-400 dark:text-gray-500">{t('calculatingFifo')}</span>
+              <span className="ml-3 text-muted-foreground">{t('calculatingFifo')}</span>
             </div>
           ) : fifoAllocation ? (
             <div className="space-y-4">
               {/* 汇总信息 */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-blue-50 rounded-lg p-3 text-center">
-                  <p className="text-xs" style={{ color: '#1677ff' }}>
-                    {t('requiredOutbound')}
-                  </p>
-                  <p className="text-xl font-bold text-blue-700">
+                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 text-center">
+                  <p className="text-xs text-blue-500">{t('requiredOutbound')}</p>
+                  <p className="text-xl font-bold text-blue-700 dark:text-blue-300">
                     {fifoAllocation.required_qty || currentRecord?.quantity || currentRecord?.qty}
                   </p>
                 </div>
-                <div className="bg-green-50 rounded-lg p-3 text-center">
-                  <p className="text-xs" style={{ color: '#52c41a' }}>
-                    {t('availableStock')}
-                  </p>
-                  <p className="text-xl font-bold text-green-700">
+                <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 text-center">
+                  <p className="text-xs text-green-500">{t('availableStock')}</p>
+                  <p className="text-xl font-bold text-green-700 dark:text-green-300">
                     {fifoAllocation.total_available?.toFixed(3) || '0'}
                   </p>
                 </div>
                 <div
-                  className={`rounded-lg p-3 text-center ${fifoAllocation.shortage > 0 ? 'bg-red-50' : 'bg-emerald-50'}`}
+                  className={`rounded-lg p-3 text-center ${fifoAllocation.shortage > 0 ? 'bg-red-50 dark:bg-red-900/30' : 'bg-emerald-50 dark:bg-emerald-900/30'}`}
                 >
                   <p
-                    className={`text-xs ${fifoAllocation.shortage > 0 ? 'text-red-600' : 'text-emerald-600'}`}
+                    className={`text-xs ${fifoAllocation.shortage > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}
                   >
                     {fifoAllocation.shortage > 0 ? t('shortage') : tc('status')}
                   </p>
                   <p
-                    className={`text-xl font-bold ${fifoAllocation.shortage > 0 ? 'text-red-700' : 'text-emerald-700'}`}
+                    className={`text-xl font-bold ${fifoAllocation.shortage > 0 ? 'text-red-700 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300'}`}
                   >
                     {fifoAllocation.shortage > 0
                       ? fifoAllocation.shortage.toFixed(3)
@@ -1620,9 +1460,9 @@ export default function OutboundManagementPage() {
               </div>
 
               {fifoAllocation.shortage > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-600" />
-                  <span className="text-sm" style={{ color: '#f5222d' }}>
+                <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  <span className="text-sm text-red-600 dark:text-red-400">
                     {t('stockInsufficient', { shortage: fifoAllocation.shortage.toFixed(3) })}
                   </span>
                 </div>
@@ -1631,31 +1471,19 @@ export default function OutboundManagementPage() {
               {/* 分配明细表 */}
               {fifoAllocation.allocation_plan && fifoAllocation.allocation_plan.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
+                  <h4 className="text-sm font-medium mb-2 text-muted-foreground">
                     {t('allocationDetails')}
                   </h4>
                   <div className="border rounded-lg overflow-hidden">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">
-                            {tc('batchNo')}
-                          </TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">
-                            {t('inboundDate')}
-                          </TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">
-                            {t('availableQty')}
-                          </TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">
-                            {t('allocatedQty')}
-                          </TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">
-                            {t('unitPrice')}
-                          </TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">
-                            {t('allocatedAmount')}
-                          </TableHead>
+                          <TableHead className="bg-muted">{tc('batchNo')}</TableHead>
+                          <TableHead className="bg-muted">{t('inboundDate')}</TableHead>
+                          <TableHead className="bg-muted">{t('availableQty')}</TableHead>
+                          <TableHead className="bg-muted">{t('allocatedQty')}</TableHead>
+                          <TableHead className="bg-muted">{t('unitPrice')}</TableHead>
+                          <TableHead className="bg-muted">{t('allocatedAmount')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1664,7 +1492,7 @@ export default function OutboundManagementPage() {
                             <TableCell className="font-mono text-sm">{alloc.batch_no}</TableCell>
                             <TableCell>{alloc.inbound_date || '-'}</TableCell>
                             <TableCell>{alloc.available_qty_before?.toFixed(3)}</TableCell>
-                            <TableCell className="font-semibold text-blue-700">
+                            <TableCell className="font-semibold text-blue-700 dark:text-blue-300">
                               {alloc.allocate_qty?.toFixed(3)}
                             </TableCell>
                             <TableCell>{alloc.unit_cost?.toFixed(2)}</TableCell>
@@ -1684,31 +1512,19 @@ export default function OutboundManagementPage() {
                 fifoAllocation.batches.length > 0 &&
                 !fifoAllocation.allocation_plan?.length && (
                   <div>
-                    <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
+                    <h4 className="text-sm font-medium mb-2 text-muted-foreground">
                       {t('availableBatches')}
                     </h4>
                     <div className="border rounded-lg overflow-hidden">
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">
-                              {tc('batchNo')}
-                            </TableHead>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">
-                              {t('inboundDate')}
-                            </TableHead>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">
-                              {tc('totalQuantity')}
-                            </TableHead>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">
-                              {t('availableQty')}
-                            </TableHead>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">
-                              {t('unitPrice')}
-                            </TableHead>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">
-                              {tc('status')}
-                            </TableHead>
+                            <TableHead className="bg-muted">{tc('batchNo')}</TableHead>
+                            <TableHead className="bg-muted">{t('inboundDate')}</TableHead>
+                            <TableHead className="bg-muted">{tc('totalQuantity')}</TableHead>
+                            <TableHead className="bg-muted">{t('availableQty')}</TableHead>
+                            <TableHead className="bg-muted">{t('unitPrice')}</TableHead>
+                            <TableHead className="bg-muted">{tc('status')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1717,14 +1533,14 @@ export default function OutboundManagementPage() {
                               <TableCell className="font-mono text-sm">{batch.batch_no}</TableCell>
                               <TableCell>{batch.inbound_date || '-'}</TableCell>
                               <TableCell>{parseFloat(batch.quantity)?.toFixed(3)}</TableCell>
-                              <TableCell className="font-semibold text-green-700">
+                              <TableCell className="font-semibold text-green-700 dark:text-green-300">
                                 {parseFloat(batch.available_qty)?.toFixed(3)}
                               </TableCell>
                               <TableCell>{parseFloat(batch.unit_price)?.toFixed(2)}</TableCell>
                               <TableCell>
                                 <Badge
                                   variant="outline"
-                                  className="bg-green-50 text-green-700 border-green-200"
+                                  className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
                                 >
                                   {tc('normal')}
                                 </Badge>
@@ -1741,17 +1557,15 @@ export default function OutboundManagementPage() {
                 (!fifoAllocation.allocation_plan ||
                   fifoAllocation.allocation_plan.length === 0) && (
                   <div className="text-center py-8">
-                    <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
-                    <p className="text-gray-600 dark:text-gray-300">{t('noAvailableBatch')}</p>
-                    <p className="text-sm mt-1 text-gray-400 dark:text-gray-500">
-                      {t('pleaseInboundFirst')}
-                    </p>
+                    <AlertCircle className="w-12 h-12 text-yellow-500 dark:text-yellow-400 mx-auto mb-3" />
+                    <p className="text-muted-foreground">{t('noAvailableBatch')}</p>
+                    <p className="text-sm mt-1 text-muted-foreground">{t('pleaseInboundFirst')}</p>
                   </div>
                 )}
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-sm text-gray-400 dark:text-gray-500">{t('cannotGetAllocation')}</p>
+              <p className="text-sm text-muted-foreground">{t('cannotGetAllocation')}</p>
             </div>
           )}
 
@@ -1765,7 +1579,7 @@ export default function OutboundManagementPage() {
                 <Button
                   onClick={handleFifoConfirm}
                   disabled={fifoConfirming}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-primary hover:bg-primary/90"
                 >
                   {fifoConfirming ? (
                     <>

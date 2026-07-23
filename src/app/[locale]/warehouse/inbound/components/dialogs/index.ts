@@ -8,3 +8,4 @@ export { AddDialog } from './AddDialog';
 export { MixedAddDialog } from './MixedAddDialog';
 export { AuditDialog } from './AuditDialog';
 export { EditDialog } from './EditDialog';
+export { SourceLabelQueryDialog } from './SourceLabelQueryDialog';

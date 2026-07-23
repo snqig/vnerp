@@ -232,6 +232,21 @@ export const INITIAL_FORM_DATA: InboundFormData = {
   baseCurrency: '',
 };
 
+// 母材查询结果（API GET /api/warehouse/inbound/cutting?labelNo=xxx）
+export interface SourceLabelData {
+  id: number;
+  labelNo: string;
+  materialName: string;
+  materialCode: string;
+  specification: string;
+  quantity: number;
+  unit: string;
+  width: number;
+  supplierName: string;
+  batchNo: string;
+  purchaseOrderNo: string;
+}
+
 // 分切表单数据类型
 export interface CuttingFormData {
   sourceLabelId: string;

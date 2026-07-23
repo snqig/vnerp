@@ -33,12 +33,20 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import { authFetch } from '@/lib/auth-fetch';
 
-import type { InboundItem, PrintLabel, ScanResult, InboundFormData, InboundRecord } from './types';
+import type {
+  InboundItem,
+  PrintLabel,
+  ScanResult,
+  InboundFormData,
+  InboundRecord,
+  SourceLabelData,
+} from './types';
 import { statusConfig, INITIAL_FORM_DATA, isCuttableMaterial } from './types';
 
 import { InboundToolbar } from './components/InboundToolbar';
 import { InboundStatsCards } from './components/InboundStatsCards';
 import { InboundDialogs } from './components/InboundDialogs';
+import { SourceLabelQueryDialog } from './components/dialogs';
 import { useInboundData } from './hooks/useInboundData';
 import { useInboundDialogs } from './hooks/useInboundDialogs';
 import { usePurchaseOrderSearch } from './hooks/usePurchaseOrderSearch';
@@ -107,6 +115,9 @@ export default function InboundManagementPage() {
   const [, setQrCodeLabelId] = useState<string>('');
   const [scanResult, _setScanResult] = useState<ScanResult | null>(null);
 
+  // 母材查询对话框状态
+  const [isSourceLabelQueryOpen, setIsSourceLabelQueryOpen] = useState(false);
+
   // 删除确认对话框状态
   const [deleteTarget, setDeleteTarget] = useState<InboundRecord | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -149,6 +160,37 @@ export default function InboundManagementPage() {
       }
     },
     [t]
+  );
+
+  const handleSourceLabelFound = useCallback(
+    (sourceLabel: SourceLabelData) => {
+      setCurrentLabel({
+        id: String(sourceLabel.id),
+        labelNo: sourceLabel.labelNo,
+        materialName: sourceLabel.materialName,
+        material_name: sourceLabel.materialName,
+        materialSpec: sourceLabel.specification,
+        material_spec: sourceLabel.specification,
+        specification: sourceLabel.specification,
+        quantity: sourceLabel.quantity,
+        unit: sourceLabel.unit,
+        supplier: sourceLabel.supplierName,
+        supplier_name: sourceLabel.supplierName,
+        batchNo: sourceLabel.batchNo,
+        batch_no: sourceLabel.batchNo,
+        materialCode: sourceLabel.materialCode,
+        material_code: sourceLabel.materialCode,
+        orderNo: sourceLabel.purchaseOrderNo,
+        order_no: sourceLabel.purchaseOrderNo,
+        originalWidth: sourceLabel.width || undefined,
+        cutWidths: '',
+        cutWidth: undefined,
+        itemIdx: 0,
+      });
+      setCuttingForm((prev) => ({ ...prev, cutWidths: '', remark: '' }));
+      setIsCuttingDialogOpen(true);
+    },
+    [setCurrentLabel, setCuttingForm, setIsCuttingDialogOpen]
   );
 
   const handleQRCodeView = useCallback(
@@ -229,6 +271,7 @@ export default function InboundManagementPage() {
           onOpenMixedAddDialog={() => setIsMixedAddDialogOpen(true)}
           onOpenGenerateDialog={() => setIsGenerateDialogOpen(true)}
           onOpenQRScanDialog={() => setIsQRScanDialogOpen(true)}
+          onOpenSourceLabelQuery={() => setIsSourceLabelQueryOpen(true)}
           onPrintLabels={setPrintLabels}
           onOpenPrintPreview={() => setIsPrintPreviewOpen(true)}
         />
@@ -721,6 +764,13 @@ export default function InboundManagementPage() {
           currentRecord={currentRecord}
           isEditDialogOpen={isEditDialogOpen}
           setIsEditDialogOpen={setIsEditDialogOpen}
+        />
+
+        {/* 母材查询对话框（工具栏分切按钮入口） */}
+        <SourceLabelQueryDialog
+          open={isSourceLabelQueryOpen}
+          onOpenChange={setIsSourceLabelQueryOpen}
+          onLabelFound={handleSourceLabelFound}
         />
       </div>
     </MainLayout>

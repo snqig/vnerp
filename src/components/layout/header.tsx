@@ -248,7 +248,10 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
           <div className="flex items-center gap-2 mr-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/loginlogo.png" alt="达昌" className="w-7 h-7 rounded-lg object-contain" />
-            <span className="font-bold text-sm text-foreground hidden md:inline">
+            <span
+              suppressHydrationWarning
+              className="font-bold text-sm text-foreground hidden md:inline"
+            >
               {companyName}
             </span>
           </div>
