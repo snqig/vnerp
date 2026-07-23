@@ -129,59 +129,20 @@ export const POST = withPermission(
     }
 
     if (!sourceLabel) {
-      const newLabelNo = sourceLabelNo || `${orderNo}-1`;
-      const specWidth = originalWidth || parseSpecWidth(specification);
-      const qrCode = JSON.stringify({
-        ID: newLabelNo,
-        TYPE: '1',
-        ORDER: orderNo || '',
-      });
-
-      const insertResult = await execute(
-        `INSERT INTO inv_material_label (
-        label_no, qr_code, purchase_order_no, supplier_name, receive_date,
-        material_code, material_name, specification, unit, batch_no,
-        quantity, width, is_main_material, is_used, is_cut,
-        label_type, status, deleted
-      ) VALUES (?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, ?, ?, 1, 0, 0, 1, 'active', 0)`,
-        [
-          newLabelNo,
-          qrCode,
-          orderNo || '',
-          supplierName || '',
-          materialCode || '',
-          materialName || '',
-          specification || '',
-          unit || '',
-          batchNo || '',
-          quantity || 0,
-          specWidth || 0,
-        ]
+      return errorResponse(
+        `标签不存在: ${sourceLabelNo || (orderNo ? `${orderNo}-1` : '')}`,
+        404,
+        404
       );
-
-      sourceLabel = {
-        id: (insertResult as Loose).insertId,
-        label_no: newLabelNo,
-        purchase_order_no: orderNo || '',
-        supplier_name: supplierName || '',
-        material_code: materialCode || '',
-        material_name: materialName || '',
-        specification: specification || '',
-        unit: unit || '',
-        batch_no: batchNo || '',
-        quantity: quantity || 0,
-        width: specWidth || 0,
-        length_per_roll: 0,
-        warehouse_id: null,
-        location_id: null,
-        is_main_material: 1,
-        is_cut: 0,
-        remark: '',
-      };
     }
 
     if (sourceLabel.is_cut === 1) {
       return errorResponse('该标签已经过分切，不能重复分切', 400, 400);
+    }
+
+    const currentQty = parseFloat(sourceLabel.quantity) || 0;
+    if (currentQty <= 0) {
+      return errorResponse('该标签库存量为零或负数，无法分切', 400, 400);
     }
 
     const cutWidths = cutWidthStr.split('+').map((w: string) => parseFloat(w.trim()));

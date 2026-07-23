@@ -387,50 +387,55 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
 
     const warehouseCategories = [
       {
-        code: 'WHCAT001',
+        code: 'WH-CAT-001',
         name: '原材料仓',
         description: '存放PET薄膜、PVC薄膜等原材料',
         sort_order: 1,
       },
       {
-        code: 'WHCAT002',
+        code: 'WH-CAT-002',
         name: '半成品仓',
         description: '存放丝印后待模切的半成品',
         sort_order: 2,
       },
-      { code: 'WHCAT003', name: '成品仓', description: '存放已完成检验的成品标签', sort_order: 3 },
       {
-        code: 'WHCAT004',
+        code: 'WH-CAT-003',
+        name: '成品仓',
+        description: '存放已完成检验的成品标签',
+        sort_order: 3,
+      },
+      {
+        code: 'WH-CAT-004',
         name: '辅料仓',
         description: '存放不干胶、保护膜等辅助材料',
         sort_order: 4,
       },
       {
-        code: 'WHCAT005',
+        code: 'WH-CAT-005',
         name: '油墨仓',
         description: '存放丝印油墨、UV油墨、溶剂等',
         sort_order: 5,
       },
       {
-        code: 'WHCAT006',
+        code: 'WH-CAT-006',
         name: '危化品仓',
         description: '存放易燃易爆化学品，需特殊管理',
         sort_order: 6,
       },
       {
-        code: 'WHCAT007',
+        code: 'WH-CAT-007',
         name: '冷藏仓',
         description: '存放需低温保存的特殊油墨和银浆',
         sort_order: 7,
       },
-      { code: 'WHCAT008', name: '待检仓', description: '存放待检验的来料和成品', sort_order: 8 },
+      { code: 'WH-CAT-008', name: '待检仓', description: '存放待检验的来料和成品', sort_order: 8 },
       {
-        code: 'WHCAT009',
+        code: 'WH-CAT-009',
         name: '退货仓',
         description: '存放客户退货和供应商退货物品',
         sort_order: 9,
       },
-      { code: 'WHCAT010', name: '废品仓', description: '存放不合格品和生产废料', sort_order: 10 },
+      { code: 'WH-CAT-010', name: '废品仓', description: '存放不合格品和生产废料', sort_order: 10 },
     ];
     for (const cat of warehouseCategories) {
       await conn.execute(
@@ -1857,22 +1862,31 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       {
         name: '原料入库标签（默认）',
         scenario: 'inbound',
-        width_mm: 60, height_mm: 40, qr_size_mm: 20,
-        html_template: '<div style="text-align:center;font-family:sans-serif;padding:4px"><img src="{qrDataUrl}" style="width:40mm;height:40mm"/><p style="font-size:10px;margin:2px 0">{materialName}</p><p style="font-size:9px;margin:2px 0">{batchNo}</p><p style="font-size:8px;margin:2px 0">{quantity} {unit}</p></div>',
+        width_mm: 60,
+        height_mm: 40,
+        qr_size_mm: 20,
+        html_template:
+          '<div style="text-align:center;font-family:sans-serif;padding:4px"><img src="{qrDataUrl}" style="width:40mm;height:40mm"/><p style="font-size:10px;margin:2px 0">{materialName}</p><p style="font-size:9px;margin:2px 0">{batchNo}</p><p style="font-size:8px;margin:2px 0">{quantity} {unit}</p></div>',
         status: 1,
       },
       {
         name: '分切子码标签',
         scenario: 'split',
-        width_mm: 50, height_mm: 30, qr_size_mm: 20,
-        html_template: '<div style="text-align:center;font-family:sans-serif;padding:2px"><img src="{qrDataUrl}" style="width:28mm;height:28mm"/><p style="font-size:9px;margin:1px 0">{materialName}</p><p style="font-size:8px;margin:1px 0">{splitIndex}/{totalSplits}</p></div>',
+        width_mm: 50,
+        height_mm: 30,
+        qr_size_mm: 20,
+        html_template:
+          '<div style="text-align:center;font-family:sans-serif;padding:2px"><img src="{qrDataUrl}" style="width:28mm;height:28mm"/><p style="font-size:9px;margin:1px 0">{materialName}</p><p style="font-size:8px;margin:1px 0">{splitIndex}/{totalSplits}</p></div>',
         status: 1,
       },
       {
         name: '成品标签',
         scenario: 'finished',
-        width_mm: 80, height_mm: 50, qr_size_mm: 20,
-        html_template: '<div style="text-align:center;font-family:sans-serif;padding:4px"><img src="{qrDataUrl}" style="width:40mm;height:40mm"/><p style="font-size:12px;margin:2px 0;font-weight:bold">{productName}</p><p style="font-size:9px;margin:2px 0">{batchNo}</p><p style="font-size:9px;margin:2px 0">{quantity} {unit}</p></div>',
+        width_mm: 80,
+        height_mm: 50,
+        qr_size_mm: 20,
+        html_template:
+          '<div style="text-align:center;font-family:sans-serif;padding:4px"><img src="{qrDataUrl}" style="width:40mm;height:40mm"/><p style="font-size:12px;margin:2px 0;font-weight:bold">{productName}</p><p style="font-size:9px;margin:2px 0">{batchNo}</p><p style="font-size:9px;margin:2px 0">{quantity} {unit}</p></div>',
         status: 1,
       },
     ];

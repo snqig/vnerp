@@ -70,7 +70,7 @@ export function AuditDialog({ open, onOpenChange, currentRecord, onSuccess }: Au
                 items: currentRecord.items.map((item: Loose) => ({
                   materialId: item.material_id,
                   materialName: item.material_name,
-                  batchNo: item.batch_no || currentRecord.batch_no || '',
+                  batchNo: item.batch_no || '',
                   quantity: item.quantity || 0,
                   count: 1,
                 })),
@@ -127,8 +127,14 @@ export function AuditDialog({ open, onOpenChange, currentRecord, onSuccess }: Au
           )}
         </div>
         <div className="flex items-center gap-2 py-2">
-          <Checkbox id="generateQr" checked={generateQr} onCheckedChange={(v) => setGenerateQr(!!v)} />
-          <Label htmlFor="generateQr" className="text-sm cursor-pointer">{t('generateQrOnApprove')}</Label>
+          <Checkbox
+            id="generateQr"
+            checked={generateQr}
+            onCheckedChange={(v) => setGenerateQr(!!v)}
+          />
+          <Label htmlFor="generateQr" className="text-sm cursor-pointer">
+            {t('generateQrOnApprove')}
+          </Label>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

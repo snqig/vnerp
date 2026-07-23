@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -145,7 +144,9 @@ export const POST = withPermission(
       l.specification as main_specification,
       l.batch_no as main_batch_no,
       l.supplier_name as main_supplier_name,
-      l.receive_date as main_receive_date
+      l.receive_date as main_receive_date,
+      l.purchase_order_no as main_purchase_order_no,
+      l.purchase_order_no as main_purchase_order_no
     FROM prd_process_card c
     LEFT JOIN inv_material_label l ON c.main_label_id = l.id
     WHERE c.card_no = ? AND c.deleted = 0`,
@@ -157,7 +158,7 @@ export const POST = withPermission(
     }
 
     // 查询流程卡关联的所有物料
-    const materials = await query<MaterialItem[]>(
+    const materials = await query<MaterialItem>(
       `SELECT
       m.label_no as labelNo,
       m.material_type as materialType,
@@ -202,8 +203,8 @@ export const POST = withPermission(
     );
 
     // 添加追溯明细
-    // @ts-expect-error materials 可能为 undefined，|| [] 已兜底但 TS 未收窄
-    for (const material of materials || []) {
+    const materialList = materials || [];
+    for (const material of materialList) {
       await execute(
         `INSERT INTO inv_trace_detail (
         trace_id, label_id, label_no, material_code, material_name,
@@ -246,6 +247,7 @@ export const POST = withPermission(
           batchNo: card.main_batch_no,
           supplierName: card.main_supplier_name,
           receiveDate: card.main_receive_date,
+          purchaseOrderNo: card.main_purchase_order_no || '',
         },
         materials: materials || [],
         mainMaterials: materials?.filter((m) => m.materialType === 'main') || [],
@@ -291,7 +293,7 @@ export const detail = withPermission(async (request: NextRequest, _userInfo) => 
   }
 
   // 查询追溯明细
-  const details = await query<TraceDetail[]>(
+  const details = await query<TraceDetail>(
     `SELECT
       d.id,
       d.label_no as labelNo,

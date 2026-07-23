@@ -1,35 +1,38 @@
 import { QRCode, QR_TYPE, type QRCodeProps } from '@/domain/trace/QRCode';
-import type { IQRCodeRepository, TraceTimelineItem } from '@/domain/trace/repositories/IQRCodeRepository';
+import type {
+  IQRCodeRepository,
+  TraceTimelineItem,
+} from '@/domain/trace/repositories/IQRCodeRepository';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction, execute } from '@/lib/db';
-import { QRCodeGeneratedEvent, QRCodeSplitEvent, QRCodeScannedEvent } from '@/domain/trace/events/QRCodeEvents';
+import {
+  QRCodeGeneratedEvent,
+  QRCodeSplitEvent,
+  QRCodeScannedEvent,
+} from '@/domain/trace/events/QRCodeEvents';
 
 export interface SplitInput {
   quantity: number;
 }
 
 export class QRCodeApplicationService {
-  constructor(
-    private readonly qrCodeRepo: IQRCodeRepository
-  ) {}
+  constructor(private readonly qrCodeRepo: IQRCodeRepository) {}
 
-  async generateBatchQr(
-    props: {
-      qrType?: string;
-      batchNo?: string | null;
-      quantity: number;
-      count: number;
-      materialId?: number | null;
-      materialCode?: string | null;
-      materialName?: string | null;
-      unit?: string | null;
-      warehouseId?: number | null;
-      warehouseName?: string | null;
-      refId?: number | null;
-      refNo?: string | null;
-    }
-  ): Promise<{ ids: number[]; qrCodes: string[] }> {
+  async generateBatchQr(props: {
+    qrType?: string;
+    batchNo?: string | null;
+    quantity: number;
+    count: number;
+    materialId?: number | null;
+    materialCode?: string | null;
+    materialName?: string | null;
+    unit?: string | null;
+    warehouseId?: number | null;
+    warehouseName?: string | null;
+    refId?: number | null;
+    refNo?: string | null;
+  }): Promise<{ ids: number[]; qrCodes: string[] }> {
     if (props.count <= 0) throw new DomainError('生成数量必须大于0');
     if (props.quantity <= 0) throw new DomainError('数量必须大于0');
 
@@ -37,20 +40,22 @@ export class QRCodeApplicationService {
     const qrCodes: QRCode[] = [];
     for (let i = 0; i < props.count; i++) {
       const qrCodeValue = `${props.batchNo || 'QR'}-${Date.now()}-${i}`;
-      qrCodes.push(QRCode.create({
-        qrCode: qrCodeValue,
-        qrType,
-        batchNo: props.batchNo ?? null,
-        quantity: props.quantity,
-        materialId: props.materialId ?? null,
-        materialCode: props.materialCode ?? null,
-        materialName: props.materialName ?? null,
-        unit: props.unit ?? null,
-        warehouseId: props.warehouseId ?? null,
-        warehouseName: props.warehouseName ?? null,
-        refId: props.refId ?? null,
-        refNo: props.refNo ?? null,
-      }));
+      qrCodes.push(
+        QRCode.create({
+          qrCode: qrCodeValue,
+          qrType,
+          batchNo: props.batchNo ?? null,
+          quantity: props.quantity,
+          materialId: props.materialId ?? null,
+          materialCode: props.materialCode ?? null,
+          materialName: props.materialName ?? null,
+          unit: props.unit ?? null,
+          warehouseId: props.warehouseId ?? null,
+          warehouseName: props.warehouseName ?? null,
+          refId: props.refId ?? null,
+          refNo: props.refNo ?? null,
+        })
+      );
     }
 
     const ids = await this.qrCodeRepo.createBatch(qrCodes);
@@ -117,10 +122,10 @@ export class QRCodeApplicationService {
         childIndex++;
       }
 
-      const remaining = parent.quantity - totalQuantity;
+      const remaining = (parent.quantity ?? 0) - (totalQuantity ?? 0);
       await conn.execute(
         'UPDATE qrcode_record SET quantity = ?, update_time = NOW() WHERE id = ?',
-        [remaining, parent.id]
+        [remaining, parent.id!] as any
       );
 
       const splitEvent = new QRCodeSplitEvent({
@@ -136,11 +141,7 @@ export class QRCodeApplicationService {
     return { childIds, childCodes };
   }
 
-  async recordScan(
-    qrCode: string,
-    operator: string,
-    location: string
-  ): Promise<void> {
+  async recordScan(qrCode: string, operator: string, location: string): Promise<void> {
     const qr = await this.qrCodeRepo.findByContent(qrCode);
     if (!qr) throw new NotFoundError('二维码不存在');
 
@@ -153,7 +154,7 @@ export class QRCodeApplicationService {
 
       await conn.execute(
         'UPDATE qrcode_record SET scan_count = scan_count + 1, last_scan_time = NOW() WHERE id = ?',
-        [qr.id]
+        [qr.id!]
       );
 
       const event = new QRCodeScannedEvent({

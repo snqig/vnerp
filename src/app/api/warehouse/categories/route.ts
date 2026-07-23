@@ -1,9 +1,8 @@
 ﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
-
 import { withPermission } from '@/lib/api-permissions';
-// 仓库分类接口
+
 interface WarehouseCategory {
   id: number;
   code: string;
@@ -13,16 +12,14 @@ interface WarehouseCategory {
   status?: number;
 }
 
-// GET - 获取仓库分类列表
 export const GET = withPermission(
   async (_request: NextRequest) => {
     const categories = await query<WarehouseCategory>(`
-    SELECT
-      id, code, name, description, sort_order, status
-    FROM sys_warehouse_category
-    WHERE deleted = 0 AND status = 1
-    ORDER BY sort_order ASC, id ASC
-  `);
+      SELECT id, code, name, description, sort_order, status
+      FROM sys_warehouse_category
+      WHERE deleted = 0 AND status = 1
+      ORDER BY sort_order ASC, id ASC
+    `);
 
     return successResponse(categories);
   },

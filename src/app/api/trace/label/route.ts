@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { query, execute } from '@/lib/db';
+import { query, execute, type SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
@@ -7,7 +7,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const scenario = searchParams.get('scenario') || '';
   let sql = 'SELECT * FROM label_template WHERE status = 1';
-  const params: unknown[] = [];
+  const params: SqlValue[] = [];
   if (scenario) {
     sql += ' AND scenario = ?';
     params.push(scenario);

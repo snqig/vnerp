@@ -184,10 +184,14 @@ function calculateAllocation(
   );
   result.total_available = totalAvailableDecimal.toNumber();
 
-  logger.debug(`[FIFO] calculateAllocation start - materialId: ${materialId}, requiredQty: ${requiredQty}`);
+  logger.debug(
+    `[FIFO] calculateAllocation start - materialId: ${materialId}, requiredQty: ${requiredQty}`
+  );
   logger.debug(`[FIFO] batches found: ${batches.length}`);
   batches.forEach((b, idx) => {
-    logger.debug(`[FIFO]   batch[${idx}]: id=${b.id}, batch_no=${b.batch_no}, available_qty=${b.available_qty}, inbound_date=${b.inbound_date}, expire_date=${b.expire_date}, opened_at=${b.opened_at}, split_flag=${b.split_flag}, version=${b.version}`);
+    logger.debug(
+      `[FIFO]   batch[${idx}]: id=${b.id}, batch_no=${b.batch_no}, available_qty=${b.available_qty}, inbound_date=${b.inbound_date}, expire_date=${b.expire_date}, opened_at=${b.opened_at}, split_flag=${b.split_flag}, version=${b.version}`
+    );
   });
 
   let remainingDecimal = new Decimal(requiredQty);
@@ -198,7 +202,9 @@ function calculateAllocation(
     const availableQtyDecimal = new Decimal(batch.available_qty);
     const allocateQtyDecimal = Decimal.min(remainingDecimal, availableQtyDecimal);
 
-    logger.debug(`[FIFO]   allocating: batch_no=${batch.batch_no}, available=${availableQtyDecimal.toNumber()}, remaining=${remainingDecimal.toNumber()}, allocate=${allocateQtyDecimal.toNumber()}`);
+    logger.debug(
+      `[FIFO]   allocating: batch_no=${batch.batch_no}, available=${availableQtyDecimal.toNumber()}, remaining=${remainingDecimal.toNumber()}, allocate=${allocateQtyDecimal.toNumber()}`
+    );
 
     result.allocations.push({
       batch_id: batch.id,
@@ -223,7 +229,9 @@ function calculateAllocation(
   result.shortage_percentage =
     requiredQty > 0 ? new Decimal(result.shortage).dividedBy(requiredQty).times(100).toNumber() : 0;
 
-  logger.debug(`[FIFO] calculateAllocation end - materialId: ${materialId}, total_available: ${result.total_available}, allocated_qty: ${result.allocated_qty}, shortage: ${result.shortage}, allocations_count: ${result.allocations.length}`);
+  logger.debug(
+    `[FIFO] calculateAllocation end - materialId: ${materialId}, total_available: ${result.total_available}, allocated_qty: ${result.allocated_qty}, shortage: ${result.shortage}, allocations_count: ${result.allocations.length}`
+  );
 
   return result;
 }
@@ -239,7 +247,9 @@ export async function planFIFOAllocation(
   requiredQty: number,
   options: FIFOPlanOptions = {}
 ): Promise<FIFOAllocationResult> {
-  logger.debug(`[FIFO] planFIFOAllocation - materialId: ${materialId}, warehouseId: ${warehouseId}, requiredQty: ${requiredQty}`);
+  logger.debug(
+    `[FIFO] planFIFOAllocation - materialId: ${materialId}, warehouseId: ${warehouseId}, requiredQty: ${requiredQty}`
+  );
   const { sql, params } = buildBatchQuery(materialId, warehouseId, options);
   logger.debug(`[FIFO] planFIFOAllocation SQL: ${sql}`);
   const [batches]: Loose = await conn.query(sql, params);
@@ -265,7 +275,9 @@ export async function allocateFIFO(
     excludeBatchIds?: number[];
   }
 ): Promise<FIFOAllocationResult> {
-  logger.debug(`[FIFO] allocateFIFO (with lock) - materialId: ${materialId}, warehouseId: ${warehouseId}, requiredQty: ${requiredQty}, options: ${JSON.stringify(options)}`);
+  logger.debug(
+    `[FIFO] allocateFIFO (with lock) - materialId: ${materialId}, warehouseId: ${warehouseId}, requiredQty: ${requiredQty}, options: ${JSON.stringify(options)}`
+  );
   const planOptions: FIFOPlanOptions = {
     allowExpired: options?.allowExpired,
     excludeBatchIds: options?.excludeBatchIds,
@@ -278,7 +290,9 @@ export async function allocateFIFO(
   const [batches]: Loose = await conn.query(lockedSql, params);
   logger.debug(`[FIFO] allocateFIFO locked query got ${batches.length} batches`);
   const result = calculateAllocation(batches, materialId, requiredQty);
-  logger.debug(`[FIFO] allocateFIFO result - allocated: ${result.allocated_qty}, shortage: ${result.shortage}`);
+  logger.debug(
+    `[FIFO] allocateFIFO result - allocated: ${result.allocated_qty}, shortage: ${result.shortage}`
+  );
   return result;
 }
 
@@ -379,8 +393,12 @@ export async function executeFIFODeductionWithRetry(
   },
   maxRetries: number = DEFAULT_RETRY_ATTEMPTS
 ): Promise<{ deductionDetails: Loose[]; totalCost: number; attempts: number }> {
-  logger.debug(`[FIFO] executeFIFODeductionWithRetry start - sourceType: ${params.sourceType}, sourceNo: ${params.sourceNo}, materialId: ${allocation.material_id}, sourceId: ${params.sourceId}, maxRetries: ${maxRetries}`);
-  logger.debug(`[FIFO] executeFIFODeductionWithRetry allocation summary - required_qty: ${allocation.required_qty}, allocated_qty: ${allocation.allocated_qty}, shortage: ${allocation.shortage}, allocations_count: ${allocation.allocations.length}`);
+  logger.debug(
+    `[FIFO] executeFIFODeductionWithRetry start - sourceType: ${params.sourceType}, sourceNo: ${params.sourceNo}, materialId: ${allocation.material_id}, sourceId: ${params.sourceId}, maxRetries: ${maxRetries}`
+  );
+  logger.debug(
+    `[FIFO] executeFIFODeductionWithRetry allocation summary - required_qty: ${allocation.required_qty}, allocated_qty: ${allocation.allocated_qty}, shortage: ${allocation.shortage}, allocations_count: ${allocation.allocations.length}`
+  );
 
   let attempts = 0;
   let lastError: string = '';
@@ -390,7 +408,9 @@ export async function executeFIFODeductionWithRetry(
     logger.debug(`[FIFO] executeFIFODeductionWithRetry attempt ${attempts}/${maxRetries}`);
     try {
       const result = await executeFIFODeductionInternal(conn, allocation, params);
-      logger.debug(`[FIFO] executeFIFODeductionWithRetry success after ${attempts} attempts - totalCost: ${result.totalCost}, deductionDetails: ${result.deductionDetails.length}`);
+      logger.debug(
+        `[FIFO] executeFIFODeductionWithRetry success after ${attempts} attempts - totalCost: ${result.totalCost}, deductionDetails: ${result.deductionDetails.length}`
+      );
       return { ...result, attempts };
     } catch (error) {
       lastError = (error as Error).message;
@@ -401,7 +421,9 @@ export async function executeFIFODeductionWithRetry(
           lastError.includes('version') ||
           lastError.includes('affectedRows'))
       ) {
-        logger.debug(`[FIFO] executeFIFODeductionWithRetry retrying after ${DEFAULT_RETRY_DELAY_MS * attempts}ms delay...`);
+        logger.debug(
+          `[FIFO] executeFIFODeductionWithRetry retrying after ${DEFAULT_RETRY_DELAY_MS * attempts}ms delay...`
+        );
         await new Promise((resolve) => setTimeout(resolve, DEFAULT_RETRY_DELAY_MS * attempts));
         continue;
       }
@@ -443,12 +465,16 @@ async function executeFIFODeductionInternal(
     operatorName: string | null;
   }
 ): Promise<{ deductionDetails: Loose[]; totalCost: number }> {
-  logger.debug(`[FIFO] executeFIFODeductionInternal start - materialId: ${allocation.material_id}, sourceNo: ${params.sourceNo}`);
+  logger.debug(
+    `[FIFO] executeFIFODeductionInternal start - materialId: ${allocation.material_id}, sourceNo: ${params.sourceNo}`
+  );
   const deductionDetails: Loose[] = [];
-  const totalCostDecimal = new Decimal(0);
+  let totalCostDecimal = new Decimal(0);
 
   for (const alloc of allocation.allocations) {
-    logger.debug(`[FIFO]   processing batch: batch_id=${alloc.batch_id}, batch_no=${alloc.batch_no}, allocate_qty=${alloc.allocate_qty}, available_qty_before=${alloc.available_qty_before}, version=${alloc.version}, unit_cost=${alloc.unit_cost}`);
+    logger.debug(
+      `[FIFO]   processing batch: batch_id=${alloc.batch_id}, batch_no=${alloc.batch_no}, allocate_qty=${alloc.allocate_qty}, available_qty_before=${alloc.available_qty_before}, version=${alloc.version}, unit_cost=${alloc.unit_cost}`
+    );
 
     // 使用乐观锁更新：WHERE 条件包含 version 字段，防止并发修改导致超扣
     const [updateResult]: Loose = await conn.execute(
@@ -461,7 +487,9 @@ async function executeFIFODeductionInternal(
       [alloc.allocate_qty, alloc.allocate_qty, alloc.batch_id, alloc.allocate_qty, alloc.version]
     );
 
-    logger.debug(`[FIFO]   batch ${alloc.batch_no} UPDATE result - affectedRows: ${updateResult.affectedRows}`);
+    logger.debug(
+      `[FIFO]   batch ${alloc.batch_no} UPDATE result - affectedRows: ${updateResult.affectedRows}`
+    );
 
     if (updateResult.affectedRows === 0) {
       // 乐观锁冲突：查询当前批次实际状态，用于生成详细错误信息
@@ -469,7 +497,9 @@ async function executeFIFODeductionInternal(
         'SELECT version, available_qty FROM inv_inventory_batch WHERE id = ?',
         [alloc.batch_id]
       );
-      logger.debug(`[FIFO]   batch ${alloc.batch_no} optimistic lock conflict - currentBatch: ${JSON.stringify(currentBatch)}`);
+      logger.debug(
+        `[FIFO]   batch ${alloc.batch_no} optimistic lock conflict - currentBatch: ${JSON.stringify(currentBatch)}`
+      );
       if (currentBatch.length > 0) {
         throw new Error(
           `批次${alloc.batch_no}乐观锁冲突: 期望版本${alloc.version}, ` +
@@ -481,8 +511,10 @@ async function executeFIFODeductionInternal(
 
     // 行成本 = 分配数量 × 单价（Decimal 运算避免浮点误差）
     const lineCostDecimal = new Decimal(alloc.allocate_qty).times(alloc.unit_cost);
-    totalCostDecimal.plus(lineCostDecimal);
-    logger.debug(`[FIFO]   batch ${alloc.batch_no} cost calculated - line_cost: ${lineCostDecimal.toNumber()}, totalCost so far: ${totalCostDecimal.toNumber()}`);
+    totalCostDecimal = totalCostDecimal.plus(lineCostDecimal);
+    logger.debug(
+      `[FIFO]   batch ${alloc.batch_no} cost calculated - line_cost: ${lineCostDecimal.toNumber()}, totalCost so far: ${totalCostDecimal.toNumber()}`
+    );
 
     deductionDetails.push({
       batch_id: alloc.batch_id,
@@ -503,7 +535,9 @@ async function executeFIFODeductionInternal(
     const beforeQty = currentInv.length > 0 ? parseFloat(currentInv[0].quantity) : 0;
     const afterQty = beforeQty - alloc.allocate_qty;
 
-    logger.debug(`[FIFO]   batch ${alloc.batch_no} inventory log - before_qty: ${beforeQty}, after_qty: ${afterQty}`);
+    logger.debug(
+      `[FIFO]   batch ${alloc.batch_no} inventory log - before_qty: ${beforeQty}, after_qty: ${afterQty}`
+    );
 
     await conn.execute(
       `INSERT INTO inv_inventory_log (
@@ -527,7 +561,9 @@ async function executeFIFODeductionInternal(
     logger.debug(`[FIFO]   batch ${alloc.batch_no} deduction completed successfully`);
   }
 
-  logger.debug(`[FIFO] executeFIFODeductionInternal end - totalCost: ${totalCostDecimal.toNumber()}, deductionDetails: ${deductionDetails.length} items`);
+  logger.debug(
+    `[FIFO] executeFIFODeductionInternal end - totalCost: ${totalCostDecimal.toNumber()}, deductionDetails: ${deductionDetails.length} items`
+  );
   return { deductionDetails, totalCost: totalCostDecimal.toNumber() };
 }
 

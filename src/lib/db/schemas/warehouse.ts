@@ -1,4 +1,18 @@
-import { bigint, date, datetime, decimal, index, int, mysqlTable, serial, text, timestamp, tinyint, uniqueIndex, varchar } from 'drizzle-orm/mysql-core';
+import {
+  bigint,
+  date,
+  datetime,
+  decimal,
+  index,
+  int,
+  mysqlTable,
+  serial,
+  text,
+  timestamp,
+  tinyint,
+  uniqueIndex,
+  varchar,
+} from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 export const invMaterial = mysqlTable(
   'inv_material',
@@ -148,6 +162,7 @@ export const invWarehouse = mysqlTable(
   'inv_warehouse',
   {
     id: serial('id').primaryKey(),
+    categoryId: int('category_id', { unsigned: true }),
     warehouseCode: varchar('warehouse_code', { length: 50 }).notNull(),
     warehouseName: varchar('warehouse_name', { length: 100 }).notNull(),
     warehouseType: tinyint('warehouse_type'),

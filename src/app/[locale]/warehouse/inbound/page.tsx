@@ -3,7 +3,6 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import QRCode from 'qrcode';
-import { useRouter } from '@/i18n/navigation';
 import { MainLayout } from '@/components/layout';
 import {
   ArrowDownLeft,
@@ -53,7 +52,6 @@ export default function InboundManagementPage() {
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
 
-  const _router = useRouter();
   const { user } = useAuth();
   const {
     setSearchQuery,
@@ -106,8 +104,8 @@ export default function InboundManagementPage() {
 
   // 二维码状态
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
-  const [_qrCodeLabelId, _setQrCodeLabelId] = useState<string>('');
-  const [_scanResult, _setScanResult] = useState<ScanResult | null>(null);
+  const [, setQrCodeLabelId] = useState<string>('');
+  const [scanResult, _setScanResult] = useState<ScanResult | null>(null);
 
   // 删除确认对话框状态
   const [deleteTarget, setDeleteTarget] = useState<InboundRecord | null>(null);
@@ -144,7 +142,7 @@ export default function InboundManagementPage() {
           margin: 1,
         });
         setQrCodeDataUrl(dataUrl);
-        _setQrCodeLabelId(labelId);
+        setQrCodeLabelId(labelId);
         setIsQRCodeDialogOpen(true);
       } catch {
         toast.error(t('qrCodeGenerateFailed'));
@@ -164,7 +162,7 @@ export default function InboundManagementPage() {
         const result = await response.json();
         if (result.success) {
           setQrCodeDataUrl(result.data?.qrCode || '');
-          _setQrCodeLabelId(label.id);
+          setQrCodeLabelId(label.id);
           setIsQRCodeDialogOpen(true);
         } else {
           toast.error(t('scanQueryFailed'));
@@ -175,23 +173,6 @@ export default function InboundManagementPage() {
     },
     [t]
   );
-
-  // 状态选项
-  const _statusOptions = [
-    { value: 'all', label: tc('all') },
-    { value: 'draft', label: tc('draft') },
-    { value: 'pending', label: tc('pending') },
-    { value: 'approved', label: tc('approved') },
-    { value: 'rejected', label: tc('rejected') },
-  ];
-
-  // 日期范围选项
-  const _dateRangeOptions = [
-    { value: 'all', label: tc('all') },
-    { value: 'today', label: tc('today') },
-    { value: 'week', label: tc('thisWeek') },
-    { value: 'month', label: tc('thisMonth') },
-  ];
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
@@ -716,7 +697,7 @@ export default function InboundManagementPage() {
           setIsPrintPreviewOpen={setIsPrintPreviewOpen}
           isQRScanDialogOpen={isQRScanDialogOpen}
           setIsQRScanDialogOpen={setIsQRScanDialogOpen}
-          scanResult={_scanResult}
+          scanResult={scanResult}
           isGenerateDialogOpen={isGenerateDialogOpen}
           setIsGenerateDialogOpen={setIsGenerateDialogOpen}
           labelSupplier={labelSupplier}

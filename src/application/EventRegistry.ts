@@ -36,6 +36,7 @@ import { ToolCostHandler } from '@/application/handlers/ToolCostHandler';
 import { OutboundInventoryHandler } from '@/application/handlers/OutboundInventoryHandler';
 import { OutboundReceivableHandler } from '@/application/handlers/OutboundReceivableHandler';
 import { MaterialReturnInventoryHandler } from '@/application/handlers/MaterialReturnInventoryHandler';
+import { SagaCompensationHandler } from '@/application/handlers/SagaCompensationHandler';
 
 /**
  * 统一事件处理器注册中心
@@ -327,6 +328,22 @@ export class EventRegistry {
     eventBus.subscribe('SampleOrderStarted', new AuditLogHandler());
     eventBus.subscribe('SampleOrderConfirmed', new AuditLogHandler());
     eventBus.subscribe('SampleOrderCancelled', new AuditLogHandler());
+
+    // Saga 补偿事件（LIFO 回滚 — 事件被触发但实际回滚逻辑需按业务逐步实现）
+    const sagaCompHandler = new SagaCompensationHandler();
+    eventBus.subscribe('saga.compensate.update_workorder', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.inventory_inbound', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.finance_cost', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.hr_salary', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.update_pick_order', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.inventory_deduct', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.finance_impact', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.validate_report', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.update_workorder_progress', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.hr_piece_record', sagaCompHandler);
+    eventBus.subscribe('saga.failed', sagaCompHandler);
+    eventBus.subscribe('saga.completed', sagaCompHandler);
+    eventBus.subscribe('saga.compensated', sagaCompHandler);
 
     // 标准卡事件 — BOM 展开缓存失效
     eventBus.subscribe('StandardCardConfirmed', new CacheInvalidationHandler());

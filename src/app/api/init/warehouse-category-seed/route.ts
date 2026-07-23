@@ -46,121 +46,121 @@ export const POST = withPermission(
 
       const warehouseCategories = [
         {
-          code: 'WHCAT001',
+          code: 'WH-CAT-001',
           name: '原材料仓',
           description: '存放PET薄膜、PVC薄膜、不干胶等原材料',
           sort_order: 1,
         },
         {
-          code: 'WHCAT002',
+          code: 'WH-CAT-002',
           name: '半成品仓',
           description: '存放丝印后待模切的半成品物料',
           sort_order: 2,
         },
         {
-          code: 'WHCAT003',
+          code: 'WH-CAT-003',
           name: '成品仓',
           description: '存放已完成检验的成品标签和包装膜',
           sort_order: 3,
         },
         {
-          code: 'WHCAT004',
+          code: 'WH-CAT-004',
           name: '辅料仓',
           description: '存放网版、刀模、保护膜等辅助材料',
           sort_order: 4,
         },
         {
-          code: 'WHCAT005',
+          code: 'WH-CAT-005',
           name: '油墨仓',
           description: '存放丝印油墨、UV油墨、溶剂型油墨',
           sort_order: 5,
         },
         {
-          code: 'WHCAT006',
+          code: 'WH-CAT-006',
           name: '危化品仓',
           description: '存放易燃易爆化学品，需双人双锁管理',
           sort_order: 6,
         },
         {
-          code: 'WHCAT007',
+          code: 'WH-CAT-007',
           name: '冷藏仓',
           description: '存放需2-8°C低温保存的特殊油墨和银浆',
           sort_order: 7,
         },
         {
-          code: 'WHCAT008',
+          code: 'WH-CAT-008',
           name: '待检仓',
           description: '存放待IQC检验的来料和待FQC检验的成品',
           sort_order: 8,
         },
         {
-          code: 'WHCAT009',
+          code: 'WH-CAT-009',
           name: '退货仓',
           description: '存放客户退货品和供应商退货品',
           sort_order: 9,
         },
         {
-          code: 'WHCAT010',
+          code: 'WH-CAT-010',
           name: '废品仓',
           description: '存放不合格品、生产废料和过期物料',
           sort_order: 10,
         },
         {
-          code: 'WHCAT011',
+          code: 'WH-CAT-011',
           name: '包材仓',
           description: '存放纸箱、木托盘、缠绕膜、气泡袋等包装材料',
           sort_order: 11,
         },
         {
-          code: 'WHCAT012',
+          code: 'WH-CAT-012',
           name: '备件仓',
           description: '存放设备备件、模具配件、网框等维修备件',
           sort_order: 12,
         },
         {
-          code: 'WHCAT013',
+          code: 'WH-CAT-013',
           name: '样品仓',
           description: '存放客户样品、色卡、材料样板、打样成品',
           sort_order: 13,
         },
         {
-          code: 'WHCAT014',
+          code: 'WH-CAT-014',
           name: '暂存仓',
           description: '生产过程中临时存放待流转的半成品',
           sort_order: 14,
         },
         {
-          code: 'WHCAT015',
+          code: 'WH-CAT-015',
           name: '外协仓',
           description: '存放外协加工发出的物料和收回的成品',
           sort_order: 15,
         },
         {
-          code: 'WHCAT016',
+          code: 'WH-CAT-016',
           name: '模具仓',
           description: '存放刀模、烫金版、击凸版等模具',
           sort_order: 16,
         },
         {
-          code: 'WHCAT017',
+          code: 'WH-CAT-017',
           name: '网版仓',
           description: '存放丝印网版、移印钢板等印刷网版',
           sort_order: 17,
         },
         {
-          code: 'WHCAT018',
+          code: 'WH-CAT-018',
           name: '溶剂仓',
           description: '存放稀释剂、洗网水、慢干水等溶剂类',
           sort_order: 18,
         },
         {
-          code: 'WHCAT019',
+          code: 'WH-CAT-019',
           name: '光油仓',
           description: '存放UV光油、水性光油、哑油等表面处理材料',
           sort_order: 19,
         },
         {
-          code: 'WHCAT020',
+          code: 'WH-CAT-020',
           name: '银浆仓',
           description: '存放导电银浆、导热银浆等特殊导电材料',
           sort_order: 20,
@@ -190,7 +190,7 @@ export const POST = withPermission(
           address: 'A栋1层A区',
           phone: '13800138001',
           remark: '存放PET薄膜卷材',
-          catCode: 'WHCAT001',
+          catCode: 'WH-CAT-001',
         },
         {
           code: 'WH-RM-002',
@@ -201,7 +201,7 @@ export const POST = withPermission(
           address: 'A栋1层B区',
           phone: '13800138002',
           remark: '存放PVC薄膜卷材',
-          catCode: 'WHCAT001',
+          catCode: 'WH-CAT-001',
         },
         {
           code: 'WH-SF-001',
@@ -212,7 +212,7 @@ export const POST = withPermission(
           address: 'A栋2层A区',
           phone: '13800138003',
           remark: '存放丝印后半成品',
-          catCode: 'WHCAT002',
+          catCode: 'WH-CAT-002',
         },
         {
           code: 'WH-SF-002',
@@ -223,7 +223,7 @@ export const POST = withPermission(
           address: 'A栋2层B区',
           phone: '13800138004',
           remark: '存放模切后半成品',
-          catCode: 'WHCAT002',
+          catCode: 'WH-CAT-002',
         },
         {
           code: 'WH-FG-001',
@@ -234,7 +234,7 @@ export const POST = withPermission(
           address: 'B栋1层A区',
           phone: '13800138005',
           remark: '存放成品标签',
-          catCode: 'WHCAT003',
+          catCode: 'WH-CAT-003',
         },
         {
           code: 'WH-FG-002',
@@ -245,7 +245,7 @@ export const POST = withPermission(
           address: 'B栋1层B区',
           phone: '13800138006',
           remark: '存放成品包装膜',
-          catCode: 'WHCAT003',
+          catCode: 'WH-CAT-003',
         },
         {
           code: 'WH-FL-001',
@@ -256,7 +256,7 @@ export const POST = withPermission(
           address: 'C栋1层A区',
           phone: '13800138007',
           remark: '存放丝印网版',
-          catCode: 'WHCAT004',
+          catCode: 'WH-CAT-004',
         },
         {
           code: 'WH-FL-002',
@@ -267,7 +267,7 @@ export const POST = withPermission(
           address: 'C栋1层B区',
           phone: '13800138008',
           remark: '存放模切刀模',
-          catCode: 'WHCAT004',
+          catCode: 'WH-CAT-004',
         },
         {
           code: 'WH-YM-001',
@@ -278,7 +278,7 @@ export const POST = withPermission(
           address: 'D栋1层A区',
           phone: '13800138009',
           remark: '存放UV油墨',
-          catCode: 'WHCAT005',
+          catCode: 'WH-CAT-005',
         },
         {
           code: 'WH-YM-002',
@@ -289,7 +289,7 @@ export const POST = withPermission(
           address: 'D栋1层B区',
           phone: '13800138010',
           remark: '存放溶剂型油墨',
-          catCode: 'WHCAT005',
+          catCode: 'WH-CAT-005',
         },
         {
           code: 'WH-WH-001',
@@ -300,7 +300,7 @@ export const POST = withPermission(
           address: 'E栋独立仓A区',
           phone: '13800138011',
           remark: '双人双锁管理',
-          catCode: 'WHCAT006',
+          catCode: 'WH-CAT-006',
         },
         {
           code: 'WH-WH-002',
@@ -311,7 +311,7 @@ export const POST = withPermission(
           address: 'E栋独立仓B区',
           phone: '13800138012',
           remark: '双人双锁管理',
-          catCode: 'WHCAT006',
+          catCode: 'WH-CAT-006',
         },
         {
           code: 'WH-LC-001',
@@ -322,7 +322,7 @@ export const POST = withPermission(
           address: 'F栋恒温区A区',
           phone: '13800138013',
           remark: '2-8°C恒温存储',
-          catCode: 'WHCAT007',
+          catCode: 'WH-CAT-007',
         },
         {
           code: 'WH-LC-002',
@@ -333,7 +333,7 @@ export const POST = withPermission(
           address: 'F栋恒温区B区',
           phone: '13800138014',
           remark: '2-8°C恒温存储',
-          catCode: 'WHCAT007',
+          catCode: 'WH-CAT-007',
         },
         {
           code: 'WH-DJ-001',
@@ -344,7 +344,7 @@ export const POST = withPermission(
           address: 'G栋检验区A区',
           phone: '13800138015',
           remark: 'IQC来料检验区',
-          catCode: 'WHCAT008',
+          catCode: 'WH-CAT-008',
         },
         {
           code: 'WH-DJ-002',
@@ -355,7 +355,7 @@ export const POST = withPermission(
           address: 'G栋检验区B区',
           phone: '13800138016',
           remark: 'FQC成品检验区',
-          catCode: 'WHCAT008',
+          catCode: 'WH-CAT-008',
         },
         {
           code: 'WH-TH-001',
@@ -366,7 +366,7 @@ export const POST = withPermission(
           address: 'H栋退货区A区',
           phone: '13800138017',
           remark: '客户退货品存放',
-          catCode: 'WHCAT009',
+          catCode: 'WH-CAT-009',
         },
         {
           code: 'WH-TH-002',
@@ -377,7 +377,7 @@ export const POST = withPermission(
           address: 'H栋退货区B区',
           phone: '13800138018',
           remark: '供应商退货品存放',
-          catCode: 'WHCAT009',
+          catCode: 'WH-CAT-009',
         },
         {
           code: 'WH-FP-001',
@@ -388,7 +388,7 @@ export const POST = withPermission(
           address: 'I栋废品区A区',
           phone: '13800138019',
           remark: '不合格品隔离存放',
-          catCode: 'WHCAT010',
+          catCode: 'WH-CAT-010',
         },
         {
           code: 'WH-FP-002',
@@ -399,7 +399,7 @@ export const POST = withPermission(
           address: 'I栋废品区B区',
           phone: '13800138020',
           remark: '生产废料和边角料',
-          catCode: 'WHCAT010',
+          catCode: 'WH-CAT-010',
         },
       ];
       for (const wh of warehouses) {

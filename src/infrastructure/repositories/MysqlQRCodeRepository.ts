@@ -1,7 +1,10 @@
 import { query, execute, transaction } from '@/lib/db';
 import type { SqlValue } from '@/lib/db';
 import { QRCode, type QRCodeProps } from '@/domain/trace/QRCode';
-import type { IQRCodeRepository, TraceTimelineItem } from '@/domain/trace/repositories/IQRCodeRepository';
+import type {
+  IQRCodeRepository,
+  TraceTimelineItem,
+} from '@/domain/trace/repositories/IQRCodeRepository';
 
 interface Row {
   [key: string]: SqlValue;
@@ -35,7 +38,12 @@ function toQRCode(row: Row): QRCode {
     productionDate: row.production_date != null ? String(row.production_date) : null,
     expiryDate: row.expiry_date != null ? String(row.expiry_date) : null,
     status: Number(row.status ?? 1),
-    extraData: row.extra_data != null ? (typeof row.extra_data === 'string' ? JSON.parse(row.extra_data as string) : row.extra_data as Record<string, unknown>) : null,
+    extraData:
+      row.extra_data != null
+        ? typeof row.extra_data === 'string'
+          ? JSON.parse(row.extra_data as string)
+          : (row.extra_data as unknown as Record<string, unknown>)
+        : null,
     remark: row.remark != null ? String(row.remark) : null,
   };
   return QRCode.reconstitute(props);

@@ -1,5 +1,4 @@
 import { query, transaction } from '@/lib/db';
-import { randomUUID } from 'crypto';
 
 export interface LabelGenerationResult {
   labelId: number;
@@ -60,7 +59,14 @@ export async function generateInboundLabels(params: {
 
     for (const item of params.items) {
       const labelNo = await generateLabelNo(conn);
-      const qrUuid = randomUUID();
+      const qrCodeJson = JSON.stringify({
+        ID: labelNo,
+        TYPE: '1',
+        WLDH: item.materialCode || '',
+        NAME: item.materialName,
+        GG: item.specification || '',
+        BATCH_NO: item.batchNo,
+      });
 
       await conn.execute(
         `INSERT INTO qrcode_record (
@@ -70,7 +76,7 @@ export async function generateInboundLabels(params: {
           supplier_name, production_date, status, create_time, deleted
         ) VALUES (?, 'material', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW(), 0)`,
         [
-          qrUuid,
+          qrCodeJson,
           params.inboundOrderId,
           params.inboundOrderNo,
           item.batchNo,
@@ -95,7 +101,7 @@ export async function generateInboundLabels(params: {
         ) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, 'active', NOW(), NOW(), 0)`,
         [
           labelNo,
-          qrUuid,
+          qrCodeJson,
           params.inboundOrderNo,
           params.supplierName || null,
           item.materialCode || '',
@@ -116,7 +122,7 @@ export async function generateInboundLabels(params: {
 
       const zplContent = generateZPLLabel({
         labelNo,
-        qrCode: qrUuid,
+        qrCode: qrCodeJson,
         materialCode: item.materialCode || '',
         materialName: item.materialName,
         specification: item.specification,
@@ -130,7 +136,7 @@ export async function generateInboundLabels(params: {
       labels.push({
         labelId,
         labelNo,
-        qrCode: qrUuid,
+        qrCode: qrCodeJson,
         zplContent,
       });
     }
@@ -152,17 +158,22 @@ export async function generateWorkOrderLabels(params: {
 }): Promise<LabelGenerationResult> {
   return await transaction(async (conn) => {
     const labelNo = await generateLabelNo(conn);
-    const qrUuid = randomUUID();
+    const qrCodeJson = JSON.stringify({
+      ID: labelNo,
+      TYPE: '5',
+      GDDH: params.workOrderNo,
+      NAME: params.productName,
+    });
 
     await conn.execute(
       `INSERT INTO qrcode_record (
-        qr_code, qr_type, ref_id, ref_no,
-        material_name, quantity, unit,
-        customer_name, work_order_id, work_order_no,
-        status, create_time, deleted
-      ) VALUES (?, 'work_order', ?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW(), 0)`,
+          qr_code, qr_type, ref_id, ref_no,
+          material_name, quantity, unit,
+          customer_name, work_order_id, work_order_no,
+          status, create_time, deleted
+        ) VALUES (?, 'work_order', ?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW(), 0)`,
       [
-        qrUuid,
+        qrCodeJson,
         params.workOrderId,
         params.workOrderNo,
         params.productName,
@@ -176,10 +187,10 @@ export async function generateWorkOrderLabels(params: {
 
     await conn.execute(
       `INSERT INTO inv_material_label (
-        label_no, qr_code, material_name, unit, batch_no,
-        quantity, status, create_time, update_time, deleted
-      ) VALUES (?, ?, ?, ?, ?, ?, 'active', NOW(), NOW(), 0)`,
-      [labelNo, qrUuid, params.productName, params.unit, params.workOrderNo, params.quantity]
+          label_no, qr_code, material_name, unit, batch_no,
+          quantity, status, create_time, update_time, deleted
+        ) VALUES (?, ?, ?, ?, ?, ?, 'active', NOW(), NOW(), 0)`,
+      [labelNo, qrCodeJson, params.productName, params.unit, params.workOrderNo, params.quantity]
     );
 
     const [labelRow]: Loose = await conn.query(
@@ -190,7 +201,7 @@ export async function generateWorkOrderLabels(params: {
 
     const zplContent = generateZPLLabel({
       labelNo,
-      qrCode: qrUuid,
+      qrCode: qrCodeJson,
       materialCode: params.workOrderNo,
       materialName: params.productName,
       batchNo: params.workOrderNo,
@@ -201,7 +212,7 @@ export async function generateWorkOrderLabels(params: {
     return {
       labelId,
       labelNo,
-      qrCode: qrUuid,
+      qrCode: qrCodeJson,
       zplContent,
     };
   });
@@ -421,7 +432,13 @@ export async function generateFIFOPriorityLabels(params: {
 
     for (const batch of batches) {
       const labelNo = await generateLabelNo(conn);
-      const qrUuid = randomUUID();
+      const qrCodeJson = JSON.stringify({
+        ID: labelNo,
+        TYPE: '1',
+        WLDH: batch.material_code || '',
+        NAME: batch.material_name,
+        BATCH_NO: batch.batch_no,
+      });
 
       await conn.execute(
         `INSERT INTO qrcode_record (
@@ -431,7 +448,7 @@ export async function generateFIFOPriorityLabels(params: {
           expiry_date, status, create_time, deleted
         ) VALUES (?, 'fifo_priority', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW(), 0)`,
         [
-          qrUuid,
+          qrCodeJson,
           batch.id,
           batch.batch_no,
           batch.batch_no,
@@ -455,7 +472,7 @@ export async function generateFIFOPriorityLabels(params: {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW(), NOW(), 0)`,
         [
           labelNo,
-          qrUuid,
+          qrCodeJson,
           batch.material_code,
           `${batch.material_name}[优先消耗]`,
           batch.specification || '',
@@ -474,7 +491,7 @@ export async function generateFIFOPriorityLabels(params: {
 
       const zplContent = generateZPLLabel({
         labelNo,
-        qrCode: qrUuid,
+        qrCode: qrCodeJson,
         materialCode: batch.material_code,
         materialName: `${batch.material_name}[优先消耗]`,
         specification: batch.specification,
@@ -487,7 +504,7 @@ export async function generateFIFOPriorityLabels(params: {
       labels.push({
         labelId,
         labelNo,
-        qrCode: qrUuid,
+        qrCode: qrCodeJson,
         zplContent,
       });
     }

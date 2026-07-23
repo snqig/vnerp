@@ -1,4 +1,4 @@
-import { execute } from '@/lib/db';
+import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import type { DomainEvent } from '@/domain/shared/DomainTypes';
 
@@ -20,13 +20,15 @@ export class ProductionFinanceHandler {
     });
 
     // 获取工单成本数据
-    const rows = await execute(
-      `SELECT total_material_cost, total_labor_cost, total_tool_cost,
-              total_overhead_cost, unit_cost, finished_qty
-       FROM prod_work_order WHERE id = ? AND deleted = 0`,
-      [workOrderId]
-    );
-    const wo = (rows as any)[0];
+    const [wo] = await transaction(async (conn) => {
+      const [rows] = await conn.execute<any>(
+        `SELECT total_material_cost, total_labor_cost, total_tool_cost,
+                total_overhead_cost, unit_cost, finished_qty
+         FROM prod_work_order WHERE id = ? AND deleted = 0`,
+        [workOrderId]
+      );
+      return [rows?.[0]];
+    });
     if (!wo) return;
 
     const totalCost =
@@ -37,12 +39,14 @@ export class ProductionFinanceHandler {
 
     // 生成成本凭证记录（使用 fin_receivable 表记录生产成本）
     const voucherNo = `COST${workOrderNo}${Date.now().toString().slice(-6)}`;
-    await execute(
-      `INSERT INTO fin_receivable
-       (receivable_no, source_type, source_no, amount, due_date, status, remark, create_time)
-       VALUES (?, 3, ?, ?, NOW(), 1, ?, NOW())`,
-      [voucherNo, workOrderNo, totalCost, `工单${workOrderNo}成本归集`]
-    );
+    await transaction(async (conn) => {
+      await conn.execute(
+        `INSERT INTO fin_receivable
+         (receivable_no, source_type, source_no, amount, due_date, status, remark, create_time)
+         VALUES (?, 3, ?, ?, NOW(), 1, ?, NOW())`,
+        [voucherNo, workOrderNo, totalCost, `工单${workOrderNo}成本归集`]
+      );
+    });
 
     secureLog('info', 'ProductionFinanceHandler: cost voucher created', {
       workOrderNo,

@@ -177,12 +177,18 @@ export class InboundApplicationService {
     const warehouseName = warehouseRows?.[0]?.warehouse_name || '';
 
     const previousStatus = order.status.value;
+
+    if (previousStatus === 'draft') {
+      order.submit();
+    }
+
     order.approve(warehouseName);
 
     await transaction(async (conn) => {
+      const whereStatus = previousStatus === 'completed' ? 'approved' : previousStatus;
       const [result] = (await conn.execute(
         "UPDATE inv_inbound_order SET status = 'approved', update_time = NOW() WHERE id = ? AND status = ?",
-        [id, previousStatus === 'completed' ? 'approved' : previousStatus]
+        [id, whereStatus]
       )) as [ResultSetHeader, any];
       if (result.affectedRows === 0) {
         throw new VersionConflictError();

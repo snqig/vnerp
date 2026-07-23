@@ -1,4 +1,16 @@
-import { bigint, date, datetime, decimal, index, int, mysqlTable, text, tinyint, uniqueIndex, varchar } from 'drizzle-orm/mysql-core';
+import {
+  bigint,
+  date,
+  datetime,
+  decimal,
+  index,
+  int,
+  mysqlTable,
+  text,
+  tinyint,
+  uniqueIndex,
+  varchar,
+} from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 export const sysCurrency = mysqlTable(
   'sys_currency',
@@ -152,4 +164,24 @@ export const sagaLog = mysqlTable(
     typeIdx: index('idx_saga_type').on(table.sagaType),
     statusIdx: index('idx_saga_status').on(table.status),
   })
-);
+);
+
+export const sysWarehouseCategory = mysqlTable(
+  'sys_warehouse_category',
+  {
+    id: int('id', { unsigned: true }).autoincrement().primaryKey(),
+    code: varchar('code', { length: 20 }).notNull(),
+    name: varchar('name', { length: 100 }).notNull(),
+    description: varchar('description', { length: 500 }),
+    sortOrder: int('sort_order', { unsigned: true }).default(0),
+    status: tinyint('status').notNull().default(1),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    codeIdx: uniqueIndex('uk_code').on(table.code),
+    statusIdx: index('idx_status').on(table.status),
+    deletedIdx: index('idx_deleted').on(table.deleted),
+  })
+);
