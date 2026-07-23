@@ -910,6 +910,19 @@ export const POST = withPermission(async (_request: NextRequest) => {
       }
     };
 
+    const addIndex = async (table: string, indexName: string, columns: string) => {
+      try {
+        await conn.execute(`ALTER TABLE ${table} ADD INDEX ${indexName} (${columns})`);
+        results.push(`${table}.${indexName}: 索引已添加`);
+      } catch (e) {
+        if ((e as Error & { code?: string }).code === 'ER_DUP_KEYNAME') {
+          results.push(`${table}.${indexName}: 索引已存在，跳过`);
+        } else {
+          results.push(`${table}.${indexName}: 添加失败 - ${(e as Error).message}`);
+        }
+      }
+    };
+
     await addColumn('sys_login_log', 'user_name', "VARCHAR(50) COMMENT '用户账号'");
     await addColumn('sys_login_log', 'ipaddr', "VARCHAR(128) COMMENT '登录IP地址'");
     await addColumn('sys_login_log', 'login_location', "VARCHAR(255) COMMENT '登录地点'");
@@ -963,8 +976,22 @@ export const POST = withPermission(async (_request: NextRequest) => {
     );
 
     await addColumn('qrcode_record', 'parent_qr_code', "VARCHAR(100) COMMENT '父二维码编码'");
-    await addColumn('qrcode_record', 'split_flag', "TINYINT DEFAULT 0 COMMENT '是否拆分: 0-否, 1-是'");
+    await addColumn(
+      'qrcode_record',
+      'split_flag',
+      "TINYINT DEFAULT 0 COMMENT '是否拆分: 0-否, 1-是'"
+    );
     await addColumn('qrcode_record', 'split_index', "INT DEFAULT 0 COMMENT '拆分序号'");
+
+    await addIndex('qrcode_record', 'idx_ref_no', 'ref_no');
+    await addIndex('qrcode_record', 'idx_material_code', 'material_code');
+    await addIndex('qrcode_record', 'idx_parent_qr_code', 'parent_qr_code');
+    await addIndex('qrcode_record', 'idx_work_order', 'work_order_no, qr_type');
+    await addIndex('qrcode_record', 'idx_create_time', 'create_time');
+
+    await addIndex('qrcode_scan_log', 'idx_qr_code', 'qr_code');
+    await addIndex('qrcode_scan_log', 'idx_scan_type', 'scan_type');
+    await addIndex('qrcode_scan_log', 'idx_create_time', 'create_time');
 
     await createTable(
       'qms_sgs_cert',
@@ -1526,6 +1553,11 @@ export const POST = withPermission(async (_request: NextRequest) => {
       PRIMARY KEY (id),
       KEY idx_scenario (scenario)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标签模板表'`
+    );
+
+    await createTable(
+      'qrcode_record_archive',
+      `CREATE TABLE IF NOT EXISTS qrcode_record_archive LIKE qrcode_record`
     );
 
     return results;
