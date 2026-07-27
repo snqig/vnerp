@@ -3,7 +3,7 @@ import {
   SagaStatus as _SagaStatus,
   SagaStepStatus as _SagaStepStatus,
 } from '@/infrastructure/repositories/SagaLogRepository';
-import { InMemoryEventBus } from '@/infrastructure/event-bus/EventBus';
+import { EventBus } from '@/infrastructure/event-bus/EventBus';
 import { transaction as _transaction } from '@/lib/db';
 
 export type SagaType =
@@ -15,7 +15,7 @@ export type SagaType =
 export class CrossModuleSagaHandler {
   constructor(
     private readonly sagaLogRepository: SagaLogRepository,
-    private readonly eventBus: InMemoryEventBus
+    private readonly eventBus: EventBus
   ) {}
 
   async handleWorkOrderCompletion(workOrderId: number): Promise<void> {

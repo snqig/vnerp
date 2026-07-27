@@ -1,5 +1,7 @@
 import { query, execute, transaction } from '@/lib/db';
 import type { SqlValue } from '@/lib/db';
+import type { DbExecutor } from './DbExecutor';
+import { mysqlDbExecutor } from './MysqlDbExecutor';
 import { QRCode, type QRCodeProps } from '@/domain/trace/QRCode';
 import type {
   IQRCodeRepository,
@@ -48,10 +50,11 @@ function toQRCode(row: Row): QRCode {
   };
   return QRCode.reconstitute(props);
 }
-
 export class MysqlQRCodeRepository implements IQRCodeRepository {
+  constructor(private readonly db: DbExecutor = mysqlDbExecutor) {}
+
   async findByContent(qrCode: string): Promise<QRCode | null> {
-    const rows = await query<Row>(
+    const rows = await this.db.query<Row>(
       'SELECT * FROM qrcode_record WHERE qr_code = ? AND deleted = 0 LIMIT 1',
       [qrCode]
     );
@@ -59,7 +62,7 @@ export class MysqlQRCodeRepository implements IQRCodeRepository {
   }
 
   async findById(id: number): Promise<QRCode | null> {
-    const rows = await query<Row>(
+    const rows = await this.db.query<Row>(
       'SELECT * FROM qrcode_record WHERE id = ? AND deleted = 0 LIMIT 1',
       [id]
     );
@@ -67,7 +70,7 @@ export class MysqlQRCodeRepository implements IQRCodeRepository {
   }
 
   async findByParentQrCode(parentQrCode: string): Promise<QRCode[]> {
-    const rows = await query<Row>(
+    const rows = await this.db.query<Row>(
       'SELECT * FROM qrcode_record WHERE parent_qr_code = ? AND deleted = 0 ORDER BY split_index ASC',
       [parentQrCode]
     );
@@ -75,7 +78,7 @@ export class MysqlQRCodeRepository implements IQRCodeRepository {
   }
 
   async findByBatchNo(batchNo: string): Promise<QRCode[]> {
-    const rows = await query<Row>(
+    const rows = await this.db.query<Row>(
       'SELECT * FROM qrcode_record WHERE batch_no = ? AND deleted = 0 ORDER BY id ASC',
       [batchNo]
     );
@@ -83,7 +86,7 @@ export class MysqlQRCodeRepository implements IQRCodeRepository {
   }
 
   async create(qrCode: QRCode): Promise<number> {
-    const result = await execute(
+    const result = await this.db.execute(
       `INSERT INTO qrcode_record (qr_code, qr_type, parent_qr_code, split_flag, split_index, batch_no, material_id, material_code, material_name, specification, quantity, unit, warehouse_id, warehouse_name, ref_id, ref_no, work_order_id, work_order_no, supplier_id, supplier_name, customer_id, customer_name, production_date, expiry_date, extra_data, remark, status, create_time, update_time)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
@@ -120,7 +123,7 @@ export class MysqlQRCodeRepository implements IQRCodeRepository {
   }
 
   async createBatch(qrCodes: QRCode[]): Promise<number[]> {
-    return await transaction(async (conn) => {
+    return await this.db.transaction(async (conn) => {
       const ids: number[] = [];
       for (const qrCode of qrCodes) {
         const [result] = (await conn.execute(
@@ -163,14 +166,14 @@ export class MysqlQRCodeRepository implements IQRCodeRepository {
   }
 
   async updateQuantity(id: number, quantity: number): Promise<void> {
-    await execute(
+    await this.db.execute(
       'UPDATE qrcode_record SET quantity = ?, update_time = NOW() WHERE id = ? AND deleted = 0',
       [quantity, id]
     );
   }
 
   async queryTraceTimeline(qrCode: string): Promise<TraceTimelineItem[]> {
-    const rows = await query<Row>(
+    const rows = await this.db.query<Row>(
       `SELECT
         qr.create_time AS time,
         qr.qr_type AS eventType,

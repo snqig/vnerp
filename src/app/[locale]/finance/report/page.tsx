@@ -223,7 +223,7 @@ export default function FinanceReportPage() {
               </TableHeader>
               <TableBody>
                 {list.length === 0 ? (
-                  <TableRow>
+                  <TableRow key="empty">
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       {tc('noData')}
                     </TableCell>

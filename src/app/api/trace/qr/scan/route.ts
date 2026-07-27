@@ -3,6 +3,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { MysqlQRCodeRepository } from '@/infrastructure/repositories/MysqlQRCodeRepository';
 import { QRCodeApplicationService } from '@/application/services/QRCodeApplicationService';
+import { invalidateTraceCache } from '@/application/services/TraceCacheService';
 
 const repo = new MysqlQRCodeRepository();
 const service = new QRCodeApplicationService(repo);
@@ -15,6 +16,7 @@ export const POST = withPermission(
       return errorResponse('缺少必填字段: qrCode, operator', 400, 400);
     }
     await service.recordScan(qrCode, operator, location || '');
+    await invalidateTraceCache(qrCode);
     return successResponse(null, '扫码登记成功');
   },
   { logTitle: '扫码登记' }

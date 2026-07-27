@@ -15,6 +15,15 @@ export default function RootLayout({
     <html suppressHydrationWarning>
       <body className="antialiased bg-background text-foreground" suppressHydrationWarning>
         {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

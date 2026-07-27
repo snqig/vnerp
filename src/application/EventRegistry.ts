@@ -251,10 +251,6 @@ export class EventRegistry {
 
     // 生产退料单事件
     eventBus.subscribe('material_return.created', new AuditLogHandler());
-    eventBus.subscribe(
-      'prod.return.approved',
-      new IdempotentHandler(new ReturnOrderInventoryHandler())
-    );
     eventBus.subscribe('prod.return.approved', new AuditLogHandler());
     eventBus.subscribe('prod.return.approved', new CacheInvalidationHandler());
     eventBus.subscribe('prod.return.cancelled', new AuditLogHandler());

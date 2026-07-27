@@ -29,6 +29,9 @@ export const invMaterial = mysqlTable(
     safetyStock: decimal('safety_stock', { precision: 18, scale: 4 }).default('0.0000'),
     maxStock: decimal('max_stock', { precision: 18, scale: 4 }),
     minStock: decimal('min_stock', { precision: 18, scale: 4 }),
+    width: decimal('width', { precision: 10, scale: 2 }).default('0.00'),
+    length: decimal('length', { precision: 10, scale: 2 }).default('0.00'),
+    unitMark: tinyint('unit_mark').default(0),
     purchasePrice: decimal('purchase_price', { precision: 18, scale: 4 }),
     salePrice: decimal('sale_price', { precision: 18, scale: 4 }),
     costPrice: decimal('cost_price', { precision: 18, scale: 4 }),
@@ -69,6 +72,11 @@ export const invInventoryBatch = mysqlTable(
     produceDate: date('produce_date'),
     expireDate: date('expire_date'),
     inboundDate: date('inbound_date'),
+    batchType: tinyint('batch_type').default(0),
+    width: decimal('width', { precision: 10, scale: 2 }).default('0.00'),
+    length: decimal('length', { precision: 10, scale: 2 }),
+    parentBatchId: bigint('parent_batch_id', { mode: 'number', unsigned: true }),
+    qrcodeUid: varchar('qrcode_uid', { length: 64 }),
     status: tinyint('status').default(1),
     version: int('version', { unsigned: true }).default(1),
     alertLevel: varchar('alert_level', { length: 20 }).default('normal'),
@@ -147,6 +155,8 @@ export const invInboundItems = mysqlTable(
     warehouseLocation: varchar('warehouse_location', { length: 50 }),
     produceDate: date('produce_date'),
     expireDate: date('expire_date'),
+    width: decimal('width', { precision: 10, scale: 2 }).default('0.00'),
+    batchType: tinyint('batch_type').default(0),
     remark: text('remark'),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     deleted: tinyint('deleted').default(0),
@@ -161,7 +171,7 @@ export const invInboundItems = mysqlTable(
 export const invWarehouse = mysqlTable(
   'inv_warehouse',
   {
-    id: serial('id').primaryKey(),
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
     categoryId: int('category_id', { unsigned: true }),
     warehouseCode: varchar('warehouse_code', { length: 50 }).notNull(),
     warehouseName: varchar('warehouse_name', { length: 100 }).notNull(),
@@ -189,7 +199,7 @@ export const invWarehouse = mysqlTable(
 export const invInventory = mysqlTable(
   'inv_inventory',
   {
-    id: serial('id').primaryKey(),
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
     materialId: bigint('material_id', { mode: 'number', unsigned: true }).notNull(),
     materialCode: varchar('material_code', { length: 50 }),
     materialName: varchar('material_name', { length: 100 }),
@@ -224,7 +234,7 @@ export const invInventory = mysqlTable(
 export const invOutboundOrders = mysqlTable(
   'inv_outbound_order',
   {
-    id: serial('id').primaryKey(),
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
     orderNo: varchar('order_no', { length: 50 }).notNull(),
     orderDate: date('order_date'),
     outboundType: varchar('outbound_type', { length: 20 }).default('sale'),
@@ -260,7 +270,7 @@ export const invOutboundOrders = mysqlTable(
 export const invOutboundItems = mysqlTable(
   'inv_outbound_item',
   {
-    id: serial('id').primaryKey(),
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
     orderId: bigint('order_id', { mode: 'number', unsigned: true }).notNull(),
     materialId: bigint('material_id', { mode: 'number', unsigned: true }).notNull(),
     materialName: varchar('material_name', { length: 100 }),
@@ -272,6 +282,8 @@ export const invOutboundItems = mysqlTable(
     baseUnitPrice: decimal('base_unit_price', { precision: 18, scale: 4 }),
     baseAmount: decimal('base_amount', { precision: 18, scale: 4 }),
     batchNo: varchar('batch_no', { length: 50 }),
+    width: decimal('width', { precision: 10, scale: 2 }).default('0.00'),
+    batchType: tinyint('batch_type').default(0),
     remark: varchar('remark', { length: 255 }),
     deleted: tinyint('deleted').default(0),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
@@ -285,7 +297,7 @@ export const invOutboundItems = mysqlTable(
 export const invTransferOrders = mysqlTable(
   'inv_transfer_order',
   {
-    id: serial('id').primaryKey(),
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
     transferNo: varchar('transfer_no', { length: 30 }).notNull(),
     type: tinyint('type').notNull(),
     fromWarehouseId: bigint('from_warehouse_id', { mode: 'number', unsigned: true }).notNull(),
@@ -325,7 +337,7 @@ export const invTransferOrders = mysqlTable(
 export const invStocktaking = mysqlTable(
   'inv_stocktaking',
   {
-    id: serial('id').primaryKey(),
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
     takingNo: varchar('taking_no', { length: 50 }).notNull(),
     takingType: tinyint('taking_type').default(1),
     warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }).notNull(),
@@ -347,6 +359,63 @@ export const invStocktaking = mysqlTable(
   })
 );
 
+export const splitOrder = mysqlTable(
+  'split_order',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    splitNo: varchar('split_no', { length: 50 }).notNull(),
+    splitDate: date('split_date'),
+    parentBatchId: bigint('parent_batch_id', { mode: 'number', unsigned: true }).notNull(),
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }).notNull(),
+    materialName: varchar('material_name', { length: 100 }),
+    warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }),
+    outQty: decimal('out_qty', { precision: 12, scale: 3 }).default('0.000'),
+    totalWaste: decimal('total_waste', { precision: 12, scale: 3 }).default('0.000'),
+    totalCost: decimal('total_cost', { precision: 18, scale: 4 }),
+    status: tinyint('status').default(0),
+    remark: text('remark'),
+    operatorId: bigint('operator_id', { mode: 'number', unsigned: true }),
+    operatorName: varchar('operator_name', { length: 50 }),
+    auditTime: datetime('audit_time'),
+    auditorId: bigint('auditor_id', { mode: 'number', unsigned: true }),
+    auditorName: varchar('auditor_name', { length: 50 }),
+    version: int('version').default(0),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    splitNoIdx: index('idx_split_no').on(table.splitNo),
+    parentBatchIdx: index('idx_parent_batch').on(table.parentBatchId),
+    materialIdx: index('idx_material').on(table.materialId),
+    statusIdx: index('idx_status').on(table.status),
+  })
+);
+
+export const splitOrderDetail = mysqlTable(
+  'split_order_detail',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    splitId: bigint('split_id', { mode: 'number', unsigned: true }).notNull(),
+    childBatchId: bigint('child_batch_id', { mode: 'number', unsigned: true }),
+    childBatchNo: varchar('child_batch_no', { length: 50 }),
+    pieces: decimal('pieces', { precision: 10, scale: 0 }).default('1'),
+    qtyPerPiece: decimal('qty_per_piece', { precision: 12, scale: 3 }).default('0.000'),
+    totalQty: decimal('total_qty', { precision: 12, scale: 3 }).default('0.000'),
+    width: decimal('width', { precision: 10, scale: 2 }).default('0.00'),
+    allocatedCost: decimal('allocated_cost', { precision: 18, scale: 4 }),
+    isWaste: tinyint('is_waste').default(0),
+    remark: text('remark'),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    splitIdx: index('idx_split').on(table.splitId),
+    childBatchIdx: index('idx_child_batch').on(table.childBatchId),
+  })
+);
+
 export type InvMaterial = typeof invMaterial.$inferSelect;
 export type InvInventoryBatch = typeof invInventoryBatch.$inferSelect;
 export type InvInboundOrder = typeof invInboundOrders.$inferSelect;
@@ -357,3 +426,5 @@ export type InvOutboundOrder = typeof invOutboundOrders.$inferSelect;
 export type InvOutboundItem = typeof invOutboundItems.$inferSelect;
 export type InvTransferOrder = typeof invTransferOrders.$inferSelect;
 export type InvStocktaking = typeof invStocktaking.$inferSelect;
+export type SplitOrder = typeof splitOrder.$inferSelect;
+export type SplitOrderDetail = typeof splitOrderDetail.$inferSelect;

@@ -99,14 +99,7 @@ async function main() {
     `SELECT config_value FROM sys_config WHERE config_key = 'tax_rate' AND deleted = 0`);
   console.log(`  系统配置: currency=${defaultCurrency}, tax_rate=${defaultTaxRate}%`);
 
-  // 写入汇率（sys_exchange_rate 当前为空）
-  await conn.execute(
-    `INSERT INTO sys_exchange_rate (from_currency, to_currency, rate, rate_date, source, remark)
-     VALUES ('USD', 'CNY', ?, '2026-07-01', 'manual', '测试数据-美元兑人民币汇率')
-     ON DUPLICATE KEY UPDATE rate = VALUES(rate)`,
-    [USD_TO_CNY_RATE]
-  );
-  console.log(`  汇率: USD→CNY = ${USD_TO_CNY_RATE}`);
+  console.log(`  预期汇率: USD→CNY = ${USD_TO_CNY_RATE}（TRUNCATE 后写入）`);
 
   // 动态查询主数据 ID
   const supplierInk = await getSingleRow(conn,
@@ -176,9 +169,17 @@ async function main() {
   );
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 步骤 7: 插入采购订单（多币种 + base_* 本位币金额）
+  // 事务包裹：步骤 7~10 的所有 INSERT/UPDATE 原子化
+  // 失败时 ROLLBACK，保证数据一致性（TRUNCATE 已先执行，回滚后表为空）
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  console.log('\n━━━ 步骤 7: 插入采购订单 ━━━');
+  await conn.beginTransaction();
+  console.log('\n━━━ 事务已开启（步骤 7~10） ━━━');
+
+  try {
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 步骤 7: 插入采购订单（多币种 + base_* 本位币金额）
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    console.log('\n━━━ 步骤 7: 插入采购订单 ━━━');
 
   // PO-2026-001: CNY, 丝印油墨-黑色 1500kg @ 85
   const po1LineAmount = 1500 * 85;          // 127500
@@ -569,8 +570,14 @@ async function main() {
   console.log(`           社保个人=${socialInsurancePersonal}, 公积金个人=${housingFundPersonal}, 个税=${individualTax}`);
   console.log(`           应发=${grossPay}, 扣款合计=${totalDeduction}, 实发=${netPay}`);
 
-  console.log('\n✅ 测试数据生成完成！');
-  console.log('   运行 node scripts/test-data/03-validate-data.mjs 进行验证');
+    await conn.commit();
+    console.log('\n✅ 测试数据生成完成（事务已提交）！');
+    console.log('   运行 node scripts/test-data/03-validate-data.mjs 进行验证');
+  } catch (e) {
+    await conn.rollback();
+    console.error('\n❌ 事务已回滚:', e.message);
+    throw e;
+  }
 
   await conn.end();
 }

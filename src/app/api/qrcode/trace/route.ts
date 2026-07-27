@@ -2,6 +2,11 @@ import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { getCachedTrace } from '@/application/services/TraceCacheService';
+import { getCacheManager } from '@/infrastructure/cache/CacheManager';
+
+const CACHE_PREFIX = 'trace:qr';
+const CACHE_TTL = 300;
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -41,6 +46,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   if (!record) return errorResponse('未找到对应的二维码记录', 404, 404);
+
+  const cached = await getCachedTrace(record.qr_code);
+  if (cached) {
+    return successResponse(cached);
+  }
 
   const scanLogs: Loose = await query(
     'SELECT * FROM qrcode_scan_log WHERE qr_code = ? ORDER BY create_time ASC',
@@ -185,7 +195,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   timeline.sort((a: Loose, b: Loose) => new Date(a.time).getTime() - new Date(b.time).getTime());
 
-  return successResponse({
+  const result = {
     record,
     timeline,
     related_records: relatedRecords,
@@ -197,7 +207,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     shipment: shipmentInfo,
     order: orderInfo,
     quality: qualityInfo,
-  });
+  };
+
+  await getCacheManager().set(`${CACHE_PREFIX}:${record.qr_code}`, result, CACHE_TTL);
+
+  return successResponse(result);
 });
 
 function getTypeLabel(type: string): string {
