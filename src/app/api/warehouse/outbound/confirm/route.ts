@@ -15,7 +15,9 @@ export const POST = withPermission(
     const body = await request.json();
     const { id, operatorId, operatorName, remark } = body;
 
-    logger.debug(`[OUTBOUND] Confirm outbound request received - id: ${id}, operatorId: ${operatorId}, operatorName: ${operatorName}`);
+    logger.debug(
+      `[OUTBOUND] Confirm outbound request received - id: ${id}, operatorId: ${operatorId}, operatorName: ${operatorName}`
+    );
 
     if (!id) {
       return errorResponse('出库单ID不能为空', 400);
@@ -37,7 +39,9 @@ export const POST = withPermission(
       }
 
       const orderRow = orderRows[0];
-      logger.debug(`[OUTBOUND] Found order: id=${orderRow.id}, order_no=${orderRow.order_no}, status=${orderRow.status}, warehouse_id=${orderRow.warehouse_id}`);
+      logger.debug(
+        `[OUTBOUND] Found order: id=${orderRow.id}, order_no=${orderRow.order_no}, status=${orderRow.status}, warehouse_id=${orderRow.warehouse_id}`
+      );
 
       if (!WarehouseStateMachine.canConfirmOutbound(orderRow.status)) {
         throw new Error(
@@ -59,10 +63,14 @@ export const POST = withPermission(
 
       for (const item of itemRows) {
         const requiredQty = parseFloat(String(item.quantity));
-        logger.debug(`[OUTBOUND] Processing item: id=${item.id}, material_id=${item.material_id}, material_name=${item.material_name}, qty=${requiredQty}, batch_no=${item.batch_no}`);
+        logger.debug(
+          `[OUTBOUND] Processing item: id=${item.id}, material_id=${item.material_id}, material_name=${item.material_name}, qty=${requiredQty}, batch_no=${item.batch_no}`
+        );
 
         if (item.batch_no) {
-          logger.debug(`[OUTBOUND] Using specified batch deduction for item ${item.id}, batch_no=${item.batch_no}`);
+          logger.debug(
+            `[OUTBOUND] Using specified batch deduction for item ${item.id}, batch_no=${item.batch_no}`
+          );
           const { deductionDetail } = await executeSpecifiedBatchDeduction(connection, {
             batchNo: item.batch_no,
             materialId: item.material_id,
@@ -78,9 +86,13 @@ export const POST = withPermission(
             operatorName: operatorName || null,
           });
           deductionDetails.push(deductionDetail);
-          logger.debug(`[OUTBOUND] Specified batch deduction completed - batch_no=${item.batch_no}, deducted_qty=${deductionDetail.deducted_qty}`);
+          logger.debug(
+            `[OUTBOUND] Specified batch deduction completed - batch_no=${item.batch_no}, deducted_qty=${deductionDetail.deducted_qty}`
+          );
         } else {
-          logger.debug(`[OUTBOUND] Using FIFO allocation for item ${item.id}, material_id=${item.material_id}, requiredQty=${requiredQty}`);
+          logger.debug(
+            `[OUTBOUND] Using FIFO allocation for item ${item.id}, material_id=${item.material_id}, requiredQty=${requiredQty}`
+          );
           const allocation = await allocateFIFO(
             connection,
             item.material_id,
@@ -88,7 +100,9 @@ export const POST = withPermission(
             requiredQty
           );
 
-          logger.debug(`[OUTBOUND] FIFO allocation result - allocated_qty=${allocation.allocated_qty}, shortage=${allocation.shortage}, total_available=${allocation.total_available}`);
+          logger.debug(
+            `[OUTBOUND] FIFO allocation result - allocated_qty=${allocation.allocated_qty}, shortage=${allocation.shortage}, total_available=${allocation.total_available}`
+          );
 
           if (allocation.shortage > 0) {
             throw new Error(
@@ -96,7 +110,9 @@ export const POST = withPermission(
             );
           }
 
-          logger.debug(`[OUTBOUND] Executing FIFO deduction with ${allocation.allocations.length} allocations`);
+          logger.debug(
+            `[OUTBOUND] Executing FIFO deduction with ${allocation.allocations.length} allocations`
+          );
           const { deductionDetails: fifoDetails } = await executeFIFODeductionWithRetry(
             connection,
             allocation,
@@ -112,7 +128,9 @@ export const POST = withPermission(
           );
 
           deductionDetails.push(...fifoDetails);
-          logger.debug(`[OUTBOUND] FIFO deduction completed - ${fifoDetails.length} batches deducted`);
+          logger.debug(
+            `[OUTBOUND] FIFO deduction completed - ${fifoDetails.length} batches deducted`
+          );
 
           const batchNos = allocation.allocations.map((a: Loose) => a.batch_no).join(',');
           await connection.execute(`UPDATE inv_outbound_item SET batch_no = ? WHERE id = ?`, [
@@ -122,7 +140,7 @@ export const POST = withPermission(
           logger.debug(`[OUTBOUND] Updated item ${item.id} with batch_no: ${batchNos}`);
         }
 
-        await connection.execute(
+        const [invResult]: Loose = await connection.execute(
           `UPDATE inv_inventory SET
           quantity = quantity - ?,
           available_qty = available_qty - ?,
@@ -130,10 +148,17 @@ export const POST = withPermission(
         WHERE material_id = ? AND warehouse_id = ?`,
           [requiredQty, requiredQty, item.material_id, orderRow.warehouse_id]
         );
-        logger.debug(`[OUTBOUND] Updated inv_inventory - material_id=${item.material_id}, warehouse_id=${orderRow.warehouse_id}, deducted_qty=${requiredQty}`);
+        if (invResult.affectedRows === 0) {
+          throw new Error(
+            `物料 ${item.material_name} 在仓库 ${orderRow.warehouse_code} 的库存记录不存在，无法扣减`
+          );
+        }
+        logger.debug(
+          `[OUTBOUND] Updated inv_inventory - material_id=${item.material_id}, warehouse_id=${orderRow.warehouse_id}, deducted_qty=${requiredQty}`
+        );
       }
 
-      await connection.execute(
+      const [orderUpdateResult]: Loose = await connection.execute(
         `UPDATE inv_outbound_order SET
         status = 'completed',
         audit_status = 1,
@@ -146,6 +171,9 @@ export const POST = withPermission(
       WHERE id = ? AND version = ?`,
         [operatorId, operatorName, remark || '', id, orderRow.version]
       );
+      if (orderUpdateResult.affectedRows === 0) {
+        throw new Error(`出库单版本冲突，可能已被其他操作修改，请刷新后重试`);
+      }
 
       // 自动生成应收单（如果出库单关联了客户）
       const [orderInfo]: Loose = await connection.execute(

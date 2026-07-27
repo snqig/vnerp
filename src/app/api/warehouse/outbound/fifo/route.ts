@@ -2,12 +2,7 @@ import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { successResponse, errorResponse, logOperation } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-import {
-  allocateFIFO,
-  planFIFOAllocation,
-  executeFIFODeductionWithRetry,
-  executeSpecifiedBatchDeduction,
-} from '@/lib/fifo-allocation';
+import { allocateFIFO, planFIFOAllocation } from '@/lib/fifo-allocation';
 
 interface FIFOAllocationItem {
   batch_id: number;
@@ -135,7 +130,15 @@ export const POST = withPermission(
       const allOutboundItems: Loose[] = [];
 
       for (const item of items) {
-        const { material_id, material_code, material_name, qty, unit: _unit, batch_no, batch_id } = item;
+        const {
+          material_id,
+          material_code,
+          material_name,
+          qty,
+          unit: _unit,
+          batch_no,
+          batch_id,
+        } = item;
         const requiredQty = parseFloat(qty);
 
         if (batch_id || batch_no) {
@@ -199,6 +202,19 @@ export const POST = withPermission(
       for (const allocation of allAllocations) {
         for (const alloc of allocation.allocations) {
           const amount = alloc.allocate_qty * alloc.unit_cost;
+
+          const [lockResult]: Loose = await conn.execute(
+            `UPDATE inv_inventory_batch SET
+              locked_qty = locked_qty + ?,
+              available_qty = available_qty - ?
+            WHERE id = ? AND available_qty >= ?`,
+            [alloc.allocate_qty, alloc.allocate_qty, alloc.batch_id, alloc.allocate_qty]
+          );
+
+          if (lockResult.affectedRows === 0) {
+            throw new Error(`批次 ${alloc.batch_no} 库存(可用量)不足或已被其他单据锁定，无法预留`);
+          }
+
           allOutboundItems.push({
             material_id: alloc.material_id,
             material_code: alloc.material_code,
@@ -321,84 +337,75 @@ export const PATCH = withPermission(
       for (const item of items) {
         const requiredQty = parseFloat(item.quantity);
 
-        if (item.batch_no) {
-          const [batch]: Loose = await conn.execute(
-            `SELECT id, batch_no, available_qty, unit_price, version FROM inv_inventory_batch 
+        const [batchRows]: Loose = await conn.execute(
+          `SELECT id, batch_no, locked_qty, quantity, unit_price, version FROM inv_inventory_batch
            WHERE batch_no = ? AND material_id = ? AND warehouse_id = ? AND deleted = 0
            FOR UPDATE`,
-            [item.batch_no, item.material_id, order.warehouse_id]
+          [item.batch_no, item.material_id, order.warehouse_id]
+        );
+
+        if (batchRows.length === 0) {
+          throw new Error(`批次 ${item.batch_no} 不存在`);
+        }
+
+        const batch = batchRows[0];
+        const lockedQty = parseFloat(batch.locked_qty || 0);
+        if (lockedQty < requiredQty) {
+          throw new Error(
+            `批次 ${item.batch_no} 预留锁定不足: 锁定 ${lockedQty}, 需要 ${requiredQty}（可用量已由建单时预留）`
           );
+        }
 
-          if (batch.length === 0) {
-            throw new Error(`批次 ${item.batch_no} 不存在`);
-          }
+        const [deductResult]: Loose = await conn.execute(
+          `UPDATE inv_inventory_batch SET
+            locked_qty = locked_qty - ?,
+            quantity = quantity - ?,
+            version = version + 1,
+            update_time = NOW()
+          WHERE id = ? AND locked_qty >= ? AND version = ?`,
+          [requiredQty, requiredQty, batch.id, requiredQty, batch.version]
+        );
 
-          const availableQty = parseFloat(batch[0].available_qty);
-          if (availableQty < requiredQty) {
-            throw new Error(
-              `批次 ${item.batch_no} 库存不足: 可用 ${availableQty}, 需要 ${requiredQty}`
-            );
-          }
+        if (deductResult.affectedRows === 0) {
+          throw new Error(`批次 ${item.batch_no} 扣减失败，可能已被其他操作修改，请刷新后重试`);
+        }
 
-          await executeSpecifiedBatchDeduction(conn, {
-            batchNo: item.batch_no,
-            materialId: item.material_id,
-            materialCode: '',
-            materialName: item.material_name,
-            warehouseId: order.warehouse_id,
-            warehouseCode: order.warehouse_code || '',
-            requiredQty,
-            sourceType: 'outbound_order',
-            sourceId: orderId,
-            sourceNo: order.order_no,
-            operatorId: operatorId || null,
-            operatorName: operatorName || '',
-          });
+        const [currentInv]: Loose = await conn.query(
+          'SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0',
+          [item.material_id, order.warehouse_id]
+        );
+        const beforeQty = currentInv.length > 0 ? parseFloat(currentInv[0].quantity) : 0;
+        const afterQty = beforeQty - requiredQty;
 
-          deductionDetails.push({
-            batch_id: batch[0].id,
-            batch_no: item.batch_no,
-            material_id: item.material_id,
-            deducted_qty: requiredQty,
-            unit_cost: parseFloat(batch[0].unit_price) || 0,
-          });
-        } else {
-          const allocation = await allocateFIFO(
-            conn,
+        await conn.execute(
+          `INSERT INTO inv_inventory_log (
+            material_id, warehouse_id, batch_no, operation_type, operation_qty,
+            before_qty, after_qty, business_type, business_no, remark, operator_id, create_time
+          ) VALUES (?, ?, ?, 2, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          [
             item.material_id,
             order.warehouse_id,
-            requiredQty
-          );
+            item.batch_no,
+            requiredQty,
+            beforeQty,
+            afterQty,
+            'outbound_order',
+            order.order_no,
+            `FIFO出库确认-批次${item.batch_no}`,
+            operatorId || null,
+          ]
+        );
 
-          if (allocation.shortage > 0) {
-            throw new Error(
-              `物料 ${item.material_name} 库存不足: 需要 ${requiredQty}, 可用 ${allocation.total_available}`
-            );
-          }
-
-          await executeFIFODeductionWithRetry(conn, allocation, {
-            sourceType: 'outbound_order',
-            sourceId: orderId,
-            sourceNo: order.order_no,
-            warehouseId: order.warehouse_id,
-            warehouseCode: order.warehouse_code || '',
-            operatorId: operatorId || null,
-            operatorName: operatorName || '',
-          });
-
-          for (const alloc of allocation.allocations) {
-            deductionDetails.push({
-              batch_id: alloc.batch_id,
-              batch_no: alloc.batch_no,
-              material_id: alloc.material_id,
-              deducted_qty: alloc.allocate_qty,
-              unit_cost: alloc.unit_cost,
-            });
-          }
-        }
+        deductionDetails.push({
+          batch_id: batch.id,
+          batch_no: item.batch_no,
+          material_id: item.material_id,
+          deducted_qty: requiredQty,
+          unit_cost: parseFloat(batch.unit_price) || 0,
+        });
       }
 
-      await conn.execute(
+      const [orderUpdateResult]: Loose = await conn.execute(
         `UPDATE inv_outbound_order SET
         status = 'completed',
         audit_status = 1,
@@ -411,6 +418,9 @@ export const PATCH = withPermission(
       WHERE id = ? AND version = ?`,
         [operatorId, operatorName, remark || '', orderId, order.version]
       );
+      if (orderUpdateResult.affectedRows === 0) {
+        throw new Error('出库单版本冲突，可能已被其他操作修改，请刷新后重试');
+      }
 
       const result = {
         orderId,

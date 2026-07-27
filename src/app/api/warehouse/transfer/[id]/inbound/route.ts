@@ -54,7 +54,7 @@ export const POST = withPermission(
       const targetQrCode = qr_code || `${transfer.transfer_no}-${Date.now()}`;
 
       const existingInventory: Loose = await queryOne(
-        `SELECT * FROM wh_inventory
+        `SELECT * FROM inv_inventory
        WHERE warehouse_id = ?
          AND material_id = ?
          AND qr_code = ?
@@ -64,7 +64,7 @@ export const POST = withPermission(
 
       if (existingInventory) {
         await execute(
-          `UPDATE wh_inventory
+          `UPDATE inv_inventory
          SET quantity = quantity + ?,
              updated_at = NOW()
          WHERE id = ?`,
@@ -74,7 +74,7 @@ export const POST = withPermission(
         const batchNo = generateDocNo(getTrPrefix());
 
         await execute(
-          `INSERT INTO wh_inventory (
+          `INSERT INTO inv_inventory (
           warehouse_id, material_id, qr_code, batch_no,
           quantity, warehouse_location, inbound_date,
           created_at, updated_at, deleted

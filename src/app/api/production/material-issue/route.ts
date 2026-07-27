@@ -103,11 +103,11 @@ export const POST = withPermission(
 
           // 获取BOM需求量
           const [bomRows]: Loose = await conn.execute(
-            `SELECT bm.quantity, bm.loss_rate 
-           FROM prod_bom b 
-           JOIN prod_bom_material bm ON b.id = bm.bom_id 
+            `SELECT bd.quantity, bd.loss_rate 
+           FROM prd_bom b 
+           JOIN prd_bom_detail bd ON b.id = bd.bom_id 
            WHERE b.product_id = (SELECT product_id FROM prod_work_order WHERE id = ?) 
-           AND bm.material_id = ? 
+           AND bd.material_id = ? 
            AND b.status = 1 
            LIMIT 1`,
             [work_order_id, item.material_id]
