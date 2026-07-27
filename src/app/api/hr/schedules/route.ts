@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getDrizzleDb } from '@/lib/db';
-import { eq, and, desc, count } from 'drizzle-orm';
+import { eq, and, desc, count, type SQLWrapper } from 'drizzle-orm';
 import { hrSchedule, hrShift, sysEmployee } from '@/lib/db/schema';
 import { withPermission } from '@/lib/api-permissions';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -15,9 +15,9 @@ export const GET = withPermission(
     const employeeId = searchParams.get('employeeId');
     const scheduleDate = searchParams.get('scheduleDate');
 
-    const conditions = [];
+    const conditions: SQLWrapper[] = [];
     if (employeeId) conditions.push(eq(hrSchedule.employeeId, Number(employeeId)));
-    if (scheduleDate) conditions.push(eq(hrSchedule.scheduleDate, scheduleDate));
+    if (scheduleDate) conditions.push(eq(hrSchedule.scheduleDate, new Date(scheduleDate)));
 
     const [{ total }] = await db
       .select({ total: count() })
@@ -67,7 +67,7 @@ export const POST = withPermission(
           schedules.push({
             employeeId,
             shiftId,
-            scheduleDate: start.toISOString().split('T')[0],
+            scheduleDate: new Date(start),
             scheduleType: 'normal',
             source: 'manual',
             status: 1,
@@ -75,26 +75,31 @@ export const POST = withPermission(
           start.setDate(start.getDate() + 1);
         }
 
-        await db.insert(hrSchedule).values(schedules).onDuplicateKeyUpdate({
-          shiftId,
-          scheduleType: 'normal',
-          source: 'manual',
-        });
+        await db
+          .insert(hrSchedule)
+          .values(schedules)
+          .onDuplicateKeyUpdate({
+            set: {
+              scheduleType: 'normal',
+              source: 'manual',
+            },
+          });
       } else {
         await db
           .insert(hrSchedule)
           .values({
             employeeId,
             shiftId,
-            scheduleDate: startDate,
+            scheduleDate: new Date(startDate),
             scheduleType: 'normal',
             source: 'manual',
             status: 1,
           })
           .onDuplicateKeyUpdate({
-            shiftId,
-            scheduleType: 'normal',
-            source: 'manual',
+            set: {
+              scheduleType: 'normal',
+              source: 'manual',
+            },
           });
       }
 

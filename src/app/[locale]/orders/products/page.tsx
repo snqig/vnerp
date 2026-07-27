@@ -407,35 +407,50 @@ export default function ProductsPage() {
     table.style.borderCollapse = 'collapse';
 
     const thead = document.createElement('thead');
-    thead.innerHTML = `
-      <tr style="background-color: #f3f4f6;">
-        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('productCode')}</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('productName')}</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('specification')}</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('unit')}</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('category')}</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('bomVersion')}</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">${tc('status')}</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('costPrice')}</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('salePrice')}</th>
-      </tr>
-    `;
+    const headerRow = document.createElement('tr');
+    headerRow.style.backgroundColor = '#f3f4f6';
+    const headers = [
+      t('productCode'),
+      t('productName'),
+      t('specification'),
+      t('unit'),
+      t('category'),
+      t('bomVersion'),
+      tc('status'),
+      t('costPrice'),
+      t('salePrice'),
+    ];
+    headers.forEach((text) => {
+      const th = document.createElement('th');
+      th.style.border = '1px solid #d1d5db';
+      th.style.padding = '8px';
+      th.textContent = text;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
     sortedProducts.forEach((product) => {
       const row = document.createElement('tr');
-      row.innerHTML = `
-        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.product_code}</td>
-        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.product_name}</td>
-        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.specification || '-'}</td>
-        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.unit}</td>
-        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.category_name || '-'}</td>
-        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.bom_version || '-'}</td>
-        <td style="border: 1px solid #d1d5db; padding: 8px;">${tc(PRODUCT_STATUS_KEYS[product.status] || 'unknown')}</td>
-        <td style="border: 1px solid #d1d5db; padding: 8px;">¥${Number(product.cost_price || 0).toFixed(2)}</td>
-        <td style="border: 1px solid #d1d5db; padding: 8px;">¥${Number(product.sale_price || 0).toFixed(2)}</td>
-      `;
+      const cells = [
+        product.product_code,
+        product.product_name,
+        product.specification || '-',
+        product.unit,
+        product.category_name || '-',
+        product.bom_version || '-',
+        tc(PRODUCT_STATUS_KEYS[product.status] || 'unknown'),
+        `¥${Number(product.cost_price || 0).toFixed(2)}`,
+        `¥${Number(product.sale_price || 0).toFixed(2)}`,
+      ];
+      cells.forEach((text) => {
+        const td = document.createElement('td');
+        td.style.border = '1px solid #d1d5db';
+        td.style.padding = '8px';
+        td.textContent = text;
+        row.appendChild(td);
+      });
       tbody.appendChild(row);
     });
     table.appendChild(tbody);

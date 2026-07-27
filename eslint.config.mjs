@@ -10,6 +10,16 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
 
+  // 启用类型感知，支持 @typescript-eslint/no-unsafe-* 等规则
+  {
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+
   // 注册自定义规则
   {
     plugins: {
@@ -115,11 +125,11 @@ const eslintConfig = defineConfig([
       }],
 
       // 禁止无意义的类型断言（如 as any）
-      '@typescript-eslint/no-unsafe-assignment': 'off', // 暂时关闭，清理 any 后再开启
-      '@typescript-eslint/no-unsafe-member-access': 'off', // 暂时关闭，清理 any 后再开启
-      '@typescript-eslint/no-unsafe-call': 'off', // 暂时关闭，清理 any 后再开启
-      '@typescript-eslint/no-unsafe-return': 'off', // 暂时关闭，清理 any 后再开启
-      '@typescript-eslint/no-unsafe-argument': 'off', // 暂时关闭，清理 any 后再开启
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unsafe-member-access': 'warn',
+      '@typescript-eslint/no-unsafe-call': 'warn',
+      '@typescript-eslint/no-unsafe-return': 'warn',
+      '@typescript-eslint/no-unsafe-argument': 'warn',
     },
   },
   

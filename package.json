@@ -40,12 +40,7 @@
     "backup:restore": "npx tsx scripts/backup-database.ts restore",
     "docs:api": "node scripts/generate-api-docs.js",
     "i18n:check": "node scripts/i18n-key-check.mjs",
-    "i18n:check:strict": "node scripts/i18n-key-check.mjs --strict",
-    "db:deploy:hr": "node scripts/deploy-hr.mjs",
-    "db:seed:hr": "node scripts/seed-hr.mjs",
-    "db:menu:hr": "node scripts/register-hr-menus.mjs",
-    "db:verify": "node scripts/verify-deployment.mjs",
-    "deploy:all": "node scripts/deploy-all.mjs"
+    "i18n:check:strict": "node scripts/i18n-key-check.mjs --strict"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,js,jsx}": [
@@ -89,7 +84,6 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.0",
     "@tailwindcss/typography": "^0.5.19",
-    "@types/jspdf": "^1.3.3",
     "@xyflow/react": "^12.11.0",
     "@zxing/browser": "^0.2.1",
     "bcryptjs": "^3.0.3",
