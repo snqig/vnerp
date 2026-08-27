@@ -1,0 +1,500 @@
+import { NextRequest } from 'next/server';
+import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
+import { successResponse, errorResponse } from '@/lib/api-response';
+
+import { withPermission } from '@/lib/api-permissions';
+import type { DbRow } from '@/types/db';
+// 生成单号
+function generateRecordNo(): string {
+  const date = new Date();
+  const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, '0');
+  return `CUT${dateStr}${random}`;
+}
+
+// 生成标签号
+function generateLabelNo(): string {
+  const date = new Date();
+  const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, '0');
+  return `LBL${dateStr}${random}`;
+}
+
+// GET - 获取分切记录列表 / 校验单个标签（?labelNo=xxx）
+export const GET = withPermission(
+  async (request: NextRequest) => {
+    const { searchParams } = new URL(request.url);
+    const labelNo = searchParams.get('labelNo');
+
+    // 如果提供 labelNo，执行单标签校验
+    if (labelNo) {
+      const label = await queryOne<unknown>(
+        `SELECT * FROM inv_material_label WHERE label_no = ? AND deleted = 0`,
+        [labelNo]
+      );
+
+      if (!label) {
+        return errorResponse('码不存在', 404, 404);
+      }
+
+      if (label.is_cut === 1) {
+        return errorResponse('物料已分切', 400, 400);
+      }
+
+      if (label.is_used === 1) {
+        return errorResponse('物料已使用', 400, 400);
+      }
+
+      if (label.label_type !== 1) {
+        return errorResponse('非母材请在采购进货中作业', 400, 400);
+      }
+
+      const currentQty = parseFloat(label.quantity) || 0;
+      if (currentQty <= 0) {
+        return errorResponse('该标签库存量为零或负数，无法分切', 400, 400);
+      }
+
+      return successResponse({
+        id: label.id,
+        labelNo: label.label_no,
+        materialName: label.material_name,
+        materialCode: label.material_code,
+        specification: label.specification,
+        quantity: label.quantity,
+        unit: label.unit,
+        width: label.width,
+        supplierName: label.supplier_name,
+        batchNo: label.batch_no,
+        purchaseOrderNo: label.purchase_order_no,
+        labelType: label.label_type,
+        isUsed: label.is_used,
+        isCut: label.is_cut,
+      });
+    }
+
+    // 否则返回分页分切记录列表
+    const keyword = searchParams.get('keyword') || '';
+    const sourceLabelNoQ = searchParams.get('sourceLabelNo') || '';
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = parseInt(searchParams.get('pageSize') || '20');
+
+    let whereClause = '';
+    const params: SqlValue[] = [];
+
+    if (keyword) {
+      whereClause += `WHERE (r.record_no LIKE ? OR r.source_label_no LIKE ?)`;
+      params.push(`%${keyword}%`, `%${keyword}%`);
+    }
+
+    if (sourceLabelNoQ) {
+      if (whereClause) {
+        whereClause += ` AND r.source_label_no = ?`;
+      } else {
+        whereClause += `WHERE r.source_label_no = ?`;
+      }
+      params.push(sourceLabelNoQ);
+    }
+
+    const result = await queryPaginated(
+      `SELECT
+      r.id,
+      r.record_no as recordNo,
+      r.source_label_id as sourceLabelId,
+      r.source_label_no as sourceLabelNo,
+      r.cut_width_str as cutWidthStr,
+      r.original_width as originalWidth,
+      r.cut_total_width as cutTotalWidth,
+      r.remain_width as remainWidth,
+      r.operator_id as operatorId,
+      r.operator_name as operatorName,
+      r.cut_time as cutTime,
+      r.remark,
+      r.status,
+      r.create_time as createTime,
+      l.material_code as materialCode,
+      l.material_name as materialName,
+      l.specification
+    FROM inv_cutting_record r
+    LEFT JOIN inv_material_label l ON r.source_label_id = l.id
+    ${whereClause}
+    ORDER BY r.cut_time DESC`,
+      `SELECT COUNT(*) as total FROM inv_cutting_record r ${whereClause}`,
+      params || [],
+      { page, pageSize }
+    );
+
+    return successResponse(result);
+  },
+  { errorMessage: '操作失败' }
+);
+
+// POST - 执行分切操作
+export const POST = withPermission(
+  async (request: NextRequest) => {
+    const body = await request.json();
+
+    const {
+      sourceLabelId,
+      sourceLabelNo,
+      cutWidthStr,
+      operatorId,
+      operatorName,
+      remark,
+      materialCode,
+      materialName,
+      specification,
+      quantity,
+      unit,
+      supplierName,
+      batchNo,
+      orderNo,
+      originalWidth,
+    } = body;
+
+    if (!cutWidthStr) {
+      return errorResponse('缺少必填字段: cutWidthStr', 400, 400);
+    }
+    const finalOperatorId = operatorId || '1';
+    const finalOperatorName = operatorName || '系统管理员';
+
+    let sourceLabel: unknown = null;
+
+    if (sourceLabelId && !isNaN(Number(sourceLabelId))) {
+      sourceLabel = await queryOne<unknown>(
+        `SELECT * FROM inv_material_label WHERE id = ? AND deleted = 0`,
+        [sourceLabelId]
+      );
+    }
+
+    if (!sourceLabel) {
+      const labelNoToFind = sourceLabelNo || `${orderNo}-1`;
+      sourceLabel = await queryOne<unknown>(
+        `SELECT * FROM inv_material_label WHERE label_no = ? AND deleted = 0`,
+        [labelNoToFind]
+      );
+    }
+
+    if (!sourceLabel) {
+      return errorResponse('码不存在', 404, 404);
+    }
+
+    if (sourceLabel.is_cut === 1) {
+      return errorResponse('物料已分切', 400, 400);
+    }
+
+    if (sourceLabel.is_used === 1) {
+      return errorResponse('物料已使用', 400, 400);
+    }
+
+    // 仅 label_type=1（原材料/母材）允许分切
+    if (sourceLabel.label_type !== 1) {
+      return errorResponse('非母材请在采购进货中作业', 400, 400);
+    }
+
+    const currentQty = parseFloat(sourceLabel.quantity) || 0;
+    if (currentQty <= 0) {
+      return errorResponse('该标签库存量为零或负数，无法分切', 400, 400);
+    }
+
+    const cutWidths = cutWidthStr.split('+').map((w: string) => parseFloat(w.trim()));
+
+    for (const width of cutWidths) {
+      if (isNaN(width) || width <= 0) {
+        return errorResponse(
+          '分切宽幅格式不正确，请使用数字+数字的格式，如：300+400+300',
+          400,
+          400
+        );
+      }
+    }
+
+    let originalW =
+      parseFloat(sourceLabel.width) ||
+      originalWidth ||
+      parseSpecWidth(sourceLabel.specification) ||
+      0;
+
+    // 标签缺 width/specification 时，从 inv_material 表补查
+    if (originalW <= 0 && sourceLabel.material_code) {
+      const matRow = await queryOne<unknown>(
+        `SELECT specification, width FROM inv_material WHERE material_code = ? AND deleted = 0 LIMIT 1`,
+        [sourceLabel.material_code]
+      );
+      if (matRow) {
+        originalW = parseFloat(matRow.width) || parseSpecWidth(matRow.specification) || 0;
+        // 顺便回填标签的 specification/width，避免下次再查
+        if (matRow.specification && !sourceLabel.specification) {
+          await execute(`UPDATE inv_material_label SET specification = ?, width = ? WHERE id = ?`, [
+            matRow.specification,
+            originalW || null,
+            sourceLabel.id,
+          ]);
+          sourceLabel.specification = matRow.specification;
+          if (originalW) sourceLabel.width = String(originalW);
+        }
+      }
+    }
+
+    const cutTotalWidth = cutWidths.reduce((sum: number, w: number) => sum + w, 0);
+    const remainWidth = originalW - cutTotalWidth;
+
+    if (originalW <= 0) {
+      return errorResponse(
+        `无法确定母材宽幅：标签和物料档案均缺少 specification/width，请先在物料档案中维护规格（如 1000×1200mm）`,
+        400,
+        400
+      );
+    }
+
+    if (cutTotalWidth > originalW) {
+      return errorResponse(
+        `分切后的宽幅总和【${cutTotalWidth}】不能大于原宽幅【${originalW}】`,
+        400,
+        400
+      );
+    }
+
+    // 库存校验（按数量）：现有库存是否满足分切后剩余 >= 0
+    if (currentQty < cutTotalWidth) {
+      return errorResponse('库存不足，现有库存无法满足分切需求', 400, 400);
+    }
+
+    const recordNo = generateRecordNo();
+
+    let result;
+    try {
+      result = await transaction(async (conn) => {
+        const [recordResult] = await conn.execute(
+          `INSERT INTO inv_cutting_record (
+        record_no, source_label_id, source_label_no, cut_width_str,
+        original_width, cut_total_width, remain_width,
+        operator_id, operator_name, remark, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+          [
+            recordNo,
+            sourceLabel.id,
+            sourceLabel.label_no,
+            cutWidthStr,
+            originalW,
+            cutTotalWidth,
+            remainWidth,
+            finalOperatorId ?? null,
+            finalOperatorName ?? null,
+            remark ?? null,
+          ]
+        );
+
+        const recordId = (recordResult as DbRow).insertId;
+
+        await conn.execute(`UPDATE inv_material_label SET is_cut = 1, status = 4 WHERE id = ?`, [
+          sourceLabel.id,
+        ]);
+
+        const newLabels = [];
+        const originalSpec = sourceLabel.specification || '';
+
+        for (let i = 0; i < cutWidths.length; i++) {
+          const newLabelNo = generateLabelNo();
+          const cutWidth = cutWidths[i];
+
+          let newSpec = originalSpec;
+          const specMatch = originalSpec.match(
+            /^(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*(mm|m)?$/i
+          );
+          if (specMatch) {
+            const origLength = specMatch[2];
+            const unitStr = specMatch[3] || 'mm';
+            newSpec = `${cutWidth}×${origLength}${unitStr}`;
+          } else {
+            newSpec = `${cutWidth}mm`;
+          }
+
+          const cutQty =
+            originalW > 0
+              ? Math.round(parseFloat(sourceLabel.quantity) * (cutWidth / originalW) * 100) / 100
+              : parseFloat(sourceLabel.quantity);
+
+          const qrCode = JSON.stringify({
+            ID: newLabelNo,
+            TYPE: '2',
+            PARENT: sourceLabel.label_no,
+          });
+
+          const [labelResult] = await conn.execute(
+            `INSERT INTO inv_material_label (
+          label_no, qr_code, purchase_order_no, supplier_name, receive_date,
+          material_code, material_name, specification, unit, batch_no,
+          quantity, width, length_per_roll, remark,
+          warehouse_id, location_id, is_used, is_cut,
+          parent_label_id, label_type, status, deleted
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, 2, 1, 0)`,
+            [
+              newLabelNo,
+              qrCode,
+              sourceLabel.purchase_order_no ?? null,
+              sourceLabel.supplier_name ?? null,
+              sourceLabel.receive_date ?? null,
+              sourceLabel.material_code ?? null,
+              sourceLabel.material_name ?? null,
+              newSpec,
+              sourceLabel.unit ?? null,
+              sourceLabel.batch_no ?? null,
+              cutQty,
+              cutWidth,
+              sourceLabel.length_per_roll ?? null,
+              `分切${i + 1}: ${cutWidth}mm`,
+              sourceLabel.warehouse_id ?? null,
+              sourceLabel.location_id ?? null,
+              sourceLabel.id,
+            ]
+          );
+
+          const newLabelId = (labelResult as DbRow).insertId;
+
+          await conn.execute(
+            `INSERT INTO inv_cutting_detail (record_id, new_label_id, new_label_no, cut_width, sequence)
+         VALUES (?, ?, ?, ?, ?)`,
+            [recordId, newLabelId, newLabelNo, cutWidth, i + 1]
+          );
+
+          newLabels.push({
+            id: newLabelId,
+            labelNo: newLabelNo,
+            cutWidth,
+            newSpec,
+            cutQty,
+            sequence: i + 1,
+          });
+        }
+
+        if (remainWidth > 0) {
+          const remLabelNo = generateLabelNo();
+          let remSpec = originalSpec;
+          const specMatch = originalSpec.match(
+            /^(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*(mm|m)?$/i
+          );
+          if (specMatch) {
+            const origLength = specMatch[2];
+            const unitStr = specMatch[3] || 'mm';
+            remSpec = `${remainWidth}×${origLength}${unitStr}`;
+          } else {
+            remSpec = `${remainWidth}mm`;
+          }
+          const remQty =
+            originalW > 0
+              ? Math.round(parseFloat(sourceLabel.quantity) * (remainWidth / originalW) * 100) / 100
+              : 0;
+
+          const remQrCode = JSON.stringify({
+            ID: remLabelNo,
+            TYPE: '3',
+            PARENT: sourceLabel.label_no,
+          });
+
+          const [remLabelResult] = await conn.execute(
+            `INSERT INTO inv_material_label (
+          label_no, qr_code, purchase_order_no, supplier_name, receive_date,
+          material_code, material_name, specification, unit, batch_no,
+          quantity, width, remaining_width, length_per_roll, remark,
+          warehouse_id, location_id, is_used, is_cut,
+          parent_label_id, label_type, status, deleted
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, 3, 1, 0)`,
+            [
+              remLabelNo,
+              remQrCode,
+              sourceLabel.purchase_order_no ?? null,
+              sourceLabel.supplier_name ?? null,
+              sourceLabel.receive_date ?? null,
+              sourceLabel.material_code ?? null,
+              `余料${sourceLabel.material_name}`,
+              remSpec,
+              sourceLabel.unit ?? null,
+              sourceLabel.batch_no ?? null,
+              remQty,
+              remainWidth,
+              remainWidth,
+              sourceLabel.length_per_roll ?? null,
+              `余料: ${remainWidth}mm`,
+              sourceLabel.warehouse_id ?? null,
+              sourceLabel.location_id ?? null,
+              sourceLabel.id,
+            ]
+          );
+
+          const remLabelId = (remLabelResult as DbRow).insertId;
+          newLabels.push({
+            id: remLabelId,
+            labelNo: remLabelNo,
+            cutWidth: remainWidth,
+            newSpec: remSpec,
+            cutQty: remQty,
+            sequence: cutWidths.length + 1,
+            isRemainder: true,
+          });
+        }
+
+        return {
+          recordId,
+          recordNo,
+          originalWidth: originalW,
+          cutTotalWidth,
+          remainWidth,
+          newLabels,
+        };
+      });
+    } catch (txErr) {
+      console.error('[cutting] 事务失败:', txErr);
+      return errorResponse(`分切事务失败: ${(txErr as Error).message}`, 500, 500);
+    }
+
+    return successResponse(result, '分切操作成功');
+  },
+  { errorMessage: '分切操作失败' }
+);
+
+function parseSpecWidth(spec: string): number | null {
+  if (!spec) return null;
+  const match = spec.match(/^(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*(mm|m)?$/i);
+  if (match) return parseFloat(match[1]);
+  return null;
+}
+
+// 辅助函数：分页查询
+async function queryPaginated(
+  sql: string,
+  countSql: string,
+  params: DbRow[],
+  pagination: { page: number; pageSize: number }
+) {
+  const { page, pageSize } = pagination;
+  const offset = (page - 1) * pageSize;
+
+  try {
+    const [data, countResult] = await Promise.all([
+      query<unknown[]>(`${sql} LIMIT ? OFFSET ?`, [...(params || []), pageSize, offset]),
+      queryOne<{ total: number }>(countSql, params || []),
+    ]);
+
+    return {
+      list: data || [],
+      pagination: {
+        page,
+        pageSize,
+        total: countResult?.total || 0,
+      },
+    };
+  } catch {
+    return {
+      list: [],
+      pagination: {
+        page,
+        pageSize,
+        total: 0,
+      },
+    };
+  }
+}

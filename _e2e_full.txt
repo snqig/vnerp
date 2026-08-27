@@ -1,0 +1,17 @@
+Error: [safe-delete][SAFE_DELETE_BULK_CONFIRM_REQUIRED] {"count":82,"threshold":50,"scope":"turn","targets":["D:\\dcprint\\erp-project\\node_modules\\.cache\\pw\\test-results"],"targetCount":1}
+
+   at C:\Program Files\WorkBuddy\resources\app.asar.unpacked\cli\vendor\shim\genie-safe-delete.cjs:222
+
+  220 |         const detail = e && e.stderr ? String(e.stderr).trim() : '';
+  221 |         if (detail) {
+> 222 |             throw new Error(detail);
+      |                   ^
+  223 |         }
+  224 |         throw new Error(`[safe-delete][SAFE_DELETE_BULK_GUARD_ERROR] ${(e && e.message) || String(e)}`);
+  225 |     }
+    at checkBulkDeleteGuard (C:\Program Files\WorkBuddy\resources\app.asar.unpacked\cli\vendor\shim\genie-safe-delete.cjs:222:19)
+    at tryTrash (C:\Program Files\WorkBuddy\resources\app.asar.unpacked\cli\vendor\shim\genie-safe-delete.cjs:546:5)
+    at tryRm (C:\Program Files\WorkBuddy\resources\app.asar.unpacked\cli\vendor\shim\genie-safe-delete.cjs:722:5)
+    at Object.wrappedPromisesRm (C:\Program Files\WorkBuddy\resources\app.asar.unpacked\cli\vendor\shim\genie-safe-delete.cjs:766:15)
+
+[1A[2K

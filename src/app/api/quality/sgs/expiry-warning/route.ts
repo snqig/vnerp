@@ -1,0 +1,43 @@
+import { NextRequest } from 'next/server';
+import { query, execute, SqlValue } from '@/lib/db';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
+import type { DbRow } from '@/types/db';
+
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const { searchParams } = new URL(request.url);
+  const days = Number(searchParams.get('days') || 90);
+
+  const rows = await query(
+    `SELECT c.*, DATEDIFF(c.expire_date, CURDATE()) as days_remaining
+     FROM qms_sgs_cert c
+     WHERE c.deleted = 0 
+       AND c.status = 1 
+       AND c.expire_date IS NOT NULL 
+       AND DATEDIFF(c.expire_date, CURDATE()) <= ?
+     ORDER BY c.expire_date ASC`,
+    [days]
+  );
+
+  const expired: SqlValue[] = [];
+  const expiring: SqlValue[] = [];
+
+  for (const row of rows) {
+    const daysLeft = Number(row.days_remaining);
+    if (daysLeft <= 0) {
+      expired.push(row);
+    } else {
+      expiring.push(row);
+    }
+  }
+
+  if (expired.length > 0) {
+    const ids = expired.map((r: DbRow) => r.id);
+    await execute(
+      `UPDATE qms_sgs_cert SET status = 3 WHERE id IN (${ids.map(() => '?').join(',')}) AND status = 1`,
+      ids
+    );
+  }
+
+  return successResponse({ expired, expiring, total: rows.length });
+});

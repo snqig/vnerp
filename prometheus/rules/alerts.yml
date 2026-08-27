@@ -1,0 +1,113 @@
+groups:
+  # ============================================================
+  # 应用层告警
+  # ============================================================
+  - name: app-alerts
+    rules:
+      - alert: AppDown
+        expr: up{job="app-health"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "App 服务不可达"
+          description: "App 健康检查连续 1 分钟失败 ({{ $labels.instance }})"
+
+  # ============================================================
+  # 基础设施告警
+  # ============================================================
+  - name: infra-alerts
+    rules:
+      - alert: MySQLDown
+        expr: mysql_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MySQL 不可达"
+          description: "MySQL 数据库连接失败"
+
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis 不可达"
+          description: "Redis 缓存连接失败"
+
+      - alert: HighCPU
+        expr: |
+          100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU 使用率 > 85%"
+          description: "{{ $labels.instance }} CPU 使用率: {{ $value | printf \"%.1f\" }}%"
+
+      - alert: DiskSpaceLow
+        expr: |
+          100 - (node_filesystem_avail_bytes / node_filesystem_size_bytes * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "磁盘空间 > 85%"
+          description: "{{ $labels.mountpoint }} 已用 {{ $value | printf \"%.1f\" }}%"
+
+      - alert: HighMemory
+        expr: |
+          (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 90
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "内存使用率 > 90%"
+          description: "主机内存使用率: {{ $value | printf \"%.1f\" }}%"
+
+  # ============================================================
+  # 数据库告警
+  # ============================================================
+  - name: db-alerts
+    rules:
+      - alert: MySQLHighConnections
+        expr: |
+          mysql_global_status_threads_connected / mysql_global_variables_max_connections * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MySQL 连接数 > 80%"
+          description: "当前连接使用率: {{ $value | printf \"%.1f\" }}%"
+
+      - alert: MySQLSlowQueries
+        expr: rate(mysql_global_status_slow_queries[5m]) > 0.17
+        labels:
+          severity: info
+        annotations:
+          summary: "MySQL 慢查询 > 10/min"
+
+  # ============================================================
+  # Redis 告警
+  # ============================================================
+  - name: redis-alerts
+    rules:
+      - alert: RedisHighMemory
+        expr: |
+          redis_memory_used_bytes / redis_memory_max_bytes * 100 > 90
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis 内存使用 > 90%"
+
+      - alert: RedisLowHitRate
+        expr: |
+          rate(redis_keyspace_hits_total[10m]) /
+          (rate(redis_keyspace_hits_total[10m]) + rate(redis_keyspace_misses_total[10m])) < 0.8
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "Redis 命中率 < 80%"

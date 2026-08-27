@@ -1,0 +1,491 @@
+
+> vnerp@0.1.0 dev
+> next dev -p 5000
+
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:5000
+- Network:       http://192.168.0.144:5000
+- Environments: .env.local, .env
+- Experiments (use with caution):
+  · optimizePackageImports
+
+✓ Starting...
+✓ Ready in 4.1s
+[2026-08-25 14:42:07.119 +0800] [32mINFO[39m: [36m[instrumentation] Server started. OutboxPoller will auto-start on first API request.[39m
+○ Compiling /[locale] ...
+[2026-08-25 14:42:17.144 +0800] [32mINFO[39m: [36mCacheManager: 使用 InMemoryCacheManager（未配置 REDIS_URL）[39m
+ GET /api/purchase/return?pageSize=3 200 in 1906ms (compile: 1743ms, proxy.ts: 14ms, render: 149ms)
+[RepoRegistry] active impl = mysql (default; set REPOSITORY_IMPL=drizzle to switch)
+[RepoRegistry] getInboundOrderRepository() → MysqlInboundOrderRepository (mysql)
+[RepoRegistry] getSalesOrderRepository() → MysqlSalesOrderRepository (mysql)
+ GET /api/sales/return?pageSize=3 200 in 2.5s (compile: 1767ms, proxy.ts: 10ms, render: 766ms)
+ GET / 200 in 11.6s (compile: 9.2s, proxy.ts: 198ms, generate-params: 2.5s, render: 2.3s)
+ GET /api/production/product-label?pageSize=3 200 in 471ms (compile: 391ms, proxy.ts: 50ms, render: 31ms)
+ GET /api/system/notice?page=1&pageSize=10 200 in 540ms (compile: 364ms, proxy.ts: 20ms, render: 156ms)
+ GET /api/orders/sales?pageSize=20 200 in 553ms (compile: 477ms, proxy.ts: 22ms, render: 54ms)
+ GET /api/system/config?pageSize=200 200 in 601ms (compile: 444ms, proxy.ts: 11ms, render: 146ms)
+ GET /api/system/config?pageSize=200 200 in 51ms (compile: 6ms, proxy.ts: 11ms, render: 34ms)
+ GET /api/system/config?pageSize=200 200 in 47ms (compile: 7ms, proxy.ts: 8ms, render: 32ms)
+ GET /api/system/config?pageSize=200 200 in 69ms (compile: 9ms, proxy.ts: 16ms, render: 44ms)
+[2026-08-25 14:42:22.592 +0800] [34mDEBUG[39m: [36m[inventory.list] 查询库存列表[39m
+    [35mctx[39m: {
+      "module": "inventory",
+      "action": "list",
+      "traceId": "mt8as9vk-r73lu9d"
+    }
+    [35mstep[39m: "查询库存列表"
+    [35mdata[39m: {
+      "keyword": null,
+      "categoryId": null,
+      "warehouseId": null,
+      "lowStock": null,
+      "page": 1,
+      "pageSize": 100
+    }
+ GET /api/warehouse/inventory?pageSize=100 200 in 308ms (compile: 234ms, proxy.ts: 15ms, render: 59ms)
+[2026-08-25 14:42:22.628 +0800] [34mDEBUG[39m: [36m[inventory.list] 查询库存列表 DONE[39m
+    [35mctx[39m: {
+      "module": "inventory",
+      "action": "list",
+      "traceId": "mt8as9vk-r73lu9d"
+    }
+    [35mstep[39m: "查询库存列表"
+    [35mdata[39m: {
+      "total": 4085,
+      "page": 1,
+      "pageSize": 100
+    }
+ GET /api/production/orders?pageSize=20 200 in 303ms (compile: 260ms, proxy.ts: 5ms, render: 38ms)
+ GET /warehouse/inbound 200 in 4.0s (compile: 3.9s, proxy.ts: 8ms, generate-params: 1594ms, render: 82ms)
+ GET /api/system/notice?page=1&pageSize=10 200 in 108ms (compile: 31ms, proxy.ts: 30ms, render: 47ms)
+ GET /api/system/config?pageSize=200 200 in 141ms (compile: 24ms, proxy.ts: 32ms, render: 85ms)
+ GET /api/system/notice?page=1&pageSize=10 200 in 42ms (compile: 4ms, proxy.ts: 10ms, render: 28ms)
+ GET /api/system/config?pageSize=200 200 in 60ms (compile: 7ms, proxy.ts: 11ms, render: 42ms)
+ GET /api/organization/warehouse-category 200 in 720ms (compile: 437ms, proxy.ts: 23ms, render: 260ms)
+ GET /api/purchase/suppliers?pageSize=1000 200 in 746ms (compile: 368ms, proxy.ts: 23ms, render: 355ms)
+ GET /api/warehouse?all=true 200 in 771ms (compile: 502ms, proxy.ts: 24ms, render: 245ms)
+ GET /api/organization?type=company 200 in 528ms (compile: 387ms, proxy.ts: 10ms, render: 131ms)
+ GET /api/warehouse/inbound/labels?pageSize=1000 200 in 683ms (compile: 476ms, proxy.ts: 16ms, render: 191ms)
+ GET /api/organization/warehouse-category 200 in 315ms (compile: 34ms, proxy.ts: 36ms, render: 245ms)
+[RepoRegistry] getInboundOrderRepository() → MysqlInboundOrderRepository (mysql)
+[RepoRegistry] getPurchaseOrderRepository() → MysqlPurchaseOrderRepository (mysql)
+[2026-08-25 14:42:57.355 +0800] [32mINFO[39m: [36mEvent registry initialized[39m
+    [35minboundApprovedHandlers[39m: 6
+    [35mpurchaseReceivedHandlers[39m: 1
+    [35msalesShippedHandlers[39m: 4
+    [35mdeliveryShippedHandlers[39m: 4
+    [35mreturnOrderCompletedHandlers[39m: 3
+    [35mreconciliationWrittenOffHandlers[39m: 3
+    [35mpurchaseReturnCompletedHandlers[39m: 3
+    [35mpurchaseReconWrittenOffHandlers[39m: 3
+    [35mworkorderCompletedHandlers[39m: 8
+    [35mqualityUnqualifiedCompletedHandlers[39m: 2
+[2026-08-25 14:42:57.357 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:42:57.357 +0800] [32mINFO[39m: [36mOutbox poller starting[39m
+    [35mintervalMs[39m: 5000
+    [35mreclaimIntervalMs[39m: 60000
+    [35mcleanupIntervalMs[39m: 86400000
+    [35mdispatchingTimeoutMinutes[39m: 10
+[2026-08-25 14:42:57.360 +0800] [32mINFO[39m: [36mOutboxPoller auto-started (EVENT_BUS_TYPE=db)[39m
+[2026-08-25 14:42:57.360 +0800] [32mINFO[39m: [36mStreamConsumer not started (Redis unavailable, OutboxPoller using direct publish)[39m
+ GET /api/purchase/suppliers?pageSize=1000 200 in 318ms (compile: 37ms, proxy.ts: 26ms, render: 255ms)
+ GET /api/warehouse/inbound?page=1&pageSize=1000 200 in 1131ms (compile: 1011ms, proxy.ts: 24ms, render: 96ms)
+ GET /api/organization?type=company 200 in 322ms (compile: 207ms, proxy.ts: 40ms, render: 75ms)
+ GET /api/warehouse?all=true 200 in 335ms (compile: 204ms, proxy.ts: 32ms, render: 100ms)
+ GET /api/system/config?pageSize=200 200 in 383ms (compile: 26ms, proxy.ts: 39ms, render: 319ms)
+[RepoRegistry] getInboundOrderRepository() → MysqlInboundOrderRepository (mysql)
+[RepoRegistry] getPurchaseOrderRepository() → MysqlPurchaseOrderRepository (mysql)
+ GET /api/warehouse/inbound/labels?pageSize=1000 200 in 121ms (compile: 26ms, proxy.ts: 36ms, render: 59ms)
+[2026-08-25 14:42:57.491 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+ GET /api/warehouse/inbound?page=1&pageSize=1000 200 in 97ms (compile: 20ms, proxy.ts: 23ms, render: 54ms)
+ GET /api/system/config?pageSize=200 200 in 92ms (compile: 20ms, proxy.ts: 20ms, render: 51ms)
+[2026-08-25 14:43:02.371 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:43:02.377 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:43:07.373 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:43:07.376 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:43:12.383 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:43:12.385 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:43:17.395 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:43:17.398 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+ GET /warehouse/transfer 200 in 2.1s (compile: 2.1s, proxy.ts: 6ms, generate-params: 1089ms, render: 40ms)
+ GET /api/system/notice?page=1&pageSize=10 200 in 45ms (compile: 14ms, proxy.ts: 12ms, render: 19ms)
+ GET /api/system/config?pageSize=200 200 in 67ms (compile: 11ms, proxy.ts: 14ms, render: 43ms)
+ GET /api/system/notice?page=1&pageSize=10 200 in 76ms (compile: 9ms, proxy.ts: 15ms, render: 52ms)
+ GET /api/organization?type=company 200 in 47ms (compile: 7ms, proxy.ts: 20ms, render: 20ms)
+ GET /api/system/config?pageSize=200 200 in 77ms (compile: 17ms, proxy.ts: 14ms, render: 46ms)
+ GET /api/organization?type=company 200 in 27ms (compile: 5ms, proxy.ts: 8ms, render: 14ms)
+ GET /api/system/config?pageSize=200 200 in 48ms (compile: 3ms, proxy.ts: 5ms, render: 40ms)
+ GET /api/warehouse/transfer?page=1&pageSize=20&transferNo= 200 in 268ms (compile: 230ms, proxy.ts: 11ms, render: 26ms)
+ GET /api/system/config?pageSize=200 200 in 85ms (compile: 51ms, proxy.ts: 7ms, render: 28ms)
+ GET /api/warehouse/transfer?page=1&pageSize=20&transferNo= 200 in 33ms (compile: 3ms, proxy.ts: 11ms, render: 19ms)
+[2026-08-25 14:43:22.405 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:43:22.409 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:43:27.420 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:43:27.422 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:43:32.425 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:43:32.427 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+ GET /warehouse/transfer 200 in 209ms (compile: 12ms, proxy.ts: 4ms, generate-params: 6ms, render: 194ms)
+ GET /api/system/config?pageSize=200 200 in 28ms (compile: 3ms, proxy.ts: 4ms, render: 21ms)
+ GET /api/system/notice?page=1&pageSize=10 200 in 43ms (compile: 11ms, proxy.ts: 9ms, render: 24ms)
+ GET /api/warehouse/transfer?page=1&pageSize=20&transferNo= 200 in 44ms (compile: 20ms, proxy.ts: 8ms, render: 17ms)
+ GET /api/system/config?pageSize=200 200 in 57ms (compile: 6ms, proxy.ts: 9ms, render: 42ms)
+[2026-08-25 14:43:37.425 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:43:37.427 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+ GET /api/system/config?pageSize=200 200 in 35ms (compile: 5ms, proxy.ts: 5ms, render: 24ms)
+ GET /warehouse/inventory 200 in 2.1s (compile: 2.1s, proxy.ts: 8ms, generate-params: 1105ms, render: 30ms)
+ GET /api/system/notice?page=1&pageSize=10 200 in 75ms (compile: 15ms, proxy.ts: 16ms, render: 44ms)
+ GET /api/system/config?pageSize=200 200 in 90ms (compile: 10ms, proxy.ts: 17ms, render: 63ms)
+ GET /api/warehouse?all=true&status=active 200 in 76ms (compile: 8ms, proxy.ts: 20ms, render: 48ms)
+ GET /api/system/notice?page=1&pageSize=10 200 in 86ms (compile: 16ms, proxy.ts: 19ms, render: 51ms)
+ GET /api/warehouse?all=true&status=active 200 in 72ms (compile: 19ms, proxy.ts: 14ms, render: 39ms)
+ GET /api/organization?type=company 200 in 75ms (compile: 17ms, proxy.ts: 17ms, render: 41ms)
+ GET /api/system/config?pageSize=200 200 in 87ms (compile: 14ms, proxy.ts: 16ms, render: 57ms)
+ GET /api/organization?type=company 200 in 26ms (compile: 4ms, proxy.ts: 7ms, render: 15ms)
+ GET /api/system/config?pageSize=200 200 in 48ms (compile: 4ms, proxy.ts: 6ms, render: 37ms)
+ GET /api/warehouse/categories 200 in 344ms (compile: 251ms, proxy.ts: 13ms, render: 80ms)
+ GET /api/inventory?pageSize=100 200 in 296ms (compile: 256ms, proxy.ts: 9ms, render: 30ms)
+ GET /api/system/config?pageSize=200 200 in 62ms (compile: 5ms, proxy.ts: 7ms, render: 50ms)
+ GET /api/warehouse/categories 200 in 43ms (compile: 6ms, proxy.ts: 10ms, render: 28ms)
+ GET /api/inventory?pageSize=100 200 in 47ms (compile: 8ms, proxy.ts: 10ms, render: 29ms)
+[2026-08-25 14:43:42.426 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:43:42.428 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:43:47.433 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:43:47.436 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:43:52.435 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:43:52.437 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:43:57.443 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:43:57.447 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:44:02.446 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:44:02.448 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:44:07.460 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:44:07.462 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:44:12.463 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:44:12.465 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:44:17.476 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:44:17.479 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:44:22.478 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:44:22.481 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:44:27.481 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:44:27.484 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:44:32.491 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:44:32.494 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:44:37.495 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:44:37.497 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:44:42.507 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:44:42.510 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:44:47.512 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:44:47.514 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:44:52.519 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:44:52.521 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:44:57.522 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:44:57.524 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:45:02.522 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:45:02.525 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:45:07.534 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:45:07.536 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:45:12.537 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:45:12.539 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:45:17.552 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:45:17.554 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:45:22.566 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:45:22.568 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:45:27.574 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:45:27.576 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:45:32.587 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:45:32.589 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:45:37.598 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:45:37.601 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:45:42.612 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:45:42.614 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:45:47.624 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:45:47.626 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:45:52.626 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:45:52.628 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:45:57.636 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:45:57.638 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:46:02.639 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:46:02.640 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:46:07.643 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:46:07.646 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:46:12.647 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:46:12.649 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:46:17.650 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:46:17.654 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:46:22.666 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:46:22.669 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:46:27.677 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:46:27.681 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:46:32.686 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:46:32.689 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:46:37.690 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:46:37.692 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:46:42.703 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:46:42.706 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:46:47.713 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:46:47.716 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:46:52.714 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:46:52.716 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:46:57.723 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:46:57.725 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:47:02.730 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:47:02.732 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:47:07.739 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:47:07.741 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:47:12.752 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:47:12.755 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+ GET /api/quality/incoming?pageSize=3 200 in 224ms (compile: 198ms, proxy.ts: 5ms, render: 20ms)
+ GET /api/dcprint/trace?pageSize=3 200 in 211ms (compile: 183ms, proxy.ts: 4ms, render: 24ms)
+[2026-08-25 14:47:17.755 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:47:17.757 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:47:22.764 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:47:22.776 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:47:27.779 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:47:27.781 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:47:32.791 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:47:32.793 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:47:37.806 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:47:37.818 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:47:42.820 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:47:42.822 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:47:47.834 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:47:47.836 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:47:52.845 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:47:52.847 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:47:57.858 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:47:57.861 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:48:02.862 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:48:02.863 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:48:07.873 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:48:07.876 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:48:12.884 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:48:12.887 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:48:17.897 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:48:17.898 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:48:22.911 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:48:22.914 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:48:27.926 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:48:27.928 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:48:32.939 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:48:32.941 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:48:37.943 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:48:37.946 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:48:42.981 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:48:42.987 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:48:47.982 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:48:47.984 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[2026-08-25 14:48:52.988 +0800] [34mDEBUG[39m: [36mEvent registry already initialized[39m
+[2026-08-25 14:48:52.990 +0800] [34mDEBUG[39m: [36mOutboxPoller: claimed pending events[39m
+    [35mcount[39m: 0
+    [35meventIds[39m: []
+    [35mmode[39m: "memory"
+[?25h

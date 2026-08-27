@@ -1,0 +1,877 @@
+
+### sal_sample_order (34 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  order_no | varchar(50) | null=NO | key=UNI | def=null
+  notify_date | date | null=YES | key=MUL | def=null
+  customer_id | bigint unsigned | null=YES | key=MUL | def=null
+  customer_name | varchar(100) | null=YES | key= | def=null
+  product_name | varchar(200) | null=YES | key= | def=null
+  material_no | varchar(50) | null=YES | key= | def=null
+  version | varchar(20) | null=YES | key= | def=A
+  size_spec | varchar(200) | null=YES | key= | def=null
+  material_spec | varchar(200) | null=YES | key= | def=null
+  specification | varchar(200) | null=YES | key= | def=null
+  quantity | int | null=YES | key= | def=0
+  order_date | date | null=YES | key= | def=null
+  customer_require_date | date | null=YES | key= | def=null
+  delivery_date | date | null=YES | key= | def=null
+  actual_delivery_date | date | null=YES | key= | def=null
+  delivery_status | varchar(20) | null=YES | key= | def=pending
+  status | varchar(20) | null=YES | key=MUL | def=pending
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  create_by | bigint unsigned | null=YES | key= | def=null
+  process_card_id | bigint unsigned | null=YES | key= | def=null
+  work_order_id | bigint unsigned | null=YES | key= | def=null
+  sales_order_id | bigint unsigned | null=YES | key= | def=null
+  sample_fee | decimal(18,4) | null=YES | key= | def=0.0000
+  fee_charged | tinyint | null=YES | key= | def=0
+  fee_deductible | tinyint | null=YES | key= | def=0
+  fee_deducted | tinyint | null=YES | key= | def=0
+  sample_version | int | null=YES | key= | def=1
+  parent_version_id | bigint unsigned | null=YES | key= | def=null
+  converted_at | datetime | null=YES | key= | def=null
+  converted_by | bigint unsigned | null=YES | key= | def=null
+  deleted | tinyint | null=YES | key= | def=0
+
+### prd_standard_card (94 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  card_no | varchar(50) | null=NO | key=UNI | def=null
+  name | varchar(200) | null=YES | key= | def=null
+  type | varchar(20) | null=YES | key= | def=process
+  customer_id | bigint unsigned | null=YES | key=MUL | def=null
+  customer_name | varchar(100) | null=YES | key= | def=null
+  customer_code | varchar(50) | null=YES | key= | def=null
+  product_name | varchar(100) | null=YES | key= | def=null
+  version | varchar(10) | null=YES | key= | def=null
+  effective_date | date | null=YES | key= | def=null
+  expiry_date | date | null=YES | key= | def=null
+  create_user | int | null=YES | key= | def=null
+  audit_user | int | null=YES | key= | def=null
+  date | date | null=YES | key= | def=null
+  document_code | varchar(50) | null=YES | key= | def=null
+  finished_size | varchar(50) | null=YES | key= | def=null
+  tolerance | varchar(50) | null=YES | key= | def=null
+  material_name | varchar(100) | null=YES | key= | def=null
+  material_type | varchar(20) | null=YES | key= | def=null
+  mold_type | varchar(100) | null=YES | key= | def=
+  layout_type | varchar(50) | null=YES | key= | def=null
+  spacing | varchar(20) | null=YES | key= | def=null
+  spacing_value | varchar(20) | null=YES | key= | def=null
+  sheet_width | varchar(20) | null=YES | key= | def=null
+  sheet_length | varchar(20) | null=YES | key= | def=null
+  core_type | varchar(50) | null=YES | key= | def=null
+  paper_direction | varchar(20) | null=YES | key= | def=null
+  roll_width | varchar(20) | null=YES | key= | def=null
+  paper_edge | varchar(20) | null=YES | key= | def=null
+  standard_usage | varchar(50) | null=YES | key= | def=null
+  jump_distance | varchar(20) | null=YES | key= | def=null
+  process_flow1 | varchar(100) | null=YES | key= | def=null
+  process_flow2 | varchar(100) | null=YES | key= | def=null
+  print_type | varchar(50) | null=YES | key= | def=null
+  first_jump_distance | varchar(20) | null=YES | key= | def=null
+  sequences | json | null=YES | key= | def=null
+  film_manufacturer | varchar(100) | null=YES | key= | def=null
+  film_code | varchar(50) | null=YES | key= | def=null
+  film_size | varchar(50) | null=YES | key= | def=null
+  process_method | varchar(50) | null=YES | key= | def=null
+  stamping_method | varchar(50) | null=YES | key= | def=null
+  mold_code | varchar(50) | null=YES | key= | def=null
+  back_mold_code | varchar(50) | null=YES | key= | def=null
+  layout_method | varchar(50) | null=YES | key= | def=null
+  layout_way | varchar(50) | null=YES | key= | def=null
+  jump_distance2 | varchar(20) | null=YES | key= | def=null
+  mylar_material | varchar(100) | null=YES | key= | def=null
+  mylar_specs | varchar(50) | null=YES | key= | def=null
+  mylar_layout | varchar(50) | null=YES | key= | def=null
+  mylar_jump | varchar(20) | null=YES | key= | def=null
+  adhesive_type | varchar(50) | null=YES | key= | def=null
+  adhesive_manufacturer | varchar(100) | null=YES | key= | def=null
+  adhesive_code | varchar(50) | null=YES | key= | def=null
+  adhesive_size | varchar(50) | null=YES | key= | def=null
+  adhesive_specs | varchar(50) | null=YES | key= | def=null
+  dashed_knife | tinyint | null=YES | key= | def=0
+  slice_per_row | varchar(20) | null=YES | key= | def=null
+  slice_per_roll | varchar(20) | null=YES | key= | def=null
+  slice_per_bundle | varchar(20) | null=YES | key= | def=null
+  slice_per_bag | varchar(20) | null=YES | key= | def=null
+  slice_per_box | varchar(20) | null=YES | key= | def=null
+  packing_qty | varchar(20) | null=YES | key= | def=null
+  back_knife_mold | varchar(50) | null=YES | key= | def=null
+  back_mylar_mold | varchar(50) | null=YES | key= | def=null
+  etch_mold | varchar(100) | null=YES | key= | def=
+  storage_location | varchar(100) | null=YES | key= | def=
+  extra_field | varchar(100) | null=YES | key= | def=
+  release_paper_code | varchar(50) | null=YES | key= | def=null
+  release_paper_type | varchar(50) | null=YES | key= | def=null
+  release_paper_category | varchar(50) | null=YES | key= | def=null
+  release_paper_specs | varchar(50) | null=YES | key= | def=null
+  padding_material | varchar(100) | null=YES | key= | def=null
+  packing_material | varchar(100) | null=YES | key= | def=null
+  special_color | varchar(200) | null=YES | key= | def=null
+  color_formula | varchar(200) | null=YES | key= | def=null
+  file_path | varchar(200) | null=YES | key= | def=null
+  sample_info | varchar(200) | null=YES | key= | def=null
+  notes | text | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  glue_type | varchar(50) | null=YES | key= | def=null
+  packing_type | varchar(50) | null=YES | key= | def=null
+  creator | varchar(50) | null=YES | key= | def=null
+  reviewer | varchar(50) | null=YES | key= | def=null
+  factory_manager | varchar(50) | null=YES | key= | def=null
+  quality_manager | varchar(50) | null=YES | key= | def=null
+  sales | varchar(50) | null=YES | key= | def=null
+  approver | varchar(50) | null=YES | key= | def=null
+  status | tinyint | null=YES | key=MUL | def=1
+  create_by | bigint unsigned | null=YES | key=MUL | def=null
+  reviewer_id | bigint unsigned | null=YES | key=MUL | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=NO | key= | def=0
+  update_by | bigint unsigned | null=YES | key= | def=null
+
+### sal_sample_inventory (14 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  sample_order_id | bigint unsigned | null=YES | key=MUL | def=null
+  product_name | varchar(200) | null=YES | key= | def=null
+  material_no | varchar(50) | null=YES | key= | def=null
+  quantity | int | null=YES | key= | def=0
+  unit | varchar(20) | null=YES | key= | def=pcs
+  warehouse_id | bigint unsigned | null=YES | key= | def=null
+  status | varchar(20) | null=YES | key= | def=available
+  sent_to | varchar(200) | null=YES | key= | def=null
+  sent_date | date | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=YES | key= | def=0
+
+### sal_sample_feedback (10 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  sample_order_id | bigint unsigned | null=NO | key=MUL | def=null
+  round | int | null=NO | key= | def=1
+  feedback_content | text | null=YES | key= | def=null
+  modification_requirements | text | null=YES | key= | def=null
+  confirmation_status | varchar(20) | null=YES | key= | def=pending
+  feedback_by | varchar(100) | null=YES | key= | def=null
+  feedback_time | datetime | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=YES | key= | def=0
+
+### sal_sample_quotation -- ERROR: ER_NO_SUCH_TABLE Table 'vnerpdacahng.sal_sample_quotation' doesn't exist
+
+### prod_work_order (35 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  work_order_no | varchar(50) | null=NO | key=UNI | def=null
+  order_id | bigint unsigned | null=YES | key= | def=null
+  order_no | varchar(50) | null=YES | key=MUL | def=null
+  bom_id | bigint unsigned | null=YES | key= | def=null
+  customer_name | varchar(200) | null=YES | key= | def=null
+  product_name | varchar(200) | null=YES | key= | def=null
+  order_type | tinyint | null=YES | key= | def=0
+  quantity | decimal(15,2) | null=YES | key= | def=0.00
+  unit | varchar(20) | null=YES | key= | def=null
+  status | varchar(20) | null=YES | key=MUL | def=pending
+  priority | varchar(20) | null=YES | key= | def=normal
+  plan_start_date | date | null=YES | key= | def=null
+  plan_end_date | date | null=YES | key= | def=null
+  actual_start_date | date | null=YES | key= | def=null
+  actual_end_date | date | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  create_by | bigint unsigned | null=YES | key= | def=null
+  create_time | datetime | null=YES | key=MUL | def=CURRENT_TIMESTAMP
+  update_by | bigint unsigned | null=YES | key= | def=null
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=YES | key= | def=0
+  picked_qty | decimal(10,2) | null=YES | key= | def=0.00
+  finished_qty | decimal(10,2) | null=YES | key= | def=0.00
+  returned_qty | decimal(10,2) | null=YES | key= | def=0.00
+  total_material_cost | decimal(12,2) | null=YES | key= | def=0.00
+  total_labor_cost | decimal(18,4) | null=YES | key= | def=0.0000
+  total_tool_cost | decimal(18,4) | null=YES | key= | def=0.0000
+  total_overhead_cost | decimal(18,4) | null=YES | key= | def=0.0000
+  unit_cost | decimal(18,4) | null=YES | key= | def=0.0000
+  approved_at | datetime | null=YES | key= | def=null
+  approved_by | bigint unsigned | null=YES | key= | def=null
+  cancelled_at | datetime | null=YES | key= | def=null
+  cancelled_by | bigint unsigned | null=YES | key= | def=null
+  cancelled_reason | varchar(500) | null=YES | key= | def=null
+
+### prod_work_order_item (11 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  work_order_id | bigint unsigned | null=NO | key=MUL | def=null
+  line_no | int | null=YES | key= | def=0
+  material_id | bigint unsigned | null=YES | key= | def=null
+  material_name | varchar(200) | null=YES | key= | def=null
+  quantity | decimal(15,2) | null=YES | key= | def=0.00
+  unit | varchar(20) | null=YES | key= | def=null
+  unit_price | decimal(15,2) | null=YES | key= | def=0.00
+  total_price | decimal(15,2) | null=YES | key= | def=0.00
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+
+### prod_work_order_material_req (8 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  work_order_id | bigint unsigned | null=NO | key=MUL | def=null
+  bom_line_id | bigint unsigned | null=YES | key= | def=null
+  material_id | bigint unsigned | null=YES | key=MUL | def=null
+  material_name | varchar(200) | null=YES | key= | def=null
+  required_qty | decimal(14,3) | null=YES | key= | def=0.000
+  unit | varchar(20) | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+
+### prd_work_order (22 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  work_order_no | varchar(50) | null=NO | key=UNI | def=null
+  work_order_date | date | null=YES | key= | def=null
+  sales_order_id | bigint unsigned | null=YES | key=MUL | def=null
+  material_id | bigint unsigned | null=NO | key=MUL | def=null
+  plan_qty | decimal(18,4) | null=NO | key= | def=null
+  completed_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  unit | varchar(20) | null=YES | key= | def=null
+  plan_start_date | date | null=YES | key= | def=null
+  plan_end_date | date | null=YES | key= | def=null
+  actual_start_date | date | null=YES | key= | def=null
+  actual_end_date | date | null=YES | key= | def=null
+  workshop_id | bigint unsigned | null=YES | key=MUL | def=null
+  workcenter_id | bigint unsigned | null=YES | key=MUL | def=null
+  priority | tinyint | null=YES | key= | def=1
+  status | tinyint | null=YES | key=MUL | def=1
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  create_by | bigint unsigned | null=YES | key= | def=null
+  deleted | tinyint | null=NO | key= | def=0
+  update_by | bigint unsigned | null=YES | key= | def=null
+
+### prd_bom (12 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  bom_name | varchar(200) | null=NO | key= | def=null
+  product_id | bigint unsigned | null=YES | key=MUL | def=null
+  version | varchar(20) | null=YES | key= | def=1.0
+  total_cost | decimal(18,4) | null=YES | key= | def=0.0000
+  status | tinyint | null=YES | key= | def=1
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  create_by | bigint unsigned | null=YES | key= | def=null
+  deleted | tinyint | null=YES | key= | def=0
+  update_by | bigint unsigned | null=YES | key= | def=null
+
+### prd_bom_item -- ERROR: ER_NO_SUCH_TABLE Table 'vnerpdacahng.prd_bom_item' doesn't exist
+
+### pur_request (24 cols)
+  id | int unsigned | null=NO | key=PRI | def=null
+  request_no | varchar(50) | null=NO | key=UNI | def=null
+  request_date | date | null=YES | key=MUL | def=null
+  request_type | varchar(20) | null=YES | key= | def=material
+  request_dept_id | int unsigned | null=YES | key=MUL | def=null
+  request_dept | varchar(100) | null=YES | key= | def=null
+  requester_id | bigint unsigned | null=YES | key=MUL | def=null
+  requester_name | varchar(50) | null=YES | key= | def=null
+  reviewer_id | int unsigned | null=YES | key= | def=null
+  reviewer_name | varchar(50) | null=YES | key= | def=null
+  approver_id | bigint unsigned | null=YES | key= | def=null
+  approver_name | varchar(50) | null=YES | key= | def=null
+  total_amount | decimal(14,2) | null=YES | key= | def=0.00
+  currency | varchar(10) | null=YES | key= | def=CNY
+  status | tinyint | null=YES | key=MUL | def=0
+  priority | tinyint | null=YES | key= | def=1
+  expected_date | date | null=YES | key= | def=null
+  supplier_name | varchar(100) | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  create_by | int unsigned | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_by | int unsigned | null=YES | key= | def=null
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=NO | key= | def=0
+
+### pur_request_item (17 cols)
+  id | int unsigned | null=NO | key=PRI | def=null
+  request_id | int unsigned | null=NO | key=MUL | def=null
+  line_no | int unsigned | null=NO | key= | def=null
+  material_id | int unsigned | null=YES | key=MUL | def=null
+  material_code | varchar(50) | null=YES | key= | def=null
+  material_name | varchar(200) | null=YES | key= | def=null
+  material_spec | varchar(500) | null=YES | key= | def=null
+  material_unit | varchar(20) | null=YES | key= | def=null
+  quantity | decimal(14,3) | null=YES | key= | def=0.000
+  price | decimal(14,4) | null=YES | key= | def=0.0000
+  amount | decimal(14,2) | null=YES | key= | def=0.00
+  supplier_name | varchar(100) | null=YES | key= | def=null
+  expected_date | date | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint(1) | null=YES | key= | def=0
+
+### pur_purchase_order (35 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  po_no | varchar(50) | null=NO | key=UNI | def=null
+  supplier_id | bigint unsigned | null=YES | key=MUL | def=null
+  supplier_name | varchar(100) | null=NO | key= | def=null
+  supplier_code | varchar(50) | null=YES | key= | def=null
+  order_date | date | null=NO | key=MUL | def=null
+  delivery_date | date | null=YES | key= | def=null
+  currency | varchar(10) | null=YES | key= | def=CNY
+  exchange_rate | decimal(18,4) | null=YES | key= | def=1.0000
+  total_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  total_quantity | decimal(18,4) | null=YES | key= | def=0.0000
+  tax_rate | decimal(18,4) | null=YES | key= | def=13.0000
+  tax_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  grand_total | decimal(18,4) | null=YES | key= | def=0.0000
+  status | tinyint unsigned | null=YES | key=MUL | def=10
+  over_receipt_tolerance | decimal(18,4) | null=YES | key= | def=5.0000
+  payment_terms | varchar(100) | null=YES | key= | def=null
+  delivery_address | text | null=YES | key= | def=null
+  contact_person | varchar(50) | null=YES | key= | def=null
+  contact_phone | varchar(50) | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  create_by | bigint unsigned | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_by | bigint unsigned | null=YES | key= | def=null
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  audit_by | bigint unsigned | null=YES | key= | def=null
+  audit_time | datetime | null=YES | key= | def=null
+  close_by | bigint unsigned | null=YES | key= | def=null
+  close_time | datetime | null=YES | key= | def=null
+  close_reason | varchar(200) | null=YES | key= | def=null
+  deleted | tinyint | null=NO | key= | def=0
+  base_total_amount | decimal(18,4) | null=NO | key= | def=0.0000
+  base_tax_amount | decimal(18,4) | null=NO | key= | def=0.0000
+  base_grand_total | decimal(18,4) | null=NO | key= | def=0.0000
+  received_quantity | decimal(18,4) | null=NO | key= | def=0.0000
+
+### pur_purchase_order_line (26 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  po_id | bigint unsigned | null=NO | key=MUL | def=null
+  line_no | int unsigned | null=NO | key= | def=null
+  material_id | bigint unsigned | null=YES | key=MUL | def=null
+  material_code | varchar(50) | null=NO | key= | def=null
+  material_name | varchar(200) | null=NO | key= | def=null
+  material_spec | varchar(500) | null=YES | key= | def=null
+  unit | varchar(20) | null=YES | key= | def=件
+  order_qty | decimal(18,4) | null=NO | key= | def=0.0000
+  received_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  returned_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  unit_price | decimal(18,4) | null=NO | key= | def=0.0000
+  amount | decimal(18,4) | null=YES | key= | def=0.0000
+  tax_rate | decimal(18,4) | null=YES | key= | def=13.0000
+  tax_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  line_total | decimal(18,4) | null=YES | key= | def=0.0000
+  require_date | date | null=YES | key= | def=null
+  closed_flag | tinyint(1) | null=YES | key= | def=0
+  closed_reason | varchar(200) | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  base_unit_price | decimal(18,4) | null=NO | key= | def=0.0000
+  base_amount | decimal(18,4) | null=NO | key= | def=0.0000
+  base_tax_amount | decimal(18,4) | null=NO | key= | def=0.0000
+  base_line_total | decimal(18,4) | null=NO | key= | def=0.0000
+
+### pur_supplier (26 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  supplier_code | varchar(50) | null=NO | key=UNI | def=null
+  supplier_name | varchar(100) | null=NO | key= | def=null
+  short_name | varchar(50) | null=YES | key= | def=null
+  supplier_type | tinyint | null=YES | key= | def=null
+  province | varchar(50) | null=YES | key= | def=null
+  city | varchar(50) | null=YES | key= | def=null
+  address | varchar(255) | null=YES | key= | def=null
+  contact_name | varchar(50) | null=YES | key= | def=null
+  contact_phone | varchar(20) | null=YES | key= | def=null
+  contact_email | varchar(100) | null=YES | key= | def=null
+  business_license | varchar(50) | null=YES | key= | def=null
+  tax_number | varchar(50) | null=YES | key= | def=null
+  bank_name | varchar(100) | null=YES | key= | def=null
+  bank_account | varchar(50) | null=YES | key= | def=null
+  credit_level | varchar(20) | null=YES | key= | def=null
+  cooperation_status | tinyint | null=YES | key= | def=1
+  settlement_method | varchar(50) | null=YES | key= | def=null
+  payment_terms | varchar(100) | null=YES | key= | def=null
+  status | tinyint | null=YES | key= | def=1
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  create_by | bigint unsigned | null=YES | key= | def=null
+  update_by | bigint unsigned | null=YES | key= | def=null
+  deleted | tinyint | null=NO | key= | def=0
+
+### inv_inbound_order (29 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  order_no | varchar(50) | null=NO | key=MUL | def=null
+  order_type | enum('purchase','return','transfer','other') | null=YES | key= | def=purchase
+  warehouse_id | bigint unsigned | null=NO | key=MUL | def=null
+  warehouse_code | varchar(50) | null=YES | key= | def=null
+  warehouse_name | varchar(100) | null=YES | key= | def=null
+  supplier_id | int unsigned | null=YES | key= | def=null
+  supplier_name | varchar(100) | null=YES | key= | def=null
+  operator_id | bigint unsigned | null=YES | key= | def=null
+  operator_name | varchar(50) | null=YES | key= | def=null
+  po_id | int unsigned | null=YES | key=MUL | def=null
+  po_no | varchar(50) | null=YES | key= | def=null
+  grn_type | enum('po','blind','return') | null=YES | key= | def=po
+  total_amount | decimal(18,4) | null=YES | key= | def=null
+  total_quantity | decimal(18,4) | null=YES | key= | def=0.0000
+  status | enum('draft','pending','approved','completed','cancelled') | null=YES | key=MUL | def=draft
+  qc_status | enum('pending','pass','fail','partial') | null=YES | key= | def=pending
+  inbound_date | date | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  create_by | bigint unsigned | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_by | bigint unsigned | null=YES | key= | def=null
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=NO | key= | def=0
+  currency | varchar(10) | null=YES | key= | def=CNY
+  exchange_rate | decimal(18,4) | null=YES | key= | def=1.0000
+  base_total_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  source_type | varchar(20) | null=YES | key=MUL | def=null
+  source_order_id | bigint unsigned | null=YES | key= | def=null
+
+### inv_inbound_item (20 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  order_id | bigint unsigned | null=NO | key=MUL | def=null
+  material_id | bigint unsigned | null=YES | key=MUL | def=null
+  material_name | varchar(100) | null=NO | key= | def=null
+  material_spec | varchar(200) | null=YES | key= | def=null
+  batch_no | varchar(50) | null=YES | key= | def=null
+  quantity | decimal(18,4) | null=YES | key= | def=null
+  unit | varchar(20) | null=YES | key= | def=null
+  unit_price | decimal(18,4) | null=YES | key= | def=null
+  total_price | decimal(18,4) | null=YES | key= | def=null
+  warehouse_location | varchar(50) | null=YES | key= | def=null
+  produce_date | date | null=YES | key= | def=null
+  expire_date | date | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=YES | key= | def=0
+  base_unit_price | decimal(18,4) | null=YES | key= | def=0.0000
+  base_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  purchase_order_item_id | bigint unsigned | null=YES | key= | def=null
+  purchase_order_line_no | int unsigned | null=YES | key= | def=null
+
+### inv_warehouse (17 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  warehouse_code | varchar(50) | null=NO | key=UNI | def=null
+  warehouse_name | varchar(100) | null=NO | key= | def=null
+  warehouse_type | tinyint | null=YES | key= | def=null
+  category_id | bigint unsigned | null=YES | key= | def=null
+  province | varchar(50) | null=YES | key= | def=null
+  city | varchar(50) | null=YES | key= | def=null
+  address | varchar(255) | null=YES | key= | def=null
+  manager_id | bigint unsigned | null=YES | key=MUL | def=null
+  contact_phone | varchar(20) | null=YES | key= | def=null
+  status | tinyint | null=YES | key=MUL | def=1
+  remark | varchar(255) | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=NO | key= | def=0
+  create_by | bigint unsigned | null=YES | key= | def=null
+  update_by | bigint unsigned | null=YES | key= | def=null
+
+### qc_incoming_inspection (17 cols)
+  id | int | null=NO | key=PRI | def=null
+  inspection_no | varchar(50) | null=NO | key=UNI | def=null
+  inspection_date | date | null=NO | key=MUL | def=null
+  supplier_name | varchar(100) | null=NO | key=MUL | def=null
+  material_code | varchar(50) | null=YES | key= | def=null
+  material_name | varchar(100) | null=NO | key=MUL | def=null
+  specification | varchar(100) | null=NO | key= | def=null
+  batch_no | varchar(50) | null=NO | key=MUL | def=null
+  quantity | decimal(10,2) | null=NO | key= | def=null
+  unit | varchar(20) | null=NO | key= | def=null
+  inspection_type | varchar(20) | null=NO | key= | def=null
+  inspection_result | varchar(20) | null=NO | key=MUL | def=null
+  inspector_name | varchar(50) | null=NO | key= | def=null
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=NO | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=NO | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=NO | key= | def=0
+
+### qc_incoming_inspection_item (11 cols)
+  id | int | null=NO | key=PRI | def=null
+  inspection_id | int | null=NO | key=MUL | def=null
+  inspection_no | varchar(50) | null=NO | key=MUL | def=null
+  item_name | varchar(100) | null=NO | key=MUL | def=null
+  standard | varchar(255) | null=NO | key= | def=null
+  actual_value | varchar(255) | null=YES | key= | def=null
+  result | varchar(20) | null=NO | key=MUL | def=null
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=NO | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=NO | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=NO | key= | def=0
+
+### qc_final_inspection -- ERROR: ER_NO_SUCH_TABLE Table 'vnerpdacahng.qc_final_inspection' doesn't exist
+
+### qc_process_inspection -- ERROR: ER_NO_SUCH_TABLE Table 'vnerpdacahng.qc_process_inspection' doesn't exist
+
+### qc_inspection (19 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  inspection_no | varchar(50) | null=NO | key=UNI | def=null
+  inspection_type | tinyint | null=YES | key=MUL | def=null
+  source_type | varchar(50) | null=YES | key= | def=null
+  source_no | varchar(50) | null=YES | key=MUL | def=null
+  material_id | bigint unsigned | null=YES | key=MUL | def=null
+  batch_no | varchar(50) | null=YES | key= | def=null
+  inspection_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  qualified_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  unqualified_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  inspection_result | tinyint | null=YES | key= | def=null
+  inspector | varchar(50) | null=YES | key= | def=null
+  inspection_date | date | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=NO | key= | def=0
+  create_by | bigint unsigned | null=YES | key= | def=null
+  update_by | bigint unsigned | null=YES | key= | def=null
+
+### split_order -- ERROR: ER_NO_SUCH_TABLE Table 'vnerpdacahng.split_order' doesn't exist
+
+### split_order_detail -- ERROR: ER_NO_SUCH_TABLE Table 'vnerpdacahng.split_order_detail' doesn't exist
+
+### prd_work_report (26 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  report_no | varchar(50) | null=NO | key=UNI | def=null
+  work_order_id | bigint unsigned | null=NO | key=MUL | def=null
+  work_order_no | varchar(50) | null=YES | key= | def=null
+  process_name | varchar(50) | null=YES | key= | def=null
+  process_seq | int | null=YES | key= | def=null
+  equipment_id | bigint unsigned | null=YES | key= | def=null
+  operator_id | bigint unsigned | null=YES | key=MUL | def=null
+  operator_name | varchar(50) | null=YES | key= | def=null
+  plan_qty | decimal(18,4) | null=YES | key= | def=null
+  completed_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  qualified_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  defective_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  scrap_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  start_time | datetime | null=YES | key= | def=null
+  end_time | datetime | null=YES | key= | def=null
+  work_hours | decimal(10,2) | null=YES | key= | def=0.00
+  is_first_piece | tinyint | null=YES | key= | def=0
+  first_piece_status | tinyint | null=YES | key= | def=null
+  first_piece_inspector | varchar(50) | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  tool_id | bigint unsigned | null=YES | key=MUL | def=null
+  screen_plate_id | bigint unsigned | null=YES | key=MUL | def=null
+  create_time | datetime | null=YES | key=MUL | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=YES | key= | def=0
+
+### prd_pick_order (12 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  pick_no | varchar(50) | null=NO | key=UNI | def=null
+  work_order_id | bigint unsigned | null=NO | key=MUL | def=null
+  warehouse_id | bigint unsigned | null=YES | key=MUL | def=null
+  picker_name | varchar(100) | null=YES | key= | def=null
+  total_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  status | tinyint | null=YES | key=MUL | def=1
+  remark | text | null=YES | key= | def=null
+  create_by | bigint unsigned | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=YES | key= | def=0
+
+### prd_pick_order_item (13 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  pick_order_id | bigint unsigned | null=NO | key=MUL | def=null
+  material_id | bigint unsigned | null=YES | key=MUL | def=null
+  material_name | varchar(200) | null=YES | key= | def=null
+  material_spec | varchar(200) | null=YES | key= | def=null
+  required_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  actual_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  batch_no | varchar(50) | null=YES | key= | def=null
+  unit_cost | decimal(18,4) | null=YES | key= | def=0.0000
+  line_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  unit | varchar(20) | null=YES | key= | def=pcs
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+
+### prd_finish_order (11 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  finish_no | varchar(50) | null=NO | key=UNI | def=null
+  work_order_id | bigint unsigned | null=NO | key=MUL | def=null
+  warehouse_id | bigint unsigned | null=YES | key=MUL | def=null
+  qualified_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  defective_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  status | tinyint | null=YES | key=MUL | def=1
+  create_by | bigint unsigned | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=YES | key= | def=0
+
+### prd_return_order (12 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  return_no | varchar(50) | null=NO | key=UNI | def=null
+  work_order_id | bigint unsigned | null=NO | key=MUL | def=null
+  pick_order_id | bigint unsigned | null=YES | key=MUL | def=null
+  warehouse_id | bigint unsigned | null=YES | key= | def=null
+  return_reason | varchar(500) | null=YES | key= | def=null
+  total_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  status | tinyint | null=YES | key=MUL | def=1
+  create_by | bigint unsigned | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=YES | key= | def=0
+
+### inv_inventory_batch (25 cols)
+  id | int unsigned | null=NO | key=PRI | def=null
+  batch_no | varchar(50) | null=NO | key= | def=null
+  material_id | bigint unsigned | null=NO | key=MUL | def=null
+  material_name | varchar(100) | null=NO | key= | def=null
+  warehouse_id | bigint unsigned | null=NO | key=MUL | def=null
+  warehouse_name | varchar(100) | null=YES | key= | def=null
+  quantity | decimal(12,3) | null=YES | key= | def=0.000
+  available_qty | decimal(12,3) | null=YES | key= | def=0.000
+  locked_qty | decimal(12,3) | null=YES | key= | def=0.000
+  unit | varchar(20) | null=YES | key= | def=件
+  unit_price | decimal(12,2) | null=YES | key= | def=0.00
+  produce_date | date | null=YES | key= | def=null
+  expire_date | date | null=YES | key= | def=null
+  inbound_date | date | null=YES | key= | def=null
+  status | tinyint | null=NO | key=MUL | def=1
+  version | int unsigned | null=YES | key= | def=1
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=NO | key= | def=0
+  alert_level | varchar(20) | null=YES | key=MUL | def=normal
+  last_alert_time | timestamp | null=YES | key= | def=null
+  inspection_status | varchar(20) | null=YES | key= | def=pending
+  quarantine_status | varchar(20) | null=YES | key= | def=none
+  create_by | bigint unsigned | null=YES | key= | def=null
+  update_by | bigint unsigned | null=YES | key= | def=null
+
+### inv_inventory (20 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  material_id | bigint unsigned | null=NO | key=MUL | def=null
+  material_code | varchar(50) | null=YES | key=MUL | def=null
+  material_name | varchar(100) | null=YES | key= | def=null
+  warehouse_id | bigint unsigned | null=NO | key=MUL | def=null
+  warehouse_name | varchar(100) | null=YES | key= | def=null
+  quantity | decimal(18,4) | null=YES | key= | def=0.0000
+  available_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  batch_no | varchar(50) | null=YES | key= | def=null
+  locked_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  unit | varchar(20) | null=YES | key= | def=null
+  unit_cost | decimal(18,4) | null=YES | key= | def=0.0000
+  total_cost | decimal(18,4) | null=YES | key= | def=0.0000
+  safety_stock | decimal(18,4) | null=YES | key= | def=0.0000
+  version | int unsigned | null=YES | key= | def=1
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=NO | key= | def=0
+  create_by | bigint unsigned | null=YES | key= | def=null
+  update_by | bigint unsigned | null=YES | key= | def=null
+
+### inv_inventory_transaction (20 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  trans_no | varchar(50) | null=NO | key=UNI | def=null
+  trans_type | enum('in','out','transfer','adjust','return') | null=NO | key=MUL | def=null
+  source_type | varchar(20) | null=YES | key=MUL | def=null
+  source_id | bigint unsigned | null=YES | key= | def=null
+  source_line_id | bigint unsigned | null=YES | key= | def=null
+  material_id | bigint unsigned | null=YES | key=MUL | def=null
+  material_code | varchar(50) | null=YES | key= | def=null
+  batch_no | varchar(50) | null=YES | key=MUL | def=null
+  warehouse_id | bigint unsigned | null=YES | key=MUL | def=null
+  location_id | bigint unsigned | null=YES | key= | def=null
+  quantity | decimal(14,3) | null=YES | key= | def=0.000
+  unit_cost | decimal(14,4) | null=YES | key= | def=0.0000
+  total_cost | decimal(14,2) | null=YES | key= | def=0.00
+  unit_price | decimal(14,4) | null=YES | key= | def=0.0000
+  total_amount | decimal(14,2) | null=YES | key= | def=0.00
+  reference_no | varchar(100) | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  create_by | bigint unsigned | null=YES | key= | def=null
+  create_time | datetime | null=YES | key=MUL | def=CURRENT_TIMESTAMP
+
+### inv_inventory_log (8 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  warehouse_id | int unsigned | null=YES | key=MUL | def=null
+  material_id | int unsigned | null=YES | key=MUL | def=null
+  change_type | varchar(20) | null=YES | key= | def=null
+  change_qty | decimal(12,3) | null=YES | key= | def=0.000
+  order_no | varchar(50) | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key=MUL | def=CURRENT_TIMESTAMP
+
+### inv_material (27 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  material_code | varchar(50) | null=NO | key=UNI | def=null
+  material_name | varchar(100) | null=NO | key= | def=null
+  specification | varchar(255) | null=YES | key= | def=null
+  category_id | bigint unsigned | null=YES | key=MUL | def=null
+  material_type | tinyint | null=YES | key=MUL | def=null
+  unit | varchar(20) | null=YES | key= | def=null
+  barcode | varchar(50) | null=YES | key= | def=null
+  brand | varchar(50) | null=YES | key= | def=null
+  safety_stock | decimal(18,4) | null=YES | key= | def=0.0000
+  max_stock | decimal(18,4) | null=YES | key= | def=null
+  min_stock | decimal(18,4) | null=YES | key= | def=null
+  purchase_price | decimal(18,4) | null=YES | key= | def=null
+  sale_price | decimal(18,4) | null=YES | key= | def=null
+  cost_price | decimal(18,4) | null=YES | key= | def=null
+  warehouse_id | bigint unsigned | null=YES | key=MUL | def=null
+  shelf_life | int | null=YES | key= | def=null
+  warning_days | int | null=YES | key= | def=null
+  is_batch_managed | tinyint | null=YES | key= | def=0
+  is_serial_managed | tinyint | null=YES | key= | def=0
+  status | tinyint | null=YES | key= | def=1
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  create_by | bigint unsigned | null=YES | key= | def=null
+  update_by | bigint unsigned | null=YES | key= | def=null
+  deleted | tinyint | null=NO | key= | def=0
+
+### sal_delivery (28 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  delivery_no | varchar(50) | null=NO | key=UNI | def=null
+  delivery_date | date | null=YES | key= | def=null
+  order_id | bigint unsigned | null=YES | key=MUL | def=null
+  order_no | varchar(50) | null=YES | key= | def=null
+  customer_id | bigint unsigned | null=NO | key=MUL | def=null
+  customer_name | varchar(100) | null=YES | key= | def=null
+  warehouse_id | bigint unsigned | null=NO | key=MUL | def=null
+  total_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  total_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  logistics_company | varchar(100) | null=YES | key= | def=null
+  tracking_no | varchar(50) | null=YES | key= | def=null
+  contact_name | varchar(50) | null=YES | key= | def=null
+  contact_phone | varchar(30) | null=YES | key= | def=null
+  delivery_address | varchar(500) | null=YES | key= | def=null
+  status | tinyint | null=YES | key= | def=1
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  create_by | bigint unsigned | null=YES | key= | def=null
+  ship_by | bigint unsigned | null=YES | key= | def=null
+  ship_time | datetime | null=YES | key= | def=null
+  sign_by | bigint unsigned | null=YES | key= | def=null
+  sign_time | datetime | null=YES | key= | def=null
+  sign_status | tinyint | null=YES | key= | def=0
+  deleted | tinyint | null=NO | key= | def=0
+  version | int | null=YES | key= | def=0
+  update_by | bigint unsigned | null=YES | key= | def=null
+
+### sal_delivery_item -- ERROR: ER_NO_SUCH_TABLE Table 'vnerpdacahng.sal_delivery_item' doesn't exist
+
+### inv_outbound_order (22 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  order_no | varchar(50) | null=NO | key=UNI | def=null
+  order_date | date | null=YES | key= | def=null
+  outbound_type | varchar(20) | null=YES | key= | def=sale
+  warehouse_id | bigint unsigned | null=YES | key=MUL | def=null
+  warehouse_code | varchar(50) | null=YES | key= | def=null
+  warehouse_name | varchar(100) | null=YES | key= | def=null
+  total_qty | decimal(18,4) | null=YES | key= | def=0.0000
+  total_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  currency | varchar(10) | null=YES | key= | def=CNY
+  status | varchar(20) | null=YES | key=MUL | def=draft
+  remark | text | null=YES | key= | def=null
+  operator_name | varchar(50) | null=YES | key= | def=null
+  operator_id | bigint unsigned | null=YES | key=MUL | def=null
+  audit_status | varchar(20) | null=YES | key= | def=pending
+  auditor_name | varchar(50) | null=YES | key= | def=null
+  audit_time | datetime | null=YES | key= | def=null
+  create_by | bigint unsigned | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=NO | key= | def=0
+  version | int | null=YES | key= | def=0
+
+### inv_outbound_item (13 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  order_id | bigint unsigned | null=NO | key=MUL | def=null
+  material_id | bigint unsigned | null=NO | key=MUL | def=null
+  material_name | varchar(100) | null=YES | key= | def=null
+  material_spec | varchar(255) | null=YES | key= | def=null
+  quantity | decimal(18,4) | null=NO | key= | def=null
+  unit | varchar(20) | null=YES | key= | def=null
+  unit_price | decimal(18,4) | null=YES | key= | def=null
+  amount | decimal(18,4) | null=YES | key= | def=null
+  batch_no | varchar(50) | null=YES | key= | def=null
+  remark | varchar(255) | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=NO | key= | def=0
+
+### sal_order (27 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  order_no | varchar(50) | null=NO | key=UNI | def=null
+  order_date | date | null=YES | key= | def=null
+  customer_id | bigint unsigned | null=NO | key=MUL | def=null
+  contact_name | varchar(50) | null=YES | key= | def=null
+  contact_phone | varchar(20) | null=YES | key= | def=null
+  delivery_address | varchar(255) | null=YES | key= | def=null
+  salesman_id | bigint unsigned | null=YES | key=MUL | def=null
+  total_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  tax_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  total_with_tax | decimal(18,4) | null=YES | key= | def=0.0000
+  discount_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  currency | varchar(10) | null=YES | key= | def=CNY
+  exchange_rate | decimal(18,4) | null=YES | key= | def=1.0000
+  payment_terms | varchar(100) | null=YES | key= | def=null
+  delivery_date | date | null=YES | key= | def=null
+  contract_no | varchar(50) | null=YES | key= | def=null
+  status | tinyint | null=YES | key= | def=1
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  create_by | bigint unsigned | null=YES | key= | def=null
+  update_by | bigint unsigned | null=YES | key= | def=null
+  deleted | tinyint | null=NO | key= | def=0
+  base_total_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  base_tax_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  base_grand_total | decimal(18,4) | null=YES | key= | def=0.0000
+
+### sales_order -- ERROR: ER_NO_SUCH_TABLE Table 'vnerpdacahng.sales_order' doesn't exist
+
+### fin_payable (16 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  payable_no | varchar(50) | null=NO | key=UNI | def=null
+  source_type | tinyint | null=YES | key= | def=1
+  source_no | varchar(50) | null=YES | key=MUL | def=null
+  supplier_id | bigint unsigned | null=YES | key=MUL | def=null
+  amount | decimal(18,4) | null=YES | key= | def=0.0000
+  paid_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  balance | decimal(18,4) | null=YES | key= | def=0.0000
+  due_date | date | null=YES | key= | def=null
+  status | tinyint | null=YES | key=MUL | def=1
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=YES | key= | def=0
+  create_by | bigint unsigned | null=YES | key= | def=null
+  update_by | bigint unsigned | null=YES | key= | def=null
+
+### fin_payment_record (10 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  payment_no | varchar(50) | null=NO | key= | def=null
+  payable_id | bigint unsigned | null=YES | key=MUL | def=null
+  supplier_id | bigint unsigned | null=YES | key=MUL | def=null
+  amount | decimal(18,4) | null=YES | key= | def=0.0000
+  payment_method | varchar(20) | null=YES | key= | def=null
+  payment_date | date | null=YES | key= | def=null
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=YES | key= | def=0
+
+### fin_receivable (16 cols)
+  id | bigint unsigned | null=NO | key=PRI | def=null
+  receivable_no | varchar(50) | null=NO | key=UNI | def=null
+  source_type | tinyint | null=YES | key= | def=1
+  source_no | varchar(50) | null=YES | key=MUL | def=null
+  customer_id | bigint unsigned | null=YES | key=MUL | def=null
+  amount | decimal(18,4) | null=YES | key= | def=0.0000
+  received_amount | decimal(18,4) | null=YES | key= | def=0.0000
+  balance | decimal(18,4) | null=YES | key= | def=0.0000
+  due_date | date | null=YES | key= | def=null
+  status | tinyint | null=YES | key=MUL | def=1
+  remark | text | null=YES | key= | def=null
+  create_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  update_time | datetime | null=YES | key= | def=CURRENT_TIMESTAMP
+  deleted | tinyint | null=YES | key= | def=0
+  create_by | bigint unsigned | null=YES | key= | def=null
+  update_by | bigint unsigned | null=YES | key= | def=null

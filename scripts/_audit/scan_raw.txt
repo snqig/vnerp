@@ -1,0 +1,1352 @@
+
+=== D:\dcprint\erp-project\src\app\[locale]\advanced\cost-analysis\page.tsx
+  endpoints: /api/advanced/cost-analysis
+  arrayKey(fe): (none)
+  rowVars: p
+  feFields(6): productId, revenue, directCost, overhead, grossMargin, netMargin
+  BE[/api/advanced/cost-analysis] -> D:\dcprint\erp-project\src\app\api\advanced\cost-analysis\route.ts
+     beFields: id, total_revenue, total_cost, total_value
+
+=== D:\dcprint\erp-project\src\app\[locale]\advanced\dashboard\page.tsx
+  endpoints: /api/advanced/dashboard
+  arrayKey(fe): (none)
+  rowVars: item, t
+  feFields(2): month, value
+  BE[/api/advanced/dashboard] -> D:\dcprint\erp-project\src\app\api\advanced\dashboard\route.ts
+     beFields: revenue, orders, turnover_rate, total_value, completion_rate, total, completed, month, value, currentMonth, fulfillmentRate, inventoryValue, trend, production
+
+=== D:\dcprint\erp-project\src\app\[locale]\analysis\db-relations\page.tsx
+  endpoints: /api/db-relations
+  arrayKey(fe): (none)
+  rowVars: table
+  feFields(3): name, comment, rows
+  BE[/api/db-relations] -> D:\dcprint\erp-project\src\app\api\db-relations\route.ts
+     beFields: (none)
+
+=== D:\dcprint\erp-project\src\app\[locale]\base-data\material-category\page.tsx
+  endpoints: /api/base-data/material-category
+  arrayKey(fe): warnings
+  rowVars: item
+  feFields(7): id, category_code, category_name, category_type, sort_order, status, remark
+  BE[/api/base-data/material-category] -> D:\dcprint\erp-project\src\app\api\base-data\material-category\route.ts
+     beFields: total, Loose, cnt, list, rules, code_pattern, code_pattern_desc, max_depth, enforce_on_create, enforce_on_update, request, id, warnings, logTitle
+
+=== D:\dcprint\erp-project\src\app\[locale]\business\contract-review\page.tsx
+  endpoints: /api/business/contract-review, /api/upload/contract
+  arrayKey(fe): (none)
+  rowVars: i, item
+  feFields(10): id, sample_status, status, review_no, order_no, customer_name, product_name, quantity, amount, delivery_date
+  BE[/api/business/contract-review] -> D:\dcprint\erp-project\src\app\api\business\contract-review\route.ts
+     beFields: total, list, request, id, review_no, logTitle
+  BE[/api/upload/contract] -> D:\dcprint\erp-project\src\app\api\upload\contract\route.ts
+     beFields: File, url, filename, originalName, size, type, logTitle
+
+=== D:\dcprint\erp-project\src\app\[locale]\crm\analysis\page.tsx
+  endpoints: /api/crm/analysis
+  arrayKey(fe): (none)
+  rowVars: r
+  feFields(11): id, on_time_rate, satisfaction_score, growth_rate, order_amount, customer_name, customer_level, analysis_period, order_count, return_count, complaint_count
+  BE[/api/crm/analysis] -> D:\dcprint\erp-project\src\app\api\crm\analysis\route.ts
+     beFields: total, total_customers, total_orders, total_amount, avg_satisfaction, avg_on_time_rate, list, request, id, logTitle, updateFields, updateValues
+
+=== D:\dcprint\erp-project\src\app\[locale]\crm\follow\page.tsx
+  endpoints: /api/crm/follow
+  arrayKey(fe): (none)
+  rowVars: r
+  feFields(9): id, customer_name, follow_type, follow_content, contact_name, salesman_name, next_follow_date, opportunity, status
+  BE[/api/crm/follow] -> D:\dcprint\erp-project\src\app\api\crm\follow\route.ts
+     beFields: total, list, request, result, id, logTitle, updateFields, updateValues
+
+=== D:\dcprint\erp-project\src\app\[locale]\dashboard\ceo\page.tsx
+  endpoints: /api/dashboard/ceo
+  arrayKey(fe): (none)
+  rowVars: d
+  feFields(4): count, product_name, defect_type, quantity
+  BE[/api/dashboard/ceo] -> D:\dcprint\erp-project\src\app\api\dashboard\ceo\route.ts
+     beFields: total, active, completed, name, status, efficiency, passed, failed, total_qty, threshold, date, count, year, plan, actual
+
+=== D:\dcprint\erp-project\src\app\[locale]\dashboard\finance\page.tsx
+  endpoints: /api/dashboard/finance
+  arrayKey(fe): (none)
+  rowVars: d
+  feFields(4): amount, date, total, supplier_name
+  BE[/api/dashboard/finance] -> D:\dcprint\erp-project\src\app\api\dashboard\finance\route.ts
+     beFields: total, date, amount, aging, count, type
+
+=== D:\dcprint\erp-project\src\app\[locale]\dashboard\page.tsx
+  endpoints: /api/dashboard
+  arrayKey(fe): (none)
+  rowVars: o
+  feFields(7): id, orderNo, customer, product, quantity, status, date
+  BE[/api/dashboard] -> D:\dcprint\erp-project\src\app\api\dashboard\route.ts
+     beFields: total, today, pending, producing, completed_today, date, count
+
+=== D:\dcprint\erp-project\src\app\[locale]\dashboard\production\page.tsx
+  endpoints: /api/dashboard/production
+  arrayKey(fe): (none)
+  rowVars: o, eq, order, alert
+  feFields(22): orderNo, customer, product, status, quantity, id, name, currentOrder, efficiency, operator, runtime, priority, estimatedComplete, productName, process, completedQty, planQty, progress, severity, type, message, timestamp
+  BE[/api/dashboard/production] -> D:\dcprint\erp-project\src\app\api\dashboard\production\route.ts
+     beFields: total_orders, active_orders, completed_today, total, running, idle, maintenance, error_count, total_inspections, passed, total_opened, in_use, expired, expiring_soon, warning, locked, scrapped
+
+=== D:\dcprint\erp-project\src\app\[locale]\dashboard\quality\page.tsx
+  endpoints: /api/dashboard/quality
+  arrayKey(fe): (none)
+  rowVars: d
+  feFields(5): total, defects, date, count, defect_type
+  BE[/api/dashboard/quality] -> D:\dcprint\erp-project\src\app\api\dashboard\quality\route.ts
+     beFields: total, passed, failed, date, defects, count, inspect_time, inspect_count
+
+=== D:\dcprint\erp-project\src\app\[locale]\dashboard\sales\page.tsx
+  endpoints: /api/dashboard/sales
+  arrayKey(fe): (none)
+  rowVars: d
+  feFields(2): count, date
+  BE[/api/dashboard/sales] -> D:\dcprint\erp-project\src\app\api\dashboard\sales\route.ts
+     beFields: total, today, pending, completed, date, count, amount, order_count, total_amount, total_qty
+
+=== D:\dcprint\erp-project\src\app\[locale]\dashboard\warehouse\page.tsx
+  endpoints: /api/dashboard/warehouse
+  arrayKey(fe): (none)
+  rowVars: w, c, d
+  feFields(7): total_qty, warehouse_name, capacity, occupancy, name, material_type, count
+  BE[/api/dashboard/warehouse] -> D:\dcprint\erp-project\src\app\api\dashboard\warehouse\route.ts
+     beFields: total, low_stock, total_value, count, value, stock_qty, min_stock, transaction_type, item_count, total_qty
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\burdening\page.tsx
+  endpoints: /api/dcprint/process-cards, /api/dcprint/process-cards/detail, /api/dcprint/scan
+  arrayKey(fe): (none)
+  rowVars: m, card
+  feFields(7): labelNo, materialName, cardNo, id, workOrderNo, productName, burdeningStatus
+  BE[/api/dcprint/process-cards] -> D:\dcprint\erp-project\src\app\api\dcprint\process-cards\route.ts
+     beFields: cardNo, qrCode, workOrderId, workOrderNo, productCode, productName, materialSpec, workOrderDate, planQty, mainLabelId, mainLabelNo, burdeningStatus, lockStatus, createUserName, createTime, mainMaterialCode, mainMaterialName, mainSpecification, mainBatchNo, mainSupplierName, mainReceiveDate, total, Loose, list, page, pageSize, request
+  BE[/api/dcprint/process-cards/detail] -> NO ROUTE
+  BE[/api/dcprint/scan] -> D:\dcprint\erp-project\src\app\api\dcprint\scan\route.ts
+     beFields: labelNo, qrCode, purchaseOrderNo, supplierName, receiveDate, materialCode, materialName, batchNo, packageQty, lengthPerRoll, colorCode, mixRemark, warehouseId, locationId, warehouseName, locationName, isMainMaterial, isUsed, isCut, parentLabelId, parentLabelNo, createTime, recordNo, cutWidthStr, originalWidth, cutTotalWidth, remainWidth, cutTime, operatorName, newLabelNo, cutWidth, orderNo, productId, productCode, productName, productSpec, planStartDate, planEndDate, cardNo, mainLabelNo, burdeningStatus, lockStatus, createUserName, workOrderId, workOrderNo, materialSpec, workOrderDate, planQty, mainLabelId, mainMaterialCode, mainMaterialName, mainSpecification, mainBatchNo, mainSupplierName, mainReceiveDate, materialType, data, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\die\page.tsx
+  endpoints: /api/prepress/die
+  arrayKey(fe): (none)
+  rowVars: item
+  feFields(10): status, remaining_count, max_use_count, id, die_code, die_name, die_type, size_spec, product_name, used_count
+  BE[/api/prepress/die] -> D:\dcprint\erp-project\src\app\api\prepress\die\route.ts
+     beFields: total, list, request, result, id, qr_code, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\ink\page.tsx
+  endpoints: /api/prepress/ink
+  arrayKey(fe): (none)
+  rowVars: s, item
+  feFields(11): id, ink_type, status, ink_code, ink_name, color_name, color_code, brand, unit, stock_qty, safety_stock
+  BE[/api/prepress/ink] -> D:\dcprint\erp-project\src\app\api\prepress\ink\route.ts
+     beFields: total, list, request, result, id, logTitle, logType, fields, values
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\ink-formula\page.tsx
+  endpoints: /api/dcprint/formula/color, /api/dcprint/formula/version, /api/dcprint/formula/version/
+  arrayKey(fe): list
+  rowVars: color, ver
+  feFields(13): id, color_code, color_name, color_series, base_ink_type, pantone_code, status, version_no, version_name, total_weight, unit, theoretical_cost, activate_time
+  BE[/api/dcprint/formula/color] -> D:\dcprint\erp-project\src\app\api\dcprint\formula\color\route.ts
+     beFields: Error, logTitle, logType, request
+  BE[/api/dcprint/formula/version] -> D:\dcprint\erp-project\src\app\api\dcprint\formula\version\route.ts
+     beFields: Error, total, request, logTitle, logType
+  BE[/api/dcprint/formula/version/] -> D:\dcprint\erp-project\src\app\api\dcprint\formula\version\route.ts
+     beFields: Error, total, request, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\ink-mixed\page.tsx
+  endpoints: /api/dcprint/ink-mixed, /api/customers, /api/dcprint/ink
+  arrayKey(fe): (none)
+  rowVars: item, ink, c
+  feFields(17): status, id, record_no, base_ink_name, base_ink_code, mix_ratio, color_code, color_name, company_name, quantity, unit, operator_name, mix_time, expire_time, ink_code, ink_name, customer_name
+  BE[/api/dcprint/ink-mixed] -> D:\dcprint\erp-project\src\app\api\dcprint\ink-mixed\route.ts
+     beFields: total, list, request, id, record_no, qr_code, logTitle, logType
+  BE[/api/customers] -> D:\dcprint\erp-project\src\app\api\customers\route.ts
+     beFields: total, id, logTitle, logType, request, body
+  BE[/api/dcprint/ink] -> D:\dcprint\erp-project\src\app\api\dcprint\ink\route.ts
+     beFields: (none)
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\ink-opening\page.tsx
+  endpoints: /api/dcprint/ink-opening, /api/inventory/materials
+  arrayKey(fe): list, summary, overdue_list
+  rowVars: r, m, opt
+  feFields(14): id, record_no, material_name, ink_type, open_time, expire_time, status, material_code, batch_no, expire_hours, remaining_qty, unit, value, label
+  BE[/api/dcprint/ink-opening] -> D:\dcprint\erp-project\src\app\api\dcprint\ink-opening\route.ts
+     beFields: total, Loose, total_count, using_count, expired_count, scrapped_count, overdue_using_count, summary, overdue_list, request
+  BE[/api/inventory/materials] -> D:\dcprint\erp-project\src\app\api\inventory\materials\route.ts
+     beFields: Loose
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\ink-usage\page.tsx
+  endpoints: /api/base-inks, /api/ink-usages
+  arrayKey(fe): (none)
+  rowVars: item, ink
+  feFields(9): id, usage_date, plate_code, ink_code, ink_name, usage_qty, unit, operator_name, remark
+  BE[/api/base-inks] -> NO ROUTE
+  BE[/api/ink-usages] -> D:\dcprint\erp-project\src\app\api\ink-usages\route.ts
+     beFields: Loose, total, list, request, id, logTitle, logType  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\labels\page.tsx
+  endpoints: /api/dcprint/labels, /api/warehouse/inbound/cutting
+  arrayKey(fe): list, pagination
+  rowVars: l, label
+  feFields(17): id, labelNo, qrCode, materialCode, materialName, specification, batchNo, quantity, unit, warehouseName, width, lengthPerRoll, locationName, isMainMaterial, isCut, isUsed, status
+  BE[/api/dcprint/labels] -> D:\dcprint\erp-project\src\app\api\dcprint\labels\route.ts
+     beFields: labelNo, qrCode, purchaseOrderNo, supplierName, receiveDate, materialCode, materialName, batchNo, packageQty, lengthPerRoll, colorCode, mixRemark, warehouseId, locationId, warehouseName, locationName, isMainMaterial, isUsed, isCut, parentLabelId, parentLabelNo, createTime, updateTime, total, id, message, logTitle, logType, request, updateFields, params, fieldColumnMap
+  BE[/api/warehouse/inbound/cutting] -> D:\dcprint\erp-project\src\app\api\warehouse\inbound\cutting\route.ts
+     beFields: recordNo, sourceLabelId, sourceLabelNo, cutWidthStr, originalWidth, cutTotalWidth, remainWidth, operatorId, operatorName, cutTime, createTime, materialCode, materialName, total, Loose, Error, id, labelNo, specification, quantity, unit, width, supplierName, batchNo, purchaseOrderNo, labelType, isUsed, isCut
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\process-card\page.tsx
+  endpoints: /api/dcprint/sample-card, /api/dcprint/sample-card/
+  arrayKey(fe): list, total
+  rowVars: card
+  feFields(11): id, sample_no, sample_name, customer_name, product_name, version_no, substrate_material_name, print_color, estimated_hour, total_cost, status
+  BE[/api/dcprint/sample-card] -> D:\dcprint\erp-project\src\app\api\dcprint\sample-card\route.ts
+     beFields: Error, logTitle
+  BE[/api/dcprint/sample-card/] -> D:\dcprint\erp-project\src\app\api\dcprint\sample-card\route.ts
+     beFields: Error, logTitle
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\process-cards\page.tsx
+  endpoints: /api/dcprint/process-cards, /api/dcprint/scan
+  arrayKey(fe): (none)
+  rowVars: material, card
+  feFields(12): id, materialName, materialCode, batchNo, cardNo, workOrderNo, productCode, mainLabelNo, burdeningStatus, lockStatus, createUserName, createTime
+  BE[/api/dcprint/process-cards] -> D:\dcprint\erp-project\src\app\api\dcprint\process-cards\route.ts
+     beFields: cardNo, qrCode, workOrderId, workOrderNo, productCode, productName, materialSpec, workOrderDate, planQty, mainLabelId, mainLabelNo, burdeningStatus, lockStatus, createUserName, createTime, mainMaterialCode, mainMaterialName, mainSpecification, mainBatchNo, mainSupplierName, mainReceiveDate, total, Loose, list, page, pageSize, request
+  BE[/api/dcprint/scan] -> D:\dcprint\erp-project\src\app\api\dcprint\scan\route.ts
+     beFields: labelNo, qrCode, purchaseOrderNo, supplierName, receiveDate, materialCode, materialName, batchNo, packageQty, lengthPerRoll, colorCode, mixRemark, warehouseId, locationId, warehouseName, locationName, isMainMaterial, isUsed, isCut, parentLabelId, parentLabelNo, createTime, recordNo, cutWidthStr, originalWidth, cutTotalWidth, remainWidth, cutTime, operatorName, newLabelNo, cutWidth, orderNo, productId, productCode, productName, productSpec, planStartDate, planEndDate, cardNo, mainLabelNo, burdeningStatus, lockStatus, createUserName, workOrderId, workOrderNo, materialSpec, workOrderDate, planQty, mainLabelId, mainMaterialCode, mainMaterialName, mainSpecification, mainBatchNo, mainSupplierName, mainReceiveDate, materialType, data, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\screen-plate\page.tsx
+  endpoints: /api/screen-plates, /api/screen-plates/history
+  arrayKey(fe): (none)
+  rowVars: item, h
+  feFields(18): status, remaining_count, max_use_count, id, plate_code, plate_name, plate_type, mesh_count, size, customer_name, life_count, reclaim_count, tension_value, action, life_increment, remark, operator_name, created_at
+  BE[/api/screen-plates] -> D:\dcprint\erp-project\src\app\api\screen-plates\route.ts
+     beFields: Loose, total, list, request, id, logTitle, logType, updateFields, params, fieldMap, plateName, plateType, meshCount, meshMaterial  [has t.*]
+  BE[/api/screen-plates/history] -> D:\dcprint\erp-project\src\app\api\screen-plates\history\route.ts
+     beFields: Loose, historyId, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\tool\page.tsx
+  endpoints: /api/dcprint/tool, /api/dcprint/tool/dashboard, /api/dcprint/tool/
+  arrayKey(fe): list, total
+  rowVars: tool, r
+  feFields(41): tool_type, tool_code, tool_name, spec, total_life, warning_threshold, original_cost, manufacture_date, warehouse_location, asset_type, layout_type, pieces_per_impression, material, qr_code, supplier_id, maintenance_interval, mesh_count, mesh_material, size, tension_value, frame_type, customer_id, remark, id, used_count, net_value, status, use_time, work_order_no, process_name, use_count, amortized_cost, operator_name, maintenance_type, maintenance_cost, life_before, life_after, life_adjustment, start_time, end_time, description
+  BE[/api/dcprint/tool] -> D:\dcprint\erp-project\src\app\api\dcprint\tool\route.ts
+     beFields: Error, logTitle
+  BE[/api/dcprint/tool/dashboard] -> D:\dcprint\erp-project\src\app\api\dcprint\tool\dashboard\route.ts
+     beFields: (none)
+  BE[/api/dcprint/tool/] -> D:\dcprint\erp-project\src\app\api\dcprint\tool\route.ts
+     beFields: Error, logTitle
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\tool-manage\page.tsx
+  endpoints: /api/dcprint/tool, /api/dcprint/tool/
+  arrayKey(fe): list
+  rowVars: tool
+  feFields(15): total_life, remain_life, id, tool_code, tool_name, tool_type, spec, mesh_count, used_count, unit_cost, status, original_cost, mesh_material, size, tension_value
+  BE[/api/dcprint/tool] -> D:\dcprint\erp-project\src\app\api\dcprint\tool\route.ts
+     beFields: Error, logTitle
+  BE[/api/dcprint/tool/] -> D:\dcprint\erp-project\src\app\api\dcprint\tool\route.ts
+     beFields: Error, logTitle
+
+=== D:\dcprint\erp-project\src\app\[locale]\dcprint\trace\page.tsx
+  endpoints: /api/dcprint/trace
+  arrayKey(fe): (none)
+  rowVars: record
+  feFields(8): id, traceNo, cardNo, workOrderNo, productCode, traceType, operatorName, traceTime
+  BE[/api/dcprint/trace] -> D:\dcprint\erp-project\src\app\api\dcprint\trace\route.ts
+     beFields: main_material_code, main_material_name, main_batch_no, total, main_specification, main_supplier_name, main_receive_date, main_purchase_order_no, labelNo, materialType, materialCode, materialName, batchNo, supplierName, receiveDate, colorCode, mixRemark, traceNo, cardId, cardNo, workOrderNo, productCode, mainLabelId, traceType, operatorId, operatorName, traceTime, createTime, card, productName, mainMaterial, specification, purchaseOrderNo, details, mainMaterials, auxiliaryMaterials, sql, countSql, params, pagination, page, pageSize
+
+=== D:\dcprint\erp-project\src\app\[locale]\delivery\vehicles\page.tsx
+  endpoints: /api/delivery/vehicles
+  arrayKey(fe): (none)
+  rowVars: vehicle
+  feFields(13): id, vehicle_no, brand, model, vehicle_type, color, fuel_type, driver_name, driver_phone, mileage, status, insurance_expire, annual_inspect_expire
+  BE[/api/delivery/vehicles] -> D:\dcprint\erp-project\src\app\api\delivery\vehicles\route.ts
+     beFields: total, id, logTitle, logType, request, body
+
+=== D:\dcprint\erp-project\src\app\[locale]\engineering\sample-to-mass\page.tsx
+  endpoints: /api/customers, /api/engineering/sample-to-mass
+  arrayKey(fe): list
+  rowVars: item, c, b
+  feFields(11): id, transfer_no, sample_order_no, product_code, product_name, customer_name, bom_version, status, create_time, version, bom_name
+  BE[/api/customers] -> D:\dcprint\erp-project\src\app\api\customers\route.ts
+     beFields: total, id, logTitle, logType, request, body
+  BE[/api/engineering/sample-to-mass] -> D:\dcprint\erp-project\src\app\api\engineering\sample-to-mass\route.ts
+     beFields: const, total, c, Loose, list, request, updated, logTitle, logType  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\engineering\sop\page.tsx
+  endpoints: /api/upload/sop, /api/engineering/sop
+  arrayKey(fe): (none)
+  rowVars: item
+  feFields(11): id, sop_no, sop_name, product_name, process_name, version, sop_type, workshop, status, effective_date, file_url
+  BE[/api/upload/sop] -> D:\dcprint\erp-project\src\app\api\upload\sop\route.ts
+     beFields: File, url, filename, originalName, size, type, logTitle
+  BE[/api/engineering/sop] -> D:\dcprint\erp-project\src\app\api\engineering\sop\route.ts
+     beFields: total, list, request, id, sop_no, logTitle, logType, updateFields, updateValues
+
+=== D:\dcprint\erp-project\src\app\[locale]\equipment\calibration\page.tsx
+  endpoints: /api/equipment/calibration
+  arrayKey(fe): (none)
+  rowVars: item
+  feFields(9): status, id, calibration_no, equipment_code, equipment_name, calibration_date, next_calibration_date, calibration_org, certificate_no
+  BE[/api/equipment/calibration] -> D:\dcprint\erp-project\src\app\api\equipment\calibration\route.ts
+     beFields: total, list, request, result, id, calibration_no, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\equipment\maintenance\page.tsx
+  endpoints: /api/equipment/plan, /api/equipment, /api/equipment/maintenance
+  arrayKey(fe): list, total
+  rowVars: p, r, eq
+  feFields(18): status, id, plan_no, equipment_code, equipment_name, plan_name, maintenance_type, cycle_days, cycle_type, next_execute_date, equipment_id, remark, result, record_no, start_time, end_time, actual_hours, actual_cost
+  BE[/api/equipment/plan] -> D:\dcprint\erp-project\src\app\api\equipment\plan\route.ts
+     beFields: total, list, rows, request, equipRows, id, plan_no, next_execute_date, logTitle, logType  [has t.*]
+  BE[/api/equipment] -> D:\dcprint\erp-project\src\app\api\equipment\route.ts
+     beFields: maintenance_count, last_maintenance_date, total, list, request, existing, id, logTitle, logType  [has t.*]
+  BE[/api/equipment/maintenance] -> D:\dcprint\erp-project\src\app\api\equipment\maintenance\route.ts
+     beFields: total, list, request, id, record_no, logTitle, logType  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\equipment\page.tsx
+  endpoints: /api/equipment
+  arrayKey(fe): list, typeStats
+  rowVars: s, eq
+  feFields(12): equipment_type, count, avg_oee, id, equipment_code, equipment_name, brand, model, location, rated_capacity, oee, current_status
+  BE[/api/equipment] -> D:\dcprint\erp-project\src\app\api\equipment\route.ts
+     beFields: maintenance_count, last_maintenance_date, total, list, request, existing, id, logTitle, logType  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\equipment\repair\page.tsx
+  endpoints: /api/equipment/repair
+  arrayKey(fe): (none)
+  rowVars: item
+  feFields(9): status, id, repair_no, equipment_code, equipment_name, fault_date, fault_desc, repair_type, repair_person
+  BE[/api/equipment/repair] -> D:\dcprint\erp-project\src\app\api\equipment\repair\route.ts
+     beFields: total, list, request, result, id, repair_no, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\equipment\scrap\page.tsx
+  endpoints: /api/equipment/scrap
+  arrayKey(fe): (none)
+  rowVars: item
+  feFields(10): status, id, scrap_no, equipment_code, equipment_name, scrap_date, scrap_reason, original_value, net_value, approval_person
+  BE[/api/equipment/scrap] -> D:\dcprint\erp-project\src\app\api\equipment\scrap\route.ts
+     beFields: total, list, request, result, id, scrap_no, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\finance\cost\page.tsx
+  endpoints: /api/finance/cost, /api/finance/stats
+  arrayKey(fe): list, total
+  rowVars: c
+  feFields(8): id, cost_no, cost_type, source_no, department, amount, cost_date, description
+  BE[/api/finance/cost] -> D:\dcprint\erp-project\src\app\api\finance\cost\route.ts
+     beFields: total, material, labor, overhead, outsource, list, cost_summary
+  BE[/api/finance/stats] -> D:\dcprint\erp-project\src\app\api\finance\stats\route.ts
+     beFields: total_amount, total_received, total_balance, unpaid_balance, partial_balance, overdue_balance, Loose, total_paid, count, amount, balance, total_revenue, total_cost, total_profit, profit_rate, receivable  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\finance\page.tsx
+  endpoints: /api/finance/receivables, /api/finance/payable, /api/finance/receipt, /api/finance/payment, /api/customers, /api/purchase/suppliers
+  arrayKey(fe): list, summary
+  rowVars: r, p, c, s
+  feFields(18): id, receivable_no, customer_name, source_no, amount, received_amount, balance, due_date, status, receipt_no, payment_method, receipt_date, remark, payable_no, supplier_name, paid_amount, payment_no, payment_date
+  BE[/api/finance/receivables] -> D:\dcprint\erp-project\src\app\api\finance\receivables\route.ts
+     beFields: total, list, request, receivableId, receivableNo  [has t.*]
+  BE[/api/finance/payable] -> D:\dcprint\erp-project\src\app\api\finance\payable\route.ts
+     beFields: (none)
+  BE[/api/finance/receipt] -> D:\dcprint\erp-project\src\app\api\finance\receipt\route.ts
+     beFields: (none)
+  BE[/api/finance/payment] -> D:\dcprint\erp-project\src\app\api\finance\payment\route.ts
+     beFields: (none)
+  BE[/api/customers] -> D:\dcprint\erp-project\src\app\api\customers\route.ts
+     beFields: total, id, logTitle, logType, request, body
+  BE[/api/purchase/suppliers] -> D:\dcprint\erp-project\src\app\api\purchase\suppliers\route.ts
+     beFields: total, Loose, id, logTitle, logType, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\finance\receivable\page.tsx
+  endpoints: /api/finance/receivables, /api/finance/receipt
+  arrayKey(fe): (none)
+  rowVars: item, r, rc
+  feFields(25): id, receivableNo, receivable_no, sourceType, source_type, sourceNo, source_no, customerId, customer_id, customerName, customer_name, amount, receivedAmount, received_amount, balance, dueDate, due_date, status, remark, currency, sourceCurrency, source_currency, sourceAmount, source_amount, receipt_date
+  BE[/api/finance/receivables] -> D:\dcprint\erp-project\src\app\api\finance\receivables\route.ts
+     beFields: total, list, request, receivableId, receivableNo  [has t.*]
+  BE[/api/finance/receipt] -> D:\dcprint\erp-project\src\app\api\finance\receipt\route.ts
+     beFields: (none)
+
+=== D:\dcprint\erp-project\src\app\[locale]\finance\report\page.tsx
+  endpoints: /api/finance/report, /api/finance/stats
+  arrayKey(fe): list, total
+  rowVars: r
+  feFields(8): id, period, type, category, revenue, cost, profit, profit_rate
+  BE[/api/finance/report] -> D:\dcprint\erp-project\src\app\api\finance\report\route.ts
+     beFields: period, type, category, revenue, cost, profit, profit_rate, total_revenue, total_cost, total_profit
+  BE[/api/finance/stats] -> D:\dcprint\erp-project\src\app\api\finance\stats\route.ts
+     beFields: total_amount, total_received, total_balance, unpaid_balance, partial_balance, overdue_balance, Loose, total_paid, count, amount, balance, total_revenue, total_cost, total_profit, profit_rate, receivable  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\hr\attendance\page.tsx
+  endpoints: /api/hr/attendance
+  arrayKey(fe): (none)
+  rowVars: r, option, record
+  feFields(27): attendanceDate, attendance_date, date, id, employeeId, employee_id, employeeName, employee_name, departmentName, department_name, department, checkInTime, check_in_time, check_in, checkOutTime, check_out_time, check_out, status, workingHours, working_hours, overtimeHours, overtime_hours, remark, checkIn, checkOut, value, label
+  BE[/api/hr/attendance] -> D:\dcprint\erp-project\src\app\api\hr\attendance\route.ts
+     beFields: attendanceDate, employeeId, employeeName, departmentName, checkInTime, checkOutTime, workingHours, overtimeHours, createTime, total, id, errorMessage, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\hr\certificates\expiring\page.tsx
+  endpoints: /api/hr/certificates/expiring, /api/hr/certificates
+  arrayKey(fe): (none)
+  rowVars: item
+  feFields(6): days_remaining, id, employee_name, cert_name, cert_code, expiry_date
+  BE[/api/hr/certificates/expiring] -> D:\dcprint\erp-project\src\app\api\hr\certificates\expiring\route.ts
+     beFields: errorMessage
+  BE[/api/hr/certificates] -> D:\dcprint\erp-project\src\app\api\hr\certificates\route.ts
+     beFields: errorMessage, request, employeeId, certName, certCode, certType, issueAuthority, issueDate, expiryDate, remindDays, status, fileUrl, id
+
+=== D:\dcprint\erp-project\src\app\[locale]\hr\certificates\page.tsx
+  endpoints: /api/hr/certificates
+  arrayKey(fe): (none)
+  rowVars: opt, item
+  feFields(10): value, label, expiry_date, id, cert_name, cert_code, cert_type, issue_authority, issue_date, status
+  BE[/api/hr/certificates] -> D:\dcprint\erp-project\src\app\api\hr\certificates\route.ts
+     beFields: errorMessage, request, employeeId, certName, certCode, certType, issueAuthority, issueDate, expiryDate, remindDays, status, fileUrl, id
+
+=== D:\dcprint\erp-project\src\app\[locale]\hr\employee\page.tsx
+  endpoints: /api/organization/role, /api/upload, /api/organization/employee, /api/organization/department
+  arrayKey(fe): list, url
+  rowVars: e, emp, row, cell
+  feFields(17): gender, age, education, id, target, key, employee_no, name, dept_name, section, position, entry_date, native_place, phone, status, photo, map
+  BE[/api/organization/role] -> D:\dcprint\erp-project\src\app\api\organization\role\route.ts
+     beFields: total, Loose, count, list, request, body, id, logTitle
+  BE[/api/upload] -> D:\dcprint\erp-project\src\app\api\upload\route.ts
+     beFields: File, url, filename, originalName, size, type, logTitle
+  BE[/api/organization/employee] -> D:\dcprint\erp-project\src\app\api\organization\employee\route.ts
+     beFields: total, id, logTitle, request, body
+  BE[/api/organization/department] -> D:\dcprint\erp-project\src\app\api\organization\department\route.ts
+     beFields: total, Loose, count, list, request, body, id, logTitle
+
+=== D:\dcprint\erp-project\src\app\[locale]\hr\mes-sync\page.tsx
+  endpoints: /api/hr/mes-sync/piece-work, /api/hr/mes-sync/sync
+  arrayKey(fe): list
+  rowVars: r
+  feFields(6): status, syncType, id, syncTime, recordCount, errorMessage
+  BE[/api/hr/mes-sync/piece-work] -> D:\dcprint\erp-project\src\app\api\hr\mes-sync\piece-work\route.ts
+     beFields: (none)
+  BE[/api/hr/mes-sync/sync] -> NO ROUTE
+
+=== D:\dcprint\erp-project\src\app\[locale]\hr\performance\page.tsx
+  endpoints: /api/hr/performance
+  arrayKey(fe): list
+  rowVars: item, r, field
+  feFields(4): id, employeeName, employeeNo, totalScore
+  BE[/api/hr/performance] -> NO ROUTE
+
+=== D:\dcprint\erp-project\src\app\[locale]\hr\salary\bank-report\page.tsx
+  endpoints: /api/hr/salary/calculate
+  arrayKey(fe): list
+  rowVars: item, r
+  feFields(10): employeeName, employee_name, name, bankCardNo, bank_card_no, bankCard, netPay, actualSalary, actual_salary, join
+  BE[/api/hr/salary/calculate] -> D:\dcprint\erp-project\src\app\api\hr\salary\calculate\route.ts
+     beFields: total, succeeded, errorMessage, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\hr\salary\page.tsx
+  endpoints: /api/hr/salary, /api/organization/department
+  arrayKey(fe): (none)
+  rowVars: item, s, dept, salary
+  feFields(37): id, employeeNo, employee_no, name, gender, deptId, dept_id, deptName, dept_name, position, entryDate, entry_date, status, salaryId, salary_id, month, basicSalary, basic_salary, positionAllowance, position_allowance, performanceBonus, performance_bonus, overtimePay, overtime_pay, otherBonus, other_bonus, socialSecurity, social_security, housingFund, housing_fund, personalTax, personal_tax, otherDeduction, other_deduction, actualSalary, actual_salary, remark
+  BE[/api/hr/salary] -> D:\dcprint\erp-project\src\app\api\hr\salary\route.ts
+     beFields: salary_id, total, Loose, list, errorMessage, request
+  BE[/api/organization/department] -> D:\dcprint\erp-project\src\app\api\organization\department\route.ts
+     beFields: total, Loose, count, list, request, body, id, logTitle
+
+=== D:\dcprint\erp-project\src\app\[locale]\hr\salary\payslips\page.tsx
+  endpoints: /api/salary/payslips/
+  arrayKey(fe): (none)
+  rowVars: r, item
+  feFields(2): label, value
+  BE[/api/salary/payslips/] -> NO ROUTE
+
+=== D:\dcprint\erp-project\src\app\[locale]\hr\salary\piece-work\page.tsx
+  endpoints: /api/hr/piece-work
+  arrayKey(fe): list
+  rowVars: r
+  feFields(10): quantity, amount, id, date, employeeName, processCode, productCode, defectCount, passRate, unitPrice
+  BE[/api/hr/piece-work] -> NO ROUTE
+
+=== D:\dcprint\erp-project\src\app\[locale]\hr\schedules\page.tsx
+  endpoints: /api/hr/schedules
+  arrayKey(fe): list
+  rowVars: s
+  feFields(6): employeeName, id, shiftName, startDate, endDate, status
+  BE[/api/hr/schedules] -> D:\dcprint\erp-project\src\app\api\hr\schedules\route.ts
+     beFields: errorMessage, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\hr\shifts\page.tsx
+  endpoints: /api/hr/shifts
+  arrayKey(fe): list
+  rowVars: shift
+  feFields(8): id, shiftName, startTime, endTime, allowOvertime, overtimeRate, nightAllowance, status
+  BE[/api/hr/shifts] -> D:\dcprint\erp-project\src\app\api\hr\shifts\route.ts
+     beFields: errorMessage, request, id, deleted
+
+=== D:\dcprint\erp-project\src\app\[locale]\hr\skills\page.tsx
+  endpoints: /api/hr/skills
+  arrayKey(fe): (none)
+  rowVars: opt, item, lv
+  feFields(10): value, label, id, employee_name, skill_name, skill_category, skill_level, certified, assessor, next_assess_date
+  BE[/api/hr/skills] -> D:\dcprint\erp-project\src\app\api\hr\skills\route.ts
+     beFields: errorMessage, request, employeeId, skillCode, skillName, skillCategory, skillLevel, certified, certificateId, assessor, assessDate, id
+
+=== D:\dcprint\erp-project\src\app\[locale]\monitoring\consistency\page.tsx
+  endpoints: /api/saga
+  arrayKey(fe): (none)
+  rowVars: saga
+  feFields(6): sagaId, sagaType, payload, status, steps, createdAt
+  BE[/api/saga] -> D:\dcprint\erp-project\src\app\api\saga\route.ts
+     beFields: SagaStatus, list, errorMessage, request, message
+
+=== D:\dcprint\erp-project\src\app\[locale]\orders\bom\create\page.tsx
+  endpoints: /api/orders/bom/materials, /api/orders/bom
+  arrayKey(fe): (none)
+  rowVars: unit, type, material
+  feFields(9): value, labelKey, id, material_code, material_name, material_spec, unit, unit_cost, material_type
+  BE[/api/orders/bom/materials] -> D:\dcprint\erp-project\src\app\api\orders\bom\materials\route.ts
+     beFields: Loose, id, logTitle, logType, request
+  BE[/api/orders/bom] -> D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+     beFields: const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+
+=== D:\dcprint\erp-project\src\app\[locale]\orders\bom\edit\[id]\page.tsx
+  endpoints: /api/orders/bom/, /api/orders/bom/materials, /api/orders/bom
+  arrayKey(fe): (none)
+  rowVars: line, unit, type, material
+  feFields(17): id, material_id, material_code, material_name, material_spec, unit, consumption_qty, loss_rate, unit_cost, material_type, is_key_material, position_no, process_seq, process_name, remark, value, labelKey
+  BE[/api/orders/bom/] -> D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+     beFields: const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+  BE[/api/orders/bom/materials] -> D:\dcprint\erp-project\src\app\api\orders\bom\materials\route.ts
+     beFields: Loose, id, logTitle, logType, request
+  BE[/api/orders/bom] -> D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+     beFields: const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+
+=== D:\dcprint\erp-project\src\app\[locale]\orders\bom\page.tsx
+  endpoints: /api/orders/bom, /api/orders/bom/
+  arrayKey(fe): list, total
+  rowVars: bom, line
+  feFields(19): id, bom_no, product_name, product_code, product_spec, version, is_default, status, total_material_count, total_cost, create_time, line_no, material_code, material_name, material_spec, consumption_qty, unit, loss_rate, actual_qty
+  BE[/api/orders/bom] -> D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+     beFields: const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+  BE[/api/orders/bom/] -> D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+     beFields: const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+
+=== D:\dcprint\erp-project\src\app\[locale]\orders\customers\page.tsx
+  endpoints: /api/customers
+  arrayKey(fe): list, total
+  rowVars: item, c, customer
+  feFields(39): id, customer_code, customer_name, short_name, customer_type, industry, scale, credit_level, province, city, district, address, contact_name, contact_phone, contact_email, fax, website, business_license, tax_number, bank_name, bank_account, salesman_id, follow_up_status, status, remark, create_time, update_time, followUpStatus, customerType, customerCode, customerName, shortName, creditLevel, contactName, contactPhone, contactEmail, taxNumber, bankName, bankAccount
+  BE[/api/customers] -> D:\dcprint\erp-project\src\app\api\customers\route.ts
+     beFields: total, id, logTitle, logType, request, body
+
+=== D:\dcprint\erp-project\src\app\[locale]\orders\products\page.tsx
+  endpoints: /api/products, /api/products/categories, /api/orders/bom, /api/orders/bom/
+  arrayKey(fe): list, header, lines, version_history
+  rowVars: p, c, product, line
+  feFields(24): id, page, category_name, categoryName, product_code, product_name, short_name, specification, unit, category_id, status, cost_price, sale_price, description, bom_version, line_no, material_code, material_name, material_spec, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost
+  BE[/api/products] -> D:\dcprint\erp-project\src\app\api\products\route.ts
+     beFields: total, Loose, id, logTitle, request, updateFields
+  BE[/api/products/categories] -> D:\dcprint\erp-project\src\app\api\products\categories\route.ts
+     beFields: categoryCode, categoryName, parentId, sortOrder, createTime, total, Loose, list, request, _userInfo, id, logTitle, updateFields, updateParams
+  BE[/api/orders/bom] -> D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+     beFields: const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+  BE[/api/orders/bom/] -> D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+     beFields: const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+
+=== D:\dcprint\erp-project\src\app\[locale]\orders\sales\page.tsx
+  endpoints: /api/customers, /api/inventory/materials, /api/orders, /api/workorders
+  arrayKey(fe): list
+  rowVars: o, item, i, row, h, c, m, order
+  feFields(21): id, status, items, order_no, customer_name, order_date, delivery_date, total_amount, remark, material_name, quantity, unit, unit_price, material_id, material_code, total_price, join, material_type, currency, base_total_amount, base_currency
+  BE[/api/customers] -> D:\dcprint\erp-project\src\app\api\customers\route.ts
+     beFields: total, id, logTitle, logType, request, body
+  BE[/api/inventory/materials] -> D:\dcprint\erp-project\src\app\api\inventory\materials\route.ts
+     beFields: Loose
+  BE[/api/orders] -> D:\dcprint\erp-project\src\app\api\orders\route.ts
+     beFields: Loose, total_price, list, total, errorMessage, request, id, order_no  [has t.*]
+  BE[/api/workorders] -> D:\dcprint\erp-project\src\app\api\workorders\route.ts
+     beFields: const, item_count, Loose, total, cnt, consumed, bom_info, list, params, errorMessage, request  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\outsource\issue\page.tsx
+  endpoints: /api/outsource/issue, /api/outsource/order, /api/materials
+  arrayKey(fe): list
+  rowVars: item, i, o, m
+  feFields(16): issue_no, outsource_order_no, warehouse_name, issue_date, items, operator_name, status, id, material_id, quantity, unit, batch_no, material_name, order_no, product_name, name
+  BE[/api/outsource/issue] -> D:\dcprint\erp-project\src\app\api\outsource\issue\route.ts
+     beFields: total, any, list, request, id, issue_no, logTitle, logType  [has t.*]
+  BE[/api/outsource/order] -> D:\dcprint\erp-project\src\app\api\outsource\order\route.ts
+     beFields: total, list, request, id, order_no, logTitle, logType, fields  [has t.*]
+  BE[/api/materials] -> D:\dcprint\erp-project\src\app\api\materials\route.ts
+     beFields: total, Loose, category, categoryHint, rules, code_pattern, code_pattern_desc
+
+=== D:\dcprint\erp-project\src\app\[locale]\outsource\order\page.tsx
+  endpoints: /api/outsource/order, /api/purchase/suppliers
+  arrayKey(fe): list
+  rowVars: item, s
+  feFields(12): status, id, order_no, supplier_name, product_name, outsource_type, process_name, plan_qty, issued_qty, received_qty, qualified_qty, delivery_date
+  BE[/api/outsource/order] -> D:\dcprint\erp-project\src\app\api\outsource\order\route.ts
+     beFields: total, list, request, id, order_no, logTitle, logType, fields  [has t.*]
+  BE[/api/purchase/suppliers] -> D:\dcprint\erp-project\src\app\api\purchase\suppliers\route.ts
+     beFields: total, Loose, id, logTitle, logType, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\outsource\receive\page.tsx
+  endpoints: /api/outsource/receive, /api/outsource/order
+  arrayKey(fe): list
+  rowVars: item, o
+  feFields(12): status, qc_status, id, receive_no, outsource_order_no, warehouse_name, receive_date, receive_qty, qualified_qty, defective_qty, order_no, product_name
+  BE[/api/outsource/receive] -> D:\dcprint\erp-project\src\app\api\outsource\receive\route.ts
+     beFields: total, list, request, id, receive_no, logTitle, logType  [has t.*]
+  BE[/api/outsource/order] -> D:\dcprint\erp-project\src\app\api\outsource\order\route.ts
+     beFields: total, list, request, id, order_no, logTitle, logType, fields  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\outsource\settlement\page.tsx
+  endpoints: /api/outsource/settlement, /api/outsource/order
+  arrayKey(fe): list
+  rowVars: item, o
+  feFields(12): status, payment_status, id, settlement_no, outsource_order_no, supplier_name, settlement_date, settlement_qty, settlement_amount, deduct_amount, actual_amount, order_no
+  BE[/api/outsource/settlement] -> D:\dcprint\erp-project\src\app\api\outsource\settlement\route.ts
+     beFields: total, list, request, id, settlement_no, logTitle, logType  [has t.*]
+  BE[/api/outsource/order] -> D:\dcprint\erp-project\src\app\api\outsource\order\route.ts
+     beFields: total, list, request, id, order_no, logTitle, logType, fields  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\page.tsx
+  endpoints: /api/orders/sales, /api/warehouse/inventory, /api/production/orders
+  arrayKey(fe): list
+  rowVars: o, wo
+  feFields(15): order_date, status, total_amount, order_no, customer_name, items, delivery_date, work_order_no, product_name, quantity, create_time, id, product, statusClass, date
+  BE[/api/orders/sales] -> D:\dcprint\erp-project\src\app\api\orders\sales\route.ts
+     beFields: total, Loose, request, user, customer_name, id, status, uncategorizedMaterials, logTitle, logType, lines, default  [has t.*]
+  BE[/api/warehouse/inventory] -> D:\dcprint\erp-project\src\app\api\warehouse\inventory\route.ts
+     beFields: stock_qty, Loose, total, list  [has t.*]
+  BE[/api/production/orders] -> D:\dcprint\erp-project\src\app\api\production\orders\route.ts
+     beFields: Loose, total, list  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\plm\eco\page.tsx
+  endpoints: /api/plm/eco
+  arrayKey(fe): (none)
+  rowVars: r
+  feFields(9): id, eco_no, eco_type, product_name, old_version, new_version, status, applicant, apply_time
+  BE[/api/plm/eco] -> D:\dcprint\erp-project\src\app\api\plm\eco\route.ts
+     beFields: total, list, request, id, eco_no, logTitle, logType, updateFields, updateValues
+
+=== D:\dcprint\erp-project\src\app\[locale]\plm\lifecycle\page.tsx
+  endpoints: /api/plm/lifecycle
+  arrayKey(fe): (none)
+  rowVars: s, r
+  feFields(9): id, product_code, product_name, lifecycle_stage, stage_status, version, change_type, effective_date, create_time
+  BE[/api/plm/lifecycle] -> D:\dcprint\erp-project\src\app\api\plm\lifecycle\route.ts
+     beFields: total, list, request, result, id, logTitle, logType, updateFields, updateValues
+
+=== D:\dcprint\erp-project\src\app\[locale]\prepress\die-template\page.tsx
+  endpoints: /api/prepress/die-template, /api/prepress/die-maintenance, /api/prepress/die-usage
+  arrayKey(fe): list, warningList, dashboardStats, cumulative_after
+  rowVars: s, item, record, log
+  feFields(37): id, status, template_type, current_usage, warning_usage, template_name, specification, material, max_usage, storage_location, remark, die_status, template_code, asset_type, layout_type, pieces_per_impression, max_impressions, cumulative_impressions, warning_threshold, maintenance_interval, unit_price, purchase_date, last_maintenance_impressions, maintenance_count, cost, maintenance_no, die_code, maintenance_type, impressions_before, impressions_after, technician_name, work_order_no, process_name, impressions, cumulative_after, operator_name, usage_date
+  BE[/api/prepress/die-template] -> D:\dcprint\erp-project\src\app\api\prepress\die-template\route.ts
+     beFields: total, Loose, count, avg_usage_pct, maintenance_needed_count, re_rule_needed_count, scrap_count, total_count, available_count, warning_count, locked_count, maintenance_due_count, Record, list, warningList, dashboardStats, assetTypeMap, dieStatusMap, request
+  BE[/api/prepress/die-maintenance] -> D:\dcprint\erp-project\src\app\api\prepress\die-maintenance\route.ts
+     beFields: die_code, total, Loose, count, total_cost, avg_cost, Record, list, costStats, pendingCount, maintenanceTypeMap, request  [has t.*]
+  BE[/api/prepress/die-usage] -> D:\dcprint\erp-project\src\app\api\prepress\die-usage\route.ts
+     beFields: die_code, total, Loose, total_records, total_impressions, unique_dies_used, unique_work_orders, Record, list, summaryStats, request  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\production\material-issue\page.tsx
+  endpoints: /api/production/material-issue
+  arrayKey(fe): (none)
+  rowVars: item
+  feFields(8): status, id, issue_no, work_order_no, warehouse_name, issue_date, issue_type, operator_name
+  BE[/api/production/material-issue] -> D:\dcprint\erp-project\src\app\api\production\material-issue\route.ts
+     beFields: total, Loose, total_issued, list, request, uncategorizedMaterials, logTitle, logType  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\production\material-return\page.tsx
+  endpoints: /api/production/material-return
+  arrayKey(fe): (none)
+  rowVars: item
+  feFields(7): id, status, return_no, work_order_no, warehouse_name, return_date, operator_name
+  BE[/api/production/material-return] -> D:\dcprint\erp-project\src\app\api\production\material-return\route.ts
+     beFields: total, list, request, result, id, return_no, logTitle, logType, returnOrder  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\production\mrp\page.tsx
+  endpoints: /api/production/orders, /api/production/mrp, /api/materials
+  arrayKey(fe): (none)
+  rowVars: wo, m
+  feFields(5): id, work_order_no, material_name, plan_qty, material_code
+  BE[/api/production/orders] -> D:\dcprint\erp-project\src\app\api\production\orders\route.ts
+     beFields: Loose, total, list  [has t.*]
+  BE[/api/production/mrp] -> D:\dcprint\erp-project\src\app\api\production\mrp\route.ts
+     beFields: (none)
+  BE[/api/materials] -> D:\dcprint\erp-project\src\app\api\materials\route.ts
+     beFields: total, Loose, category, categoryHint, rules, code_pattern, code_pattern_desc
+
+=== D:\dcprint\erp-project\src\app\[locale]\production\process\page.tsx
+  endpoints: /api/production/process
+  arrayKey(fe): list
+  rowVars: process
+  feFields(11): id, process_flow1, process_flow2, burdening_status, card_no, work_order_no, product_name, material_spec, print_type, customer_name, plan_qty
+  BE[/api/production/process] -> D:\dcprint\erp-project\src\app\api\production\process\route.ts
+     beFields: total, Loose, list, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\production\product-label\page.tsx
+  endpoints: /api/production/product-label
+  arrayKey(fe): (none)
+  rowVars: i, item
+  feFields(10): id, label_no, batch_no, status, work_order_no, material_code, material_name, quantity, unit, qc_result
+  BE[/api/production/product-label] -> D:\dcprint\erp-project\src\app\api\production\product-label\route.ts
+     beFields: total, list, request, id, label_no, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\production\report\page.tsx
+  endpoints: /api/production/work-report, /api/workorders, /api/equipment, /api/prepress/die-template
+  arrayKey(fe): list, total, summaryStats
+  rowVars: r, name, eq, wo, die
+  feFields(18): id, plan_qty, completed_qty, report_no, work_order_no, process_name, operator_name, equipment_name, qualified_qty, scrap_qty, work_hours, equipment_code, order_no, product_name, max_impressions, cumulative_impressions, template_code, template_name
+  BE[/api/production/work-report] -> D:\dcprint\erp-project\src\app\api\production\work-report\route.ts
+     beFields: total, Loose, total_completed, total_qualified, total_defective, total_scrap, id, summaryStats, request  [has t.*]
+  BE[/api/workorders] -> D:\dcprint\erp-project\src\app\api\workorders\route.ts
+     beFields: const, item_count, Loose, total, cnt, consumed, bom_info, list, params, errorMessage, request  [has t.*]
+  BE[/api/equipment] -> D:\dcprint\erp-project\src\app\api\equipment\route.ts
+     beFields: maintenance_count, last_maintenance_date, total, list, request, existing, id, logTitle, logType  [has t.*]
+  BE[/api/prepress/die-template] -> D:\dcprint\erp-project\src\app\api\prepress\die-template\route.ts
+     beFields: total, Loose, count, avg_usage_pct, maintenance_needed_count, re_rule_needed_count, scrap_count, total_count, available_count, warning_count, locked_count, maintenance_due_count, Record, list, warningList, dashboardStats, assetTypeMap, dieStatusMap, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\production\schedule\page.tsx
+  endpoints: /api/production/schedule, /api/production/schedule/capacity, /api/production/orders, /api/production/schedule/auto
+  arrayKey(fe): results, summary, list, workshopCapacity
+  rowVars: item, schedule, s, wo, result, c, cap
+  feFields(29): workshop, equipmentCount, totalCapacity, usedCapacity, availableCapacity, utilizationRate, status, schedule_no, order_no, product_name, scheduler, id, planned_start, planned_end, planned_qty, completed_qty, priority, remark, work_order_no, plan_qty, push, success, message, data, work_order_id, conflicts, overall_start, overall_end, reason
+  BE[/api/production/schedule] -> D:\dcprint\erp-project\src\app\api\production\schedule\route.ts
+     beFields: total, pending, scheduled, producing, completed, cancelled, total_planned_qty, total_completed_qty, scheduled_count, ready_count, shortage_count, date_range, start, end, total_working_days, overloaded_days, statsRows, list, request, action, scheduling_results, updated_count, conflicts, id, schedule_no, logTitle, logType, updateFields, updateValues
+  BE[/api/production/schedule/capacity] -> D:\dcprint\erp-project\src\app\api\production\schedule\capacity\route.ts
+     beFields: equipment_count, total_capacity_per_hour, schedule_count, total_planned_qty, total_completed_qty, total_planned_hours, equipment_id, used_hours, workshopCapacity, summary, totalEquipment, sum, r, totalWorkshops, avgUtilization, c
+  BE[/api/production/orders] -> D:\dcprint\erp-project\src\app\api\production\orders\route.ts
+     beFields: Loose, total, list  [has t.*]
+  BE[/api/production/schedule/auto] -> D:\dcprint\erp-project\src\app\api\production\schedule\auto\route.ts
+     beFields: summary, total, scheduled, with_conflicts, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\production\workorder\page.tsx
+  endpoints: /api/workorders, /api/orders, /api/orders/bom
+  arrayKey(fe): list
+  rowVars: wo, o, i, it, so, b, order, item
+  feFields(18): status, order_no, work_order_no, quantity, product_name, material_id, material_name, unit, unit_price, line_no, material_code, id, customer_name, bom_no, items, priority, plan_start_date, plan_end_date
+  BE[/api/workorders] -> D:\dcprint\erp-project\src\app\api\workorders\route.ts
+     beFields: const, item_count, Loose, total, cnt, consumed, bom_info, list, params, errorMessage, request  [has t.*]
+  BE[/api/orders] -> D:\dcprint\erp-project\src\app\api\orders\route.ts
+     beFields: Loose, total_price, list, total, errorMessage, request, id, order_no  [has t.*]
+  BE[/api/orders/bom] -> D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+     beFields: const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+
+=== D:\dcprint\erp-project\src\app\[locale]\purchase\request\form\page.tsx
+  endpoints: /api/organization/department, /api/organization/employee, /api/purchase/request
+  arrayKey(fe): data, uncategorizedMaterials, id
+  rowVars: item, m, dept, field, u, emp, h, record
+  feFields(27): material_id, material_code, material_name, material_spec, material_unit, quantity, price, amount, remark, productName, spec, unit, id, key, label, idKey, dept_name, name, status, request_no, request_date, request_dept, requester_name, reviewer_name, approver_name, items, total_amount
+  BE[/api/organization/department] -> D:\dcprint\erp-project\src\app\api\organization\department\route.ts
+     beFields: total, Loose, count, list, request, body, id, logTitle
+  BE[/api/organization/employee] -> D:\dcprint\erp-project\src\app\api\organization\employee\route.ts
+     beFields: total, id, logTitle, request, body
+  BE[/api/purchase/request] -> D:\dcprint\erp-project\src\app\api\purchase\request\route.ts
+     beFields: total, Loose, RequestItem, cnt, params, uncategorizedMaterials, logTitle, logType, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\purchase\request\new\page.tsx
+  endpoints: /api/organization/department, /api/purchase/request
+  arrayKey(fe): (none)
+  rowVars: dept
+  feFields(2): id, dept_name
+  BE[/api/organization/department] -> D:\dcprint\erp-project\src\app\api\organization\department\route.ts
+     beFields: total, Loose, count, list, request, body, id, logTitle
+  BE[/api/purchase/request] -> D:\dcprint\erp-project\src\app\api\purchase\request\route.ts
+     beFields: total, Loose, RequestItem, cnt, params, uncategorizedMaterials, logTitle, logType, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\purchase\request\page.tsx
+  endpoints: /api/purchase/request
+  arrayKey(fe): list, total
+  rowVars: r, c, request
+  feFields(13): id, items, request_no, request_dept, requester_name, request_date, priority, status, total_amount, currency, remark, request_type, map
+  BE[/api/purchase/request] -> D:\dcprint\erp-project\src\app\api\purchase\request\route.ts
+     beFields: total, Loose, RequestItem, cnt, params, uncategorizedMaterials, logTitle, logType, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\purchase\request\[id]\page.tsx
+  endpoints: /api/purchase/request
+  arrayKey(fe): (none)
+  rowVars: item
+  feFields(10): id, line_no, material_code, material_name, material_spec, material_unit, quantity, price, amount, remark
+  BE[/api/purchase/request] -> D:\dcprint\erp-project\src\app\api\purchase\request\route.ts
+     beFields: total, Loose, RequestItem, cnt, params, uncategorizedMaterials, logTitle, logType, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\purchase\return\page.tsx
+  endpoints: /api/purchase/return, /api/purchase/orders
+  arrayKey(fe): list, total
+  rowVars: order
+  feFields(15): id, po_no, supplier_id, supplier_name, currency, base_currency, lines, return_no, order_no, return_date, return_type, grand_total, total_amount, base_grand_total, status
+  BE[/api/purchase/return] -> D:\dcprint\erp-project\src\app\api\purchase\return\route.ts
+     beFields: total, line_count, id, return_no, logTitle, logType, request
+  BE[/api/purchase/orders] -> D:\dcprint\erp-project\src\app\api\purchase\orders\route.ts
+     beFields: Loose, uncategorizedMaterials, errorMessage, request, userInfo
+
+=== D:\dcprint\erp-project\src\app\[locale]\purchase\suppliers\page.tsx
+  endpoints: /api/purchase/suppliers
+  arrayKey(fe): list, total
+  rowVars: s, item
+  feFields(15): status, supplier_code, supplier_name, short_name, credit_level, id, supplier_type, contact_name, contact_phone, contact_email, address, settlement_method, payment_terms, remark, default_currency
+  BE[/api/purchase/suppliers] -> D:\dcprint\erp-project\src\app\api\purchase\suppliers\route.ts
+     beFields: total, Loose, id, logTitle, logType, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\qrcode\page.tsx
+  endpoints: /api/qrcode, /api/qrcode/trace
+  arrayKey(fe): qr_code
+  rowVars: r
+  feFields(12): id, qr_code, qr_type, ref_no, material_name, specification, quantity, unit, warehouse_name, print_count, scan_count, status
+  BE[/api/qrcode] -> D:\dcprint\erp-project\src\app\api\qrcode\route.ts
+     beFields: total, batch_available_qty, batch_total_qty, batch_status, Loose, list, request, id, qr_code, logTitle  [has t.*]
+  BE[/api/qrcode/trace] -> D:\dcprint\erp-project\src\app\api\qrcode\trace\route.ts
+     beFields: inbound_order_no, inbound_type, inbound_status, work_order_status  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\quality\complaint\page.tsx
+  endpoints: /api/quality/complaint
+  arrayKey(fe): (none)
+  rowVars: i
+  feFields(1): id
+  BE[/api/quality/complaint] -> D:\dcprint\erp-project\src\app\api\quality\complaint\route.ts
+     beFields: total, list, request, id, complaint_no, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\quality\final\page.tsx
+  endpoints: /api/quality/final
+  arrayKey(fe): (none)
+  rowVars: item, f, final
+  feFields(51): id, cardNo, card_no, qrCode, qr_code, workOrderNo, work_order_no, productCode, product_code, productName, product_name, materialSpec, material_spec, workOrderDate, work_order_date, planQty, plan_qty, mainLabelNo, main_label_no, burdeningStatus, burdening_status, lockStatus, lock_status, createUserName, create_user_name, createTime, create_time, updateTime, update_time, customerName, customer_name, customerCode, customer_code, processFlow1, process_flow1, processFlow2, process_flow2, printType, print_type, finishedSize, finished_size, tolerance, qualityManager, quality_manager, packingType, packing_type, slicePerBox, slice_per_box, slicePerBundle, slice_per_bundle, name
+  BE[/api/quality/final] -> D:\dcprint\erp-project\src\app\api\quality\final\route.ts
+     beFields: cardNo, qrCode, workOrderNo, productCode, productName, materialSpec, workOrderDate, planQty, mainLabelNo, burdeningStatus, lockStatus, createUserName, createTime, updateTime, customerName, customerCode, processFlow1, processFlow2, printType, finishedSize, tolerance, qualityManager, packingType, slicePerBox, slicePerBundle, UNSIGNED, total, logTitle, logType, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\quality\incoming\page.tsx
+  endpoints: /api/quality/incoming
+  arrayKey(fe): (none)
+  rowVars: item, i, option
+  feFields(24): id, inspectionNo, inspectionDate, supplierName, materialCode, materialName, specification, batchNo, quantity, unit, inspectionType, inspectionResult, inspectorName, remark, items, name, standard, itemName, actualValue, result, itemRemark, date, value, label
+  BE[/api/quality/incoming] -> D:\dcprint\erp-project\src\app\api\quality\incoming\route.ts
+     beFields: inspectionNo, inspectionDate, supplierName, materialCode, materialName, batchNo, inspectionType, inspectionResult, inspectorName, createTime, total, inspectionId, itemName, actualValue, itemRemark, Loose, maxNo
+
+=== D:\dcprint\erp-project\src\app\[locale]\quality\lab-test\page.tsx
+  endpoints: /api/quality/lab-test
+  arrayKey(fe): (none)
+  rowVars: i
+  feFields(1): id
+  BE[/api/quality/lab-test] -> D:\dcprint\erp-project\src\app\api\quality\lab-test\route.ts
+     beFields: total, list, request, id, test_no, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\quality\process\page.tsx
+  endpoints: /api/quality/process
+  arrayKey(fe): (none)
+  rowVars: item, p, process, record
+  feFields(50): id, cardNo, card_no, qrCode, qr_code, workOrderNo, work_order_no, productCode, product_code, productName, product_name, materialSpec, material_spec, workOrderDate, work_order_date, planQty, plan_qty, mainLabelNo, main_label_no, burdeningStatus, burdening_status, createUserName, create_user_name, createTime, create_time, updateTime, update_time, customerName, customer_name, customerCode, customer_code, processFlow1, process_flow1, processFlow2, process_flow2, printType, print_type, finishedSize, finished_size, tolerance, qualityManager, quality_manager, name, required, inspectNo, inspectType, result, inspector, inspectTime, remark
+  BE[/api/quality/process] -> D:\dcprint\erp-project\src\app\api\quality\process\route.ts
+     beFields: cardNo, qrCode, workOrderNo, productCode, productName, materialSpec, workOrderDate, planQty, mainLabelNo, burdeningStatus, createUserName, createTime, updateTime, customerName, customerCode, processFlow1, processFlow2, printType, finishedSize, qualityManager, UNSIGNED, total, InspectStatus, logTitle, logType, request
+
+=== D:\dcprint\erp-project\src\app\[locale]\quality\sgs\page.tsx
+  endpoints: /api/quality/sgs/expiry-warning, /api/quality/sgs, /api/quality/sgs/
+  arrayKey(fe): (none)
+  rowVars: t, i
+  feFields(1): id
+  BE[/api/quality/sgs/expiry-warning] -> D:\dcprint\erp-project\src\app\api\quality\sgs\expiry-warning\route.ts
+     beFields: days_remaining, total  [has t.*]
+  BE[/api/quality/sgs] -> D:\dcprint\erp-project\src\app\api\quality\sgs\route.ts
+     beFields: total, item_count, list, request, id, logTitle, logType, updateFields, updateValues  [has t.*]
+  BE[/api/quality/sgs/] -> D:\dcprint\erp-project\src\app\api\quality\sgs\route.ts
+     beFields: total, item_count, list, request, id, logTitle, logType, updateFields, updateValues  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\quality\spc\page.tsx
+  endpoints: /api/quality/spc, /api/materials
+  arrayKey(fe): (none)
+  rowVars: p, dp, m, n, v
+  feFields(16): type, subgroup_id, value, period, rate, x_bar, range, timestamp, values, defective_rate, inspected, defective, id, material_code, material_name, toFixed
+  BE[/api/quality/spc] -> D:\dcprint\erp-project\src\app\api\quality\spc\route.ts
+     beFields: count, period, inspected, defective, message, params
+  BE[/api/materials] -> D:\dcprint\erp-project\src\app\api\materials\route.ts
+     beFields: total, Loose, category, categoryHint, rules, code_pattern, code_pattern_desc
+
+=== D:\dcprint\erp-project\src\app\[locale]\quality\supplier-audit\page.tsx
+  endpoints: /api/quality/supplier-audit
+  arrayKey(fe): (none)
+  rowVars: i
+  feFields(1): id
+  BE[/api/quality/supplier-audit] -> D:\dcprint\erp-project\src\app\api\quality\supplier-audit\route.ts
+     beFields: total, list, request, id, audit_no, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\quality\trace\page.tsx
+  endpoints: /api/dcprint/trace
+  arrayKey(fe): (none)
+  rowVars: item, r
+  feFields(26): id, traceNo, trace_no, cardNo, card_no, workOrderNo, work_order_no, productCode, product_code, productName, product_name, mainLabelId, main_label_id, mainMaterialCode, main_material_code, mainMaterialName, main_material_name, mainBatchNo, main_batch_no, traceType, trace_type, operatorName, operator_name, traceTime, trace_time, remark
+  BE[/api/dcprint/trace] -> D:\dcprint\erp-project\src\app\api\dcprint\trace\route.ts
+     beFields: main_material_code, main_material_name, main_batch_no, total, main_specification, main_supplier_name, main_receive_date, main_purchase_order_no, labelNo, materialType, materialCode, materialName, batchNo, supplierName, receiveDate, colorCode, mixRemark, traceNo, cardId, cardNo, workOrderNo, productCode, mainLabelId, traceType, operatorId, operatorName, traceTime, createTime, card, productName, mainMaterial, specification, purchaseOrderNo, details, mainMaterials, auxiliaryMaterials, sql, countSql, params, pagination, page, pageSize
+
+=== D:\dcprint\erp-project\src\app\[locale]\quality\unqualified\page.tsx
+  endpoints: /api/quality/unqualified
+  arrayKey(fe): (none)
+  rowVars: i
+  feFields(1): id
+  BE[/api/quality/unqualified] -> D:\dcprint\erp-project\src\app\api\quality\unqualified\route.ts
+     beFields: total, page, pageSize, totalPages, logTitle, request, id, unqualified_no, handle_no, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\reports\page.tsx
+  endpoints: /api/reports/dashboard, /api/reports/purchase-supplier, /api/reports/sales-customer
+  arrayKey(fe): period, orderMetrics, productionMetrics, inventoryMetrics, financeMetrics
+  rowVars: stat
+  feFields(11): supplierId, supplierName, rank, supplierCode, orderCount, totalAmount, totalQuantity, proportion, customerId, customerName, customerCode
+  BE[/api/reports/dashboard] -> D:\dcprint\erp-project\src\app\api\reports\dashboard\route.ts
+     beFields: total_orders, completed_orders, pending_orders, total_amount, completed_amount, total_work_orders, completed_work_orders, in_progress_work_orders, total_plan_qty, total_completed_qty, material_count, total_stock, total_locked, total_available, zero_stock_count, low_stock_count, total_purchase_orders, received_orders, total_purchase_amount, pending_receivable, pending_payable, period, orderMetrics, totalOrders, completedOrders, pendingOrders, totalAmount, completedAmount, completionRate, productionMetrics, totalWorkOrders
+  BE[/api/reports/purchase-supplier] -> D:\dcprint\erp-project\src\app\api\reports\purchase-supplier\route.ts
+     beFields: supplier_id, supplier_code, order_count, total_amount, total_quantity, received_count, period, summary, supplierCount
+  BE[/api/reports/sales-customer] -> D:\dcprint\erp-project\src\app\api\reports\sales-customer\route.ts
+     beFields: order_count, total_amount, total_with_tax, completed_count, period, summary, customerCount
+
+=== D:\dcprint\erp-project\src\app\[locale]\sales\delivery\page.tsx
+  endpoints: /api/sales/delivery, /api/customers, /api/orders/sales
+  arrayKey(fe): list, total
+  rowVars: d, c, o
+  feFields(12): status, id, delivery_no, order_no, customer_name, delivery_date, total_qty, total_amount, currency, base_total_amount, base_currency, sign_status
+  BE[/api/sales/delivery] -> D:\dcprint\erp-project\src\app\api\sales\delivery\route.ts
+     beFields: total, Loose, id, request  [has t.*]
+  BE[/api/customers] -> D:\dcprint\erp-project\src\app\api\customers\route.ts
+     beFields: total, id, logTitle, logType, request, body
+  BE[/api/orders/sales] -> D:\dcprint\erp-project\src\app\api\orders\sales\route.ts
+     beFields: total, Loose, request, user, customer_name, id, status, uncategorizedMaterials, logTitle, logType, lines, default  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\sales\orders\[id]\page.tsx
+  endpoints: /api/orders/sales, /api/sales/delivery, /api/sales/return, /api/finance/receivables
+  arrayKey(fe): list
+  rowVars: rec
+  feFields(24): id, delivery_no, delivery_date, customer_name, total_qty, total_amount, status, return_no, return_date, reason, remark, receivable_no, source_no, amount, received_amount, balance, due_date, logistics_company, tracking_no, sign_status, contact_name, contact_phone, ship_time, delivery_address
+  BE[/api/orders/sales] -> D:\dcprint\erp-project\src\app\api\orders\sales\route.ts
+     beFields: total, Loose, request, user, customer_name, id, status, uncategorizedMaterials, logTitle, logType, lines, default  [has t.*]
+  BE[/api/sales/delivery] -> D:\dcprint\erp-project\src\app\api\sales\delivery\route.ts
+     beFields: total, Loose, id, request  [has t.*]
+  BE[/api/sales/return] -> D:\dcprint\erp-project\src\app\api\sales\return\route.ts
+     beFields: total, item_count, id  [has t.*]
+  BE[/api/finance/receivables] -> D:\dcprint\erp-project\src\app\api\finance\receivables\route.ts
+     beFields: total, list, request, receivableId, receivableNo  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\sales\reconciliation\page.tsx
+  endpoints: /api/sales/reconciliation, /api/customers
+  arrayKey(fe): list, total, net_amount, lines
+  rowVars: r, c
+  feFields(13): id, delivery_amount, return_amount, net_amount, balance_amount, reconciliation_no, customer_name, has_mismatch, period_start, period_end, currency, received_amount, status
+  BE[/api/sales/reconciliation] -> D:\dcprint\erp-project\src\app\api\sales\reconciliation\route.ts
+     beFields: total, Loose, const, values, request, id, reconciliation_no, delivery_amount, return_amount, line_count, logTitle, logType, discountAmount  [has t.*]
+  BE[/api/customers] -> D:\dcprint\erp-project\src\app\api\customers\route.ts
+     beFields: total, id, logTitle, logType, request, body
+
+=== D:\dcprint\erp-project\src\app\[locale]\sales\return\page.tsx
+  endpoints: /api/sales/return, /api/customers
+  arrayKey(fe): list, total
+  rowVars: r, c
+  feFields(13): id, status, return_no, order_no, customer_name, return_date, return_type, total_qty, total_amount, currency, base_total_amount, base_currency, inspection_status
+  BE[/api/sales/return] -> D:\dcprint\erp-project\src\app\api\sales\return\route.ts
+     beFields: total, item_count, id  [has t.*]
+  BE[/api/customers] -> D:\dcprint\erp-project\src\app\api\customers\route.ts
+     beFields: total, id, logTitle, logType, request, body
+
+=== D:\dcprint\erp-project\src\app\[locale]\sample\management\page.tsx
+  endpoints: /api/sample/orders
+  arrayKey(fe): list, total
+  rowVars: s
+  feFields(7): order_no, product_name, customer_name, notify_date, customer_require_date, delivery_status, id
+  BE[/api/sample/orders] -> D:\dcprint\erp-project\src\app\api\sample\orders\route.ts
+     beFields: Record, Partial, string, SampleOrderStatus, id, order_no, logTitle, request, module, action, snakeCaseFields
+
+=== D:\dcprint\erp-project\src\app\[locale]\sample\orders\page.tsx
+  endpoints: /api/sample/orders, /api/sample/orders/linkage, /api/sample/orders/status
+  arrayKey(fe): list, total
+  rowVars: o, customer
+  feFields(10): customer_name, id, notify_date, product_name, material_no, version, size_spec, quantity, customer_require_date, status
+  BE[/api/sample/orders] -> D:\dcprint\erp-project\src\app\api\sample\orders\route.ts
+     beFields: Record, Partial, string, SampleOrderStatus, id, order_no, logTitle, request, module, action, snakeCaseFields
+  BE[/api/sample/orders/linkage] -> D:\dcprint\erp-project\src\app\api\sample\orders\linkage\route.ts
+     beFields: const, cnt, Loose, available_qty, work_order_id, work_order_no, sample_order_no, bom_info, bom_id, bom_no, version, logTitle, request, module, action, delivery_status, sample_order, work_orders, material_requirements
+  BE[/api/sample/orders/status] -> D:\dcprint\erp-project\src\app\api\sample\orders\status\route.ts
+     beFields: err, error, logTitle
+
+=== D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input\page.tsx
+  endpoints: /api/dcprint/sample-card/template, /api/customers, /api/inventory/materials, /api/dcprint/formula/color, /api/dcprint/tool, /api/production/process-route
+  arrayKey(fe): (none)
+  rowVars: c, m, t, s
+  feFields(19): id, customer_name, color_code, color_name, material_name, material_code, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, process_name, work_hour, step_name
+  BE[/api/dcprint/sample-card/template] -> D:\dcprint\erp-project\src\app\api\dcprint\sample-card\template\route.ts
+     beFields: logTitle
+  BE[/api/customers] -> D:\dcprint\erp-project\src\app\api\customers\route.ts
+     beFields: total, id, logTitle, logType, request, body
+  BE[/api/inventory/materials] -> D:\dcprint\erp-project\src\app\api\inventory\materials\route.ts
+     beFields: Loose
+  BE[/api/dcprint/formula/color] -> D:\dcprint\erp-project\src\app\api\dcprint\formula\color\route.ts
+     beFields: Error, logTitle, logType, request
+  BE[/api/dcprint/tool] -> D:\dcprint\erp-project\src\app\api\dcprint\tool\route.ts
+     beFields: Error, logTitle
+  BE[/api/production/process-route] -> D:\dcprint\erp-project\src\app\api\production\process-route\route.ts
+     beFields: product_name, total, Loose, id, request  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input-card\page.tsx
+  endpoints: /api/standard-cards, /api/customers
+  arrayKey(fe): list, id
+  rowVars: c, num, type
+  feFields(3): customerName, customerCode, id
+  BE[/api/standard-cards] -> D:\dcprint\erp-project\src\app\api\standard-cards\route.ts
+     beFields: Loose, total, import, Record, unknown, id, card_no, errorMessage, request, deletedCount, logTitle, logType
+  BE[/api/customers] -> D:\dcprint\erp-project\src\app\api\customers\route.ts
+     beFields: total, id, logTitle, logType, request, body
+
+=== D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input-v2\page.tsx
+  endpoints: /api/dcprint/sample-card/template, /api/customers, /api/inventory/materials, /api/dcprint/formula/color, /api/dcprint/tool, /api/production/process-route
+  arrayKey(fe): (none)
+  rowVars: c, m, t, s
+  feFields(19): id, customer_name, color_code, color_name, material_code, material_name, cost_price, unit, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, step_name
+  BE[/api/dcprint/sample-card/template] -> D:\dcprint\erp-project\src\app\api\dcprint\sample-card\template\route.ts
+     beFields: logTitle
+  BE[/api/customers] -> D:\dcprint\erp-project\src\app\api\customers\route.ts
+     beFields: total, id, logTitle, logType, request, body
+  BE[/api/inventory/materials] -> D:\dcprint\erp-project\src\app\api\inventory\materials\route.ts
+     beFields: Loose
+  BE[/api/dcprint/formula/color] -> D:\dcprint\erp-project\src\app\api\dcprint\formula\color\route.ts
+     beFields: Error, logTitle, logType, request
+  BE[/api/dcprint/tool] -> D:\dcprint\erp-project\src\app\api\dcprint\tool\route.ts
+     beFields: Error, logTitle
+  BE[/api/production/process-route] -> D:\dcprint\erp-project\src\app\api\production\process-route\route.ts
+     beFields: product_name, total, Loose, id, request  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\page.tsx
+  endpoints: /api/standard-cards
+  arrayKey(fe): (none)
+  rowVars: i, item
+  feFields(12): id, card_no, customer_code, customer_name, product_name, version, finished_size, print_type, material_type, status, creator, create_time
+  BE[/api/standard-cards] -> D:\dcprint\erp-project\src\app\api\standard-cards\route.ts
+     beFields: Loose, total, import, Record, unknown, id, card_no, errorMessage, request, deletedCount, logTitle, logType
+
+=== D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\template\page.tsx
+  endpoints: /api/dcprint/sample-card/template, /api/dcprint/sample-card/template/
+  arrayKey(fe): (none)
+  rowVars: t
+  feFields(9): template_name, category, tags, remark, id, template_no, total_cost, usage_count, create_time
+  BE[/api/dcprint/sample-card/template] -> D:\dcprint\erp-project\src\app\api\dcprint\sample-card\template\route.ts
+     beFields: logTitle
+  BE[/api/dcprint/sample-card/template/] -> D:\dcprint\erp-project\src\app\api\dcprint\sample-card\template\route.ts
+     beFields: logTitle
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\announcement\page.tsx
+  endpoints: /api/system/announcement
+  arrayKey(fe): list, total
+  rowVars: item
+  feFields(8): id, is_read, title, type, status, is_top, read_count, publish_time
+  BE[/api/system/announcement] -> D:\dcprint\erp-project\src\app\api\system\announcement\route.ts
+     beFields: total, creator_name, read_count, is_read, list, errorMessage, request, userInfo, result, id  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\config\page.tsx
+  endpoints: /api/system/config
+  arrayKey(fe): (none)
+  rowVars: group, item
+  feFields(9): key, icon, config_key, id, config_name, config_type, config_value, description, remark
+  BE[/api/system/config] -> D:\dcprint\erp-project\src\app\api\system\config\route.ts
+     beFields: total, list, logTitle, logType, request, result, id
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\currency\page.tsx
+  endpoints: /api/system/currency
+  arrayKey(fe): (none)
+  rowVars: currency
+  feFields(7): id, sort, code, name, symbol, decimal_places, status
+  BE[/api/system/currency] -> D:\dcprint\erp-project\src\app\api\system\currency\route.ts
+     beFields: v, id, logTitle, request, userInfo
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\dict\page.tsx
+  endpoints: /api/system/dict
+  arrayKey(fe): list
+  rowVars: dt, item
+  feFields(8): id, dict_name, dict_type, items, dict_label, dict_value, sort_order, status
+  BE[/api/system/dict] -> D:\dcprint\erp-project\src\app\api\system\dict\route.ts
+     beFields: dict_type, total, remark, list, countRows, types, errorMessage, request, _userInfo, existing, id, typeRows, updates, params
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\exchange-rate\page.tsx
+  endpoints: /api/system/exchange-rate
+  arrayKey(fe): list
+  rowVars: rate
+  feFields(7): id, from_currency, to_currency, rate, rate_date, source, remark
+  BE[/api/system/exchange-rate] -> D:\dcprint\erp-project\src\app\api\system\exchange-rate\route.ts
+     beFields: total, id, logTitle, request, _userInfo
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\label-template\page.tsx
+  endpoints: /api/trace/label, /api/trace/label/
+  arrayKey(fe): list
+  rowVars: item
+  feFields(8): name, scenario, html_template, width_mm, height_mm, qr_size_mm, id, status
+  BE[/api/trace/label] -> D:\dcprint\erp-project\src\app\api\trace\label\route.ts
+     beFields: id, logTitle
+  BE[/api/trace/label/] -> D:\dcprint\erp-project\src\app\api\trace\label\route.ts
+     beFields: id, logTitle
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\login-log\page.tsx
+  endpoints: /api/system/login-log
+  arrayKey(fe): (none)
+  rowVars: item
+  feFields(9): id, user_name, login_time, ipaddr, login_location, browser, os, status, msg
+  BE[/api/system/login-log] -> D:\dcprint\erp-project\src\app\api\system\login-log\route.ts
+     beFields: total, user_name, login_time, ipaddr, login_location, browser, msg, list, logTitle, logType, _request
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\menus\page.tsx
+  endpoints: /api/organization/menu
+  arrayKey(fe): list
+  rowVars: m, p
+  feFields(2): menu_type, id
+  BE[/api/organization/menu] -> D:\dcprint\erp-project\src\app\api\organization\menu\route.ts
+     beFields: count, id, logTitle, request, body
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\notice\page.tsx
+  endpoints: /api/system/notice
+  arrayKey(fe): (none)
+  rowVars: item
+  feFields(6): id, notice_title, notice_type, notice_content, status, create_time
+  BE[/api/system/notice] -> D:\dcprint\erp-project\src\app\api\system\notice\route.ts
+     beFields: total, list, logTitle, logType, request, result, id
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\oper-log\page.tsx
+  endpoints: /api/system/oper-log
+  arrayKey(fe): (none)
+  rowVars: item
+  feFields(9): id, title, oper_name, oper_type, oper_method, oper_url, oper_ip, oper_time, status
+  BE[/api/system/oper-log] -> D:\dcprint\erp-project\src\app\api\system\oper-log\route.ts
+     beFields: total, title, oper_name, oper_type, oper_method, oper_url, oper_ip, oper_time, business_type, business_id, request_params, response_result, list, logTitle, logType, request, count
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\organization\page.tsx
+  endpoints: /api/organization, /api/organization/department, /api/organization/role
+  arrayKey(fe): (none)
+  rowVars: r, item, dept
+  feFields(6): code, id, icon, key, label, dept_name
+  BE[/api/organization] -> D:\dcprint\erp-project\src\app\api\organization\route.ts
+     beFields: id
+  BE[/api/organization/department] -> D:\dcprint\erp-project\src\app\api\organization\department\route.ts
+     beFields: total, Loose, count, list, request, body, id, logTitle
+  BE[/api/organization/role] -> D:\dcprint\erp-project\src\app\api\organization\role\route.ts
+     beFields: total, Loose, count, list, request, body, id, logTitle
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\roles\page.tsx
+  endpoints: /api/menu, /api/role-permissions, /api/organization/role, /api/role-permissions/buttons, /api/system/data-scope, /api/auth/cache/clear, /api/warehouse/list, /api/customers, /api/suppliers
+  arrayKey(fe): list
+  rowVars: p, w, c, s, menu, module, permission, wh, cust, sup
+  feFields(10): menu_id, id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+  BE[/api/menu] -> D:\dcprint\erp-project\src\app\api\menu\route.ts
+     beFields: keep_alive, hidden, Loose
+  BE[/api/role-permissions] -> D:\dcprint\erp-project\src\app\api\role-permissions\route.ts
+     beFields: (none)
+  BE[/api/organization/role] -> D:\dcprint\erp-project\src\app\api\organization\role\route.ts
+     beFields: total, Loose, count, list, request, body, id, logTitle
+  BE[/api/role-permissions/buttons] -> D:\dcprint\erp-project\src\app\api\role-permissions\buttons\route.ts
+     beFields: (none)
+  BE[/api/system/data-scope] -> D:\dcprint\erp-project\src\app\api\system\data-scope\route.ts
+     beFields: Loose
+  BE[/api/auth/cache/clear] -> D:\dcprint\erp-project\src\app\api\auth\cache\clear\route.ts
+     beFields: (none)
+  BE[/api/warehouse/list] -> NO ROUTE
+  BE[/api/customers] -> D:\dcprint\erp-project\src\app\api\customers\route.ts
+     beFields: total, id, logTitle, logType, request, body
+  BE[/api/suppliers] -> NO ROUTE
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\scheduler\page.tsx
+  endpoints: /api/system/scheduler
+  arrayKey(fe): list, total, logs
+  rowVars: item
+  feFields(8): id, task_name, task_type, task_group, cron_expression, status, last_execute_time, last_result
+  BE[/api/system/scheduler] -> D:\dcprint\erp-project\src\app\api\system\scheduler\route.ts
+     beFields: total, Error, id, errorMessage, request, _userInfo, result, updates, params
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\seed-data\page.tsx
+  endpoints: /api/init/settings-seed, /api/init/business-seed
+  arrayKey(fe): (none)
+  rowVars: user
+  feFields(3): username, role, password
+  BE[/api/init/settings-seed] -> D:\dcprint\erp-project\src\app\api\init\settings-seed\route.ts
+     beFields: (none)
+  BE[/api/init/business-seed] -> D:\dcprint\erp-project\src\app\api\init\business-seed\route.ts
+     beFields: any
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\system\page.tsx
+  endpoints: /api/settings/system
+  arrayKey(fe): (none)
+  rowVars: category, item
+  feFields(8): config_key, config_value, config_type, id, display_name, is_required, approval_required, description
+  BE[/api/settings/system] -> D:\dcprint\erp-project\src\app\api\settings\system\route.ts
+     beFields: config_type, list, categories, request, _userInfo, requireApproval
+
+=== D:\dcprint\erp-project\src\app\[locale]\settings\user\page.tsx
+  endpoints: /api/system/user, /api/system/roles, /api/organization/department, /api/organization/employee, /api/auth/cache/clear
+  arrayKey(fe): (none)
+  rowVars: r, item, d, role
+  feFields(12): id, role_name, roles, department_id, username, real_name, email, phone, dept_name, status, first_login, role_code
+  BE[/api/system/user] -> D:\dcprint\erp-project\src\app\api\system\user\route.ts
+     beFields: total, real_name, user_real_name, list, request, _userInfo, success, message, status, existing
+  BE[/api/system/roles] -> D:\dcprint\erp-project\src\app\api\system\roles\route.ts
+     beFields: total, roleId, role, id, request, _userInfo
+  BE[/api/organization/department] -> D:\dcprint\erp-project\src\app\api\organization\department\route.ts
+     beFields: total, Loose, count, list, request, body, id, logTitle
+  BE[/api/organization/employee] -> D:\dcprint\erp-project\src\app\api\organization\employee\route.ts
+     beFields: total, id, logTitle, request, body
+  BE[/api/auth/cache/clear] -> D:\dcprint\erp-project\src\app\api\auth\cache\clear\route.ts
+     beFields: (none)
+
+=== D:\dcprint\erp-project\src\app\[locale]\srm\evaluation\page.tsx
+  endpoints: /api/srm/evaluation, /api/srm/evaluation/
+  arrayKey(fe): (none)
+  rowVars: r, c
+  feFields(12): id, eval_no, supplier_name, eval_period, quality_score, delivery_score, price_score, service_score, total_score, supplier_level, status, map
+  BE[/api/srm/evaluation] -> D:\dcprint\erp-project\src\app\api\srm\evaluation\route.ts
+     beFields: total, list, request, id, eval_no, logTitle, logType, updateFields, updateValues  [has t.*]
+  BE[/api/srm/evaluation/] -> D:\dcprint\erp-project\src\app\api\srm\evaluation\route.ts
+     beFields: total, list, request, id, eval_no, logTitle, logType, updateFields, updateValues  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\tools\uploader\page.tsx
+  endpoints: /api/project-files, /api/project-files/gitignore, /api/project-files/upload
+  arrayKey(fe): (none)
+  rowVars: f, file
+  feFields(3): path, size, modified
+  BE[/api/project-files] -> D:\dcprint\erp-project\src\app\api\project-files\route.ts
+     beFields: been
+  BE[/api/project-files/gitignore] -> D:\dcprint\erp-project\src\app\api\project-files\gitignore\route.ts
+     beFields: (none)  [has t.*]
+  BE[/api/project-files/upload] -> D:\dcprint\erp-project\src\app\api\project-files\upload\route.ts
+     beFields: been
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\batch\page.tsx
+  endpoints: /api/warehouse/batch, /api/materials
+  arrayKey(fe): list, total
+  rowVars: item, m
+  feFields(10): expiry_date, id, batch_no, material_code, material_name, warehouse_name, quantity, available_qty, cost_price, status
+  BE[/api/warehouse/batch] -> D:\dcprint\erp-project\src\app\api\warehouse\batch\route.ts
+     beFields: total, id, result, errorMessage, request, _userInfo  [has t.*]
+  BE[/api/materials] -> D:\dcprint\erp-project\src\app\api\materials\route.ts
+     beFields: total, Loose, category, categoryHint, rules, code_pattern, code_pattern_desc
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\cost\page.tsx
+  endpoints: /api/warehouse/cost
+  arrayKey(fe): list, total
+  rowVars: item
+  feFields(9): total_cost_amount, material_id, material_code, material_name, material_spec, unit, total_quantity, avg_cost_price, warehouse_count
+  BE[/api/warehouse/cost] -> D:\dcprint\erp-project\src\app\api\warehouse\cost\route.ts
+     beFields: total, total_quantity, total_cost_amount, avg_cost_price, min_cost_price, max_cost_price, warehouse_count, stock, costHistory, countRows, rows, list, errorMessage, request, _userInfo, movements, costPrice, totalQuantity, totalCostAmount, movementCount  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\inbound\cutting\page.tsx
+  endpoints: /api/warehouse/inbound/cutting
+  arrayKey(fe): list, pagination
+  rowVars: r, record
+  feFields(13): recordNo, sourceLabelNo, materialName, materialCode, specification, originalWidth, cutWidthStr, cutTotalWidth, remainWidth, operatorName, cutTime, status, id
+  BE[/api/warehouse/inbound/cutting] -> D:\dcprint\erp-project\src\app\api\warehouse\inbound\cutting\route.ts
+     beFields: recordNo, sourceLabelId, sourceLabelNo, cutWidthStr, originalWidth, cutTotalWidth, remainWidth, operatorId, operatorName, cutTime, createTime, materialCode, materialName, total, Loose, Error, id, labelNo, specification, quantity, unit, width, supplierName, batchNo, purchaseOrderNo, labelType, isUsed, isCut
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\inbound\page.tsx
+  endpoints: /api/warehouse/inbound/labels/, /api/warehouse/inbound
+  arrayKey(fe): qrCode
+  rowVars: r, record, l, label
+  feFields(19): id, status, warehouse_id, items, total_quantity, warehouse_name, po_no, currency, remark, order_no, supplier_name, base_currency, labelNo, materialName, orderNo, specification, item, supplier, inboundTime
+  BE[/api/warehouse/inbound/labels/] -> D:\dcprint\erp-project\src\app\api\warehouse\inbound\labels\route.ts
+     beFields: labelId, orderNo, purchaseOrderNo, supplierName, inboundDate, warehouseCode, materialCode, materialName, batchNo, isRawMaterial, packageQty, labelQty, labelStatus, auditStatus, operatorName, auditorName, auditTime, colorCode, mixedMaterialRemark, machineNo, createTime, updateTime, total, maxId, errorMessage, request, id, label_status
+  BE[/api/warehouse/inbound] -> D:\dcprint\erp-project\src\app\api\warehouse\inbound\route.ts
+     beFields: Loose, order_id, order_no, uncategorizedMaterials, errorMessage, request, _userInfo, validated, iss
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\inbound-simple\page.tsx
+  endpoints: /api/warehouse/inbound
+  arrayKey(fe): list
+  rowVars: record
+  feFields(6): id, order_no, supplier_name, total_quantity, inbound_date, status
+  BE[/api/warehouse/inbound] -> D:\dcprint\erp-project\src\app\api\warehouse\inbound\route.ts
+     beFields: Loose, order_id, order_no, uncategorizedMaterials, errorMessage, request, _userInfo, validated, iss
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\inventory\page.tsx
+  endpoints: /api/warehouse/freeze, /api/warehouse/inventory/export, /api/inventory
+  arrayKey(fe): (none)
+  rowVars: item, wh, i
+  feFields(22): alertLevel, material_name, available_qty, safety_stock, unit, warehouse_id, warehouse_name, quantity, unit_price, id, batch_no, material_code, material_spec, locked_qty, status, expire_date, count, value, name, code, utilization, items
+  BE[/api/warehouse/freeze] -> D:\dcprint\erp-project\src\app\api\warehouse\freeze\route.ts
+     beFields: total, operator_name, list, errorMessage, request, userInfo, module, action, userId, id  [has t.*]
+  BE[/api/warehouse/inventory/export] -> D:\dcprint\erp-project\src\app\api\warehouse\inventory\export\route.ts
+     beFields: operator_name, list, total, errorMessage
+  BE[/api/inventory] -> D:\dcprint\erp-project\src\app\api\inventory\route.ts
+     beFields: material_spec, total, Loose, id, list, errorMessage, request, batchNo, fifoRecommended, warning, undefined, operatedAt, allocatedQty, fifoMode, batchDetails, d, deductedQty, unitCost, lineCost, totalCost
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\outbound\page.tsx
+  endpoints: /api/warehouse/outbound, /api/warehouse, /api/warehouse/outbound/fifo, /api/dcprint/scan, /api/warehouse/outbound/confirm
+  arrayKey(fe): list
+  rowVars: o, r, option, record, b
+  feFields(39): id, orderNo, orderDate, totalQty, totalAmount, currency, baseTotalAmount, baseCurrency, warehouseName, outboundType, status, auditStatus, operatorName, warehouseId, remark, date, quantity, value, labelKey, label, materialName, materialCode, spec, unit, type, isRawMaterial, batchNo, width, warehouse, materialId, material_id, qty, total_amount, base_total_amount, base_currency, batch_no, operator, available_qty, inbound_date
+  BE[/api/warehouse/outbound] -> D:\dcprint\erp-project\src\app\api\warehouse\outbound\route.ts
+     beFields: orderNo, orderDate, outboundType, warehouseCode, warehouseName, totalQty, totalAmount, operatorName, auditStatus, auditorName, auditTime, createTime, total, orderId, materialName, specification, qty, batchNo, Loose, Error, uncategorizedMaterials, errorMessage, request, status
+  BE[/api/warehouse] -> D:\dcprint\erp-project\src\app\api\warehouse\route.ts
+     beFields: code, name, createTime, updateTime, total, Loose, mysql, list, errorMessage, request, _userInfo, body, id
+  BE[/api/warehouse/outbound/fifo] -> D:\dcprint\erp-project\src\app\api\warehouse\outbound\fifo\route.ts
+     beFields: Loose, maxNo, material, total_available, allocation_plan, can_fulfill, errorMessage, request
+  BE[/api/dcprint/scan] -> D:\dcprint\erp-project\src\app\api\dcprint\scan\route.ts
+     beFields: labelNo, qrCode, purchaseOrderNo, supplierName, receiveDate, materialCode, materialName, batchNo, packageQty, lengthPerRoll, colorCode, mixRemark, warehouseId, locationId, warehouseName, locationName, isMainMaterial, isUsed, isCut, parentLabelId, parentLabelNo, createTime, recordNo, cutWidthStr, originalWidth, cutTotalWidth, remainWidth, cutTime, operatorName, newLabelNo, cutWidth, orderNo, productId, productCode, productName, productSpec, planStartDate, planEndDate, cardNo, mainLabelNo, burdeningStatus, lockStatus, createUserName, workOrderId, workOrderNo, materialSpec, workOrderDate, planQty, mainLabelId, mainMaterialCode, mainMaterialName, mainSpecification, mainBatchNo, mainSupplierName, mainReceiveDate, materialType, data, logTitle, logType
+  BE[/api/warehouse/outbound/confirm] -> D:\dcprint\erp-project\src\app\api\warehouse\outbound\confirm\route.ts
+     beFields: total_qty, total_out, number, orderId, totalDeductedBatches, errorMessage, request, status
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\page.tsx
+  endpoints: /api/warehouse/batch-inventory
+  arrayKey(fe): (none)
+  rowVars: item, batch
+  feFields(16): material_id, quantity, material_code, material_name, unit, batch_no, batch_inventory_id, id, available_quantity, specification, warehouse_name, inbound_quantity, outbound_quantity, inbound_date, qc_status, status
+  BE[/api/warehouse/batch-inventory] -> D:\dcprint\erp-project\src\app\api\warehouse\batch-inventory\route.ts
+     beFields: total, list, request, params, batches, allocation_plan, total_available, sum, b, shortage, remaining, inbound_id, outbound_id  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\production-inbound\page.tsx
+  endpoints: /api/warehouse, /api/warehouse/production-inbound
+  arrayKey(fe): (none)
+  rowVars: item
+  feFields(8): id, inbound_no, work_order_no, warehouse_name, inbound_date, qc_status, operator_name, status
+  BE[/api/warehouse] -> D:\dcprint\erp-project\src\app\api\warehouse\route.ts
+     beFields: code, name, createTime, updateTime, total, Loose, mysql, list, errorMessage, request, _userInfo, body, id
+  BE[/api/warehouse/production-inbound] -> D:\dcprint\erp-project\src\app\api\warehouse\production-inbound\route.ts
+     beFields: total, Loose, list, request, qc_status  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\sales-outbound\page.tsx
+  endpoints: /api/warehouse/sales-outbound, /api/warehouse, /api/customers
+  arrayKey(fe): list
+  rowVars: item, c
+  feFields(8): status, id, outbound_no, order_no, customer_name, warehouse_name, outbound_date, delivery_person
+  BE[/api/warehouse/sales-outbound] -> D:\dcprint\erp-project\src\app\api\warehouse\sales-outbound\route.ts
+     beFields: total, Loose, delivered_qty, list, request, uncategorizedMaterials  [has t.*]
+  BE[/api/warehouse] -> D:\dcprint\erp-project\src\app\api\warehouse\route.ts
+     beFields: code, name, createTime, updateTime, total, Loose, mysql, list, errorMessage, request, _userInfo, body, id
+  BE[/api/customers] -> D:\dcprint\erp-project\src\app\api\customers\route.ts
+     beFields: total, id, logTitle, logType, request, body
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\setup\page.tsx
+  endpoints: /api/warehouse
+  arrayKey(fe): list
+  rowVars: warehouse, nature, type
+  feFields(12): id, code, name, nature, type, includeInCalculation, usedCapacity, capacity, manager, status, value, labelKey
+  BE[/api/warehouse] -> D:\dcprint\erp-project\src\app\api\warehouse\route.ts
+     beFields: code, name, createTime, updateTime, total, Loose, mysql, list, errorMessage, request, _userInfo, body, id
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\split-order\page.tsx
+  endpoints: /api/warehouse/split-order, /api/warehouse/batch-inventory, /api/warehouse/split-order/detail
+  arrayKey(fe): list
+  rowVars: d, item
+  feFields(15): pieces, qtyPerPiece, totalQty, width, isWaste, remark, status, id, split_no, split_date, parent_batch_id, material_name, out_qty, total_waste, operator_name
+  BE[/api/warehouse/split-order] -> D:\dcprint\erp-project\src\app\api\warehouse\split-order\route.ts
+     beFields: total, Loose, detail_count, maxNo, batch_version, m_width, Decimal, errorMessage, request, splitNo, status, childCount, totalCost, wasteQty  [has t.*]
+  BE[/api/warehouse/batch-inventory] -> D:\dcprint\erp-project\src\app\api\warehouse\batch-inventory\route.ts
+     beFields: total, list, request, params, batches, allocation_plan, total_available, sum, b, shortage, remaining, inbound_id, outbound_id  [has t.*]
+  BE[/api/warehouse/split-order/detail] -> NO ROUTE
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\stock-adjust\page.tsx
+  endpoints: /api/warehouse/stock-adjust
+  arrayKey(fe): (none)
+  rowVars: item, i
+  feFields(7): adjust_no, warehouse_name, adjust_date, adjust_type, operator_name, status, id
+  BE[/api/warehouse/stock-adjust] -> D:\dcprint\erp-project\src\app\api\warehouse\stock-adjust\route.ts
+     beFields: total, list, request, result, id, adjust_no, operation  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\stocktaking\page.tsx
+  endpoints: /api/warehouse/stocktaking, /api/warehouse/stocktaking/
+  arrayKey(fe): list
+  rowVars: item, i
+  feFields(14): check_no, warehouse_name, type, total_items, diff_items, diff_amount, status, id, qr_code, material_name, split_flag, book_quantity, actual_quantity, difference
+  BE[/api/warehouse/stocktaking] -> D:\dcprint\erp-project\src\app\api\warehouse\stocktaking\route.ts
+     beFields: total, checker_name, approver_name, inventory_id, system_qty, count, diff_items, diff_amount, Loose, checked_count, total_count, list, row, check_no, type_name, status_name, request, id, status, item_count, locked, check, progress, default  [has t.*]
+  BE[/api/warehouse/stocktaking/] -> D:\dcprint\erp-project\src\app\api\warehouse\stocktaking\route.ts
+     beFields: total, checker_name, approver_name, inventory_id, system_qty, count, diff_items, diff_amount, Loose, checked_count, total_count, list, row, check_no, type_name, status_name, request, id, status, item_count, locked, check, progress, default  [has t.*]
+
+=== D:\dcprint\erp-project\src\app\[locale]\warehouse\transfer\page.tsx
+  endpoints: /api/warehouse/transfer, /api/warehouse/locations, /api/warehouse/transfer/
+  arrayKey(fe): list
+  rowVars: item, l
+  feFields(19): id, status, transfer_no, type, from_warehouse_name, from_location, to_warehouse_name, to_location, applicant_name, qr_code, quantity, material_id, material_name, batch_no, out_quantity, in_quantity, unit, code, name
+  BE[/api/warehouse/transfer] -> D:\dcprint\erp-project\src\app\api\warehouse\transfer\route.ts
+     beFields: total, from_warehouse_name, to_warehouse_name, operator_name, Loose, list, row, type_name, status_name, request, id, transfer_no, status, uncategorizedMaterials, result, transfer  [has t.*]
+  BE[/api/warehouse/locations] -> NO ROUTE
+  BE[/api/warehouse/transfer/] -> D:\dcprint\erp-project\src\app\api\warehouse\transfer\route.ts
+     beFields: total, from_warehouse_name, to_warehouse_name, operator_name, Loose, list, row, type_name, status_name, request, id, transfer_no, status, uncategorizedMaterials, result, transfer  [has t.*]

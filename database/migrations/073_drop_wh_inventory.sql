@@ -1,0 +1,22 @@
+-- 迁移 073：废弃遗留幽灵表 wh_inventory，统一到 inv_inventory
+--
+-- 背景：
+--   wh_inventory 在权威 schema（vnerpdacahng_schema.sql）与全部迁移文件中均无 CREATE TABLE 定义，
+--   但旧代码（cost-engine / 发货扣库存 / 盘点扫码）与旧 seed 仍在引用，属于遗留幽灵表。
+--   库存权威表为 inv_inventory（按 material_id + warehouse_id 聚合，含 available_qty），
+--   本迁移同期已将三处代码与 seed 重定向到 inv_inventory。
+--
+-- ⚠️ 部署前请 DBA 确认：
+--   若生产库仍存在 wh_inventory 且其中有 inv_inventory 未覆盖的库存数据，请先执行下方
+--   “合并片段”（取消注释）将数据并入 inv_inventory，再执行 DROP。
+--   若 wh_inventory 已无数据或不存在，直接 DROP 即可（IF EXISTS 保证幂等）。
+--
+-- 合并片段（仅当 wh_inventory 存在且有数据时需要；执行后请删除本段）：
+-- INSERT INTO inv_inventory (material_id, warehouse_id, quantity, available_qty, batch_no, create_time, update_time, deleted)
+-- SELECT material_id, warehouse_id, quantity, quantity, batch_no, create_time, NOW(), 0
+-- FROM wh_inventory
+-- ON DUPLICATE KEY UPDATE
+--   quantity = inv_inventory.quantity + VALUES(quantity),
+--   available_qty = inv_inventory.available_qty + VALUES(available_qty);
+
+DROP TABLE IF EXISTS `wh_inventory`;

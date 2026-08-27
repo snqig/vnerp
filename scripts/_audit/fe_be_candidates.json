@@ -1,0 +1,126 @@
+[
+  {
+    "page": "finance",
+    "ep": "/finance/receivables",
+    "missing": [
+      "amount",
+      "balance",
+      "due_date",
+      "payment_method",
+      "receipt_date",
+      "receipt_no",
+      "received_amount",
+      "remark",
+      "status"
+    ],
+    "missingCount": 9,
+    "feCount": 12,
+    "beCount": 5,
+    "underDetected": true
+  },
+  {
+    "page": "finance",
+    "ep": "/purchase/suppliers",
+    "missing": [
+      "amount",
+      "balance",
+      "customer_name",
+      "due_date",
+      "payment_method",
+      "receipt_date",
+      "receipt_no",
+      "receivable_no",
+      "received_amount",
+      "source_no"
+    ],
+    "missingCount": 10,
+    "feCount": 12,
+    "beCount": 18,
+    "underDetected": false
+  },
+  {
+    "page": "qrcode",
+    "ep": "/qrcode",
+    "missing": [
+      "event",
+      "operator",
+      "print_count",
+      "qr_code",
+      "qr_type",
+      "ref_no",
+      "scan_count",
+      "specification",
+      "time",
+      "unit"
+    ],
+    "missingCount": 10,
+    "feCount": 14,
+    "beCount": 12,
+    "underDetected": false
+  },
+  {
+    "page": "finance",
+    "ep": "/customers",
+    "missing": [
+      "amount",
+      "balance",
+      "due_date",
+      "payment_method",
+      "receipt_date",
+      "receipt_no",
+      "receivable_no",
+      "received_amount",
+      "source_no"
+    ],
+    "missingCount": 9,
+    "feCount": 12,
+    "beCount": 27,
+    "underDetected": false
+  },
+  {
+    "page": "warehouse",
+    "ep": "/warehouse/batch-inventory",
+    "missing": [
+      "batch_inventory_id",
+      "inbound_date",
+      "material_id",
+      "outbound_quantity",
+      "qc_status",
+      "quantity",
+      "specification",
+      "status"
+    ],
+    "missingCount": 8,
+    "feCount": 15,
+    "beCount": 8,
+    "underDetected": false
+  },
+  {
+    "page": "qrcode",
+    "ep": "/qrcode/trace",
+    "missing": [
+      "event",
+      "operator",
+      "print_count",
+      "scan_count",
+      "specification",
+      "time",
+      "unit"
+    ],
+    "missingCount": 7,
+    "feCount": 14,
+    "beCount": 36,
+    "underDetected": false
+  },
+  {
+    "page": "equipment",
+    "ep": "/equipment",
+    "missing": [
+      "label"
+    ],
+    "missingCount": 1,
+    "feCount": 1,
+    "beCount": 13,
+    "underDetected": false
+  }
+]

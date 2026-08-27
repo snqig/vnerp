@@ -1,0 +1,9 @@
+{
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/admin/archive/qrcode",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}

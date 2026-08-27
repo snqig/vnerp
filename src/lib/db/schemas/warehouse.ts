@@ -1,0 +1,591 @@
+import {
+  bigint,
+  date,
+  datetime,
+  decimal,
+  index,
+  int,
+  mysqlTable,
+  serial,
+  text,
+  timestamp,
+  tinyint,
+  uniqueIndex,
+  varchar,
+  foreignKey,
+} from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
+import { invMaterialCategory } from './_gen_warehouse_missing';
+import { sysUser } from './system';
+export const invMaterial = mysqlTable(
+  'inv_material',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    materialCode: varchar('material_code', { length: 50 }).notNull(),
+    materialName: varchar('material_name', { length: 100 }).notNull(),
+    specification: varchar('specification', { length: 255 }),
+    categoryId: bigint('category_id', { mode: 'number', unsigned: true }),
+    materialType: tinyint('material_type'),
+    unit: varchar('unit', { length: 20 }),
+    barcode: varchar('barcode', { length: 50 }),
+    brand: varchar('brand', { length: 50 }),
+    safetyStock: decimal('safety_stock', { precision: 18, scale: 4 }).default('0.0000'),
+    maxStock: decimal('max_stock', { precision: 18, scale: 4 }),
+    minStock: decimal('min_stock', { precision: 18, scale: 4 }),
+    width: decimal('width', { precision: 10, scale: 2 }).default('0.00'),
+    purchasePrice: decimal('purchase_price', { precision: 18, scale: 4 }),
+    salePrice: decimal('sale_price', { precision: 18, scale: 4 }),
+    costPrice: decimal('cost_price', { precision: 18, scale: 4 }),
+    warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }),
+    shelfLife: int('shelf_life'),
+    warningDays: int('warning_days'),
+    isBatchManaged: tinyint('is_batch_managed').default(0),
+    isSerialManaged: tinyint('is_serial_managed').default(0),
+    status: tinyint('status').default(1),
+    remark: text('remark'),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    materialCodeIdx: index('idx_material_code').on(table.materialCode),
+    materialTypeIdx: index('idx_material_type').on(table.materialType, table.deleted),
+    warehouseIdx: index('idx_warehouse').on(table.warehouseId),
+
+    fk_invMaterialCategory_categoryId: foreignKey({
+      name: 'fk_material_category',
+      columns: [table.categoryId],
+      foreignColumns: [invMaterialCategory.id],
+    })
+      .onDelete('set null')
+      .onUpdate('cascade'),
+  })
+);
+
+export const invInventoryBatch = mysqlTable(
+  'inv_inventory_batch',
+  {
+    id: int('id', { unsigned: true }).autoincrement().primaryKey(),
+    batchNo: varchar('batch_no', { length: 50 }).notNull(),
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }).notNull(),
+    materialName: varchar('material_name', { length: 100 }).notNull(),
+    materialCode: varchar('material_code', { length: 50 }),
+    warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }).notNull(),
+    warehouseName: varchar('warehouse_name', { length: 100 }),
+    quantity: decimal('quantity', { precision: 12, scale: 3 }).default('0.000'),
+    availableQty: decimal('available_qty', { precision: 12, scale: 3 }).default('0.000'),
+    lockedQty: decimal('locked_qty', { precision: 12, scale: 3 }).default('0.000'),
+    unit: varchar('unit', { length: 20 }).default('件'),
+    unitPrice: decimal('unit_price', { precision: 12, scale: 2 }).default('0.00'),
+    produceDate: date('produce_date'),
+    expireDate: date('expire_date'),
+    inboundDate: date('inbound_date'),
+    area: decimal('area', { precision: 18, scale: 4 }),
+    availableArea: decimal('available_area', { precision: 18, scale: 4 }),
+    openedAt: datetime('opened_at'),
+    batchType: tinyint('batch_type').default(0),
+    width: decimal('width', { precision: 10, scale: 2 }).default('0.00'),
+    length: decimal('length', { precision: 10, scale: 2 }),
+    parentBatchId: bigint('parent_batch_id', { mode: 'number', unsigned: true }),
+    splitFlag: tinyint('split_flag').default(0),
+    qrCode: varchar('qr_code', { length: 100 }),
+    location: varchar('location', { length: 50 }),
+    status: tinyint('status').default(1),
+    version: int('version', { unsigned: true }).default(1),
+    alertLevel: varchar('alert_level', { length: 20 }).default('normal'),
+    lastAlertTime: timestamp('last_alert_time'),
+    inspectionStatus: varchar('inspection_status', { length: 20 }).default('pending'),
+    quarantineStatus: varchar('quarantine_status', { length: 20 }).default('none'),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    warehouseMaterialBatchIdx: uniqueIndex('uk_warehouse_material_batch').on(
+      table.warehouseId,
+      table.materialId,
+      table.batchNo,
+      table.deleted
+    ),
+    materialIdx: index('idx_material').on(table.materialId),
+    warehouseIdx: index('idx_warehouse').on(table.warehouseId),
+    statusIdx: index('idx_status').on(table.status),
+    alertLevelIdx: index('idx_alert_level').on(table.alertLevel),
+    qrCodeIdx: index('idx_qr_code').on(table.qrCode),
+    splitFlagIdx: index('idx_split_flag').on(table.splitFlag),
+      fk_invMaterial_materialId: foreignKey({
+      name: 'fk_inv_inventory_batch_material',
+      columns: [table.materialId],
+      foreignColumns: [invMaterial.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
+    fk_invWarehouse_warehouseId: foreignKey({
+      name: 'fk_inv_inventory_batch_warehouse',
+      columns: [table.warehouseId],
+      foreignColumns: [invWarehouse.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
+  })
+);
+
+export const invInboundOrders = mysqlTable(
+  'inv_inbound_order',
+  {
+    id: int('id', { unsigned: true }).autoincrement().primaryKey(),
+    orderNo: varchar('order_no', { length: 50 }).notNull(),
+    orderType: varchar('order_type', { length: 20 }).default('purchase'),
+    warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }).notNull(),
+    warehouseCode: varchar('warehouse_code', { length: 50 }),
+    warehouseName: varchar('warehouse_name', { length: 100 }),
+    supplierId: bigint('supplier_id', { mode: 'number', unsigned: true }),
+    supplierName: varchar('supplier_name', { length: 100 }),
+    operatorId: bigint('operator_id', { mode: 'number', unsigned: true }),
+    operatorName: varchar('operator_name', { length: 50 }),
+    poId: bigint('po_id', { mode: 'number', unsigned: true }),
+    poNo: varchar('po_no', { length: 50 }),
+    sourceType: varchar('source_type', { length: 20 }),
+    sourceOrderId: bigint('source_order_id', { mode: 'number', unsigned: true }),
+    grnType: varchar('grn_type', { length: 10 }).default('po'),
+    totalAmount: decimal('total_amount', { precision: 18, scale: 4 }),
+    currency: varchar('currency', { length: 10 }).default('CNY'),
+    exchangeRate: decimal('exchange_rate', { precision: 18, scale: 4 }).default('1.0000'),
+    baseTotalAmount: decimal('base_total_amount', { precision: 18, scale: 4 }),
+    totalQuantity: decimal('total_quantity', { precision: 18, scale: 4 }).default('0.0000'),
+    status: varchar('status', { length: 20 }).default('draft'),
+    qcStatus: varchar('qc_status', { length: 20 }).default('pending'),
+    inboundDate: date('inbound_date'),
+    remark: text('remark'),
+    createBy: int('create_by', { unsigned: true }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateBy: int('update_by', { unsigned: true }),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    orderNoIdx: index('idx_order_no').on(table.orderNo),
+    statusIdx: index('idx_status').on(table.status),
+    warehouseIdx: index('idx_warehouse').on(table.warehouseId),
+    poIdIdx: index('idx_po_id').on(table.poId),
+    sourceIdx: index('idx_source_order').on(table.sourceType, table.sourceOrderId),
+      fk_invWarehouse_warehouseId: foreignKey({
+      name: 'fk_inv_inbound_warehouse',
+      columns: [table.warehouseId],
+      foreignColumns: [invWarehouse.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
+  })
+);
+
+export const invInboundItems = mysqlTable(
+  'inv_inbound_item',
+  {
+    id: int('id', { unsigned: true }).autoincrement().primaryKey(),
+    orderId: int('order_id', { unsigned: true }).notNull(),
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }),
+    materialName: varchar('material_name', { length: 100 }).notNull(),
+    materialCode: varchar('material_code', { length: 50 }),
+    materialSpec: varchar('material_spec', { length: 200 }),
+    batchNo: varchar('batch_no', { length: 50 }),
+    batchId: bigint('batch_id', { mode: 'number', unsigned: true }),
+    originalInboundDate: date('original_inbound_date'),
+    locationId: bigint('location_id', { mode: 'number', unsigned: true }),
+    quantity: decimal('quantity', { precision: 18, scale: 4 }),
+    unit: varchar('unit', { length: 20 }),
+    unitPrice: decimal('unit_price', { precision: 18, scale: 4 }),
+    totalPrice: decimal('total_price', { precision: 18, scale: 4 }),
+    baseUnitPrice: decimal('base_unit_price', { precision: 18, scale: 4 }),
+    baseAmount: decimal('base_amount', { precision: 18, scale: 4 }),
+    warehouseLocation: varchar('warehouse_location', { length: 50 }),
+    produceDate: date('produce_date'),
+    expireDate: date('expire_date'),
+    purchaseOrderItemId: bigint('purchase_order_item_id', { mode: 'number', unsigned: true }),
+    purchaseOrderLineNo: int('purchase_order_line_no', { unsigned: true }),
+    remark: text('remark'),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    orderIdx: index('idx_order').on(table.orderId),
+    materialIdx: index('idx_material').on(table.materialId),
+    batchIdx: index('idx_batch').on(table.batchNo),
+    batchIdIdx: index('idx_batch_id').on(table.batchId),
+    originalInboundDateIdx: index('idx_original_inbound_date').on(table.originalInboundDate),
+
+    fk_invInboundOrder_orderId: foreignKey({
+      name: 'fk_inv_inbound_item_order',
+      columns: [table.orderId],
+      foreignColumns: [invInboundOrders.id],
+    })
+      .onDelete('cascade')
+      .onUpdate('cascade'),
+  })
+);
+
+export const invWarehouse = mysqlTable(
+  'inv_warehouse',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    categoryId: int('category_id', { unsigned: true }),
+    warehouseCode: varchar('warehouse_code', { length: 50 }).notNull(),
+    warehouseName: varchar('warehouse_name', { length: 100 }).notNull(),
+    warehouseType: tinyint('warehouse_type'),
+    province: varchar('province', { length: 50 }),
+    city: varchar('city', { length: 50 }),
+    address: varchar('address', { length: 255 }),
+    managerId: bigint('manager_id', { mode: 'number', unsigned: true }),
+    contactPhone: varchar('contact_phone', { length: 20 }),
+    status: tinyint('status').default(1),
+    remark: varchar('remark', { length: 255 }),
+    deleted: tinyint('deleted').default(0),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    warehouseCodeIdx: uniqueIndex('uk_warehouse_code').on(table.warehouseCode),
+    statusIdx: index('idx_warehouse_status').on(table.status, table.deleted),
+    managerIdx: index('idx_manager').on(table.managerId),
+
+    fk_sysUser_managerId: foreignKey({
+      name: 'fk_warehouse_manager',
+      columns: [table.managerId],
+      foreignColumns: [sysUser.id],
+    })
+      .onDelete('set null')
+      .onUpdate('cascade'),
+  })
+);
+
+export const invInventory = mysqlTable(
+  'inv_inventory',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }).notNull(),
+    materialCode: varchar('material_code', { length: 50 }),
+    materialName: varchar('material_name', { length: 100 }),
+    warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }).notNull(),
+    warehouseName: varchar('warehouse_name', { length: 100 }),
+    quantity: decimal('quantity', { precision: 18, scale: 4 }).default('0.0000'),
+    availableQty: decimal('available_qty', { precision: 18, scale: 4 }).default('0.0000'),
+    batchNo: varchar('batch_no', { length: 50 }),
+    lockedQty: decimal('locked_qty', { precision: 18, scale: 4 }).default('0.0000'),
+    unit: varchar('unit', { length: 20 }),
+    unitCost: decimal('unit_cost', { precision: 18, scale: 4 }).default('0.0000'),
+    totalCost: decimal('total_cost', { precision: 18, scale: 4 }).default('0.0000'),
+    area: decimal('area', { precision: 18, scale: 4 }),
+    availableArea: decimal('available_area', { precision: 18, scale: 4 }),
+    safetyStock: decimal('safety_stock', { precision: 18, scale: 4 }).default('0.0000'),
+    version: int('version', { unsigned: true }).default(1),
+    deleted: tinyint('deleted').default(0),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    materialWarehouseIdx: uniqueIndex('uk_material_warehouse').on(
+      table.materialId,
+      table.warehouseId
+    ),
+    materialIdx: index('idx_material').on(table.materialId),
+    warehouseIdx: index('idx_warehouse').on(table.warehouseId),
+    materialCodeIdx: index('idx_material_code').on(table.materialCode),
+      fk_invMaterial_materialId: foreignKey({
+      name: 'fk_inv_inventory_material',
+      columns: [table.materialId],
+      foreignColumns: [invMaterial.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
+    fk_invWarehouse_warehouseId: foreignKey({
+      name: 'fk_inv_inventory_warehouse',
+      columns: [table.warehouseId],
+      foreignColumns: [invWarehouse.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
+  })
+);
+
+export const invOutboundOrders = mysqlTable(
+  'inv_outbound_order',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    orderNo: varchar('order_no', { length: 50 }).notNull(),
+    orderDate: date('order_date'),
+    outboundType: varchar('outbound_type', { length: 20 }).default('sale'),
+    warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }),
+    warehouseCode: varchar('warehouse_code', { length: 50 }),
+    warehouseName: varchar('warehouse_name', { length: 100 }),
+    totalQty: decimal('total_qty', { precision: 18, scale: 4 }).default('0.0000'),
+    totalAmount: decimal('total_amount', { precision: 18, scale: 4 }).default('0.0000'),
+    currency: varchar('currency', { length: 10 }).default('CNY'),
+    status: varchar('status', { length: 20 }).default('draft'),
+    remark: text('remark'),
+    operatorName: varchar('operator_name', { length: 50 }),
+    operatorId: bigint('operator_id', { mode: 'number', unsigned: true }),
+    auditStatus: varchar('audit_status', { length: 20 }).default('pending'),
+    auditorName: varchar('auditor_name', { length: 50 }),
+    auditorId: bigint('auditor_id', { mode: 'number', unsigned: true }),
+    auditRemark: varchar('audit_remark', { length: 512 }),
+    auditTime: datetime('audit_time'),
+    customerId: bigint('customer_id', { mode: 'number', unsigned: true }),
+    customerName: varchar('customer_name', { length: 128 }),
+    salesOrderNo: varchar('sales_order_no', { length: 50 }),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    deleted: tinyint('deleted').default(0),
+    version: int('version').default(0),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    orderNoIdx: uniqueIndex('uk_order_no').on(table.orderNo),
+    warehouseIdx: index('idx_warehouse').on(table.warehouseId),
+    statusIdx: index('idx_status').on(table.status),
+    operatorIdx: index('idx_operator').on(table.operatorId),
+
+    fk_sysUser_operatorId: foreignKey({
+      name: 'fk_inv_outbound_operator',
+      columns: [table.operatorId],
+      foreignColumns: [sysUser.id],
+    })
+      .onDelete('set null')
+      .onUpdate('cascade'),
+      fk_invWarehouse_warehouseId: foreignKey({
+      name: 'fk_inv_outbound_order_warehouse',
+      columns: [table.warehouseId],
+      foreignColumns: [invWarehouse.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
+  })
+);
+
+export const invOutboundItems = mysqlTable(
+  'inv_outbound_item',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    orderId: bigint('order_id', { mode: 'number', unsigned: true }).notNull(),
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }).notNull(),
+    materialName: varchar('material_name', { length: 100 }),
+    materialSpec: varchar('material_spec', { length: 255 }),
+    quantity: decimal('quantity', { precision: 18, scale: 4 }).notNull(),
+    unit: varchar('unit', { length: 20 }),
+    unitPrice: decimal('unit_price', { precision: 18, scale: 4 }),
+    amount: decimal('amount', { precision: 18, scale: 4 }),
+    batchNo: varchar('batch_no', { length: 50 }),
+    batchId: bigint('batch_id', { mode: 'number', unsigned: true }),
+    qrCode: varchar('qr_code', { length: 100 }),
+    originalInboundDate: date('original_inbound_date'),
+    locationId: bigint('location_id', { mode: 'number', unsigned: true }),
+    width: decimal('width', { precision: 10, scale: 2 }).default('0.00'),
+    remark: varchar('remark', { length: 255 }),
+    deleted: tinyint('deleted').default(0),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    orderIdx: index('idx_order').on(table.orderId),
+    materialIdx: index('idx_material').on(table.materialId),
+    batchIdIdx: index('idx_batch_id').on(table.batchId),
+    originalInboundDateIdx: index('idx_original_inbound_date').on(table.originalInboundDate),
+
+    fk_invOutboundOrder_orderId: foreignKey({
+      name: 'fk_inv_outbound_item_order',
+      columns: [table.orderId],
+      foreignColumns: [invOutboundOrders.id],
+    })
+      .onDelete('cascade')
+      .onUpdate('cascade'),
+      fk_invMaterial_materialId: foreignKey({
+      name: 'fk_inv_outbound_item_material',
+      columns: [table.materialId],
+      foreignColumns: [invMaterial.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
+  })
+);
+
+export const invTransferOrders = mysqlTable(
+  'inv_transfer_order',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    transferNo: varchar('transfer_no', { length: 30 }).notNull(),
+    type: tinyint('type').notNull(),
+    fromWarehouseId: bigint('from_warehouse_id', { mode: 'number', unsigned: true }).notNull(),
+    toWarehouseId: bigint('to_warehouse_id', { mode: 'number', unsigned: true }).notNull(),
+    fromLocation: varchar('from_location', { length: 50 }),
+    toLocation: varchar('to_location', { length: 50 }),
+    status: tinyint('status').notNull().default(0),
+    applicantId: bigint('applicant_id', { mode: 'number', unsigned: true }),
+    applicantName: varchar('applicant_name', { length: 50 }),
+    approverId: bigint('approver_id', { mode: 'number', unsigned: true }),
+    approverName: varchar('approver_name', { length: 50 }),
+    operatorId: bigint('operator_id', { mode: 'number', unsigned: true }),
+    operatorName: varchar('operator_name', { length: 50 }),
+    outTime: datetime('out_time'),
+    inTime: datetime('in_time'),
+    totalQty: decimal('total_qty', { precision: 18, scale: 4 }).default('0.0000'),
+    totalAmount: decimal('total_amount', { precision: 18, scale: 4 }).default('0.0000'),
+    version: int('version').default(0),
+    remark: varchar('remark', { length: 500 }),
+    deleted: tinyint('deleted').default(0),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    transferNoIdx: uniqueIndex('uk_transfer_no').on(table.transferNo),
+    statusIdx: index('idx_status').on(table.status),
+    fromWarehouseIdx: index('idx_from_warehouse').on(table.fromWarehouseId),
+    toWarehouseIdx: index('idx_to_warehouse').on(table.toWarehouseId),
+    operatorIdx: index('idx_operator').on(table.operatorId),
+    applicantIdx: index('idx_applicant').on(table.applicantId),
+    approverIdx: index('idx_approver').on(table.approverId),
+
+    fk_sysUser_applicantId: foreignKey({
+      name: 'fk_inv_transfer_applicant',
+      columns: [table.applicantId],
+      foreignColumns: [sysUser.id],
+    })
+      .onDelete('set null')
+      .onUpdate('cascade'),
+    fk_invWarehouse_fromWarehouseId: foreignKey({
+      name: 'fk_inv_transfer_from_wh',
+      columns: [table.fromWarehouseId],
+      foreignColumns: [invWarehouse.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
+    fk_invWarehouse_toWarehouseId: foreignKey({
+      name: 'fk_inv_transfer_to_wh',
+      columns: [table.toWarehouseId],
+      foreignColumns: [invWarehouse.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
+      fk_sysUser_approverId: foreignKey({
+      name: 'fk_inv_transfer_approver',
+      columns: [table.approverId],
+      foreignColumns: [sysUser.id],
+    })
+      .onDelete('set null')
+      .onUpdate('cascade'),
+    fk_sysUser_operatorId: foreignKey({
+      name: 'fk_inv_transfer_operator',
+      columns: [table.operatorId],
+      foreignColumns: [sysUser.id],
+    })
+      .onDelete('set null')
+      .onUpdate('cascade'),
+  })
+);
+
+export const invStocktaking = mysqlTable(
+  'inv_stocktaking',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    takingNo: varchar('taking_no', { length: 50 }).notNull(),
+    takingType: tinyint('taking_type').default(1),
+    warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }).notNull(),
+    status: tinyint('status').default(1),
+    takingDate: date('taking_date'),
+    operatorId: bigint('operator_id', { mode: 'number', unsigned: true }),
+    operatorName: varchar('operator_name', { length: 50 }),
+    remark: varchar('remark', { length: 500 }),
+    deleted: tinyint('deleted').default(0),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    takingNoIdx: uniqueIndex('uk_taking_no').on(table.takingNo),
+    warehouseIdx: index('idx_warehouse').on(table.warehouseId),
+    statusIdx: index('idx_status').on(table.status),
+      fk_invWarehouse_warehouseId: foreignKey({
+      name: 'fk_inv_stocktaking_warehouse',
+      columns: [table.warehouseId],
+      foreignColumns: [invWarehouse.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
+  })
+);
+
+export const splitOrder = mysqlTable(
+  'split_order',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    splitNo: varchar('split_no', { length: 50 }).notNull(),
+    splitDate: date('split_date'),
+    parentBatchId: bigint('parent_batch_id', { mode: 'number', unsigned: true }).notNull(),
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }).notNull(),
+    materialName: varchar('material_name', { length: 100 }),
+    warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }),
+    outQty: decimal('out_qty', { precision: 12, scale: 3 }).default('0.000'),
+    totalWaste: decimal('total_waste', { precision: 12, scale: 3 }).default('0.000'),
+    totalCost: decimal('total_cost', { precision: 18, scale: 4 }),
+    status: tinyint('status').default(0),
+    remark: text('remark'),
+    operatorId: bigint('operator_id', { mode: 'number', unsigned: true }),
+    operatorName: varchar('operator_name', { length: 50 }),
+    auditTime: datetime('audit_time'),
+    auditorId: bigint('auditor_id', { mode: 'number', unsigned: true }),
+    auditorName: varchar('auditor_name', { length: 50 }),
+    version: int('version').default(0),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: tinyint('deleted').default(0),
+  },
+  (table) => ({
+    splitNoIdx: index('idx_split_no').on(table.splitNo),
+    parentBatchIdx: index('idx_parent_batch').on(table.parentBatchId),
+    materialIdx: index('idx_material').on(table.materialId),
+    statusIdx: index('idx_status').on(table.status),
+  })
+);
+
+export const splitOrderDetail = mysqlTable(
+  'split_order_detail',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
+    splitId: bigint('split_id', { mode: 'number', unsigned: true }).notNull(),
+    childBatchId: bigint('child_batch_id', { mode: 'number', unsigned: true }),
+    childBatchNo: varchar('child_batch_no', { length: 50 }),
+    pieces: decimal('pieces', { precision: 10, scale: 0 }).default('1'),
+    qtyPerPiece: decimal('qty_per_piece', { precision: 12, scale: 3 }).default('0.000'),
+    totalQty: decimal('total_qty', { precision: 12, scale: 3 }).default('0.000'),
+    width: decimal('width', { precision: 10, scale: 2 }).default('0.00'),
+    allocatedCost: decimal('allocated_cost', { precision: 18, scale: 4 }),
+    isWaste: tinyint('is_waste').default(0),
+    remark: text('remark'),
+  },
+  (table) => ({
+    splitIdx: index('idx_split').on(table.splitId),
+    childBatchIdx: index('idx_child_batch').on(table.childBatchId),
+  })
+);
+
+export type InvMaterial = typeof invMaterial.$inferSelect;
+export type InvInventoryBatch = typeof invInventoryBatch.$inferSelect;
+export type InvInboundOrder = typeof invInboundOrders.$inferSelect;
+export type InvInboundItem = typeof invInboundItems.$inferSelect;
+export type InvWarehouse = typeof invWarehouse.$inferSelect;
+export type InvInventory = typeof invInventory.$inferSelect;
+export type InvOutboundOrder = typeof invOutboundOrders.$inferSelect;
+export type InvOutboundItem = typeof invOutboundItems.$inferSelect;
+export type InvTransferOrder = typeof invTransferOrders.$inferSelect;
+export type InvStocktaking = typeof invStocktaking.$inferSelect;
+export type SplitOrder = typeof splitOrder.$inferSelect;
+export type SplitOrderDetail = typeof splitOrderDetail.$inferSelect;

@@ -1,0 +1,136 @@
+import { NextRequest } from 'next/server';
+import { query, SqlValue } from '@/lib/db';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
+import { logger, generateTraceId } from '@/lib/logger';
+import type { DbRow } from '@/types/db';
+
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const traceId = generateTraceId();
+  const ctx = { module: 'inventory', action: 'list', traceId };
+
+  const { searchParams } = new URL(request.url);
+  const pageSize = parseInt(searchParams.get('pageSize') || '100');
+  const page = parseInt(searchParams.get('page') || '1');
+  const keyword = searchParams.get('keyword');
+  const categoryId = searchParams.get('categoryId');
+  const warehouseId = searchParams.get('warehouseId');
+  const lowStock = searchParams.get('lowStock');
+
+  logger.stepStart(ctx, '查询库存列表', {
+    keyword,
+    categoryId,
+    warehouseId,
+    lowStock,
+    page,
+    pageSize,
+  });
+
+  let sql = `
+    SELECT m.*, w.warehouse_name, mc.category_name,
+           COALESCE(ib.stock_qty, 0) as stock_qty
+    FROM inv_material m
+    LEFT JOIN inv_warehouse w ON m.warehouse_id = w.id
+    LEFT JOIN inv_material_category mc ON m.category_id = mc.id
+    LEFT JOIN (
+      SELECT material_id, COALESCE(SUM(available_qty), 0) as stock_qty
+      FROM inv_inventory_batch
+      WHERE deleted = 0
+      GROUP BY material_id
+    ) ib ON m.id = ib.material_id
+    WHERE m.deleted = 0
+  `;
+  const values: SqlValue[] = [];
+
+  if (keyword) {
+    logger.branch(ctx, '筛选条件', '关键词搜索', true, { keyword });
+    sql += ` AND (m.material_code LIKE ? OR m.material_name LIKE ?)`;
+    const likeKeyword = `%${keyword}%`;
+    values.push(likeKeyword, likeKeyword);
+  }
+
+  if (categoryId) {
+    logger.branch(ctx, '筛选条件', '分类筛选', true, { categoryId });
+    sql += ` AND m.category_id = ?`;
+    values.push(parseInt(categoryId));
+  }
+
+  if (warehouseId) {
+    logger.branch(ctx, '筛选条件', '仓库筛选', true, { warehouseId });
+    sql += ` AND m.warehouse_id = ?`;
+    values.push(parseInt(warehouseId));
+  }
+
+  if (lowStock === 'true') {
+    logger.branch(ctx, '筛选条件', '低库存筛选', true);
+    sql += ` AND m.safety_stock > 0 AND COALESCE(ib.stock_qty, 0) <= m.safety_stock`;
+  }
+
+  sql += ` ORDER BY m.create_time DESC LIMIT ? OFFSET ?`;
+  values.push(pageSize, (page - 1) * pageSize);
+
+  const materials = await query(sql, values);
+
+  const result = (materials as DbRow[]).map((item: DbRow) => ({
+    id: item.id,
+    material_code: item.material_code,
+    material_name: item.material_name,
+    specification: item.specification,
+    category_id: item.category_id,
+    category_name: item.category_name,
+    material_type: item.material_type,
+    unit: item.unit,
+    barcode: item.barcode,
+    brand: item.brand,
+    safety_stock: parseFloat(item.safety_stock || '0'),
+    max_stock: parseFloat(item.max_stock || '0'),
+    min_stock: parseFloat(item.min_stock || '0'),
+    stock_qty: parseFloat(item.stock_qty || '0'),
+    quantity: parseFloat(item.stock_qty || '0'),
+    min_quantity: parseFloat(item.min_stock || item.safety_stock || '0'),
+    purchase_price: parseFloat(item.purchase_price || '0'),
+    sale_price: parseFloat(item.sale_price || '0'),
+    cost_price: parseFloat(item.cost_price || '0'),
+    warehouse_id: item.warehouse_id,
+    warehouse_name: item.warehouse_name,
+    shelf_life: item.shelf_life,
+    warning_days: item.warning_days,
+    status: item.status,
+    remark: item.remark,
+    create_time: item.create_time,
+    update_time: item.update_time,
+  }));
+
+  let countSql = `SELECT COUNT(*) as total FROM inv_material m LEFT JOIN (
+    SELECT material_id, COALESCE(SUM(available_qty), 0) as stock_qty
+    FROM inv_inventory_batch
+    WHERE deleted = 0
+    GROUP BY material_id
+  ) ib ON m.id = ib.material_id WHERE m.deleted = 0`;
+  const countValues: SqlValue[] = [];
+  if (keyword) {
+    countSql += ` AND (m.material_code LIKE ? OR m.material_name LIKE ?)`;
+    countValues.push(`%${keyword}%`, `%${keyword}%`);
+  }
+  if (categoryId) {
+    countSql += ` AND m.category_id = ?`;
+    countValues.push(parseInt(categoryId));
+  }
+  if (warehouseId) {
+    countSql += ` AND m.warehouse_id = ?`;
+    countValues.push(parseInt(warehouseId));
+  }
+  if (lowStock === 'true') {
+    countSql += ` AND m.safety_stock > 0 AND COALESCE(ib.stock_qty, 0) <= m.safety_stock`;
+  }
+  const countResult = await query(countSql, countValues);
+  const total = (countResult as DbRow[])[0]?.total || 0;
+
+  logger.stepEnd(ctx, '查询库存列表', { total, page, pageSize });
+  return successResponse({
+    list: result,
+    total,
+    page,
+    pageSize,
+  });
+});

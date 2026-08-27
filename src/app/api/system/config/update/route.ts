@@ -1,0 +1,40 @@
+import { NextRequest } from 'next/server';
+import { execute, SqlValue } from '@/lib/db';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
+
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { config_key, config_value, config_name, description } = body;
+
+    if (!config_key) {
+      return errorResponse('缺少 config_key', 400, 400);
+    }
+
+    let sql = 'UPDATE sys_config SET config_value = ?';
+    const params: SqlValue[] = [config_value];
+
+    if (config_name !== undefined) {
+      sql += ', config_name = ?';
+      params.push(config_name);
+    }
+
+    if (description !== undefined) {
+      sql += ', description = ?';
+      params.push(description);
+    }
+
+    sql += ', update_time = NOW() WHERE config_key = ?';
+    params.push(config_key);
+
+    const result = await execute(sql, params);
+
+    if (result.affectedRows === 0) {
+      return errorResponse('配置项不存在', 404, 404);
+    }
+
+    return successResponse(null, '更新成功');
+  },
+  { logTitle: '更新系统配置', logType: 'system' }
+);

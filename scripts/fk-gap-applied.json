@@ -1,0 +1,419 @@
+{
+  "applied": [
+    {
+      "table": "dcprint_sample_process_step",
+      "column": "card_id",
+      "ref": "dcprint_sample_process_card",
+      "refColumn": "id",
+      "name": "fk_sample_step_card"
+    },
+    {
+      "table": "dcprint_sample_process_template_step",
+      "column": "template_id",
+      "ref": "dcprint_sample_process_template",
+      "refColumn": "id",
+      "name": "fk_tpl_step_card"
+    },
+    {
+      "table": "fin_payable",
+      "column": "supplier_id",
+      "ref": "pur_supplier",
+      "refColumn": "id",
+      "name": "fk_fin_payable_supplier"
+    },
+    {
+      "table": "fin_receivable",
+      "column": "customer_id",
+      "ref": "crm_customer",
+      "refColumn": "id",
+      "name": "fk_fin_receivable_customer"
+    },
+    {
+      "table": "fin_voucher_line",
+      "column": "customer_id",
+      "ref": "crm_customer",
+      "refColumn": "id",
+      "name": "fk_fin_voucher_line_customer"
+    },
+    {
+      "table": "fin_voucher_line",
+      "column": "supplier_id",
+      "ref": "pur_supplier",
+      "refColumn": "id",
+      "name": "fk_fin_voucher_line_supplier"
+    },
+    {
+      "table": "inv_inbound_order",
+      "column": "warehouse_id",
+      "ref": "inv_warehouse",
+      "refColumn": "id",
+      "name": "fk_inv_inbound_warehouse"
+    },
+    {
+      "table": "inv_inventory",
+      "column": "material_id",
+      "ref": "inv_material",
+      "refColumn": "id",
+      "name": "fk_inv_inventory_material"
+    },
+    {
+      "table": "inv_inventory",
+      "column": "warehouse_id",
+      "ref": "inv_warehouse",
+      "refColumn": "id",
+      "name": "fk_inv_inventory_warehouse"
+    },
+    {
+      "table": "inv_inventory_batch",
+      "column": "material_id",
+      "ref": "inv_material",
+      "refColumn": "id",
+      "name": "fk_inv_inventory_batch_material"
+    },
+    {
+      "table": "inv_inventory_batch",
+      "column": "warehouse_id",
+      "ref": "inv_warehouse",
+      "refColumn": "id",
+      "name": "fk_inv_inventory_batch_warehouse"
+    },
+    {
+      "table": "inv_material",
+      "column": "category_id",
+      "ref": "inv_material_category",
+      "refColumn": "id",
+      "name": "fk_material_category"
+    },
+    {
+      "table": "inv_outbound_item",
+      "column": "material_id",
+      "ref": "inv_material",
+      "refColumn": "id",
+      "name": "fk_inv_outbound_item_material"
+    },
+    {
+      "table": "inv_outbound_order",
+      "column": "warehouse_id",
+      "ref": "inv_warehouse",
+      "refColumn": "id",
+      "name": "fk_inv_outbound_order_warehouse"
+    },
+    {
+      "table": "inv_outbound_order",
+      "column": "warehouse_id",
+      "ref": "inv_warehouse",
+      "refColumn": "id",
+      "name": "fk_inv_outbound_warehouse"
+    },
+    {
+      "table": "inv_production_inbound",
+      "column": "work_order_id",
+      "ref": "prd_work_order",
+      "refColumn": "id",
+      "name": "fk_inv_prod_inbound_workorder"
+    },
+    {
+      "table": "inv_sales_outbound",
+      "column": "customer_id",
+      "ref": "crm_customer",
+      "refColumn": "id",
+      "name": "fk_inv_sales_outbound_customer"
+    },
+    {
+      "table": "inv_sales_outbound",
+      "column": "order_id",
+      "ref": "sal_order",
+      "refColumn": "id",
+      "name": "fk_inv_sales_outbound_order"
+    },
+    {
+      "table": "inv_stock_adjust",
+      "column": "approver_id",
+      "ref": "sys_user",
+      "refColumn": "id",
+      "name": "fk_inv_adjust_approver"
+    },
+    {
+      "table": "inv_stock_adjust",
+      "column": "operator_id",
+      "ref": "sys_user",
+      "refColumn": "id",
+      "name": "fk_inv_adjust_operator"
+    },
+    {
+      "table": "inv_stocktaking",
+      "column": "warehouse_id",
+      "ref": "inv_warehouse",
+      "refColumn": "id",
+      "name": "fk_inv_stocktaking_warehouse"
+    },
+    {
+      "table": "inv_transfer_order",
+      "column": "approver_id",
+      "ref": "sys_user",
+      "refColumn": "id",
+      "name": "fk_inv_transfer_approver"
+    },
+    {
+      "table": "inv_transfer_order",
+      "column": "operator_id",
+      "ref": "sys_user",
+      "refColumn": "id",
+      "name": "fk_inv_transfer_operator"
+    },
+    {
+      "table": "prd_bom_detail",
+      "column": "material_id",
+      "ref": "inv_material",
+      "refColumn": "id",
+      "name": "fk_prd_bom_detail_material"
+    },
+    {
+      "table": "prd_schedule",
+      "column": "product_id",
+      "ref": "inv_material",
+      "refColumn": "id",
+      "name": "fk_prd_schedule_product"
+    },
+    {
+      "table": "prd_schedule",
+      "column": "work_order_id",
+      "ref": "prd_work_order",
+      "refColumn": "id",
+      "name": "fk_prd_schedule_work_order"
+    },
+    {
+      "table": "prd_schedule_detail",
+      "column": "equipment_id",
+      "ref": "eqp_equipment",
+      "refColumn": "id",
+      "name": "fk_prd_schedule_detail_equipment"
+    },
+    {
+      "table": "prd_schedule_detail",
+      "column": "work_order_id",
+      "ref": "prd_work_order",
+      "refColumn": "id",
+      "name": "fk_prd_schedule_detail_work_order"
+    },
+    {
+      "table": "prd_standard_card",
+      "column": "customer_id",
+      "ref": "crm_customer",
+      "refColumn": "id",
+      "name": "fk_prd_std_card_customer"
+    },
+    {
+      "table": "prd_work_order",
+      "column": "material_id",
+      "ref": "inv_material",
+      "refColumn": "id",
+      "name": "fk_prd_wo_material"
+    },
+    {
+      "table": "prd_work_order",
+      "column": "sales_order_id",
+      "ref": "sal_order",
+      "refColumn": "id",
+      "name": "fk_prd_wo_sales_order"
+    },
+    {
+      "table": "prd_work_order",
+      "column": "material_id",
+      "ref": "inv_material",
+      "refColumn": "id",
+      "name": "fk_prd_work_order_material"
+    },
+    {
+      "table": "prd_work_order",
+      "column": "sales_order_id",
+      "ref": "sal_order",
+      "refColumn": "id",
+      "name": "fk_prd_work_order_sales_order"
+    },
+    {
+      "table": "prd_work_order_color_seq",
+      "column": "work_order_id",
+      "ref": "prd_work_order",
+      "refColumn": "id",
+      "name": "fk_prd_wo_color_seq_workorder"
+    },
+    {
+      "table": "pur_purchase_order",
+      "column": "supplier_id",
+      "ref": "pur_supplier",
+      "refColumn": "id",
+      "name": "fk_pur_po_supplier"
+    },
+    {
+      "table": "pur_purchase_order_line",
+      "column": "material_id",
+      "ref": "inv_material",
+      "refColumn": "id",
+      "name": "fk_pur_line_material"
+    },
+    {
+      "table": "sal_delivery",
+      "column": "customer_id",
+      "ref": "crm_customer",
+      "refColumn": "id",
+      "name": "fk_sal_delivery_customer"
+    },
+    {
+      "table": "sal_delivery",
+      "column": "warehouse_id",
+      "ref": "inv_warehouse",
+      "refColumn": "id",
+      "name": "fk_sal_delivery_warehouse"
+    },
+    {
+      "table": "sal_delivery_detail",
+      "column": "material_id",
+      "ref": "inv_material",
+      "refColumn": "id",
+      "name": "fk_sal_delivery_detail_material"
+    },
+    {
+      "table": "sal_order",
+      "column": "customer_id",
+      "ref": "crm_customer",
+      "refColumn": "id",
+      "name": "fk_sal_order_customer"
+    },
+    {
+      "table": "sal_order",
+      "column": "salesman_id",
+      "ref": "sys_user",
+      "refColumn": "id",
+      "name": "fk_sal_order_salesman"
+    },
+    {
+      "table": "sal_order_detail",
+      "column": "material_id",
+      "ref": "inv_material",
+      "refColumn": "id",
+      "name": "fk_sal_order_detail_material"
+    },
+    {
+      "table": "sal_order_detail",
+      "column": "order_id",
+      "ref": "sal_order",
+      "refColumn": "id",
+      "name": "fk_sal_order_detail_order"
+    },
+    {
+      "table": "sal_reconciliation",
+      "column": "customer_id",
+      "ref": "crm_customer",
+      "refColumn": "id",
+      "name": "fk_sal_recon_customer"
+    },
+    {
+      "table": "sal_return",
+      "column": "customer_id",
+      "ref": "crm_customer",
+      "refColumn": "id",
+      "name": "fk_sal_return_customer"
+    },
+    {
+      "table": "sal_return",
+      "column": "receivable_id",
+      "ref": "fin_receivable",
+      "refColumn": "id",
+      "name": "fk_sal_return_receivable"
+    },
+    {
+      "table": "sal_return",
+      "column": "warehouse_id",
+      "ref": "inv_warehouse",
+      "refColumn": "id",
+      "name": "fk_sal_return_warehouse"
+    },
+    {
+      "table": "sal_return_detail",
+      "column": "material_id",
+      "ref": "inv_material",
+      "refColumn": "id",
+      "name": "fk_sal_return_detail_material"
+    },
+    {
+      "table": "sal_return_order",
+      "column": "order_id",
+      "ref": "sal_order",
+      "refColumn": "id",
+      "name": "fk_sal_return_order_order"
+    },
+    {
+      "table": "sys_department",
+      "column": "leader_id",
+      "ref": "sys_user",
+      "refColumn": "id",
+      "name": "fk_sys_department_leader"
+    },
+    {
+      "table": "sys_role_menu",
+      "column": "menu_id",
+      "ref": "sys_menu",
+      "refColumn": "id",
+      "name": "fk_role_menu_menu"
+    },
+    {
+      "table": "sys_role_menu",
+      "column": "role_id",
+      "ref": "sys_role",
+      "refColumn": "id",
+      "name": "fk_role_menu_role"
+    },
+    {
+      "table": "sys_user",
+      "column": "department_id",
+      "ref": "sys_department",
+      "refColumn": "id",
+      "name": "fk_sys_user_department"
+    },
+    {
+      "table": "sys_user_role",
+      "column": "role_id",
+      "ref": "sys_role",
+      "refColumn": "id",
+      "name": "fk_user_role_role"
+    },
+    {
+      "table": "sys_user_role",
+      "column": "user_id",
+      "ref": "sys_user",
+      "refColumn": "id",
+      "name": "fk_user_role_user"
+    }
+  ],
+  "skippedSelfRefOrCycle": [
+    {
+      "table": "inv_material_category",
+      "column": "parent_id",
+      "ref": "inv_material_category",
+      "name": "fk_material_category_parent",
+      "reason": "self-ref (skip per convention, TS7022)"
+    },
+    {
+      "table": "material_requisitions",
+      "column": "original_requisition_id",
+      "ref": "material_requisitions",
+      "name": "fk_mat_req_original",
+      "reason": "self-ref (skip per convention, TS7022)"
+    },
+    {
+      "table": "sys_department",
+      "column": "parent_id",
+      "ref": "sys_department",
+      "name": "fk_sys_department_parent",
+      "reason": "self-ref (skip per convention, TS7022)"
+    },
+    {
+      "table": "sys_menu",
+      "column": "parent_id",
+      "ref": "sys_menu",
+      "name": "fk_sys_menu_parent",
+      "reason": "self-ref (skip per convention, TS7022)"
+    }
+  ]
+}

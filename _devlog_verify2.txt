@@ -1,0 +1,129 @@
+
+> vnerp@0.1.0 dev
+> next dev -p 5000
+
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:5000
+- Network:       http://192.168.0.144:5000
+- Environments: .env.local, .env
+- Experiments (use with caution):
+  · optimizePackageImports
+
+✓ Starting...
+✓ Ready in 1773ms
+[2026-08-25 14:17:14.227 +0800] [32mINFO[39m: [36m[instrumentation] Server started. OutboxPoller will auto-start on first API request.[39m
+[2026-08-25 14:17:36.487 +0800] [32mINFO[39m: [36mCacheManager: 使用 InMemoryCacheManager（未配置 REDIS_URL）[39m
+ GET /api/qrcode?pageSize=3 200 in 839ms (compile: 651ms, proxy.ts: 130ms, render: 58ms)
+ GET /api/reports/dashboard 200 in 234ms (compile: 206ms, proxy.ts: 5ms, render: 23ms)
+ GET /api/dcprint/tool?pageSize=3 200 in 192ms (compile: 170ms, proxy.ts: 6ms, render: 16ms)
+ GET /api/system/oper-log?pageSize=3 200 in 207ms (compile: 190ms, proxy.ts: 3ms, render: 13ms)
+ GET /api/hr/reports/turnover 200 in 153ms (compile: 131ms, proxy.ts: 5ms, render: 18ms)
+ GET /api/orders?pageSize=3 200 in 188ms (compile: 126ms, proxy.ts: 4ms, render: 58ms)
+[RepoRegistry] active impl = mysql (default; set REPOSITORY_IMPL=drizzle to switch)
+[RepoRegistry] getSalesOrderRepository() → MysqlSalesOrderRepository (mysql)
+ GET /api/sales/delivery?pageSize=3 200 in 257ms (compile: 236ms, proxy.ts: 5ms, render: 16ms)
+ GET /api/warehouse/sales-outbound?pageSize=3 200 in 162ms (compile: 141ms, proxy.ts: 4ms, render: 17ms)
+ GET /api/production/orders?pageSize=3 200 in 114ms (compile: 95ms, proxy.ts: 6ms, render: 13ms)
+[2026-08-25 14:20:09.725 +0800] [32mINFO[39m: [36m查询打样单列表[39m
+    [35mmodule[39m: "sample"
+    [35maction[39m: "GET_orders"
+    [35mtraceId[39m: "mt89zpfh-7unw88a"
+[2026-08-25 14:20:09.725 +0800] [34mDEBUG[39m: [36m[sample.listOrders] 列表查询[39m
+    [35mctx[39m: {
+      "module": "sample",
+      "action": "listOrders",
+      "traceId": "mt89zpfh-23nn890"
+    }
+    [35mstep[39m: "列表查询"
+    [35mdata[39m: {
+      "filters": {},
+      "page": 1,
+      "pageSize": 3
+    }
+ GET /api/sample/orders?pageSize=3 200 in 139ms (compile: 118ms, proxy.ts: 3ms, render: 18ms)
+[2026-08-25 14:20:09.732 +0800] [34mDEBUG[39m: [36m[sample.listOrders] 列表查询 DONE[39m
+    [35mctx[39m: {
+      "module": "sample",
+      "action": "listOrders",
+      "traceId": "mt89zpfh-23nn890"
+    }
+    [35mstep[39m: "列表查询"
+    [35mdata[39m: {
+      "total": 10,
+      "count": 3
+    }
+[2026-08-25 14:20:09.732 +0800] [32mINFO[39m: [36m查询结果[39m
+    [35mmodule[39m: "sample"
+    [35maction[39m: "GET_orders"
+    [35mtraceId[39m: "mt89zpfh-7unw88a"
+[API Error] 请求处理失败: Error: Table 'vnerpdacahng.sales_order' doesn't exist
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\reports\delivery-rate\route.ts:26:36)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'vnerpdacahng.sales_order' doesn't exist",
+  sql: 'SELECT\n' +
+    "        DATE_FORMAT(so.order_date, '%Y-%m') as month,\n" +
+    '        COUNT(*) as total_orders,\n' +
+    '        SUM(CASE WHEN so.status >= 3 THEN 1 ELSE 0 END) as completed_orders,\n' +
+    '        SUM(CASE WHEN so.delivery_date >= so.actual_delivery_date THEN 1 ELSE 0 END) as on_time_orders,\n' +
+    '        COALESCE(SUM(so.total_amount), 0) as total_amount,\n' +
+    '        COALESCE(SUM(CASE WHEN so.status >= 3 THEN so.total_amount ELSE 0 END), 0) as completed_amount\n' +
+    '      FROM sales_order so\n' +
+    '      WHERE so.deleted = 0 \n' +
+    "      GROUP BY DATE_FORMAT(so.order_date, '%Y-%m')\n" +
+    '      ORDER BY month DESC'
+}
+ GET /api/reports/delivery-rate?pageSize=3 500 in 246ms (compile: 93ms, proxy.ts: 4ms, render: 149ms)
+[API Error] 请求处理失败: Error: Table 'vnerpdacahng.sales_order_item' doesn't exist
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\finance\cost-variance\route.ts:37:40)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'vnerpdacahng.sales_order_item' doesn't exist",
+  sql: '\n' +
+    '    SELECT\n' +
+    '      wo.id,\n' +
+    '      wo.work_order_no,\n' +
+    '      wo.product_name,\n' +
+    '      wo.quantity as plan_qty,\n' +
+    '      wo.status,\n' +
+    '      wo.create_time,\n' +
+    '      soi.unit_price as sale_unit_price,\n' +
+    '      soi.total_price as sale_total_price\n' +
+    '    FROM prod_work_order wo\n' +
+    '    LEFT JOIN sales_order_item soi ON wo.order_id = soi.order_id\n' +
+    '    WHERE wo.deleted = 0\n' +
+    '    ORDER BY wo.create_time DESC\n' +
+    '    LIMIT 3 OFFSET 0\n' +
+    '  '
+}
+ GET /api/finance/cost-variance?pageSize=3 500 in 197ms (compile: 113ms, proxy.ts: 3ms, render: 81ms)
+ GET /api/qrcode/trace?pageSize=3 400 in 123ms (compile: 111ms, proxy.ts: 4ms, render: 9ms)
+[RepoRegistry] getInboundOrderRepository() → MysqlInboundOrderRepository (mysql)
+[RepoRegistry] getSalesOrderRepository() → MysqlSalesOrderRepository (mysql)
+ GET /api/sales/return?pageSize=3 200 in 180ms (compile: 158ms, proxy.ts: 3ms, render: 19ms)
+ GET /api/sales/orders?pageSize=3 200 in 115ms (compile: 103ms, proxy.ts: 3ms, render: 9ms)
+[?25h

@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# 本沙箱中 pnpm 路径被错拼不可用，且 node 会把 /d/... 路径误读成 D:\d\...，
+# 故改用 node 直调本地 commitlint，并通过 stdin 传入消息（避开文件路径拼接问题）。
+cat "$1" | node node_modules/@commitlint/cli/cli.js

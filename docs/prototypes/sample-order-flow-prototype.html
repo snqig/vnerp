@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>打样单全流程交互原型 — Sample Order Lifecycle</title>
+<style>
+  :root {
+    --c-draft: #909399;
+    --c-pending: #E6A23C;
+    --c-progress: #409EFF;
+    --c-completed: #67C23A;
+    --c-confirmed: #00C853;
+    --c-converted: #333333;
+    --c-cancelled: #F56C6C;
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --border: #e4e7ed;
+    --text: #303133;
+    --text-secondary: #909399;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 24px; margin-bottom: 4px; }
+  .subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
+
+  /* State Machine Flow Chart */
+  .flow-chart {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 20px;
+    background: var(--card);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+    overflow-x: auto;
+    flex-wrap: wrap;
+  }
+  .state-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: #fafafa;
+    min-width: 100px;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  .state-node.active {
+    transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    z-index: 2;
+  }
+  .state-node.active::after {
+    content: '当前';
+    position: absolute;
+    top: -10px;
+    background: #333;
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .state-node .state-label { font-weight: 600; font-size: 13px; }
+  .state-node .state-code { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .arrow { color: var(--text-secondary); font-size: 18px; padding: 0 2px; }
+  .state-node[data-status="draft"] { border-color: var(--c-draft); }
+  .state-node[data-status="draft"].active { background: var(--c-draft); color: #fff; }
+  .state-node[data-status="pending"] { border-color: var(--c-pending); }
+  .state-node[data-status="pending"].active { background: var(--c-pending); color: #fff; }
+  .state-node[data-status="in_progress"] { border-color: var(--c-progress); }
+  .state-node[data-status="in_progress"].active { background: var(--c-progress); color: #fff; }
+  .state-node[data-status="completed"] { border-color: var(--c-completed); }
+  .state-node[data-status="completed"].active { background: var(--c-completed); color: #fff; }
+  .state-node[data-status="confirmed"] { border-color: var(--c-confirmed); }
+  .state-node[data-status="confirmed"].active { background: var(--c-confirmed); color: #fff; }
+  .state-node[data-status="converted"] { border-color: var(--c-converted); }
+  .state-node[data-status="converted"].active { background: var(--c-converted); color: #fff; }
+  .state-node[data-status="cancelled"] { border-color: var(--c-cancelled); }
+  .state-node[data-status="cancelled"].active { background: var(--c-cancelled); color: #fff; }
+
+  /* Main Layout */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+  }
+  @media (max-width: 900px) {
+    .main-layout { grid-template-columns: 1fr; }
+  }
+
+  /* Order Card */
+  .order-card {
+    background: var(--card);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .order-no { font-size: 20px; font-weight: 700; }
+  .status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .order-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .field-group { display: flex; flex-direction: column; }
+  .field-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+  .field-value { font-size: 14px; font-weight: 500; }
+  .field-value.highlight { color: var(--c-confirmed); }
+
+  /* Action Buttons */
+  .actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .btn {
+    padding: 8px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    color: #fff;
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-submit { background: var(--c-pending); }
+  .btn-start { background: var(--c-progress); }
+  .btn-complete { background: var(--c-completed); }
+  .btn-confirm { background: var(--c-confirmed); }
+  .btn-convert { background: var(--c-converted); }
+  .btn-cancel { background: var(--c-cancelled); }
+  .btn-deliver { background: #8e44ad; }
+  .btn-sign { background: #2c3e50; }
+  .btn-reset { background: var(--text-secondary); }
+  .btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+
+  /* Delivery Tracker */
+  .delivery-tracker {
+    background: var(--card);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 16px 24px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .delivery-steps { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .delivery-step {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    background: #fafafa;
+    transition: all 0.3s;
+  }
+  .delivery-step.done { background: #8e44ad; color: #fff; border-color: #8e44ad; }
+  .delivery-step.current { background: #fff; border-color: #8e44ad; color: #8e44ad; font-weight: 600; }
+
+  /* Event Log */
+  .event-log {
+    background: #1e1e1e;
+    border-radius: 8px;
+    padding: 20px;
+    height: 600px;
+    overflow-y: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  }
+  .event-log h3 { color: #fff; font-size: 14px; margin-bottom: 12px; font-family: sans-serif; }
+  .event-entry {
+    color: #d4d4d4;
+    font-size: 12px;
+    line-height: 1.6;
+    padding: 8px 0;
+    border-bottom: 1px solid #333;
+  }
+  .event-type { color: #569cd6; }
+  .event-time { color: #6a9955; }
+  .event-data { color: #ce9178; }
+
+  /* Fee Panel */
+  .fee-panel {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .fee-panel h4 { font-size: 13px; color: #f57f17; margin-bottom: 8px; }
+  .fee-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+  .fee-deducted-yes { color: var(--c-confirmed); font-weight: 600; }
+
+  /* Create Form */
+  .create-form {
+    background: var(--card);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .create-form h3 { margin-bottom: 16px; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+  .form-group input, .form-group select {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  .form-actions { margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<h1>打样单全流程交互原型</h1>
+<p class="subtitle">Sample Order Lifecycle — 7态状态机: draft → pending → in_progress → completed → confirmed → converted (+ cancelled)</p>
+
+<!-- State Machine Flow Chart -->
+<div class="flow-chart" id="flowChart">
+  <div class="state-node" data-status="draft"><span class="state-label">草稿</span><span class="state-code">draft</span></div>
+  <span class="arrow">→</span>
+  <div class="state-node" data-status="pending"><span class="state-label">待打样</span><span class="state-code">pending</span></div>
+  <span class="arrow">→</span>
+  <div class="state-node" data-status="in_progress"><span class="state-label">打样中</span><span class="state-code">in_progress</span></div>
+  <span class="arrow">→</span>
+  <div class="state-node" data-status="completed"><span class="state-label">已完成</span><span class="state-code">completed</span></div>
+  <span class="arrow">→</span>
+  <div class="state-node" data-status="confirmed"><span class="state-label">已确认</span><span class="state-code">confirmed</span></div>
+  <span class="arrow">→</span>
+  <div class="state-node" data-status="converted"><span class="state-label">已转大货</span><span class="state-code">converted</span></div>
+  <span class="arrow" style="font-size:14px;color:#F56C6C;">↕</span>
+  <div class="state-node" data-status="cancelled"><span class="state-label">已作废</span><span class="state-code">cancelled</span></div>
+</div>
+
+<div class="main-layout">
+  <div>
+    <!-- Create Form -->
+    <div class="create-form" id="createForm">
+      <h3>创建打样单</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>客户名称</label>
+          <input type="text" id="f-customer" value="深圳精密电子有限公司">
+        </div>
+        <div class="form-group">
+          <label>产品名称</label>
+          <input type="text" id="f-product" value="汽车仪表盘面板">
+        </div>
+        <div class="form-group">
+          <label>物料编号</label>
+          <input type="text" id="f-material" value="M-2026-001">
+        </div>
+        <div class="form-group">
+          <label>数量</label>
+          <input type="number" id="f-qty" value="100">
+        </div>
+        <div class="form-group">
+          <label>打样费用</label>
+          <input type="number" id="f-fee" value="800">
+        </div>
+        <div class="form-group">
+          <label>是否收取</label>
+          <select id="f-charged"><option value="1">是</option><option value="0">否</option></select>
+        </div>
+        <div class="form-group">
+          <label>可抵扣大货</label>
+          <select id="f-deductible"><option value="1">是</option><option value="0">否</option></select>
+        </div>
+        <div class="form-group">
+          <label>交付日期</label>
+          <input type="date" id="f-delivery" value="2026-07-30">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-submit" onclick="createOrder()">创建打样单</button>
+      </div>
+    </div>
+
+    <!-- Order Detail Card (hidden until created) -->
+    <div class="order-card" id="orderCard" style="display:none;">
+      <div class="order-header">
+        <div>
+          <div class="order-no" id="o-no">SP20260713001</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;" id="o-created">创建时间: —</div>
+        </div>
+        <div class="status-badge" id="o-badge">草稿</div>
+      </div>
+      <div class="order-fields">
+        <div class="field-group"><span class="field-label">客户名称</span><span class="field-value" id="o-customer">—</span></div>
+        <div class="field-group"><span class="field-label">产品名称</span><span class="field-value" id="o-product">—</span></div>
+        <div class="field-group"><span class="field-label">物料编号</span><span class="field-value" id="o-material">—</span></div>
+        <div class="field-group"><span class="field-label">数量</span><span class="field-value" id="o-qty">—</span></div>
+        <div class="field-group"><span class="field-label">打样费用</span><span class="field-value" id="o-fee">—</span></div>
+        <div class="field-group"><span class="field-label">版本</span><span class="field-value" id="o-version">A</span></div>
+        <div class="field-group"><span class="field-label">交付日期</span><span class="field-value" id="o-delivery">—</span></div>
+        <div class="field-group"><span class="field-label">实际交付日</span><span class="field-value" id="o-actual">—</span></div>
+        <div class="field-group"><span class="field-label">关联销售单</span><span class="field-value" id="o-sales">—</span></div>
+        <div class="field-group"><span class="field-label">转大货时间</span><span class="field-value" id="o-converted-at">—</span></div>
+        <div class="field-group"><span class="field-label">转大货人</span><span class="field-value" id="o-converted-by">—</span></div>
+      </div>
+
+      <!-- Fee Panel -->
+      <div class="fee-panel" style="margin-top:16px;">
+        <h4>打样费用管理</h4>
+        <div class="fee-row"><span>打样费用</span><span id="o-fee-display">¥0</span></div>
+        <div class="fee-row"><span>是否收取</span><span id="o-charged">否</span></div>
+        <div class="fee-row"><span>可抵扣大货</span><span id="o-deductible">否</span></div>
+        <div class="fee-row"><span>已抵扣</span><span id="o-deducted">否</span></div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions" id="actions"></div>
+    </div>
+
+    <!-- Delivery Tracker -->
+    <div class="delivery-tracker" id="deliveryTracker" style="display:none;">
+      <strong style="font-size:13px;white-space:nowrap;">交付状态:</strong>
+      <div class="delivery-steps">
+        <div class="delivery-step" data-ds="pending">待交付</div>
+        <span class="arrow">→</span>
+        <div class="delivery-step" data-ds="delivered">已交付</div>
+        <span class="arrow">→</span>
+        <div class="delivery-step" data-ds="signed">已签收</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Log -->
+  <div class="event-log">
+    <h3>领域事件日志 (Domain Events)</h3>
+    <div id="eventLog"></div>
+  </div>
+</div>
+
+<div style="margin-top:24px;text-align:center;">
+  <button class="btn btn-reset" onclick="resetPrototype()">重置原型</button>
+</div>
+
+<script>
+// ============================================================
+// 状态机定义 — 与 SampleOrderStatus.ts 完全一致
+// ============================================================
+const STATES = {
+  draft:       { label: '草稿',    color: '#909399', transitions: ['pending', 'cancelled'] },
+  pending:     { label: '待打样',  color: '#E6A23C', transitions: ['in_progress', 'cancelled'] },
+  in_progress: { label: '打样中',  color: '#409EFF', transitions: ['completed', 'cancelled'] },
+  completed:   { label: '已完成',  color: '#67C23A', transitions: ['confirmed', 'cancelled'] },
+  confirmed:   { label: '已确认',  color: '#00C853', transitions: ['converted'] },
+  converted:   { label: '已转大货', color: '#333333', transitions: [] },
+  cancelled:   { label: '已作废',  color: '#F56C6C', transitions: [] },
+};
+
+const DELIVERY_STEPS = ['pending', 'delivered', 'signed'];
+const DELIVERY_LABELS = { pending: '待交付', delivered: '已交付', signed: '已签收' };
+
+let order = null;
+
+function canTransition(from, to) {
+  return STATES[from]?.transitions.includes(to) ?? false;
+}
+
+// ============================================================
+// 打样单创建
+// ============================================================
+function createOrder() {
+  const seq = String(Math.floor(Math.random() * 9999) + 1).padStart(4, '0');
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+
+  order = {
+    orderNo: `SP${y}${m}${d}${seq}`,
+    customerName: document.getElementById('f-customer').value,
+    productName: document.getElementById('f-product').value,
+    materialNo: document.getElementById('f-material').value,
+    quantity: parseInt(document.getElementById('f-qty').value),
+    version: 'A',
+    deliveryDate: document.getElementById('f-delivery').value,
+    actualDeliveryDate: '',
+    deliveryStatus: 'pending',
+    status: 'draft',
+    sampleFee: parseFloat(document.getElementById('f-fee').value) || 0,
+    feeCharged: parseInt(document.getElementById('f-charged').value),
+    feeDeductible: parseInt(document.getElementById('f-deductible').value),
+    feeDeducted: 0,
+    sampleVersion: 1,
+    salesOrderId: null,
+    convertedAt: '',
+    convertedBy: null,
+    createdAt: now.toISOString(),
+    events: [],
+  };
+
+  pushEvent('SampleOrderCreated', { orderNo: order.orderNo, customerName: order.customerName });
+  document.getElementById('createForm').style.display = 'none';
+  document.getElementById('orderCard').style.display = 'block';
+  document.getElementById('deliveryTracker').style.display = 'flex';
+  render();
+}
+
+// ============================================================
+// 状态流转方法 — 与 SampleOrder.ts 聚合根逻辑一致
+// ============================================================
+function transition(action) {
+  if (!order) return;
+  const userId = 1;
+
+  const transitions = {
+    submit:         { to: 'pending',     event: 'SampleOrderSubmitted',  label: '提交' },
+    startProduction:{ to: 'in_progress', event: 'SampleOrderStarted',     label: '开始生产' },
+    complete:       { to: 'completed',   event: 'SampleOrderCompleted',   label: '完成生产' },
+    confirm:        { to: 'confirmed',   event: 'SampleOrderConfirmed',   label: '确认合格' },
+    convert:        { to: 'converted',   event: 'SampleOrderConverted',   label: '转大货' },
+    cancel:         { to: 'cancelled',   event: 'SampleOrderCancelled',   label: '作废' },
+  };
+
+  const t = transitions[action];
+  if (!t) return;
+
+  if (!canTransition(order.status, t.to)) {
+    logError(`非法流转: ${order.status} → ${t.to} 被拒绝`);
+    return;
+  }
+
+  const prevStatus = order.status;
+  order.status = t.to;
+
+  // convertToSalesOrder 核心逻辑
+  if (action === 'convert') {
+    order.salesOrderId = Math.floor(Math.random() * 9000) + 1000;
+    order.convertedAt = new Date().toISOString();
+    order.convertedBy = userId;
+    if (order.feeCharged && order.feeDeductible) {
+      order.feeDeducted = 1;
+    }
+    pushEvent(t.event, { orderNo: order.orderNo, salesOrderId: order.salesOrderId, userId, feeDeducted: order.feeDeducted });
+  } else if (action === 'cancel') {
+    pushEvent(t.event, { orderNo: order.orderNo, reason: '用户手动作废', userId });
+  } else {
+    pushEvent(t.event, { orderNo: order.orderNo, userId });
+  }
+
+  render();
+}
+
+// ============================================================
+// 交付状态流转
+// ============================================================
+function updateDelivery(action) {
+  if (!order) return;
+  const dsTransitions = { pending: 'delivered', delivered: 'signed' };
+  const next = dsTransitions[order.deliveryStatus];
+  if (!next || next !== action) return;
+
+  order.deliveryStatus = next;
+  if (next === 'delivered') {
+    order.actualDeliveryDate = new Date().toISOString().split('T')[0];
+  }
+  pushEvent('DeliveryStatusChanged', { orderNo: order.orderNo, from: order.deliveryStatus, to: next });
+  render();
+}
+
+// ============================================================
+// 事件日志
+// ============================================================
+function pushEvent(eventType, payload) {
+  order.events.push({
+    eventId: `evt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    eventType,
+    occurredAt: new Date(),
+    payload,
+  });
+}
+
+function logError(msg) {
+  const log = document.getElementById('eventLog');
+  const entry = document.createElement('div');
+  entry.className = 'event-entry';
+  entry.innerHTML = `<span class="event-time">[${new Date().toISOString()}]</span> <span style="color:#F56C6C;">[ERROR]</span> ${msg}`;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+// ============================================================
+// 渲染
+// ============================================================
+function render() {
+  if (!order) return;
+
+  // Flow chart
+  document.querySelectorAll('.state-node').forEach(node => {
+    node.classList.toggle('active', node.dataset.status === order.status);
+  });
+
+  // Order card
+  document.getElementById('o-no').textContent = order.orderNo;
+  document.getElementById('o-created').textContent = `创建时间: ${order.createdAt.replace('T', ' ').slice(0, 19)}`;
+  document.getElementById('o-customer').textContent = order.customerName;
+  document.getElementById('o-product').textContent = order.productName;
+  document.getElementById('o-material').textContent = order.materialNo;
+  document.getElementById('o-qty').textContent = order.quantity;
+  document.getElementById('o-fee').textContent = `¥${order.sampleFee}`;
+  document.getElementById('o-version').textContent = `${order.version} (v${order.sampleVersion})`;
+  document.getElementById('o-delivery').textContent = order.deliveryDate || '—';
+  document.getElementById('o-actual').textContent = order.actualDeliveryDate || '—';
+  document.getElementById('o-sales').textContent = order.salesOrderId ? `SO-${order.salesOrderId}` : '—';
+  document.getElementById('o-converted-at').textContent = order.convertedAt ? order.convertedAt.replace('T', ' ').slice(0, 19) : '—';
+  document.getElementById('o-converted-by').textContent = order.convertedBy ? `用户#${order.convertedBy}` : '—';
+
+  // Status badge
+  const badge = document.getElementById('o-badge');
+  badge.textContent = STATES[order.status].label;
+  badge.style.background = STATES[order.status].color;
+
+  // Fee panel
+  document.getElementById('o-fee-display').textContent = `¥${order.sampleFee}`;
+  document.getElementById('o-charged').textContent = order.feeCharged ? '是' : '否';
+  document.getElementById('o-deductible').textContent = order.feeDeductible ? '是' : '否';
+  const deductedEl = document.getElementById('o-deducted');
+  deductedEl.textContent = order.feeDeducted ? '是 ✓' : '否';
+  deductedEl.className = order.feeDeducted ? 'fee-deducted-yes' : '';
+
+  // Delivery tracker
+  document.querySelectorAll('.delivery-step').forEach(step => {
+    const ds = step.dataset.ds;
+    const idx = DELIVERY_STEPS.indexOf(order.deliveryStatus);
+    const stepIdx = DELIVERY_STEPS.indexOf(ds);
+    step.classList.remove('done', 'current');
+    if (stepIdx < idx) step.classList.add('done');
+    else if (stepIdx === idx) step.classList.add('current');
+  });
+
+  // Action buttons
+  const actions = document.getElementById('actions');
+  actions.innerHTML = '';
+  const config = STATES[order.status];
+
+  const btnConfig = [
+    { action: 'submit', label: '提交', class: 'btn-submit', to: 'pending' },
+    { action: 'startProduction', label: '开始生产', class: 'btn-start', to: 'in_progress' },
+    { action: 'complete', label: '完成生产', class: 'btn-complete', to: 'completed' },
+    { action: 'confirm', label: '确认合格', class: 'btn-confirm', to: 'confirmed' },
+    { action: 'convert', label: '转为大货订单', class: 'btn-convert', to: 'converted' },
+    { action: 'cancel', label: '作废', class: 'btn-cancel', to: 'cancelled' },
+  ];
+
+  btnConfig.forEach(b => {
+    const allowed = canTransition(order.status, b.to);
+    if (allowed) {
+      const btn = document.createElement('button');
+      btn.className = `btn ${b.class}`;
+      btn.textContent = b.label;
+      btn.onclick = () => transition(b.action);
+      actions.appendChild(btn);
+    }
+  });
+
+  // Delivery buttons
+  if (order.deliveryStatus === 'pending') {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-deliver';
+    btn.textContent = '标记已交付';
+    btn.onclick = () => updateDelivery('delivered');
+    actions.appendChild(btn);
+  } else if (order.deliveryStatus === 'delivered') {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-sign';
+    btn.textContent = '标记已签收';
+    btn.onclick = () => updateDelivery('signed');
+    actions.appendChild(btn);
+  }
+
+  // Reset button
+  if (order.status === 'converted' || order.status === 'cancelled') {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-reset';
+    btn.textContent = '重新创建';
+    btn.onclick = resetPrototype;
+    actions.appendChild(btn);
+  }
+
+  // Event log
+  const log = document.getElementById('eventLog');
+  log.innerHTML = '';
+  order.events.forEach(e => {
+    const entry = document.createElement('div');
+    entry.className = 'event-entry';
+    entry.innerHTML = `<span class="event-time">[${e.occurredAt.toISOString()}]</span> <span class="event-type">${e.eventType}</span><br><span class="event-data">  ${JSON.stringify(e.payload)}</span>`;
+    log.appendChild(entry);
+  });
+  log.scrollTop = log.scrollHeight;
+}
+
+function resetPrototype() {
+  order = null;
+  document.getElementById('createForm').style.display = 'block';
+  document.getElementById('orderCard').style.display = 'none';
+  document.getElementById('deliveryTracker').style.display = 'none';
+  document.getElementById('eventLog').innerHTML = '';
+  document.querySelectorAll('.state-node').forEach(n => n.classList.remove('active'));
+}
+</script>
+</body>
+</html>

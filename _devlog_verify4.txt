@@ -1,0 +1,120 @@
+
+> vnerp@0.1.0 dev
+> next dev -p 5000
+
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:5000
+- Network:       http://192.168.0.144:5000
+- Environments: .env.local, .env
+- Experiments (use with caution):
+  · optimizePackageImports
+
+✓ Starting...
+✓ Ready in 1989ms
+[2026-08-25 14:30:58.149 +0800] [32mINFO[39m: [36m[instrumentation] Server started. OutboxPoller will auto-start on first API request.[39m
+[2026-08-25 14:31:04.410 +0800] [32mINFO[39m: [36mCacheManager: 使用 InMemoryCacheManager（未配置 REDIS_URL）[39m
+ GET /api/orders?pageSize=3 200 in 914ms (compile: 699ms, proxy.ts: 127ms, render: 88ms)
+[RepoRegistry] active impl = mysql (default; set REPOSITORY_IMPL=drizzle to switch)
+[RepoRegistry] getSalesOrderRepository() → MysqlSalesOrderRepository (mysql)
+ GET /api/sales/delivery?pageSize=3 200 in 371ms (compile: 353ms, proxy.ts: 6ms, render: 12ms)
+ GET /api/warehouse/sales-outbound?pageSize=3 200 in 213ms (compile: 189ms, proxy.ts: 4ms, render: 20ms)
+ GET /api/production/orders?pageSize=3 200 in 254ms (compile: 239ms, proxy.ts: 4ms, render: 11ms)
+[2026-08-25 14:31:05.438 +0800] [32mINFO[39m: [36m查询打样单列表[39m
+    [35mmodule[39m: "sample"
+    [35maction[39m: "GET_orders"
+    [35mtraceId[39m: "mt8adrdq-ee830ge"
+[2026-08-25 14:31:05.438 +0800] [34mDEBUG[39m: [36m[sample.listOrders] 列表查询[39m
+    [35mctx[39m: {
+      "module": "sample",
+      "action": "listOrders",
+      "traceId": "mt8adrdq-qlxhkrn"
+    }
+    [35mstep[39m: "列表查询"
+    [35mdata[39m: {
+      "filters": {},
+      "page": 1,
+      "pageSize": 3
+    }
+ GET /api/sample/orders?pageSize=3 200 in 143ms (compile: 123ms, proxy.ts: 6ms, render: 14ms)
+[2026-08-25 14:31:05.441 +0800] [34mDEBUG[39m: [36m[sample.listOrders] 列表查询 DONE[39m
+    [35mctx[39m: {
+      "module": "sample",
+      "action": "listOrders",
+      "traceId": "mt8adrdq-qlxhkrn"
+    }
+    [35mstep[39m: "列表查询"
+    [35mdata[39m: {
+      "total": 10,
+      "count": 3
+    }
+[2026-08-25 14:31:05.442 +0800] [32mINFO[39m: [36m查询结果[39m
+    [35mmodule[39m: "sample"
+    [35maction[39m: "GET_orders"
+    [35mtraceId[39m: "mt8adrdq-ee830ge"
+ GET /api/reports/delivery-rate?pageSize=3 200 in 125ms (compile: 112ms, proxy.ts: 3ms, render: 9ms)
+ GET /api/finance/cost-variance?pageSize=3 200 in 130ms (compile: 104ms, proxy.ts: 6ms, render: 21ms)
+ GET /api/qrcode/trace?pageSize=3 400 in 151ms (compile: 138ms, proxy.ts: 3ms, render: 10ms)
+[RepoRegistry] getInboundOrderRepository() → MysqlInboundOrderRepository (mysql)
+[RepoRegistry] getSalesOrderRepository() → MysqlSalesOrderRepository (mysql)
+ GET /api/sales/return?pageSize=3 200 in 183ms (compile: 165ms, proxy.ts: 4ms, render: 14ms)
+ GET /api/sales/orders?pageSize=3 200 in 119ms (compile: 104ms, proxy.ts: 3ms, render: 11ms)
+ GET /api/finance/receipt?pageSize=3 200 in 157ms (compile: 138ms, proxy.ts: 4ms, render: 15ms)
+ GET /api/finance/payment?pageSize=3 200 in 118ms (compile: 105ms, proxy.ts: 3ms, render: 10ms)
+ GET /api/finance/stats 200 in 114ms (compile: 93ms, proxy.ts: 3ms, render: 18ms)
+ GET /api/finance/cost?pageSize=3 200 in 127ms (compile: 111ms, proxy.ts: 5ms, render: 11ms)
+ GET /api/finance/receivables?pageSize=3 200 in 121ms (compile: 102ms, proxy.ts: 5ms, render: 15ms)
+ GET /api/quality/complaint?pageSize=3 200 in 157ms (compile: 140ms, proxy.ts: 6ms, render: 10ms)
+ GET /api/quality/lab-test?pageSize=3 200 in 113ms (compile: 93ms, proxy.ts: 6ms, render: 13ms)
+ GET /api/quality/supplier-audit?pageSize=3 200 in 107ms (compile: 90ms, proxy.ts: 2ms, render: 15ms)
+ GET /api/purchase/suppliers?pageSize=3 200 in 122ms (compile: 105ms, proxy.ts: 4ms, render: 14ms)
+ GET /api/system/announcement?pageSize=3 200 in 92ms (compile: 81ms, proxy.ts: 2ms, render: 9ms)
+ GET /api/system/scheduler?pageSize=3 200 in 102ms (compile: 91ms, proxy.ts: 3ms, render: 9ms)
+ GET /api/trace/label?pageSize=3 200 in 94ms (compile: 83ms, proxy.ts: 3ms, render: 8ms)
+ GET /api/ink-usages?pageSize=3 200 in 102ms (compile: 87ms, proxy.ts: 3ms, render: 12ms)
+ GET /api/qrcode?pageSize=3 200 in 105ms (compile: 87ms, proxy.ts: 3ms, render: 15ms)
+ GET /api/reports/dashboard 200 in 102ms (compile: 80ms, proxy.ts: 5ms, render: 17ms)
+ GET /api/dcprint/tool?pageSize=3 200 in 135ms (compile: 114ms, proxy.ts: 4ms, render: 17ms)
+ GET /api/system/oper-log?pageSize=3 200 in 119ms (compile: 105ms, proxy.ts: 3ms, render: 11ms)
+ GET /api/hr/reports/turnover 200 in 139ms (compile: 120ms, proxy.ts: 3ms, render: 15ms)
+ GET /api/orders?pageSize=3 200 in 17ms (compile: 2ms, proxy.ts: 3ms, render: 12ms)
+ GET /api/sales/delivery?pageSize=3 200 in 15ms (compile: 1947µs, proxy.ts: 3ms, render: 10ms)
+ GET /api/warehouse/sales-outbound?pageSize=3 200 in 15ms (compile: 1764µs, proxy.ts: 4ms, render: 9ms)
+ GET /api/production/orders?pageSize=3 200 in 12ms (compile: 1597µs, proxy.ts: 2ms, render: 8ms)
+[2026-08-25 14:31:28.376 +0800] [32mINFO[39m: [36m查询打样单列表[39m
+    [35mmodule[39m: "sample"
+    [35maction[39m: "GET_orders"
+    [35mtraceId[39m: "mt8ae92w-gj6vc5i"
+[2026-08-25 14:31:28.376 +0800] [34mDEBUG[39m: [36m[sample.listOrders] 列表查询[39m
+    [35mctx[39m: {
+      "module": "sample",
+      "action": "listOrders",
+      "traceId": "mt8ae92w-9ew7jib"
+    }
+    [35mstep[39m: "列表查询"
+    [35mdata[39m: {
+      "filters": {},
+      "page": 1,
+      "pageSize": 3
+    }
+ GET /api/sample/orders?pageSize=3 200 in 18ms (compile: 3ms, proxy.ts: 6ms, render: 9ms)
+[2026-08-25 14:31:28.378 +0800] [34mDEBUG[39m: [36m[sample.listOrders] 列表查询 DONE[39m
+    [35mctx[39m: {
+      "module": "sample",
+      "action": "listOrders",
+      "traceId": "mt8ae92w-9ew7jib"
+    }
+    [35mstep[39m: "列表查询"
+    [35mdata[39m: {
+      "total": 10,
+      "count": 3
+    }
+[2026-08-25 14:31:28.378 +0800] [32mINFO[39m: [36m查询结果[39m
+    [35mmodule[39m: "sample"
+    [35maction[39m: "GET_orders"
+    [35mtraceId[39m: "mt8ae92w-gj6vc5i"
+ GET /api/reports/delivery-rate?pageSize=3 200 in 13ms (compile: 2ms, proxy.ts: 2ms, render: 8ms)
+ GET /api/finance/cost-variance?pageSize=3 200 in 18ms (compile: 1968µs, proxy.ts: 4ms, render: 12ms)
+ GET /api/qrcode/trace?pageSize=3 400 in 12ms (compile: 2ms, proxy.ts: 4ms, render: 6ms)
+ GET /api/sales/return?pageSize=3 200 in 11ms (compile: 1632µs, proxy.ts: 2ms, render: 7ms)
+ GET /api/sales/orders?pageSize=3 200 in 17ms (compile: 2ms, proxy.ts: 6ms, render: 9ms)
+[?25h

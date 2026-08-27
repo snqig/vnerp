@@ -1,0 +1,910 @@
+
+> vnerp@0.1.0 dev
+> next dev -p 5000
+
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:5000
+- Network:       http://192.168.0.144:5000
+- Environments: .env.local, .env
+- Experiments (use with caution):
+  · optimizePackageImports
+
+✓ Starting...
+✓ Ready in 3.4s
+[2026-08-25 11:52:44.677 +0800] [32mINFO[39m: [36m[instrumentation] Server started. OutboxPoller will auto-start on first API request.[39m
+ GET /api/quality/complaint?pageSize=5 401 in 928ms (compile: 760ms, proxy.ts: 126ms, render: 42ms)
+ GET /api/finance/receivables?pageSize=5 401 in 137ms (compile: 118ms, proxy.ts: 8ms, render: 11ms)
+ GET /api/quality/sgs?pageSize=5 401 in 124ms (compile: 106ms, proxy.ts: 8ms, render: 10ms)
+ GET /api/hr/salary?pageSize=5 401 in 131ms (compile: 114ms, proxy.ts: 5ms, render: 12ms)
+ GET /api/quality/complaint?pageSize=5 401 in 17ms (compile: 5ms, proxy.ts: 6ms, render: 6ms)
+ GET /api/finance/receivables?pageSize=5 401 in 14ms (compile: 4ms, proxy.ts: 4ms, render: 5ms)
+ GET /api/quality/sgs?pageSize=5 401 in 13ms (compile: 3ms, proxy.ts: 6ms, render: 4ms)
+ GET /api/hr/salary?pageSize=5 401 in 13ms (compile: 3ms, proxy.ts: 4ms, render: 6ms)
+[2026-08-25 11:54:04.167 +0800] [32mINFO[39m: [36mCacheManager: 使用 InMemoryCacheManager（未配置 REDIS_URL）[39m
+[API Error] 请求处理失败: Error: Unknown column 'deleted' in 'where clause'
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\quality\complaint\route.ts:34:39)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted' in 'where clause'",
+  sql: 'SELECT COUNT(*) as total FROM qms_complaint WHERE deleted = 0'
+}
+ GET /api/quality/complaint?pageSize=5 500 in 257ms (compile: 3ms, proxy.ts: 5ms, render: 248ms)
+ GET /api/finance/receivables?pageSize=5 200 in 29ms (compile: 3ms, proxy.ts: 4ms, render: 22ms)
+ GET /api/quality/sgs?pageSize=5 200 in 22ms (compile: 2ms, proxy.ts: 4ms, render: 15ms)
+ GET /api/hr/salary?pageSize=5 200 in 27ms (compile: 4ms, proxy.ts: 4ms, render: 18ms)
+ GET /api/finance/cost?pageSize=3 200 in 175ms (compile: 129ms, proxy.ts: 3ms, render: 43ms)
+ GET /api/finance/stats?pageSize=3 200 in 198ms (compile: 150ms, proxy.ts: 4ms, render: 44ms)
+ GET /api/finance/receivables?pageSize=3 200 in 21ms (compile: 4ms, proxy.ts: 5ms, render: 12ms)
+ GET /api/finance/payable?pageSize=3 200 in 222ms (compile: 202ms, proxy.ts: 4ms, render: 17ms)
+ GET /api/finance/receipt?pageSize=3 405 in 151ms (compile: 142ms, proxy.ts: 5ms, render: 5ms)
+ GET /api/finance/payment?pageSize=3 405 in 180ms (compile: 169ms, proxy.ts: 6ms, render: 5ms)
+ GET /api/customers?pageSize=3 200 in 80ms (compile: 56ms, proxy.ts: 3ms, render: 20ms)
+[API Error] 请求处理失败: Error: Unknown column 'default_currency' in 'field list'
+    at query (src\lib\db\index.ts:113:33)
+    at queryPaginated (src\lib\db\index.ts:357:22)
+    at async (src\app\api\purchase\suppliers\route.ts:68:18)
+    at async errorMessage (src\lib\api-permissions.ts:961:22)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'default_currency' in 'field list'",
+  sql: '\n' +
+    '    SELECT\n' +
+    '      id,\n' +
+    '      supplier_code,\n' +
+    '      default_currency,\n' +
+    '      supplier_name,\n' +
+    '      short_name,\n' +
+    '      supplier_type,\n' +
+    '      contact_name,\n' +
+    '      contact_phone,\n' +
+    '      contact_email,\n' +
+    '      address,\n' +
+    '      credit_level,\n' +
+    '      cooperation_status,\n' +
+    '      settlement_method,\n' +
+    '      payment_terms,\n' +
+    '      status,\n' +
+    '      remark,\n' +
+    '      create_time,\n' +
+    '      update_time\n' +
+    '    FROM pur_supplier\n' +
+    '    WHERE deleted = 0\n' +
+    '   ORDER BY create_time DESC LIMIT 3 OFFSET 0'
+}
+ GET /api/purchase/suppliers?pageSize=3 500 in 186ms (compile: 46ms, proxy.ts: 4ms, render: 136ms)
+ GET /api/finance/report?pageSize=3 200 in 184ms (compile: 152ms, proxy.ts: 4ms, render: 27ms)
+[API Error] 请求处理失败: Error: Unknown column 'deleted' in 'where clause'
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\quality\complaint\route.ts:34:39)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted' in 'where clause'",
+  sql: 'SELECT COUNT(*) as total FROM qms_complaint WHERE deleted = 0'
+}
+ GET /api/quality/complaint?pageSize=3 500 in 96ms (compile: 3ms, proxy.ts: 8ms, render: 85ms)
+ GET /api/quality/final?pageSize=3 200 in 169ms (compile: 148ms, proxy.ts: 4ms, render: 17ms)
+ GET /api/quality/incoming?pageSize=3 200 in 167ms (compile: 134ms, proxy.ts: 4ms, render: 30ms)
+[API Error] 请求处理失败: Error: Unknown column 'deleted' in 'where clause'
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\quality\lab-test\route.ts:34:39)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted' in 'where clause'",
+  sql: 'SELECT COUNT(*) as total FROM qms_lab_test WHERE deleted = 0'
+}
+ GET /api/quality/lab-test?pageSize=3 500 in 230ms (compile: 112ms, proxy.ts: 6ms, render: 112ms)
+ GET /api/quality/process?pageSize=3 200 in 158ms (compile: 136ms, proxy.ts: 5ms, render: 17ms)
+ GET /api/quality/sgs/expiry-warning?pageSize=3 200 in 152ms (compile: 131ms, proxy.ts: 4ms, render: 17ms)
+ GET /api/quality/sgs?pageSize=3 200 in 14ms (compile: 2ms, proxy.ts: 4ms, render: 9ms)
+ GET /api/quality/spc?pageSize=3 400 in 136ms (compile: 123ms, proxy.ts: 3ms, render: 11ms)
+[API Error] 请求处理失败: Error: Unknown column 'deleted' in 'where clause'
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\quality\supplier-audit\route.ts:34:39)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted' in 'where clause'",
+  sql: 'SELECT COUNT(*) as total FROM qms_supplier_audit WHERE deleted = 0'
+}
+ GET /api/quality/supplier-audit?pageSize=3 500 in 247ms (compile: 143ms, proxy.ts: 3ms, render: 101ms)
+ GET /api/dcprint/trace?pageSize=3 200 in 128ms (compile: 104ms, proxy.ts: 3ms, render: 21ms)
+ GET /api/quality/unqualified?pageSize=3 200 in 176ms (compile: 150ms, proxy.ts: 4ms, render: 22ms)
+[API Error] 操作失败: Error: Table 'vnerpdacahng.sys_announcement' doesn't exist
+    at query (src\lib\db\index.ts:113:33)
+    at GET.errorMessage (src\app\api\system\announcement\route.ts:32:41)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'vnerpdacahng.sys_announcement' doesn't exist",
+  sql: "SELECT COUNT(*) as total FROM sys_announcement a WHERE 1=1 AND a.status = 'published' AND (a.expire_time IS NULL OR a.expire_time > NOW())"
+}
+ GET /api/system/announcement?pageSize=3 500 in 224ms (compile: 127ms, proxy.ts: 3ms, render: 94ms)
+ GET /api/system/config?pageSize=3 200 in 70ms (compile: 45ms, proxy.ts: 4ms, render: 21ms)
+ GET /api/system/currency?pageSize=3 200 in 63ms (compile: 40ms, proxy.ts: 4ms, render: 19ms)
+ GET /api/system/dict?pageSize=3 200 in 173ms (compile: 142ms, proxy.ts: 4ms, render: 28ms)
+ GET /api/system/exchange-rate?pageSize=3 200 in 156ms (compile: 137ms, proxy.ts: 3ms, render: 15ms)
+[API Error] 请求处理失败: Error: Table 'vnerpdacahng.label_template' doesn't exist
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\trace\label\route.ts:16:27)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'vnerpdacahng.label_template' doesn't exist",
+  sql: 'SELECT * FROM label_template WHERE status = 1 ORDER BY id ASC'
+}
+ GET /api/trace/label?pageSize=3 500 in 209ms (compile: 118ms, proxy.ts: 3ms, render: 88ms)
+[API Error] 请求处理失败: Error: Table 'vnerpdacahng.label_template' doesn't exist
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\trace\label\route.ts:16:27)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'vnerpdacahng.label_template' doesn't exist",
+  sql: 'SELECT * FROM label_template WHERE status = 1 ORDER BY id ASC'
+}
+ GET /api/trace/label?pageSize=3 500 in 69ms (compile: 3ms, proxy.ts: 3ms, render: 63ms)
+ GET /api/system/login-log?pageSize=3 200 in 108ms (compile: 93ms, proxy.ts: 3ms, render: 13ms)
+ GET /api/organization/menu?pageSize=3 200 in 118ms (compile: 103ms, proxy.ts: 3ms, render: 12ms)
+ GET /api/system/notice?pageSize=3 200 in 55ms (compile: 33ms, proxy.ts: 7ms, render: 15ms)
+[API Error] 请求处理失败: Error: Unknown column 'business_type' in 'field list'
+    at query (src\lib\db\index.ts:113:33)
+    at GET.logTitle (src\app\api\system\oper-log\route.ts:52:36)
+    at async errorMessage (src\lib\api-permissions.ts:961:22)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'business_type' in 'field list'",
+  sql: "SELECT id, COALESCE(operation, '') as title, COALESCE(username, '') as oper_name,\n" +
+    "            COALESCE(operation, '') as oper_type, COALESCE(method, '') as oper_method,\n" +
+    "            COALESCE(request_url, '') as oper_url, COALESCE(ip, '') as oper_ip,\n" +
+    '            COALESCE(create_time, NOW()) as oper_time, status,\n' +
+    "            COALESCE(business_type, '') as business_type,\n" +
+    "            COALESCE(business_id, '') as business_id,\n" +
+    "            COALESCE(request_params, '') as request_params,\n" +
+    "            COALESCE(response_result, '') as response_result\n" +
+    '     FROM sys_operation_log WHERE 1=1\n' +
+    '     ORDER BY create_time DESC\n' +
+    '     LIMIT 3 OFFSET 0'
+}
+ GET /api/system/oper-log?pageSize=3 500 in 241ms (compile: 165ms, proxy.ts: 4ms, render: 73ms)
+ GET /api/organization?pageSize=3 400 in 53ms (compile: 37ms, proxy.ts: 3ms, render: 13ms)
+ GET /api/organization/department?pageSize=3 200 in 55ms (compile: 37ms, proxy.ts: 3ms, render: 16ms)
+ GET /api/organization/role?pageSize=3 200 in 134ms (compile: 116ms, proxy.ts: 3ms, render: 15ms)
+ GET /api/system/profile?pageSize=3 200 in 169ms (compile: 155ms, proxy.ts: 3ms, render: 11ms)
+ GET /api/system/profile/password?pageSize=3 405 in 197ms (compile: 185ms, proxy.ts: 5ms, render: 6ms)
+ GET /api/menu?pageSize=3 200 in 147ms (compile: 128ms, proxy.ts: 4ms, render: 15ms)
+ GET /api/role-permissions?pageSize=3 400 in 216ms (compile: 202ms, proxy.ts: 4ms, render: 11ms)
+ GET /api/role-permissions/buttons?pageSize=3 400 in 125ms (compile: 107ms, proxy.ts: 4ms, render: 15ms)
+ GET /api/system/data-scope?pageSize=3 400 in 120ms (compile: 105ms, proxy.ts: 3ms, render: 12ms)
+ GET /api/auth/cache/clear?pageSize=3 405 in 124ms (compile: 116ms, proxy.ts: 2ms, render: 5ms)
+○ Compiling /_not-found/page ...
+ GET /api/warehouse/list?pageSize=3 404 in 3.8s (compile: 3.7s, proxy.ts: 3ms, render: 126ms)
+ GET /api/suppliers?pageSize=3 404 in 48ms (compile: 15ms, proxy.ts: 3ms, render: 29ms)
+[API Error] 操作失败: Error: Table 'vnerpdacahng.sys_scheduled_task' doesn't exist
+    at query (src\lib\db\index.ts:113:33)
+    at GET.errorMessage (src\app\api\system\scheduler\route.ts:33:41)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'vnerpdacahng.sys_scheduled_task' doesn't exist",
+  sql: 'SELECT COUNT(*) as total FROM sys_scheduled_task WHERE 1=1'
+}
+ GET /api/system/scheduler?pageSize=3 500 in 191ms (compile: 107ms, proxy.ts: 3ms, render: 81ms)
+ GET /api/init/settings-seed?pageSize=3 405 in 298ms (compile: 287ms, proxy.ts: 3ms, render: 8ms)
+ GET /api/init/business-seed?pageSize=3 405 in 129ms (compile: 115ms, proxy.ts: 6ms, render: 9ms)
+ GET /api/settings/system?pageSize=3 200 in 289ms (compile: 135ms, proxy.ts: 5ms, render: 149ms)
+ GET /api/system/user?pageSize=3 200 in 82ms (compile: 55ms, proxy.ts: 6ms, render: 22ms)
+ GET /api/system/roles?pageSize=3 200 in 58ms (compile: 41ms, proxy.ts: 3ms, render: 14ms)
+ GET /api/organization/employee?pageSize=3 200 in 75ms (compile: 49ms, proxy.ts: 5ms, render: 22ms)
+ GET /api/hr/attendance?pageSize=3 200 in 162ms (compile: 132ms, proxy.ts: 5ms, render: 25ms)
+ GET /api/hr/certificates/expiring?pageSize=3 200 in 153ms (compile: 125ms, proxy.ts: 3ms, render: 25ms)
+ GET /api/hr/certificates?pageSize=3 200 in 159ms (compile: 137ms, proxy.ts: 3ms, render: 18ms)
+ GET /api/upload?pageSize=3 405 in 120ms (compile: 111ms, proxy.ts: 3ms, render: 6ms)
+ GET /api/hr/mes-sync/piece-work?pageSize=3 200 in 153ms (compile: 132ms, proxy.ts: 3ms, render: 18ms)
+ GET /api/hr/mes-sync/sync?pageSize=3 404 in 48ms (compile: 10ms, proxy.ts: 3ms, render: 36ms)
+ GET /api/hr/performance?pageSize=3 200 in 3.0s (compile: 2.2s, proxy.ts: 3ms, generate-params: 972ms, render: 740ms)
+ GET /api/hr/reports/labor-cost?pageSize=3 200 in 150ms (compile: 120ms, proxy.ts: 5ms, render: 26ms)
+ GET /api/hr/reports/salary-structure?pageSize=3 200 in 136ms (compile: 113ms, proxy.ts: 4ms, render: 19ms)
+[API Error] 获取人力流动报表失败: Error: Failed query: 
+    SELECT
+      COUNT(*) as totalEmployees,
+      SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as resignedCount
+    FROM sys_employee WHERE deleted = 0
+  
+params: 
+    at async GET.errorMessage (src\app\api\hr\reports\turnover\route.ts:10:20)
+    at async errorMessage (src\lib\api-permissions.ts:961:22)
+    at async (src\lib\api-auth.ts:202:14)
+   8 |
+   9 | export const GET = withPermission(async (_request: NextRequest) => {
+> 10 |   const [totals] = await db.execute(sql`
+     |                    ^
+  11 |     SELECT
+  12 |       COUNT(*) as totalEmployees,
+  13 |       SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as resignedCount {
+  query: '\n' +
+    '    SELECT\n' +
+    '      COUNT(*) as totalEmployees,\n' +
+    '      SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as resignedCount\n' +
+    '    FROM sys_employee WHERE deleted = 0\n' +
+    '  ',
+  params: [],
+  [cause]: Error: Unknown column 'deleted' in 'where clause'
+      at GET.errorMessage (src\app\api\hr\reports\turnover\route.ts:10:29)
+      at errorMessage (src\lib\api-permissions.ts:961:28)
+      at <unknown> (src\lib\api-auth.ts:166:12)
+      at async (src\lib\api-auth.ts:202:14)
+     8 |
+     9 | export const GET = withPermission(async (_request: NextRequest) => {
+  > 10 |   const [totals] = await db.execute(sql`
+       |                             ^
+    11 |     SELECT
+    12 |       COUNT(*) as totalEmployees,
+    13 |       SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as resignedCount {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'deleted' in 'where clause'",
+    sql: '\n' +
+      '    SELECT\n' +
+      '      COUNT(*) as totalEmployees,\n' +
+      '      SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as resignedCount\n' +
+      '    FROM sys_employee WHERE deleted = 0\n' +
+      '  '
+  }
+}
+ GET /api/hr/reports/turnover?pageSize=3 500 in 307ms (compile: 133ms, proxy.ts: 3ms, render: 171ms)
+ GET /api/hr/salary/calculate?pageSize=3 400 in 144ms (compile: 127ms, proxy.ts: 4ms, render: 13ms)
+ GET /api/hr/salary?pageSize=3 200 in 15ms (compile: 1988µs, proxy.ts: 4ms, render: 9ms)
+ GET /api/salary/payslips?pageSize=3 404 in 46ms (compile: 10ms, proxy.ts: 4ms, render: 32ms)
+ GET /api/hr/piece-rate?pageSize=3 404 in 37ms (compile: 7ms, proxy.ts: 2ms, render: 28ms)
+ GET /api/hr/piece-work?pageSize=3 404 in 39ms (compile: 7ms, proxy.ts: 5ms, render: 27ms)
+ GET /api/hr/schedules?pageSize=3 200 in 138ms (compile: 111ms, proxy.ts: 3ms, render: 24ms)
+ GET /api/hr/shifts?pageSize=3 200 in 131ms (compile: 113ms, proxy.ts: 3ms, render: 14ms)
+ GET /api/hr/skills?pageSize=3 200 in 169ms (compile: 138ms, proxy.ts: 3ms, render: 28ms)
+ GET /api/hr/training?pageSize=3 200 in 138ms (compile: 114ms, proxy.ts: 3ms, render: 21ms)
+ GET /api/dcprint/process-cards?pageSize=3 200 in 163ms (compile: 144ms, proxy.ts: 4ms, render: 15ms)
+ GET /api/dcprint/process-cards/detail?pageSize=3 404 in 54ms (compile: 15ms, proxy.ts: 5ms, render: 33ms)
+ GET /api/dcprint/scan?pageSize=3 405 in 117ms (compile: 107ms, proxy.ts: 2ms, render: 8ms)
+ GET /api/prepress/die?pageSize=3 200 in 148ms (compile: 116ms, proxy.ts: 3ms, render: 29ms)
+ GET /api/prepress/ink?pageSize=3 200 in 174ms (compile: 149ms, proxy.ts: 4ms, render: 21ms)
+ GET /api/dcprint/formula/color?pageSize=3 200 in 197ms (compile: 168ms, proxy.ts: 3ms, render: 26ms)
+ GET /api/dcprint/formula/version?pageSize=3 400 in 152ms (compile: 131ms, proxy.ts: 3ms, render: 18ms)
+ GET /api/dcprint/formula/version?pageSize=3 400 in 19ms (compile: 4ms, proxy.ts: 4ms, render: 11ms)
+ GET /api/dcprint/ink-mixed?pageSize=3 200 in 151ms (compile: 122ms, proxy.ts: 3ms, render: 27ms)
+ GET /api/dcprint/ink?pageSize=3 200 in 140ms (compile: 118ms, proxy.ts: 5ms, render: 17ms)
+ GET /api/dcprint/ink-opening?pageSize=3 200 in 146ms (compile: 124ms, proxy.ts: 3ms, render: 19ms)
+ GET /api/inventory/materials?pageSize=3 200 in 170ms (compile: 127ms, proxy.ts: 3ms, render: 40ms)
+ GET /api/base-inks?pageSize=3 404 in 50ms (compile: 15ms, proxy.ts: 3ms, render: 32ms)
+[API Error] 请求处理失败: Error: Table 'vnerpdacahng.ink_usage' doesn't exist
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\ink-usages\route.ts:54:10)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'vnerpdacahng.ink_usage' doesn't exist",
+  sql: '\n' +
+    '      SELECT iu.*, bi.ink_code, bi.ink_name, bi.unit, sp.plate_code\n' +
+    '      FROM ink_usage iu\n' +
+    '      LEFT JOIN base_ink bi ON iu.ink_id = bi.id\n' +
+    '      LEFT JOIN prd_screen_plate sp ON iu.screen_plate_id = sp.id\n' +
+    '      WHERE iu.deleted = 0\n' +
+    '      ORDER BY iu.usage_date DESC\n' +
+    '      LIMIT 3 OFFSET 0\n' +
+    '    '
+}
+ GET /api/ink-usages?pageSize=3 500 in 216ms (compile: 112ms, proxy.ts: 7ms, render: 97ms)
+ GET /api/dcprint/labels?pageSize=3 200 in 187ms (compile: 161ms, proxy.ts: 3ms, render: 22ms)
+ GET /api/warehouse/inbound/cutting?pageSize=3 200 in 65ms (compile: 47ms, proxy.ts: 3ms, render: 16ms)
+ GET /api/dcprint/sample-card?pageSize=3 200 in 312ms (compile: 279ms, proxy.ts: 4ms, render: 28ms)
+ GET /api/dcprint/sample-card?pageSize=3 200 in 15ms (compile: 3ms, proxy.ts: 4ms, render: 9ms)
+ GET /api/screen-plates?pageSize=3 200 in 135ms (compile: 109ms, proxy.ts: 5ms, render: 22ms)
+ GET /api/screen-plates/history?pageSize=3 400 in 157ms (compile: 138ms, proxy.ts: 3ms, render: 16ms)
+[API Error] 请求处理失败: Error: Unknown column 'deleted' in 'where clause'
+    at query (src\lib\db\index.ts:113:33)
+    at MysqlToolRepository.findList (src\infrastructure\repositories\MysqlToolRepository.ts:53:34)
+    at ToolManagementService.listTools (src\application\services\ToolManagementService.ts:148:40)
+    at GET.logTitle (src\app\api\dcprint\tool\route.ts:20:34)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted' in 'where clause'",
+  sql: 'SELECT COUNT(*) as total FROM dcprint_tool WHERE deleted = 0'
+}
+ GET /api/dcprint/tool?pageSize=3 500 in 205ms (compile: 117ms, proxy.ts: 2ms, render: 86ms)
+[API Error] 请求处理失败: Error: Unknown column 'deleted' in 'where clause'
+    at query (src\lib\db\index.ts:113:33)
+    at MysqlToolRepository.countByStatus (src\infrastructure\repositories\MysqlToolRepository.ts:232:29)
+    at ToolManagementService.getDashboard (src\application\services\ToolManagementService.ts:670:39)
+    at GET.logTitle (src\app\api\dcprint\tool\dashboard\route.ts:11:37)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted' in 'where clause'",
+  sql: 'SELECT\n' +
+    '         COUNT(*) as total,\n' +
+    '         SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as active,\n' +
+    '         SUM(CASE WHEN status = 4 THEN 1 ELSE 0 END) as warning,\n' +
+    '         SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as maintenance,\n' +
+    '         SUM(CASE WHEN status = 5 THEN 1 ELSE 0 END) as scrapped,\n' +
+    '         COALESCE(SUM(net_value), 0) as total_net_value\n' +
+    '       FROM dcprint_tool WHERE deleted = 0'
+}
+ GET /api/dcprint/tool/dashboard?pageSize=3 500 in 233ms (compile: 125ms, proxy.ts: 5ms, render: 103ms)
+[API Error] 请求处理失败: Error: Unknown column 'deleted' in 'where clause'
+    at query (src\lib\db\index.ts:113:33)
+    at MysqlToolRepository.findList (src\infrastructure\repositories\MysqlToolRepository.ts:53:34)
+    at ToolManagementService.listTools (src\application\services\ToolManagementService.ts:148:40)
+    at GET.logTitle (src\app\api\dcprint\tool\route.ts:20:34)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted' in 'where clause'",
+  sql: 'SELECT COUNT(*) as total FROM dcprint_tool WHERE deleted = 0'
+}
+ GET /api/dcprint/tool?pageSize=3 500 in 64ms (compile: 3ms, proxy.ts: 3ms, render: 59ms)
+ GET /api/engineering/sample-to-mass?pageSize=3 200 in 142ms (compile: 118ms, proxy.ts: 3ms, render: 21ms)
+ GET /api/upload/sop?pageSize=3 405 in 155ms (compile: 142ms, proxy.ts: 3ms, render: 10ms)
+ GET /api/engineering/sop?pageSize=3 200 in 157ms (compile: 126ms, proxy.ts: 4ms, render: 26ms)
+ GET /api/dashboard/ceo?pageSize=3 200 in 195ms (compile: 122ms, proxy.ts: 7ms, render: 66ms)
+ GET /api/dashboard/finance?pageSize=3 200 in 144ms (compile: 116ms, proxy.ts: 4ms, render: 24ms)
+ GET /api/dashboard?pageSize=3 200 in 64ms (compile: 42ms, proxy.ts: 5ms, render: 18ms)
+ GET /api/dashboard/production?pageSize=3 200 in 159ms (compile: 132ms, proxy.ts: 2ms, render: 25ms)
+[2026-08-25 11:54:57.072 +0800] [31mERROR[39m: [36mDashboard query failed[39m
+    [35mmodule[39m: "dashboard"
+    [35maction[39m: "sales"
+ GET /api/dashboard/sales?pageSize=3 200 in 164ms (compile: 131ms, proxy.ts: 7ms, render: 26ms)
+[2026-08-25 11:54:57.251 +0800] [31mERROR[39m: [36mDashboard query failed[39m
+    [35mmodule[39m: "dashboard"
+    [35maction[39m: "warehouse"
+[2026-08-25 11:54:57.255 +0800] [31mERROR[39m: [36mDashboard query failed[39m
+    [35mmodule[39m: "dashboard"
+    [35maction[39m: "warehouse"
+[2026-08-25 11:54:57.269 +0800] [31mERROR[39m: [36mDashboard query failed[39m
+    [35mmodule[39m: "dashboard"
+    [35maction[39m: "warehouse"
+ GET /api/dashboard/warehouse?pageSize=3 200 in 184ms (compile: 146ms, proxy.ts: 3ms, render: 36ms)
+[API Error] 请求处理失败: Error: Table 'vnerpdacahng.sales_order' doesn't exist
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\reports\dashboard\route.ts:19:40)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'vnerpdacahng.sales_order' doesn't exist",
+  sql: 'SELECT\n' +
+    '      COUNT(*) as total_orders,\n' +
+    '      SUM(CASE WHEN status >= 3 THEN 1 ELSE 0 END) as completed_orders,\n' +
+    '      SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as pending_orders,\n' +
+    '      COALESCE(SUM(total_amount), 0) as total_amount,\n' +
+    '      COALESCE(SUM(CASE WHEN status >= 3 THEN total_amount ELSE 0 END), 0) as completed_amount\n' +
+    '    FROM sales_order\n' +
+    "    WHERE deleted = 0 AND order_date >= '2026-07-26'"
+}
+ GET /api/reports/dashboard?pageSize=3 500 in 209ms (compile: 114ms, proxy.ts: 3ms, render: 92ms)
+ GET /api/reports/purchase-supplier?pageSize=3 200 in 172ms (compile: 138ms, proxy.ts: 3ms, render: 31ms)
+ GET /api/reports/sales-customer?pageSize=3 200 in 131ms (compile: 110ms, proxy.ts: 5ms, render: 15ms)
+ GET /api/equipment/calibration?pageSize=3 200 in 155ms (compile: 136ms, proxy.ts: 2ms, render: 17ms)
+ GET /api/equipment/plan?pageSize=3 200 in 157ms (compile: 123ms, proxy.ts: 3ms, render: 31ms)
+ GET /api/equipment?pageSize=3 200 in 159ms (compile: 134ms, proxy.ts: 3ms, render: 22ms)
+ GET /api/equipment/repair?pageSize=3 200 in 193ms (compile: 161ms, proxy.ts: 3ms, render: 29ms)
+ GET /api/equipment/scrap?pageSize=3 200 in 153ms (compile: 126ms, proxy.ts: 5ms, render: 22ms)
+[API Error] 请求处理失败: Error: Illegal mix of collations (utf8mb4_unicode_ci,IMPLICIT) and (utf8mb4_0900_ai_ci,IMPLICIT) for operation '='
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\qrcode\route.ts:38:34)
+    at async errorMessage (src\lib\api-permissions.ts:961:22)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_CANT_AGGREGATE_2COLLATIONS',
+  errno: 1267,
+  sqlState: 'HY000',
+  sqlMessage: "Illegal mix of collations (utf8mb4_unicode_ci,IMPLICIT) and (utf8mb4_0900_ai_ci,IMPLICIT) for operation '='",
+  sql: 'SELECT q.*, b.available_qty AS batch_available_qty, b.quantity AS batch_total_qty, b.status AS batch_status\n' +
+    '     FROM qrcode_record q\n' +
+    '     LEFT JOIN inv_inventory_batch b ON q.batch_no = b.batch_no AND b.deleted = 0\n' +
+    '     WHERE q.deleted = 0 ORDER BY q.create_time DESC LIMIT 3 OFFSET 0'
+}
+ GET /api/qrcode?pageSize=3 500 in 231ms (compile: 137ms, proxy.ts: 4ms, render: 91ms)
+[API Error] 请求处理失败: Error: Unknown column 'deleted' in 'where clause'
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\quality\complaint\route.ts:34:39)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted' in 'where clause'",
+  sql: 'SELECT COUNT(*) as total FROM qms_complaint WHERE deleted = 0'
+}
+ GET /api/quality/complaint?pageSize=3 500 in 136ms (compile: 7ms, proxy.ts: 4ms, render: 125ms)
+[API Error] 请求处理失败: Error: Unknown column 'deleted' in 'where clause'
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\quality\lab-test\route.ts:34:39)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted' in 'where clause'",
+  sql: 'SELECT COUNT(*) as total FROM qms_lab_test WHERE deleted = 0'
+}
+ GET /api/quality/lab-test?pageSize=3 500 in 80ms (compile: 5ms, proxy.ts: 5ms, render: 70ms)
+[API Error] 请求处理失败: Error: Unknown column 'deleted' in 'where clause'
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\quality\supplier-audit\route.ts:34:39)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted' in 'where clause'",
+  sql: 'SELECT COUNT(*) as total FROM qms_supplier_audit WHERE deleted = 0'
+}
+ GET /api/quality/supplier-audit?pageSize=3 500 in 78ms (compile: 6ms, proxy.ts: 4ms, render: 67ms)
+[API Error] 操作失败: Error: Table 'vnerpdacahng.sys_announcement' doesn't exist
+    at query (src\lib\db\index.ts:113:33)
+    at GET.errorMessage (src\app\api\system\announcement\route.ts:32:41)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'vnerpdacahng.sys_announcement' doesn't exist",
+  sql: "SELECT COUNT(*) as total FROM sys_announcement a WHERE 1=1 AND a.status = 'published' AND (a.expire_time IS NULL OR a.expire_time > NOW())"
+}
+ GET /api/system/announcement?pageSize=3 500 in 89ms (compile: 3ms, proxy.ts: 3ms, render: 83ms)
+[API Error] 请求处理失败: Error: Table 'vnerpdacahng.label_template' doesn't exist
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\trace\label\route.ts:16:27)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'vnerpdacahng.label_template' doesn't exist",
+  sql: 'SELECT * FROM label_template WHERE status = 1 ORDER BY id ASC'
+}
+ GET /api/trace/label?pageSize=3 500 in 103ms (compile: 5ms, proxy.ts: 4ms, render: 94ms)
+[API Error] 请求处理失败: Error: Unknown column 'business_type' in 'field list'
+    at query (src\lib\db\index.ts:113:33)
+    at GET.logTitle (src\app\api\system\oper-log\route.ts:52:36)
+    at async errorMessage (src\lib\api-permissions.ts:961:22)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'business_type' in 'field list'",
+  sql: "SELECT id, COALESCE(operation, '') as title, COALESCE(username, '') as oper_name,\n" +
+    "            COALESCE(operation, '') as oper_type, COALESCE(method, '') as oper_method,\n" +
+    "            COALESCE(request_url, '') as oper_url, COALESCE(ip, '') as oper_ip,\n" +
+    '            COALESCE(create_time, NOW()) as oper_time, status,\n' +
+    "            COALESCE(business_type, '') as business_type,\n" +
+    "            COALESCE(business_id, '') as business_id,\n" +
+    "            COALESCE(request_params, '') as request_params,\n" +
+    "            COALESCE(response_result, '') as response_result\n" +
+    '     FROM sys_operation_log WHERE 1=1\n' +
+    '     ORDER BY create_time DESC\n' +
+    '     LIMIT 3 OFFSET 0'
+}
+ GET /api/system/oper-log?pageSize=3 500 in 92ms (compile: 4ms, proxy.ts: 4ms, render: 85ms)
+[API Error] 操作失败: Error: Table 'vnerpdacahng.sys_scheduled_task' doesn't exist
+    at query (src\lib\db\index.ts:113:33)
+    at GET.errorMessage (src\app\api\system\scheduler\route.ts:33:41)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'vnerpdacahng.sys_scheduled_task' doesn't exist",
+  sql: 'SELECT COUNT(*) as total FROM sys_scheduled_task WHERE 1=1'
+}
+ GET /api/system/scheduler?pageSize=3 500 in 71ms (compile: 2ms, proxy.ts: 2ms, render: 66ms)
+[API Error] 获取人力流动报表失败: Error: Failed query: 
+    SELECT
+      COUNT(*) as totalEmployees,
+      SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as resignedCount
+    FROM sys_employee WHERE deleted = 0
+  
+params: 
+    at async GET.errorMessage (src\app\api\hr\reports\turnover\route.ts:10:20)
+    at async errorMessage (src\lib\api-permissions.ts:961:22)
+    at async (src\lib\api-auth.ts:202:14)
+   8 |
+   9 | export const GET = withPermission(async (_request: NextRequest) => {
+> 10 |   const [totals] = await db.execute(sql`
+     |                    ^
+  11 |     SELECT
+  12 |       COUNT(*) as totalEmployees,
+  13 |       SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as resignedCount {
+  query: '\n' +
+    '    SELECT\n' +
+    '      COUNT(*) as totalEmployees,\n' +
+    '      SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as resignedCount\n' +
+    '    FROM sys_employee WHERE deleted = 0\n' +
+    '  ',
+  params: [],
+  [cause]: Error: Unknown column 'deleted' in 'where clause'
+      at GET.errorMessage (src\app\api\hr\reports\turnover\route.ts:10:29)
+      at errorMessage (src\lib\api-permissions.ts:961:28)
+      at <unknown> (src\lib\api-auth.ts:166:12)
+      at async (src\lib\api-auth.ts:202:14)
+     8 |
+     9 | export const GET = withPermission(async (_request: NextRequest) => {
+  > 10 |   const [totals] = await db.execute(sql`
+       |                             ^
+    11 |     SELECT
+    12 |       COUNT(*) as totalEmployees,
+    13 |       SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as resignedCount {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'deleted' in 'where clause'",
+    sql: '\n' +
+      '    SELECT\n' +
+      '      COUNT(*) as totalEmployees,\n' +
+      '      SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as resignedCount\n' +
+      '    FROM sys_employee WHERE deleted = 0\n' +
+      '  '
+  }
+}
+ GET /api/hr/reports/turnover?pageSize=3 500 in 138ms (compile: 3ms, proxy.ts: 4ms, render: 131ms)
+[API Error] 请求处理失败: Error: Table 'vnerpdacahng.ink_usage' doesn't exist
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\ink-usages\route.ts:54:10)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'vnerpdacahng.ink_usage' doesn't exist",
+  sql: '\n' +
+    '      SELECT iu.*, bi.ink_code, bi.ink_name, bi.unit, sp.plate_code\n' +
+    '      FROM ink_usage iu\n' +
+    '      LEFT JOIN base_ink bi ON iu.ink_id = bi.id\n' +
+    '      LEFT JOIN prd_screen_plate sp ON iu.screen_plate_id = sp.id\n' +
+    '      WHERE iu.deleted = 0\n' +
+    '      ORDER BY iu.usage_date DESC\n' +
+    '      LIMIT 3 OFFSET 0\n' +
+    '    '
+}
+ GET /api/ink-usages?pageSize=3 500 in 80ms (compile: 3ms, proxy.ts: 2ms, render: 74ms)
+[API Error] 请求处理失败: Error: Unknown column 'default_currency' in 'field list'
+    at query (src\lib\db\index.ts:113:33)
+    at queryPaginated (src\lib\db\index.ts:357:22)
+    at async (src\app\api\purchase\suppliers\route.ts:68:18)
+    at async errorMessage (src\lib\api-permissions.ts:961:22)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'default_currency' in 'field list'",
+  sql: '\n' +
+    '    SELECT\n' +
+    '      id,\n' +
+    '      supplier_code,\n' +
+    '      default_currency,\n' +
+    '      supplier_name,\n' +
+    '      short_name,\n' +
+    '      supplier_type,\n' +
+    '      contact_name,\n' +
+    '      contact_phone,\n' +
+    '      contact_email,\n' +
+    '      address,\n' +
+    '      credit_level,\n' +
+    '      cooperation_status,\n' +
+    '      settlement_method,\n' +
+    '      payment_terms,\n' +
+    '      status,\n' +
+    '      remark,\n' +
+    '      create_time,\n' +
+    '      update_time\n' +
+    '    FROM pur_supplier\n' +
+    '    WHERE deleted = 0\n' +
+    '   ORDER BY create_time DESC LIMIT 3 OFFSET 0'
+}
+ GET /api/purchase/suppliers?pageSize=3 500 in 72ms (compile: 3ms, proxy.ts: 2ms, render: 67ms)
+[API Error] 请求处理失败: Error: Illegal mix of collations (utf8mb4_unicode_ci,IMPLICIT) and (utf8mb4_0900_ai_ci,IMPLICIT) for operation '='
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\qrcode\route.ts:38:34)
+    at async errorMessage (src\lib\api-permissions.ts:961:22)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_CANT_AGGREGATE_2COLLATIONS',
+  errno: 1267,
+  sqlState: 'HY000',
+  sqlMessage: "Illegal mix of collations (utf8mb4_unicode_ci,IMPLICIT) and (utf8mb4_0900_ai_ci,IMPLICIT) for operation '='",
+  sql: 'SELECT q.*, b.available_qty AS batch_available_qty, b.quantity AS batch_total_qty, b.status AS batch_status\n' +
+    '     FROM qrcode_record q\n' +
+    '     LEFT JOIN inv_inventory_batch b ON q.batch_no = b.batch_no AND b.deleted = 0\n' +
+    '     WHERE q.deleted = 0 ORDER BY q.create_time DESC LIMIT 3 OFFSET 0'
+}
+ GET /api/qrcode?pageSize=3 500 in 96ms (compile: 3ms, proxy.ts: 4ms, render: 90ms)
+[API Error] 请求处理失败: Error: Table 'vnerpdacahng.sales_order' doesn't exist
+    at query (src\lib\db\index.ts:113:33)
+    at <unknown> (src\app\api\reports\dashboard\route.ts:19:40)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'vnerpdacahng.sales_order' doesn't exist",
+  sql: 'SELECT\n' +
+    '      COUNT(*) as total_orders,\n' +
+    '      SUM(CASE WHEN status >= 3 THEN 1 ELSE 0 END) as completed_orders,\n' +
+    '      SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as pending_orders,\n' +
+    '      COALESCE(SUM(total_amount), 0) as total_amount,\n' +
+    '      COALESCE(SUM(CASE WHEN status >= 3 THEN total_amount ELSE 0 END), 0) as completed_amount\n' +
+    '    FROM sales_order\n' +
+    "    WHERE deleted = 0 AND order_date >= '2026-07-26'"
+}
+ GET /api/reports/dashboard?pageSize=3 500 in 71ms (compile: 4ms, proxy.ts: 4ms, render: 62ms)
+[API Error] 请求处理失败: Error: Unknown column 'deleted' in 'where clause'
+    at query (src\lib\db\index.ts:113:33)
+    at MysqlToolRepository.findList (src\infrastructure\repositories\MysqlToolRepository.ts:53:34)
+    at ToolManagementService.listTools (src\application\services\ToolManagementService.ts:148:40)
+    at GET.logTitle (src\app\api\dcprint\tool\route.ts:20:34)
+    at errorMessage (src\lib\api-permissions.ts:961:28)
+    at <unknown> (src\lib\api-auth.ts:166:12)
+    at async (src\lib\api-auth.ts:202:14)
+  111 |         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
+  112 |       }
+> 113 |       const [rows] = await pool.query(sql, values);
+      |                                 ^
+  114 |       if (DEBUG_DB) {
+  115 |       }
+  116 |       return rows as T[]; {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted' in 'where clause'",
+  sql: 'SELECT COUNT(*) as total FROM dcprint_tool WHERE deleted = 0'
+}
+ GET /api/dcprint/tool?pageSize=3 500 in 73ms (compile: 5ms, proxy.ts: 5ms, render: 64ms)
+ GET /api/purchase/return?pageSize=5 200 in 248ms (compile: 204ms, proxy.ts: 4ms, render: 40ms)
+[RepoRegistry] active impl = mysql (default; set REPOSITORY_IMPL=drizzle to switch)
+[RepoRegistry] getInboundOrderRepository() → MysqlInboundOrderRepository (mysql)
+[RepoRegistry] getSalesOrderRepository() → MysqlSalesOrderRepository (mysql)
+ GET /api/sales/return?pageSize=5 200 in 295ms (compile: 248ms, proxy.ts: 3ms, render: 44ms)
+ GET /api/production/product-label?pageSize=5 200 in 136ms (compile: 113ms, proxy.ts: 2ms, render: 20ms)
+ GET /api/quality/incoming?pageSize=5 200 in 16ms (compile: 3ms, proxy.ts: 3ms, render: 10ms)
+[?25h

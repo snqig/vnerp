@@ -1,0 +1,717 @@
+{
+  "db": "vnerpdacahng",
+  "generatedAt": "2026-08-26T00:44:41.868Z",
+  "total": 88,
+  "byRisk": {
+    "SAFE": 88,
+    "LOW": 0,
+    "CAUTION": 0
+  },
+  "cautionTables": [],
+  "details": [
+    {
+      "table": "sys_exchange_rate_bak_20260816_gen",
+      "rows": 0,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "sal_sample_order_bak_chain_20260817",
+      "rows": 2,
+      "createTime": "Mon Aug 17 2026 16:44:41 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "sal_order_detail_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:44 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "sal_order_detail_bak_20260816_gen",
+      "rows": 3,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "sal_order_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:44 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "sal_order_bak_20260816_gen",
+      "rows": 3,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "sal_delivery_detail_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:44 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "sal_delivery_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:44 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "qc_inspection_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:44 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "qc_incoming_inspection_item_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "qc_incoming_inspection_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "pur_request_item_bak_pur_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 10:40:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "pur_request_item_bak_chain_20260817",
+      "rows": 2,
+      "createTime": "Mon Aug 17 2026 16:44:42 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "pur_request_bak_pur_20260817",
+      "rows": 3,
+      "createTime": "Mon Aug 17 2026 10:40:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "pur_request_bak_chain_20260817",
+      "rows": 2,
+      "createTime": "Mon Aug 17 2026 16:44:42 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "pur_purchase_order_line_bak_pur_20260817",
+      "rows": 81,
+      "createTime": "Mon Aug 17 2026 10:40:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "pur_purchase_order_line_bak_chain_20260817",
+      "rows": 2,
+      "createTime": "Mon Aug 17 2026 16:44:42 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "pur_purchase_order_line_bak_20260816_gen",
+      "rows": 32,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "pur_purchase_order_bak_pur_20260817",
+      "rows": 81,
+      "createTime": "Mon Aug 17 2026 10:40:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "pur_purchase_order_bak_chain_20260817",
+      "rows": 2,
+      "createTime": "Mon Aug 17 2026 16:44:42 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "pur_purchase_order_bak_20260816_gen",
+      "rows": 16,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "prod_work_order_material_req_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:42 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "prod_work_order_item_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:42 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "prod_work_order_bak_chain_20260817",
+      "rows": 2,
+      "createTime": "Mon Aug 17 2026 16:44:42 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "prd_work_report_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "prd_work_order_bak_20260816_gen",
+      "rows": 3,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "prd_standard_card_bak_chain_20260817",
+      "rows": 2,
+      "createTime": "Mon Aug 17 2026 16:44:41 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "prd_schedule_bak_20260816_gen",
+      "rows": 3,
+      "createTime": "Sun Aug 16 2026 22:55:26 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "prd_pick_order_item_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "prd_pick_order_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "prd_material_issue_item_bak_20260816_gen",
+      "rows": 123,
+      "createTime": "Sun Aug 16 2026 22:55:26 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "prd_material_issue_bak_20260816_gen",
+      "rows": 122,
+      "createTime": "Sun Aug 16 2026 22:55:26 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "prd_finish_order_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:44 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_transfer_order_bak_20260817e",
+      "rows": 3,
+      "createTime": "Mon Aug 17 2026 10:22:39 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_transfer_item_bak_20260817e",
+      "rows": 3,
+      "createTime": "Mon Aug 17 2026 10:22:39 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_stock_adjust_item_bak_20260817d",
+      "rows": 20,
+      "createTime": "Mon Aug 17 2026 10:17:48 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_stock_adjust_item_bak_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 10:21:41 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_stock_adjust_bak_20260817d",
+      "rows": 20,
+      "createTime": "Mon Aug 17 2026 10:17:48 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_stock_adjust_bak_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 10:21:41 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_sales_outbound_item_bak_20260817d",
+      "rows": 20,
+      "createTime": "Mon Aug 17 2026 10:17:48 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_sales_outbound_item_bak_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 10:21:41 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_sales_outbound_bak_20260817d",
+      "rows": 20,
+      "createTime": "Mon Aug 17 2026 10:17:48 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_sales_outbound_bak_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 10:21:41 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_production_inbound_item_bak_20260817",
+      "rows": 20,
+      "createTime": "Mon Aug 17 2026 10:21:41 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_production_inbound_bak_20260817",
+      "rows": 20,
+      "createTime": "Mon Aug 17 2026 10:21:41 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_outbound_order_bak_20260817d",
+      "rows": 25,
+      "createTime": "Mon Aug 17 2026 10:17:48 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_outbound_order_bak_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 10:21:40 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_outbound_item_bak_20260817d",
+      "rows": 25,
+      "createTime": "Mon Aug 17 2026 10:17:48 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_outbound_item_bak_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 10:21:40 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_transaction_bak_inv_20260817c",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 10:14:51 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_transaction_bak_inv_20260817b",
+      "rows": 105,
+      "createTime": "Mon Aug 17 2026 10:13:19 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_transaction_bak_chain_20260817",
+      "rows": 4,
+      "createTime": "Mon Aug 17 2026 16:44:45 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_transaction_bak_20260817",
+      "rows": 40,
+      "createTime": "Mon Aug 17 2026 10:21:41 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_transaction_bak_20260816_gen",
+      "rows": 0,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_log_bak_inv_20260817c",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 10:14:51 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_log_bak_inv_20260817b",
+      "rows": 105,
+      "createTime": "Mon Aug 17 2026 10:13:19 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_log_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:45 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_log_bak_20260817",
+      "rows": 40,
+      "createTime": "Mon Aug 17 2026 10:21:41 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_batch_bak_inv_20260817c",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 10:14:50 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_batch_bak_inv_20260817b",
+      "rows": 40,
+      "createTime": "Mon Aug 17 2026 10:13:19 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_batch_bak_chain_20260817",
+      "rows": 4,
+      "createTime": "Mon Aug 17 2026 16:44:44 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_batch_bak_20260817",
+      "rows": 40,
+      "createTime": "Mon Aug 17 2026 10:21:40 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_batch_bak_20260816_gen",
+      "rows": 127,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_bak_inv_20260817c",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 10:14:50 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_bak_inv_20260817b",
+      "rows": 40,
+      "createTime": "Mon Aug 17 2026 10:13:19 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_bak_chain_20260817",
+      "rows": 2,
+      "createTime": "Mon Aug 17 2026 16:44:44 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_bak_20260817",
+      "rows": 40,
+      "createTime": "Mon Aug 17 2026 10:21:40 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_bak_20260816_gen",
+      "rows": 103,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inventory_bak_20260816",
+      "rows": 102,
+      "createTime": "Sun Aug 16 2026 22:38:18 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inbound_order_bak_chain_20260817",
+      "rows": 2,
+      "createTime": "Mon Aug 17 2026 16:44:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inbound_order_bak_20260817",
+      "rows": 20,
+      "createTime": "Mon Aug 17 2026 10:21:40 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inbound_order_bak_20260816_gen",
+      "rows": 12,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inbound_item_bak_chain_20260817",
+      "rows": 2,
+      "createTime": "Mon Aug 17 2026 16:44:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inbound_item_bak_20260817",
+      "rows": 20,
+      "createTime": "Mon Aug 17 2026 10:21:40 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_inbound_item_bak_20260816_gen",
+      "rows": 21,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_cutting_record_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "inv_cutting_detail_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "hr_salary_standard_bak_20260816_gen",
+      "rows": 3,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "hr_salary_profile_bak_20260816_gen",
+      "rows": 7,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "hr_salary_calculation_bak_20260816_gen",
+      "rows": 7,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "hr_piece_work_detail_bak_20260816_gen",
+      "rows": 10,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "hr_piece_rate_bak_20260816_gen",
+      "rows": 3,
+      "createTime": "Sun Aug 16 2026 22:55:27 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "fin_receivable_bak_chain_20260817",
+      "rows": 0,
+      "createTime": "Mon Aug 17 2026 16:44:44 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "fin_payment_record_bak_pur_20260817",
+      "rows": 3,
+      "createTime": "Mon Aug 17 2026 10:40:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "fin_payable_bak_pur_20260817",
+      "rows": 5,
+      "createTime": "Mon Aug 17 2026 10:40:43 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "eng_sample_to_mass_bak_chain_20260817",
+      "rows": 2,
+      "createTime": "Mon Aug 17 2026 16:44:42 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "_ghost_backup_inv_inventory_transaction",
+      "rows": 16,
+      "createTime": "Mon Aug 24 2026 15:01:34 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    },
+    {
+      "table": "_ghost_backup_inv_inventory_batch",
+      "rows": 10,
+      "createTime": "Mon Aug 24 2026 15:01:34 GMT+0800 (中国标准时间)",
+      "referencedByCore": [],
+      "referencedByBackup": [],
+      "risk": "SAFE"
+    }
+  ]
+}

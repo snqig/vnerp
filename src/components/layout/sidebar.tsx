@@ -1,0 +1,750 @@
+'use client';
+
+/* eslint-disable @next/next/no-img-element */
+import { useState, useEffect, useRef, useCallback, useMemo as _useMemo } from 'react';
+import { Link, usePathname } from '@/i18n/navigation';
+import {
+  LayoutDashboard,
+  FileText,
+  Package,
+  Factory,
+  ClipboardCheck,
+  ShoppingCart,
+  Settings,
+  ChevronDown,
+  ChevronRight,
+  Menu,
+  X,
+  Printer,
+  Users,
+  Warehouse,
+  Banknote,
+  ShieldCheck,
+  Home,
+  ShoppingBag,
+  Globe,
+  Database,
+  Zap,
+  Palette,
+  GripVertical,
+  QrCode,
+  Scissors,
+  Search,
+  Droplets,
+  Wrench,
+  Truck,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { NavigationMode } from '@/hooks/useSnowAdminTheme';
+import { useCompanyName } from '@/hooks/useCompanyName';
+import { useTranslations } from 'next-intl';
+
+// 拖拽相关导入
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { authFetch } from '@/lib/auth-fetch';
+
+// 图标映射
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Home,
+  LayoutDashboard,
+  FileText,
+  Package,
+  Factory,
+  ClipboardCheck,
+  ShoppingCart,
+  Settings,
+  Printer,
+  Users,
+  Warehouse,
+  Banknote,
+  ShieldCheck,
+  ShoppingBag,
+  Globe,
+  Database,
+  Zap,
+  Palette,
+  QrCode,
+  Scissors,
+  Search,
+  Droplets,
+  Wrench,
+  Truck,
+};
+
+interface MenuItem {
+  id: number;
+  name: string;
+  code: string;
+  type: number;
+  icon?: string;
+  path?: string;
+  children?: MenuItem[];
+  sort_order?: number;
+}
+
+// 可拖拽的菜单项组件
+interface SortableMenuItemProps {
+  menu: MenuItem;
+  level: number;
+  collapsed: boolean;
+  active: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+  getIcon: (iconName?: string) => React.ReactNode;
+  getMenuName: (menu: MenuItem) => string;
+  renderChildren: (menu: MenuItem, level: number) => React.ReactNode;
+  onMenuClick?: (menuPath?: string) => void;
+}
+
+function SortableMenuItem({
+  menu,
+  level,
+  collapsed,
+  active,
+  expanded,
+  onToggle,
+  getIcon,
+  getMenuName,
+  renderChildren,
+  onMenuClick,
+}: SortableMenuItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: menu.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+  };
+
+  const hasChildren = menu.children && menu.children.length > 0;
+
+  if (hasChildren) {
+    return (
+      <div ref={setNodeRef} style={style} className="mb-1">
+        <button
+          onClick={onToggle}
+          aria-expanded={expanded}
+          aria-label={`${getMenuName(menu)} ${expanded ? 'collapse' : 'expand'}`}
+          className={cn(
+            'w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group',
+            active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
+          )}
+          style={{ paddingLeft: collapsed ? '12px' : `${12 + level * 12}px` }}
+        >
+          <div className="flex items-center gap-3 flex-1">
+            {!collapsed && (
+              <span
+                {...attributes}
+                {...listeners}
+                aria-label="Drag to reorder"
+                className="cursor-grab active:cursor-grabbing p-1 hover:bg-accent rounded opacity-0 group-hover:opacity-100 transition-opacity inline-flex"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GripVertical className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+              </span>
+            )}
+            {getIcon(menu.icon)}
+            {!collapsed && <span>{getMenuName(menu)}</span>}
+          </div>
+          {!collapsed &&
+            (expanded ? (
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
+            ) : (
+              <ChevronRight className="w-4 h-4" aria-hidden="true" />
+            ))}
+        </button>
+        {expanded && !collapsed && (
+          <div className="mt-1 ml-4">
+            {menu.children!.map((child) => renderChildren(child, level + 1))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="mb-1 group">
+      <Link
+        href={menu.path || '#'}
+        onClick={() => onMenuClick?.(menu.path)}
+        className={cn(
+          'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
+          active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
+        )}
+        style={{ paddingLeft: collapsed ? '12px' : `${12 + level * 12}px` }}
+        title={collapsed ? getMenuName(menu) : undefined}
+      >
+        {!collapsed && (
+          <span
+            {...attributes}
+            {...listeners}
+            aria-label="Drag to reorder"
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-accent rounded opacity-0 group-hover:opacity-100 transition-opacity inline-flex"
+            onClick={(e) => e.preventDefault()}
+          >
+            <GripVertical className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+          </span>
+        )}
+        {getIcon(menu.icon)}
+        {!collapsed && <span>{getMenuName(menu)}</span>}
+      </Link>
+    </div>
+  );
+}
+
+interface SidebarProps {
+  navigationMode?: NavigationMode;
+}
+
+// 模块级缓存已警告过的翻译缺失键，避免重复打印（不触发重渲染）
+const warnedKeys = new Set<string>();
+
+export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
+  const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+  const [orderedMenus, setOrderedMenus] = useState<MenuItem[]>([]);
+  const [activeParentCode, setActiveParentCode] = useState<string | null>(null);
+  const {
+    menus,
+    isLoading,
+    user,
+    isAuthenticated: _isAuthenticated,
+    logout,
+    isHydrated,
+  } = useAuth();
+  const { companyName } = useCompanyName();
+  const t = useTranslations('Auth');
+  const tc = useTranslations('Common');
+  const tn = useTranslations('Nav');
+  const { toast } = useToast();
+
+  // 获取菜单的翻译名称
+  const getMenuName = (menu: MenuItem): string => {
+    // 尝试使用菜单 code 作为翻译键
+    if (menu.code) {
+      try {
+        const translated = tn(menu.code);
+        // 如果翻译存在且不等于翻译键本身，使用翻译
+        // next-intl 在找不到翻译时会返回翻译键本身
+        if (translated && translated !== menu.code && translated.trim() !== '') {
+          return translated;
+        } else {
+          // 只在首次缺失时打印一次警告
+          if (!warnedKeys.has(menu.code)) {
+            warnedKeys.add(menu.code);
+          }
+        }
+      } catch {
+        // 只在首次异常时打印一次警告
+        if (!warnedKeys.has(menu.code)) {
+          warnedKeys.add(menu.code);
+        }
+      }
+    }
+    return menu.name;
+  };
+
+  // 从 localStorage 加载排序
+  // 用ref缓存menus的序列化值，避免引用变化但内容不变时触发重排序
+  const menusSnapshotRef = useRef<string>('');
+
+  useEffect(() => {
+    // 确保 menus 是数组
+    const safeMenus = Array.isArray(menus) ? menus : [];
+
+    // 深度比较：内容没变就跳过
+    const snapshot = JSON.stringify(
+      safeMenus.map((m: MenuItem) => ({
+        id: m.id,
+        name: m.name,
+        code: m.code,
+        path: m.path,
+        sort_order: m.sort_order,
+        childrenCount: m.children?.length,
+      }))
+    );
+    if (snapshot === menusSnapshotRef.current) return;
+    menusSnapshotRef.current = snapshot;
+
+    const savedOrder = localStorage.getItem('menu_order');
+    if (savedOrder) {
+      try {
+        const orderIds = JSON.parse(savedOrder) as number[];
+        // 根据保存的ID顺序重新排序菜单
+        const sortedMenus = [...safeMenus].sort((a, b) => {
+          const indexA = orderIds.indexOf(a.id);
+          const indexB = orderIds.indexOf(b.id);
+          if (indexA === -1 && indexB === -1) return (a.sort_order || 0) - (b.sort_order || 0);
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          return indexA - indexB;
+        });
+        setOrderedMenus(sortedMenus);
+      } catch {
+        setOrderedMenus(safeMenus);
+      }
+    } else {
+      setOrderedMenus(safeMenus);
+    }
+  }, [menus]);
+
+  // 保存排序到 localStorage（立即）和数据库（防抖）
+  const saveToLocalStorage = useCallback((newOrder: MenuItem[]) => {
+    const orderIds = newOrder.map((m) => m.id);
+    localStorage.setItem('menu_order', JSON.stringify(orderIds));
+  }, []);
+
+  // 防抖保存到数据库
+  const debouncedSaveToDatabase = useCallback((orders: MenuItem[]) => {
+    const orderData = orders.map((m, index) => ({
+      id: m.id,
+      sort_order: index + 1,
+    }));
+
+    authFetch('/api/menu/sort-order', {
+      method: 'POST',
+      body: JSON.stringify({ orders: orderData }),
+    }).catch(() => {});
+  }, []);
+
+  // 保存排序（先本地，再防抖保存到数据库）
+  const saveMenuOrder = useCallback(
+    (newOrder: MenuItem[]) => {
+      // 立即保存到 localStorage
+      saveToLocalStorage(newOrder);
+
+      // 延迟保存到数据库（防抖）
+      const timer = setTimeout(() => {
+        debouncedSaveToDatabase(newOrder);
+      }, 800);
+
+      return () => clearTimeout(timer);
+    },
+    [saveToLocalStorage, debouncedSaveToDatabase]
+  );
+
+  useEffect(() => {
+    const expandActiveParent = () => {
+      setExpandedMenus((prev) => {
+        const codesToExpand: string[] = [...prev];
+        let changed = false;
+        for (const menu of orderedMenus) {
+          if (menu.children && menu.children.length > 0) {
+            for (const child of menu.children) {
+              if (isActive(child.path)) {
+                if (!codesToExpand.includes(menu.code)) {
+                  codesToExpand.push(menu.code);
+                  changed = true;
+                }
+                break;
+              }
+            }
+          }
+        }
+        // 只有变化时才更新，避免不必要的重渲染
+        if (!changed) return prev;
+        return codesToExpand;
+      });
+    };
+    expandActiveParent();
+  }, [pathname, orderedMenus]);
+
+  // 配置拖拽传感器
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // 处理拖拽结束
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      if (over && active.id !== over.id) {
+        setOrderedMenus((items) => {
+          const oldIndex = items.findIndex((item) => item.id === active.id);
+          const newIndex = items.findIndex((item) => item.id === over.id);
+          const newOrder = arrayMove(items, oldIndex, newIndex);
+          saveMenuOrder(newOrder);
+          toast({ title: tc('menuOrderSaved') });
+          return newOrder;
+        });
+      }
+    },
+    [saveMenuOrder]
+  );
+
+  // 切换菜单展开状态
+  const toggleMenu = (code: string) => {
+    setExpandedMenus((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
+    );
+  };
+
+  // 点击菜单项：确保父菜单展开 + 移动端关闭侧边栏
+  const handleMenuClick = useCallback(
+    (menuPath?: string) => {
+      // 确保父菜单保持展开
+      if (menuPath) {
+        setExpandedMenus((prev) => {
+          for (const menu of orderedMenus) {
+            if (menu.children) {
+              for (const child of menu.children) {
+                if (child.path === menuPath) {
+                  if (!prev.includes(menu.code)) {
+                    return [...prev, menu.code];
+                  }
+                  return prev; // 无变化，不触发重渲染
+                }
+              }
+            }
+          }
+          return prev;
+        });
+      }
+      // 移动端延迟关闭侧边栏
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+        setTimeout(() => setCollapsed(true), 300);
+      }
+    },
+    [orderedMenus]
+  );
+
+  // 获取图标组件
+  const getIcon = (iconName?: string) => {
+    if (!iconName) return <LayoutDashboard className="w-5 h-5" />;
+    const IconComponent = iconMap[iconName];
+    return IconComponent ? (
+      <IconComponent className="w-5 h-5" />
+    ) : (
+      <LayoutDashboard className="w-5 h-5" />
+    );
+  };
+
+  // 检查菜单是否激活
+  const isActive = (path?: string) => {
+    if (!path) return false;
+    return pathname === path || pathname.startsWith(path + '/');
+  };
+
+  // 计算当前激活的一级菜单（用于混合导航模式）
+  useEffect(() => {
+    if (navigationMode !== 'mixed') return;
+    for (const menu of orderedMenus) {
+      if (menu.children) {
+        for (const child of menu.children) {
+          if (isActive(child.path)) {
+            setActiveParentCode(menu.code);
+            return;
+          }
+        }
+      }
+      if (isActive(menu.path)) {
+        setActiveParentCode(menu.code);
+        return;
+      }
+    }
+    setActiveParentCode(null);
+  }, [pathname, orderedMenus, navigationMode]);
+
+  // 获取混合模式下当前激活的子菜单
+  const mixedSubMenus =
+    navigationMode === 'mixed' && activeParentCode
+      ? orderedMenus.find((m) => m.code === activeParentCode)?.children || []
+      : [];
+
+  // 渲染子菜单（非拖拽）
+  const renderMenuItem = (menu: MenuItem, level: number = 0): React.ReactNode => {
+    const hasChildren = menu.children && menu.children.length > 0;
+    const isExpanded = expandedMenus.includes(menu.code);
+    const active = isActive(menu.path);
+
+    if (hasChildren) {
+      return (
+        <div key={menu.id} className="mb-1">
+          <button
+            onClick={() => toggleMenu(menu.code)}
+            aria-expanded={isExpanded}
+            aria-label={`${getMenuName(menu)} ${isExpanded ? 'collapse' : 'expand'}`}
+            className={cn(
+              'w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
+              active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
+            )}
+            style={{ paddingLeft: collapsed ? '12px' : `${12 + level * 12}px` }}
+          >
+            <div className="flex items-center gap-3">
+              {getIcon(menu.icon)}
+              {!collapsed && <span>{getMenuName(menu)}</span>}
+            </div>
+            {!collapsed &&
+              (isExpanded ? (
+                <ChevronDown className="w-4 h-4" aria-hidden="true" />
+              ) : (
+                <ChevronRight className="w-4 h-4" aria-hidden="true" />
+              ))}
+          </button>
+          {isExpanded && !collapsed && (
+            <div className="mt-1 ml-4">
+              {menu.children!.map((child) => renderMenuItem(child, level + 1))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        key={menu.id}
+        href={menu.path || '#'}
+        onClick={() => handleMenuClick(menu.path)}
+        className={cn(
+          'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors mb-1',
+          active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
+        )}
+        style={{ paddingLeft: collapsed ? '12px' : `${12 + level * 12}px` }}
+        title={collapsed ? getMenuName(menu) : undefined}
+      >
+        {getIcon(menu.icon)}
+        {!collapsed && <span>{getMenuName(menu)}</span>}
+      </Link>
+    );
+  };
+
+  // 顶部导航模式下不渲染侧边栏
+  if (navigationMode === 'top') {
+    return null;
+  }
+
+  return (
+    <>
+      {/* 移动端菜单按钮 */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed top-4 left-4 z-50 lg:hidden"
+        onClick={() => setCollapsed(!collapsed)}
+        aria-label={collapsed ? 'Open menu' : 'Close menu'}
+      >
+        {collapsed ? (
+          <Menu className="w-5 h-5" aria-hidden="true" />
+        ) : (
+          <X className="w-5 h-5" aria-hidden="true" />
+        )}
+      </Button>
+
+      {/* 侧边栏 */}
+      <aside
+        data-sidebar="true"
+        className={cn(
+          'fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-all duration-300 lg:static',
+          navigationMode === 'mixed' ? 'w-52' : collapsed ? 'w-16' : 'w-64',
+          collapsed && navigationMode !== 'mixed'
+            ? '-translate-x-full lg:translate-x-0'
+            : 'translate-x-0'
+        )}
+      >
+        {/* Logo区域 - 混合模式下隐藏 */}
+        {navigationMode !== 'mixed' && (
+          <div className="h-16 flex items-center justify-center border-b border-border">
+            {collapsed ? (
+              <img src="/loginlogo.png" alt="达昌" className="w-8 h-8 rounded-lg object-contain" />
+            ) : (
+              <div className="flex items-center gap-2">
+                <img
+                  src="/loginlogo.png"
+                  alt="达昌"
+                  className="w-8 h-8 rounded-lg object-contain"
+                />
+                <span
+                  suppressHydrationWarning
+                  className="font-bold text-xs text-foreground whitespace-nowrap overflow-hidden text-ellipsis"
+                >
+                  {companyName}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 混合导航模式 - 显示当前一级菜单的子菜单 */}
+        {navigationMode === 'mixed' && (
+          <div className="h-full flex flex-col">
+            <div className="h-16 flex items-center px-4 border-b border-border">
+              <span className="font-semibold text-sm text-foreground">
+                {getMenuName(orderedMenus.find((m) => m.code === activeParentCode)!) || '子菜单'}
+              </span>
+            </div>
+            <ScrollArea className="flex-1">
+              <nav className="p-3">
+                {mixedSubMenus.length > 0 ? (
+                  mixedSubMenus.map((child) => (
+                    <Link
+                      key={child.id}
+                      href={child.path || '#'}
+                      onClick={() => handleMenuClick(child.path)}
+                      className={cn('snow-mixed-submenu-item', isActive(child.path) && 'active')}
+                    >
+                      {getIcon(child.icon)}
+                      <span>{getMenuName(child)}</span>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    {tc('selectFromTopMenu')}
+                  </div>
+                )}
+              </nav>
+            </ScrollArea>
+          </div>
+        )}
+
+        {/* 标准侧边栏导航模式 */}
+        {navigationMode !== 'mixed' && (
+          <>
+            {/* 菜单区域 */}
+            <ScrollArea className="flex-1 h-[calc(100vh-8rem)]">
+              <nav className="p-3" suppressHydrationWarning>
+                {!isHydrated || isLoading ? (
+                  collapsed ? (
+                    <div className="space-y-1" aria-busy="true">
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="flex justify-center px-3 py-2.5 animate-pulse">
+                          <div className="w-5 h-5 rounded bg-muted" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-1" aria-busy="true" aria-label="Loading menu">
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="flex items-center gap-3 px-3 py-2.5 animate-pulse">
+                          <div className="w-5 h-5 rounded bg-muted flex-shrink-0" />
+                          <div
+                            className="h-3 rounded bg-muted"
+                            style={{ width: `${60 + i * 5}%` }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )
+                ) : !Array.isArray(orderedMenus) || orderedMenus.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    {tc('noMenuPermission')}
+                  </div>
+                ) : (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={orderedMenus.map((m) => m.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {orderedMenus.map((menu) => (
+                        <SortableMenuItem
+                          key={menu.id}
+                          menu={menu}
+                          level={0}
+                          collapsed={collapsed}
+                          active={isActive(menu.path)}
+                          expanded={expandedMenus.includes(menu.code)}
+                          onToggle={() => toggleMenu(menu.code)}
+                          getIcon={getIcon}
+                          getMenuName={getMenuName}
+                          renderChildren={renderMenuItem}
+                          onMenuClick={handleMenuClick}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                )}
+              </nav>
+            </ScrollArea>
+
+            {/* 底部用户信息 */}
+            <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border bg-background">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                  <Users className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                </div>
+                {!collapsed && (
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {user ? user.realName || user.username : t('login')}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user?.roles?.[0]?.role_name || tc('status')}
+                    </p>
+                  </div>
+                )}
+                {!collapsed && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={logout}
+                    className="text-muted-foreground hover:text-red-600"
+                  >
+                    {t('logout')}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* 折叠按钮 */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute -right-3 top-20 hidden lg:flex w-6 h-6 rounded-full bg-background border border-border shadow-sm"
+              onClick={() => setCollapsed(!collapsed)}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {collapsed ? (
+                <ChevronRight className="w-3 h-3" aria-hidden="true" />
+              ) : (
+                <ChevronDown className="w-3 h-3 rotate-90" aria-hidden="true" />
+              )}
+            </Button>
+          </>
+        )}
+      </aside>
+
+      {/* 移动端遮罩 */}
+      {!collapsed && (
+        <button
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setCollapsed(true)}
+          aria-label="Close menu"
+        />
+      )}
+    </>
+  );
+}

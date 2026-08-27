@@ -1,0 +1,7167 @@
+[
+  {
+    "path": "agency-agents\\academic\\academic-anthropologist.md",
+    "size": 7878,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\academic\\academic-geographer.md",
+    "size": 7740,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\academic\\academic-historian.md",
+    "size": 7272,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\academic\\academic-narratologist.md",
+    "size": 6797,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\academic\\academic-psychologist.md",
+    "size": 7833,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\CONTRIBUTING.md",
+    "size": 14305,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\CONTRIBUTING_zh-CN.md",
+    "size": 9677,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\design\\design-brand-guardian.md",
+    "size": 11641,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\design\\design-image-prompt-engineer.md",
+    "size": 11160,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\design\\design-inclusive-visuals-specialist.md",
+    "size": 6799,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\design\\design-ui-designer.md",
+    "size": 13339,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\design\\design-ux-architect.md",
+    "size": 15758,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\design\\design-ux-researcher.md",
+    "size": 13030,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\design\\design-visual-storyteller.md",
+    "size": 7416,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\design\\design-whimsy-injector.md",
+    "size": 15851,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-ai-data-remediation-engineer.md",
+    "size": 10691,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-ai-engineer.md",
+    "size": 7383,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-autonomous-optimization-architect.md",
+    "size": 7953,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-backend-architect.md",
+    "size": 9542,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-cms-developer.md",
+    "size": 19520,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-code-reviewer.md",
+    "size": 3076,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-codebase-onboarding-engineer.md",
+    "size": 9569,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-data-engineer.md",
+    "size": 14687,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-database-optimizer.md",
+    "size": 5533,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-devops-automator.md",
+    "size": 12879,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-email-intelligence-engineer.md",
+    "size": 16550,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-embedded-firmware-engineer.md",
+    "size": 6562,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-feishu-integration-developer.md",
+    "size": 21127,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-filament-optimization-specialist.md",
+    "size": 14269,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-frontend-developer.md",
+    "size": 9283,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-git-workflow-master.md",
+    "size": 3342,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-incident-response-commander.md",
+    "size": 21121,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-minimal-change-engineer.md",
+    "size": 11231,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-mobile-app-builder.md",
+    "size": 17034,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-rapid-prototyper.md",
+    "size": 15492,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-security-engineer.md",
+    "size": 17731,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-senior-developer.md",
+    "size": 6252,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-software-architect.md",
+    "size": 3719,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-solidity-smart-contract-engineer.md",
+    "size": 21714,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-sre.md",
+    "size": 3882,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-technical-writer.md",
+    "size": 14210,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-threat-detection-engineer.md",
+    "size": 24873,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-voice-ai-integration-engineer.md",
+    "size": 27288,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\engineering\\engineering-wechat-mini-program-developer.md",
+    "size": 15566,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\examples\\nexus-spatial-discovery.md",
+    "size": 40664,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\examples\\README.md",
+    "size": 2402,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\examples\\workflow-book-chapter.md",
+    "size": 2101,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\examples\\workflow-landing-page.md",
+    "size": 3389,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\examples\\workflow-startup-mvp.md",
+    "size": 4594,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\examples\\workflow-with-memory.md",
+    "size": 9090,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\finance\\finance-bookkeeper-controller.md",
+    "size": 15247,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\finance\\finance-financial-analyst.md",
+    "size": 13448,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\finance\\finance-fpa-analyst.md",
+    "size": 16614,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\finance\\finance-investment-researcher.md",
+    "size": 15678,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\finance\\finance-tax-strategist.md",
+    "size": 13731,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\blender\\blender-addon-engineer.md",
+    "size": 10954,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\game-audio-engineer.md",
+    "size": 12298,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\game-designer.md",
+    "size": 8433,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\godot\\godot-gameplay-scripter.md",
+    "size": 15538,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\godot\\godot-multiplayer-engineer.md",
+    "size": 13918,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\godot\\godot-shader-developer.md",
+    "size": 13392,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\level-designer.md",
+    "size": 10340,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\narrative-designer.md",
+    "size": 13160,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\roblox-studio\\roblox-avatar-creator.md",
+    "size": 14116,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\roblox-studio\\roblox-experience-designer.md",
+    "size": 14863,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\roblox-studio\\roblox-systems-scripter.md",
+    "size": 15204,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\technical-artist.md",
+    "size": 11220,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\unity\\unity-architect.md",
+    "size": 12244,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\unity\\unity-editor-tool-developer.md",
+    "size": 14889,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\unity\\unity-multiplayer-engineer.md",
+    "size": 14947,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\unity\\unity-shader-graph-artist.md",
+    "size": 13080,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\unreal-engine\\unreal-multiplayer-architect.md",
+    "size": 14039,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\unreal-engine\\unreal-systems-engineer.md",
+    "size": 15507,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\unreal-engine\\unreal-technical-artist.md",
+    "size": 11854,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\game-development\\unreal-engine\\unreal-world-builder.md",
+    "size": 14011,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\aider\\README.md",
+    "size": 691,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\antigravity\\README.md",
+    "size": 1009,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\claude-code\\README.md",
+    "size": 712,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\cursor\\README.md",
+    "size": 729,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\gemini-cli\\README.md",
+    "size": 734,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\github-copilot\\README.md",
+    "size": 759,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\kimi\\README.md",
+    "size": 2027,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\mcp-memory\\backend-architect-with-memory.md",
+    "size": 10940,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\mcp-memory\\README.md",
+    "size": 3760,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\mcp-memory\\setup.sh",
+    "size": 2227,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\openclaw\\README.md",
+    "size": 697,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\accessibility-auditor.md",
+    "size": 15232,
+    "modified": "2026-05-05 00:30:49"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\account-strategist.md",
+    "size": 14762,
+    "modified": "2026-05-05 00:29:59"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\accounts-payable-agent.md",
+    "size": 6712,
+    "modified": "2026-05-05 00:30:09"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\ad-creative-strategist.md",
+    "size": 4990,
+    "modified": "2026-05-05 00:29:47"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\agentic-identity-trust-architect.md",
+    "size": 18296,
+    "modified": "2026-05-05 00:30:10"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\agentic-search-optimizer.md",
+    "size": 15553,
+    "modified": "2026-05-05 00:29:23"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\agents-orchestrator.md",
+    "size": 15647,
+    "modified": "2026-05-05 00:30:10"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\ai-citation-strategist.md",
+    "size": 9274,
+    "modified": "2026-05-05 00:29:24"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\ai-data-remediation-engineer.md",
+    "size": 10584,
+    "modified": "2026-05-05 00:28:44"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\ai-engineer.md",
+    "size": 7320,
+    "modified": "2026-05-05 00:28:45"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\analytics-reporter.md",
+    "size": 15722,
+    "modified": "2026-05-05 00:30:41"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\anthropologist.md",
+    "size": 7786,
+    "modified": "2026-05-05 00:28:36"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\api-tester.md",
+    "size": 12481,
+    "modified": "2026-05-05 00:30:50"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\app-store-optimizer.md",
+    "size": 13024,
+    "modified": "2026-05-05 00:29:25"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\automation-governance-architect.md",
+    "size": 5744,
+    "modified": "2026-05-05 00:30:11"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\autonomous-optimization-architect.md",
+    "size": 7881,
+    "modified": "2026-05-05 00:28:45"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\backend-architect.md",
+    "size": 9459,
+    "modified": "2026-05-05 00:28:46"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\baidu-seo-specialist.md",
+    "size": 12887,
+    "modified": "2026-05-05 00:29:26"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\behavioral-nudge-engine.md",
+    "size": 5244,
+    "modified": "2026-05-05 00:29:52"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\bilibili-content-strategist.md",
+    "size": 11593,
+    "modified": "2026-05-05 00:29:27"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\blender-add-on-engineer.md",
+    "size": 10860,
+    "modified": "2026-05-05 00:29:09"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\blockchain-security-auditor.md",
+    "size": 21051,
+    "modified": "2026-05-05 00:30:12"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\book-co-author.md",
+    "size": 4989,
+    "modified": "2026-05-05 00:29:27"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\bookkeeper-controller.md",
+    "size": 15152,
+    "modified": "2026-05-05 00:29:05"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\brand-guardian.md",
+    "size": 11574,
+    "modified": "2026-05-05 00:28:39"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\carousel-growth-engine.md",
+    "size": 14593,
+    "modified": "2026-05-05 00:29:28"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\chief-of-staff.md",
+    "size": 18118,
+    "modified": "2026-05-05 00:30:28"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\china-e-commerce-operator.md",
+    "size": 16711,
+    "modified": "2026-05-05 00:29:29"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\china-market-localization-strategist.md",
+    "size": 16796,
+    "modified": "2026-05-05 00:29:30"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\civil-engineer.md",
+    "size": 16931,
+    "modified": "2026-05-05 00:30:28"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\cms-developer.md",
+    "size": 19500,
+    "modified": "2026-05-05 00:28:47"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\code-reviewer.md",
+    "size": 2994,
+    "modified": "2026-05-05 00:28:49"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\codebase-onboarding-engineer.md",
+    "size": 9455,
+    "modified": "2026-05-05 00:28:48"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\compliance-auditor.md",
+    "size": 7125,
+    "modified": "2026-05-05 00:30:13"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\content-creator.md",
+    "size": 3012,
+    "modified": "2026-05-05 00:29:30"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\corporate-training-designer.md",
+    "size": 15472,
+    "modified": "2026-05-05 00:30:13"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\cross-border-e-commerce-specialist.md",
+    "size": 17346,
+    "modified": "2026-05-05 00:29:31"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\cultural-intelligence-strategist.md",
+    "size": 6559,
+    "modified": "2026-05-05 00:30:29"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\customer-service.md",
+    "size": 19033,
+    "modified": "2026-05-05 00:30:14"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\data-consolidation-agent.md",
+    "size": 2321,
+    "modified": "2026-05-05 00:30:15"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\data-engineer.md",
+    "size": 14605,
+    "modified": "2026-05-05 00:28:50"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\database-optimizer.md",
+    "size": 5449,
+    "modified": "2026-05-05 00:28:49"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\deal-strategist.md",
+    "size": 13625,
+    "modified": "2026-05-05 00:30:01"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\developer-advocate.md",
+    "size": 14734,
+    "modified": "2026-05-05 00:30:30"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\devops-automator.md",
+    "size": 12796,
+    "modified": "2026-05-05 00:28:51"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\discovery-coach.md",
+    "size": 13501,
+    "modified": "2026-05-05 00:30:01"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\document-generator.md",
+    "size": 2361,
+    "modified": "2026-05-05 00:30:30"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\douyin-strategist.md",
+    "size": 6882,
+    "modified": "2026-05-05 00:29:32"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\email-intelligence-engineer.md",
+    "size": 16442,
+    "modified": "2026-05-05 00:28:52"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\embedded-firmware-engineer.md",
+    "size": 6488,
+    "modified": "2026-05-05 00:28:52"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\evidence-collector.md",
+    "size": 8274,
+    "modified": "2026-05-05 00:30:52"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\executive-summary-generator.md",
+    "size": 8929,
+    "modified": "2026-05-05 00:30:42"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\experiment-tracker.md",
+    "size": 9385,
+    "modified": "2026-05-05 00:29:55"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\feedback-synthesizer.md",
+    "size": 7140,
+    "modified": "2026-05-05 00:29:52"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\feishu-integration-developer.md",
+    "size": 20981,
+    "modified": "2026-05-05 00:28:53"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\filament-optimization-specialist.md",
+    "size": 14201,
+    "modified": "2026-05-05 00:28:54"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\finance-tracker.md",
+    "size": 19176,
+    "modified": "2026-05-05 00:30:43"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\financial-analyst.md",
+    "size": 13333,
+    "modified": "2026-05-05 00:29:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\fp-a-analyst.md",
+    "size": 16532,
+    "modified": "2026-05-05 00:29:07"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\french-consulting-market-navigator.md",
+    "size": 11038,
+    "modified": "2026-05-05 00:30:31"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\frontend-developer.md",
+    "size": 9206,
+    "modified": "2026-05-05 00:28:55"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\game-audio-engineer.md",
+    "size": 12221,
+    "modified": "2026-05-05 00:29:10"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\game-designer.md",
+    "size": 8351,
+    "modified": "2026-05-05 00:29:11"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\geographer.md",
+    "size": 7669,
+    "modified": "2026-05-05 00:28:37"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\git-workflow-master.md",
+    "size": 3279,
+    "modified": "2026-05-05 00:28:55"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\godot-gameplay-scripter.md",
+    "size": 15461,
+    "modified": "2026-05-05 00:29:11"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\godot-multiplayer-engineer.md",
+    "size": 13846,
+    "modified": "2026-05-05 00:29:12"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\godot-shader-developer.md",
+    "size": 13308,
+    "modified": "2026-05-05 00:29:13"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\government-digital-presales-consultant.md",
+    "size": 22604,
+    "modified": "2026-05-05 00:30:15"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\growth-hacker.md",
+    "size": 2932,
+    "modified": "2026-05-05 00:29:33"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\healthcare-customer-service.md",
+    "size": 21946,
+    "modified": "2026-05-05 00:30:16"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\healthcare-marketing-compliance-specialist.md",
+    "size": 35139,
+    "modified": "2026-05-05 00:30:17"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\historian.md",
+    "size": 7201,
+    "modified": "2026-05-05 00:28:37"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\hospitality-guest-services.md",
+    "size": 27574,
+    "modified": "2026-05-05 00:30:17"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\hr-onboarding.md",
+    "size": 23759,
+    "modified": "2026-05-05 00:30:18"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\identity-graph-operator.md",
+    "size": 14018,
+    "modified": "2026-05-05 00:30:19"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\image-prompt-engineer.md",
+    "size": 11071,
+    "modified": "2026-05-05 00:28:39"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\incident-response-commander.md",
+    "size": 21055,
+    "modified": "2026-05-05 00:28:56"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\inclusive-visuals-specialist.md",
+    "size": 6717,
+    "modified": "2026-05-05 00:28:40"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\infrastructure-maintainer.md",
+    "size": 22294,
+    "modified": "2026-05-05 00:30:44"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\instagram-curator.md",
+    "size": 6487,
+    "modified": "2026-05-05 00:29:33"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\investment-researcher.md",
+    "size": 15558,
+    "modified": "2026-05-05 00:29:08"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\jira-workflow-steward.md",
+    "size": 13416,
+    "modified": "2026-05-05 00:29:56"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\korean-business-navigator.md",
+    "size": 13946,
+    "modified": "2026-05-05 00:30:32"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\kuaishou-strategist.md",
+    "size": 13822,
+    "modified": "2026-05-05 00:29:34"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\language-translator.md",
+    "size": 15940,
+    "modified": "2026-05-05 00:30:19"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\legal-billing-time-tracking.md",
+    "size": 27049,
+    "modified": "2026-05-05 00:30:20"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\legal-client-intake.md",
+    "size": 25413,
+    "modified": "2026-05-05 00:30:21"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\legal-compliance-checker.md",
+    "size": 26455,
+    "modified": "2026-05-05 00:30:46"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\legal-document-review.md",
+    "size": 24573,
+    "modified": "2026-05-05 00:30:22"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\level-designer.md",
+    "size": 10265,
+    "modified": "2026-05-05 00:29:13"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\linkedin-content-creator.md",
+    "size": 13261,
+    "modified": "2026-05-05 00:29:35"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\livestream-commerce-coach.md",
+    "size": 17082,
+    "modified": "2026-05-05 00:29:35"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\loan-officer-assistant.md",
+    "size": 28303,
+    "modified": "2026-05-05 00:30:22"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\lsp-index-engineer.md",
+    "size": 11112,
+    "modified": "2026-05-05 00:30:23"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\macos-spatial-metal-engineer.md",
+    "size": 12062,
+    "modified": "2026-05-05 00:30:05"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\mcp-builder.md",
+    "size": 11987,
+    "modified": "2026-05-05 00:30:32"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\minimal-change-engineer.md",
+    "size": 11149,
+    "modified": "2026-05-05 00:28:57"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\mobile-app-builder.md",
+    "size": 16975,
+    "modified": "2026-05-05 00:28:57"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\model-qa-specialist.md",
+    "size": 20051,
+    "modified": "2026-05-05 00:30:33"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\narrative-designer.md",
+    "size": 13092,
+    "modified": "2026-05-05 00:29:14"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\narratologist.md",
+    "size": 6719,
+    "modified": "2026-05-05 00:28:38"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\outbound-strategist.md",
+    "size": 10662,
+    "modified": "2026-05-05 00:30:03"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\paid-media-auditor.md",
+    "size": 5392,
+    "modified": "2026-05-05 00:29:46"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\paid-social-strategist.md",
+    "size": 5275,
+    "modified": "2026-05-05 00:29:48"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\performance-benchmarker.md",
+    "size": 12131,
+    "modified": "2026-05-05 00:30:53"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\pipeline-analyst.md",
+    "size": 18693,
+    "modified": "2026-05-05 00:30:03"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\podcast-strategist.md",
+    "size": 17955,
+    "modified": "2026-05-05 00:29:36"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\ppc-campaign-strategist.md",
+    "size": 4821,
+    "modified": "2026-05-05 00:29:48"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\private-domain-operator.md",
+    "size": 16093,
+    "modified": "2026-05-05 00:29:37"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\product-manager.md",
+    "size": 22406,
+    "modified": "2026-05-05 00:29:53"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\programmatic-display-buyer.md",
+    "size": 5105,
+    "modified": "2026-05-05 00:29:49"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\project-shepherd.md",
+    "size": 9758,
+    "modified": "2026-05-05 00:29:57"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\proposal-strategist.md",
+    "size": 14232,
+    "modified": "2026-05-05 00:30:04"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\psychologist.md",
+    "size": 7771,
+    "modified": "2026-05-05 00:28:38"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\rapid-prototyper.md",
+    "size": 15420,
+    "modified": "2026-05-05 00:28:58"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\real-estate-buyer-seller.md",
+    "size": 30899,
+    "modified": "2026-05-05 00:30:24"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\reality-checker.md",
+    "size": 9880,
+    "modified": "2026-05-05 00:30:55"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\recruitment-specialist.md",
+    "size": 29282,
+    "modified": "2026-05-05 00:30:24"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\reddit-community-builder.md",
+    "size": 7429,
+    "modified": "2026-05-05 00:29:38"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\report-distribution-agent.md",
+    "size": 2582,
+    "modified": "2026-05-05 00:30:25"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\retail-customer-returns.md",
+    "size": 27510,
+    "modified": "2026-05-05 00:30:26"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\roblox-avatar-creator.md",
+    "size": 14042,
+    "modified": "2026-05-05 00:29:15"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\roblox-experience-designer.md",
+    "size": 14784,
+    "modified": "2026-05-05 00:29:16"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\roblox-systems-scripter.md",
+    "size": 15122,
+    "modified": "2026-05-05 00:29:16"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\sales-coach.md",
+    "size": 20937,
+    "modified": "2026-05-05 00:30:00"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\sales-data-extraction-agent.md",
+    "size": 2631,
+    "modified": "2026-05-05 00:30:26"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\sales-engineer.md",
+    "size": 13871,
+    "modified": "2026-05-05 00:30:02"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\sales-outreach.md",
+    "size": 20512,
+    "modified": "2026-05-05 00:30:27"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\salesforce-architect.md",
+    "size": 9783,
+    "modified": "2026-05-05 00:30:34"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\search-query-analyst.md",
+    "size": 4763,
+    "modified": "2026-05-05 00:29:50"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\security-engineer.md",
+    "size": 17595,
+    "modified": "2026-05-05 00:28:59"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\senior-developer.md",
+    "size": 6170,
+    "modified": "2026-05-05 00:29:00"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\senior-project-manager.md",
+    "size": 5228,
+    "modified": "2026-05-05 00:29:59"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\seo-specialist.md",
+    "size": 17847,
+    "modified": "2026-05-05 00:29:39"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\short-video-editing-coach.md",
+    "size": 30698,
+    "modified": "2026-05-05 00:29:39"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\social-media-strategist.md",
+    "size": 7289,
+    "modified": "2026-05-05 00:29:40"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\software-architect.md",
+    "size": 3617,
+    "modified": "2026-05-05 00:29:00"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\solidity-smart-contract-engineer.md",
+    "size": 21641,
+    "modified": "2026-05-05 00:29:01"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\sprint-prioritizer.md",
+    "size": 9342,
+    "modified": "2026-05-05 00:29:54"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\sre-site-reliability-engineer.md",
+    "size": 3799,
+    "modified": "2026-05-05 00:29:02"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\studio-operations.md",
+    "size": 9844,
+    "modified": "2026-05-05 00:29:57"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\studio-producer.md",
+    "size": 10824,
+    "modified": "2026-05-05 00:29:58"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\supply-chain-strategist.md",
+    "size": 32249,
+    "modified": "2026-05-05 00:30:36"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\support-responder.md",
+    "size": 24606,
+    "modified": "2026-05-05 00:30:47"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\tax-strategist.md",
+    "size": 13611,
+    "modified": "2026-05-05 00:29:08"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\technical-artist.md",
+    "size": 11167,
+    "modified": "2026-05-05 00:29:17"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\technical-writer.md",
+    "size": 14149,
+    "modified": "2026-05-05 00:29:02"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\terminal-integration-specialist.md",
+    "size": 4033,
+    "modified": "2026-05-05 00:30:05"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\test-results-analyzer.md",
+    "size": 14521,
+    "modified": "2026-05-05 00:30:56"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\threat-detection-engineer.md",
+    "size": 24786,
+    "modified": "2026-05-05 00:29:03"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\tiktok-strategist.md",
+    "size": 7482,
+    "modified": "2026-05-05 00:29:41"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\tool-evaluator.md",
+    "size": 17449,
+    "modified": "2026-05-05 00:30:58"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\tracking-measurement-specialist.md",
+    "size": 5167,
+    "modified": "2026-05-05 00:29:51"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\trend-researcher.md",
+    "size": 10383,
+    "modified": "2026-05-05 00:29:54"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\twitter-engager.md",
+    "size": 7686,
+    "modified": "2026-05-05 00:29:42"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\ui-designer.md",
+    "size": 13257,
+    "modified": "2026-05-05 00:28:40"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\unity-architect.md",
+    "size": 12168,
+    "modified": "2026-05-05 00:29:18"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\unity-editor-tool-developer.md",
+    "size": 14821,
+    "modified": "2026-05-05 00:29:18"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\unity-multiplayer-engineer.md",
+    "size": 14872,
+    "modified": "2026-05-05 00:29:19"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\unity-shader-graph-artist.md",
+    "size": 13006,
+    "modified": "2026-05-05 00:29:20"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\unreal-multiplayer-architect.md",
+    "size": 13970,
+    "modified": "2026-05-05 00:29:20"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\unreal-systems-engineer.md",
+    "size": 15431,
+    "modified": "2026-05-05 00:29:21"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\unreal-technical-artist.md",
+    "size": 11781,
+    "modified": "2026-05-05 00:29:22"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\unreal-world-builder.md",
+    "size": 13930,
+    "modified": "2026-05-05 00:29:23"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\ux-architect.md",
+    "size": 15670,
+    "modified": "2026-05-05 00:28:41"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\ux-researcher.md",
+    "size": 12959,
+    "modified": "2026-05-05 00:28:42"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\video-optimization-specialist.md",
+    "size": 6173,
+    "modified": "2026-05-05 00:29:42"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\visionos-spatial-engineer.md",
+    "size": 3322,
+    "modified": "2026-05-05 00:30:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\visual-storyteller.md",
+    "size": 7341,
+    "modified": "2026-05-05 00:28:42"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\voice-ai-integration-engineer.md",
+    "size": 27183,
+    "modified": "2026-05-05 00:29:04"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\wechat-mini-program-developer.md",
+    "size": 15494,
+    "modified": "2026-05-05 00:29:04"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\wechat-official-account-manager.md",
+    "size": 9752,
+    "modified": "2026-05-05 00:29:43"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\weibo-strategist.md",
+    "size": 15628,
+    "modified": "2026-05-05 00:29:44"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\whimsy-injector.md",
+    "size": 15780,
+    "modified": "2026-05-05 00:28:43"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\workflow-architect.md",
+    "size": 26321,
+    "modified": "2026-05-05 00:30:35"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\workflow-optimizer.md",
+    "size": 21984,
+    "modified": "2026-05-05 00:30:59"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\xiaohongshu-specialist.md",
+    "size": 9539,
+    "modified": "2026-05-05 00:29:44"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\xr-cockpit-interaction-specialist.md",
+    "size": 1725,
+    "modified": "2026-05-05 00:30:07"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\xr-immersive-developer.md",
+    "size": 1771,
+    "modified": "2026-05-05 00:30:08"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\xr-interface-architect.md",
+    "size": 1613,
+    "modified": "2026-05-05 00:30:08"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\zhihu-strategist.md",
+    "size": 11936,
+    "modified": "2026-05-05 00:29:45"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\agents\\zk-steward.md",
+    "size": 10790,
+    "modified": "2026-05-05 00:30:37"
+  },
+  {
+    "path": "agency-agents\\integrations\\opencode\\README.md",
+    "size": 1493,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\qwen\\README.md",
+    "size": 957,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\README.md",
+    "size": 5852,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\integrations\\windsurf\\README.md",
+    "size": 510,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\LICENSE",
+    "size": 1100,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-agentic-search-optimizer.md",
+    "size": 15674,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-ai-citation-strategist.md",
+    "size": 9380,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-app-store-optimizer.md",
+    "size": 13086,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-baidu-seo-specialist.md",
+    "size": 12968,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-bilibili-content-strategist.md",
+    "size": 11647,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-book-co-author.md",
+    "size": 5083,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-carousel-growth-engine.md",
+    "size": 14840,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-china-ecommerce-operator.md",
+    "size": 16791,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-china-market-localization-strategist.md",
+    "size": 16913,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-content-creator.md",
+    "size": 3129,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-cross-border-ecommerce.md",
+    "size": 17415,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-douyin-strategist.md",
+    "size": 6954,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-growth-hacker.md",
+    "size": 3044,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-instagram-curator.md",
+    "size": 6563,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-kuaishou-strategist.md",
+    "size": 13889,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-linkedin-content-creator.md",
+    "size": 13361,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-livestream-commerce-coach.md",
+    "size": 17166,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-podcast-strategist.md",
+    "size": 18038,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-private-domain-operator.md",
+    "size": 16176,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-reddit-community-builder.md",
+    "size": 7498,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-seo-specialist.md",
+    "size": 17975,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-short-video-editing-coach.md",
+    "size": 30779,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-social-media-strategist.md",
+    "size": 7414,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-tiktok-strategist.md",
+    "size": 7559,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-twitter-engager.md",
+    "size": 7760,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-video-optimization-specialist.md",
+    "size": 6245,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-wechat-official-account.md",
+    "size": 9832,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-weibo-strategist.md",
+    "size": 15697,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-xiaohongshu-specialist.md",
+    "size": 9609,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\marketing\\marketing-zhihu-strategist.md",
+    "size": 12006,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\paid-media\\paid-media-auditor.md",
+    "size": 5546,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\paid-media\\paid-media-creative-strategist.md",
+    "size": 5151,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\paid-media\\paid-media-paid-social-strategist.md",
+    "size": 5440,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\paid-media\\paid-media-ppc-strategist.md",
+    "size": 4984,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\paid-media\\paid-media-programmatic-buyer.md",
+    "size": 5271,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\paid-media\\paid-media-search-query-analyst.md",
+    "size": 4930,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\paid-media\\paid-media-tracking-specialist.md",
+    "size": 5315,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\product\\product-behavioral-nudge-engine.md",
+    "size": 5335,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\product\\product-feedback-synthesizer.md",
+    "size": 7260,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\product\\product-manager.md",
+    "size": 22687,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\product\\product-sprint-prioritizer.md",
+    "size": 9464,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\product\\product-trend-researcher.md",
+    "size": 10482,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\project-management\\project-management-experiment-tracker.md",
+    "size": 9455,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\project-management\\project-management-jira-workflow-steward.md",
+    "size": 13498,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\project-management\\project-management-project-shepherd.md",
+    "size": 9825,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\project-management\\project-management-studio-operations.md",
+    "size": 9926,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\project-management\\project-management-studio-producer.md",
+    "size": 10905,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\project-management\\project-manager-senior.md",
+    "size": 5308,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\README.md",
+    "size": 58258,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\sales\\sales-account-strategist.md",
+    "size": 14844,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\sales\\sales-coach.md",
+    "size": 21009,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\sales\\sales-deal-strategist.md",
+    "size": 13698,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\sales\\sales-discovery-coach.md",
+    "size": 13591,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\sales\\sales-engineer.md",
+    "size": 13948,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\sales\\sales-outbound-strategist.md",
+    "size": 10744,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\sales\\sales-pipeline-analyst.md",
+    "size": 18765,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\sales\\sales-proposal-strategist.md",
+    "size": 14295,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\scripts\\convert.sh",
+    "size": 18283,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\scripts\\i18n\\agent-names-zh.json",
+    "size": 22512,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\scripts\\i18n\\localize-agents-zh.ps1",
+    "size": 1654,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\scripts\\i18n\\README.md",
+    "size": 1842,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\scripts\\install.sh",
+    "size": 23880,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\scripts\\lint-agents.sh",
+    "size": 4142,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\SECURITY.md",
+    "size": 1085,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\spatial-computing\\macos-spatial-metal-engineer.md",
+    "size": 12141,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\spatial-computing\\terminal-integration-specialist.md",
+    "size": 4110,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\spatial-computing\\visionos-spatial-engineer.md",
+    "size": 3400,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\spatial-computing\\xr-cockpit-interaction-specialist.md",
+    "size": 1795,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\spatial-computing\\xr-immersive-developer.md",
+    "size": 1847,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\spatial-computing\\xr-interface-architect.md",
+    "size": 1700,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\accounts-payable-agent.md",
+    "size": 6795,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\agentic-identity-trust.md",
+    "size": 18398,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\agents-orchestrator.md",
+    "size": 15725,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\automation-governance-architect.md",
+    "size": 5831,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\blockchain-security-auditor.md",
+    "size": 21130,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\compliance-auditor.md",
+    "size": 7213,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\corporate-training-designer.md",
+    "size": 15673,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\customer-service.md",
+    "size": 19184,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\data-consolidation-agent.md",
+    "size": 2393,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\government-digital-presales-consultant.md",
+    "size": 22759,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\healthcare-customer-service.md",
+    "size": 22100,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\healthcare-marketing-compliance.md",
+    "size": 35322,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\hospitality-guest-services.md",
+    "size": 27773,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\hr-onboarding.md",
+    "size": 23923,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\identity-graph-operator.md",
+    "size": 14122,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\language-translator.md",
+    "size": 16086,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\legal-billing-time-tracking.md",
+    "size": 27280,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\legal-client-intake.md",
+    "size": 25630,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\legal-document-review.md",
+    "size": 24728,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\loan-officer-assistant.md",
+    "size": 28515,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\lsp-index-engineer.md",
+    "size": 11197,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\real-estate-buyer-seller.md",
+    "size": 31124,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\recruitment-specialist.md",
+    "size": 29401,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\report-distribution-agent.md",
+    "size": 2653,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\retail-customer-returns.md",
+    "size": 27700,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\sales-data-extraction-agent.md",
+    "size": 2697,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\sales-outreach.md",
+    "size": 20656,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\specialized-chief-of-staff.md",
+    "size": 18190,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\specialized-civil-engineer.md",
+    "size": 17068,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\specialized-cultural-intelligence-strategist.md",
+    "size": 6643,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\specialized-developer-advocate.md",
+    "size": 14829,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\specialized-document-generator.md",
+    "size": 2437,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\specialized-french-consulting-market.md",
+    "size": 11156,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\specialized-korean-business-navigator.md",
+    "size": 14071,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\specialized-mcp-builder.md",
+    "size": 12062,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\specialized-model-qa.md",
+    "size": 20143,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\specialized-salesforce-architect.md",
+    "size": 9904,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\specialized-workflow-architect.md",
+    "size": 26488,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\study-abroad-advisor.md",
+    "size": 16984,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\supply-chain-strategist.md",
+    "size": 32397,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\specialized\\zk-steward.md",
+    "size": 10890,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\coordination\\agent-activation-prompts.md",
+    "size": 13158,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\coordination\\handoff-templates.md",
+    "size": 10073,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\EXECUTIVE-BRIEF.md",
+    "size": 5800,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\nexus-strategy.md",
+    "size": 55287,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\playbooks\\phase-0-discovery.md",
+    "size": 6150,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\playbooks\\phase-1-strategy.md",
+    "size": 8094,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\playbooks\\phase-2-foundation.md",
+    "size": 8916,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\playbooks\\phase-3-build.md",
+    "size": 9641,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\playbooks\\phase-4-hardening.md",
+    "size": 10546,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\playbooks\\phase-5-launch.md",
+    "size": 8280,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\playbooks\\phase-6-operate.md",
+    "size": 9802,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\QUICKSTART.md",
+    "size": 8388,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\runbooks\\scenario-enterprise-feature.md",
+    "size": 6256,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\runbooks\\scenario-incident-response.md",
+    "size": 6789,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\runbooks\\scenario-marketing-campaign.md",
+    "size": 7072,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\strategy\\runbooks\\scenario-startup-mvp.md",
+    "size": 5631,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\support\\support-analytics-reporter.md",
+    "size": 15796,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\support\\support-executive-summary-generator.md",
+    "size": 8992,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\support\\support-finance-tracker.md",
+    "size": 19249,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\support\\support-infrastructure-maintainer.md",
+    "size": 22365,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\support\\support-legal-compliance-checker.md",
+    "size": 26545,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\support\\support-support-responder.md",
+    "size": 24683,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\testing\\testing-accessibility-auditor.md",
+    "size": 15300,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\testing\\testing-api-tester.md",
+    "size": 12526,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\testing\\testing-evidence-collector.md",
+    "size": 8354,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\testing\\testing-performance-benchmarker.md",
+    "size": 12213,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\testing\\testing-reality-checker.md",
+    "size": 9969,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\testing\\testing-test-results-analyzer.md",
+    "size": 14602,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\testing\\testing-tool-evaluator.md",
+    "size": 17542,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "agency-agents\\testing\\testing-workflow-optimizer.md",
+    "size": 22050,
+    "modified": "2026-05-05 00:25:06"
+  },
+  {
+    "path": "backups\\backup_data_2026-03-27T00-26-52.sql",
+    "size": 3762,
+    "modified": "2026-03-27 00:26:53"
+  },
+  {
+    "path": "clean-start.bat",
+    "size": 1522,
+    "modified": "2026-05-07 02:08:59"
+  },
+  {
+    "path": "components.json",
+    "size": 431,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "coverage\\app\\api\\auth\\login\\index.html",
+    "size": 4540,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\app\\api\\auth\\login\\route.ts.html",
+    "size": 37418,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\app\\api\\system\\config\\index.html",
+    "size": 4525,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\app\\api\\system\\config\\route.ts.html",
+    "size": 11139,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\base.css",
+    "size": 5394,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\block-navigation.js",
+    "size": 2655,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\components\\ui\\button.tsx.html",
+    "size": 21860,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\components\\ui\\index.html",
+    "size": 5794,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\components\\ui\\input.tsx.html",
+    "size": 6067,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\components\\ui\\table.tsx.html",
+    "size": 16432,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\coverage-final.json",
+    "size": 113122,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\favicon.png",
+    "size": 445,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\hooks\\index.html",
+    "size": 5130,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\hooks\\use-toast.ts.html",
+    "size": 8404,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\hooks\\useCompanyName.ts.html",
+    "size": 9458,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\index.html",
+    "size": 7235,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\lib\\api-response.ts.html",
+    "size": 19185,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\lib\\index.html",
+    "size": 5834,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\lib\\utils.ts.html",
+    "size": 18437,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\lib\\validation.ts.html",
+    "size": 44878,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\prettify.css",
+    "size": 676,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\prettify.js",
+    "size": 17590,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\sort-arrow-sprite.png",
+    "size": 138,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "coverage\\sorter.js",
+    "size": 6731,
+    "modified": "2026-05-05 03:27:26"
+  },
+  {
+    "path": "database\\actual_schema.sql",
+    "size": 52,
+    "modified": "2026-05-12 04:35:49"
+  },
+  {
+    "path": "database\\alter_warehouse_add_category.sql",
+    "size": 950,
+    "modified": "2026-03-26 06:37:46"
+  },
+  {
+    "path": "database\\audit_system_tables.sql",
+    "size": 20307,
+    "modified": "2026-05-12 01:34:02"
+  },
+  {
+    "path": "database\\dcprint_menus.sql",
+    "size": 1752,
+    "modified": "2026-03-31 07:10:13"
+  },
+  {
+    "path": "database\\dcprint_migration.sql",
+    "size": 13292,
+    "modified": "2026-03-31 07:10:14"
+  },
+  {
+    "path": "database\\delivery_vehicles.sql",
+    "size": 5309,
+    "modified": "2026-03-20 01:00:52"
+  },
+  {
+    "path": "database\\department_structure_new.sql",
+    "size": 2373,
+    "modified": "2026-04-02 02:19:54"
+  },
+  {
+    "path": "database\\hr_attendance.sql",
+    "size": 2367,
+    "modified": "2026-03-31 07:10:14"
+  },
+  {
+    "path": "database\\hr_menus.sql",
+    "size": 1552,
+    "modified": "2026-03-31 07:10:14"
+  },
+  {
+    "path": "database\\init-db.js",
+    "size": 4141,
+    "modified": "2026-03-16 07:59:02"
+  },
+  {
+    "path": "database\\insert_warehouses.sql",
+    "size": 810,
+    "modified": "2026-03-23 03:08:48"
+  },
+  {
+    "path": "database\\inventory_tables.sql",
+    "size": 4349,
+    "modified": "2026-03-26 07:01:53"
+  },
+  {
+    "path": "database\\inventory_transaction_migration.sql",
+    "size": 6685,
+    "modified": "2026-05-11 07:58:03"
+  },
+  {
+    "path": "database\\label_print_records.sql",
+    "size": 2749,
+    "modified": "2026-05-12 05:36:20"
+  },
+  {
+    "path": "database\\login.sql",
+    "size": 2858,
+    "modified": "2026-05-07 23:47:58"
+  },
+  {
+    "path": "database\\material_lifecycle_migration.sql",
+    "size": 12505,
+    "modified": "2026-05-11 09:10:28"
+  },
+  {
+    "path": "database\\mock_data_all_modules.sql",
+    "size": 15795,
+    "modified": "2026-04-02 00:37:57"
+  },
+  {
+    "path": "database\\organization.sql",
+    "size": 12354,
+    "modified": "2026-03-23 03:08:48"
+  },
+  {
+    "path": "database\\package-lock.json",
+    "size": 5622,
+    "modified": "2026-03-17 07:54:42"
+  },
+  {
+    "path": "database\\package.json",
+    "size": 273,
+    "modified": "2026-03-17 07:54:42"
+  },
+  {
+    "path": "database\\permission_system.sql",
+    "size": 12131,
+    "modified": "2026-03-23 03:08:48"
+  },
+  {
+    "path": "database\\pnpm-lock.yaml",
+    "size": 3237,
+    "modified": "2026-04-24 07:35:06"
+  },
+  {
+    "path": "database\\purchase_request.sql",
+    "size": 4607,
+    "modified": "2026-03-20 01:00:52"
+  },
+  {
+    "path": "database\\qrcode_and_print_template.sql",
+    "size": 6180,
+    "modified": "2026-05-11 08:58:03"
+  },
+  {
+    "path": "database\\quality_incoming.sql",
+    "size": 4723,
+    "modified": "2026-03-31 07:10:14"
+  },
+  {
+    "path": "database\\quality_menus.sql",
+    "size": 1547,
+    "modified": "2026-03-31 07:10:14"
+  },
+  {
+    "path": "database\\run-purchase-sql.js",
+    "size": 1458,
+    "modified": "2026-03-20 01:00:52"
+  },
+  {
+    "path": "database\\run-sample-sql.js",
+    "size": 1264,
+    "modified": "2026-03-20 01:00:52"
+  },
+  {
+    "path": "database\\run-sql.js",
+    "size": 698,
+    "modified": "2026-03-17 07:52:59"
+  },
+  {
+    "path": "database\\run-vehicle-sql.js",
+    "size": 1460,
+    "modified": "2026-03-20 01:00:53"
+  },
+  {
+    "path": "database\\sample_orders.sql",
+    "size": 5978,
+    "modified": "2026-03-20 01:00:53"
+  },
+  {
+    "path": "database\\seeds\\demo_seed_data.sql",
+    "size": 804,
+    "modified": "2026-05-12 08:36:25"
+  },
+  {
+    "path": "database\\seeds\\seed.js",
+    "size": 479,
+    "modified": "2026-05-12 08:36:59"
+  },
+  {
+    "path": "database\\seeds\\vnerp-seed-data.sql",
+    "size": 13507,
+    "modified": "2026-05-12 01:34:02"
+  },
+  {
+    "path": "database\\seed_business_data.sql",
+    "size": 223233,
+    "modified": "2026-05-12 05:47:33"
+  },
+  {
+    "path": "database\\seed_part1_inventory.sql",
+    "size": 71207,
+    "modified": "2026-05-12 07:00:13"
+  },
+  {
+    "path": "database\\seed_part2_production.sql",
+    "size": 104971,
+    "modified": "2026-05-12 09:11:53"
+  },
+  {
+    "path": "database\\seed_part3_sales_purchase.sql",
+    "size": 92357,
+    "modified": "2026-05-12 10:02:12"
+  },
+  {
+    "path": "database\\seed_part4_dcprint_qc_eqp.sql",
+    "size": 213419,
+    "modified": "2026-05-12 11:09:11"
+  },
+  {
+    "path": "database\\seed_part5_finance_hr_sample.sql",
+    "size": 95418,
+    "modified": "2026-05-12 11:54:42"
+  },
+  {
+    "path": "database\\standard_card_migration.sql",
+    "size": 11799,
+    "modified": "2026-05-11 09:09:12"
+  },
+  {
+    "path": "database\\state_transition_log.sql",
+    "size": 2014,
+    "modified": "2026-05-11 08:55:28"
+  },
+  {
+    "path": "database\\system_config_migration.sql",
+    "size": 13239,
+    "modified": "2026-05-12 00:09:25"
+  },
+  {
+    "path": "database\\update_standard_card.sql",
+    "size": 9435,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "database\\vnerpdacahng_schema.sql",
+    "size": 70234,
+    "modified": "2026-06-01 08:19:17"
+  },
+  {
+    "path": "database\\warehouse.sql",
+    "size": 5389,
+    "modified": "2026-03-23 03:08:48"
+  },
+  {
+    "path": "database\\warehouse_category.sql",
+    "size": 2017,
+    "modified": "2026-03-26 06:37:46"
+  },
+  {
+    "path": "database\\warehouse_inbound.sql",
+    "size": 10114,
+    "modified": "2026-03-23 03:08:48"
+  },
+  {
+    "path": "database\\workflow_engine.sql",
+    "size": 9816,
+    "modified": "2026-05-13 04:49:56"
+  },
+  {
+    "path": "database\\_fix_part4.js",
+    "size": 20943,
+    "modified": "2026-05-12 11:07:53"
+  },
+  {
+    "path": "database\\_gen_part4_remaining.js",
+    "size": 65556,
+    "modified": "2026-05-12 11:04:05"
+  },
+  {
+    "path": "database\\_temp_part2.sql",
+    "size": 6300,
+    "modified": "2026-05-12 09:11:29"
+  },
+  {
+    "path": "debug-errors.ps1",
+    "size": 1474,
+    "modified": "2026-05-13 03:39:45"
+  },
+  {
+    "path": "debug.log",
+    "size": 186,
+    "modified": "2026-05-08 00:48:07"
+  },
+  {
+    "path": "docs\\01-项目概述\\项目概述.md",
+    "size": 15940,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\02-模块详细设计\\00-模块详细设计总览.md",
+    "size": 21368,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\02-模块详细设计\\01-二维码全流程追溯系统设计.md",
+    "size": 61861,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\02-模块详细设计\\06-标准卡管理设计.md",
+    "size": 11149,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\02-模块详细设计\\07-发货管理设计.md",
+    "size": 9682,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\02-模块详细设计\\15-盘点与调拨设计.md",
+    "size": 11129,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\02-模块详细设计\\21-物料领用设计.md",
+    "size": 9486,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\02-模块详细设计\\24-财务管理设计.md",
+    "size": 12011,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\02-模块详细设计\\26-仓库管理核心原则专项说明.md",
+    "size": 8344,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\03-技术规范\\00-技术规范总览.md",
+    "size": 14730,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\03-技术规范\\代码规范.md",
+    "size": 13772,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\03-技术规范\\开发规范.md",
+    "size": 15528,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\03-技术规范\\系统可审计性设计方案.md",
+    "size": 29099,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\03-技术规范\\颜色主题修复方案.md",
+    "size": 12172,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\04-运维指南\\00-运维指南总览.md",
+    "size": 12797,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\04-运维指南\\部署指南.md",
+    "size": 12222,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\05-测试文档\\00-测试文档总览.md",
+    "size": 39356,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Changes\\bug-fixes\\bug-001-arch-consolidation.md",
+    "size": 1143,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Changes\\CHANGELOG.md",
+    "size": 2007,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Changes\\migrations\\20260510_consolidate_tables.sql",
+    "size": 1181,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Changes\\README.md",
+    "size": 781,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Changes\\releases\\v0.1.0.md",
+    "size": 1260,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\DATABASE_OPTIMIZATION_GUIDE.md",
+    "size": 19695,
+    "modified": "2026-06-03 02:27:56"
+  },
+  {
+    "path": "docs\\DATABASE_RELATIONS.md",
+    "size": 3483,
+    "modified": "2026-06-03 01:46:41"
+  },
+  {
+    "path": "docs\\demo_accounts.md",
+    "size": 978,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\DEVELOPMENT_GUIDE.md",
+    "size": 10235,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "docs\\harness\\fixtures\\base-data.sql",
+    "size": 2557,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\harness\\fixtures\\production-data.sql",
+    "size": 1591,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\harness\\fixtures\\warehouse-data.sql",
+    "size": 2615,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\harness\\full-chain-test-plan.md",
+    "size": 14948,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\harness\\README.md",
+    "size": 2637,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\harness\\scripts\\test-runner.sh",
+    "size": 2269,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\plugin_dev.md",
+    "size": 1781,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\README.md",
+    "size": 4999,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Rules\\api-design-rules.md",
+    "size": 4761,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Rules\\business-rules\\finance.md",
+    "size": 3089,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Rules\\business-rules\\production.md",
+    "size": 2808,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Rules\\business-rules\\purchase.md",
+    "size": 1677,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Rules\\business-rules\\quality.md",
+    "size": 2112,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Rules\\business-rules\\warehouse.md",
+    "size": 4857,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Rules\\coding-standards.md",
+    "size": 5931,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Rules\\database-rules.md",
+    "size": 5253,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Rules\\README.md",
+    "size": 2077,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Rules\\security-rules.md",
+    "size": 3068,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\SEED.md",
+    "size": 534,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Skills\\deployment\\backup-restore.md",
+    "size": 1721,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Skills\\deployment\\database-migration.md",
+    "size": 1944,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Skills\\deployment\\local-dev.md",
+    "size": 2474,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Skills\\deployment\\production-deploy.md",
+    "size": 2814,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Skills\\development\\api-development.md",
+    "size": 4506,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Skills\\development\\bug-fix-process.md",
+    "size": 2131,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Skills\\development\\module-creation.md",
+    "size": 3477,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Skills\\development\\qrcode-trace.md",
+    "size": 4609,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Skills\\operation\\daily-operation.md",
+    "size": 1879,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Skills\\operation\\troubleshooting.md",
+    "size": 2839,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Skills\\operation\\user-management.md",
+    "size": 1899,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Skills\\README.md",
+    "size": 1992,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Wiki\\architecture\\database-architecture.md",
+    "size": 3134,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Wiki\\architecture\\module-architecture.md",
+    "size": 4076,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Wiki\\architecture\\overall-architecture.md",
+    "size": 5425,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Wiki\\architecture\\tech-stack.md",
+    "size": 1908,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Wiki\\business\\business-processes.md",
+    "size": 3421,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Wiki\\business\\glossary.md",
+    "size": 2102,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Wiki\\business\\screen-printing-basics.md",
+    "size": 2557,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Wiki\\decisions\\001-database-choice.md",
+    "size": 1125,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Wiki\\decisions\\002-qrcode-implementation.md",
+    "size": 1209,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Wiki\\decisions\\003-reporting-system.md",
+    "size": 1147,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Wiki\\README.md",
+    "size": 1531,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Wiki\\technical\\known-issues.md",
+    "size": 2102,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\Wiki\\technical\\performance-tuning.md",
+    "size": 2028,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\测试.md",
+    "size": 12925,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\测试用例模板.md",
+    "size": 11586,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "docs\\系统初始化配置指南.md",
+    "size": 7179,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "eslint.config.mjs",
+    "size": 465,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "fix_blank_pages.py",
+    "size": 2858,
+    "modified": "2026-05-14 01:34:58"
+  },
+  {
+    "path": "migration.log",
+    "size": 55949686,
+    "modified": "2026-05-28 06:02:45"
+  },
+  {
+    "path": "migrations\\0001_add_inventory_alerts.sql",
+    "size": 955,
+    "modified": "2026-03-03 02:58:58"
+  },
+  {
+    "path": "migrations\\0002_add_performance_indexes.sql",
+    "size": 3836,
+    "modified": "2026-03-26 08:48:36"
+  },
+  {
+    "path": "migrations\\0003_add_login_security_fields.sql",
+    "size": 443,
+    "modified": "2026-04-23 01:57:25"
+  },
+  {
+    "path": "migrations\\0004_add_purchase_request_fk_fields.sql",
+    "size": 5007,
+    "modified": "2026-04-29 05:58:00"
+  },
+  {
+    "path": "next-env.d.ts",
+    "size": 253,
+    "modified": "2026-06-03 01:12:10"
+  },
+  {
+    "path": "next.config.optimized.ts",
+    "size": 2285,
+    "modified": "2026-06-03 01:12:52"
+  },
+  {
+    "path": "next.config.ts",
+    "size": 1854,
+    "modified": "2026-06-02 07:57:39"
+  },
+  {
+    "path": "orders-bom.png",
+    "size": 5829,
+    "modified": "2026-05-14 01:10:28"
+  },
+  {
+    "path": "package.json",
+    "size": 4272,
+    "modified": "2026-05-13 05:07:22"
+  },
+  {
+    "path": "playwright.config.ts",
+    "size": 1841,
+    "modified": "2026-05-07 02:24:45"
+  },
+  {
+    "path": "pnpm-lock.yaml",
+    "size": 384073,
+    "modified": "2026-05-13 05:07:22"
+  },
+  {
+    "path": "postcss.config.mjs",
+    "size": 94,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "public\\animations\\login-animation.json",
+    "size": 7071,
+    "modified": "2026-03-27 02:40:24"
+  },
+  {
+    "path": "public\\bj.jpg",
+    "size": 742162,
+    "modified": "2026-03-03 08:20:41"
+  },
+  {
+    "path": "public\\debug-auth.html",
+    "size": 7068,
+    "modified": "2026-04-01 06:48:45"
+  },
+  {
+    "path": "public\\debug-login.html",
+    "size": 4437,
+    "modified": "2026-04-01 03:31:46"
+  },
+  {
+    "path": "public\\file.svg",
+    "size": 391,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "public\\globe.svg",
+    "size": 1035,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "public\\loginlogo.png",
+    "size": 19859,
+    "modified": "2026-04-24 05:27:57"
+  },
+  {
+    "path": "public\\next.svg",
+    "size": 1375,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "public\\test-login-react.html",
+    "size": 5590,
+    "modified": "2026-04-01 06:48:45"
+  },
+  {
+    "path": "public\\vercel.svg",
+    "size": 128,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "public\\window.svg",
+    "size": 385,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "README.md",
+    "size": 13441,
+    "modified": "2026-05-08 06:44:49"
+  },
+  {
+    "path": "sample-management.png",
+    "size": 5829,
+    "modified": "2026-05-14 01:10:32"
+  },
+  {
+    "path": "sample-orders.png",
+    "size": 5829,
+    "modified": "2026-05-14 01:10:36"
+  },
+  {
+    "path": "scripts\\add-mold-code.js",
+    "size": 610,
+    "modified": "2026-03-17 00:06:13"
+  },
+  {
+    "path": "scripts\\analyze-database-tables.ts",
+    "size": 8810,
+    "modified": "2026-03-27 00:16:17"
+  },
+  {
+    "path": "scripts\\analyze-db-relations.js",
+    "size": 5461,
+    "modified": "2026-06-03 01:41:27"
+  },
+  {
+    "path": "scripts\\analyze-tables-static.ts",
+    "size": 12557,
+    "modified": "2026-03-27 00:19:05"
+  },
+  {
+    "path": "scripts\\backup-data.ts",
+    "size": 6390,
+    "modified": "2026-03-27 00:26:37"
+  },
+  {
+    "path": "scripts\\backup-database.ts",
+    "size": 3209,
+    "modified": "2026-03-27 00:25:32"
+  },
+  {
+    "path": "scripts\\build.sh",
+    "size": 329,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "scripts\\check-admin-permissions.ts",
+    "size": 3635,
+    "modified": "2026-03-27 01:48:19"
+  },
+  {
+    "path": "scripts\\check-data-integrity.sql",
+    "size": 7374,
+    "modified": "2026-06-03 02:25:13"
+  },
+  {
+    "path": "scripts\\check-date-format.js",
+    "size": 696,
+    "modified": "2026-05-05 06:03:24"
+  },
+  {
+    "path": "scripts\\check-final-tables.js",
+    "size": 800,
+    "modified": "2026-04-02 00:37:57"
+  },
+  {
+    "path": "scripts\\check-menus.js",
+    "size": 2461,
+    "modified": "2026-03-31 07:10:14"
+  },
+  {
+    "path": "scripts\\check-process-tables.js",
+    "size": 909,
+    "modified": "2026-04-02 00:37:57"
+  },
+  {
+    "path": "scripts\\check-production-tables.js",
+    "size": 1041,
+    "modified": "2026-04-02 00:37:57"
+  },
+  {
+    "path": "scripts\\check-quality-tables.js",
+    "size": 1044,
+    "modified": "2026-04-02 00:37:57"
+  },
+  {
+    "path": "scripts\\check-suppliers.js",
+    "size": 760,
+    "modified": "2026-05-05 06:03:24"
+  },
+  {
+    "path": "scripts\\check-table-structure.js",
+    "size": 963,
+    "modified": "2026-04-02 00:37:57"
+  },
+  {
+    "path": "scripts\\check-table-structure2.js",
+    "size": 738,
+    "modified": "2026-04-02 00:37:57"
+  },
+  {
+    "path": "scripts\\check-tables.js",
+    "size": 1027,
+    "modified": "2026-05-05 06:03:24"
+  },
+  {
+    "path": "scripts\\check-user-menus.js",
+    "size": 2877,
+    "modified": "2026-03-31 07:10:14"
+  },
+  {
+    "path": "scripts\\cleanup-auto.ts",
+    "size": 4890,
+    "modified": "2026-03-27 00:28:47"
+  },
+  {
+    "path": "scripts\\cleanup-unused-tables.sql",
+    "size": 7241,
+    "modified": "2026-03-27 00:19:54"
+  },
+  {
+    "path": "scripts\\clear-auth-cache.js",
+    "size": 453,
+    "modified": "2026-03-27 01:54:40"
+  },
+  {
+    "path": "scripts\\clear-cache.js",
+    "size": 1542,
+    "modified": "2026-03-31 07:10:14"
+  },
+  {
+    "path": "scripts\\create-salary-table.js",
+    "size": 3353,
+    "modified": "2026-04-02 01:54:20"
+  },
+  {
+    "path": "scripts\\create_bom_tables.sql",
+    "size": 12978,
+    "modified": "2026-04-10 00:38:16"
+  },
+  {
+    "path": "scripts\\create_inbound_tables.sql",
+    "size": 6749,
+    "modified": "2026-04-10 00:12:53"
+  },
+  {
+    "path": "scripts\\create_po_grn_tables.sql",
+    "size": 16847,
+    "modified": "2026-04-10 00:16:55"
+  },
+  {
+    "path": "scripts\\create_product_tables.sql",
+    "size": 9955,
+    "modified": "2026-04-10 00:12:53"
+  },
+  {
+    "path": "scripts\\create_sales_order.sql",
+    "size": 3249,
+    "modified": "2026-04-09 00:59:44"
+  },
+  {
+    "path": "scripts\\create_sample_order_tables.sql",
+    "size": 5695,
+    "modified": "2026-04-10 00:12:53"
+  },
+  {
+    "path": "scripts\\create_three_layer_linkage.sql",
+    "size": 18034,
+    "modified": "2026-04-10 00:28:21"
+  },
+  {
+    "path": "scripts\\create_work_order.sql",
+    "size": 2262,
+    "modified": "2026-04-09 00:59:44"
+  },
+  {
+    "path": "scripts\\database-optimization.sql",
+    "size": 18722,
+    "modified": "2026-06-03 02:24:05"
+  },
+  {
+    "path": "scripts\\db-cleanup.ts",
+    "size": 16124,
+    "modified": "2026-03-27 00:22:30"
+  },
+  {
+    "path": "scripts\\db-relations.json",
+    "size": 415145,
+    "modified": "2026-06-03 01:41:39"
+  },
+  {
+    "path": "scripts\\dev.sh",
+    "size": 1076,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "scripts\\fix-admin-menus.js",
+    "size": 1991,
+    "modified": "2026-03-31 07:10:14"
+  },
+  {
+    "path": "scripts\\fix-admin-role.ts",
+    "size": 4201,
+    "modified": "2026-03-27 01:49:07"
+  },
+  {
+    "path": "scripts\\fix-department-table.ts",
+    "size": 2371,
+    "modified": "2026-03-27 02:36:06"
+  },
+  {
+    "path": "scripts\\fix-role-table.ts",
+    "size": 2317,
+    "modified": "2026-03-27 02:28:13"
+  },
+  {
+    "path": "scripts\\fix-suppliers.js",
+    "size": 797,
+    "modified": "2026-05-05 06:03:24"
+  },
+  {
+    "path": "scripts\\fix_security_issues.sql",
+    "size": 6885,
+    "modified": "2026-04-09 00:59:44"
+  },
+  {
+    "path": "scripts\\generate-charts.js",
+    "size": 4836,
+    "modified": "2026-06-03 01:43:46"
+  },
+  {
+    "path": "scripts\\generate_purchase_orders.sql",
+    "size": 8115,
+    "modified": "2026-04-23 05:04:57"
+  },
+  {
+    "path": "scripts\\init_sample_menu.sql",
+    "size": 3647,
+    "modified": "2026-04-10 00:12:54"
+  },
+  {
+    "path": "scripts\\init_seed_data.py",
+    "size": 2167,
+    "modified": "2026-05-14 03:08:36"
+  },
+  {
+    "path": "scripts\\insert-mock-data-v2.js",
+    "size": 25102,
+    "modified": "2026-04-02 00:37:57"
+  },
+  {
+    "path": "scripts\\insert-mock-data-v3.js",
+    "size": 25325,
+    "modified": "2026-04-02 00:37:58"
+  },
+  {
+    "path": "scripts\\insert-mock-data.js",
+    "size": 58060,
+    "modified": "2026-04-02 00:37:58"
+  },
+  {
+    "path": "scripts\\insert-test-cards.js",
+    "size": 8226,
+    "modified": "2026-03-17 00:11:54"
+  },
+  {
+    "path": "scripts\\prepare.sh",
+    "size": 244,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "scripts\\project_uploader.js",
+    "size": 9006,
+    "modified": "2026-06-03 02:37:13"
+  },
+  {
+    "path": "scripts\\project_uploader.py",
+    "size": 16048,
+    "modified": "2026-06-03 02:33:51"
+  },
+  {
+    "path": "scripts\\README.md",
+    "size": 4783,
+    "modified": "2026-03-27 00:23:16"
+  },
+  {
+    "path": "scripts\\reset-password.ts",
+    "size": 1254,
+    "modified": "2026-03-27 00:48:22"
+  },
+  {
+    "path": "scripts\\run-menus-sql.js",
+    "size": 1047,
+    "modified": "2026-03-31 07:10:14"
+  },
+  {
+    "path": "scripts\\run-migration.ts",
+    "size": 1471,
+    "modified": "2026-04-23 01:57:25"
+  },
+  {
+    "path": "scripts\\run-purchase-orders.js",
+    "size": 1591,
+    "modified": "2026-04-23 05:02:38"
+  },
+  {
+    "path": "scripts\\run-sql.js",
+    "size": 1814,
+    "modified": "2026-03-31 07:10:14"
+  },
+  {
+    "path": "scripts\\seed-all-data.js",
+    "size": 19905,
+    "modified": "2026-05-05 06:03:24"
+  },
+  {
+    "path": "scripts\\seed-attendance.js",
+    "size": 5300,
+    "modified": "2026-05-05 06:03:24"
+  },
+  {
+    "path": "scripts\\seed-customers.js",
+    "size": 11017,
+    "modified": "2026-03-16 07:59:02"
+  },
+  {
+    "path": "scripts\\seed-dashboard-data.js",
+    "size": 6905,
+    "modified": "2026-05-08 00:00:03"
+  },
+  {
+    "path": "scripts\\seed-fullflow-data.js",
+    "size": 35160,
+    "modified": "2026-05-05 06:03:24"
+  },
+  {
+    "path": "scripts\\seed-standard-cards.js",
+    "size": 5441,
+    "modified": "2026-03-16 07:59:03"
+  },
+  {
+    "path": "scripts\\start.sh",
+    "size": 396,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "scripts\\stress-test.ts",
+    "size": 4363,
+    "modified": "2026-05-08 08:02:49"
+  },
+  {
+    "path": "scripts\\temp\\bar-chart.json",
+    "size": 913,
+    "modified": "2026-06-03 01:43:57"
+  },
+  {
+    "path": "scripts\\temp\\network-graph.json",
+    "size": 11136,
+    "modified": "2026-06-03 01:43:56"
+  },
+  {
+    "path": "scripts\\temp\\pie-chart.json",
+    "size": 429,
+    "modified": "2026-06-03 01:43:57"
+  },
+  {
+    "path": "scripts\\test-api-call.ts",
+    "size": 1413,
+    "modified": "2026-03-27 01:52:36"
+  },
+  {
+    "path": "scripts\\test-api-simple.js",
+    "size": 1101,
+    "modified": "2026-03-16 07:59:03"
+  },
+  {
+    "path": "scripts\\test-api.ps1",
+    "size": 194,
+    "modified": "2026-03-16 07:59:03"
+  },
+  {
+    "path": "scripts\\test-db.js",
+    "size": 1140,
+    "modified": "2026-03-16 07:59:03"
+  },
+  {
+    "path": "scripts\\test-login.ts",
+    "size": 2178,
+    "modified": "2026-03-27 00:46:14"
+  },
+  {
+    "path": "scripts\\test-menus-api.ts",
+    "size": 3561,
+    "modified": "2026-03-27 01:50:52"
+  },
+  {
+    "path": "scripts\\test_api.js",
+    "size": 1269,
+    "modified": "2026-05-14 03:51:02"
+  },
+  {
+    "path": "scripts\\test_auth_api.js",
+    "size": 1980,
+    "modified": "2026-05-14 04:01:22"
+  },
+  {
+    "path": "scripts\\test_inbound.sql",
+    "size": 304,
+    "modified": "2026-05-14 03:44:59"
+  },
+  {
+    "path": "scripts\\test_login_inbound.js",
+    "size": 2531,
+    "modified": "2026-05-14 04:06:46"
+  },
+  {
+    "path": "scripts\\update-standard-card-table.js",
+    "size": 10150,
+    "modified": "2026-03-16 08:46:48"
+  },
+  {
+    "path": "scripts\\update-standard-card-table.sql",
+    "size": 5116,
+    "modified": "2026-03-16 08:44:53"
+  },
+  {
+    "path": "scripts\\verify-data.js",
+    "size": 4233,
+    "modified": "2026-04-02 00:37:58"
+  },
+  {
+    "path": "scripts\\verify-db-config.js",
+    "size": 2069,
+    "modified": "2026-04-09 01:11:21"
+  },
+  {
+    "path": "src\\app\\analysis\\db-relations\\page.tsx",
+    "size": 13467,
+    "modified": "2026-06-03 01:45:46"
+  },
+  {
+    "path": "src\\app\\api\\audit\\logs\\route.ts",
+    "size": 3205,
+    "modified": "2026-05-12 01:34:03"
+  },
+  {
+    "path": "src\\app\\api\\audit\\report\\route.ts",
+    "size": 823,
+    "modified": "2026-05-13 04:59:07"
+  },
+  {
+    "path": "src\\app\\api\\auth\\cache\\clear\\route.ts",
+    "size": 367,
+    "modified": "2026-05-05 06:03:24"
+  },
+  {
+    "path": "src\\app\\api\\auth\\change-password\\route.ts",
+    "size": 2226,
+    "modified": "2026-04-23 01:57:28"
+  },
+  {
+    "path": "src\\app\\api\\auth\\login\\route.test.ts",
+    "size": 12351,
+    "modified": "2026-05-13 04:59:07"
+  },
+  {
+    "path": "src\\app\\api\\auth\\login\\route.ts",
+    "size": 9600,
+    "modified": "2026-06-01 08:19:17"
+  },
+  {
+    "path": "src\\app\\api\\auth\\me\\route.ts",
+    "size": 58,
+    "modified": "2026-05-13 03:36:27"
+  },
+  {
+    "path": "src\\app\\api\\auth\\menus\\route.ts",
+    "size": 4826,
+    "modified": "2026-05-28 07:42:25"
+  },
+  {
+    "path": "src\\app\\api\\auth\\register\\route.ts",
+    "size": 5160,
+    "modified": "2026-05-13 04:59:07"
+  },
+  {
+    "path": "src\\app\\api\\auth\\reset-lock\\route.ts",
+    "size": 864,
+    "modified": "2026-05-13 04:59:07"
+  },
+  {
+    "path": "src\\app\\api\\base-data\\material-category\\route.ts",
+    "size": 2718,
+    "modified": "2026-06-02 09:53:08"
+  },
+  {
+    "path": "src\\app\\api\\biz\\contract-review\\route.ts",
+    "size": 6137,
+    "modified": "2026-05-13 04:59:07"
+  },
+  {
+    "path": "src\\app\\api\\business\\contract-review\\route.ts",
+    "size": 7570,
+    "modified": "2026-05-13 04:59:08"
+  },
+  {
+    "path": "src\\app\\api\\crm\\analysis\\route.ts",
+    "size": 4367,
+    "modified": "2026-05-13 04:59:08"
+  },
+  {
+    "path": "src\\app\\api\\crm\\follow\\route.ts",
+    "size": 3568,
+    "modified": "2026-05-13 04:59:08"
+  },
+  {
+    "path": "src\\app\\api\\customers\\route.ts",
+    "size": 9845,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\app\\api\\dashboard\\ceo\\route.ts",
+    "size": 15788,
+    "modified": "2026-05-13 05:01:28"
+  },
+  {
+    "path": "src\\app\\api\\dashboard\\finance\\route.ts",
+    "size": 5616,
+    "modified": "2026-05-13 05:01:28"
+  },
+  {
+    "path": "src\\app\\api\\dashboard\\kpi\\route.ts",
+    "size": 25831,
+    "modified": "2026-05-13 05:01:28"
+  },
+  {
+    "path": "src\\app\\api\\dashboard\\production\\route.ts",
+    "size": 7112,
+    "modified": "2026-05-13 05:01:28"
+  },
+  {
+    "path": "src\\app\\api\\dashboard\\quality\\route.ts",
+    "size": 4443,
+    "modified": "2026-05-14 03:06:47"
+  },
+  {
+    "path": "src\\app\\api\\dashboard\\route.ts",
+    "size": 5517,
+    "modified": "2026-05-13 05:01:28"
+  },
+  {
+    "path": "src\\app\\api\\dashboard\\sales\\route.ts",
+    "size": 4172,
+    "modified": "2026-05-13 05:01:28"
+  },
+  {
+    "path": "src\\app\\api\\dashboard\\warehouse\\route.ts",
+    "size": 4355,
+    "modified": "2026-05-13 05:01:28"
+  },
+  {
+    "path": "src\\app\\api\\db-relations\\route.ts",
+    "size": 544,
+    "modified": "2026-06-03 01:46:01"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\die\\route.ts",
+    "size": 72,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\die-maintenance\\route.ts",
+    "size": 84,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\die-template\\route.ts",
+    "size": 81,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\die-usage\\route.ts",
+    "size": 65,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\ink\\route.ts",
+    "size": 72,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\ink-consumption\\route.ts",
+    "size": 6869,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\ink-dispatch\\route.ts",
+    "size": 9481,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\ink-formula\\route.ts",
+    "size": 8130,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\ink-init\\route.ts",
+    "size": 10391,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\ink-mixed\\route.ts",
+    "size": 4909,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\ink-opening\\route.ts",
+    "size": 11275,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\ink-query\\route.ts",
+    "size": 10754,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\ink-surplus\\route.ts",
+    "size": 10052,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\ink-usage\\route.ts",
+    "size": 8214,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\labels\\route.ts",
+    "size": 9319,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\process-cards\\route.ts",
+    "size": 11973,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\scan\\route.ts",
+    "size": 8324,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\screen-plate\\route.ts",
+    "size": 81,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\dcprint\\trace\\route.ts",
+    "size": 9891,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\debug\\schema\\route.ts",
+    "size": 869,
+    "modified": "2026-04-29 09:01:31"
+  },
+  {
+    "path": "src\\app\\api\\delivery\\vehicles\\route.ts",
+    "size": 7377,
+    "modified": "2026-05-13 04:59:09"
+  },
+  {
+    "path": "src\\app\\api\\diagnose\\all-tables\\route.ts",
+    "size": 864,
+    "modified": "2026-05-14 03:48:36"
+  },
+  {
+    "path": "src\\app\\api\\diagnose\\column-types\\route.ts",
+    "size": 622,
+    "modified": "2026-05-14 03:56:59"
+  },
+  {
+    "path": "src\\app\\api\\diagnose\\final-inspection-schema\\route.ts",
+    "size": 457,
+    "modified": "2026-05-14 03:51:36"
+  },
+  {
+    "path": "src\\app\\api\\diagnose\\inbound\\route.ts",
+    "size": 1113,
+    "modified": "2026-05-14 03:45:09"
+  },
+  {
+    "path": "src\\app\\api\\diagnose\\insert-test\\route.ts",
+    "size": 1936,
+    "modified": "2026-05-14 03:52:24"
+  },
+  {
+    "path": "src\\app\\api\\diagnose\\inventory-schema\\route.ts",
+    "size": 415,
+    "modified": "2026-05-14 03:55:07"
+  },
+  {
+    "path": "src\\app\\api\\diagnose\\label-status\\route.ts",
+    "size": 609,
+    "modified": "2026-05-14 03:54:25"
+  },
+  {
+    "path": "src\\app\\api\\diagnose\\material\\route.ts",
+    "size": 812,
+    "modified": "2026-06-03 01:14:00"
+  },
+  {
+    "path": "src\\app\\api\\diagnose\\show-columns\\route.ts",
+    "size": 406,
+    "modified": "2026-06-03 00:56:16"
+  },
+  {
+    "path": "src\\app\\api\\diagnose\\table-schema\\route.ts",
+    "size": 451,
+    "modified": "2026-05-14 03:48:15"
+  },
+  {
+    "path": "src\\app\\api\\document-number\\route.ts",
+    "size": 880,
+    "modified": "2026-05-13 04:59:09"
+  },
+  {
+    "path": "src\\app\\api\\engineering\\sample-to-mass\\route.ts",
+    "size": 5625,
+    "modified": "2026-05-13 04:59:09"
+  },
+  {
+    "path": "src\\app\\api\\engineering\\sop\\route.ts",
+    "size": 3877,
+    "modified": "2026-05-13 04:59:09"
+  },
+  {
+    "path": "src\\app\\api\\engineering\\standard-card\\route.ts",
+    "size": 3562,
+    "modified": "2026-05-13 04:59:09"
+  },
+  {
+    "path": "src\\app\\api\\equipment\\calibration\\route.ts",
+    "size": 3510,
+    "modified": "2026-05-13 04:59:09"
+  },
+  {
+    "path": "src\\app\\api\\equipment\\maintenance\\route.ts",
+    "size": 8714,
+    "modified": "2026-05-13 04:59:09"
+  },
+  {
+    "path": "src\\app\\api\\equipment\\repair\\route.ts",
+    "size": 3697,
+    "modified": "2026-05-13 04:59:09"
+  },
+  {
+    "path": "src\\app\\api\\equipment\\route.ts",
+    "size": 4607,
+    "modified": "2026-05-13 04:59:09"
+  },
+  {
+    "path": "src\\app\\api\\equipment\\scrap\\route.ts",
+    "size": 3009,
+    "modified": "2026-05-13 04:59:09"
+  },
+  {
+    "path": "src\\app\\api\\finance\\cost\\route.ts",
+    "size": 1863,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\finance\\cost-variance\\route.ts",
+    "size": 8396,
+    "modified": "2026-05-13 04:59:09"
+  },
+  {
+    "path": "src\\app\\api\\finance\\costs\\route.ts",
+    "size": 1744,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\finance\\payable\\route.ts",
+    "size": 1315,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\finance\\payables\\route.ts",
+    "size": 1975,
+    "modified": "2026-05-28 07:42:25"
+  },
+  {
+    "path": "src\\app\\api\\finance\\payables\\[id]\\payment\\route.ts",
+    "size": 945,
+    "modified": "2026-05-13 05:35:10"
+  },
+  {
+    "path": "src\\app\\api\\finance\\payment\\route.ts",
+    "size": 1363,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\finance\\receipt\\route.ts",
+    "size": 1375,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\finance\\receivable\\route.ts",
+    "size": 1318,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\finance\\receivables\\route.ts",
+    "size": 2001,
+    "modified": "2026-05-28 07:42:25"
+  },
+  {
+    "path": "src\\app\\api\\finance\\receivables\\[id]\\receipt\\route.ts",
+    "size": 945,
+    "modified": "2026-05-13 05:35:11"
+  },
+  {
+    "path": "src\\app\\api\\finance\\report\\route.ts",
+    "size": 2690,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\finance\\stats\\route.ts",
+    "size": 4468,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\finance\\summary\\route.ts",
+    "size": 1398,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\hr\\attendance\\route.ts",
+    "size": 7854,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\hr\\departments\\route.ts",
+    "size": 917,
+    "modified": "2026-05-13 01:42:58"
+  },
+  {
+    "path": "src\\app\\api\\hr\\employees\\route.ts",
+    "size": 80,
+    "modified": "2026-05-13 01:35:01"
+  },
+  {
+    "path": "src\\app\\api\\hr\\salary\\route.ts",
+    "size": 7102,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\hr\\salary\\stats\\route.ts",
+    "size": 2383,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\hr\\training\\route.ts",
+    "size": 3819,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\init\\bom-tables\\route.ts",
+    "size": 14973,
+    "modified": "2026-05-13 04:59:10"
+  },
+  {
+    "path": "src\\app\\api\\init\\business-seed\\route.ts",
+    "size": 22171,
+    "modified": "2026-05-14 03:58:12"
+  },
+  {
+    "path": "src\\app\\api\\init\\core-flow-seed\\route.ts",
+    "size": 38864,
+    "modified": "2026-05-13 04:59:11"
+  },
+  {
+    "path": "src\\app\\api\\init\\data-logic\\route.ts",
+    "size": 24211,
+    "modified": "2026-05-13 04:59:11"
+  },
+  {
+    "path": "src\\app\\api\\init\\department\\route.ts",
+    "size": 4588,
+    "modified": "2026-05-13 04:59:11"
+  },
+  {
+    "path": "src\\app\\api\\init\\die-template-seed\\route.ts",
+    "size": 30497,
+    "modified": "2026-06-01 08:19:17"
+  },
+  {
+    "path": "src\\app\\api\\init\\finance-tables\\route.ts",
+    "size": 3661,
+    "modified": "2026-05-14 03:49:07"
+  },
+  {
+    "path": "src\\app\\api\\init\\full-business-seed\\route.ts",
+    "size": 72155,
+    "modified": "2026-05-13 04:59:11"
+  },
+  {
+    "path": "src\\app\\api\\init\\full-seed\\route.ts",
+    "size": 98053,
+    "modified": "2026-05-13 04:59:12"
+  },
+  {
+    "path": "src\\app\\api\\init\\full-tables\\route.ts",
+    "size": 89774,
+    "modified": "2026-05-13 04:59:12"
+  },
+  {
+    "path": "src\\app\\api\\init\\inbound-tables\\route.ts",
+    "size": 12727,
+    "modified": "2026-05-13 04:59:12"
+  },
+  {
+    "path": "src\\app\\api\\init\\ink-seed\\route.ts",
+    "size": 10453,
+    "modified": "2026-05-13 04:59:12"
+  },
+  {
+    "path": "src\\app\\api\\init\\inventory-tables\\route.ts",
+    "size": 2991,
+    "modified": "2026-05-13 04:59:12"
+  },
+  {
+    "path": "src\\app\\api\\init\\menus\\route.ts",
+    "size": 38660,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\api\\init\\migrate\\route.ts",
+    "size": 8015,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\app\\api\\init\\po-grn-tables\\route.ts",
+    "size": 19404,
+    "modified": "2026-05-13 04:59:12"
+  },
+  {
+    "path": "src\\app\\api\\init\\product-tables\\route.ts",
+    "size": 10870,
+    "modified": "2026-05-13 04:59:13"
+  },
+  {
+    "path": "src\\app\\api\\init\\quality-final-seed\\route.ts",
+    "size": 28379,
+    "modified": "2026-05-13 04:59:13"
+  },
+  {
+    "path": "src\\app\\api\\init\\related-seed\\route.ts",
+    "size": 6937,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\app\\api\\init\\sample-seed\\route.ts",
+    "size": 11736,
+    "modified": "2026-05-13 04:59:13"
+  },
+  {
+    "path": "src\\app\\api\\init\\sample-tables\\route.ts",
+    "size": 7568,
+    "modified": "2026-05-13 04:59:13"
+  },
+  {
+    "path": "src\\app\\api\\init\\seed-data\\route.ts",
+    "size": 53056,
+    "modified": "2026-06-01 08:19:17"
+  },
+  {
+    "path": "src\\app\\api\\init\\settings-seed\\route.ts",
+    "size": 44046,
+    "modified": "2026-05-14 00:24:26"
+  },
+  {
+    "path": "src\\app\\api\\init\\supplement-tables\\route.ts",
+    "size": 75276,
+    "modified": "2026-05-13 04:59:13"
+  },
+  {
+    "path": "src\\app\\api\\init\\three-layer-tables\\route.ts",
+    "size": 21136,
+    "modified": "2026-05-13 04:59:13"
+  },
+  {
+    "path": "src\\app\\api\\init\\warehouse\\route.ts",
+    "size": 4487,
+    "modified": "2026-05-13 04:59:14"
+  },
+  {
+    "path": "src\\app\\api\\init\\warehouse-category\\route.ts",
+    "size": 3611,
+    "modified": "2026-05-13 04:59:13"
+  },
+  {
+    "path": "src\\app\\api\\init\\warehouse-category-seed\\route.ts",
+    "size": 27919,
+    "modified": "2026-05-13 04:59:13"
+  },
+  {
+    "path": "src\\app\\api\\ink-usages\\route.ts",
+    "size": 3821,
+    "modified": "2026-05-13 04:59:14"
+  },
+  {
+    "path": "src\\app\\api\\inventory\\materials\\route.ts",
+    "size": 1896,
+    "modified": "2026-05-13 04:59:14"
+  },
+  {
+    "path": "src\\app\\api\\inventory\\route.ts",
+    "size": 21134,
+    "modified": "2026-05-13 04:59:14"
+  },
+  {
+    "path": "src\\app\\api\\linkage\\validate\\route.ts",
+    "size": 15383,
+    "modified": "2026-05-13 05:01:28"
+  },
+  {
+    "path": "src\\app\\api\\material-labels\\route.ts",
+    "size": 9069,
+    "modified": "2026-05-13 04:59:14"
+  },
+  {
+    "path": "src\\app\\api\\material-lifecycle\\route.ts",
+    "size": 5799,
+    "modified": "2026-05-13 04:59:14"
+  },
+  {
+    "path": "src\\app\\api\\material-requisitions\\route.ts",
+    "size": 5916,
+    "modified": "2026-05-13 04:59:14"
+  },
+  {
+    "path": "src\\app\\api\\material-requisitions\\[id]\\issue\\route.ts",
+    "size": 839,
+    "modified": "2026-05-13 05:35:42"
+  },
+  {
+    "path": "src\\app\\api\\material-returns\\route.ts",
+    "size": 5647,
+    "modified": "2026-05-13 04:59:14"
+  },
+  {
+    "path": "src\\app\\api\\materials\\route.ts",
+    "size": 1635,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\app\\api\\menu\\route.ts",
+    "size": 1598,
+    "modified": "2026-05-13 04:59:15"
+  },
+  {
+    "path": "src\\app\\api\\menu\\sort-order\\route.ts",
+    "size": 2422,
+    "modified": "2026-05-13 04:59:15"
+  },
+  {
+    "path": "src\\app\\api\\migrations\\add-workshop-column\\route.ts",
+    "size": 5304,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\migrations\\foreign-keys\\route.ts",
+    "size": 17609,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\migrations\\purchase-request-fk\\route.ts",
+    "size": 3987,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\migrations\\readmd-fixes\\route.ts",
+    "size": 34550,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\migrations\\six-critical-fixes\\route.ts",
+    "size": 34894,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\migrations\\views\\route.ts",
+    "size": 5780,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\app\\api\\monitoring\\route.ts",
+    "size": 2786,
+    "modified": "2026-06-03 01:16:45"
+  },
+  {
+    "path": "src\\app\\api\\orders\\bom\\materials\\route.ts",
+    "size": 5860,
+    "modified": "2026-05-13 04:59:15"
+  },
+  {
+    "path": "src\\app\\api\\orders\\bom\\route.ts",
+    "size": 13033,
+    "modified": "2026-05-13 04:59:15"
+  },
+  {
+    "path": "src\\app\\api\\orders\\bom\\[id]\\route.ts",
+    "size": 2507,
+    "modified": "2026-05-13 04:59:15"
+  },
+  {
+    "path": "src\\app\\api\\orders\\customers\\route.ts",
+    "size": 68,
+    "modified": "2026-05-13 03:36:26"
+  },
+  {
+    "path": "src\\app\\api\\orders\\export\\route.ts",
+    "size": 5661,
+    "modified": "2026-05-13 04:59:15"
+  },
+  {
+    "path": "src\\app\\api\\orders\\products\\route.ts",
+    "size": 67,
+    "modified": "2026-05-13 03:36:26"
+  },
+  {
+    "path": "src\\app\\api\\orders\\route.ts",
+    "size": 9253,
+    "modified": "2026-05-13 05:01:28"
+  },
+  {
+    "path": "src\\app\\api\\orders\\sales\\route.ts",
+    "size": 6972,
+    "modified": "2026-05-13 04:59:16"
+  },
+  {
+    "path": "src\\app\\api\\organization\\department\\route.ts",
+    "size": 5258,
+    "modified": "2026-06-02 23:35:35"
+  },
+  {
+    "path": "src\\app\\api\\organization\\employee\\route.ts",
+    "size": 8470,
+    "modified": "2026-05-13 04:59:16"
+  },
+  {
+    "path": "src\\app\\api\\organization\\menu\\route.ts",
+    "size": 5151,
+    "modified": "2026-05-13 04:59:16"
+  },
+  {
+    "path": "src\\app\\api\\organization\\role\\route.ts",
+    "size": 6880,
+    "modified": "2026-05-13 04:59:16"
+  },
+  {
+    "path": "src\\app\\api\\organization\\route.ts",
+    "size": 4153,
+    "modified": "2026-05-28 07:42:25"
+  },
+  {
+    "path": "src\\app\\api\\organization\\warehouse-category\\route.ts",
+    "size": 4524,
+    "modified": "2026-06-02 09:50:50"
+  },
+  {
+    "path": "src\\app\\api\\organization\\warehouse-category\\stats\\route.ts",
+    "size": 1485,
+    "modified": "2026-06-02 09:56:33"
+  },
+  {
+    "path": "src\\app\\api\\outsource\\issue\\route.ts",
+    "size": 7512,
+    "modified": "2026-05-13 04:59:16"
+  },
+  {
+    "path": "src\\app\\api\\outsource\\order\\route.ts",
+    "size": 4860,
+    "modified": "2026-05-13 04:59:16"
+  },
+  {
+    "path": "src\\app\\api\\outsource\\receive\\route.ts",
+    "size": 7880,
+    "modified": "2026-05-13 04:59:16"
+  },
+  {
+    "path": "src\\app\\api\\outsource\\settlement\\route.ts",
+    "size": 6079,
+    "modified": "2026-05-13 04:59:16"
+  },
+  {
+    "path": "src\\app\\api\\plm\\eco\\route.ts",
+    "size": 3839,
+    "modified": "2026-05-13 04:59:16"
+  },
+  {
+    "path": "src\\app\\api\\plm\\lifecycle\\route.ts",
+    "size": 3606,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\prepress\\die\\route.ts",
+    "size": 4997,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\app\\api\\prepress\\die-maintenance\\route.ts",
+    "size": 9818,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\prepress\\die-migrate\\route.ts",
+    "size": 8177,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\prepress\\die-template\\route.ts",
+    "size": 10625,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\prepress\\die-usage\\route.ts",
+    "size": 7146,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\prepress\\ink\\route.ts",
+    "size": 4911,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\app\\api\\prepress\\screen-plate\\route.ts",
+    "size": 5009,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\production\\bom\\route.ts",
+    "size": 69,
+    "modified": "2026-05-13 01:34:53"
+  },
+  {
+    "path": "src\\app\\api\\production\\material-issue\\route.ts",
+    "size": 11739,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\production\\material-return\\route.ts",
+    "size": 3531,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\production\\mrp\\route.ts",
+    "size": 2974,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\production\\orders\\route.ts",
+    "size": 2206,
+    "modified": "2026-05-13 00:35:36"
+  },
+  {
+    "path": "src\\app\\api\\production\\process\\route.ts",
+    "size": 2964,
+    "modified": "2026-05-13 01:46:15"
+  },
+  {
+    "path": "src\\app\\api\\production\\process\\stats\\route.ts",
+    "size": 1953,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\production\\process-route\\route.ts",
+    "size": 5363,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\production\\product-label\\route.ts",
+    "size": 3424,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\production\\schedule\\auto\\route.ts",
+    "size": 1155,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\production\\schedule\\capacity\\route.ts",
+    "size": 4493,
+    "modified": "2026-05-13 04:59:17"
+  },
+  {
+    "path": "src\\app\\api\\production\\schedule\\route.ts",
+    "size": 5052,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\production\\schedule\\stats\\route.ts",
+    "size": 2546,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\production\\trace\\route.ts",
+    "size": 5483,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\production\\work-order\\color-seq\\route.ts",
+    "size": 1145,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\production\\work-order\\create-multi-color\\route.ts",
+    "size": 1015,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\production\\work-orders\\route.ts",
+    "size": 69,
+    "modified": "2026-05-13 01:34:51"
+  },
+  {
+    "path": "src\\app\\api\\production\\work-report\\route.ts",
+    "size": 7684,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\products\\categories\\route.ts",
+    "size": 5222,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\products\\route.ts",
+    "size": 6385,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\purchase\\convert-po\\route.ts",
+    "size": 876,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\purchase\\orders\\route.ts",
+    "size": 8183,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\purchase\\request\\route.ts",
+    "size": 11567,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\purchase\\suppliers\\route.ts",
+    "size": 5581,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\qrcode\\payload\\route.ts",
+    "size": 3536,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\qrcode\\print\\route.ts",
+    "size": 2525,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\qrcode\\records\\route.ts",
+    "size": 52,
+    "modified": "2026-05-13 03:40:53"
+  },
+  {
+    "path": "src\\app\\api\\qrcode\\route.ts",
+    "size": 7755,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\qrcode\\trace\\route.ts",
+    "size": 7527,
+    "modified": "2026-05-13 04:59:18"
+  },
+  {
+    "path": "src\\app\\api\\quality\\complaint\\route.ts",
+    "size": 7937,
+    "modified": "2026-05-13 04:59:19"
+  },
+  {
+    "path": "src\\app\\api\\quality\\final\\route.ts",
+    "size": 5155,
+    "modified": "2026-05-13 04:59:19"
+  },
+  {
+    "path": "src\\app\\api\\quality\\final\\stats\\route.ts",
+    "size": 2001,
+    "modified": "2026-05-13 04:59:19"
+  },
+  {
+    "path": "src\\app\\api\\quality\\incoming\\route.ts",
+    "size": 11843,
+    "modified": "2026-05-13 04:59:19"
+  },
+  {
+    "path": "src\\app\\api\\quality\\lab-test\\route.ts",
+    "size": 5634,
+    "modified": "2026-05-13 04:59:19"
+  },
+  {
+    "path": "src\\app\\api\\quality\\process\\route.ts",
+    "size": 8550,
+    "modified": "2026-05-13 04:59:19"
+  },
+  {
+    "path": "src\\app\\api\\quality\\process\\stats\\route.ts",
+    "size": 1558,
+    "modified": "2026-05-13 04:59:19"
+  },
+  {
+    "path": "src\\app\\api\\quality\\sgs\\expiry-warning\\route.ts",
+    "size": 1184,
+    "modified": "2026-04-17 00:29:29"
+  },
+  {
+    "path": "src\\app\\api\\quality\\sgs\\route.ts",
+    "size": 5969,
+    "modified": "2026-05-13 04:59:19"
+  },
+  {
+    "path": "src\\app\\api\\quality\\sgs\\[id]\\route.ts",
+    "size": 789,
+    "modified": "2026-05-13 04:59:19"
+  },
+  {
+    "path": "src\\app\\api\\quality\\spc\\route.ts",
+    "size": 3494,
+    "modified": "2026-05-13 04:59:19"
+  },
+  {
+    "path": "src\\app\\api\\quality\\supplier-audit\\route.ts",
+    "size": 6044,
+    "modified": "2026-05-13 04:59:19"
+  },
+  {
+    "path": "src\\app\\api\\quality\\unqualified\\route.ts",
+    "size": 3882,
+    "modified": "2026-05-13 04:59:20"
+  },
+  {
+    "path": "src\\app\\api\\reports\\dashboard\\route.ts",
+    "size": 4962,
+    "modified": "2026-05-13 04:59:20"
+  },
+  {
+    "path": "src\\app\\api\\reports\\delivery-rate\\route.ts",
+    "size": 4410,
+    "modified": "2026-05-13 04:59:20"
+  },
+  {
+    "path": "src\\app\\api\\reports\\inventory-turnover\\route.ts",
+    "size": 5333,
+    "modified": "2026-05-13 04:59:20"
+  },
+  {
+    "path": "src\\app\\api\\reports\\production-cost\\route.ts",
+    "size": 5422,
+    "modified": "2026-05-13 04:59:20"
+  },
+  {
+    "path": "src\\app\\api\\role-permissions\\buttons\\route.ts",
+    "size": 2319,
+    "modified": "2026-05-13 04:59:20"
+  },
+  {
+    "path": "src\\app\\api\\role-permissions\\route.ts",
+    "size": 2730,
+    "modified": "2026-05-13 04:59:20"
+  },
+  {
+    "path": "src\\app\\api\\sales\\convert-wo\\route.ts",
+    "size": 578,
+    "modified": "2026-04-29 08:01:16"
+  },
+  {
+    "path": "src\\app\\api\\sales\\delivery\\partial\\route.ts",
+    "size": 2104,
+    "modified": "2026-05-13 04:59:20"
+  },
+  {
+    "path": "src\\app\\api\\sales\\delivery\\re-ship\\route.ts",
+    "size": 2594,
+    "modified": "2026-05-13 04:59:20"
+  },
+  {
+    "path": "src\\app\\api\\sales\\delivery\\route.ts",
+    "size": 9588,
+    "modified": "2026-05-13 04:59:20"
+  },
+  {
+    "path": "src\\app\\api\\sales\\delivery\\[id]\\ship\\route.ts",
+    "size": 4516,
+    "modified": "2026-05-13 04:59:20"
+  },
+  {
+    "path": "src\\app\\api\\sales\\orders\\route.ts",
+    "size": 52,
+    "modified": "2026-05-13 01:34:53"
+  },
+  {
+    "path": "src\\app\\api\\sales\\reconciliation\\route.ts",
+    "size": 7754,
+    "modified": "2026-05-13 04:59:21"
+  },
+  {
+    "path": "src\\app\\api\\sales\\return\\route.ts",
+    "size": 7435,
+    "modified": "2026-05-13 04:59:21"
+  },
+  {
+    "path": "src\\app\\api\\sample\\orders\\linkage\\route.ts",
+    "size": 9015,
+    "modified": "2026-05-13 04:59:21"
+  },
+  {
+    "path": "src\\app\\api\\sample\\orders\\route.ts",
+    "size": 6528,
+    "modified": "2026-05-13 04:59:21"
+  },
+  {
+    "path": "src\\app\\api\\screen-plates\\history\\route.ts",
+    "size": 2583,
+    "modified": "2026-05-13 04:59:21"
+  },
+  {
+    "path": "src\\app\\api\\screen-plates\\route.ts",
+    "size": 6151,
+    "modified": "2026-06-02 07:56:47"
+  },
+  {
+    "path": "src\\app\\api\\settings\\category-linkage\\route.ts",
+    "size": 4808,
+    "modified": "2026-06-02 08:49:46"
+  },
+  {
+    "path": "src\\app\\api\\settings\\category-rules\\route.ts",
+    "size": 5079,
+    "modified": "2026-06-02 08:49:18"
+  },
+  {
+    "path": "src\\app\\api\\settings\\change-approval\\route.ts",
+    "size": 5402,
+    "modified": "2026-06-02 08:50:26"
+  },
+  {
+    "path": "src\\app\\api\\settings\\system\\route.ts",
+    "size": 29671,
+    "modified": "2026-05-14 00:23:15"
+  },
+  {
+    "path": "src\\app\\api\\setup\\create-tables\\route.ts",
+    "size": 54908,
+    "modified": "2026-06-03 02:37:24"
+  },
+  {
+    "path": "src\\app\\api\\srm\\evaluation\\route.ts",
+    "size": 5819,
+    "modified": "2026-05-13 04:59:21"
+  },
+  {
+    "path": "src\\app\\api\\srm\\evaluation\\[id]\\route.ts",
+    "size": 842,
+    "modified": "2026-05-13 04:59:21"
+  },
+  {
+    "path": "src\\app\\api\\standard-card\\action\\route.ts",
+    "size": 2296,
+    "modified": "2026-05-13 04:59:21"
+  },
+  {
+    "path": "src\\app\\api\\standard-card\\by-material\\route.ts",
+    "size": 1089,
+    "modified": "2026-05-13 04:59:21"
+  },
+  {
+    "path": "src\\app\\api\\standard-card\\route.ts",
+    "size": 4741,
+    "modified": "2026-05-13 04:59:22"
+  },
+  {
+    "path": "src\\app\\api\\standard-cards\\approve\\route.ts",
+    "size": 6897,
+    "modified": "2026-06-02 08:28:30"
+  },
+  {
+    "path": "src\\app\\api\\standard-cards\\by-material\\[material_id]\\route.ts",
+    "size": 3465,
+    "modified": "2026-05-13 05:34:40"
+  },
+  {
+    "path": "src\\app\\api\\standard-cards\\by-work-order\\[work_order_id]\\route.ts",
+    "size": 1478,
+    "modified": "2026-05-13 05:34:56"
+  },
+  {
+    "path": "src\\app\\api\\standard-cards\\check-deviation\\route.ts",
+    "size": 3138,
+    "modified": "2026-06-03 01:22:06"
+  },
+  {
+    "path": "src\\app\\api\\standard-cards\\route.ts",
+    "size": 17293,
+    "modified": "2026-06-03 01:26:06"
+  },
+  {
+    "path": "src\\app\\api\\standard-cards\\scan\\route.ts",
+    "size": 3477,
+    "modified": "2026-05-13 04:59:22"
+  },
+  {
+    "path": "src\\app\\api\\system\\config\\route.test.ts",
+    "size": 6426,
+    "modified": "2026-05-13 04:59:22"
+  },
+  {
+    "path": "src\\app\\api\\system\\config\\route.ts",
+    "size": 2526,
+    "modified": "2026-05-14 00:25:08"
+  },
+  {
+    "path": "src\\app\\api\\system\\config\\update\\route.ts",
+    "size": 1313,
+    "modified": "2026-05-14 00:40:54"
+  },
+  {
+    "path": "src\\app\\api\\system\\data-fix\\route.ts",
+    "size": 1607,
+    "modified": "2026-05-13 04:59:22"
+  },
+  {
+    "path": "src\\app\\api\\system\\dict-data\\route.ts",
+    "size": 2865,
+    "modified": "2026-05-13 04:59:22"
+  },
+  {
+    "path": "src\\app\\api\\system\\dict-type\\route.ts",
+    "size": 2892,
+    "modified": "2026-06-02 09:55:15"
+  },
+  {
+    "path": "src\\app\\api\\system\\init\\route.ts",
+    "size": 1067,
+    "modified": "2026-05-13 04:59:23"
+  },
+  {
+    "path": "src\\app\\api\\system\\login-log\\route.ts",
+    "size": 1501,
+    "modified": "2026-06-02 09:49:28"
+  },
+  {
+    "path": "src\\app\\api\\system\\monitor\\deadlock\\route.ts",
+    "size": 1133,
+    "modified": "2026-05-13 04:59:23"
+  },
+  {
+    "path": "src\\app\\api\\system\\notice\\route.ts",
+    "size": 2545,
+    "modified": "2026-05-13 04:59:23"
+  },
+  {
+    "path": "src\\app\\api\\system\\oper-log\\route.ts",
+    "size": 1848,
+    "modified": "2026-06-02 09:49:08"
+  },
+  {
+    "path": "src\\app\\api\\system\\outbox\\route.ts",
+    "size": 2031,
+    "modified": "2026-05-13 04:59:23"
+  },
+  {
+    "path": "src\\app\\api\\system\\roles\\route.ts",
+    "size": 3526,
+    "modified": "2026-05-13 04:59:23"
+  },
+  {
+    "path": "src\\app\\api\\system\\scheduler\\route.ts",
+    "size": 1957,
+    "modified": "2026-05-13 04:59:23"
+  },
+  {
+    "path": "src\\app\\api\\system\\user\\fix-names\\route.ts",
+    "size": 4023,
+    "modified": "2026-05-13 04:59:23"
+  },
+  {
+    "path": "src\\app\\api\\system\\user\\route.ts",
+    "size": 5421,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\api\\system\\user\\sync-names\\route.ts",
+    "size": 1271,
+    "modified": "2026-05-13 04:59:23"
+  },
+  {
+    "path": "src\\app\\api\\system\\workflow\\route.ts",
+    "size": 6256,
+    "modified": "2026-05-27 06:26:08"
+  },
+  {
+    "path": "src\\app\\api\\test\\route.ts",
+    "size": 5850,
+    "modified": "2026-05-13 04:59:23"
+  },
+  {
+    "path": "src\\app\\api\\upload\\contract\\route.ts",
+    "size": 2355,
+    "modified": "2026-05-13 04:59:24"
+  },
+  {
+    "path": "src\\app\\api\\upload\\route.ts",
+    "size": 3031,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\api\\upload\\sop\\route.ts",
+    "size": 1921,
+    "modified": "2026-05-13 04:59:24"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\batch-inventory\\route.ts",
+    "size": 11913,
+    "modified": "2026-05-13 04:59:24"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\categories\\route.ts",
+    "size": 728,
+    "modified": "2026-03-27 00:01:29"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\fifo-recommend\\route.ts",
+    "size": 8691,
+    "modified": "2026-05-13 05:01:28"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\inbound\\audit\\route.ts",
+    "size": 9928,
+    "modified": "2026-05-13 04:59:24"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\inbound\\cutting\\route.ts",
+    "size": 12778,
+    "modified": "2026-05-13 04:59:24"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\inbound\\labels\\route.ts",
+    "size": 8191,
+    "modified": "2026-05-13 04:59:24"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\inbound\\route.ts",
+    "size": 7169,
+    "modified": "2026-05-13 04:59:24"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\inbound\\scan\\route.ts",
+    "size": 2255,
+    "modified": "2026-05-13 04:59:24"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\inbound\\with-po\\route.ts",
+    "size": 13600,
+    "modified": "2026-05-13 04:59:24"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\ink-mixing\\route.ts",
+    "size": 7498,
+    "modified": "2026-05-13 04:59:25"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\ink-opening\\route.ts",
+    "size": 4549,
+    "modified": "2026-06-03 01:44:28"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\inventory\\adjust\\route.ts",
+    "size": 1164,
+    "modified": "2026-05-13 04:59:25"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\inventory\\logs\\route.ts",
+    "size": 1120,
+    "modified": "2026-05-12 01:42:22"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\inventory\\route.ts",
+    "size": 3458,
+    "modified": "2026-04-28 23:54:02"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\inventory\\warning\\route.ts",
+    "size": 762,
+    "modified": "2026-05-13 04:59:25"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\outbound\\confirm\\route.ts",
+    "size": 10698,
+    "modified": "2026-05-13 04:59:25"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\outbound\\fifo\\route.ts",
+    "size": 16712,
+    "modified": "2026-05-13 05:01:28"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\outbound\\route.ts",
+    "size": 9478,
+    "modified": "2026-05-13 04:59:25"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\production-inbound\\route.ts",
+    "size": 13336,
+    "modified": "2026-05-13 04:59:25"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\route.ts",
+    "size": 10141,
+    "modified": "2026-05-13 04:59:25"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\sales-outbound\\route.ts",
+    "size": 14806,
+    "modified": "2026-05-13 04:59:25"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\stock-adjust\\route.ts",
+    "size": 3608,
+    "modified": "2026-05-13 04:59:25"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\stocktaking\\route.ts",
+    "size": 10724,
+    "modified": "2026-05-13 04:59:26"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\stocktaking\\[id]\\items\\route.ts",
+    "size": 1323,
+    "modified": "2026-05-13 04:59:25"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\stocktaking\\[id]\\scan\\route.ts",
+    "size": 3353,
+    "modified": "2026-05-13 04:59:25"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\stocktaking\\[id]\\split-summary\\route.ts",
+    "size": 2621,
+    "modified": "2026-05-13 04:59:26"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\transfer\\route.ts",
+    "size": 7236,
+    "modified": "2026-05-13 04:59:26"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\transfer\\[id]\\inbound\\route.ts",
+    "size": 4000,
+    "modified": "2026-05-13 04:59:26"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\transfer\\[id]\\items\\route.ts",
+    "size": 915,
+    "modified": "2026-05-13 04:59:26"
+  },
+  {
+    "path": "src\\app\\api\\warehouse\\transfer\\[id]\\outbound\\route.ts",
+    "size": 3899,
+    "modified": "2026-05-13 04:59:26"
+  },
+  {
+    "path": "src\\app\\api\\workflow\\process\\route.ts",
+    "size": 4544,
+    "modified": "2026-05-27 06:26:08"
+  },
+  {
+    "path": "src\\app\\api\\workflow\\tasks\\route.ts",
+    "size": 2878,
+    "modified": "2026-05-27 06:26:08"
+  },
+  {
+    "path": "src\\app\\api\\workorders\\route.ts",
+    "size": 13114,
+    "modified": "2026-05-13 04:59:26"
+  },
+  {
+    "path": "src\\app\\base-data\\material-category\\page.tsx",
+    "size": 11321,
+    "modified": "2026-06-02 08:56:23"
+  },
+  {
+    "path": "src\\app\\business\\contract-review\\page.tsx",
+    "size": 29076,
+    "modified": "2026-05-28 07:42:25"
+  },
+  {
+    "path": "src\\app\\components\\button-demo\\page.tsx",
+    "size": 21751,
+    "modified": "2026-05-13 04:59:27"
+  },
+  {
+    "path": "src\\app\\crm\\analysis\\page.tsx",
+    "size": 19983,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\crm\\follow\\page.tsx",
+    "size": 14265,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\dashboard\\ceo\\page.tsx",
+    "size": 51155,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\dashboard\\finance\\page.tsx",
+    "size": 23000,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\dashboard\\flow\\page.tsx",
+    "size": 31156,
+    "modified": "2026-05-13 04:59:28"
+  },
+  {
+    "path": "src\\app\\dashboard\\page.tsx",
+    "size": 18362,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\dashboard\\production\\page.tsx",
+    "size": 28971,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\dashboard\\quality\\page.tsx",
+    "size": 31807,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\dashboard\\sales\\page.tsx",
+    "size": 20770,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\dashboard\\warehouse\\page.tsx",
+    "size": 27564,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\dcprint\\die\\page.tsx",
+    "size": 12281,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\dcprint\\ink\\page.tsx",
+    "size": 21097,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\dcprint\\ink-mixed\\page.tsx",
+    "size": 16401,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\dcprint\\ink-opening\\page.tsx",
+    "size": 31403,
+    "modified": "2026-06-03 02:22:45"
+  },
+  {
+    "path": "src\\app\\dcprint\\ink-usage\\page.tsx",
+    "size": 12610,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\dcprint\\labels\\page.tsx",
+    "size": 21652,
+    "modified": "2026-05-28 07:42:25"
+  },
+  {
+    "path": "src\\app\\dcprint\\page.tsx",
+    "size": 8556,
+    "modified": "2026-05-13 04:59:31"
+  },
+  {
+    "path": "src\\app\\dcprint\\process-cards\\page.tsx",
+    "size": 19850,
+    "modified": "2026-05-28 07:42:25"
+  },
+  {
+    "path": "src\\app\\dcprint\\screen-plate\\page.tsx",
+    "size": 23527,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\dcprint\\trace\\page.tsx",
+    "size": 17844,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\debug\\inbound\\page.tsx",
+    "size": 4129,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\delivery\\vehicles\\new\\page.tsx",
+    "size": 11753,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\delivery\\vehicles\\page.tsx",
+    "size": 10757,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\diagnostic\\page.tsx",
+    "size": 9588,
+    "modified": "2026-05-13 04:59:31"
+  },
+  {
+    "path": "src\\app\\engineering\\sample-to-mass\\page.tsx",
+    "size": 16015,
+    "modified": "2026-05-28 07:42:25"
+  },
+  {
+    "path": "src\\app\\engineering\\sop\\page.tsx",
+    "size": 17839,
+    "modified": "2026-05-28 07:42:25"
+  },
+  {
+    "path": "src\\app\\equipment\\calibration\\page.tsx",
+    "size": 12465,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\equipment\\maintenance\\page.tsx",
+    "size": 34053,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\equipment\\page.tsx",
+    "size": 15866,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\equipment\\repair\\page.tsx",
+    "size": 12907,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\equipment\\scrap\\page.tsx",
+    "size": 12832,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\favicon.ico",
+    "size": 25931,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "src\\app\\finance\\cost\\page.tsx",
+    "size": 8684,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\finance\\costs\\page.tsx",
+    "size": 5810,
+    "modified": "2026-05-27 06:26:08"
+  },
+  {
+    "path": "src\\app\\finance\\page.tsx",
+    "size": 52146,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\finance\\payables\\page.tsx",
+    "size": 7902,
+    "modified": "2026-05-27 06:26:08"
+  },
+  {
+    "path": "src\\app\\finance\\receivable\\page.tsx",
+    "size": 14652,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\finance\\receivables\\page.tsx",
+    "size": 7967,
+    "modified": "2026-05-27 06:26:08"
+  },
+  {
+    "path": "src\\app\\finance\\report\\page.tsx",
+    "size": 9183,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\globals.css",
+    "size": 23582,
+    "modified": "2026-05-28 07:42:25"
+  },
+  {
+    "path": "src\\app\\hr\\attendance\\page.tsx",
+    "size": 45796,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\hr\\employee\\page.tsx",
+    "size": 75113,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\hr\\employee\\query\\page.tsx",
+    "size": 11452,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\hr\\salary\\page.tsx",
+    "size": 55193,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\hr\\training\\page.tsx",
+    "size": 13943,
+    "modified": "2026-06-02 23:42:36"
+  },
+  {
+    "path": "src\\app\\layout.tsx",
+    "size": 2901,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\app\\login\\page.tsx",
+    "size": 29838,
+    "modified": "2026-05-13 04:59:34"
+  },
+  {
+    "path": "src\\app\\material-requisitions\\page.tsx",
+    "size": 15549,
+    "modified": "2026-05-13 04:59:34"
+  },
+  {
+    "path": "src\\app\\modules\\page.tsx",
+    "size": 11882,
+    "modified": "2026-05-13 04:59:34"
+  },
+  {
+    "path": "src\\app\\orders\\bom\\create\\page.tsx",
+    "size": 22186,
+    "modified": "2026-06-03 01:27:50"
+  },
+  {
+    "path": "src\\app\\orders\\bom\\page.tsx",
+    "size": 18524,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\orders\\customers\\new\\page.tsx",
+    "size": 15632,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\orders\\customers\\page.tsx",
+    "size": 52529,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\orders\\products\\page.tsx",
+    "size": 44342,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\orders\\sales\\page.tsx",
+    "size": 59250,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\outsource\\issue\\page.tsx",
+    "size": 22494,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\outsource\\order\\page.tsx",
+    "size": 17275,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\outsource\\receive\\page.tsx",
+    "size": 17500,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\outsource\\settlement\\page.tsx",
+    "size": 16391,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\page.tsx",
+    "size": 22177,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\plm\\eco\\page.tsx",
+    "size": 15930,
+    "modified": "2026-05-28 07:42:25"
+  },
+  {
+    "path": "src\\app\\plm\\lifecycle\\page.tsx",
+    "size": 16681,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\app\\prepress\\die-template\\page.tsx",
+    "size": 87163,
+    "modified": "2026-06-03 00:07:10"
+  },
+  {
+    "path": "src\\app\\production\\material-issue\\page.tsx",
+    "size": 12949,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\production\\material-return\\page.tsx",
+    "size": 12292,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\production\\mrp\\page.tsx",
+    "size": 47414,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\production\\orders\\page.tsx",
+    "size": 15954,
+    "modified": "2026-05-13 04:59:37"
+  },
+  {
+    "path": "src\\app\\production\\process\\page.tsx",
+    "size": 29578,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\production\\product-label\\page.tsx",
+    "size": 22358,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\production\\report\\page.tsx",
+    "size": 37179,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\production\\schedule\\page.tsx",
+    "size": 67354,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\production\\workorder\\page.tsx",
+    "size": 40226,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\purchase\\orders\\page.tsx",
+    "size": 54723,
+    "modified": "2026-05-28 07:42:25"
+  },
+  {
+    "path": "src\\app\\purchase\\request\\form\\page.tsx",
+    "size": 46983,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\purchase\\request\\new\\page.tsx",
+    "size": 16465,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\purchase\\request\\page.tsx",
+    "size": 34551,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\purchase\\request\\[id]\\page.tsx",
+    "size": 12820,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\purchase\\suppliers\\page.tsx",
+    "size": 35859,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\qrcode\\page.tsx",
+    "size": 30601,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\quality\\complaint\\page.tsx",
+    "size": 35351,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\quality\\final\\page.tsx",
+    "size": 49936,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\quality\\incoming\\page.tsx",
+    "size": 37893,
+    "modified": "2026-05-13 04:59:39"
+  },
+  {
+    "path": "src\\app\\quality\\lab-test\\page.tsx",
+    "size": 21116,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\quality\\process\\page.tsx",
+    "size": 62603,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\quality\\sgs\\page.tsx",
+    "size": 41110,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\quality\\spc\\page.tsx",
+    "size": 58290,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\quality\\supplier-audit\\page.tsx",
+    "size": 22472,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\quality\\trace\\page.tsx",
+    "size": 29399,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\quality\\unqualified\\page.tsx",
+    "size": 17615,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\reports\\page.tsx",
+    "size": 14375,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\robots.ts",
+    "size": 224,
+    "modified": "2026-02-27 07:27:35"
+  },
+  {
+    "path": "src\\app\\sales\\delivery\\page.tsx",
+    "size": 38151,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\sales\\reconciliation\\page.tsx",
+    "size": 24100,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\sales\\return\\page.tsx",
+    "size": 28512,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\sample\\management\\page.tsx",
+    "size": 29168,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\sample\\orders\\new\\page.tsx",
+    "size": 16751,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\sample\\orders\\page.tsx",
+    "size": 29867,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\sample\\orders\\[id]\\edit\\page.tsx",
+    "size": 19898,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\sample\\orders\\[id]\\page.tsx",
+    "size": 15426,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\sample\\standard-card\\input\\page.tsx",
+    "size": 82446,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\app\\sample\\standard-card\\input-v2\\1.tsx",
+    "size": 44076,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\sample\\standard-card\\input-v2\\page - 副本.tsx",
+    "size": 89430,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\app\\sample\\standard-card\\input-v2\\page.tsx",
+    "size": 90542,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\app\\sample\\standard-card\\page.tsx",
+    "size": 39439,
+    "modified": "2026-06-03 00:04:37"
+  },
+  {
+    "path": "src\\app\\sample\\standard-card\\print\\page.tsx",
+    "size": 41328,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\app\\settings\\basics\\page.tsx",
+    "size": 10011,
+    "modified": "2026-06-02 08:57:54"
+  },
+  {
+    "path": "src\\app\\settings\\config\\page.tsx",
+    "size": 5548,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\settings\\dict\\page.tsx",
+    "size": 8561,
+    "modified": "2026-05-14 05:56:56"
+  },
+  {
+    "path": "src\\app\\settings\\login-log\\page.tsx",
+    "size": 5691,
+    "modified": "2026-05-14 05:57:54"
+  },
+  {
+    "path": "src\\app\\settings\\menus\\page.tsx",
+    "size": 14547,
+    "modified": "2026-05-14 06:00:27"
+  },
+  {
+    "path": "src\\app\\settings\\notice\\page.tsx",
+    "size": 9290,
+    "modified": "2026-05-14 05:54:31"
+  },
+  {
+    "path": "src\\app\\settings\\oper-log\\page.tsx",
+    "size": 5776,
+    "modified": "2026-05-14 05:58:52"
+  },
+  {
+    "path": "src\\app\\settings\\organization\\department-table.tsx",
+    "size": 7429,
+    "modified": "2026-05-13 04:59:41"
+  },
+  {
+    "path": "src\\app\\settings\\organization\\page.tsx",
+    "size": 41290,
+    "modified": "2026-05-14 05:51:46"
+  },
+  {
+    "path": "src\\app\\settings\\organization\\warehouse-category.tsx",
+    "size": 20007,
+    "modified": "2026-05-14 05:53:16"
+  },
+  {
+    "path": "src\\app\\settings\\permissions\\page.tsx",
+    "size": 17318,
+    "modified": "2026-05-13 04:59:42"
+  },
+  {
+    "path": "src\\app\\settings\\roles\\page.tsx",
+    "size": 24796,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\settings\\seed-data\\page.tsx",
+    "size": 14046,
+    "modified": "2026-05-15 00:34:56"
+  },
+  {
+    "path": "src\\app\\settings\\system\\page.tsx",
+    "size": 11407,
+    "modified": "2026-05-14 05:55:43"
+  },
+  {
+    "path": "src\\app\\settings\\user\\page.tsx",
+    "size": 29384,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\settings\\users\\page.tsx",
+    "size": 115,
+    "modified": "2026-04-17 01:10:57"
+  },
+  {
+    "path": "src\\app\\settings\\warehouse-category\\page.tsx",
+    "size": 336,
+    "modified": "2026-06-03 00:06:35"
+  },
+  {
+    "path": "src\\app\\srm\\evaluation\\page.tsx",
+    "size": 38114,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\test\\page.tsx",
+    "size": 7204,
+    "modified": "2026-05-13 04:59:42"
+  },
+  {
+    "path": "src\\app\\test-api\\page.tsx",
+    "size": 3050,
+    "modified": "2026-05-13 04:59:42"
+  },
+  {
+    "path": "src\\app\\warehouse\\inbound\\cutting\\page.tsx",
+    "size": 14174,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\warehouse\\inbound\\page.tsx",
+    "size": 132756,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\warehouse\\inbound-simple\\page.tsx",
+    "size": 4164,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\warehouse\\inventory\\page.tsx",
+    "size": 20439,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\warehouse\\outbound\\page.tsx",
+    "size": 64366,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\warehouse\\page.tsx",
+    "size": 24150,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\warehouse\\production-inbound\\page.tsx",
+    "size": 11950,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\warehouse\\sales-outbound\\page.tsx",
+    "size": 13693,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\warehouse\\setup\\page.tsx",
+    "size": 24117,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\warehouse\\stock-adjust\\page.tsx",
+    "size": 16356,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\warehouse\\stocktaking\\page.tsx",
+    "size": 28555,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\app\\warehouse\\transfer\\page.tsx",
+    "size": 39370,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\application\\AppInitializer.ts",
+    "size": 393,
+    "modified": "2026-05-13 04:30:04"
+  },
+  {
+    "path": "src\\application\\EventRegistry.ts",
+    "size": 4501,
+    "modified": "2026-05-15 00:34:57"
+  },
+  {
+    "path": "src\\application\\handlers\\AuditLogHandler.ts",
+    "size": 1290,
+    "modified": "2026-05-08 04:08:17"
+  },
+  {
+    "path": "src\\application\\handlers\\CacheInvalidationHandler.ts",
+    "size": 903,
+    "modified": "2026-05-08 04:10:41"
+  },
+  {
+    "path": "src\\application\\handlers\\FinanceVoucherHandler.ts",
+    "size": 3222,
+    "modified": "2026-05-15 00:34:57"
+  },
+  {
+    "path": "src\\application\\handlers\\InkCostHandler.ts",
+    "size": 6347,
+    "modified": "2026-05-13 04:59:44"
+  },
+  {
+    "path": "src\\application\\handlers\\InventoryRollbackHandler.ts",
+    "size": 3501,
+    "modified": "2026-05-13 07:39:34"
+  },
+  {
+    "path": "src\\application\\handlers\\InventorySyncHandler.ts",
+    "size": 2918,
+    "modified": "2026-05-13 07:45:32"
+  },
+  {
+    "path": "src\\application\\handlers\\PurchaseApprovedHandler.ts",
+    "size": 604,
+    "modified": "2026-05-11 07:47:01"
+  },
+  {
+    "path": "src\\application\\handlers\\PurchasePayableHandler.ts",
+    "size": 2382,
+    "modified": "2026-05-13 04:59:44"
+  },
+  {
+    "path": "src\\application\\handlers\\PurchaseReceivedHandler.ts",
+    "size": 3410,
+    "modified": "2026-05-13 04:59:44"
+  },
+  {
+    "path": "src\\application\\handlers\\QrCodeGenerationHandler.ts",
+    "size": 1969,
+    "modified": "2026-05-13 07:48:14"
+  },
+  {
+    "path": "src\\application\\handlers\\SalesReceivableHandler.ts",
+    "size": 1248,
+    "modified": "2026-05-13 04:59:44"
+  },
+  {
+    "path": "src\\application\\handlers\\SalesShippedHandler.ts",
+    "size": 3116,
+    "modified": "2026-05-13 04:59:44"
+  },
+  {
+    "path": "src\\application\\handlers\\SalesToWorkOrderHandler.ts",
+    "size": 7108,
+    "modified": "2026-05-13 04:59:44"
+  },
+  {
+    "path": "src\\application\\handlers\\ScreenPlateCostHandler.ts",
+    "size": 8134,
+    "modified": "2026-05-13 04:59:44"
+  },
+  {
+    "path": "src\\application\\handlers\\StandardCardHandlers.ts",
+    "size": 5041,
+    "modified": "2026-05-13 07:55:55"
+  },
+  {
+    "path": "src\\application\\services\\DashboardDataService.ts",
+    "size": 3269,
+    "modified": "2026-05-08 04:42:06"
+  },
+  {
+    "path": "src\\application\\services\\FinanceApplicationService.ts",
+    "size": 10524,
+    "modified": "2026-05-13 04:59:44"
+  },
+  {
+    "path": "src\\application\\services\\InboundApplicationService.ts",
+    "size": 5723,
+    "modified": "2026-05-13 04:59:44"
+  },
+  {
+    "path": "src\\application\\services\\InventoryValidationService.ts",
+    "size": 5984,
+    "modified": "2026-05-13 04:59:44"
+  },
+  {
+    "path": "src\\application\\services\\MaterialLifecycleService.ts",
+    "size": 16383,
+    "modified": "2026-05-13 08:03:22"
+  },
+  {
+    "path": "src\\application\\services\\ProductionApplicationService.ts",
+    "size": 8939,
+    "modified": "2026-05-13 04:59:44"
+  },
+  {
+    "path": "src\\application\\services\\PurchaseApplicationService.ts",
+    "size": 6270,
+    "modified": "2026-05-13 04:59:44"
+  },
+  {
+    "path": "src\\application\\services\\SalesApplicationService.ts",
+    "size": 6506,
+    "modified": "2026-05-13 04:59:44"
+  },
+  {
+    "path": "src\\application\\services\\StandardCardApplicationService.ts",
+    "size": 20703,
+    "modified": "2026-05-13 08:06:18"
+  },
+  {
+    "path": "src\\application\\workflow\\WorkflowEngine.ts",
+    "size": 14327,
+    "modified": "2026-05-13 08:10:41"
+  },
+  {
+    "path": "src\\bj.jpg",
+    "size": 742162,
+    "modified": "2026-03-03 08:20:41"
+  },
+  {
+    "path": "src\\components\\auth\\PermissionGuard.tsx",
+    "size": 1318,
+    "modified": "2026-05-13 04:59:45"
+  },
+  {
+    "path": "src\\components\\ClientProviders.tsx",
+    "size": 287,
+    "modified": "2026-03-25 02:52:43"
+  },
+  {
+    "path": "src\\components\\common\\index.ts",
+    "size": 147,
+    "modified": "2026-05-13 04:59:45"
+  },
+  {
+    "path": "src\\components\\common\\page-header.tsx",
+    "size": 547,
+    "modified": "2026-05-13 04:59:45"
+  },
+  {
+    "path": "src\\components\\common\\status-badge.tsx",
+    "size": 514,
+    "modified": "2026-05-13 04:59:45"
+  },
+  {
+    "path": "src\\components\\common\\use-paginated-list.ts",
+    "size": 1588,
+    "modified": "2026-05-13 04:59:45"
+  },
+  {
+    "path": "src\\components\\GlassGauge.tsx",
+    "size": 9870,
+    "modified": "2026-05-13 04:59:45"
+  },
+  {
+    "path": "src\\components\\GlassKnob.tsx",
+    "size": 9268,
+    "modified": "2026-05-13 04:59:45"
+  },
+  {
+    "path": "src\\components\\layout\\DynamicMenu.tsx",
+    "size": 5683,
+    "modified": "2026-05-14 02:14:01"
+  },
+  {
+    "path": "src\\components\\layout\\header.tsx",
+    "size": 13143,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\components\\layout\\index.ts",
+    "size": 161,
+    "modified": "2026-03-23 03:08:53"
+  },
+  {
+    "path": "src\\components\\layout\\main-layout.tsx",
+    "size": 1378,
+    "modified": "2026-05-13 04:59:45"
+  },
+  {
+    "path": "src\\components\\layout\\sidebar.tsx",
+    "size": 21203,
+    "modified": "2026-06-03 01:05:19"
+  },
+  {
+    "path": "src\\components\\PermissionGuard.tsx",
+    "size": 1930,
+    "modified": "2026-05-13 04:59:45"
+  },
+  {
+    "path": "src\\components\\printing\\LabelPrintPreview.tsx",
+    "size": 8702,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\components\\printing\\PrinterManagement.tsx",
+    "size": 10653,
+    "modified": "2026-05-28 07:47:58"
+  },
+  {
+    "path": "src\\components\\qr-code\\index.ts",
+    "size": 324,
+    "modified": "2026-05-13 04:59:45"
+  },
+  {
+    "path": "src\\components\\qr-code\\qr-code-types.ts",
+    "size": 2673,
+    "modified": "2026-05-13 08:18:20"
+  },
+  {
+    "path": "src\\components\\qr-code\\QRCodeGenerator.tsx",
+    "size": 10058,
+    "modified": "2026-05-13 04:59:45"
+  },
+  {
+    "path": "src\\components\\qr-code\\QRCodePrinter.tsx",
+    "size": 10135,
+    "modified": "2026-05-13 04:59:45"
+  },
+  {
+    "path": "src\\components\\qr-code\\QRCodeScanner.tsx",
+    "size": 8941,
+    "modified": "2026-05-13 04:59:45"
+  },
+  {
+    "path": "src\\components\\qr-code\\QRCodeSearch.tsx",
+    "size": 8316,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\qr-code\\QRCodeTrace.tsx",
+    "size": 15972,
+    "modified": "2026-05-13 08:16:07"
+  },
+  {
+    "path": "src\\components\\qr-code\\QRCodeViewer.tsx",
+    "size": 10469,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\SystemConfigInitializer.tsx",
+    "size": 1741,
+    "modified": "2026-05-14 00:37:38"
+  },
+  {
+    "path": "src\\components\\theme-settings.tsx",
+    "size": 5058,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\theme-toggle.tsx",
+    "size": 3220,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\accordion.tsx",
+    "size": 2061,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\alert-dialog.tsx",
+    "size": 3799,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\alert.tsx",
+    "size": 1594,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\animated-tabs.tsx",
+    "size": 2631,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\aspect-ratio.tsx",
+    "size": 282,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\avatar.tsx",
+    "size": 1049,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\badge.tsx",
+    "size": 1773,
+    "modified": "2026-05-13 06:43:40"
+  },
+  {
+    "path": "src\\components\\ui\\breadcrumb.tsx",
+    "size": 2361,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\button-group.tsx",
+    "size": 2211,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\button.perf.test.tsx",
+    "size": 2432,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\button.test.tsx",
+    "size": 8974,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\button.tsx",
+    "size": 4645,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\calendar.tsx",
+    "size": 7455,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\card.tsx",
+    "size": 1926,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\carousel.tsx",
+    "size": 5542,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\chart.tsx",
+    "size": 9985,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\checkbox.tsx",
+    "size": 1222,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\collapsible.tsx",
+    "size": 752,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\command.tsx",
+    "size": 4755,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\context-menu.tsx",
+    "size": 8183,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\dialog.d.ts",
+    "size": 420,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\dialog.tsx",
+    "size": 6283,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\drawer.tsx",
+    "size": 4258,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\dropdown-menu.tsx",
+    "size": 8319,
+    "modified": "2026-05-13 04:59:46"
+  },
+  {
+    "path": "src\\components\\ui\\empty.tsx",
+    "size": 2369,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\field.tsx",
+    "size": 6069,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\form.tsx",
+    "size": 3724,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\hover-card.tsx",
+    "size": 1526,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\input-group.tsx",
+    "size": 5015,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\input-otp.tsx",
+    "size": 2222,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\input.test.tsx",
+    "size": 2550,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\input.tsx",
+    "size": 1010,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\item.tsx",
+    "size": 4379,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\kbd.tsx",
+    "size": 866,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\label.tsx",
+    "size": 613,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\material-picker.tsx",
+    "size": 8895,
+    "modified": "2026-05-28 07:42:26"
+  },
+  {
+    "path": "src\\components\\ui\\menubar.tsx",
+    "size": 8344,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\navigation-menu.tsx",
+    "size": 6629,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\pagination.tsx",
+    "size": 2700,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\popover.tsx",
+    "size": 1638,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\progress.tsx",
+    "size": 722,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\radio-group.tsx",
+    "size": 1474,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\resizable.tsx",
+    "size": 1916,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\scroll-area.tsx",
+    "size": 1632,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\search-input.tsx",
+    "size": 2682,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\select.tsx",
+    "size": 6317,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\separator.tsx",
+    "size": 705,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\sheet.tsx",
+    "size": 4097,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\sidebar.tsx",
+    "size": 21563,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\skeleton.tsx",
+    "size": 279,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\slider.tsx",
+    "size": 1963,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\sonner.tsx",
+    "size": 1042,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\sortable-table.tsx",
+    "size": 2061,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\spinner.tsx",
+    "size": 335,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\switch.tsx",
+    "size": 1179,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\table-export-toolbar.tsx",
+    "size": 6414,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\table.perf.test.tsx",
+    "size": 3732,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\table.test.tsx",
+    "size": 4207,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\table.tsx",
+    "size": 2366,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\tabs.tsx",
+    "size": 1962,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\textarea.tsx",
+    "size": 763,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\toast.tsx",
+    "size": 3345,
+    "modified": "2026-05-28 07:42:26"
+  },
+  {
+    "path": "src\\components\\ui\\toggle-group.tsx",
+    "size": 2325,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\toggle.tsx",
+    "size": 1576,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\tooltip.tsx",
+    "size": 1897,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\components\\ui\\user-select.tsx",
+    "size": 1589,
+    "modified": "2026-05-28 07:42:26"
+  },
+  {
+    "path": "src\\components\\WarehouseCharts.tsx",
+    "size": 3672,
+    "modified": "2026-05-14 03:36:01"
+  },
+  {
+    "path": "src\\contexts\\AuthContext.tsx",
+    "size": 8415,
+    "modified": "2026-05-13 04:59:47"
+  },
+  {
+    "path": "src\\domain\\production\\aggregates\\WorkOrder.ts",
+    "size": 8319,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\production\\entities\\MaterialRequirement.ts",
+    "size": 2859,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\production\\events\\WorkOrderEvents.ts",
+    "size": 2084,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\production\\repositories\\IWorkOrderRepository.ts",
+    "size": 619,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\production\\value-objects\\WorkOrderStatus.ts",
+    "size": 3383,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\purchase\\aggregates\\PurchaseOrder.ts",
+    "size": 9495,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\purchase\\entities\\PurchaseOrderLine.ts",
+    "size": 4157,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\purchase\\events\\PurchaseOrderEvents.ts",
+    "size": 2064,
+    "modified": "2026-05-11 07:42:03"
+  },
+  {
+    "path": "src\\domain\\purchase\\repositories\\IPurchaseOrderRepository.ts",
+    "size": 1041,
+    "modified": "2026-05-11 07:44:30"
+  },
+  {
+    "path": "src\\domain\\purchase\\value-objects\\PurchaseOrderStatus.ts",
+    "size": 3759,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\sales\\aggregates\\SalesOrder.ts",
+    "size": 7685,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\sales\\entities\\SalesOrderLine.ts",
+    "size": 2907,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\sales\\events\\SalesOrderEvents.ts",
+    "size": 1920,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\sales\\repositories\\ISalesOrderRepository.ts",
+    "size": 813,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\sales\\value-objects\\SalesOrderStatus.ts",
+    "size": 3591,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\shared\\DomainTypes.ts",
+    "size": 903,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\shared\\value-objects\\Money.ts",
+    "size": 1309,
+    "modified": "2026-05-08 07:21:22"
+  },
+  {
+    "path": "src\\domain\\standard-card\\aggregates\\StandardCard.ts",
+    "size": 14693,
+    "modified": "2026-05-13 05:31:11"
+  },
+  {
+    "path": "src\\domain\\standard-card\\entities\\ColorStandardItem.ts",
+    "size": 1836,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\standard-card\\entities\\ProcessStandardItem.ts",
+    "size": 2383,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\standard-card\\entities\\QualityStandardItem.ts",
+    "size": 2041,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\standard-card\\entities\\StandardCardAttachment.ts",
+    "size": 2536,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\standard-card\\entities\\StandardCardInk.ts",
+    "size": 1624,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\standard-card\\entities\\StandardCardMaterial.ts",
+    "size": 1854,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\standard-card\\entities\\StandardCardTooling.ts",
+    "size": 1868,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\standard-card\\entities\\VersionChangeLog.ts",
+    "size": 2162,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\standard-card\\events\\StandardCardEvents.ts",
+    "size": 3799,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\standard-card\\repositories\\IStandardCardRepository.ts",
+    "size": 3050,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\standard-card\\value-objects\\StandardCardStatus.ts",
+    "size": 2662,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\standard-card\\value-objects\\StandardCardType.ts",
+    "size": 869,
+    "modified": "2026-05-13 04:59:48"
+  },
+  {
+    "path": "src\\domain\\warehouse\\aggregates\\InboundOrder.ts",
+    "size": 6416,
+    "modified": "2026-05-13 08:20:34"
+  },
+  {
+    "path": "src\\domain\\warehouse\\entities\\InboundItem.ts",
+    "size": 1816,
+    "modified": "2026-05-08 07:22:11"
+  },
+  {
+    "path": "src\\domain\\warehouse\\events\\InboundOrderEvents.ts",
+    "size": 2303,
+    "modified": "2026-05-13 05:09:38"
+  },
+  {
+    "path": "src\\domain\\warehouse\\repositories\\IInboundOrderRepository.ts",
+    "size": 904,
+    "modified": "2026-05-13 04:59:49"
+  },
+  {
+    "path": "src\\domain\\warehouse\\value-objects\\OrderStatus.ts",
+    "size": 2134,
+    "modified": "2026-05-14 03:47:11"
+  },
+  {
+    "path": "src\\hooks\\use-debounce.ts",
+    "size": 388,
+    "modified": "2026-05-13 04:59:49"
+  },
+  {
+    "path": "src\\hooks\\use-mobile.ts",
+    "size": 576,
+    "modified": "2026-05-13 04:59:49"
+  },
+  {
+    "path": "src\\hooks\\use-toast.test.ts",
+    "size": 4449,
+    "modified": "2026-05-13 04:59:49"
+  },
+  {
+    "path": "src\\hooks\\use-toast.ts",
+    "size": 1040,
+    "modified": "2026-05-28 07:42:26"
+  },
+  {
+    "path": "src\\hooks\\useAuth.ts",
+    "size": 127,
+    "modified": "2026-05-13 05:02:21"
+  },
+  {
+    "path": "src\\hooks\\useCompanyName.test.ts",
+    "size": 4762,
+    "modified": "2026-05-13 04:59:49"
+  },
+  {
+    "path": "src\\hooks\\useCompanyName.ts",
+    "size": 2803,
+    "modified": "2026-05-14 00:24:00"
+  },
+  {
+    "path": "src\\hooks\\usePermission.ts",
+    "size": 5726,
+    "modified": "2026-06-02 23:48:21"
+  },
+  {
+    "path": "src\\hooks\\useSnowAdminTheme.tsx",
+    "size": 3421,
+    "modified": "2026-05-13 04:59:49"
+  },
+  {
+    "path": "src\\infrastructure\\cache\\CacheManager.ts",
+    "size": 1846,
+    "modified": "2026-05-08 04:10:01"
+  },
+  {
+    "path": "src\\infrastructure\\config\\EventRegistry.ts",
+    "size": 3771,
+    "modified": "2026-05-11 08:12:27"
+  },
+  {
+    "path": "src\\infrastructure\\event-bus\\DomainEventOutbox.ts",
+    "size": 1774,
+    "modified": "2026-05-08 07:55:20"
+  },
+  {
+    "path": "src\\infrastructure\\event-bus\\EventBus.ts",
+    "size": 1667,
+    "modified": "2026-05-13 04:59:49"
+  },
+  {
+    "path": "src\\infrastructure\\event-bus\\OutboxPoller.ts",
+    "size": 3206,
+    "modified": "2026-05-08 07:53:34"
+  },
+  {
+    "path": "src\\infrastructure\\events\\EventHandler.ts",
+    "size": 73,
+    "modified": "2026-05-13 05:06:22"
+  },
+  {
+    "path": "src\\infrastructure\\monitoring\\DeadlockMonitor.ts",
+    "size": 4396,
+    "modified": "2026-05-13 04:59:49"
+  },
+  {
+    "path": "src\\infrastructure\\repositories\\MysqlInboundOrderRepository.ts",
+    "size": 8261,
+    "modified": "2026-05-13 04:59:49"
+  },
+  {
+    "path": "src\\infrastructure\\repositories\\MysqlPurchaseOrderRepository.ts",
+    "size": 9816,
+    "modified": "2026-05-28 07:42:26"
+  },
+  {
+    "path": "src\\infrastructure\\repositories\\MysqlSalesOrderRepository.ts",
+    "size": 7060,
+    "modified": "2026-05-13 04:59:49"
+  },
+  {
+    "path": "src\\infrastructure\\repositories\\MysqlStandardCardRepository.ts",
+    "size": 17309,
+    "modified": "2026-05-13 08:30:47"
+  },
+  {
+    "path": "src\\infrastructure\\repositories\\MysqlWorkOrderRepository.ts",
+    "size": 5852,
+    "modified": "2026-05-13 04:59:49"
+  },
+  {
+    "path": "src\\infrastructure\\schedulers\\BatchExpiryScheduler.ts",
+    "size": 3652,
+    "modified": "2026-05-08 07:56:17"
+  },
+  {
+    "path": "src\\lib\\api-auth.ts",
+    "size": 4207,
+    "modified": "2026-05-13 04:59:50"
+  },
+  {
+    "path": "src\\lib\\api-cache.ts",
+    "size": 1764,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\lib\\api-client.ts",
+    "size": 3214,
+    "modified": "2026-06-03 00:09:20"
+  },
+  {
+    "path": "src\\lib\\api-permissions.ts",
+    "size": 6188,
+    "modified": "2026-05-13 04:59:50"
+  },
+  {
+    "path": "src\\lib\\api-response.test.ts",
+    "size": 8357,
+    "modified": "2026-05-13 04:59:50"
+  },
+  {
+    "path": "src\\lib\\api-response.ts",
+    "size": 4535,
+    "modified": "2026-05-13 04:59:50"
+  },
+  {
+    "path": "src\\lib\\app-init-middleware.ts",
+    "size": 428,
+    "modified": "2026-05-13 04:31:12"
+  },
+  {
+    "path": "src\\lib\\audit-logger.ts",
+    "size": 27299,
+    "modified": "2026-05-13 04:59:50"
+  },
+  {
+    "path": "src\\lib\\audit-middleware.ts",
+    "size": 9178,
+    "modified": "2026-05-13 04:59:50"
+  },
+  {
+    "path": "src\\lib\\auth-cache.ts",
+    "size": 3066,
+    "modified": "2026-05-13 04:59:50"
+  },
+  {
+    "path": "src\\lib\\auth-fetch.ts",
+    "size": 508,
+    "modified": "2026-06-03 00:07:02"
+  },
+  {
+    "path": "src\\lib\\auth.ts",
+    "size": 7172,
+    "modified": "2026-05-28 07:42:26"
+  },
+  {
+    "path": "src\\lib\\cache.ts",
+    "size": 109,
+    "modified": "2026-05-13 05:41:24"
+  },
+  {
+    "path": "src\\lib\\constants.ts",
+    "size": 4267,
+    "modified": "2026-04-09 00:59:53"
+  },
+  {
+    "path": "src\\lib\\cutting-optimizer.ts",
+    "size": 11770,
+    "modified": "2026-05-13 04:59:50"
+  },
+  {
+    "path": "src\\lib\\data-diff.ts",
+    "size": 11935,
+    "modified": "2026-05-13 05:03:58"
+  },
+  {
+    "path": "src\\lib\\date-utils.ts",
+    "size": 1382,
+    "modified": "2026-05-05 06:03:32"
+  },
+  {
+    "path": "src\\lib\\db\\index.ts",
+    "size": 7976,
+    "modified": "2026-06-02 07:57:53"
+  },
+  {
+    "path": "src\\lib\\db\\mysql.ts",
+    "size": 308,
+    "modified": "2026-05-13 04:59:50"
+  },
+  {
+    "path": "src\\lib\\db\\schema.ts",
+    "size": 37053,
+    "modified": "2026-05-13 04:59:50"
+  },
+  {
+    "path": "src\\lib\\db.ts",
+    "size": 66,
+    "modified": "2026-04-09 00:59:53"
+  },
+  {
+    "path": "src\\lib\\die-matcher.ts",
+    "size": 12760,
+    "modified": "2026-05-13 04:59:50"
+  },
+  {
+    "path": "src\\lib\\document-numbering.ts",
+    "size": 7276,
+    "modified": "2026-05-13 08:35:03"
+  },
+  {
+    "path": "src\\lib\\enhanced-money.ts",
+    "size": 6001,
+    "modified": "2026-05-13 08:46:32"
+  },
+  {
+    "path": "src\\lib\\enhanced-state-machine.ts",
+    "size": 12362,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\enum-status.ts",
+    "size": 3205,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\error-handling.ts",
+    "size": 6617,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\lib\\excel-service.ts",
+    "size": 10621,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\fifo-allocation.ts",
+    "size": 16117,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\finance-core.ts",
+    "size": 13770,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\FinanceVoucherHandler.ts",
+    "size": 13318,
+    "modified": "2026-05-13 08:49:12"
+  },
+  {
+    "path": "src\\lib\\global-config.ts",
+    "size": 7555,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\inventory-sync.ts",
+    "size": 14035,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\label-service.ts",
+    "size": 14673,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\logger.ts",
+    "size": 5675,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\material-requisition.ts",
+    "size": 18885,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\money.ts",
+    "size": 3681,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\monitoring.ts",
+    "size": 8343,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\lib\\mrp-engine.ts",
+    "size": 28319,
+    "modified": "2026-05-13 05:01:28"
+  },
+  {
+    "path": "src\\lib\\multi-color-printing.ts",
+    "size": 13870,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\performance\\api-optimization.ts",
+    "size": 5631,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\lib\\performance\\cache-strategy.ts",
+    "size": 3101,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\lib\\performance\\db-optimization.ts",
+    "size": 4532,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\lib\\performance\\frontend-optimization.ts",
+    "size": 4791,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\lib\\performance\\index.ts",
+    "size": 150,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\lib\\production-scheduling-enhanced.ts",
+    "size": 14092,
+    "modified": "2026-05-14 02:27:35"
+  },
+  {
+    "path": "src\\lib\\production-scheduling.test.ts",
+    "size": 6049,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\production-scheduling.ts",
+    "size": 11502,
+    "modified": "2026-05-13 05:01:28"
+  },
+  {
+    "path": "src\\lib\\qrcode-service.ts",
+    "size": 11348,
+    "modified": "2026-05-13 04:59:51"
+  },
+  {
+    "path": "src\\lib\\rate-limit.ts",
+    "size": 1685,
+    "modified": "2026-05-08 07:50:08"
+  },
+  {
+    "path": "src\\lib\\sales-order-state-machine.ts",
+    "size": 4211,
+    "modified": "2026-05-13 08:49:27"
+  },
+  {
+    "path": "src\\lib\\services\\data-fix-tool.ts",
+    "size": 8587,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\services\\purchase-request-service.ts",
+    "size": 3456,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\services\\sales-order-service.ts",
+    "size": 3088,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\shipment-state-machine.ts",
+    "size": 5597,
+    "modified": "2026-05-13 08:49:19"
+  },
+  {
+    "path": "src\\lib\\soft-delete.ts",
+    "size": 14515,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\spc-analysis.ts",
+    "size": 11657,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\standard-card-service.ts",
+    "size": 14631,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\state-machine.test.ts",
+    "size": 6097,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\state-machine.ts",
+    "size": 5214,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\utils.test.ts",
+    "size": 8338,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\utils.ts",
+    "size": 3196,
+    "modified": "2026-05-13 08:50:32"
+  },
+  {
+    "path": "src\\lib\\validation-schemas.test.ts",
+    "size": 9525,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\validation-schemas.ts",
+    "size": 3924,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\validation.test.ts",
+    "size": 11646,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\validation.ts",
+    "size": 9653,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\validations\\inbound.ts",
+    "size": 1772,
+    "modified": "2026-05-08 07:45:33"
+  },
+  {
+    "path": "src\\lib\\warehouse-core.ts",
+    "size": 16081,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\warehouse-state-machine.test.ts",
+    "size": 6706,
+    "modified": "2026-05-06 05:19:09"
+  },
+  {
+    "path": "src\\lib\\warehouse-state-machine.ts",
+    "size": 6402,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\work-order-state-machine.test.ts",
+    "size": 9811,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\work-order-state-machine.ts",
+    "size": 7853,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\lib\\__tests__\\api-response.test.ts",
+    "size": 3275,
+    "modified": "2026-05-07 10:27:02"
+  },
+  {
+    "path": "src\\lib\\__tests__\\db-transaction.test.ts",
+    "size": 4191,
+    "modified": "2026-05-13 04:59:49"
+  },
+  {
+    "path": "src\\lib\\__tests__\\end-to-end-flow.test.ts",
+    "size": 15690,
+    "modified": "2026-05-13 04:59:49"
+  },
+  {
+    "path": "src\\lib\\__tests__\\fifo-allocation.test.ts",
+    "size": 11755,
+    "modified": "2026-05-13 04:59:50"
+  },
+  {
+    "path": "src\\lib\\__tests__\\performance.test.ts",
+    "size": 5995,
+    "modified": "2026-06-02 07:55:34"
+  },
+  {
+    "path": "src\\services\\CostAmortizationService.ts",
+    "size": 7798,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\test\\fixtures\\configs.ts",
+    "size": 1426,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\test\\fixtures\\index.ts",
+    "size": 428,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\test\\fixtures\\users.ts",
+    "size": 1488,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\test\\setup.ts",
+    "size": 994,
+    "modified": "2026-05-13 04:59:52"
+  },
+  {
+    "path": "src\\__tests__\\domain\\inbound-order.concurrency.test.ts",
+    "size": 3783,
+    "modified": "2026-05-13 04:59:07"
+  },
+  {
+    "path": "src\\__tests__\\domain\\money.value-object.test.ts",
+    "size": 1790,
+    "modified": "2026-05-08 07:59:12"
+  },
+  {
+    "path": "src\\__tests__\\lib\\rate-limit.test.ts",
+    "size": 2054,
+    "modified": "2026-05-08 07:59:34"
+  },
+  {
+    "path": "src\\__tests__\\validations\\inbound-schema.test.ts",
+    "size": 4597,
+    "modified": "2026-05-13 04:59:07"
+  },
+  {
+    "path": "start.bat",
+    "size": 1192,
+    "modified": "2026-05-07 07:00:02"
+  },
+  {
+    "path": "TEAM_SETUP.md",
+    "size": 3340,
+    "modified": "2026-05-05 00:52:45"
+  },
+  {
+    "path": "test-api-debug.py",
+    "size": 1158,
+    "modified": "2026-05-08 00:47:51"
+  },
+  {
+    "path": "test-api.js",
+    "size": 1039,
+    "modified": "2026-05-12 02:36:02"
+  },
+  {
+    "path": "test-api.ps1",
+    "size": 6921,
+    "modified": "2026-05-13 02:54:51"
+  },
+  {
+    "path": "test-columns.py",
+    "size": 544,
+    "modified": "2026-05-08 01:13:13"
+  },
+  {
+    "path": "test-errors.ps1",
+    "size": 1545,
+    "modified": "2026-05-13 02:58:55"
+  },
+  {
+    "path": "test-full-scan.py",
+    "size": 16409,
+    "modified": "2026-05-08 00:35:03"
+  },
+  {
+    "path": "test-screenshots\\01_login.png",
+    "size": 228591,
+    "modified": "2026-05-08 01:16:54"
+  },
+  {
+    "path": "test-screenshots\\01_login_after.png",
+    "size": 228690,
+    "modified": "2026-05-08 01:16:55"
+  },
+  {
+    "path": "test-screenshots\\01_login_filled.png",
+    "size": 229050,
+    "modified": "2026-05-08 01:16:54"
+  },
+  {
+    "path": "test-screenshots\\02_dashboard.png",
+    "size": 53196,
+    "modified": "2026-05-08 01:16:56"
+  },
+  {
+    "path": "test-screenshots\\03_warehouse_warehouse_inbound.png",
+    "size": 112053,
+    "modified": "2026-05-08 01:17:03"
+  },
+  {
+    "path": "test-screenshots\\03_warehouse_warehouse_inventory.png",
+    "size": 31378,
+    "modified": "2026-05-08 01:16:58"
+  },
+  {
+    "path": "test-screenshots\\03_warehouse_warehouse_outbound.png",
+    "size": 110336,
+    "modified": "2026-05-08 01:17:05"
+  },
+  {
+    "path": "test-screenshots\\03_warehouse_warehouse_production-inbound.png",
+    "size": 65902,
+    "modified": "2026-05-08 01:17:12"
+  },
+  {
+    "path": "test-screenshots\\03_warehouse_warehouse_sales-outbound.png",
+    "size": 71804,
+    "modified": "2026-05-08 01:17:14"
+  },
+  {
+    "path": "test-screenshots\\03_warehouse_warehouse_setup.png",
+    "size": 63824,
+    "modified": "2026-05-08 01:17:16"
+  },
+  {
+    "path": "test-screenshots\\03_warehouse_warehouse_stock-adjust.png",
+    "size": 71256,
+    "modified": "2026-05-08 01:17:09"
+  },
+  {
+    "path": "test-screenshots\\03_warehouse_warehouse_stocktaking.png",
+    "size": 72754,
+    "modified": "2026-05-08 01:17:07"
+  },
+  {
+    "path": "test-screenshots\\03_warehouse_warehouse_transfer.png",
+    "size": 72276,
+    "modified": "2026-05-08 01:17:00"
+  },
+  {
+    "path": "test-screenshots\\04_production_production_mrp.png",
+    "size": 37832,
+    "modified": "2026-05-08 01:17:24"
+  },
+  {
+    "path": "test-screenshots\\04_production_production_schedule.png",
+    "size": 58423,
+    "modified": "2026-05-08 01:17:21"
+  },
+  {
+    "path": "test-screenshots\\04_production_production_workorder.png",
+    "size": 62428,
+    "modified": "2026-05-08 01:17:19"
+  },
+  {
+    "path": "test-screenshots\\04_schedule_list.png",
+    "size": 58752,
+    "modified": "2026-05-08 01:17:22"
+  },
+  {
+    "path": "test-screenshots\\05_quality_spc.png",
+    "size": 36651,
+    "modified": "2026-05-08 01:17:27"
+  },
+  {
+    "path": "test-screenshots\\06_flow.png",
+    "size": 68289,
+    "modified": "2026-05-08 01:17:28"
+  },
+  {
+    "path": "test-screenshots\\07_other_prepress_die-template.png",
+    "size": 71042,
+    "modified": "2026-05-08 01:17:33"
+  },
+  {
+    "path": "test-screenshots\\07_other_sample_management.png",
+    "size": 57719,
+    "modified": "2026-05-08 01:17:32"
+  },
+  {
+    "path": "test-screenshots\\07_other_settings_users.png",
+    "size": 59863,
+    "modified": "2026-05-08 01:17:30"
+  },
+  {
+    "path": "test-screenshots\\09_mobile_dashboard.png",
+    "size": 14199,
+    "modified": "2026-05-08 01:17:36"
+  },
+  {
+    "path": "test-screenshots\\09_mobile_inventory.png",
+    "size": 11024,
+    "modified": "2026-05-08 01:17:37"
+  },
+  {
+    "path": "test-screenshots\\test_report.json",
+    "size": 14113,
+    "modified": "2026-05-08 01:17:37"
+  },
+  {
+    "path": "test-table-check.py",
+    "size": 595,
+    "modified": "2026-05-08 01:09:59"
+  },
+  {
+    "path": "tests\\auth.spec.ts",
+    "size": 1695,
+    "modified": "2026-05-07 02:24:53"
+  },
+  {
+    "path": "tests\\dashboard.spec.ts",
+    "size": 3715,
+    "modified": "2026-05-07 02:24:53"
+  },
+  {
+    "path": "tests\\global-setup.ts",
+    "size": 649,
+    "modified": "2026-05-07 02:24:53"
+  },
+  {
+    "path": "tests\\inbound.spec.ts",
+    "size": 3290,
+    "modified": "2026-05-07 02:25:05"
+  },
+  {
+    "path": "tests\\login.spec.ts",
+    "size": 4551,
+    "modified": "2026-05-05 22:01:23"
+  },
+  {
+    "path": "test_customers.png",
+    "size": 40885,
+    "modified": "2026-05-14 01:08:38"
+  },
+  {
+    "path": "test_debug.png",
+    "size": 161744,
+    "modified": "2026-05-14 00:41:19"
+  },
+  {
+    "path": "test_login.png",
+    "size": 160239,
+    "modified": "2026-05-14 00:36:35"
+  },
+  {
+    "path": "test_login_updated.png",
+    "size": 161932,
+    "modified": "2026-05-14 00:41:37"
+  },
+  {
+    "path": "test_settings_basics.png",
+    "size": 41768,
+    "modified": "2026-05-14 00:42:08"
+  },
+  {
+    "path": "tsconfig.json",
+    "size": 746,
+    "modified": "2026-05-05 06:03:32"
+  },
+  {
+    "path": "tsconfig.tsbuildinfo",
+    "size": 887739,
+    "modified": "2026-05-27 23:57:50"
+  },
+  {
+    "path": "vitest.config.ts",
+    "size": 713,
+    "modified": "2026-05-07 06:31:27"
+  },
+  {
+    "path": "warehouse_category_pie.json",
+    "size": 460,
+    "modified": "2026-05-14 03:34:17"
+  },
+  {
+    "path": "warehouse_liquid_1.json",
+    "size": 211,
+    "modified": "2026-05-14 03:34:18"
+  },
+  {
+    "path": "warehouse_liquid_2.json",
+    "size": 211,
+    "modified": "2026-05-14 03:34:23"
+  },
+  {
+    "path": "warehouse_liquid_3.json",
+    "size": 211,
+    "modified": "2026-05-14 03:34:23"
+  },
+  {
+    "path": "warehouse_trend_line.json",
+    "size": 1120,
+    "modified": "2026-05-14 03:34:24"
+  }
+]

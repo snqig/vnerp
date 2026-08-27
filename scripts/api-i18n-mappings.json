@@ -1,0 +1,704 @@
+{
+  "MISSING_REQUIRED_FIELDS": {
+    "zh-CN": "缺少必填字段: {fields}",
+    "en": "Missing required fields: {fields}",
+    "zh-TW": "缺少必填欄位: {fields}",
+    "vi": "Thiếu trường bắt buộc: {fields}"
+  },
+  "RETURN_ITEMS_REQUIRED": {
+    "zh-CN": "退货明细不能为空",
+    "en": "Return items cannot be empty",
+    "zh-TW": "退貨明細不能為空",
+    "vi": "Chi tiết trả hàng không được để trống"
+  },
+  "PURCHASE_RETURN_CREATED": {
+    "zh-CN": "采购退货单创建成功",
+    "en": "Purchase return order created successfully",
+    "zh-TW": "採購退貨單創建成功",
+    "vi": "Tạo đơn trả hàng mua thành công"
+  },
+  "RETURN_ORDER_ID_REQUIRED": {
+    "zh-CN": "退货单ID不能为空",
+    "en": "Return order ID cannot be empty",
+    "zh-TW": "退貨單ID不能為空",
+    "vi": "ID đơn trả hàng không được để trống"
+  },
+  "OPERATION_TYPE_REQUIRED": {
+    "zh-CN": "操作类型不能为空",
+    "en": "Operation type cannot be empty",
+    "zh-TW": "操作類型不能為空",
+    "vi": "Loại thao tác không được để trống"
+  },
+  "RETURN_ORDER_NOT_FOUND": {
+    "zh-CN": "退货单不存在",
+    "en": "Return order not found",
+    "zh-TW": "退貨單不存在",
+    "vi": "Không tìm thấy đơn trả hàng"
+  },
+  "ONLY_PENDING_CAN_APPROVE": {
+    "zh-CN": "只有待审核状态才能审核",
+    "en": "Only pending status can be approved",
+    "zh-TW": "只有待審核狀態才能審核",
+    "vi": "Chỉ trạng thái chờ duyệt mới có thể phê duyệt"
+  },
+  "RETURN_APPROVED": {
+    "zh-CN": "退货单审核成功",
+    "en": "Return order approved successfully",
+    "zh-TW": "退貨單審核成功",
+    "vi": "Phê duyệt đơn trả hàng thành công"
+  },
+  "ONLY_APPROVED_CAN_COMPLETE": {
+    "zh-CN": "只有已审核状态才能完成退货",
+    "en": "Only approved status can complete return",
+    "zh-TW": "只有已審核狀態才能完成退貨",
+    "vi": "Chỉ trạng thái đã duyệt mới có thể hoàn thành trả hàng"
+  },
+  "RETURN_COMPLETED": {
+    "zh-CN": "退货完成，已扣减库存并生成红字应付单",
+    "en": "Return completed, stock deducted and red payable generated",
+    "zh-TW": "退貨完成，已扣減庫存並生成紅字應付單",
+    "vi": "Hoàn thành trả hàng, đã trừ tồn kho và tạo phiếu phải trả đỏ"
+  },
+  "RETURN_CANCELLED": {
+    "zh-CN": "退货单已取消",
+    "en": "Return order cancelled",
+    "zh-TW": "退貨單已取消",
+    "vi": "Đơn trả hàng đã hủy"
+  },
+  "UNSUPPORTED_OPERATION_TYPE": {
+    "zh-CN": "不支持的操作类型",
+    "en": "Unsupported operation type",
+    "zh-TW": "不支持的操作類型",
+    "vi": "Loại thao tác không được hỗ trợ"
+  },
+  "SALES_RETURN_CREATED": {
+    "zh-CN": "销售退货单创建成功",
+    "en": "Sales return order created successfully",
+    "zh-TW": "銷售退貨單創建成功",
+    "vi": "Tạo đơn trả hàng bán thành công"
+  },
+  "INCOMPLETE_PARAMS": {
+    "zh-CN": "参数不完整",
+    "en": "Incomplete parameters",
+    "zh-TW": "參數不完整",
+    "vi": "Tham số không đầy đủ"
+  },
+  "WAREHOUSE_ID_REQUIRED": {
+    "zh-CN": "仓库ID不能为空",
+    "en": "Warehouse ID cannot be empty",
+    "zh-TW": "倉庫ID不能為空",
+    "vi": "ID kho không được để trống"
+  },
+  "ISSUE_ITEMS_REQUIRED": {
+    "zh-CN": "发料明细不能为空",
+    "en": "Issue items cannot be empty",
+    "zh-TW": "發料明細不能為空",
+    "vi": "Chi tiết xuất kho không được để trống"
+  },
+  "MATERIAL_ISSUE_CREATED": {
+    "zh-CN": "发料单创建成功",
+    "en": "Material issue order created successfully",
+    "zh-TW": "發料單創建成功",
+    "vi": "Tạo phiếu xuất vật tư thành công"
+  },
+  "MATERIAL_ISSUE_ID_REQUIRED": {
+    "zh-CN": "发料单ID不能为空",
+    "en": "Material issue ID cannot be empty",
+    "zh-TW": "發料單ID不能為空",
+    "vi": "ID phiếu xuất không được để trống"
+  },
+  "MATERIAL_ISSUE_POSTED": {
+    "zh-CN": "发料过账成功",
+    "en": "Material issue posted successfully",
+    "zh-TW": "發料過賬成功",
+    "vi": "Ghi sổ xuất vật tư thành công"
+  },
+  "UPDATE_SUCCESS": {
+    "zh-CN": "更新成功",
+    "en": "Updated successfully",
+    "zh-TW": "更新成功",
+    "vi": "Cập nhật thành công"
+  },
+  "MATERIAL_ISSUE_NOT_FOUND": {
+    "zh-CN": "发料单不存在",
+    "en": "Material issue not found",
+    "zh-TW": "發料單不存在",
+    "vi": "Không tìm thấy phiếu xuất"
+  },
+  "COMPLETED_ISSUE_CANNOT_DELETE": {
+    "zh-CN": "已完成的发料单不能删除",
+    "en": "Completed issue order cannot be deleted",
+    "zh-TW": "已完成的發料單不能刪除",
+    "vi": "Phiếu xuất đã hoàn thành không thể xóa"
+  },
+  "DELETE_SUCCESS": {
+    "zh-CN": "删除成功",
+    "en": "Deleted successfully",
+    "zh-TW": "刪除成功",
+    "vi": "Xóa thành công"
+  },
+  "SELECT_WAREHOUSE": {
+    "zh-CN": "请选择盘点仓库",
+    "en": "Please select warehouse",
+    "zh-TW": "請選擇盤點倉庫",
+    "vi": "Vui lòng chọn kho kiểm kê"
+  },
+  "INVALID_STOCKTAKING_TYPE": {
+    "zh-CN": "盘点类型无效",
+    "en": "Invalid stocktaking type",
+    "zh-TW": "盤點類型無效",
+    "vi": "Loại kiểm kê không hợp lệ"
+  },
+  "ONLY_IN_PROGRESS_CAN_SUBMIT": {
+    "zh-CN": "只有进行中的盘点单才能提交",
+    "en": "Only in-progress stocktaking can be submitted",
+    "zh-TW": "只有進行中的盤點單才能提交",
+    "vi": "Chỉ kiểm kê đang tiến hành mới có thể gửi"
+  },
+  "INCOMPLETE_STOCKTAKING_ITEMS": {
+    "zh-CN": "还有 {count} 项未盘点，请完成所有盘点项",
+    "en": "{count} items not checked, please complete all items",
+    "zh-TW": "還有 {count} 項未盤點，請完成所有盤點項",
+    "vi": "Còn {count} mục chưa kiểm kê, vui lòng hoàn thành tất cả"
+  },
+  "STOCKTAKING_SUBMITTED": {
+    "zh-CN": "盘点结果已提交，等待审批",
+    "en": "Stocktaking submitted, waiting for approval",
+    "zh-TW": "盤點結果已提交，等待審批",
+    "vi": "Kết quả kiểm kê đã gửi, chờ phê duyệt"
+  },
+  "ONLY_PENDING_APPROVAL_CAN_APPROVE": {
+    "zh-CN": "只有待审批的盘点单才能审批",
+    "en": "Only pending approval stocktaking can be approved",
+    "zh-TW": "只有待審批的盤點單才能審批",
+    "vi": "Chỉ kiểm kê chờ phê duyệt mới có thể phê duyệt"
+  },
+  "APPROVER_REQUIRED": {
+    "zh-CN": "请指定审批人",
+    "en": "Please specify approver",
+    "zh-TW": "請指定審批人",
+    "vi": "Vui lòng chỉ định người phê duyệt"
+  },
+  "STOCKTAKING_APPROVED": {
+    "zh-CN": "盘点审批通过，库存已调整",
+    "en": "Stocktaking approved, inventory adjusted",
+    "zh-TW": "盤點審批通過，庫存已調整",
+    "vi": "Kiểm kê đã phê duyệt, tồn kho đã điều chỉnh"
+  },
+  "ONLY_PENDING_APPROVAL_CAN_REJECT": {
+    "zh-CN": "只有待审批的盘点单才能驳回",
+    "en": "Only pending approval stocktaking can be rejected",
+    "zh-TW": "只有待審批的盤點單才能駁回",
+    "vi": "Chỉ kiểm kê chờ phê duyệt mới có thể từ chối"
+  },
+  "STOCKTAKING_REJECTED": {
+    "zh-CN": "盘点单已驳回，请重新盘点",
+    "en": "Stocktaking rejected, please re-check",
+    "zh-TW": "盤點單已駁回，請重新盤點",
+    "vi": "Kiểm kê đã từ chối, vui lòng kiểm kê lại"
+  },
+  "ONLY_IN_PROGRESS_CAN_CANCEL": {
+    "zh-CN": "只有进行中的盘点单才能取消",
+    "en": "Only in-progress stocktaking can be cancelled",
+    "zh-TW": "只有進行中的盤點單才能取消",
+    "vi": "Chỉ kiểm kê đang tiến hành mới có thể hủy"
+  },
+  "STOCKTAKING_CANCELLED": {
+    "zh-CN": "盘点单已取消",
+    "en": "Stocktaking cancelled",
+    "zh-TW": "盤點單已取消",
+    "vi": "Kiểm kê đã hủy"
+  },
+  "STOCKTAKING_ITEMS_REQUIRED": {
+    "zh-CN": "缺少盘点明细数据",
+    "en": "Missing stocktaking items data",
+    "zh-TW": "缺少盤點明細數據",
+    "vi": "Thiếu dữ liệu chi tiết kiểm kê"
+  },
+  "INVALID_OPERATION_TYPE": {
+    "zh-CN": "无效的操作类型",
+    "en": "Invalid operation type",
+    "zh-TW": "無效的操作類型",
+    "vi": "Loại thao tác không hợp lệ"
+  },
+  "ID_PARAM_REQUIRED": {
+    "zh-CN": "缺少ID参数",
+    "en": "Missing ID parameter",
+    "zh-TW": "缺少ID參數",
+    "vi": "Thiếu tham số ID"
+  },
+  "ONLY_CANCELLED_CAN_DELETE": {
+    "zh-CN": "只能删除已取消的盘点单",
+    "en": "Only cancelled stocktaking can be deleted",
+    "zh-TW": "只能刪除已取消的盤點單",
+    "vi": "Chỉ có thể xóa kiểm kê đã hủy"
+  },
+  "STOCKTAKING_DELETED": {
+    "zh-CN": "盘点单删除成功",
+    "en": "Stocktaking deleted successfully",
+    "zh-TW": "盤點單刪除成功",
+    "vi": "Xóa kiểm kê thành công"
+  },
+  "CONVERSION_RATIO_MUST_BE_POSITIVE": {
+    "zh-CN": "换算比例必须大于0",
+    "en": "Conversion ratio must be greater than 0",
+    "zh-TW": "換算比例必須大於0",
+    "vi": "Tỷ lệ chuyển đổi phải lớn hơn 0"
+  },
+  "CONVERSION_UPDATED": {
+    "zh-CN": "换算关系已更新",
+    "en": "Conversion updated",
+    "zh-TW": "換算關係已更新",
+    "vi": "Đã cập nhật quan hệ chuyển đổi"
+  },
+  "CONVERSION_CREATED": {
+    "zh-CN": "换算关系创建成功",
+    "en": "Conversion created successfully",
+    "zh-TW": "換算關係創建成功",
+    "vi": "Tạo quan hệ chuyển đổi thành công"
+  },
+  "CONVERSION_DELETED": {
+    "zh-CN": "换算关系已删除",
+    "en": "Conversion deleted",
+    "zh-TW": "換算關係已刪除",
+    "vi": "Đã xóa quan hệ chuyển đổi"
+  },
+  "CONVERSION_PARAMS_REQUIRED": {
+    "zh-CN": "物料ID、源单位、目标单位和数量不能为空",
+    "en": "Material ID, source unit, target unit and quantity cannot be empty",
+    "zh-TW": "物料ID、源單位、目標單位和數量不能為空",
+    "vi": "ID vật tư, đơn vị nguồn, đơn vị đích và số lượng không được để trống"
+  },
+  "CONVERSION_NOT_FOUND": {
+    "zh-CN": "未找到对应的单位换算关系",
+    "en": "Unit conversion not found",
+    "zh-TW": "未找到對應的單位換算關係",
+    "vi": "Không tìm thấy quan hệ chuyển đổi đơn vị"
+  },
+  "SELECT_OUT_WAREHOUSE": {
+    "zh-CN": "请选择调出仓库",
+    "en": "Please select source warehouse",
+    "zh-TW": "請選擇調出倉庫",
+    "vi": "Vui lòng chọn kho nguồn"
+  },
+  "SELECT_IN_WAREHOUSE": {
+    "zh-CN": "请选择调入仓库",
+    "en": "Please select target warehouse",
+    "zh-TW": "請選擇調入倉庫",
+    "vi": "Vui lòng chọn kho đích"
+  },
+  "INVALID_TRANSFER_TYPE": {
+    "zh-CN": "调拨类型无效（1=库位调拨，2=仓库调拨）",
+    "en": "Invalid transfer type (1=location, 2=warehouse)",
+    "zh-TW": "調撥類型無效（1=庫位調撥，2=倉庫調撥）",
+    "vi": "Loại điều chuyển không hợp lệ (1=vị trí, 2=kho)"
+  },
+  "LOCATION_TRANSFER_SAME_WAREHOUSE": {
+    "zh-CN": "库位调拨必须在同一仓库内进行",
+    "en": "Location transfer must be within same warehouse",
+    "zh-TW": "庫位調撥必須在同一倉庫內進行",
+    "vi": "Điều chuyển vị trí phải trong cùng một kho"
+  },
+  "SELECT_OUT_LOCATION": {
+    "zh-CN": "请选择调出库位",
+    "en": "Please select source location",
+    "zh-TW": "請選擇調出庫位",
+    "vi": "Vui lòng chọn vị trí nguồn"
+  },
+  "SELECT_IN_LOCATION": {
+    "zh-CN": "请选择调入库位",
+    "en": "Please select target location",
+    "zh-TW": "請選擇調入庫位",
+    "vi": "Vui lòng chọn vị trí đích"
+  },
+  "ONLY_DRAFT_CAN_SUBMIT_APPROVAL": {
+    "zh-CN": "只有草稿状态的调拨单才能提交审批",
+    "en": "Only draft transfer can submit for approval",
+    "zh-TW": "只有草稿狀態的調撥單才能提交審批",
+    "vi": "Chỉ điều chuyển nháp mới có thể gửi phê duyệt"
+  },
+  "TRANSFER_SUBMITTED": {
+    "zh-CN": "调拨单已提交审批",
+    "en": "Transfer submitted for approval",
+    "zh-TW": "調撥單已提交審批",
+    "vi": "Điều chuyển đã gửi phê duyệt"
+  },
+  "TRANSFER_APPROVED": {
+    "zh-CN": "调拨单审批通过",
+    "en": "Transfer approved",
+    "zh-TW": "調撥單審批通過",
+    "vi": "Điều chuyển đã phê duyệt"
+  },
+  "TRANSFER_REJECTED": {
+    "zh-CN": "调拨单已驳回",
+    "en": "Transfer rejected",
+    "zh-TW": "調撥單已駁回",
+    "vi": "Điều chuyển đã từ chối"
+  },
+  "ONLY_DRAFT_OR_PENDING_CAN_CANCEL": {
+    "zh-CN": "只能取消草稿或待审批的调拨单",
+    "en": "Only draft or pending transfer can be cancelled",
+    "zh-TW": "只能取消草稿或待審批的調撥單",
+    "vi": "Chỉ điều chuyển nháp hoặc chờ phê duyệt mới có thể hủy"
+  },
+  "TRANSFER_CANCELLED": {
+    "zh-CN": "调拨单已取消",
+    "en": "Transfer cancelled",
+    "zh-TW": "調撥單已取消",
+    "vi": "Điều chuyển đã hủy"
+  },
+  "ONLY_DRAFT_OR_CANCELLED_CAN_DELETE": {
+    "zh-CN": "只能删除草稿或已取消的调拨单",
+    "en": "Only draft or cancelled transfer can be deleted",
+    "zh-TW": "只能刪除草稿或已取消的調撥單",
+    "vi": "Chỉ có thể xóa điều chuyển nháp hoặc đã hủy"
+  },
+  "TRANSFER_DELETED": {
+    "zh-CN": "调拨单删除成功",
+    "en": "Transfer deleted successfully",
+    "zh-TW": "調撥單刪除成功",
+    "vi": "Xóa điều chuyển thành công"
+  },
+  "SELECT_DIFF_ITEMS_TO_APPROVE": {
+    "zh-CN": "请选择需要审批的差异项",
+    "en": "Please select diff items to approve",
+    "zh-TW": "請選擇需要審批的差異項",
+    "vi": "Vui lòng chọn mục chênh lệch để phê duyệt"
+  },
+  "DIFF_ITEMS_APPROVED": {
+    "zh-CN": "已审批 {count} 项差异",
+    "en": "{count} diff items approved",
+    "zh-TW": "已審批 {count} 項差異",
+    "vi": "Đã phê duyệt {count} mục chênh lệch"
+  },
+  "SELECT_DIFF_ITEMS_TO_PROCESS": {
+    "zh-CN": "请选择需要处理的差异项",
+    "en": "Please select diff items to process",
+    "zh-TW": "請選擇需要處理的差異項",
+    "vi": "Vui lòng chọn mục chênh lệch để xử lý"
+  },
+  "DIFF_ITEMS_PROCESSED": {
+    "zh-CN": "已处理 {count} 项差异",
+    "en": "{count} diff items processed",
+    "zh-TW": "已處理 {count} 項差異",
+    "vi": "Đã xử lý {count} mục chênh lệch"
+  },
+  "SELECT_DIFF_ITEMS_TO_REJECT": {
+    "zh-CN": "请选择需要驳回的差异项",
+    "en": "Please select diff items to reject",
+    "zh-TW": "請選擇需要駁回的差異項",
+    "vi": "Vui lòng chọn mục chênh lệch để từ chối"
+  },
+  "DIFF_ITEMS_REJECTED": {
+    "zh-CN": "已驳回 {count} 项差异",
+    "en": "{count} diff items rejected",
+    "zh-TW": "已駁回 {count} 項差異",
+    "vi": "Đã từ chối {count} mục chênh lệch"
+  },
+  "FREEZE_PARAMS_REQUIRED": {
+    "zh-CN": "物料ID、仓库ID和冻结数量不能为空",
+    "en": "Material ID, warehouse ID and freeze quantity cannot be empty",
+    "zh-TW": "物料ID、倉庫ID和凍結數量不能為空",
+    "vi": "ID vật tư, ID kho và số lượng đóng băng không được để trống"
+  },
+  "FREEZE_QTY_MUST_BE_POSITIVE": {
+    "zh-CN": "冻结数量必须大于0",
+    "en": "Freeze quantity must be greater than 0",
+    "zh-TW": "凍結數量必須大於0",
+    "vi": "Số lượng đóng băng phải lớn hơn 0"
+  },
+  "STOCK_RECORD_NOT_FOUND": {
+    "zh-CN": "库存记录不存在",
+    "en": "Stock record not found",
+    "zh-TW": "庫存記錄不存在",
+    "vi": "Không tìm thấy bản ghi tồn kho"
+  },
+  "INSUFFICIENT_AVAILABLE_STOCK": {
+    "zh-CN": "可用库存不足，当前可用: {qty}",
+    "en": "Insufficient available stock, current: {qty}",
+    "zh-TW": "可用庫存不足，當前可用: {qty}",
+    "vi": "Tồn kho可用 không đủ, hiện tại: {qty}"
+  },
+  "STOCK_FROZEN": {
+    "zh-CN": "库存冻结成功",
+    "en": "Stock frozen successfully",
+    "zh-TW": "庫存凍結成功",
+    "vi": "Đóng băng tồn kho thành công"
+  },
+  "FREEZE_RECORD_ID_REQUIRED": {
+    "zh-CN": "冻结记录ID不能为空",
+    "en": "Freeze record ID cannot be empty",
+    "zh-TW": "凍結記錄ID不能為空",
+    "vi": "ID bản ghi đóng băng không được để trống"
+  },
+  "FREEZE_RECORD_NOT_FOUND": {
+    "zh-CN": "冻结记录不存在或已解冻",
+    "en": "Freeze record not found or already unfrozen",
+    "zh-TW": "凍結記錄不存在或已解凍",
+    "vi": "Không tìm thấy bản ghi đóng băng hoặc đã giải đông"
+  },
+  "STOCK_UNFROZEN": {
+    "zh-CN": "库存已解冻",
+    "en": "Stock unfrozen",
+    "zh-TW": "庫存已解凍",
+    "vi": "Tồn kho đã giải đông"
+  },
+  "UNFREEZE_QTY_MUST_BE_POSITIVE": {
+    "zh-CN": "解冻数量必须大于0",
+    "en": "Unfreeze quantity must be greater than 0",
+    "zh-TW": "解凍數量必須大於0",
+    "vi": "Số lượng giải đông phải lớn hơn 0"
+  },
+  "UNFREEZE_QTY_EXCEEDS_FROZEN": {
+    "zh-CN": "解冻数量不能超过冻结数量",
+    "en": "Unfreeze quantity cannot exceed frozen quantity",
+    "zh-TW": "解凍數量不能超過凍結數量",
+    "vi": "Số lượng giải đông không thể vượt quá số lượng đóng băng"
+  },
+  "PARTIAL_UNFREEZE_SUCCESS": {
+    "zh-CN": "部分解冻成功",
+    "en": "Partial unfreeze successful",
+    "zh-TW": "部分解凍成功",
+    "vi": "Giải đông một phần thành công"
+  },
+  "MATERIAL_ID_REQUIRED": {
+    "zh-CN": "物料ID不能为空",
+    "en": "Material ID cannot be empty",
+    "zh-TW": "物料ID不能為空",
+    "vi": "ID vật tư không được để trống"
+  },
+  "NO_INBOUND_RECORDS": {
+    "zh-CN": "没有找到入库记录，无法计算成本",
+    "en": "No inbound records found, cannot calculate cost",
+    "zh-TW": "沒有找到入庫記錄，無法計算成本",
+    "vi": "Không tìm thấy bản ghi nhập kho, không thể tính giá vốn"
+  },
+  "BATCH_QTY_UPDATED": {
+    "zh-CN": "批次数量已更新",
+    "en": "Batch quantity updated",
+    "zh-TW": "批次數量已更新",
+    "vi": "Số lượng lô đã cập nhật"
+  },
+  "BATCH_CREATED": {
+    "zh-CN": "批次创建成功",
+    "en": "Batch created successfully",
+    "zh-TW": "批次創建成功",
+    "vi": "Tạo lô thành công"
+  },
+  "BATCH_ID_REQUIRED": {
+    "zh-CN": "批次ID不能为空",
+    "en": "Batch ID cannot be empty",
+    "zh-TW": "批次ID不能為空",
+    "vi": "ID lô không được để trống"
+  },
+  "BATCH_FROZEN": {
+    "zh-CN": "批次已冻结",
+    "en": "Batch frozen",
+    "zh-TW": "批次已凍結",
+    "vi": "Lô đã đóng băng"
+  },
+  "BATCH_NOT_FOUND": {
+    "zh-CN": "批次不存在",
+    "en": "Batch not found",
+    "zh-TW": "批次不存在",
+    "vi": "Không tìm thấy lô"
+  },
+  "BATCH_UNFROZEN": {
+    "zh-CN": "批次已解冻",
+    "en": "Batch unfrozen",
+    "zh-TW": "批次已解凍",
+    "vi": "Lô đã giải đông"
+  },
+  "NO_FIELDS_TO_UPDATE": {
+    "zh-CN": "没有需要更新的字段",
+    "en": "No fields to update",
+    "zh-TW": "沒有需要更新的欄位",
+    "vi": "Không có trường cần cập nhật"
+  },
+  "BATCH_UPDATED": {
+    "zh-CN": "批次信息更新成功",
+    "en": "Batch info updated successfully",
+    "zh-TW": "批次信息更新成功",
+    "vi": "Cập nhật thông tin lô thành công"
+  },
+  "INVALID_QUERY_TYPE": {
+    "zh-CN": "无效的查询类型",
+    "en": "Invalid query type",
+    "zh-TW": "無效的查詢類型",
+    "vi": "Loại truy vấn không hợp lệ"
+  },
+  "ALERT_RULE_PARAMS_REQUIRED": {
+    "zh-CN": "规则名称、预警类型和阈值不能为空",
+    "en": "Rule name, alert type and threshold cannot be empty",
+    "zh-TW": "規則名稱、預警類型和閾值不能為空",
+    "vi": "Tên quy tắc, loại cảnh báo và ngưỡng không được để trống"
+  },
+  "ALERT_RULE_CREATED": {
+    "zh-CN": "预警规则创建成功",
+    "en": "Alert rule created successfully",
+    "zh-TW": "預警規則創建成功",
+    "vi": "Tạo quy tắc cảnh báo thành công"
+  },
+  "NOTIFICATION_IDS_REQUIRED": {
+    "zh-CN": "通知ID列表不能为空",
+    "en": "Notification ID list cannot be empty",
+    "zh-TW": "通知ID列表不能為空",
+    "vi": "Danh sách ID thông báo không được để trống"
+  },
+  "MARKED_AS_READ": {
+    "zh-CN": "已标记为已读",
+    "en": "Marked as read",
+    "zh-TW": "已標記為已讀",
+    "vi": "Đã đánh dấu là đã đọc"
+  },
+  "ALERT_RULE_ID_REQUIRED": {
+    "zh-CN": "规则ID不能为空",
+    "en": "Rule ID cannot be empty",
+    "zh-TW": "規則ID不能為空",
+    "vi": "ID quy tắc không được để trống"
+  },
+  "ALERT_RULE_UPDATED": {
+    "zh-CN": "预警规则更新成功",
+    "en": "Alert rule updated successfully",
+    "zh-TW": "預警規則更新成功",
+    "vi": "Cập nhật quy tắc cảnh báo thành công"
+  },
+  "NO_STOCK_ALERT": {
+    "zh-CN": "当前无库存预警",
+    "en": "No stock alert currently",
+    "zh-TW": "當前無庫存預警",
+    "vi": "Hiện không có cảnh báo tồn kho"
+  },
+  "SCHEDULER_CREATED": {
+    "zh-CN": "定时任务创建成功",
+    "en": "Scheduler task created successfully",
+    "zh-TW": "定時任務創建成功",
+    "vi": "Tạo tác vụ định kỳ thành công"
+  },
+  "TASK_PAUSED": {
+    "zh-CN": "任务已暂停",
+    "en": "Task paused",
+    "zh-TW": "任務已暫停",
+    "vi": "Tác vụ đã tạm dừng"
+  },
+  "TASK_RESUMED": {
+    "zh-CN": "任务已恢复",
+    "en": "Task resumed",
+    "zh-TW": "任務已恢復",
+    "vi": "Tác vụ đã tiếp tục"
+  },
+  "TASK_NOT_FOUND": {
+    "zh-CN": "任务不存在",
+    "en": "Task not found",
+    "zh-TW": "任務不存在",
+    "vi": "Không tìm thấy tác vụ"
+  },
+  "TASK_EXECUTED": {
+    "zh-CN": "任务执行完成",
+    "en": "Task executed successfully",
+    "zh-TW": "任務執行完成",
+    "vi": "Tác vụ đã thực hiện"
+  },
+  "TASK_EXECUTION_FAILED": {
+    "zh-CN": "任务执行失败: {error}",
+    "en": "Task execution failed: {error}",
+    "zh-TW": "任務執行失敗: {error}",
+    "vi": "Thực hiện tác vụ thất bại: {error}"
+  },
+  "TASK_UPDATED": {
+    "zh-CN": "任务更新成功",
+    "en": "Task updated successfully",
+    "zh-TW": "任務更新成功",
+    "vi": "Cập nhật tác vụ thành công"
+  },
+  "UNSUPPORTED_OPERATION": {
+    "zh-CN": "不支持的操作",
+    "en": "Unsupported operation",
+    "zh-TW": "不支持的操作",
+    "vi": "Thao tác không được hỗ trợ"
+  },
+  "TASK_ID_REQUIRED": {
+    "zh-CN": "任务ID不能为空",
+    "en": "Task ID cannot be empty",
+    "zh-TW": "任務ID不能為空",
+    "vi": "ID tác vụ không được để trống"
+  },
+  "TASK_DELETED": {
+    "zh-CN": "任务删除成功",
+    "en": "Task deleted successfully",
+    "zh-TW": "任務刪除成功",
+    "vi": "Xóa tác vụ thành công"
+  },
+  "ROLE_NAME_CODE_REQUIRED": {
+    "zh-CN": "角色名称和编码不能为空",
+    "en": "Role name and code cannot be empty",
+    "zh-TW": "角色名稱和編碼不能為空",
+    "vi": "Tên vai trò và mã không được để trống"
+  },
+  "ROLE_CODE_EXISTS": {
+    "zh-CN": "角色编码已存在",
+    "en": "Role code already exists",
+    "zh-TW": "角色編碼已存在",
+    "vi": "Mã vai trò đã tồn tại"
+  },
+  "PARENT_ROLE_NOT_FOUND": {
+    "zh-CN": "父角色不存在",
+    "en": "Parent role not found",
+    "zh-TW": "父角色不存在",
+    "vi": "Không tìm thấy vai trò cha"
+  },
+  "ROLE_CREATED": {
+    "zh-CN": "角色创建成功",
+    "en": "Role created successfully",
+    "zh-TW": "角色創建成功",
+    "vi": "Tạo vai trò thành công"
+  },
+  "ROLE_ID_REQUIRED": {
+    "zh-CN": "角色ID不能为空",
+    "en": "Role ID cannot be empty",
+    "zh-TW": "角色ID不能為空",
+    "vi": "ID vai trò không được để trống"
+  },
+  "CANNOT_SET_SELF_AS_PARENT": {
+    "zh-CN": "不能将自己设为父角色",
+    "en": "Cannot set self as parent role",
+    "zh-TW": "不能將自己設為父角色",
+    "vi": "Không thể đặt chính mình làm vai trò cha"
+  },
+  "CANNOT_FORM_CIRCULAR_INHERITANCE": {
+    "zh-CN": "不能形成循环继承",
+    "en": "Cannot form circular inheritance",
+    "zh-TW": "不能形成循環繼承",
+    "vi": "Không thể tạo kế thừa vòng lặp"
+  },
+  "ROLE_UPDATED": {
+    "zh-CN": "角色更新成功",
+    "en": "Role updated successfully",
+    "zh-TW": "角色更新成功",
+    "vi": "Cập nhật vai trò thành công"
+  },
+  "ROLE_HAS_CHILDREN": {
+    "zh-CN": "该角色下有子角色，无法删除",
+    "en": "Role has children, cannot delete",
+    "zh-TW": "該角色下有子角色，無法刪除",
+    "vi": "Vai trò có vai trò con, không thể xóa"
+  },
+  "ROLE_DELETED": {
+    "zh-CN": "角色删除成功",
+    "en": "Role deleted successfully",
+    "zh-TW": "角色刪除成功",
+    "vi": "Xóa vai trò thành công"
+  },
+  "OUTBOUND_ITEMS_REQUIRED": {
+    "zh-CN": "缺少出库明细数据",
+    "en": "Missing outbound items data",
+    "zh-TW": "缺少出庫明細數據",
+    "vi": "Thiếu dữ liệu chi tiết xuất kho"
+  },
+  "CURRENT_STATUS_CANNOT_OUTBOUND": {
+    "zh-CN": "当前状态为\"{status}\"，不能执行出库操作",
+    "en": "Current status is \"{status}\", cannot perform outbound operation",
+    "zh-TW": "當前狀態為\"{status}\"，不能執行出庫操作",
+    "vi": "Trạng thái hiện tại là \"{status}\", không thể thực hiện xuất kho"
+  }
+}

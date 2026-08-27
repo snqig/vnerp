@@ -1,0 +1,1122 @@
+Total candidate mismatches: 185
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\advanced\cost-analysis\page.tsx
+  EP /api/advanced/cost-analysis  ROUTE D:\dcprint\erp-project\src\app\api\advanced\cost-analysis\route.ts
+  feFields(6): productId, revenue, directCost, overhead, grossMargin, netMargin
+  beFields(4): id, total_revenue, total_cost, total_value
+  MISSING(snake): product_id, revenue, direct_cost, overhead, gross_margin, net_margin
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\analysis\db-relations\page.tsx
+  EP /api/db-relations  ROUTE D:\dcprint\erp-project\src\app\api\db-relations\route.ts
+  feFields(3): name, comment, rows
+  beFields(0): 
+  MISSING(snake): name, comment, rows
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\base-data\material-category\page.tsx
+  EP /api/base-data/material-category  ROUTE D:\dcprint\erp-project\src\app\api\base-data\material-category\route.ts
+  feFields(7): id, category_code, category_name, category_type, sort_order, status, remark
+  beFields(14): total, Loose, cnt, list, rules, code_pattern, code_pattern_desc, max_depth, enforce_on_create, enforce_on_update, id, warnings, logTitle, request
+  MISSING(snake): category_code, category_name, category_type, sort_order, status, remark
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\business\contract-review\page.tsx
+  EP /api/business/contract-review  ROUTE D:\dcprint\erp-project\src\app\api\business\contract-review\route.ts
+  feFields(10): id, sample_status, status, review_no, order_no, customer_name, product_name, quantity, amount, delivery_date
+  beFields(6): total, list, request, id, review_no, logTitle
+  MISSING(snake): sample_status, status, order_no, customer_name, product_name, quantity, amount, delivery_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\business\contract-review\page.tsx
+  EP /api/upload/contract  ROUTE D:\dcprint\erp-project\src\app\api\upload\contract\route.ts
+  feFields(10): id, sample_status, status, review_no, order_no, customer_name, product_name, quantity, amount, delivery_date
+  beFields(7): File, url, filename, originalName, size, type, logTitle
+  MISSING(snake): id, sample_status, status, review_no, order_no, customer_name, product_name, quantity, amount, delivery_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\crm\analysis\page.tsx
+  EP /api/crm/analysis  ROUTE D:\dcprint\erp-project\src\app\api\crm\analysis\route.ts
+  feFields(11): id, on_time_rate, satisfaction_score, growth_rate, order_amount, customer_name, customer_level, analysis_period, order_count, return_count, complaint_count
+  beFields(10): total, total_customers, total_orders, total_amount, avg_satisfaction, avg_on_time_rate, list, request, id, logTitle
+  MISSING(snake): on_time_rate, satisfaction_score, growth_rate, order_amount, customer_name, customer_level, analysis_period, order_count, return_count, complaint_count
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\crm\follow\page.tsx
+  EP /api/crm/follow  ROUTE D:\dcprint\erp-project\src\app\api\crm\follow\route.ts
+  feFields(9): id, customer_name, follow_type, follow_content, contact_name, salesman_name, next_follow_date, opportunity, status
+  beFields(5): total, list, request, id, logTitle
+  MISSING(snake): customer_name, follow_type, follow_content, contact_name, salesman_name, next_follow_date, opportunity, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dashboard\ceo\page.tsx
+  EP /api/dashboard/ceo  ROUTE D:\dcprint\erp-project\src\app\api\dashboard\ceo\route.ts
+  feFields(4): count, product_name, defect_type, quantity
+  beFields(15): total, active, completed, name, status, efficiency, passed, failed, total_qty, threshold, date, count, year, plan, actual
+  MISSING(snake): product_name, defect_type, quantity
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dashboard\finance\page.tsx
+  EP /api/dashboard/finance  ROUTE D:\dcprint\erp-project\src\app\api\dashboard\finance\route.ts
+  feFields(4): amount, date, total, supplier_name
+  beFields(6): total, date, amount, aging, count, type
+  MISSING(snake): supplier_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dashboard\page.tsx
+  EP /api/dashboard  ROUTE D:\dcprint\erp-project\src\app\api\dashboard\route.ts
+  feFields(7): id, orderNo, customer, product, quantity, status, date
+  beFields(7): total, today, pending, producing, completed_today, date, count
+  MISSING(snake): id, order_no, customer, product, quantity, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dashboard\production\page.tsx
+  EP /api/dashboard/production  ROUTE D:\dcprint\erp-project\src\app\api\dashboard\production\route.ts
+  feFields(22): orderNo, customer, product, status, quantity, id, name, currentOrder, efficiency, operator, runtime, priority, estimatedComplete, productName, process, completedQty, planQty, progress, severity, type, message, timestamp
+  beFields(17): total_orders, active_orders, completed_today, total, running, idle, maintenance, error_count, total_inspections, passed, total_opened, in_use, expired, expiring_soon, warning, locked, scrapped
+  MISSING(snake): order_no, customer, product, status, quantity, id, name, current_order, efficiency, operator, runtime, priority, estimated_complete, product_name, process, completed_qty, plan_qty, progress, severity, type, message, timestamp
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dashboard\quality\page.tsx
+  EP /api/dashboard/quality  ROUTE D:\dcprint\erp-project\src\app\api\dashboard\quality\route.ts
+  feFields(5): total, defects, date, count, defect_type
+  beFields(8): total, passed, failed, date, defects, count, inspect_time, inspect_count
+  MISSING(snake): defect_type
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dashboard\warehouse\page.tsx
+  EP /api/dashboard/warehouse  ROUTE D:\dcprint\erp-project\src\app\api\dashboard\warehouse\route.ts
+  feFields(7): total_qty, warehouse_name, capacity, occupancy, name, material_type, count
+  beFields(10): total, low_stock, total_value, count, value, stock_qty, min_stock, transaction_type, item_count, total_qty
+  MISSING(snake): warehouse_name, capacity, occupancy, name, material_type
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\burdening\page.tsx
+  EP /api/dcprint/process-cards  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\process-cards\route.ts
+  feFields(7): labelNo, materialName, cardNo, id, workOrderNo, productName, burdeningStatus
+  beFields(27): cardNo, qrCode, workOrderId, workOrderNo, productCode, productName, materialSpec, workOrderDate, planQty, mainLabelId, mainLabelNo, burdeningStatus, lockStatus, createUserName, createTime, mainMaterialCode, mainMaterialName, mainSpecification, mainBatchNo, mainSupplierName, mainReceiveDate, total, Loose, list, page, pageSize, request
+  MISSING(snake): label_no, material_name, id
+
+NO_ROUTE D:\dcprint\erp-project\src\app\[locale]\dcprint\burdening\page.tsx -> /api/dcprint/process-cards/detail
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\burdening\page.tsx
+  EP /api/dcprint/scan  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\scan\route.ts
+  feFields(7): labelNo, materialName, cardNo, id, workOrderNo, productName, burdeningStatus
+  beFields(58): labelNo, qrCode, purchaseOrderNo, supplierName, receiveDate, materialCode, materialName, batchNo, packageQty, lengthPerRoll, colorCode, mixRemark, warehouseId, locationId, warehouseName, locationName, isMainMaterial, isUsed, isCut, parentLabelId, parentLabelNo, createTime, recordNo, cutWidthStr, originalWidth, cutTotalWidth, remainWidth, cutTime, operatorName, newLabelNo, cutWidth, orderNo, productId, productCode, productName, productSpec, planStartDate, planEndDate, cardNo, mainLabelNo, burdeningStatus, lockStatus, createUserName, workOrderId, workOrderNo, materialSpec, workOrderDate, planQty, mainLabelId, mainMaterialCode, mainMaterialName, mainSpecification, mainBatchNo, mainSupplierName, mainReceiveDate, materialType, logTitle, logType
+  MISSING(snake): id
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\die\page.tsx
+  EP /api/prepress/die  ROUTE D:\dcprint\erp-project\src\app\api\prepress\die\route.ts
+  feFields(10): status, remaining_count, max_use_count, id, die_code, die_name, die_type, size_spec, product_name, used_count
+  beFields(7): total, list, request, id, qr_code, logTitle, logType
+  MISSING(snake): status, remaining_count, max_use_count, die_code, die_name, die_type, size_spec, product_name, used_count
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\ink\page.tsx
+  EP /api/prepress/ink  ROUTE D:\dcprint\erp-project\src\app\api\prepress\ink\route.ts
+  feFields(11): id, ink_type, status, ink_code, ink_name, color_name, color_code, brand, unit, stock_qty, safety_stock
+  beFields(6): total, list, request, id, logTitle, logType
+  MISSING(snake): ink_type, status, ink_code, ink_name, color_name, color_code, brand, unit, stock_qty, safety_stock
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\ink-formula\page.tsx
+  EP /api/dcprint/formula/color  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\formula\color\route.ts
+  feFields(13): id, color_code, color_name, color_series, base_ink_type, pantone_code, status, version_no, version_name, total_weight, unit, theoretical_cost, activate_time
+  beFields(3): Error, logTitle, logType
+  MISSING(snake): id, color_code, color_name, color_series, base_ink_type, pantone_code, status, version_no, version_name, total_weight, unit, theoretical_cost, activate_time
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\ink-formula\page.tsx
+  EP /api/dcprint/formula/version  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\formula\version\route.ts
+  feFields(13): id, color_code, color_name, color_series, base_ink_type, pantone_code, status, version_no, version_name, total_weight, unit, theoretical_cost, activate_time
+  beFields(5): Error, total, request, logTitle, logType
+  MISSING(snake): id, color_code, color_name, color_series, base_ink_type, pantone_code, status, version_no, version_name, total_weight, unit, theoretical_cost, activate_time
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\ink-formula\page.tsx
+  EP /api/dcprint/formula/version/  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\formula\version\route.ts
+  feFields(13): id, color_code, color_name, color_series, base_ink_type, pantone_code, status, version_no, version_name, total_weight, unit, theoretical_cost, activate_time
+  beFields(5): Error, total, request, logTitle, logType
+  MISSING(snake): id, color_code, color_name, color_series, base_ink_type, pantone_code, status, version_no, version_name, total_weight, unit, theoretical_cost, activate_time
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\ink-mixed\page.tsx
+  EP /api/dcprint/ink-mixed  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\ink-mixed\route.ts
+  feFields(17): status, id, record_no, base_ink_name, base_ink_code, mix_ratio, color_code, color_name, company_name, quantity, unit, operator_name, mix_time, expire_time, ink_code, ink_name, customer_name
+  beFields(8): total, list, request, id, record_no, qr_code, logTitle, logType
+  MISSING(snake): status, base_ink_name, base_ink_code, mix_ratio, color_code, color_name, company_name, quantity, unit, operator_name, mix_time, expire_time, ink_code, ink_name, customer_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\ink-mixed\page.tsx
+  EP /api/customers  ROUTE D:\dcprint\erp-project\src\app\api\customers\route.ts
+  feFields(17): status, id, record_no, base_ink_name, base_ink_code, mix_ratio, color_code, color_name, company_name, quantity, unit, operator_name, mix_time, expire_time, ink_code, ink_name, customer_name
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): status, record_no, base_ink_name, base_ink_code, mix_ratio, color_code, color_name, company_name, quantity, unit, operator_name, mix_time, expire_time, ink_code, ink_name, customer_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\ink-mixed\page.tsx
+  EP /api/dcprint/ink  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\ink\route.ts
+  feFields(17): status, id, record_no, base_ink_name, base_ink_code, mix_ratio, color_code, color_name, company_name, quantity, unit, operator_name, mix_time, expire_time, ink_code, ink_name, customer_name
+  beFields(0): 
+  MISSING(snake): status, id, record_no, base_ink_name, base_ink_code, mix_ratio, color_code, color_name, company_name, quantity, unit, operator_name, mix_time, expire_time, ink_code, ink_name, customer_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\ink-opening\page.tsx
+  EP /api/dcprint/ink-opening  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\ink-opening\route.ts
+  feFields(14): id, record_no, material_name, ink_type, open_time, expire_time, status, material_code, batch_no, expire_hours, remaining_qty, unit, value, label
+  beFields(8): total, Loose, total_count, using_count, expired_count, scrapped_count, overdue_using_count, summary
+  MISSING(snake): id, record_no, material_name, ink_type, open_time, expire_time, status, material_code, batch_no, expire_hours, remaining_qty, unit, value, label
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\ink-opening\page.tsx
+  EP /api/inventory/materials  ROUTE D:\dcprint\erp-project\src\app\api\inventory\materials\route.ts
+  feFields(14): id, record_no, material_name, ink_type, open_time, expire_time, status, material_code, batch_no, expire_hours, remaining_qty, unit, value, label
+  beFields(1): Loose
+  MISSING(snake): id, record_no, material_name, ink_type, open_time, expire_time, status, material_code, batch_no, expire_hours, remaining_qty, unit, value, label
+
+NO_ROUTE D:\dcprint\erp-project\src\app\[locale]\dcprint\ink-usage\page.tsx -> /api/base-inks
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\labels\page.tsx
+  EP /api/dcprint/labels  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\labels\route.ts
+  feFields(17): id, labelNo, qrCode, materialCode, materialName, specification, batchNo, quantity, unit, warehouseName, width, lengthPerRoll, locationName, isMainMaterial, isCut, isUsed, status
+  beFields(28): labelNo, qrCode, purchaseOrderNo, supplierName, receiveDate, materialCode, materialName, batchNo, packageQty, lengthPerRoll, colorCode, mixRemark, warehouseId, locationId, warehouseName, locationName, isMainMaterial, isUsed, isCut, parentLabelId, parentLabelNo, createTime, updateTime, total, id, logTitle, logType, request
+  MISSING(snake): specification, quantity, unit, width, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\labels\page.tsx
+  EP /api/warehouse/inbound/cutting  ROUTE D:\dcprint\erp-project\src\app\api\warehouse\inbound\cutting\route.ts
+  feFields(17): id, labelNo, qrCode, materialCode, materialName, specification, batchNo, quantity, unit, warehouseName, width, lengthPerRoll, locationName, isMainMaterial, isCut, isUsed, status
+  beFields(22): recordNo, sourceLabelId, sourceLabelNo, cutWidthStr, originalWidth, cutTotalWidth, remainWidth, operatorId, operatorName, cutTime, createTime, materialCode, materialName, total, Loose, Error, id, labelNo, specification, quantity, unit, width
+  MISSING(snake): qr_code, batch_no, warehouse_name, length_per_roll, location_name, is_main_material, is_cut, is_used, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\process-card\page.tsx
+  EP /api/dcprint/sample-card  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\sample-card\route.ts
+  feFields(11): id, sample_no, sample_name, customer_name, product_name, version_no, substrate_material_name, print_color, estimated_hour, total_cost, status
+  beFields(2): Error, logTitle
+  MISSING(snake): id, sample_no, sample_name, customer_name, product_name, version_no, substrate_material_name, print_color, estimated_hour, total_cost, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\process-card\page.tsx
+  EP /api/dcprint/sample-card/  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\sample-card\route.ts
+  feFields(11): id, sample_no, sample_name, customer_name, product_name, version_no, substrate_material_name, print_color, estimated_hour, total_cost, status
+  beFields(2): Error, logTitle
+  MISSING(snake): id, sample_no, sample_name, customer_name, product_name, version_no, substrate_material_name, print_color, estimated_hour, total_cost, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\process-cards\page.tsx
+  EP /api/dcprint/process-cards  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\process-cards\route.ts
+  feFields(12): id, materialName, materialCode, batchNo, cardNo, workOrderNo, productCode, mainLabelNo, burdeningStatus, lockStatus, createUserName, createTime
+  beFields(27): cardNo, qrCode, workOrderId, workOrderNo, productCode, productName, materialSpec, workOrderDate, planQty, mainLabelId, mainLabelNo, burdeningStatus, lockStatus, createUserName, createTime, mainMaterialCode, mainMaterialName, mainSpecification, mainBatchNo, mainSupplierName, mainReceiveDate, total, Loose, list, page, pageSize, request
+  MISSING(snake): id, material_name, material_code, batch_no
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\process-cards\page.tsx
+  EP /api/dcprint/scan  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\scan\route.ts
+  feFields(12): id, materialName, materialCode, batchNo, cardNo, workOrderNo, productCode, mainLabelNo, burdeningStatus, lockStatus, createUserName, createTime
+  beFields(58): labelNo, qrCode, purchaseOrderNo, supplierName, receiveDate, materialCode, materialName, batchNo, packageQty, lengthPerRoll, colorCode, mixRemark, warehouseId, locationId, warehouseName, locationName, isMainMaterial, isUsed, isCut, parentLabelId, parentLabelNo, createTime, recordNo, cutWidthStr, originalWidth, cutTotalWidth, remainWidth, cutTime, operatorName, newLabelNo, cutWidth, orderNo, productId, productCode, productName, productSpec, planStartDate, planEndDate, cardNo, mainLabelNo, burdeningStatus, lockStatus, createUserName, workOrderId, workOrderNo, materialSpec, workOrderDate, planQty, mainLabelId, mainMaterialCode, mainMaterialName, mainSpecification, mainBatchNo, mainSupplierName, mainReceiveDate, materialType, logTitle, logType
+  MISSING(snake): id
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\screen-plate\page.tsx
+  EP /api/screen-plates/history  ROUTE D:\dcprint\erp-project\src\app\api\screen-plates\history\route.ts
+  feFields(18): status, remaining_count, max_use_count, id, plate_code, plate_name, plate_type, mesh_count, size, customer_name, life_count, reclaim_count, tension_value, action, life_increment, remark, operator_name, created_at
+  beFields(4): Loose, historyId, logTitle, logType
+  MISSING(snake): status, remaining_count, max_use_count, id, plate_code, plate_name, plate_type, mesh_count, size, customer_name, life_count, reclaim_count, tension_value, action, life_increment, remark, operator_name, created_at
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\tool\page.tsx
+  EP /api/dcprint/tool  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\tool\route.ts
+  feFields(41): tool_type, tool_code, tool_name, spec, total_life, warning_threshold, original_cost, manufacture_date, warehouse_location, asset_type, layout_type, pieces_per_impression, material, qr_code, supplier_id, maintenance_interval, mesh_count, mesh_material, size, tension_value, frame_type, customer_id, remark, id, used_count, net_value, status, use_time, work_order_no, process_name, use_count, amortized_cost, operator_name, maintenance_type, maintenance_cost, life_before, life_after, life_adjustment, start_time, end_time, description
+  beFields(2): Error, logTitle
+  MISSING(snake): tool_type, tool_code, tool_name, spec, total_life, warning_threshold, original_cost, manufacture_date, warehouse_location, asset_type, layout_type, pieces_per_impression, material, qr_code, supplier_id, maintenance_interval, mesh_count, mesh_material, size, tension_value, frame_type, customer_id, remark, id, used_count, net_value, status, use_time, work_order_no, process_name, use_count, amortized_cost, operator_name, maintenance_type, maintenance_cost, life_before, life_after, life_adjustment, start_time, end_time, description
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\tool\page.tsx
+  EP /api/dcprint/tool/dashboard  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\tool\dashboard\route.ts
+  feFields(41): tool_type, tool_code, tool_name, spec, total_life, warning_threshold, original_cost, manufacture_date, warehouse_location, asset_type, layout_type, pieces_per_impression, material, qr_code, supplier_id, maintenance_interval, mesh_count, mesh_material, size, tension_value, frame_type, customer_id, remark, id, used_count, net_value, status, use_time, work_order_no, process_name, use_count, amortized_cost, operator_name, maintenance_type, maintenance_cost, life_before, life_after, life_adjustment, start_time, end_time, description
+  beFields(0): 
+  MISSING(snake): tool_type, tool_code, tool_name, spec, total_life, warning_threshold, original_cost, manufacture_date, warehouse_location, asset_type, layout_type, pieces_per_impression, material, qr_code, supplier_id, maintenance_interval, mesh_count, mesh_material, size, tension_value, frame_type, customer_id, remark, id, used_count, net_value, status, use_time, work_order_no, process_name, use_count, amortized_cost, operator_name, maintenance_type, maintenance_cost, life_before, life_after, life_adjustment, start_time, end_time, description
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\tool\page.tsx
+  EP /api/dcprint/tool/  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\tool\route.ts
+  feFields(41): tool_type, tool_code, tool_name, spec, total_life, warning_threshold, original_cost, manufacture_date, warehouse_location, asset_type, layout_type, pieces_per_impression, material, qr_code, supplier_id, maintenance_interval, mesh_count, mesh_material, size, tension_value, frame_type, customer_id, remark, id, used_count, net_value, status, use_time, work_order_no, process_name, use_count, amortized_cost, operator_name, maintenance_type, maintenance_cost, life_before, life_after, life_adjustment, start_time, end_time, description
+  beFields(2): Error, logTitle
+  MISSING(snake): tool_type, tool_code, tool_name, spec, total_life, warning_threshold, original_cost, manufacture_date, warehouse_location, asset_type, layout_type, pieces_per_impression, material, qr_code, supplier_id, maintenance_interval, mesh_count, mesh_material, size, tension_value, frame_type, customer_id, remark, id, used_count, net_value, status, use_time, work_order_no, process_name, use_count, amortized_cost, operator_name, maintenance_type, maintenance_cost, life_before, life_after, life_adjustment, start_time, end_time, description
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\tool-manage\page.tsx
+  EP /api/dcprint/tool  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\tool\route.ts
+  feFields(15): total_life, remain_life, id, tool_code, tool_name, tool_type, spec, mesh_count, used_count, unit_cost, status, original_cost, mesh_material, size, tension_value
+  beFields(2): Error, logTitle
+  MISSING(snake): total_life, remain_life, id, tool_code, tool_name, tool_type, spec, mesh_count, used_count, unit_cost, status, original_cost, mesh_material, size, tension_value
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\tool-manage\page.tsx
+  EP /api/dcprint/tool/  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\tool\route.ts
+  feFields(15): total_life, remain_life, id, tool_code, tool_name, tool_type, spec, mesh_count, used_count, unit_cost, status, original_cost, mesh_material, size, tension_value
+  beFields(2): Error, logTitle
+  MISSING(snake): total_life, remain_life, id, tool_code, tool_name, tool_type, spec, mesh_count, used_count, unit_cost, status, original_cost, mesh_material, size, tension_value
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\dcprint\trace\page.tsx
+  EP /api/dcprint/trace  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\trace\route.ts
+  feFields(8): id, traceNo, cardNo, workOrderNo, productCode, traceType, operatorName, traceTime
+  beFields(35): main_material_code, main_material_name, main_batch_no, total, main_specification, main_supplier_name, main_receive_date, main_purchase_order_no, labelNo, materialType, materialCode, materialName, batchNo, supplierName, receiveDate, colorCode, mixRemark, traceNo, cardId, cardNo, workOrderNo, productCode, mainLabelId, traceType, operatorId, operatorName, traceTime, createTime, card, productName, mainMaterial, details, mainMaterials, auxiliaryMaterials, sql
+  MISSING(snake): id
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\delivery\vehicles\page.tsx
+  EP /api/delivery/vehicles  ROUTE D:\dcprint\erp-project\src\app\api\delivery\vehicles\route.ts
+  feFields(13): id, vehicle_no, brand, model, vehicle_type, color, fuel_type, driver_name, driver_phone, mileage, status, insurance_expire, annual_inspect_expire
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): vehicle_no, brand, model, vehicle_type, color, fuel_type, driver_name, driver_phone, mileage, status, insurance_expire, annual_inspect_expire
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\engineering\sample-to-mass\page.tsx
+  EP /api/customers  ROUTE D:\dcprint\erp-project\src\app\api\customers\route.ts
+  feFields(11): id, transfer_no, sample_order_no, product_code, product_name, customer_name, bom_version, status, create_time, version, bom_name
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): transfer_no, sample_order_no, product_code, product_name, customer_name, bom_version, status, create_time, version, bom_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\engineering\sop\page.tsx
+  EP /api/upload/sop  ROUTE D:\dcprint\erp-project\src\app\api\upload\sop\route.ts
+  feFields(11): id, sop_no, sop_name, product_name, process_name, version, sop_type, workshop, status, effective_date, file_url
+  beFields(7): File, url, filename, originalName, size, type, logTitle
+  MISSING(snake): id, sop_no, sop_name, product_name, process_name, version, sop_type, workshop, status, effective_date, file_url
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\engineering\sop\page.tsx
+  EP /api/engineering/sop  ROUTE D:\dcprint\erp-project\src\app\api\engineering\sop\route.ts
+  feFields(11): id, sop_no, sop_name, product_name, process_name, version, sop_type, workshop, status, effective_date, file_url
+  beFields(7): total, list, request, id, sop_no, logTitle, logType
+  MISSING(snake): sop_name, product_name, process_name, version, sop_type, workshop, status, effective_date, file_url
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\equipment\calibration\page.tsx
+  EP /api/equipment/calibration  ROUTE D:\dcprint\erp-project\src\app\api\equipment\calibration\route.ts
+  feFields(9): status, id, calibration_no, equipment_code, equipment_name, calibration_date, next_calibration_date, calibration_org, certificate_no
+  beFields(7): total, list, request, id, calibration_no, logTitle, logType
+  MISSING(snake): status, equipment_code, equipment_name, calibration_date, next_calibration_date, calibration_org, certificate_no
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\equipment\repair\page.tsx
+  EP /api/equipment/repair  ROUTE D:\dcprint\erp-project\src\app\api\equipment\repair\route.ts
+  feFields(9): status, id, repair_no, equipment_code, equipment_name, fault_date, fault_desc, repair_type, repair_person
+  beFields(7): total, list, request, id, repair_no, logTitle, logType
+  MISSING(snake): status, equipment_code, equipment_name, fault_date, fault_desc, repair_type, repair_person
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\equipment\scrap\page.tsx
+  EP /api/equipment/scrap  ROUTE D:\dcprint\erp-project\src\app\api\equipment\scrap\route.ts
+  feFields(10): status, id, scrap_no, equipment_code, equipment_name, scrap_date, scrap_reason, original_value, net_value, approval_person
+  beFields(7): total, list, request, id, scrap_no, logTitle, logType
+  MISSING(snake): status, equipment_code, equipment_name, scrap_date, scrap_reason, original_value, net_value, approval_person
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\finance\cost\page.tsx
+  EP /api/finance/cost  ROUTE D:\dcprint\erp-project\src\app\api\finance\cost\route.ts
+  feFields(8): id, cost_no, cost_type, source_no, department, amount, cost_date, description
+  beFields(7): total, material, labor, overhead, outsource, list, cost_summary
+  MISSING(snake): id, cost_no, cost_type, source_no, department, amount, cost_date, description
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\finance\page.tsx
+  EP /api/finance/payable  ROUTE D:\dcprint\erp-project\src\app\api\finance\payable\route.ts
+  feFields(18): id, receivable_no, customer_name, source_no, amount, received_amount, balance, due_date, status, receipt_no, payment_method, receipt_date, remark, payable_no, supplier_name, paid_amount, payment_no, payment_date
+  beFields(0): 
+  MISSING(snake): id, receivable_no, customer_name, source_no, amount, received_amount, balance, due_date, status, receipt_no, payment_method, receipt_date, remark, payable_no, supplier_name, paid_amount, payment_no, payment_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\finance\page.tsx
+  EP /api/finance/receipt  ROUTE D:\dcprint\erp-project\src\app\api\finance\receipt\route.ts
+  feFields(18): id, receivable_no, customer_name, source_no, amount, received_amount, balance, due_date, status, receipt_no, payment_method, receipt_date, remark, payable_no, supplier_name, paid_amount, payment_no, payment_date
+  beFields(0): 
+  MISSING(snake): id, receivable_no, customer_name, source_no, amount, received_amount, balance, due_date, status, receipt_no, payment_method, receipt_date, remark, payable_no, supplier_name, paid_amount, payment_no, payment_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\finance\page.tsx
+  EP /api/finance/payment  ROUTE D:\dcprint\erp-project\src\app\api\finance\payment\route.ts
+  feFields(18): id, receivable_no, customer_name, source_no, amount, received_amount, balance, due_date, status, receipt_no, payment_method, receipt_date, remark, payable_no, supplier_name, paid_amount, payment_no, payment_date
+  beFields(0): 
+  MISSING(snake): id, receivable_no, customer_name, source_no, amount, received_amount, balance, due_date, status, receipt_no, payment_method, receipt_date, remark, payable_no, supplier_name, paid_amount, payment_no, payment_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\finance\page.tsx
+  EP /api/customers  ROUTE D:\dcprint\erp-project\src\app\api\customers\route.ts
+  feFields(18): id, receivable_no, customer_name, source_no, amount, received_amount, balance, due_date, status, receipt_no, payment_method, receipt_date, remark, payable_no, supplier_name, paid_amount, payment_no, payment_date
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): receivable_no, customer_name, source_no, amount, received_amount, balance, due_date, status, receipt_no, payment_method, receipt_date, remark, payable_no, supplier_name, paid_amount, payment_no, payment_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\finance\page.tsx
+  EP /api/purchase/suppliers  ROUTE D:\dcprint\erp-project\src\app\api\purchase\suppliers\route.ts
+  feFields(18): id, receivable_no, customer_name, source_no, amount, received_amount, balance, due_date, status, receipt_no, payment_method, receipt_date, remark, payable_no, supplier_name, paid_amount, payment_no, payment_date
+  beFields(6): total, Loose, id, logTitle, logType, request
+  MISSING(snake): receivable_no, customer_name, source_no, amount, received_amount, balance, due_date, status, receipt_no, payment_method, receipt_date, remark, payable_no, supplier_name, paid_amount, payment_no, payment_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\finance\receivable\page.tsx
+  EP /api/finance/receipt  ROUTE D:\dcprint\erp-project\src\app\api\finance\receipt\route.ts
+  feFields(25): id, receivableNo, receivable_no, sourceType, source_type, sourceNo, source_no, customerId, customer_id, customerName, customer_name, amount, receivedAmount, received_amount, balance, dueDate, due_date, status, remark, currency, sourceCurrency, source_currency, sourceAmount, source_amount, receipt_date
+  beFields(0): 
+  MISSING(snake): id, receivable_no, source_type, source_no, customer_id, customer_name, amount, received_amount, balance, due_date, status, remark, currency, source_currency, source_amount, receipt_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\finance\report\page.tsx
+  EP /api/finance/report  ROUTE D:\dcprint\erp-project\src\app\api\finance\report\route.ts
+  feFields(8): id, period, type, category, revenue, cost, profit, profit_rate
+  beFields(10): period, type, category, revenue, cost, profit, profit_rate, total_revenue, total_cost, total_profit
+  MISSING(snake): id
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\attendance\page.tsx
+  EP /api/hr/attendance  ROUTE D:\dcprint\erp-project\src\app\api\hr\attendance\route.ts
+  feFields(27): attendanceDate, attendance_date, date, id, employeeId, employee_id, employeeName, employee_name, departmentName, department_name, department, checkInTime, check_in_time, check_in, checkOutTime, check_out_time, check_out, status, workingHours, working_hours, overtimeHours, overtime_hours, remark, checkIn, checkOut, value, label
+  beFields(13): attendanceDate, employeeId, employeeName, departmentName, checkInTime, checkOutTime, workingHours, overtimeHours, createTime, total, id, errorMessage, request
+  MISSING(snake): date, department, check_in, check_out, status, remark, value, label
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\certificates\expiring\page.tsx
+  EP /api/hr/certificates/expiring  ROUTE D:\dcprint\erp-project\src\app\api\hr\certificates\expiring\route.ts
+  feFields(6): days_remaining, id, employee_name, cert_name, cert_code, expiry_date
+  beFields(1): errorMessage
+  MISSING(snake): days_remaining, id, employee_name, cert_name, cert_code, expiry_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\certificates\expiring\page.tsx
+  EP /api/hr/certificates  ROUTE D:\dcprint\erp-project\src\app\api\hr\certificates\route.ts
+  feFields(6): days_remaining, id, employee_name, cert_name, cert_code, expiry_date
+  beFields(4): errorMessage, request, employeeId, id
+  MISSING(snake): days_remaining, employee_name, cert_name, cert_code, expiry_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\certificates\page.tsx
+  EP /api/hr/certificates  ROUTE D:\dcprint\erp-project\src\app\api\hr\certificates\route.ts
+  feFields(10): value, label, expiry_date, id, cert_name, cert_code, cert_type, issue_authority, issue_date, status
+  beFields(4): errorMessage, request, employeeId, id
+  MISSING(snake): value, label, expiry_date, cert_name, cert_code, cert_type, issue_authority, issue_date, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\employee\page.tsx
+  EP /api/organization/role  ROUTE D:\dcprint\erp-project\src\app\api\organization\role\route.ts
+  feFields(17): gender, age, education, id, target, key, employee_no, name, dept_name, section, position, entry_date, native_place, phone, status, photo, map
+  beFields(8): total, Loose, count, list, request, body, id, logTitle
+  MISSING(snake): gender, age, education, target, key, employee_no, name, dept_name, section, position, entry_date, native_place, phone, status, photo, map
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\employee\page.tsx
+  EP /api/upload  ROUTE D:\dcprint\erp-project\src\app\api\upload\route.ts
+  feFields(17): gender, age, education, id, target, key, employee_no, name, dept_name, section, position, entry_date, native_place, phone, status, photo, map
+  beFields(7): File, url, filename, originalName, size, type, logTitle
+  MISSING(snake): gender, age, education, id, target, key, employee_no, name, dept_name, section, position, entry_date, native_place, phone, status, photo, map
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\employee\page.tsx
+  EP /api/organization/employee  ROUTE D:\dcprint\erp-project\src\app\api\organization\employee\route.ts
+  feFields(17): gender, age, education, id, target, key, employee_no, name, dept_name, section, position, entry_date, native_place, phone, status, photo, map
+  beFields(5): total, id, logTitle, request, body
+  MISSING(snake): gender, age, education, target, key, employee_no, name, dept_name, section, position, entry_date, native_place, phone, status, photo, map
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\employee\page.tsx
+  EP /api/organization/department  ROUTE D:\dcprint\erp-project\src\app\api\organization\department\route.ts
+  feFields(17): gender, age, education, id, target, key, employee_no, name, dept_name, section, position, entry_date, native_place, phone, status, photo, map
+  beFields(8): total, Loose, count, list, request, body, id, logTitle
+  MISSING(snake): gender, age, education, target, key, employee_no, name, dept_name, section, position, entry_date, native_place, phone, status, photo, map
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\mes-sync\page.tsx
+  EP /api/hr/mes-sync/piece-work  ROUTE D:\dcprint\erp-project\src\app\api\hr\mes-sync\piece-work\route.ts
+  feFields(6): status, syncType, id, syncTime, recordCount, errorMessage
+  beFields(0): 
+  MISSING(snake): status, sync_type, id, sync_time, record_count, error_message
+
+NO_ROUTE D:\dcprint\erp-project\src\app\[locale]\hr\mes-sync\page.tsx -> /api/hr/mes-sync/sync
+NO_ROUTE D:\dcprint\erp-project\src\app\[locale]\hr\performance\page.tsx -> /api/hr/performance
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\salary\bank-report\page.tsx
+  EP /api/hr/salary/calculate  ROUTE D:\dcprint\erp-project\src\app\api\hr\salary\calculate\route.ts
+  feFields(10): employeeName, employee_name, name, bankCardNo, bank_card_no, bankCard, netPay, actualSalary, actual_salary, join
+  beFields(4): total, succeeded, errorMessage, request
+  MISSING(snake): employee_name, name, bank_card_no, bank_card, net_pay, actual_salary, join
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\salary\page.tsx
+  EP /api/hr/salary  ROUTE D:\dcprint\erp-project\src\app\api\hr\salary\route.ts
+  feFields(37): id, employeeNo, employee_no, name, gender, deptId, dept_id, deptName, dept_name, position, entryDate, entry_date, status, salaryId, salary_id, month, basicSalary, basic_salary, positionAllowance, position_allowance, performanceBonus, performance_bonus, overtimePay, overtime_pay, otherBonus, other_bonus, socialSecurity, social_security, housingFund, housing_fund, personalTax, personal_tax, otherDeduction, other_deduction, actualSalary, actual_salary, remark
+  beFields(6): salary_id, total, Loose, list, errorMessage, request
+  MISSING(snake): id, employee_no, name, gender, dept_id, dept_name, position, entry_date, status, month, basic_salary, position_allowance, performance_bonus, overtime_pay, other_bonus, social_security, housing_fund, personal_tax, other_deduction, actual_salary, remark
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\salary\page.tsx
+  EP /api/organization/department  ROUTE D:\dcprint\erp-project\src\app\api\organization\department\route.ts
+  feFields(37): id, employeeNo, employee_no, name, gender, deptId, dept_id, deptName, dept_name, position, entryDate, entry_date, status, salaryId, salary_id, month, basicSalary, basic_salary, positionAllowance, position_allowance, performanceBonus, performance_bonus, overtimePay, overtime_pay, otherBonus, other_bonus, socialSecurity, social_security, housingFund, housing_fund, personalTax, personal_tax, otherDeduction, other_deduction, actualSalary, actual_salary, remark
+  beFields(8): total, Loose, count, list, request, body, id, logTitle
+  MISSING(snake): employee_no, name, gender, dept_id, dept_name, position, entry_date, status, salary_id, month, basic_salary, position_allowance, performance_bonus, overtime_pay, other_bonus, social_security, housing_fund, personal_tax, other_deduction, actual_salary, remark
+
+NO_ROUTE D:\dcprint\erp-project\src\app\[locale]\hr\salary\payslips\page.tsx -> /api/salary/payslips/
+NO_ROUTE D:\dcprint\erp-project\src\app\[locale]\hr\salary\piece-work\page.tsx -> /api/hr/piece-work
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\schedules\page.tsx
+  EP /api/hr/schedules  ROUTE D:\dcprint\erp-project\src\app\api\hr\schedules\route.ts
+  feFields(6): employeeName, id, shiftName, startDate, endDate, status
+  beFields(2): errorMessage, request
+  MISSING(snake): employee_name, id, shift_name, start_date, end_date, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\shifts\page.tsx
+  EP /api/hr/shifts  ROUTE D:\dcprint\erp-project\src\app\api\hr\shifts\route.ts
+  feFields(8): id, shiftName, startTime, endTime, allowOvertime, overtimeRate, nightAllowance, status
+  beFields(3): errorMessage, request, id
+  MISSING(snake): shift_name, start_time, end_time, allow_overtime, overtime_rate, night_allowance, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\hr\skills\page.tsx
+  EP /api/hr/skills  ROUTE D:\dcprint\erp-project\src\app\api\hr\skills\route.ts
+  feFields(10): value, label, id, employee_name, skill_name, skill_category, skill_level, certified, assessor, next_assess_date
+  beFields(4): errorMessage, request, employeeId, id
+  MISSING(snake): value, label, employee_name, skill_name, skill_category, skill_level, certified, assessor, next_assess_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\monitoring\consistency\page.tsx
+  EP /api/saga  ROUTE D:\dcprint\erp-project\src\app\api\saga\route.ts
+  feFields(6): sagaId, sagaType, payload, status, steps, createdAt
+  beFields(4): SagaStatus, list, errorMessage, request
+  MISSING(snake): saga_id, saga_type, payload, status, steps, created_at
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\bom\create\page.tsx
+  EP /api/orders/bom/materials  ROUTE D:\dcprint\erp-project\src\app\api\orders\bom\materials\route.ts
+  feFields(9): value, labelKey, id, material_code, material_name, material_spec, unit, unit_cost, material_type
+  beFields(5): Loose, id, logTitle, logType, request
+  MISSING(snake): value, label_key, material_code, material_name, material_spec, unit, unit_cost, material_type
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\bom\create\page.tsx
+  EP /api/orders/bom  ROUTE D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+  feFields(9): value, labelKey, id, material_code, material_name, material_spec, unit, unit_cost, material_type
+  beFields(8): const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+  MISSING(snake): value, label_key, id, material_code, material_name, material_spec, unit, unit_cost, material_type
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\bom\edit\[id]\page.tsx
+  EP /api/orders/bom/  ROUTE D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+  feFields(17): id, material_id, material_code, material_name, material_spec, unit, consumption_qty, loss_rate, unit_cost, material_type, is_key_material, position_no, process_seq, process_name, remark, value, labelKey
+  beFields(8): const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+  MISSING(snake): id, material_id, material_code, material_name, material_spec, unit, consumption_qty, loss_rate, unit_cost, material_type, is_key_material, position_no, process_seq, process_name, remark, value, label_key
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\bom\edit\[id]\page.tsx
+  EP /api/orders/bom/materials  ROUTE D:\dcprint\erp-project\src\app\api\orders\bom\materials\route.ts
+  feFields(17): id, material_id, material_code, material_name, material_spec, unit, consumption_qty, loss_rate, unit_cost, material_type, is_key_material, position_no, process_seq, process_name, remark, value, labelKey
+  beFields(5): Loose, id, logTitle, logType, request
+  MISSING(snake): material_id, material_code, material_name, material_spec, unit, consumption_qty, loss_rate, unit_cost, material_type, is_key_material, position_no, process_seq, process_name, remark, value, label_key
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\bom\edit\[id]\page.tsx
+  EP /api/orders/bom  ROUTE D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+  feFields(17): id, material_id, material_code, material_name, material_spec, unit, consumption_qty, loss_rate, unit_cost, material_type, is_key_material, position_no, process_seq, process_name, remark, value, labelKey
+  beFields(8): const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+  MISSING(snake): id, material_id, material_code, material_name, material_spec, unit, consumption_qty, loss_rate, unit_cost, material_type, is_key_material, position_no, process_seq, process_name, remark, value, label_key
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\bom\page.tsx
+  EP /api/orders/bom  ROUTE D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+  feFields(19): id, bom_no, product_name, product_code, product_spec, version, is_default, status, total_material_count, total_cost, create_time, line_no, material_code, material_name, material_spec, consumption_qty, unit, loss_rate, actual_qty
+  beFields(8): const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+  MISSING(snake): id, bom_no, product_name, product_code, product_spec, version, is_default, status, total_material_count, total_cost, create_time, line_no, material_code, material_name, material_spec, consumption_qty, unit, loss_rate, actual_qty
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\bom\page.tsx
+  EP /api/orders/bom/  ROUTE D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+  feFields(19): id, bom_no, product_name, product_code, product_spec, version, is_default, status, total_material_count, total_cost, create_time, line_no, material_code, material_name, material_spec, consumption_qty, unit, loss_rate, actual_qty
+  beFields(8): const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+  MISSING(snake): id, bom_no, product_name, product_code, product_spec, version, is_default, status, total_material_count, total_cost, create_time, line_no, material_code, material_name, material_spec, consumption_qty, unit, loss_rate, actual_qty
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\customers\page.tsx
+  EP /api/customers  ROUTE D:\dcprint\erp-project\src\app\api\customers\route.ts
+  feFields(39): id, customer_code, customer_name, short_name, customer_type, industry, scale, credit_level, province, city, district, address, contact_name, contact_phone, contact_email, fax, website, business_license, tax_number, bank_name, bank_account, salesman_id, follow_up_status, status, remark, create_time, update_time, followUpStatus, customerType, customerCode, customerName, shortName, creditLevel, contactName, contactPhone, contactEmail, taxNumber, bankName, bankAccount
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): customer_code, customer_name, short_name, customer_type, industry, scale, credit_level, province, city, district, address, contact_name, contact_phone, contact_email, fax, website, business_license, tax_number, bank_name, bank_account, salesman_id, follow_up_status, status, remark, create_time, update_time
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\products\page.tsx
+  EP /api/products  ROUTE D:\dcprint\erp-project\src\app\api\products\route.ts
+  feFields(24): id, page, category_name, categoryName, product_code, product_name, short_name, specification, unit, category_id, status, cost_price, sale_price, description, bom_version, line_no, material_code, material_name, material_spec, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost
+  beFields(5): total, Loose, id, logTitle, request
+  MISSING(snake): page, category_name, product_code, product_name, short_name, specification, unit, category_id, status, cost_price, sale_price, description, bom_version, line_no, material_code, material_name, material_spec, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\products\page.tsx
+  EP /api/products/categories  ROUTE D:\dcprint\erp-project\src\app\api\products\categories\route.ts
+  feFields(24): id, page, category_name, categoryName, product_code, product_name, short_name, specification, unit, category_id, status, cost_price, sale_price, description, bom_version, line_no, material_code, material_name, material_spec, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost
+  beFields(12): categoryCode, categoryName, parentId, sortOrder, createTime, total, Loose, list, request, _userInfo, id, logTitle
+  MISSING(snake): page, product_code, product_name, short_name, specification, unit, category_id, status, cost_price, sale_price, description, bom_version, line_no, material_code, material_name, material_spec, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\products\page.tsx
+  EP /api/orders/bom  ROUTE D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+  feFields(24): id, page, category_name, categoryName, product_code, product_name, short_name, specification, unit, category_id, status, cost_price, sale_price, description, bom_version, line_no, material_code, material_name, material_spec, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost
+  beFields(8): const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+  MISSING(snake): id, page, category_name, product_code, product_name, short_name, specification, unit, category_id, status, cost_price, sale_price, description, bom_version, line_no, material_code, material_name, material_spec, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\products\page.tsx
+  EP /api/orders/bom/  ROUTE D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+  feFields(24): id, page, category_name, categoryName, product_code, product_name, short_name, specification, unit, category_id, status, cost_price, sale_price, description, bom_version, line_no, material_code, material_name, material_spec, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost
+  beFields(8): const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+  MISSING(snake): id, page, category_name, product_code, product_name, short_name, specification, unit, category_id, status, cost_price, sale_price, description, bom_version, line_no, material_code, material_name, material_spec, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\sales\page.tsx
+  EP /api/customers  ROUTE D:\dcprint\erp-project\src\app\api\customers\route.ts
+  feFields(21): id, status, items, order_no, customer_name, order_date, delivery_date, total_amount, remark, material_name, quantity, unit, unit_price, material_id, material_code, total_price, join, material_type, currency, base_total_amount, base_currency
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): status, items, order_no, customer_name, order_date, delivery_date, total_amount, remark, material_name, quantity, unit, unit_price, material_id, material_code, total_price, join, material_type, currency, base_total_amount, base_currency
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\orders\sales\page.tsx
+  EP /api/inventory/materials  ROUTE D:\dcprint\erp-project\src\app\api\inventory\materials\route.ts
+  feFields(21): id, status, items, order_no, customer_name, order_date, delivery_date, total_amount, remark, material_name, quantity, unit, unit_price, material_id, material_code, total_price, join, material_type, currency, base_total_amount, base_currency
+  beFields(1): Loose
+  MISSING(snake): id, status, items, order_no, customer_name, order_date, delivery_date, total_amount, remark, material_name, quantity, unit, unit_price, material_id, material_code, total_price, join, material_type, currency, base_total_amount, base_currency
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\outsource\issue\page.tsx
+  EP /api/materials  ROUTE D:\dcprint\erp-project\src\app\api\materials\route.ts
+  feFields(16): issue_no, outsource_order_no, warehouse_name, issue_date, items, operator_name, status, id, material_id, quantity, unit, batch_no, material_name, order_no, product_name, name
+  beFields(4): total, Loose, category, categoryHint
+  MISSING(snake): issue_no, outsource_order_no, warehouse_name, issue_date, items, operator_name, status, id, material_id, quantity, unit, batch_no, material_name, order_no, product_name, name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\outsource\order\page.tsx
+  EP /api/purchase/suppliers  ROUTE D:\dcprint\erp-project\src\app\api\purchase\suppliers\route.ts
+  feFields(12): status, id, order_no, supplier_name, product_name, outsource_type, process_name, plan_qty, issued_qty, received_qty, qualified_qty, delivery_date
+  beFields(6): total, Loose, id, logTitle, logType, request
+  MISSING(snake): status, order_no, supplier_name, product_name, outsource_type, process_name, plan_qty, issued_qty, received_qty, qualified_qty, delivery_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\plm\eco\page.tsx
+  EP /api/plm/eco  ROUTE D:\dcprint\erp-project\src\app\api\plm\eco\route.ts
+  feFields(9): id, eco_no, eco_type, product_name, old_version, new_version, status, applicant, apply_time
+  beFields(7): total, list, request, id, eco_no, logTitle, logType
+  MISSING(snake): eco_type, product_name, old_version, new_version, status, applicant, apply_time
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\plm\lifecycle\page.tsx
+  EP /api/plm/lifecycle  ROUTE D:\dcprint\erp-project\src\app\api\plm\lifecycle\route.ts
+  feFields(9): id, product_code, product_name, lifecycle_stage, stage_status, version, change_type, effective_date, create_time
+  beFields(6): total, list, request, id, logTitle, logType
+  MISSING(snake): product_code, product_name, lifecycle_stage, stage_status, version, change_type, effective_date, create_time
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\prepress\die-template\page.tsx
+  EP /api/prepress/die-template  ROUTE D:\dcprint\erp-project\src\app\api\prepress\die-template\route.ts
+  feFields(37): id, status, template_type, current_usage, warning_usage, template_name, specification, material, max_usage, storage_location, remark, die_status, template_code, asset_type, layout_type, pieces_per_impression, max_impressions, cumulative_impressions, warning_threshold, maintenance_interval, unit_price, purchase_date, last_maintenance_impressions, maintenance_count, cost, maintenance_no, die_code, maintenance_type, impressions_before, impressions_after, technician_name, work_order_no, process_name, impressions, cumulative_after, operator_name, usage_date
+  beFields(16): total, Loose, count, avg_usage_pct, maintenance_needed_count, re_rule_needed_count, scrap_count, total_count, available_count, warning_count, locked_count, maintenance_due_count, Record, list, warningList, dashboardStats
+  MISSING(snake): id, status, template_type, current_usage, warning_usage, template_name, specification, material, max_usage, storage_location, remark, die_status, template_code, asset_type, layout_type, pieces_per_impression, max_impressions, cumulative_impressions, warning_threshold, maintenance_interval, unit_price, purchase_date, last_maintenance_impressions, maintenance_count, cost, maintenance_no, die_code, maintenance_type, impressions_before, impressions_after, technician_name, work_order_no, process_name, impressions, cumulative_after, operator_name, usage_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\production\mrp\page.tsx
+  EP /api/production/mrp  ROUTE D:\dcprint\erp-project\src\app\api\production\mrp\route.ts
+  feFields(5): id, work_order_no, material_name, plan_qty, material_code
+  beFields(0): 
+  MISSING(snake): id, work_order_no, material_name, plan_qty, material_code
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\production\mrp\page.tsx
+  EP /api/materials  ROUTE D:\dcprint\erp-project\src\app\api\materials\route.ts
+  feFields(5): id, work_order_no, material_name, plan_qty, material_code
+  beFields(4): total, Loose, category, categoryHint
+  MISSING(snake): id, work_order_no, material_name, plan_qty, material_code
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\production\process\page.tsx
+  EP /api/production/process  ROUTE D:\dcprint\erp-project\src\app\api\production\process\route.ts
+  feFields(11): id, process_flow1, process_flow2, burdening_status, card_no, work_order_no, product_name, material_spec, print_type, customer_name, plan_qty
+  beFields(4): total, Loose, list, request
+  MISSING(snake): id, process_flow1, process_flow2, burdening_status, card_no, work_order_no, product_name, material_spec, print_type, customer_name, plan_qty
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\production\product-label\page.tsx
+  EP /api/production/product-label  ROUTE D:\dcprint\erp-project\src\app\api\production\product-label\route.ts
+  feFields(10): id, label_no, batch_no, status, work_order_no, material_code, material_name, quantity, unit, qc_result
+  beFields(7): total, list, request, id, label_no, logTitle, logType
+  MISSING(snake): batch_no, status, work_order_no, material_code, material_name, quantity, unit, qc_result
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\production\report\page.tsx
+  EP /api/prepress/die-template  ROUTE D:\dcprint\erp-project\src\app\api\prepress\die-template\route.ts
+  feFields(18): id, plan_qty, completed_qty, report_no, work_order_no, process_name, operator_name, equipment_name, qualified_qty, scrap_qty, work_hours, equipment_code, order_no, product_name, max_impressions, cumulative_impressions, template_code, template_name
+  beFields(16): total, Loose, count, avg_usage_pct, maintenance_needed_count, re_rule_needed_count, scrap_count, total_count, available_count, warning_count, locked_count, maintenance_due_count, Record, list, warningList, dashboardStats
+  MISSING(snake): id, plan_qty, completed_qty, report_no, work_order_no, process_name, operator_name, equipment_name, qualified_qty, scrap_qty, work_hours, equipment_code, order_no, product_name, max_impressions, cumulative_impressions, template_code, template_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\production\schedule\page.tsx
+  EP /api/production/schedule  ROUTE D:\dcprint\erp-project\src\app\api\production\schedule\route.ts
+  feFields(29): workshop, equipmentCount, totalCapacity, usedCapacity, availableCapacity, utilizationRate, status, schedule_no, order_no, product_name, scheduler, id, planned_start, planned_end, planned_qty, completed_qty, priority, remark, work_order_no, plan_qty, push, success, message, data, work_order_id, conflicts, overall_start, overall_end, reason
+  beFields(24): total, pending, scheduled, producing, completed, cancelled, total_planned_qty, total_completed_qty, scheduled_count, ready_count, shortage_count, date_range, start, end, total_working_days, overloaded_days, statsRows, list, request, updated_count, id, schedule_no, logTitle, logType
+  MISSING(snake): workshop, equipment_count, total_capacity, used_capacity, available_capacity, utilization_rate, status, order_no, product_name, scheduler, planned_start, planned_end, planned_qty, completed_qty, priority, remark, work_order_no, plan_qty, push, success, message, data, work_order_id, conflicts, overall_start, overall_end, reason
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\production\schedule\page.tsx
+  EP /api/production/schedule/capacity  ROUTE D:\dcprint\erp-project\src\app\api\production\schedule\capacity\route.ts
+  feFields(29): workshop, equipmentCount, totalCapacity, usedCapacity, availableCapacity, utilizationRate, status, schedule_no, order_no, product_name, scheduler, id, planned_start, planned_end, planned_qty, completed_qty, priority, remark, work_order_no, plan_qty, push, success, message, data, work_order_id, conflicts, overall_start, overall_end, reason
+  beFields(15): equipment_count, total_capacity_per_hour, schedule_count, total_planned_qty, total_completed_qty, total_planned_hours, equipment_id, used_hours, workshopCapacity, summary, totalEquipment, sum, r, totalWorkshops, avgUtilization
+  MISSING(snake): workshop, total_capacity, used_capacity, available_capacity, utilization_rate, status, schedule_no, order_no, product_name, scheduler, id, planned_start, planned_end, planned_qty, completed_qty, priority, remark, work_order_no, plan_qty, push, success, message, data, work_order_id, conflicts, overall_start, overall_end, reason
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\production\schedule\page.tsx
+  EP /api/production/schedule/auto  ROUTE D:\dcprint\erp-project\src\app\api\production\schedule\auto\route.ts
+  feFields(29): workshop, equipmentCount, totalCapacity, usedCapacity, availableCapacity, utilizationRate, status, schedule_no, order_no, product_name, scheduler, id, planned_start, planned_end, planned_qty, completed_qty, priority, remark, work_order_no, plan_qty, push, success, message, data, work_order_id, conflicts, overall_start, overall_end, reason
+  beFields(4): summary, total, scheduled, with_conflicts
+  MISSING(snake): workshop, equipment_count, total_capacity, used_capacity, available_capacity, utilization_rate, status, schedule_no, order_no, product_name, scheduler, id, planned_start, planned_end, planned_qty, completed_qty, priority, remark, work_order_no, plan_qty, push, success, message, data, work_order_id, conflicts, overall_start, overall_end, reason
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\production\workorder\page.tsx
+  EP /api/orders/bom  ROUTE D:\dcprint\erp-project\src\app\api\orders\bom\route.ts
+  feFields(18): status, order_no, work_order_no, quantity, product_name, material_id, material_name, unit, unit_price, line_no, material_code, id, customer_name, bom_no, items, priority, plan_start_date, plan_end_date
+  beFields(8): const, status_name, Loose, logTitle, logType, request, updateFields, updateValues
+  MISSING(snake): status, order_no, work_order_no, quantity, product_name, material_id, material_name, unit, unit_price, line_no, material_code, id, customer_name, bom_no, items, priority, plan_start_date, plan_end_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\purchase\request\form\page.tsx
+  EP /api/organization/department  ROUTE D:\dcprint\erp-project\src\app\api\organization\department\route.ts
+  feFields(27): material_id, material_code, material_name, material_spec, material_unit, quantity, price, amount, remark, productName, spec, unit, id, key, label, idKey, dept_name, name, status, request_no, request_date, request_dept, requester_name, reviewer_name, approver_name, items, total_amount
+  beFields(8): total, Loose, count, list, request, body, id, logTitle
+  MISSING(snake): material_id, material_code, material_name, material_spec, material_unit, quantity, price, amount, remark, product_name, spec, unit, key, label, id_key, dept_name, name, status, request_no, request_date, request_dept, requester_name, reviewer_name, approver_name, items, total_amount
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\purchase\request\form\page.tsx
+  EP /api/organization/employee  ROUTE D:\dcprint\erp-project\src\app\api\organization\employee\route.ts
+  feFields(27): material_id, material_code, material_name, material_spec, material_unit, quantity, price, amount, remark, productName, spec, unit, id, key, label, idKey, dept_name, name, status, request_no, request_date, request_dept, requester_name, reviewer_name, approver_name, items, total_amount
+  beFields(5): total, id, logTitle, request, body
+  MISSING(snake): material_id, material_code, material_name, material_spec, material_unit, quantity, price, amount, remark, product_name, spec, unit, key, label, id_key, dept_name, name, status, request_no, request_date, request_dept, requester_name, reviewer_name, approver_name, items, total_amount
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\purchase\request\form\page.tsx
+  EP /api/purchase/request  ROUTE D:\dcprint\erp-project\src\app\api\purchase\request\route.ts
+  feFields(27): material_id, material_code, material_name, material_spec, material_unit, quantity, price, amount, remark, productName, spec, unit, id, key, label, idKey, dept_name, name, status, request_no, request_date, request_dept, requester_name, reviewer_name, approver_name, items, total_amount
+  beFields(8): total, Loose, RequestItem, cnt, params, uncategorizedMaterials, logTitle, logType
+  MISSING(snake): material_id, material_code, material_name, material_spec, material_unit, quantity, price, amount, remark, product_name, spec, unit, id, key, label, id_key, dept_name, name, status, request_no, request_date, request_dept, requester_name, reviewer_name, approver_name, items, total_amount
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\purchase\request\new\page.tsx
+  EP /api/organization/department  ROUTE D:\dcprint\erp-project\src\app\api\organization\department\route.ts
+  feFields(2): id, dept_name
+  beFields(8): total, Loose, count, list, request, body, id, logTitle
+  MISSING(snake): dept_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\purchase\request\new\page.tsx
+  EP /api/purchase/request  ROUTE D:\dcprint\erp-project\src\app\api\purchase\request\route.ts
+  feFields(2): id, dept_name
+  beFields(8): total, Loose, RequestItem, cnt, params, uncategorizedMaterials, logTitle, logType
+  MISSING(snake): id, dept_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\purchase\request\page.tsx
+  EP /api/purchase/request  ROUTE D:\dcprint\erp-project\src\app\api\purchase\request\route.ts
+  feFields(13): id, items, request_no, request_dept, requester_name, request_date, priority, status, total_amount, currency, remark, request_type, map
+  beFields(8): total, Loose, RequestItem, cnt, params, uncategorizedMaterials, logTitle, logType
+  MISSING(snake): id, items, request_no, request_dept, requester_name, request_date, priority, status, total_amount, currency, remark, request_type, map
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\purchase\request\[id]\page.tsx
+  EP /api/purchase/request  ROUTE D:\dcprint\erp-project\src\app\api\purchase\request\route.ts
+  feFields(10): id, line_no, material_code, material_name, material_spec, material_unit, quantity, price, amount, remark
+  beFields(8): total, Loose, RequestItem, cnt, params, uncategorizedMaterials, logTitle, logType
+  MISSING(snake): id, line_no, material_code, material_name, material_spec, material_unit, quantity, price, amount, remark
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\purchase\return\page.tsx
+  EP /api/purchase/return  ROUTE D:\dcprint\erp-project\src\app\api\purchase\return\route.ts
+  feFields(15): id, po_no, supplier_id, supplier_name, currency, base_currency, lines, return_no, order_no, return_date, return_type, grand_total, total_amount, base_grand_total, status
+  beFields(5): total, line_count, id, return_no, logTitle
+  MISSING(snake): po_no, supplier_id, supplier_name, currency, base_currency, lines, order_no, return_date, return_type, grand_total, total_amount, base_grand_total, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\purchase\return\page.tsx
+  EP /api/purchase/orders  ROUTE D:\dcprint\erp-project\src\app\api\purchase\orders\route.ts
+  feFields(15): id, po_no, supplier_id, supplier_name, currency, base_currency, lines, return_no, order_no, return_date, return_type, grand_total, total_amount, base_grand_total, status
+  beFields(2): Loose, uncategorizedMaterials
+  MISSING(snake): id, po_no, supplier_id, supplier_name, currency, base_currency, lines, return_no, order_no, return_date, return_type, grand_total, total_amount, base_grand_total, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\purchase\suppliers\page.tsx
+  EP /api/purchase/suppliers  ROUTE D:\dcprint\erp-project\src\app\api\purchase\suppliers\route.ts
+  feFields(15): status, supplier_code, supplier_name, short_name, credit_level, id, supplier_type, contact_name, contact_phone, contact_email, address, settlement_method, payment_terms, remark, default_currency
+  beFields(6): total, Loose, id, logTitle, logType, request
+  MISSING(snake): status, supplier_code, supplier_name, short_name, credit_level, supplier_type, contact_name, contact_phone, contact_email, address, settlement_method, payment_terms, remark, default_currency
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\quality\final\page.tsx
+  EP /api/quality/final  ROUTE D:\dcprint\erp-project\src\app\api\quality\final\route.ts
+  feFields(51): id, cardNo, card_no, qrCode, qr_code, workOrderNo, work_order_no, productCode, product_code, productName, product_name, materialSpec, material_spec, workOrderDate, work_order_date, planQty, plan_qty, mainLabelNo, main_label_no, burdeningStatus, burdening_status, lockStatus, lock_status, createUserName, create_user_name, createTime, create_time, updateTime, update_time, customerName, customer_name, customerCode, customer_code, processFlow1, process_flow1, processFlow2, process_flow2, printType, print_type, finishedSize, finished_size, tolerance, qualityManager, quality_manager, packingType, packing_type, slicePerBox, slice_per_box, slicePerBundle, slice_per_bundle, name
+  beFields(30): cardNo, qrCode, workOrderNo, productCode, productName, materialSpec, workOrderDate, planQty, mainLabelNo, burdeningStatus, lockStatus, createUserName, createTime, updateTime, customerName, customerCode, processFlow1, processFlow2, printType, finishedSize, tolerance, qualityManager, packingType, slicePerBox, slicePerBundle, UNSIGNED, total, logTitle, logType, request
+  MISSING(snake): id, name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\quality\incoming\page.tsx
+  EP /api/quality/incoming  ROUTE D:\dcprint\erp-project\src\app\api\quality\incoming\route.ts
+  feFields(24): id, inspectionNo, inspectionDate, supplierName, materialCode, materialName, specification, batchNo, quantity, unit, inspectionType, inspectionResult, inspectorName, remark, items, name, standard, itemName, actualValue, result, itemRemark, date, value, label
+  beFields(17): inspectionNo, inspectionDate, supplierName, materialCode, materialName, batchNo, inspectionType, inspectionResult, inspectorName, createTime, total, inspectionId, itemName, actualValue, itemRemark, Loose, maxNo
+  MISSING(snake): id, specification, quantity, unit, remark, items, name, standard, result, date, value, label
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\quality\process\page.tsx
+  EP /api/quality/process  ROUTE D:\dcprint\erp-project\src\app\api\quality\process\route.ts
+  feFields(50): id, cardNo, card_no, qrCode, qr_code, workOrderNo, work_order_no, productCode, product_code, productName, product_name, materialSpec, material_spec, workOrderDate, work_order_date, planQty, plan_qty, mainLabelNo, main_label_no, burdeningStatus, burdening_status, createUserName, create_user_name, createTime, create_time, updateTime, update_time, customerName, customer_name, customerCode, customer_code, processFlow1, process_flow1, processFlow2, process_flow2, printType, print_type, finishedSize, finished_size, tolerance, qualityManager, quality_manager, name, required, inspectNo, inspectType, result, inspector, inspectTime, remark
+  beFields(26): cardNo, qrCode, workOrderNo, productCode, productName, materialSpec, workOrderDate, planQty, mainLabelNo, burdeningStatus, createUserName, createTime, updateTime, customerName, customerCode, processFlow1, processFlow2, printType, finishedSize, qualityManager, UNSIGNED, total, InspectStatus, logTitle, logType, request
+  MISSING(snake): id, tolerance, name, required, inspect_no, inspect_type, result, inspector, inspect_time, remark
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\quality\spc\page.tsx
+  EP /api/quality/spc  ROUTE D:\dcprint\erp-project\src\app\api\quality\spc\route.ts
+  feFields(16): type, subgroup_id, value, period, rate, x_bar, range, timestamp, values, defective_rate, inspected, defective, id, material_code, material_name, toFixed
+  beFields(4): count, period, inspected, defective
+  MISSING(snake): type, subgroup_id, value, rate, x_bar, range, timestamp, values, defective_rate, id, material_code, material_name, to_fixed
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\quality\spc\page.tsx
+  EP /api/materials  ROUTE D:\dcprint\erp-project\src\app\api\materials\route.ts
+  feFields(16): type, subgroup_id, value, period, rate, x_bar, range, timestamp, values, defective_rate, inspected, defective, id, material_code, material_name, toFixed
+  beFields(4): total, Loose, category, categoryHint
+  MISSING(snake): type, subgroup_id, value, period, rate, x_bar, range, timestamp, values, defective_rate, inspected, defective, id, material_code, material_name, to_fixed
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\quality\trace\page.tsx
+  EP /api/dcprint/trace  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\trace\route.ts
+  feFields(26): id, traceNo, trace_no, cardNo, card_no, workOrderNo, work_order_no, productCode, product_code, productName, product_name, mainLabelId, main_label_id, mainMaterialCode, main_material_code, mainMaterialName, main_material_name, mainBatchNo, main_batch_no, traceType, trace_type, operatorName, operator_name, traceTime, trace_time, remark
+  beFields(35): main_material_code, main_material_name, main_batch_no, total, main_specification, main_supplier_name, main_receive_date, main_purchase_order_no, labelNo, materialType, materialCode, materialName, batchNo, supplierName, receiveDate, colorCode, mixRemark, traceNo, cardId, cardNo, workOrderNo, productCode, mainLabelId, traceType, operatorId, operatorName, traceTime, createTime, card, productName, mainMaterial, details, mainMaterials, auxiliaryMaterials, sql
+  MISSING(snake): id, remark
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\reports\page.tsx
+  EP /api/reports/dashboard  ROUTE D:\dcprint\erp-project\src\app\api\reports\dashboard\route.ts
+  feFields(11): supplierId, supplierName, rank, supplierCode, orderCount, totalAmount, totalQuantity, proportion, customerId, customerName, customerCode
+  beFields(27): total_orders, completed_orders, pending_orders, total_amount, completed_amount, total_work_orders, completed_work_orders, in_progress_work_orders, total_plan_qty, total_completed_qty, material_count, total_stock, total_locked, total_available, zero_stock_count, low_stock_count, total_purchase_orders, received_orders, total_purchase_amount, pending_receivable, pending_payable, period, orderMetrics, totalOrders, completedOrders, pendingOrders, totalAmount
+  MISSING(snake): supplier_id, supplier_name, rank, supplier_code, order_count, total_quantity, proportion, customer_id, customer_name, customer_code
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\reports\page.tsx
+  EP /api/reports/purchase-supplier  ROUTE D:\dcprint\erp-project\src\app\api\reports\purchase-supplier\route.ts
+  feFields(11): supplierId, supplierName, rank, supplierCode, orderCount, totalAmount, totalQuantity, proportion, customerId, customerName, customerCode
+  beFields(9): supplier_id, supplier_code, order_count, total_amount, total_quantity, received_count, period, summary, supplierCount
+  MISSING(snake): supplier_name, rank, proportion, customer_id, customer_name, customer_code
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\reports\page.tsx
+  EP /api/reports/sales-customer  ROUTE D:\dcprint\erp-project\src\app\api\reports\sales-customer\route.ts
+  feFields(11): supplierId, supplierName, rank, supplierCode, orderCount, totalAmount, totalQuantity, proportion, customerId, customerName, customerCode
+  beFields(7): order_count, total_amount, total_with_tax, completed_count, period, summary, customerCount
+  MISSING(snake): supplier_id, supplier_name, rank, supplier_code, total_quantity, proportion, customer_id, customer_name, customer_code
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sales\delivery\page.tsx
+  EP /api/customers  ROUTE D:\dcprint\erp-project\src\app\api\customers\route.ts
+  feFields(12): status, id, delivery_no, order_no, customer_name, delivery_date, total_qty, total_amount, currency, base_total_amount, base_currency, sign_status
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): status, delivery_no, order_no, customer_name, delivery_date, total_qty, total_amount, currency, base_total_amount, base_currency, sign_status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sales\reconciliation\page.tsx
+  EP /api/customers  ROUTE D:\dcprint\erp-project\src\app\api\customers\route.ts
+  feFields(13): id, delivery_amount, return_amount, net_amount, balance_amount, reconciliation_no, customer_name, has_mismatch, period_start, period_end, currency, received_amount, status
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): delivery_amount, return_amount, net_amount, balance_amount, reconciliation_no, customer_name, has_mismatch, period_start, period_end, currency, received_amount, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sales\return\page.tsx
+  EP /api/customers  ROUTE D:\dcprint\erp-project\src\app\api\customers\route.ts
+  feFields(13): id, status, return_no, order_no, customer_name, return_date, return_type, total_qty, total_amount, currency, base_total_amount, base_currency, inspection_status
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): status, return_no, order_no, customer_name, return_date, return_type, total_qty, total_amount, currency, base_total_amount, base_currency, inspection_status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\management\page.tsx
+  EP /api/sample/orders  ROUTE D:\dcprint\erp-project\src\app\api\sample\orders\route.ts
+  feFields(7): order_no, product_name, customer_name, notify_date, customer_require_date, delivery_status, id
+  beFields(10): Record, Partial, string, SampleOrderStatus, id, order_no, logTitle, request, module, action
+  MISSING(snake): product_name, customer_name, notify_date, customer_require_date, delivery_status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\orders\page.tsx
+  EP /api/sample/orders  ROUTE D:\dcprint\erp-project\src\app\api\sample\orders\route.ts
+  feFields(10): customer_name, id, notify_date, product_name, material_no, version, size_spec, quantity, customer_require_date, status
+  beFields(10): Record, Partial, string, SampleOrderStatus, id, order_no, logTitle, request, module, action
+  MISSING(snake): customer_name, notify_date, product_name, material_no, version, size_spec, quantity, customer_require_date, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\orders\page.tsx
+  EP /api/sample/orders/linkage  ROUTE D:\dcprint\erp-project\src\app\api\sample\orders\linkage\route.ts
+  feFields(10): customer_name, id, notify_date, product_name, material_no, version, size_spec, quantity, customer_require_date, status
+  beFields(16): const, cnt, Loose, available_qty, work_order_id, work_order_no, sample_order_no, bom_info, bom_id, bom_no, version, delivery_status, logTitle, sample_order, work_orders, material_requirements
+  MISSING(snake): customer_name, id, notify_date, product_name, material_no, size_spec, quantity, customer_require_date, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\orders\page.tsx
+  EP /api/sample/orders/status  ROUTE D:\dcprint\erp-project\src\app\api\sample\orders\status\route.ts
+  feFields(10): customer_name, id, notify_date, product_name, material_no, version, size_spec, quantity, customer_require_date, status
+  beFields(3): err, error, logTitle
+  MISSING(snake): customer_name, id, notify_date, product_name, material_no, version, size_spec, quantity, customer_require_date, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input\page.tsx
+  EP /api/dcprint/sample-card/template  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\sample-card\template\route.ts
+  feFields(19): id, customer_name, color_code, color_name, material_name, material_code, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, process_name, work_hour, step_name
+  beFields(1): logTitle
+  MISSING(snake): id, customer_name, color_code, color_name, material_name, material_code, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, process_name, work_hour, step_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input\page.tsx
+  EP /api/customers  ROUTE D:\dcprint\erp-project\src\app\api\customers\route.ts
+  feFields(19): id, customer_name, color_code, color_name, material_name, material_code, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, process_name, work_hour, step_name
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): customer_name, color_code, color_name, material_name, material_code, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, process_name, work_hour, step_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input\page.tsx
+  EP /api/inventory/materials  ROUTE D:\dcprint\erp-project\src\app\api\inventory\materials\route.ts
+  feFields(19): id, customer_name, color_code, color_name, material_name, material_code, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, process_name, work_hour, step_name
+  beFields(1): Loose
+  MISSING(snake): id, customer_name, color_code, color_name, material_name, material_code, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, process_name, work_hour, step_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input\page.tsx
+  EP /api/dcprint/formula/color  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\formula\color\route.ts
+  feFields(19): id, customer_name, color_code, color_name, material_name, material_code, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, process_name, work_hour, step_name
+  beFields(3): Error, logTitle, logType
+  MISSING(snake): id, customer_name, color_code, color_name, material_name, material_code, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, process_name, work_hour, step_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input\page.tsx
+  EP /api/dcprint/tool  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\tool\route.ts
+  feFields(19): id, customer_name, color_code, color_name, material_name, material_code, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, process_name, work_hour, step_name
+  beFields(2): Error, logTitle
+  MISSING(snake): id, customer_name, color_code, color_name, material_name, material_code, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, process_name, work_hour, step_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input-card\page.tsx
+  EP /api/standard-cards  ROUTE D:\dcprint\erp-project\src\app\api\standard-cards\route.ts
+  feFields(3): customerName, customerCode, id
+  beFields(12): Loose, total, import, Record, unknown, id, card_no, errorMessage, request, deletedCount, logTitle, logType
+  MISSING(snake): customer_name, customer_code
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input-card\page.tsx
+  EP /api/customers  ROUTE D:\dcprint\erp-project\src\app\api\customers\route.ts
+  feFields(3): customerName, customerCode, id
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): customer_name, customer_code
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input-v2\page.tsx
+  EP /api/dcprint/sample-card/template  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\sample-card\template\route.ts
+  feFields(19): id, customer_name, color_code, color_name, material_code, material_name, cost_price, unit, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, step_name
+  beFields(1): logTitle
+  MISSING(snake): id, customer_name, color_code, color_name, material_code, material_name, cost_price, unit, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, step_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input-v2\page.tsx
+  EP /api/customers  ROUTE D:\dcprint\erp-project\src\app\api\customers\route.ts
+  feFields(19): id, customer_name, color_code, color_name, material_code, material_name, cost_price, unit, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, step_name
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): customer_name, color_code, color_name, material_code, material_name, cost_price, unit, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, step_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input-v2\page.tsx
+  EP /api/inventory/materials  ROUTE D:\dcprint\erp-project\src\app\api\inventory\materials\route.ts
+  feFields(19): id, customer_name, color_code, color_name, material_code, material_name, cost_price, unit, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, step_name
+  beFields(1): Loose
+  MISSING(snake): id, customer_name, color_code, color_name, material_code, material_name, cost_price, unit, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, step_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input-v2\page.tsx
+  EP /api/dcprint/formula/color  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\formula\color\route.ts
+  feFields(19): id, customer_name, color_code, color_name, material_code, material_name, cost_price, unit, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, step_name
+  beFields(3): Error, logTitle, logType
+  MISSING(snake): id, customer_name, color_code, color_name, material_code, material_name, cost_price, unit, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, step_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\input-v2\page.tsx
+  EP /api/dcprint/tool  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\tool\route.ts
+  feFields(19): id, customer_name, color_code, color_name, material_code, material_name, cost_price, unit, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, step_name
+  beFields(2): Error, logTitle
+  MISSING(snake): id, customer_name, color_code, color_name, material_code, material_name, cost_price, unit, tool_type, status, total_life, remain_life, tool_code, tool_name, template_no, template_name, category, total_cost, step_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\page.tsx
+  EP /api/standard-cards  ROUTE D:\dcprint\erp-project\src\app\api\standard-cards\route.ts
+  feFields(12): id, card_no, customer_code, customer_name, product_name, version, finished_size, print_type, material_type, status, creator, create_time
+  beFields(12): Loose, total, import, Record, unknown, id, card_no, errorMessage, request, deletedCount, logTitle, logType
+  MISSING(snake): customer_code, customer_name, product_name, version, finished_size, print_type, material_type, status, creator, create_time
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\template\page.tsx
+  EP /api/dcprint/sample-card/template  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\sample-card\template\route.ts
+  feFields(9): template_name, category, tags, remark, id, template_no, total_cost, usage_count, create_time
+  beFields(1): logTitle
+  MISSING(snake): template_name, category, tags, remark, id, template_no, total_cost, usage_count, create_time
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\sample\standard-card\template\page.tsx
+  EP /api/dcprint/sample-card/template/  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\sample-card\template\route.ts
+  feFields(9): template_name, category, tags, remark, id, template_no, total_cost, usage_count, create_time
+  beFields(1): logTitle
+  MISSING(snake): template_name, category, tags, remark, id, template_no, total_cost, usage_count, create_time
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\config\page.tsx
+  EP /api/system/config  ROUTE D:\dcprint\erp-project\src\app\api\system\config\route.ts
+  feFields(9): key, icon, config_key, id, config_name, config_type, config_value, description, remark
+  beFields(6): total, list, logTitle, logType, request, id
+  MISSING(snake): key, icon, config_key, config_name, config_type, config_value, description, remark
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\currency\page.tsx
+  EP /api/system/currency  ROUTE D:\dcprint\erp-project\src\app\api\system\currency\route.ts
+  feFields(7): id, sort, code, name, symbol, decimal_places, status
+  beFields(5): v, id, logTitle, request, userInfo
+  MISSING(snake): sort, code, name, symbol, decimal_places, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\dict\page.tsx
+  EP /api/system/dict  ROUTE D:\dcprint\erp-project\src\app\api\system\dict\route.ts
+  feFields(8): id, dict_name, dict_type, items, dict_label, dict_value, sort_order, status
+  beFields(10): dict_type, total, remark, list, countRows, types, errorMessage, request, _userInfo, id
+  MISSING(snake): dict_name, items, dict_label, dict_value, sort_order, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\exchange-rate\page.tsx
+  EP /api/system/exchange-rate  ROUTE D:\dcprint\erp-project\src\app\api\system\exchange-rate\route.ts
+  feFields(7): id, from_currency, to_currency, rate, rate_date, source, remark
+  beFields(5): total, id, logTitle, request, _userInfo
+  MISSING(snake): from_currency, to_currency, rate, rate_date, source, remark
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\label-template\page.tsx
+  EP /api/trace/label  ROUTE D:\dcprint\erp-project\src\app\api\trace\label\route.ts
+  feFields(8): name, scenario, html_template, width_mm, height_mm, qr_size_mm, id, status
+  beFields(2): id, logTitle
+  MISSING(snake): name, scenario, html_template, width_mm, height_mm, qr_size_mm, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\label-template\page.tsx
+  EP /api/trace/label/  ROUTE D:\dcprint\erp-project\src\app\api\trace\label\route.ts
+  feFields(8): name, scenario, html_template, width_mm, height_mm, qr_size_mm, id, status
+  beFields(2): id, logTitle
+  MISSING(snake): name, scenario, html_template, width_mm, height_mm, qr_size_mm, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\login-log\page.tsx
+  EP /api/system/login-log  ROUTE D:\dcprint\erp-project\src\app\api\system\login-log\route.ts
+  feFields(9): id, user_name, login_time, ipaddr, login_location, browser, os, status, msg
+  beFields(11): total, user_name, login_time, ipaddr, login_location, browser, msg, list, logTitle, logType, _request
+  MISSING(snake): id, os, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\menus\page.tsx
+  EP /api/organization/menu  ROUTE D:\dcprint\erp-project\src\app\api\organization\menu\route.ts
+  feFields(2): menu_type, id
+  beFields(5): count, id, logTitle, request, body
+  MISSING(snake): menu_type
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\notice\page.tsx
+  EP /api/system/notice  ROUTE D:\dcprint\erp-project\src\app\api\system\notice\route.ts
+  feFields(6): id, notice_title, notice_type, notice_content, status, create_time
+  beFields(6): total, list, logTitle, logType, request, id
+  MISSING(snake): notice_title, notice_type, notice_content, status, create_time
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\oper-log\page.tsx
+  EP /api/system/oper-log  ROUTE D:\dcprint\erp-project\src\app\api\system\oper-log\route.ts
+  feFields(9): id, title, oper_name, oper_type, oper_method, oper_url, oper_ip, oper_time, status
+  beFields(17): total, title, oper_name, oper_type, oper_method, oper_url, oper_ip, oper_time, business_type, business_id, request_params, response_result, list, logTitle, logType, request, count
+  MISSING(snake): id, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\organization\page.tsx
+  EP /api/organization  ROUTE D:\dcprint\erp-project\src\app\api\organization\route.ts
+  feFields(6): code, id, icon, key, label, dept_name
+  beFields(1): id
+  MISSING(snake): code, icon, key, label, dept_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\organization\page.tsx
+  EP /api/organization/department  ROUTE D:\dcprint\erp-project\src\app\api\organization\department\route.ts
+  feFields(6): code, id, icon, key, label, dept_name
+  beFields(8): total, Loose, count, list, request, body, id, logTitle
+  MISSING(snake): code, icon, key, label, dept_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\organization\page.tsx
+  EP /api/organization/role  ROUTE D:\dcprint\erp-project\src\app\api\organization\role\route.ts
+  feFields(6): code, id, icon, key, label, dept_name
+  beFields(8): total, Loose, count, list, request, body, id, logTitle
+  MISSING(snake): code, icon, key, label, dept_name
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\roles\page.tsx
+  EP /api/menu  ROUTE D:\dcprint\erp-project\src\app\api\menu\route.ts
+  feFields(10): menu_id, id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+  beFields(3): keep_alive, hidden, Loose
+  MISSING(snake): menu_id, id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\roles\page.tsx
+  EP /api/role-permissions  ROUTE D:\dcprint\erp-project\src\app\api\role-permissions\route.ts
+  feFields(10): menu_id, id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+  beFields(0): 
+  MISSING(snake): menu_id, id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\roles\page.tsx
+  EP /api/organization/role  ROUTE D:\dcprint\erp-project\src\app\api\organization\role\route.ts
+  feFields(10): menu_id, id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+  beFields(8): total, Loose, count, list, request, body, id, logTitle
+  MISSING(snake): menu_id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\roles\page.tsx
+  EP /api/role-permissions/buttons  ROUTE D:\dcprint\erp-project\src\app\api\role-permissions\buttons\route.ts
+  feFields(10): menu_id, id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+  beFields(0): 
+  MISSING(snake): menu_id, id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\roles\page.tsx
+  EP /api/system/data-scope  ROUTE D:\dcprint\erp-project\src\app\api\system\data-scope\route.ts
+  feFields(10): menu_id, id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+  beFields(1): Loose
+  MISSING(snake): menu_id, id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\roles\page.tsx
+  EP /api/auth/cache/clear  ROUTE D:\dcprint\erp-project\src\app\api\auth\cache\clear\route.ts
+  feFields(10): menu_id, id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+  beFields(0): 
+  MISSING(snake): menu_id, id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+
+NO_ROUTE D:\dcprint\erp-project\src\app\[locale]\settings\roles\page.tsx -> /api/warehouse/list
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\roles\page.tsx
+  EP /api/customers  ROUTE D:\dcprint\erp-project\src\app\api\customers\route.ts
+  feFields(10): menu_id, id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): menu_id, warehouse_name, name, customer_name, supplier_name, children, menu_name, path, permissions
+
+NO_ROUTE D:\dcprint\erp-project\src\app\[locale]\settings\roles\page.tsx -> /api/suppliers
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\scheduler\page.tsx
+  EP /api/system/scheduler  ROUTE D:\dcprint\erp-project\src\app\api\system\scheduler\route.ts
+  feFields(8): id, task_name, task_type, task_group, cron_expression, status, last_execute_time, last_result
+  beFields(7): total, Error, id, errorMessage, request, _userInfo, result
+  MISSING(snake): task_name, task_type, task_group, cron_expression, status, last_execute_time, last_result
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\seed-data\page.tsx
+  EP /api/init/settings-seed  ROUTE D:\dcprint\erp-project\src\app\api\init\settings-seed\route.ts
+  feFields(3): username, role, password
+  beFields(0): 
+  MISSING(snake): username, role, password
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\seed-data\page.tsx
+  EP /api/init/business-seed  ROUTE D:\dcprint\erp-project\src\app\api\init\business-seed\route.ts
+  feFields(3): username, role, password
+  beFields(1): any
+  MISSING(snake): username, role, password
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\system\page.tsx
+  EP /api/settings/system  ROUTE D:\dcprint\erp-project\src\app\api\settings\system\route.ts
+  feFields(8): config_key, config_value, config_type, id, display_name, is_required, approval_required, description
+  beFields(5): config_type, list, categories, request, _userInfo
+  MISSING(snake): config_key, config_value, id, display_name, is_required, approval_required, description
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\user\page.tsx
+  EP /api/system/user  ROUTE D:\dcprint\erp-project\src\app\api\system\user\route.ts
+  feFields(12): id, role_name, roles, department_id, username, real_name, email, phone, dept_name, status, first_login, role_code
+  beFields(6): total, real_name, user_real_name, list, request, _userInfo
+  MISSING(snake): id, role_name, roles, department_id, username, email, phone, dept_name, status, first_login, role_code
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\user\page.tsx
+  EP /api/system/roles  ROUTE D:\dcprint\erp-project\src\app\api\system\roles\route.ts
+  feFields(12): id, role_name, roles, department_id, username, real_name, email, phone, dept_name, status, first_login, role_code
+  beFields(6): total, roleId, role, id, request, _userInfo
+  MISSING(snake): role_name, roles, department_id, username, real_name, email, phone, dept_name, status, first_login, role_code
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\user\page.tsx
+  EP /api/organization/department  ROUTE D:\dcprint\erp-project\src\app\api\organization\department\route.ts
+  feFields(12): id, role_name, roles, department_id, username, real_name, email, phone, dept_name, status, first_login, role_code
+  beFields(8): total, Loose, count, list, request, body, id, logTitle
+  MISSING(snake): role_name, roles, department_id, username, real_name, email, phone, dept_name, status, first_login, role_code
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\user\page.tsx
+  EP /api/organization/employee  ROUTE D:\dcprint\erp-project\src\app\api\organization\employee\route.ts
+  feFields(12): id, role_name, roles, department_id, username, real_name, email, phone, dept_name, status, first_login, role_code
+  beFields(5): total, id, logTitle, request, body
+  MISSING(snake): role_name, roles, department_id, username, real_name, email, phone, dept_name, status, first_login, role_code
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\settings\user\page.tsx
+  EP /api/auth/cache/clear  ROUTE D:\dcprint\erp-project\src\app\api\auth\cache\clear\route.ts
+  feFields(12): id, role_name, roles, department_id, username, real_name, email, phone, dept_name, status, first_login, role_code
+  beFields(0): 
+  MISSING(snake): id, role_name, roles, department_id, username, real_name, email, phone, dept_name, status, first_login, role_code
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\tools\uploader\page.tsx
+  EP /api/project-files  ROUTE D:\dcprint\erp-project\src\app\api\project-files\route.ts
+  feFields(3): path, size, modified
+  beFields(1): been
+  MISSING(snake): path, size, modified
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\tools\uploader\page.tsx
+  EP /api/project-files/upload  ROUTE D:\dcprint\erp-project\src\app\api\project-files\upload\route.ts
+  feFields(3): path, size, modified
+  beFields(1): been
+  MISSING(snake): path, size, modified
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\batch\page.tsx
+  EP /api/materials  ROUTE D:\dcprint\erp-project\src\app\api\materials\route.ts
+  feFields(10): expiry_date, id, batch_no, material_code, material_name, warehouse_name, quantity, available_qty, cost_price, status
+  beFields(4): total, Loose, category, categoryHint
+  MISSING(snake): expiry_date, id, batch_no, material_code, material_name, warehouse_name, quantity, available_qty, cost_price, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\inbound\cutting\page.tsx
+  EP /api/warehouse/inbound/cutting  ROUTE D:\dcprint\erp-project\src\app\api\warehouse\inbound\cutting\route.ts
+  feFields(13): recordNo, sourceLabelNo, materialName, materialCode, specification, originalWidth, cutWidthStr, cutTotalWidth, remainWidth, operatorName, cutTime, status, id
+  beFields(22): recordNo, sourceLabelId, sourceLabelNo, cutWidthStr, originalWidth, cutTotalWidth, remainWidth, operatorId, operatorName, cutTime, createTime, materialCode, materialName, total, Loose, Error, id, labelNo, specification, quantity, unit, width
+  MISSING(snake): status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\inbound\page.tsx
+  EP /api/warehouse/inbound/labels/  ROUTE D:\dcprint\erp-project\src\app\api\warehouse\inbound\labels\route.ts
+  feFields(19): id, status, warehouse_id, items, total_quantity, warehouse_name, po_no, currency, remark, order_no, supplier_name, base_currency, labelNo, materialName, orderNo, specification, item, supplier, inboundTime
+  beFields(26): labelId, orderNo, purchaseOrderNo, supplierName, inboundDate, warehouseCode, materialCode, materialName, batchNo, isRawMaterial, packageQty, labelQty, labelStatus, auditStatus, operatorName, auditorName, auditTime, colorCode, mixedMaterialRemark, machineNo, createTime, updateTime, total, maxId, errorMessage, request
+  MISSING(snake): id, status, warehouse_id, items, total_quantity, warehouse_name, po_no, currency, remark, base_currency, label_no, specification, item, supplier, inbound_time
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\inbound\page.tsx
+  EP /api/warehouse/inbound  ROUTE D:\dcprint\erp-project\src\app\api\warehouse\inbound\route.ts
+  feFields(19): id, status, warehouse_id, items, total_quantity, warehouse_name, po_no, currency, remark, order_no, supplier_name, base_currency, labelNo, materialName, orderNo, specification, item, supplier, inboundTime
+  beFields(6): Loose, order_id, order_no, uncategorizedMaterials, errorMessage, request
+  MISSING(snake): id, status, warehouse_id, items, total_quantity, warehouse_name, po_no, currency, remark, supplier_name, base_currency, label_no, material_name, specification, item, supplier, inbound_time
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\inbound-simple\page.tsx
+  EP /api/warehouse/inbound  ROUTE D:\dcprint\erp-project\src\app\api\warehouse\inbound\route.ts
+  feFields(6): id, order_no, supplier_name, total_quantity, inbound_date, status
+  beFields(6): Loose, order_id, order_no, uncategorizedMaterials, errorMessage, request
+  MISSING(snake): id, supplier_name, total_quantity, inbound_date, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\inventory\page.tsx
+  EP /api/warehouse/inventory/export  ROUTE D:\dcprint\erp-project\src\app\api\warehouse\inventory\export\route.ts
+  feFields(22): alertLevel, material_name, available_qty, safety_stock, unit, warehouse_id, warehouse_name, quantity, unit_price, id, batch_no, material_code, material_spec, locked_qty, status, expire_date, count, value, name, code, utilization, items
+  beFields(4): operator_name, list, total, errorMessage
+  MISSING(snake): alert_level, material_name, available_qty, safety_stock, unit, warehouse_id, warehouse_name, quantity, unit_price, id, batch_no, material_code, material_spec, locked_qty, status, expire_date, count, value, name, code, utilization, items
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\inventory\page.tsx
+  EP /api/inventory  ROUTE D:\dcprint\erp-project\src\app\api\inventory\route.ts
+  feFields(22): alertLevel, material_name, available_qty, safety_stock, unit, warehouse_id, warehouse_name, quantity, unit_price, id, batch_no, material_code, material_spec, locked_qty, status, expire_date, count, value, name, code, utilization, items
+  beFields(15): material_spec, total, Loose, id, list, errorMessage, request, batchNo, fifoRecommended, warning, undefined, allocatedQty, fifoMode, batchDetails, d
+  MISSING(snake): alert_level, material_name, available_qty, safety_stock, unit, warehouse_id, warehouse_name, quantity, unit_price, material_code, locked_qty, status, expire_date, count, value, name, code, utilization, items
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\outbound\page.tsx
+  EP /api/warehouse/outbound  ROUTE D:\dcprint\erp-project\src\app\api\warehouse\outbound\route.ts
+  feFields(39): id, orderNo, orderDate, totalQty, totalAmount, currency, baseTotalAmount, baseCurrency, warehouseName, outboundType, status, auditStatus, operatorName, warehouseId, remark, date, quantity, value, labelKey, label, materialName, materialCode, spec, unit, type, isRawMaterial, batchNo, width, warehouse, materialId, material_id, qty, total_amount, base_total_amount, base_currency, batch_no, operator, available_qty, inbound_date
+  beFields(23): orderNo, orderDate, outboundType, warehouseCode, warehouseName, totalQty, totalAmount, operatorName, auditStatus, auditorName, auditTime, createTime, total, orderId, materialName, specification, qty, batchNo, Loose, Error, uncategorizedMaterials, errorMessage, request
+  MISSING(snake): id, currency, base_total_amount, base_currency, status, warehouse_id, remark, date, quantity, value, label_key, label, material_code, spec, unit, type, is_raw_material, width, warehouse, material_id, operator, available_qty, inbound_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\outbound\page.tsx
+  EP /api/warehouse  ROUTE D:\dcprint\erp-project\src\app\api\warehouse\route.ts
+  feFields(39): id, orderNo, orderDate, totalQty, totalAmount, currency, baseTotalAmount, baseCurrency, warehouseName, outboundType, status, auditStatus, operatorName, warehouseId, remark, date, quantity, value, labelKey, label, materialName, materialCode, spec, unit, type, isRawMaterial, batchNo, width, warehouse, materialId, material_id, qty, total_amount, base_total_amount, base_currency, batch_no, operator, available_qty, inbound_date
+  beFields(12): code, name, createTime, updateTime, total, Loose, mysql, list, errorMessage, request, _userInfo, body
+  MISSING(snake): id, order_no, order_date, total_qty, total_amount, currency, base_total_amount, base_currency, warehouse_name, outbound_type, status, audit_status, operator_name, warehouse_id, remark, date, quantity, value, label_key, label, material_name, material_code, spec, unit, type, is_raw_material, batch_no, width, warehouse, material_id, qty, operator, available_qty, inbound_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\outbound\page.tsx
+  EP /api/warehouse/outbound/fifo  ROUTE D:\dcprint\erp-project\src\app\api\warehouse\outbound\fifo\route.ts
+  feFields(39): id, orderNo, orderDate, totalQty, totalAmount, currency, baseTotalAmount, baseCurrency, warehouseName, outboundType, status, auditStatus, operatorName, warehouseId, remark, date, quantity, value, labelKey, label, materialName, materialCode, spec, unit, type, isRawMaterial, batchNo, width, warehouse, materialId, material_id, qty, total_amount, base_total_amount, base_currency, batch_no, operator, available_qty, inbound_date
+  beFields(8): Loose, maxNo, material, total_available, allocation_plan, can_fulfill, errorMessage, request
+  MISSING(snake): id, order_no, order_date, total_qty, total_amount, currency, base_total_amount, base_currency, warehouse_name, outbound_type, status, audit_status, operator_name, warehouse_id, remark, date, quantity, value, label_key, label, material_name, material_code, spec, unit, type, is_raw_material, batch_no, width, warehouse, material_id, qty, operator, available_qty, inbound_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\outbound\page.tsx
+  EP /api/dcprint/scan  ROUTE D:\dcprint\erp-project\src\app\api\dcprint\scan\route.ts
+  feFields(39): id, orderNo, orderDate, totalQty, totalAmount, currency, baseTotalAmount, baseCurrency, warehouseName, outboundType, status, auditStatus, operatorName, warehouseId, remark, date, quantity, value, labelKey, label, materialName, materialCode, spec, unit, type, isRawMaterial, batchNo, width, warehouse, materialId, material_id, qty, total_amount, base_total_amount, base_currency, batch_no, operator, available_qty, inbound_date
+  beFields(58): labelNo, qrCode, purchaseOrderNo, supplierName, receiveDate, materialCode, materialName, batchNo, packageQty, lengthPerRoll, colorCode, mixRemark, warehouseId, locationId, warehouseName, locationName, isMainMaterial, isUsed, isCut, parentLabelId, parentLabelNo, createTime, recordNo, cutWidthStr, originalWidth, cutTotalWidth, remainWidth, cutTime, operatorName, newLabelNo, cutWidth, orderNo, productId, productCode, productName, productSpec, planStartDate, planEndDate, cardNo, mainLabelNo, burdeningStatus, lockStatus, createUserName, workOrderId, workOrderNo, materialSpec, workOrderDate, planQty, mainLabelId, mainMaterialCode, mainMaterialName, mainSpecification, mainBatchNo, mainSupplierName, mainReceiveDate, materialType, logTitle, logType
+  MISSING(snake): id, order_date, total_qty, total_amount, currency, base_total_amount, base_currency, outbound_type, status, audit_status, remark, date, quantity, value, label_key, label, spec, unit, type, is_raw_material, width, warehouse, material_id, qty, operator, available_qty, inbound_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\outbound\page.tsx
+  EP /api/warehouse/outbound/confirm  ROUTE D:\dcprint\erp-project\src\app\api\warehouse\outbound\confirm\route.ts
+  feFields(39): id, orderNo, orderDate, totalQty, totalAmount, currency, baseTotalAmount, baseCurrency, warehouseName, outboundType, status, auditStatus, operatorName, warehouseId, remark, date, quantity, value, labelKey, label, materialName, materialCode, spec, unit, type, isRawMaterial, batchNo, width, warehouse, materialId, material_id, qty, total_amount, base_total_amount, base_currency, batch_no, operator, available_qty, inbound_date
+  beFields(8): total_qty, total_out, number, orderId, totalDeductedBatches, errorMessage, request, status
+  MISSING(snake): id, order_no, order_date, total_amount, currency, base_total_amount, base_currency, warehouse_name, outbound_type, audit_status, operator_name, warehouse_id, remark, date, quantity, value, label_key, label, material_name, material_code, spec, unit, type, is_raw_material, batch_no, width, warehouse, material_id, qty, operator, available_qty, inbound_date
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\production-inbound\page.tsx
+  EP /api/warehouse  ROUTE D:\dcprint\erp-project\src\app\api\warehouse\route.ts
+  feFields(8): id, inbound_no, work_order_no, warehouse_name, inbound_date, qc_status, operator_name, status
+  beFields(12): code, name, createTime, updateTime, total, Loose, mysql, list, errorMessage, request, _userInfo, body
+  MISSING(snake): id, inbound_no, work_order_no, warehouse_name, inbound_date, qc_status, operator_name, status
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\sales-outbound\page.tsx
+  EP /api/warehouse  ROUTE D:\dcprint\erp-project\src\app\api\warehouse\route.ts
+  feFields(8): status, id, outbound_no, order_no, customer_name, warehouse_name, outbound_date, delivery_person
+  beFields(12): code, name, createTime, updateTime, total, Loose, mysql, list, errorMessage, request, _userInfo, body
+  MISSING(snake): status, id, outbound_no, order_no, customer_name, warehouse_name, outbound_date, delivery_person
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\sales-outbound\page.tsx
+  EP /api/customers  ROUTE D:\dcprint\erp-project\src\app\api\customers\route.ts
+  feFields(8): status, id, outbound_no, order_no, customer_name, warehouse_name, outbound_date, delivery_person
+  beFields(5): total, id, logTitle, logType, request
+  MISSING(snake): status, outbound_no, order_no, customer_name, warehouse_name, outbound_date, delivery_person
+
+MISMATCH D:\dcprint\erp-project\src\app\[locale]\warehouse\setup\page.tsx
+  EP /api/warehouse  ROUTE D:\dcprint\erp-project\src\app\api\warehouse\route.ts
+  feFields(12): id, code, name, nature, type, includeInCalculation, usedCapacity, capacity, manager, status, value, labelKey
+  beFields(12): code, name, createTime, updateTime, total, Loose, mysql, list, errorMessage, request, _userInfo, body
+  MISSING(snake): id, nature, type, include_in_calculation, used_capacity, capacity, manager, status, value, label_key
+
+NO_ROUTE D:\dcprint\erp-project\src\app\[locale]\warehouse\split-order\page.tsx -> /api/warehouse/split-order/detail
+NO_ROUTE D:\dcprint\erp-project\src\app\[locale]\warehouse\transfer\page.tsx -> /api/warehouse/locations
