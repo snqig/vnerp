@@ -111,7 +111,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       const totalWithTax = Math.round(totalAmount * 1.13 * 100) / 100;
 
       await conn.execute(
-        `INSERT INTO sal_order (order_no, order_date, customer_id, total_amount, total_with_tax, delivery_date, status) VALUES (?, ?, ?, ?, ?, ?, 2)`,
+        `INSERT INTO sal_order (order_no, order_date, customer_id, total_amount, total_with_tax, delivery_date, currency, status) VALUES (?, ?, ?, ?, ?, ?, 'CNY', 2)`,
         [
           `SO2026${String(i + 1).padStart(2, '0')}${String(i + 1).padStart(3, '0')}`,
           order.date,
