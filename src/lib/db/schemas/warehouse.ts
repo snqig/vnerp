@@ -41,6 +41,8 @@ export const invMaterial = mysqlTable(
     warningDays: int('warning_days'),
     isBatchManaged: tinyint('is_batch_managed').default(0),
     isSerialManaged: tinyint('is_serial_managed').default(0),
+    // #21 分切物料类型限制：是否允许分切（卷材类 FILM/PAPER/PKG/RAW 默认 1，支持主数据手动覆盖）
+    isSplittable: tinyint('is_splittable').default(0),
     status: tinyint('status').default(1),
     remark: text('remark'),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
@@ -117,7 +119,7 @@ export const invInventoryBatch = mysqlTable(
     alertLevelIdx: index('idx_alert_level').on(table.alertLevel),
     qrCodeIdx: index('idx_qr_code').on(table.qrCode),
     splitFlagIdx: index('idx_split_flag').on(table.splitFlag),
-      fk_invMaterial_materialId: foreignKey({
+    fk_invMaterial_materialId: foreignKey({
       name: 'fk_inv_inventory_batch_material',
       columns: [table.materialId],
       foreignColumns: [invMaterial.id],
@@ -173,7 +175,7 @@ export const invInboundOrders = mysqlTable(
     warehouseIdx: index('idx_warehouse').on(table.warehouseId),
     poIdIdx: index('idx_po_id').on(table.poId),
     sourceIdx: index('idx_source_order').on(table.sourceType, table.sourceOrderId),
-      fk_invWarehouse_warehouseId: foreignKey({
+    fk_invWarehouse_warehouseId: foreignKey({
       name: 'fk_inv_inbound_warehouse',
       columns: [table.warehouseId],
       foreignColumns: [invWarehouse.id],
@@ -298,7 +300,7 @@ export const invInventory = mysqlTable(
     materialIdx: index('idx_material').on(table.materialId),
     warehouseIdx: index('idx_warehouse').on(table.warehouseId),
     materialCodeIdx: index('idx_material_code').on(table.materialCode),
-      fk_invMaterial_materialId: foreignKey({
+    fk_invMaterial_materialId: foreignKey({
       name: 'fk_inv_inventory_material',
       columns: [table.materialId],
       foreignColumns: [invMaterial.id],
@@ -359,7 +361,7 @@ export const invOutboundOrders = mysqlTable(
     })
       .onDelete('set null')
       .onUpdate('cascade'),
-      fk_invWarehouse_warehouseId: foreignKey({
+    fk_invWarehouse_warehouseId: foreignKey({
       name: 'fk_inv_outbound_order_warehouse',
       columns: [table.warehouseId],
       foreignColumns: [invWarehouse.id],
@@ -404,7 +406,7 @@ export const invOutboundItems = mysqlTable(
     })
       .onDelete('cascade')
       .onUpdate('cascade'),
-      fk_invMaterial_materialId: foreignKey({
+    fk_invMaterial_materialId: foreignKey({
       name: 'fk_inv_outbound_item_material',
       columns: [table.materialId],
       foreignColumns: [invMaterial.id],
@@ -473,7 +475,7 @@ export const invTransferOrders = mysqlTable(
     })
       .onDelete('restrict')
       .onUpdate('cascade'),
-      fk_sysUser_approverId: foreignKey({
+    fk_sysUser_approverId: foreignKey({
       name: 'fk_inv_transfer_approver',
       columns: [table.approverId],
       foreignColumns: [sysUser.id],
@@ -512,7 +514,7 @@ export const invStocktaking = mysqlTable(
     takingNoIdx: uniqueIndex('uk_taking_no').on(table.takingNo),
     warehouseIdx: index('idx_warehouse').on(table.warehouseId),
     statusIdx: index('idx_status').on(table.status),
-      fk_invWarehouse_warehouseId: foreignKey({
+    fk_invWarehouse_warehouseId: foreignKey({
       name: 'fk_inv_stocktaking_warehouse',
       columns: [table.warehouseId],
       foreignColumns: [invWarehouse.id],

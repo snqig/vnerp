@@ -39,9 +39,10 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   const offset = (page - 1) * pageSize;
   const rows = await query(
-    `SELECT bi.*, w.warehouse_name 
+    `SELECT bi.*, w.warehouse_name, m.is_splittable
      FROM inv_batch_inventory bi
      LEFT JOIN inv_warehouse w ON bi.warehouse_id = w.id
+     LEFT JOIN inv_material m ON bi.material_id = m.id
      ${whereClause}
      ORDER BY bi.inbound_date ASC, bi.batch_no ASC
      LIMIT ? OFFSET ?`,

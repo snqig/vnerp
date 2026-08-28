@@ -137,7 +137,7 @@ export const POST = withPermission(
   async (request: NextRequest) => {
     const body = await request.json();
 
-    const { customer_id, customer_name, delivery_date, items, remark } = body;
+    const { customer_id, customer_name, delivery_date, order_date, items, remark } = body;
 
     const finalCustomerId = customer_id || null;
     let finalCustomerName = customer_name || '';
@@ -181,8 +181,8 @@ export const POST = withPermission(
 
     const orderResult = await query(
       `INSERT INTO sal_order (order_no, customer_id, order_date, delivery_date, total_amount, status, remark, create_time) 
-     VALUES (?, ?, CURDATE(), ?, ?, 1, ?, NOW())`,
-      [orderNo, finalCustomerId, delivery_date, total_amount, remark || '']
+     VALUES (?, ?, COALESCE(?, CURDATE()), ?, ?, 1, ?, NOW())`,
+      [orderNo, finalCustomerId, order_date || null, delivery_date, total_amount, remark || '']
     );
 
     const orderId = (orderResult as DbRow).insertId;

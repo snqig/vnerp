@@ -125,16 +125,96 @@ interface Material {
 
 // 模拟物料数据（material_type=3 表示成品/可销售商品，用于销售订单下拉选择）
 const MOCK_MATERIALS: Material[] = [
-  { id: 1001, material_code: 'PROD001', material_name: '高端画册-A4覆膜', specification: '210×297mm 250g铜版纸', unit: '本', sale_price: 18.5, material_type: 3 },
-  { id: 1002, material_code: 'PROD002', material_name: '商务名片-双面彩色', specification: '90×54mm 300g哑粉纸', unit: '盒', sale_price: 35.0, material_type: 3 },
-  { id: 1003, material_code: 'PROD003', material_name: '产品包装盒-白卡彩盒', specification: '200×120×60mm', unit: '个', sale_price: 2.8, material_type: 3 },
-  { id: 1004, material_code: 'PROD004', material_name: '海报打印-A1高光相纸', specification: '594×841mm 200g光面', unit: '张', sale_price: 28.0, material_type: 3 },
-  { id: 1005, material_code: 'PROD005', material_name: '手提袋-牛皮纸烫金', specification: '320×260×100mm', unit: '个', sale_price: 6.5, material_type: 3 },
-  { id: 1006, material_code: 'PROD006', material_name: '不干胶标签-圆形', specification: '直径50mm 亮面铜版', unit: '张', sale_price: 0.35, material_type: 3 },
-  { id: 1007, material_code: 'PROD007', material_name: '企业手册-胶装80P', specification: '210×285mm 157g哑粉', unit: '册', sale_price: 45.0, material_type: 3 },
-  { id: 1008, material_code: 'PROD008', material_name: '信封定制-5号西式', specification: '220×110mm 120g米白', unit: '个', sale_price: 1.2, material_type: 3 },
-  { id: 1009, material_code: 'PROD009', material_name: '台历定制-竖版三角', specification: '210×145mm 250g', unit: '本', sale_price: 22.0, material_type: 3 },
-  { id: 1010, material_code: 'PROD010', material_name: '挂历-双月8页', specification: '420×570mm 200g光面', unit: '本', sale_price: 38.0, material_type: 3 },
+  {
+    id: 1001,
+    material_code: 'PROD001',
+    material_name: '高端画册-A4覆膜',
+    specification: '210×297mm 250g铜版纸',
+    unit: '本',
+    sale_price: 18.5,
+    material_type: 3,
+  },
+  {
+    id: 1002,
+    material_code: 'PROD002',
+    material_name: '商务名片-双面彩色',
+    specification: '90×54mm 300g哑粉纸',
+    unit: '盒',
+    sale_price: 35.0,
+    material_type: 3,
+  },
+  {
+    id: 1003,
+    material_code: 'PROD003',
+    material_name: '产品包装盒-白卡彩盒',
+    specification: '200×120×60mm',
+    unit: '个',
+    sale_price: 2.8,
+    material_type: 3,
+  },
+  {
+    id: 1004,
+    material_code: 'PROD004',
+    material_name: '海报打印-A1高光相纸',
+    specification: '594×841mm 200g光面',
+    unit: '张',
+    sale_price: 28.0,
+    material_type: 3,
+  },
+  {
+    id: 1005,
+    material_code: 'PROD005',
+    material_name: '手提袋-牛皮纸烫金',
+    specification: '320×260×100mm',
+    unit: '个',
+    sale_price: 6.5,
+    material_type: 3,
+  },
+  {
+    id: 1006,
+    material_code: 'PROD006',
+    material_name: '不干胶标签-圆形',
+    specification: '直径50mm 亮面铜版',
+    unit: '张',
+    sale_price: 0.35,
+    material_type: 3,
+  },
+  {
+    id: 1007,
+    material_code: 'PROD007',
+    material_name: '企业手册-胶装80P',
+    specification: '210×285mm 157g哑粉',
+    unit: '册',
+    sale_price: 45.0,
+    material_type: 3,
+  },
+  {
+    id: 1008,
+    material_code: 'PROD008',
+    material_name: '信封定制-5号西式',
+    specification: '220×110mm 120g米白',
+    unit: '个',
+    sale_price: 1.2,
+    material_type: 3,
+  },
+  {
+    id: 1009,
+    material_code: 'PROD009',
+    material_name: '台历定制-竖版三角',
+    specification: '210×145mm 250g',
+    unit: '本',
+    sale_price: 22.0,
+    material_type: 3,
+  },
+  {
+    id: 1010,
+    material_code: 'PROD010',
+    material_name: '挂历-双月8页',
+    specification: '420×570mm 200g光面',
+    unit: '本',
+    sale_price: 38.0,
+    material_type: 3,
+  },
 ];
 
 const STATUS_MAP: Record<number, { labelKey: string; className: string }> = {
@@ -195,14 +275,31 @@ export default function SalesOrdersPage() {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>(null);
   const [orderItems, setOrderItems] = useState<
-    { material_id: number | ''; material_code: string; material_name: string; quantity: string; unit: string; unit_price: string }[]
-  >([{ material_id: '', material_code: '', material_name: '', quantity: '', unit: '', unit_price: '' }]);
+    {
+      material_id: number | '';
+      material_code: string;
+      material_name: string;
+      quantity: string;
+      unit: string;
+      unit_price: string;
+    }[]
+  >([
+    {
+      material_id: '',
+      material_code: '',
+      material_name: '',
+      quantity: '',
+      unit: '',
+      unit_price: '',
+    },
+  ]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [currency, setCurrency] = useState('CNY');
+  const [orderDate, setOrderDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   const fetchCustomers = async () => {
     try {
@@ -351,7 +448,14 @@ export default function SalesOrdersPage() {
   const addOrderItem = () => {
     setOrderItems([
       ...orderItems,
-      { material_id: '', material_code: '', material_name: '', quantity: '', unit: '', unit_price: '' },
+      {
+        material_id: '',
+        material_code: '',
+        material_name: '',
+        quantity: '',
+        unit: '',
+        unit_price: '',
+      },
     ]);
   };
 
@@ -759,6 +863,7 @@ export default function SalesOrdersPage() {
         body: JSON.stringify({
           customer_id: parseInt(selectedCustomer),
           delivery_date: deliveryDate,
+          order_date: orderDate || null,
           currency,
           items: validItems.map((item) => ({
             material_id: item.material_id || null,
@@ -777,7 +882,14 @@ export default function SalesOrdersPage() {
         setIsCreateOpen(false);
         fetchOrders();
         setOrderItems([
-          { material_id: '', material_code: '', material_name: '', quantity: '', unit: '', unit_price: '' },
+          {
+            material_id: '',
+            material_code: '',
+            material_name: '',
+            quantity: '',
+            unit: '',
+            unit_price: '',
+          },
         ]);
         setSelectedCustomer('');
       } else {
@@ -797,6 +909,7 @@ export default function SalesOrdersPage() {
         body: JSON.stringify({
           customer_id: parseInt(selectedCustomer) || null,
           delivery_date: (document.getElementById('deliveryDate') as HTMLInputElement)?.value,
+          order_date: orderDate || null,
           currency,
           items: orderItems.map((item) => ({
             material_id: item.material_id || null,
@@ -973,7 +1086,10 @@ export default function SalesOrdersPage() {
                       {t('newOrder')}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-7xl w-[95vw] max-h-[92vh] overflow-y-auto" resizable>
+                  <DialogContent
+                    className="w-[1000px] max-w-[95vw] h-[512px] max-h-[90vh] overflow-y-auto"
+                    resizable
+                  >
                     <DialogHeader>
                       <DialogTitle>{t('newSalesOrder')}</DialogTitle>
                       <DialogDescription>{t('fillOrderInfo')}</DialogDescription>
@@ -1000,6 +1116,15 @@ export default function SalesOrdersPage() {
                           <Input type="date" id="deliveryDate" />
                         </div>
                         <div className="space-y-2">
+                          <Label htmlFor="orderDate">{t('orderDate')}</Label>
+                          <Input
+                            type="date"
+                            id="orderDate"
+                            value={orderDate}
+                            onChange={(e) => setOrderDate(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
                           <Label>{tc('currency')}</Label>
                           <CurrencySelect value={currency} onChange={setCurrency} />
                         </div>
@@ -1017,11 +1142,21 @@ export default function SalesOrdersPage() {
                           <Table className="min-w-[920px]">
                             <TableHeader className="sticky top-0 bg-background z-10">
                               <TableRow>
-                                <TableHead className="w-[300px] min-w-[280px]">{t('product')}</TableHead>
-                                <TableHead className="w-[150px] min-w-[140px] text-right">{t('quantity')}</TableHead>
-                                <TableHead className="w-[130px] min-w-[120px]">{t('unit')}</TableHead>
-                                <TableHead className="w-[170px] min-w-[160px] text-right">{t('unitPrice')}</TableHead>
-                                <TableHead className="w-[170px] min-w-[160px] text-right">{t('amount')}</TableHead>
+                                <TableHead className="w-[300px] min-w-[280px]">
+                                  {t('product')}
+                                </TableHead>
+                                <TableHead className="w-[150px] min-w-[140px] text-right">
+                                  {t('quantity')}
+                                </TableHead>
+                                <TableHead className="w-[130px] min-w-[120px]">
+                                  {t('unit')}
+                                </TableHead>
+                                <TableHead className="w-[170px] min-w-[160px] text-right">
+                                  {t('unitPrice')}
+                                </TableHead>
+                                <TableHead className="w-[170px] min-w-[160px] text-right">
+                                  {t('amount')}
+                                </TableHead>
                                 <TableHead className="w-[60px] min-w-[60px] text-center"></TableHead>
                               </TableRow>
                             </TableHeader>
@@ -1035,8 +1170,7 @@ export default function SalesOrdersPage() {
                                           (m) => String(m.id) === value
                                         );
                                         const newItems = [...orderItems];
-                                        newItems[index].material_id =
-                                          material?.id ?? '';
+                                        newItems[index].material_id = material?.id ?? '';
                                         newItems[index].material_code =
                                           material?.material_code || '';
                                         newItems[index].material_name =
@@ -1351,76 +1485,76 @@ export default function SalesOrdersPage() {
                             <TableCell colSpan={11} className="p-0">
                               <div className="bg-slate-50 dark:bg-gray-800 border-t">
                                 <Table>
-                                    <TableHeader>
-                                      <TableRow className="bg-slate-100/50 hover:bg-slate-100/50 dark:bg-gray-700/30 dark:hover:bg-gray-700/50">
-                                        <TableHead className="pl-8 text-xs font-normal text-muted-foreground">
-                                          {t('productNameCol')}
-                                        </TableHead>
-                                        <TableHead className="text-xs font-normal text-muted-foreground">
-                                          {t('materialCode') || '物料编码'}
-                                        </TableHead>
-                                        <TableHead className="text-xs font-normal text-muted-foreground text-right">
-                                          {t('quantity')}
-                                        </TableHead>
-                                        <TableHead className="text-xs font-normal text-muted-foreground">
-                                          {t('unit')}
-                                        </TableHead>
-                                        <TableHead className="text-xs font-normal text-muted-foreground text-right">
-                                          {t('unitPrice')}
-                                        </TableHead>
-                                        <TableHead className="text-xs font-normal text-muted-foreground text-right">
-                                          {t('amount')}
-                                        </TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                      {lines.length > 0 ? (
-                                        lines.map((item, idx) => (
-                                          <TableRow
-                                            key={idx}
-                                            className="bg-transparent hover:bg-white/60 dark:hover:bg-gray-700/30"
-                                          >
-                                            <TableCell className="pl-8 text-sm">
-                                              {item.material_name || '-'}
-                                            </TableCell>
-                                            <TableCell className="text-sm font-mono text-muted-foreground">
-                                              {item.material_code || '-'}
-                                            </TableCell>
-                                            <TableCell className="text-sm text-right">
-                                              {item.quantity ?? 0}
-                                            </TableCell>
-                                            <TableCell className="text-sm">
-                                              {item.unit || '-'}
-                                            </TableCell>
-                                            <TableCell className="text-sm text-right">
-                                              <MoneyDisplay
-                                                amount={item.unit_price || 0}
-                                                currency={order.currency || 'CNY'}
-                                              />
-                                            </TableCell>
-                                            <TableCell className="text-sm text-right font-medium">
-                                              <MoneyDisplay
-                                                amount={
-                                                  item.total_price ||
-                                                  (item.quantity || 0) * (item.unit_price || 0)
-                                                }
-                                                currency={order.currency || 'CNY'}
-                                              />
-                                            </TableCell>
-                                          </TableRow>
-                                        ))
-                                      ) : (
-                                        <TableRow>
-                                          <TableCell
-                                            colSpan={6}
-                                            className="text-center py-3 text-muted-foreground text-sm"
-                                          >
-                                            {t('noDetailData')}
+                                  <TableHeader>
+                                    <TableRow className="bg-slate-100/50 hover:bg-slate-100/50 dark:bg-gray-700/30 dark:hover:bg-gray-700/50">
+                                      <TableHead className="pl-8 text-xs font-normal text-muted-foreground">
+                                        {t('productNameCol')}
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground">
+                                        {t('materialCode') || '物料编码'}
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">
+                                        {t('quantity')}
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground">
+                                        {t('unit')}
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">
+                                        {t('unitPrice')}
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">
+                                        {t('amount')}
+                                      </TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {lines.length > 0 ? (
+                                      lines.map((item, idx) => (
+                                        <TableRow
+                                          key={idx}
+                                          className="bg-transparent hover:bg-white/60 dark:hover:bg-gray-700/30"
+                                        >
+                                          <TableCell className="pl-8 text-sm">
+                                            {item.material_name || '-'}
+                                          </TableCell>
+                                          <TableCell className="text-sm font-mono text-muted-foreground">
+                                            {item.material_code || '-'}
+                                          </TableCell>
+                                          <TableCell className="text-sm text-right">
+                                            {item.quantity ?? 0}
+                                          </TableCell>
+                                          <TableCell className="text-sm">
+                                            {item.unit || '-'}
+                                          </TableCell>
+                                          <TableCell className="text-sm text-right">
+                                            <MoneyDisplay
+                                              amount={item.unit_price || 0}
+                                              currency={order.currency || 'CNY'}
+                                            />
+                                          </TableCell>
+                                          <TableCell className="text-sm text-right font-medium">
+                                            <MoneyDisplay
+                                              amount={
+                                                item.total_price ||
+                                                (item.quantity || 0) * (item.unit_price || 0)
+                                              }
+                                              currency={order.currency || 'CNY'}
+                                            />
                                           </TableCell>
                                         </TableRow>
-                                      )}
-                                    </TableBody>
-                                  </Table>
+                                      ))
+                                    ) : (
+                                      <TableRow>
+                                        <TableCell
+                                          colSpan={6}
+                                          className="text-center py-3 text-muted-foreground text-sm"
+                                        >
+                                          {t('noDetailData')}
+                                        </TableCell>
+                                      </TableRow>
+                                    )}
+                                  </TableBody>
+                                </Table>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -1489,7 +1623,9 @@ export default function SalesOrdersPage() {
                     {selectedOrder?.items?.map((item, index) => (
                       <TableRow key={index}>
                         <TableCell>{item.material_name}</TableCell>
-                        <TableCell className="font-mono text-muted-foreground">{item.material_code || '-'}</TableCell>
+                        <TableCell className="font-mono text-muted-foreground">
+                          {item.material_code || '-'}
+                        </TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell>{item.unit}</TableCell>
                         <TableCell>
@@ -1566,7 +1702,9 @@ export default function SalesOrdersPage() {
                     {selectedOrder?.items?.map((item, index) => (
                       <TableRow key={index}>
                         <TableCell>{item.material_name}</TableCell>
-                        <TableCell className="font-mono text-muted-foreground">{item.material_code || '-'}</TableCell>
+                        <TableCell className="font-mono text-muted-foreground">
+                          {item.material_code || '-'}
+                        </TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell>{item.unit}</TableCell>
                         <TableCell>

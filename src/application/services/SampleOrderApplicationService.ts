@@ -11,6 +11,7 @@ import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 import { DomainEvent } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction, query } from '@/lib/db';
+import { assertCustomerExists, assertMaterialByCode } from '@/lib/reference-validation';
 import type { PoolConnection, ResultSetHeader } from 'mysql2/promise';
 import { logger, generateTraceId } from '@/lib/logger';
 
@@ -53,6 +54,14 @@ export class SampleOrderApplicationService {
       productName: props.productName,
       materialNo: props.materialNo,
     });
+
+    // 引用完整性校验（写入前）：客户（按 ID）、物料（按编码）
+    if (props.customerId) {
+      await assertCustomerExists(props.customerId);
+    }
+    if (props.materialNo) {
+      await assertMaterialByCode(props.materialNo);
+    }
 
     const orderNo = await this.orderRepo.getNextSequence();
     logger.info(ctx, '生成打样单号', { orderNo });

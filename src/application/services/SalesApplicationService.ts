@@ -7,6 +7,7 @@ import { CurrencySnapshot } from '@/domain/shared/value-objects/CurrencySnapshot
 import { Money } from '@/domain/shared/value-objects/Money';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
+import { assertCustomerExists, assertAllMaterialsExist } from '@/lib/reference-validation';
 import { InventoryValidationService } from '@/application/services/InventoryValidationService';
 import {
   getSystemConfig,
@@ -118,6 +119,10 @@ export class SalesApplicationService {
     };
 
     const order = SalesOrder.create(effectiveProps);
+
+    // #① 引用完整性：写入前断言客户与物料主数据存在（防悬空引用）
+    await assertCustomerExists(effectiveProps.customerId);
+    await assertAllMaterialsExist(effectiveProps.lines.map((l) => l.materialId));
 
     // 订单最低金额校验
     const minAmount = await getSystemConfigNumber('order.min_amount', 0);

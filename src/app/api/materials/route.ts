@@ -37,6 +37,8 @@ interface MaterialRow {
   category_id: number | null;
   category_code: string | null;
   category_name: string | null;
+  // #21 分切物料类型限制：是否允许分切（主数据可手动覆盖）
+  is_splittable: number | null;
 }
 
 export const GET = withPermission(async (request: NextRequest) => {
@@ -100,7 +102,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     `SELECT
        m.id, m.material_code, m.material_name, m.specification, m.unit,
        m.purchase_price, m.sale_price, m.material_type, m.category_id,
-       c.category_code, c.category_name
+       c.category_code, c.category_name, m.is_splittable
      ${fromSql}
      WHERE ${whereSql}
      ORDER BY m.id DESC

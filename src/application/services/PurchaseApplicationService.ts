@@ -4,6 +4,7 @@ import { PurchaseOrderStatus } from '@/domain/purchase/value-objects/PurchaseOrd
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { query, transaction } from '@/lib/db';
+import { assertSupplierExists, assertAllMaterialsExist } from '@/lib/reference-validation';
 import {
   getSystemConfig,
   getSystemConfigBoolean,
@@ -141,6 +142,11 @@ export class PurchaseApplicationService {
     };
 
     const order = PurchaseOrder.create(effectiveProps);
+
+    // #① 引用完整性：写入前断言供应商与物料主数据存在（防悬空引用）
+    await assertSupplierExists(effectiveProps.supplierId);
+    await assertAllMaterialsExist(effectiveProps.lines.map((l) => l.materialId));
+
     const result = await this.orderRepo.save(order);
 
     if (result.id) {

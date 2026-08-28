@@ -97,6 +97,8 @@ export default function SplitOrderPage() {
   const [parentBatchNo, setParentBatchNo] = useState('');
   const [parentBatchId, setParentBatchId] = useState(0);
   const [parentInfo, setParentInfo] = useState<Loose>(null);
+  // #21 分切物料类型限制：母料是否允许分切（不可切则禁用创建并提示）
+  const [parentSplittable, setParentSplittable] = useState(true);
   const [warehouseId, setWarehouseId] = useState(0);
   const [remark, setRemark] = useState('');
   const [details, setDetails] = useState<SplitDetail[]>([
@@ -131,10 +133,20 @@ export default function SplitOrderPage() {
         setParentBatchId(batch.id);
         setParentInfo(batch);
         setWarehouseId(batch.warehouse_id);
-        toast({
-          title: '已找到母料批次',
-          description: `${batch.material_name} (可用: ${batch.available_qty})`,
-        });
+        const splittable = batch.is_splittable === 1;
+        setParentSplittable(splittable);
+        if (splittable) {
+          toast({
+            title: '已找到母料批次',
+            description: `${batch.material_name} (可用: ${batch.available_qty})`,
+          });
+        } else {
+          toast({
+            title: '该物料不可分切',
+            description: `【${batch.material_name}】非卷材类物料，不能创建分切单`,
+            variant: 'destructive',
+          });
+        }
       } else {
         toast({ title: '未找到批次', variant: 'destructive' });
       }
@@ -169,6 +181,14 @@ export default function SplitOrderPage() {
   const handleCreate = async () => {
     if (!parentBatchId || details.length === 0) {
       toast({ title: '请填写完整信息', variant: 'destructive' });
+      return;
+    }
+    if (!parentSplittable) {
+      toast({
+        title: '该物料不可分切',
+        description: '请选择薄膜/纸张/包装/原材料等卷材类物料的批次',
+        variant: 'destructive',
+      });
       return;
     }
     try {
@@ -262,6 +282,7 @@ export default function SplitOrderPage() {
     setParentBatchNo('');
     setParentBatchId(0);
     setParentInfo(null);
+    setParentSplittable(true);
     setWarehouseId(0);
     setRemark('');
     setDetails([{ pieces: 1, qtyPerPiece: 0, totalQty: 0, width: 0, isWaste: false }]);
@@ -434,6 +455,12 @@ export default function SplitOrderPage() {
                 <div>
                   规格: {parentInfo.specification || '-'} | 宽幅: {parentInfo.width || '-'}
                 </div>
+                {!parentSplittable && (
+                  <div className="mt-1 text-red-600 font-medium">
+                    ⚠ 该物料【{parentInfo.material_name}
+                    】不可分切（仅薄膜/纸张/包装/原材料等卷材类允许）
+                  </div>
+                )}
               </div>
             )}
             <div>
@@ -527,7 +554,9 @@ export default function SplitOrderPage() {
             <Button variant="outline" onClick={() => setShowCreate(false)}>
               取消
             </Button>
-            <Button onClick={handleCreate}>创建分切单</Button>
+            <Button onClick={handleCreate} disabled={!parentSplittable}>
+              创建分切单
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

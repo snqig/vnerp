@@ -18,6 +18,12 @@ vi.mock('@/lib/db', () => ({
   dbConfig: {} as any,
 }));
 
+vi.mock('@/lib/reference-validation', () => ({
+  assertSupplierExists: vi.fn().mockResolvedValue(undefined),
+  assertWarehouseExists: vi.fn().mockResolvedValue(undefined),
+  assertAllMaterialsExist: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { PurchaseReturnApplicationService } from '@/application/services/PurchaseReturnApplicationService';
 import type { IPurchaseReturnRepository } from '@/domain/purchase/repositories/IPurchaseReturnRepository';
 import type { IPurchaseOrderRepository } from '@/domain/purchase/repositories/IPurchaseOrderRepository';

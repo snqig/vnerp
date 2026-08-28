@@ -42,20 +42,16 @@ export interface AssertExistsOptions {
  * 断言某 id 在主表中存在（含软删除过滤）。返回匹配首行。
  */
 export async function assertEntityExists(
-  id: number,
+  id: number | null | undefined,
   opts: AssertExistsOptions
 ): Promise<DbRow> {
-  if (!Number.isInteger(id) || id <= 0) {
+  if (id == null || !Number.isInteger(id) || id <= 0) {
     throw AppError.badRequest(`指定的${opts.label}ID非法：${id}`);
   }
   const idColumn = opts.idColumn ?? 'id';
   const softDelete =
-    opts.softDeleteColumn === null
-      ? ''
-      : ` AND ${opts.softDeleteColumn ?? 'deleted'} = 0`;
-  const selectCols = opts.nameColumn
-    ? `${idColumn}, ${opts.nameColumn}`
-    : idColumn;
+    opts.softDeleteColumn === null ? '' : ` AND ${opts.softDeleteColumn ?? 'deleted'} = 0`;
+  const selectCols = opts.nameColumn ? `${idColumn}, ${opts.nameColumn}` : idColumn;
 
   const rows = (await query(
     `SELECT ${selectCols} FROM ${opts.table} WHERE ${idColumn} = ?${softDelete} LIMIT 1`,
@@ -69,7 +65,7 @@ export async function assertEntityExists(
 }
 
 /** 仓库存在性断言；返回行含 warehouse_name，可复用避免二次查询。 */
-export async function assertWarehouseExists(id: number): Promise<DbRow> {
+export async function assertWarehouseExists(id: number | null | undefined): Promise<DbRow> {
   return assertEntityExists(id, {
     table: 'inv_warehouse',
     label: '仓库',
@@ -78,7 +74,7 @@ export async function assertWarehouseExists(id: number): Promise<DbRow> {
 }
 
 /** 物料存在性断言；返回行含 material_name。 */
-export async function assertMaterialExists(id: number): Promise<DbRow> {
+export async function assertMaterialExists(id: number | null | undefined): Promise<DbRow> {
   return assertEntityExists(id, {
     table: 'inv_material',
     label: '物料',
@@ -86,8 +82,27 @@ export async function assertMaterialExists(id: number): Promise<DbRow> {
   });
 }
 
+/**
+ * 物料存在性断言（按物料编码 material_code 查）。
+ * 部分业务（打样单等）以「物料编码」而非「物料ID」引用主数据，
+ * 故提供按编码查重的变体，逻辑与 assertEntityExists 一致（只读 + 软删过滤）。
+ */
+export async function assertMaterialByCode(code: string | null | undefined): Promise<DbRow> {
+  if (!code || typeof code !== 'string' || code.trim() === '') {
+    throw AppError.badRequest('指定的物料编码为空');
+  }
+  const rows = (await query(
+    `SELECT material_code, material_name FROM inv_material WHERE material_code = ? AND deleted = 0 LIMIT 1`,
+    [code]
+  )) as DbRow[];
+  if (rows.length === 0) {
+    throw AppError.badRequest(`指定的物料编码不存在或已删除：${code}`);
+  }
+  return rows[0];
+}
+
 /** 供应商存在性断言；返回行含 supplier_name。 */
-export async function assertSupplierExists(id: number): Promise<DbRow> {
+export async function assertSupplierExists(id: number | null | undefined): Promise<DbRow> {
   return assertEntityExists(id, {
     table: 'pur_supplier',
     label: '供应商',
@@ -95,14 +110,81 @@ export async function assertSupplierExists(id: number): Promise<DbRow> {
   });
 }
 
+/** 客户存在性断言（crm_customer，sal_order.customer_id 引用目标）。 */
+export async function assertCustomerExists(id: number | null | undefined): Promise<DbRow> {
+  return assertEntityExists(id, {
+    table: 'crm_customer',
+    label: '客户',
+    nameColumn: 'customer_name',
+  });
+}
+
+/** 销售订单存在性断言（sal_order，退货单/发货单的 order_id 引用目标）。 */
+export async function assertSalesOrderExists(id: number | null | undefined): Promise<DbRow> {
+  return assertEntityExists(id, {
+    table: 'sal_order',
+    label: '销售订单',
+    nameColumn: 'order_no',
+  });
+}
+
+/** 发货单存在性断言（sal_delivery，退货单的 delivery_id 引用目标）。 */
+export async function assertDeliveryExists(id: number | null | undefined): Promise<DbRow> {
+  return assertEntityExists(id, {
+    table: 'sal_delivery',
+    label: '发货单',
+    nameColumn: 'delivery_no',
+  });
+}
+
+/** 生产工单存在性断言（prod_work_order，领料/报工/完工单的 work_order_id 引用目标）。 */
+export async function assertWorkOrderExists(id: number | null | undefined): Promise<DbRow> {
+  return assertEntityExists(id, {
+    table: 'prod_work_order',
+    label: '生产工单',
+    nameColumn: 'work_order_no',
+  });
+}
+
+/**
+ * 物料「可分切性」约束断言（#21 分切物料类型限制）。
+ *
+ * 与上面"存在性"断言互补：存在性管「在不在」，本函数管「能不能分切」。
+ * 列 `inv_material.is_splittable` 表达是否允许分切（白名单分类 FILM/PAPER/PKG/RAW
+ * 由迁移初始化为 1，主数据可手动覆盖）。
+ *
+ * @param material 调用方已查出的物料行（事务内请用 conn.query 取，保证同源）。
+ *                 传 undefined/null → 视为物料不存在，拦截。
+ *                 is_splittable 为 0 / null / undefined → 拦截并明确提示。
+ * @throws AppError.badRequest(400) 不可分切时。
+ */
+export interface SplittableMaterialInput {
+  id?: number | string;
+  materialName?: string;
+  isSplittable?: number | null;
+}
+
+export function assertMaterialSplittable(
+  material: SplittableMaterialInput | undefined | null
+): void {
+  if (!material) {
+    throw AppError.badRequest('无法校验可分切性：母料对应的物料不存在或已删除');
+  }
+  const flag = material.isSplittable;
+  if (!flag) {
+    const name = material.materialName || `ID=${material.id ?? '未知'}`;
+    throw AppError.badRequest(
+      `该物料【${name}】不允许分切（仅薄膜/纸张/包装/原材料等卷材类物料允许分切）`
+    );
+  }
+}
+
 /**
  * 批量物料存在性校验（单次往返）。
  * 自动去重，并过滤 material_id<=0（自由录入物料允许为 0，不查主数据）。
  * 任一物料不存在/已删除 → 抛 400，并列出缺失的 ID（最多 10 个）。
  */
-export async function assertAllMaterialsExist(
-  ids: (number | null | undefined)[]
-): Promise<void> {
+export async function assertAllMaterialsExist(ids: (number | null | undefined)[]): Promise<void> {
   const set = new Set<number>();
   for (const v of ids) {
     const n = Number(v);
@@ -120,9 +202,7 @@ export async function assertAllMaterialsExist(
   const found = new Set(rows.map((r) => Number(r.id)));
   const missing = list.filter((id) => !found.has(id));
   if (missing.length > 0) {
-    const preview = missing
-      .slice(0, 10)
-      .join(', ');
+    const preview = missing.slice(0, 10).join(', ');
     const more = missing.length > 10 ? ` 等 ${missing.length} 项` : '';
     throw AppError.badRequest(`以下物料不存在或已删除：${preview}${more}`);
   }

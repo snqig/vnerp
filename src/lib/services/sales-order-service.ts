@@ -51,7 +51,7 @@ export async function createWorkOrderFromSalesOrder(
     const workOrderNo = await generateDocumentNo('work_order');
 
     const [woResult]: Loose = await conn.execute(
-      `INSERT INTO prod_work_order (work_order_no, sales_order_id, product_id, product_name, bom_id, plan_qty, status, create_time)
+      `INSERT INTO prod_work_order (work_order_no, order_id, product_id, product_name, bom_id, quantity, status, create_time)
        VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`,
       [
         workOrderNo,

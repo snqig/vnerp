@@ -7,9 +7,15 @@ import {
   logOperation,
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { AppError } from '@/lib/error-handling';
+import { assertMaterialSplittable } from '@/lib/reference-validation';
 import { getEventBus } from '@/infrastructure/event-bus/EventBus';
 import { SplitOrderAuditedEvent } from '@/domain/cutting/events/SplitOrderEvents';
-import { appendInventoryTransaction, recomputeInventorySummary, appendInventoryLog } from '@/lib/inventory-ledger';
+import {
+  appendInventoryTransaction,
+  recomputeInventorySummary,
+  appendInventoryLog,
+} from '@/lib/inventory-ledger';
 import Decimal from 'decimal.js';
 import type { DbRow } from '@/types/db';
 
@@ -89,6 +95,19 @@ export const POST = withPermission(
       }
 
       const batch = parentBatch[0];
+
+      // #21 分切物料类型限制：母料对应物料必须允许分切（FILM/PAPER/PKG/RAW 等卷材类）
+      const [matRows] = await conn.query(
+        `SELECT id, material_name, is_splittable FROM inv_material WHERE id = ?`,
+        [batch.material_id]
+      );
+      const mat = (matRows as DbRow[])[0];
+      assertMaterialSplittable({
+        id: batch.material_id as number,
+        materialName: (batch.material_name as string) || (mat?.material_name as string | undefined),
+        isSplittable: mat?.is_splittable as number | null | undefined,
+      });
+
       const availableQty = parseFloat(batch.available_qty);
       let totalOutQty = new Decimal(0);
       let totalWasteQty = new Decimal(0);
@@ -188,7 +207,7 @@ export const PATCH = withPermission(
       const [orders] = await conn.query(
         `SELECT s.*, ib.available_qty, ib.quantity, ib.unit_price, ib.unit, ib.width, ib.length,
           ib.material_id, ib.material_name, ib.warehouse_id, ib.batch_type, ib.version as batch_version,
-          m.material_code, m.width as m_width
+          m.material_code, m.width as m_width, m.is_splittable
         FROM split_order s
         JOIN inv_inventory_batch ib ON s.parent_batch_id = ib.id
         LEFT JOIN inv_material m ON s.material_id = m.id
@@ -206,6 +225,13 @@ export const PATCH = withPermission(
         if (order.status !== 0) {
           throw new Error('分切单状态不正确，只能审核草稿状态的分切单');
         }
+
+        // #21 分切物料类型限制：审核时再次校验，防止绕过前端直接调用 API
+        assertMaterialSplittable({
+          id: order.material_id as number,
+          materialName: order.material_name as string,
+          isSplittable: order.is_splittable as number | null | undefined,
+        });
 
         const [details] = await conn.query(`SELECT * FROM split_order_detail WHERE split_id = ?`, [
           splitId,

@@ -46,6 +46,11 @@ vi.mock('@/lib/db', () => ({
   transaction: mocks.transaction,
 }));
 
+vi.mock('@/lib/reference-validation', () => ({
+  assertCustomerExists: vi.fn().mockResolvedValue(undefined),
+  assertMaterialByCode: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('@/lib/logger', () => ({
   logger: mocks.mockLogger,
   generateTraceId: vi.fn(() => 'test-trace-id'),

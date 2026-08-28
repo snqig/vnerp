@@ -1,17 +1,12 @@
 import { ITransferOrderRepository } from '@/domain/warehouse/repositories/ITransferOrderRepository';
 import { TransferOrder, TransferOrderProps } from '@/domain/warehouse/aggregates/TransferOrder';
-import {
-  DomainError,
-  NotFoundError,
-  VersionConflictError,
-} from '@/domain/shared/DomainTypes';
+import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
+import { assertWarehouseExists } from '@/lib/reference-validation';
 
 export class TransferApplicationService {
-  constructor(
-    private readonly orderRepo: ITransferOrderRepository
-  ) {}
+  constructor(private readonly orderRepo: ITransferOrderRepository) {}
 
   async getOrderById(id: number): Promise<TransferOrder> {
     const order = await this.orderRepo.findById(id);
@@ -38,6 +33,9 @@ export class TransferApplicationService {
   }
 
   async createOrder(props: TransferOrderProps): Promise<{ id: number; transferNo: string }> {
+    // #① 引用完整性：写入前断言调出/调入仓库存在（防悬空引用）
+    await assertWarehouseExists(props.fromWarehouseId);
+    await assertWarehouseExists(props.toWarehouseId);
     const order = TransferOrder.create(props);
     const result = await this.orderRepo.save(order);
     return result;
@@ -139,10 +137,7 @@ export class TransferApplicationService {
     await this.orderRepo.softDelete(id);
   }
 
-  private async persistAndPublishEvents(
-    aggregateId: number,
-    order: TransferOrder
-  ): Promise<void> {
+  private async persistAndPublishEvents(aggregateId: number, order: TransferOrder): Promise<void> {
     const events = order.getDomainEvents();
     if (events.length === 0) return;
 

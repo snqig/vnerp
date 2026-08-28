@@ -24,6 +24,11 @@ import {
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction, execute, query } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
+import {
+  assertWorkOrderExists,
+  assertWarehouseExists,
+  assertAllMaterialsExist,
+} from '@/lib/reference-validation';
 import type { ResultSetHeader } from 'mysql2';
 
 export class ProductionApplicationService {
@@ -52,6 +57,9 @@ export class ProductionApplicationService {
   }
 
   async createWorkOrder(props: WorkOrderProps): Promise<{ id: number; workOrderNo: string }> {
+    // #① 引用完整性：写入前断言物料主数据存在（防 BOM 悬空引用）
+    await assertAllMaterialsExist(props.materialRequirements.map((mr) => mr.materialId));
+
     const wo = WorkOrder.create(props);
     const result = await this.workOrderRepo.save(wo);
     if (result.id) {
@@ -149,6 +157,10 @@ export class ProductionApplicationService {
   // ==================== 领料单 ====================
 
   async createPickOrder(props: PickOrderProps): Promise<{ id: number; pickNo: string }> {
+    // #① 引用完整性：写入前断言生产工单与物料主数据存在（防悬空引用）
+    await assertWorkOrderExists(props.workOrderId);
+    await assertAllMaterialsExist(props.items.map((i) => i.materialId));
+
     const pickNo = props.pickNo || (await generateDocumentNo('material_pick'));
     const order = PickOrder.create({ ...props, pickNo });
     const result = await this.pickOrderRepo!.save(order);
@@ -180,6 +192,9 @@ export class ProductionApplicationService {
   // ==================== 报工单 ====================
 
   async createWorkReport(props: WorkReportProps): Promise<{ id: number; reportNo: string }> {
+    // #① 引用完整性：写入前断言关联生产工单存在（防悬空引用）
+    await assertWorkOrderExists(props.workOrderId);
+
     const reportNo = props.reportNo || (await generateDocumentNo('process_report'));
     const report = WorkReport.create({ ...props, reportNo });
     const id = await this.workReportRepo!.save(report);
@@ -209,6 +224,10 @@ export class ProductionApplicationService {
   // ==================== 完工入库单 ====================
 
   async createFinishOrder(props: FinishOrderProps): Promise<{ id: number; finishNo: string }> {
+    // #① 引用完整性：写入前断言生产工单与入库仓库存在（防悬空引用）
+    await assertWorkOrderExists(props.workOrderId);
+    await assertWarehouseExists(props.warehouseId);
+
     const finishNo = props.finishNo || (await generateDocumentNo('finish_inbound'));
     const order = FinishOrder.create({ ...props, finishNo });
     const id = await this.finishOrderRepo!.save(order);

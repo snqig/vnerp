@@ -4,6 +4,7 @@ import { DomainError, NotFoundError, VersionConflictError } from '@/domain/share
 import { AppError } from '@/lib/error-handling';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { query, transaction } from '@/lib/db';
+import { assertWarehouseExists, assertAllMaterialsExist } from '@/lib/reference-validation';
 import type { ResultSetHeader } from 'mysql2/promise';
 
 export class OutboundApplicationService {
@@ -35,6 +36,9 @@ export class OutboundApplicationService {
   async createOrder(props: OutboundOrderProps): Promise<{ id: number; orderNo: string }> {
     // 前置查重：同一出库单内不允许重复的 (物料, 批次) 组合，避免落库触发 uk_outbound_order_line
     this.assertNoDuplicateOutboundLines(props.items);
+    // #① 引用完整性：写入前断言仓库与物料主数据存在（防悬空引用）
+    await assertWarehouseExists(props.warehouseId);
+    await assertAllMaterialsExist(props.items.map((i) => i.materialId));
     const order = OutboundOrder.create(props);
     const result = await this.orderRepo.save(order);
     return result;
@@ -83,17 +87,16 @@ export class OutboundApplicationService {
   ): Promise<{ id: number; status: string }> {
     const order = await this.getOrderById(id);
 
-    const warehouseRows = await query(
-      'SELECT warehouse_name FROM inv_warehouse WHERE id = ?',
-      [order.warehouseId]
-    );
+    const warehouseRows = await query('SELECT warehouse_name FROM inv_warehouse WHERE id = ?', [
+      order.warehouseId,
+    ]);
     const warehouseName = warehouseRows?.[0]?.warehouse_name || '';
 
     const previousStatus = order.status.value;
     order.approve(warehouseName, auditorId, auditorName);
 
     await transaction(async (conn) => {
-      const [result] = await conn.execute(
+      const [result] = (await conn.execute(
         "UPDATE inv_outbound_order SET status = 'approved', audit_status = 1, finance_posted = 1, auditor_id = ?, auditor_name = ?, audit_time = NOW(), update_time = NOW() WHERE id = ? AND status = ?",
         [
           auditorId || null,
@@ -101,7 +104,7 @@ export class OutboundApplicationService {
           id,
           previousStatus === 'completed' ? 'approved' : previousStatus,
         ]
-      ) as [ResultSetHeader, any];
+      )) as [ResultSetHeader, any];
       if (result.affectedRows === 0) {
         throw new VersionConflictError();
       }

@@ -1,7 +1,9 @@
-
 import type { DbConnection, DbRow } from '@/types/db';
 
-export async function seedMasterData(conn: DbConnection, stats: Record<string, number>): Promise<Record<string, unknown>[]> {
+export async function seedMasterData(
+  conn: DbConnection,
+  stats: Record<string, number>
+): Promise<Record<string, unknown>[]> {
   const warehouses = [
     { code: 'WH001', name: '原材料仓', type: 1, address: 'A栋1楼' },
     { code: 'WH002', name: '半成品仓', type: 2, address: 'A栋2楼' },
@@ -633,7 +635,7 @@ export async function seedMasterData(conn: DbConnection, stats: Record<string, n
       `INSERT INTO prd_process_route (route_code, route_name, product_id, version, is_default, status) VALUES (?, ?, ?, '1.0', 1, 1)`,
       [pr.code, pr.name, pr.pid]
     );
-    const [rows] = await conn.execute('SELECT LAST_INSERT_ID() as id') as [DbRow[], unknown];
+    const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
     const routeId = rows[0].id;
     for (const step of pr.steps) {
       await conn.execute(
@@ -659,7 +661,12 @@ export async function seedMasterData(conn: DbConnection, stats: Record<string, n
 export async function seedCommercialData(
   conn: DbConnection,
   stats: Record<string, number>
-): Promise<{ saleOrderIds: number[]; purchaseOrders: Record<string, unknown>[]; deliveryOrders: Record<string, unknown>[]; salesOrders: Record<string, unknown>[] }> {
+): Promise<{
+  saleOrderIds: number[];
+  purchaseOrders: Record<string, unknown>[];
+  deliveryOrders: Record<string, unknown>[];
+  salesOrders: Record<string, unknown>[];
+}> {
   const salesOrders = [
     {
       no: 'SO20260401001',
@@ -747,7 +754,7 @@ export async function seedCommercialData(
         order.delivery,
       ]
     );
-    const [rows] = await conn.execute('SELECT LAST_INSERT_ID() as id') as [DbRow[], unknown];
+    const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
     const orderId = rows[0].id;
     saleOrderIds.push(orderId);
     for (const item of order.items) {
@@ -917,19 +924,9 @@ export async function seedCommercialData(
     const grandTotal = Math.round(totalAmount * 1.13 * 100) / 100;
     await conn.execute(
       `INSERT INTO pur_purchase_order (po_no, supplier_id, supplier_name, order_date, delivery_date, total_amount, total_quantity, tax_rate, tax_amount, grand_total, status) VALUES (?, ?, ?, ?, ?, ?, ?, 13.00, ?, ?, 30)`,
-      [
-        po.no,
-        po.sid,
-        po.sname,
-        po.date,
-        po.delivery,
-        totalAmount,
-        totalQty,
-        taxAmount,
-        grandTotal,
-      ]
+      [po.no, po.sid, po.sname, po.date, po.delivery, totalAmount, totalQty, taxAmount, grandTotal]
     );
-    const [rows] = await conn.execute('SELECT LAST_INSERT_ID() as id') as [DbRow[], unknown];
+    const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
     const poId = rows[0].id;
     for (let i = 0; i < po.items.length; i++) {
       const item = po.items[i];
@@ -1130,7 +1127,7 @@ export async function seedCommercialData(
         dn.status,
       ]
     );
-    const [rows] = await conn.execute('SELECT LAST_INSERT_ID() as id') as [DbRow[], unknown];
+    const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
     const dnId = rows[0].id;
     let lineNo = 1;
     for (const item of dn.items) {
@@ -1207,7 +1204,7 @@ export async function seedCommercialData(
         totalAmount,
       ]
     );
-    const [rows] = await conn.execute('SELECT LAST_INSERT_ID() as id') as [DbRow[], unknown];
+    const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
     const rtId = rows[0].id;
     let lineNo = 1;
     for (const item of rt.items) {
@@ -1325,7 +1322,7 @@ export async function seedCommercialData(
       `INSERT INTO inv_outbound_order (order_no, order_date, outbound_type, warehouse_id, warehouse_name, total_qty, total_amount, status, audit_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'approved')`,
       [ob.no, ob.date, ob.type, ob.wh, ob.whname, totalQty, totalAmount, ob.status]
     );
-    const [rows] = await conn.execute('SELECT LAST_INSERT_ID() as id') as [DbRow[], unknown];
+    const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
     const obId = rows[0].id;
     for (const item of ob.items) {
       await conn.execute(
@@ -1521,17 +1518,16 @@ export async function seedProductionData(
   for (const bom of bomList) {
     let totalCost = 0;
     for (const item of bom.items) {
-      const [matRows] = await conn.execute(
-        `SELECT purchase_price FROM inv_material WHERE id = ?`,
-        [item.mid]
-      );
+      const [matRows] = await conn.execute(`SELECT purchase_price FROM inv_material WHERE id = ?`, [
+        item.mid,
+      ]);
       totalCost += item.qty * (matRows[0]?.purchase_price || 0);
     }
     await conn.execute(
       `INSERT INTO prd_bom (bom_name, product_id, version, total_cost, status, create_time) VALUES (?, ?, '1.0', ?, 1, NOW())`,
       [bom.name, bom.pid, Math.round(totalCost * 100) / 100]
     );
-    const [rows] = await conn.execute('SELECT LAST_INSERT_ID() as id') as [DbRow[], unknown];
+    const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
     const bomId = rows[0].id;
     bomIds.push(bomId);
     for (const item of bom.items) {
@@ -1709,7 +1705,7 @@ export async function seedProductionData(
         wo.aed,
       ]
     );
-    const [rows] = await conn.execute('SELECT LAST_INSERT_ID() as id') as [DbRow[], unknown];
+    const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
     const woId = rows[0].id;
     const soItem = salesOrders[wo.soi]?.items?.[0];
     if (soItem) {
@@ -2051,11 +2047,21 @@ export async function seedProductionData(
     },
   ];
   for (const cr of cuttingRecords) {
+    // #29 E2E 造数合法性：按业务键 label_no 真实查源标签 ID，
+    // 与 auto_increment 解耦（原硬编码 srcId 在非干净库重跑会指向错误/不存在标签）。
+    const [srcRows] = (await conn.execute(
+      'SELECT id FROM inv_material_label WHERE label_no = ? LIMIT 1',
+      [cr.srcLabel]
+    )) as [DbRow[], unknown];
+    if (!srcRows.length) {
+      throw new Error(`切割源标签不存在，无法继续 seed: ${cr.srcLabel}`);
+    }
+    const srcId = (srcRows[0] as DbRow).id;
     await conn.execute(
       `INSERT INTO inv_cutting_record (record_no, source_label_id, source_label_no, cut_width_str, original_width, cut_total_width, remain_width, operator_name, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [cr.no, cr.srcId, cr.srcLabel, cr.cutStr, cr.origW, cr.cutW, cr.remainW, cr.op]
+      [cr.no, srcId, cr.srcLabel, cr.cutStr, cr.origW, cr.cutW, cr.remainW, cr.op]
     );
-    const [rows] = await conn.execute('SELECT LAST_INSERT_ID() as id') as [DbRow[], unknown];
+    const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
     const cutId = rows[0].id;
     const widths = cr.cutStr.split('+').map(Number);
     for (let i = 0; i < widths.length; i++) {
@@ -2073,10 +2079,10 @@ export async function seedProductionData(
           50000,
           widths[i],
           1,
-          cr.srcId,
+          srcId,
         ]
       );
-      const [newRows] = await conn.execute('SELECT LAST_INSERT_ID() as id') as [DbRow[], unknown];
+      const [newRows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
       const newLabelId = newRows[0].id;
       await conn.execute(
         `INSERT INTO inv_cutting_detail (record_id, new_label_id, new_label_no, cut_width, sequence) VALUES (?, ?, ?, ?, ?)`,
@@ -2099,7 +2105,7 @@ export async function seedProductionData(
           cr.remainW,
           cr.remainW,
           1,
-          cr.srcId,
+          srcId,
         ]
       );
     }
@@ -2238,7 +2244,7 @@ export async function seedInventoryData(
       `INSERT INTO inv_inbound_order (order_no, supplier_name, inbound_date, warehouse_id, po_id, po_no, grn_type, total_quantity, total_amount, status, remark) VALUES (?, ?, ?, ?, ?, ?, 'po', ?, ?, 'approved', '采购入库')`,
       [io.no, io.supplier, io.date, io.wh, io.poId, io.poNo, totalQty, totalAmt]
     );
-    const [rows] = await conn.execute('SELECT LAST_INSERT_ID() as id') as [DbRow[], unknown];
+    const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
     const orderId = rows[0].id;
     for (const item of io.items) {
       await conn.execute(
@@ -2986,7 +2992,11 @@ export async function seedQualityData(conn: DbConnection, stats: Record<string, 
   stats.unqualified = unqualifiedList.length;
 }
 
-export async function seedFinancialData(conn: DbConnection, stats: Record<string, number>, deliveryOrders: Record<string, unknown>[]) {
+export async function seedFinancialData(
+  conn: DbConnection,
+  stats: Record<string, number>,
+  deliveryOrders: Record<string, unknown>[]
+) {
   const reconciliations = [
     {
       no: 'RC20260430001',
@@ -3048,7 +3058,7 @@ export async function seedFinancialData(conn: DbConnection, stats: Record<string
         rc.netAmt,
       ]
     );
-    const [rows] = await conn.execute('SELECT LAST_INSERT_ID() as id') as [DbRow[], unknown];
+    const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
     const rcId = rows[0].id;
     const dnList = deliveryOrders.filter((d: Record<string, unknown>) => d.cid === rc.cid);
     for (const dn of dnList) {
@@ -3413,7 +3423,3 @@ export async function seedContactsAndLocations(conn: DbConnection, stats: Record
   }
   stats.contacts = contacts.length;
 }
-
-
-
-

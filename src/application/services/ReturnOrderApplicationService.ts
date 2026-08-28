@@ -17,6 +17,13 @@ import { CurrencyApplicationService } from './CurrencyApplicationService';
 import { CurrencySnapshot } from '@/domain/shared/value-objects/CurrencySnapshot';
 import { Money } from '@/domain/shared/value-objects/Money';
 import { getSystemConfig } from '@/lib/system-config';
+import {
+  assertSalesOrderExists,
+  assertCustomerExists,
+  assertWarehouseExists,
+  assertDeliveryExists,
+  assertAllMaterialsExist,
+} from '@/lib/reference-validation';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction, query } from '@/lib/db';
 
@@ -83,6 +90,15 @@ export class ReturnOrderApplicationService {
 
     const baseTotalAmount = effectiveProps.lines.reduce((sum, l) => sum + (l.baseAmount || 0), 0);
     effectiveProps.baseTotalAmount = Math.round(baseTotalAmount * 100) / 100;
+
+    // #① 引用完整性：写入前断言主数据存在（防悬空引用）
+    await assertSalesOrderExists(effectiveProps.orderId);
+    await assertCustomerExists(effectiveProps.customerId);
+    await assertWarehouseExists(effectiveProps.warehouseId);
+    if (effectiveProps.deliveryId) {
+      await assertDeliveryExists(effectiveProps.deliveryId);
+    }
+    await assertAllMaterialsExist(effectiveProps.lines.map((l) => l.materialId));
 
     const ret = ReturnOrder.create(effectiveProps);
     const id = await this.returnRepo.save(ret);

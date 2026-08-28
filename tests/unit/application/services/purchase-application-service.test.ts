@@ -20,6 +20,13 @@ vi.mock('@/lib/db', () => ({
   dbConfig: {} as any,
 }));
 
+// 引用完整性守卫：写入前存在性断言。单元测试里主数据均视为存在，避免命中被 mock 的 query 而误判。
+vi.mock('@/lib/reference-validation', () => ({
+  assertSupplierExists: vi.fn().mockResolvedValue({ id: 1, supplier_name: '测试供应商' }),
+  assertAllMaterialsExist: vi.fn().mockResolvedValue(undefined),
+  assertWarehouseExists: vi.fn().mockResolvedValue({ id: 1, warehouse_name: '测试仓库' }),
+}));
+
 import { PurchaseApplicationService } from '@/application/services/PurchaseApplicationService';
 import { getSystemConfig, getSystemConfigBoolean, getSystemConfigNumber } from '@/lib/system-config';
 import type { IPurchaseOrderRepository } from '@/domain/purchase/repositories/IPurchaseOrderRepository';

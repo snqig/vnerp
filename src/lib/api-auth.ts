@@ -48,6 +48,8 @@ export const FIRST_LOGIN_WHITELIST = [
   '/api/auth/logout',
   '/api/auth/user-info',
   '/api/auth/refresh',
+  '/api/init',
+  '/api/migrations',
 ];
 
 /**

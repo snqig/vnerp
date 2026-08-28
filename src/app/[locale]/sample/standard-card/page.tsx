@@ -73,12 +73,12 @@ function StandardCardPageContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  // URL mode 参数变化时同步组件状态
+  // URL mode 参数变化时同步组件状态（含显式 mode=list，回列表时也要切回列表视图）
   useEffect(() => {
     const m = searchParams.get('mode');
     if (m === 'v2') setMode('v2');
     else if (m === 'card') setMode('card');
-    else if (!m) setMode('list');
+    else setMode('list'); // ''、'list' 及其它一律回列表
   }, [searchParams]);
 
   const fetchList = useCallback(async () => {

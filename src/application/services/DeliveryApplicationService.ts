@@ -9,6 +9,12 @@ import { getSystemConfig } from '@/lib/system-config';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
 import { InventoryValidationService } from '@/application/services/InventoryValidationService';
+import {
+  assertSalesOrderExists,
+  assertCustomerExists,
+  assertWarehouseExists,
+  assertAllMaterialsExist,
+} from '@/lib/reference-validation';
 
 export interface ShipDeliveryInput {
   deliveryId: number;
@@ -72,6 +78,12 @@ export class DeliveryApplicationService {
 
     const baseTotalAmount = effectiveProps.lines.reduce((sum, l) => sum + (l.baseAmount || 0), 0);
     effectiveProps.baseTotalAmount = Math.round(baseTotalAmount * 100) / 100;
+
+    // #① 引用完整性：写入前断言主数据存在（防悬空引用）
+    await assertSalesOrderExists(effectiveProps.orderId);
+    await assertCustomerExists(effectiveProps.customerId);
+    await assertWarehouseExists(effectiveProps.warehouseId);
+    await assertAllMaterialsExist(effectiveProps.lines.map((l) => l.materialId));
 
     const delivery = Delivery.create(effectiveProps);
     const id = await this.deliveryRepo.save(delivery);

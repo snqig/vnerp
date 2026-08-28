@@ -13,6 +13,11 @@ import { DomainError, DomainEvent, NotFoundError } from '@/domain/shared/DomainT
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { query, transaction } from '@/lib/db';
 import { getSystemConfig as _getSystemConfig } from '@/lib/system-config';
+import {
+  assertSupplierExists,
+  assertWarehouseExists,
+  assertAllMaterialsExist,
+} from '@/lib/reference-validation';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { CurrencyApplicationService } from './CurrencyApplicationService';
 import { MysqlCurrencyRepository } from '@/infrastructure/repositories/MysqlCurrencyRepository';
@@ -45,6 +50,11 @@ export class PurchaseReturnApplicationService {
     if (!originalOrder) {
       throw new NotFoundError('原采购订单不存在');
     }
+
+    // 引用完整性校验（写入前）：供应商、仓库、各退货明细物料
+    await assertSupplierExists(props.supplierId);
+    await assertWarehouseExists(props.warehouseId);
+    await assertAllMaterialsExist(props.lines.map((l) => l.materialId));
 
     const currency = originalOrder.currency;
     const exchangeRate = originalOrder.exchangeRate;

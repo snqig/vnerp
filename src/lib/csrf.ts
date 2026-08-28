@@ -4,7 +4,14 @@ export const CSRF_COOKIE_NAME = 'csrf_token';
 export const CSRF_HEADER_NAME = 'x-csrf-token';
 
 // 登录/注册等无需 CSRF 校验的路由（首次请求尚无 token）
-const CSRF_EXEMPT_PATHS = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh'];
+// init/migrations 路由为管理员运维接口，不经过页面表单，无需 CSRF
+const CSRF_EXEMPT_PATHS = [
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/refresh',
+  '/api/init',
+  '/api/migrations',
+];
 
 const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
