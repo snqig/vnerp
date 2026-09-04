@@ -145,8 +145,7 @@ const outboundTypeOptions = [
 ];
 
 // 列表接口返回的是「单据 + 明细数组」，表格按扁平字段渲染，这里做一次字段映射
-function mapOutboundRow(o: DbRow): OutboundRecord {
-  const ts = useTranslations('Warehouse');
+function mapOutboundRow(o: DbRow, ts: (key: string) => string): OutboundRecord {
   const firstItem = Array.isArray((o as DbRow).items) ? (o as DbRow).items[0] : undefined;
   const typeLabel: Record<string, string> = {
     production: ts('k_g4v5tc'),
@@ -413,7 +412,7 @@ export default function OutboundManagementPage() {
       const result = await response.json();
       if (result.success) {
         const raw = result.data?.list || result.data || [];
-        const mapped = raw.map((o: Loose) => mapOutboundRow(o));
+        const mapped = raw.map((o: Loose) => mapOutboundRow(o, ts));
         setOutboundRecords(mapped);
         logger.info({ module: 'Warehouse', action: 'fetchOutboundRecords' }, ts('k_1ui4vre'), {
           count: mapped.length,
