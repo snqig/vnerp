@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface StandardCardMaterialProps {
   id?: number;
   standardCardId?: number;
@@ -35,14 +37,15 @@ export class StandardCardMaterial {
   }
 
   private validate(props: StandardCardMaterialProps): void {
+  const ts = t;
     if (!props.materialId) {
-      throw new Error('物料ID不能为空');
+      throw new Error(ts('k_1f11b1g'));
     }
     if (props.unitConsumption < 0) {
-      throw new Error('单耗不能为负数');
+      throw new Error(ts('k_26c9bk'));
     }
     if (props.lossRate !== undefined && (props.lossRate < 0 || props.lossRate > 100)) {
-      throw new Error('损耗率必须在0-100之间');
+      throw new Error(ts('k_17swgcd'));
     }
   }
 

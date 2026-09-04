@@ -46,6 +46,7 @@ const STATUS_VARIANT: Record<string, 'secondary' | 'default' | 'destructive' | '
 };
 
 function StandardCardPageContent() {
+  const ts = useTranslations('StandardCard');
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -168,11 +169,11 @@ function StandardCardPageContent() {
         setSelectedIds([]);
         fetchList();
       } else {
-        toast({ title: result.message || '批量删除失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_1izxzmz'), variant: 'destructive' });
       }
     } catch (e) {
       console.error('batch delete error:', e);
-      toast({ title: '批量删除失败', variant: 'destructive' });
+      toast({ title: ts('k_1izxzmz'), variant: 'destructive' });
     }
   };
 
@@ -369,7 +370,7 @@ function StandardCardPageContent() {
           {selectedIds.length > 0 && (
             <Button variant="destructive" onClick={handleBatchDelete} className="ml-auto">
               <Trash2 className="h-4 w-4 mr-2" />
-              批量删除 ({selectedIds.length})
+              {ts('k_tfzlxh')}{selectedIds.length})
             </Button>
           )}
         </div>
@@ -429,7 +430,7 @@ function StandardCardPageContent() {
                           className="w-4 h-4 cursor-pointer"
                           checked={list.length > 0 && selectedIds.length === list.length}
                           onChange={handleToggleAll}
-                          aria-label="全选"
+                          aria-label={ts('k_1yb2sje')}
                         />
                       </th>
                       <th className="px-3 py-2 text-left font-medium whitespace-nowrap">
@@ -454,7 +455,7 @@ function StandardCardPageContent() {
                         {t('printType')}
                       </th>
                       <th className="px-3 py-2 text-left font-medium whitespace-nowrap">
-                        {t('materialTypeCol')}
+                        {t('materialName')}
                       </th>
                       <th className="px-3 py-2 text-left font-medium whitespace-nowrap">
                         {t('statusCol')}
@@ -491,7 +492,9 @@ function StandardCardPageContent() {
                         <td className="px-3 py-2 whitespace-nowrap">{item.version || '-'}</td>
                         <td className="px-3 py-2 whitespace-nowrap">{item.finished_size || '-'}</td>
                         <td className="px-3 py-2 whitespace-nowrap">{item.print_type || '-'}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">{item.material_type || '-'}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {item.material_name || item.material_type || '-'}
+                        </td>
                         <td className="px-3 py-2">{renderStatusBadge(item.status ?? 1)}</td>
                         <td className="px-3 py-2 whitespace-nowrap">{item.creator || '-'}</td>
                         <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">

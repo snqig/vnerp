@@ -73,6 +73,7 @@ import { usePrintLabels } from './hooks/usePrintLabels';
 import { mapRecordsToLabels, filterApprovedRecords } from './utils/mapRecordsToLabels';
 
 export default function InboundManagementPage() {
+  const ts = useTranslations('Warehouse');
   // 翻译钩子
   const locale = useLocale();
   const t = useTranslations('Warehouse');
@@ -299,12 +300,12 @@ export default function InboundManagementPage() {
       (r) => r.status === 'approved' || r.status === 'completed'
     );
     if (approved.length === 0) {
-      toast.error('请选择已审核/已入库的单据进行调拨');
+      toast.error(ts('k_1j0kggt'));
       return;
     }
     const whs = new Set(approved.map((r) => r.warehouse_id));
     if (whs.size > 1) {
-      toast.error('所选单据不在同一仓库，无法合并为一张调拨单');
+      toast.error(ts('k_pufxan'));
       return;
     }
     setTransferSourceRecords(approved);
@@ -318,12 +319,12 @@ export default function InboundManagementPage() {
       (r) => r.status === 'approved' || r.status === 'completed'
     );
     if (approved.length === 0) {
-      toast.error('请选择已审核/已入库的单据');
+      toast.error(ts('k_u6yluh'));
       return;
     }
     const whs = new Set(approved.map((r) => r.warehouse_id));
     if (whs.size > 1) {
-      toast.error('所选单据不在同一仓库，无法合并处理');
+      toast.error(ts('k_p1rnpd'));
       return;
     }
     if (kind === 'raw') {
@@ -434,33 +435,27 @@ export default function InboundManagementPage() {
                       onClick={handleBatchTransfer}
                     >
                       <ArrowRightLeft className="w-3 h-3" />
-                      批量调拨出库
-                    </Button>
+                      {ts('k_kp84k9')}</Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button size="sm" variant="outline" className="gap-1">
                           <MoreHorizontal className="w-3 h-3" />
-                          批量出库 / 退料
-                        </Button>
+                          {ts('k_oety1u')}</Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleBatchOutbound('raw')}>
                           <PackageMinus className="w-4 h-4" />
-                          批量原料出库
-                        </DropdownMenuItem>
+                          {ts('k_1i7zgny')}</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleBatchOutbound('workshop')}>
                           <Factory className="w-4 h-4" />
-                          批量出库到车间生产
-                        </DropdownMenuItem>
+                          {ts('k_19x8e3q')}</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleBatchOutbound('prodReturn')}>
                           <Undo2 className="w-4 h-4" />
-                          批量生产退料
-                        </DropdownMenuItem>
+                          {ts('k_jd0ac4')}</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleBatchOutbound('purReturn')}>
                           <Truck className="w-4 h-4" />
-                          批量采购退料
-                        </DropdownMenuItem>
+                          {ts('k_h682yy')}</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -535,8 +530,7 @@ export default function InboundManagementPage() {
                               <DropdownMenuTrigger asChild>
                                 <Button size="sm" variant="outline" className="gap-1">
                                   <MoreHorizontal className="w-3 h-3" />
-                                  操作
-                                </Button>
+                                  {tc('operation')}</Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 {(record.status === 'draft' || record.status === 'pending') && (
@@ -600,25 +594,20 @@ export default function InboundManagementPage() {
                                       }}
                                     >
                                       <ArrowRightLeft className="w-4 h-4" />
-                                      调拨出库
-                                    </DropdownMenuItem>
+                                      {ts('k_1j10cql')}</DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => openRowOutbound('raw', record)}>
                                       <PackageMinus className="w-4 h-4" />
-                                      原料出库
-                                    </DropdownMenuItem>
+                                      {ts('k_i8a8h6')}</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => openRowOutbound('workshop', record)}>
                                       <Factory className="w-4 h-4" />
-                                      出库到车间
-                                    </DropdownMenuItem>
+                                      {ts('k_1ujut5g')}</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => openRowOutbound('prodReturn', record)}>
                                       <Undo2 className="w-4 h-4" />
-                                      生产退料
-                                    </DropdownMenuItem>
+                                      {ts('k_18y1htk')}</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => openRowOutbound('purReturn', record)}>
                                       <Truck className="w-4 h-4" />
-                                      采购退料
-                                    </DropdownMenuItem>
+                                      {ts('k_ri2ei6')}</DropdownMenuItem>
                                   </>
                                 )}
                                 <DropdownMenuSeparator />

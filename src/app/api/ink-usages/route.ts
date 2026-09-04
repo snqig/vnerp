@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -5,6 +8,7 @@ import type { NextRequest } from 'next/server';
 import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const workOrderId = searchParams.get('workOrderId');
@@ -21,7 +25,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     `,
       [id]
     );
-    return successResponse((rows as DbRow[])[0], '油墨耗用详情');
+    return successResponse((rows as DbRow[])[0], ts('k_2183v2'));
   }
 
   const page = parseInt(searchParams.get('page') || '1');
@@ -74,12 +78,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       page,
       pageSize,
     },
-    '油墨耗用列表'
+    ts('k_1y1mpbw')
   );
 });
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       workOrderId,
@@ -94,7 +99,7 @@ export const POST = withPermission(
     } = body;
 
     if (!inkId || !usageQty) {
-      return errorResponse('缺少必要参数', 400);
+      return errorResponse(ts('k_fifqlw'), 400);
     }
 
     const inkInfo = await query(`SELECT ink_code, ink_name, unit FROM base_ink WHERE id = ?`, [
@@ -103,7 +108,7 @@ export const POST = withPermission(
     const ink = (inkInfo as DbRow[])[0];
 
     if (!ink) {
-      return errorResponse('油墨不存在', 404);
+      return errorResponse(ts('k_92qwn7'), 404);
     }
 
     const result = await execute(
@@ -128,23 +133,24 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: (result as DbRow).insertId }, '油墨耗用记录成功');
+    return successResponse({ id: (result as DbRow).insertId }, ts('k_qmisx5'));
   },
   { logTitle: '记录油墨耗用', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('缺少记录ID', 400);
+      return errorResponse(ts('k_1sdbmxi'), 400);
     }
 
     await execute('UPDATE ink_usage SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
-    return successResponse(null, '油墨耗用记录删除成功');
+    return successResponse(null, ts('k_zes3bp'));
   },
   { logTitle: '删除油墨耗用记录', logType: 'business' }
 );

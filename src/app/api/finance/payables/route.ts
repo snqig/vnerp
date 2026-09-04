@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -6,6 +9,7 @@ import { generatePayable } from '@/lib/finance-core';
 import { withPermission } from '@/lib/api-permissions';
 // 查询应付单列表
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -39,7 +43,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     [...params, pageSize, (page - 1) * pageSize]
   );
 
-  return successResponse({ list: rows, total, page, pageSize }, '获取应付单列表成功');
+  return successResponse({ list: rows, total, page, pageSize }, ts('k_oboibd'));
 });
 
 // 生成应付单

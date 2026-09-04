@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -37,16 +40,17 @@ async function generateWorkOrderNo(conn: DbRow): Promise<string> {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'POST_linkage', traceId };
     const body = await request.json();
     const { sample_order_id, plan_start_date, plan_end_date } = body;
 
     if (!sample_order_id) {
-      return errorResponse('打样订单ID不能为空', 400, 400);
+      return errorResponse(ts('k_qcdlp'), 400, 400);
     }
 
-    logger.info(ctx, '打样单转工单请求', { sample_order_id, plan_start_date, plan_end_date });
+    logger.info(ctx, ts('k_dwb5ht'), { sample_order_id, plan_start_date, plan_end_date });
 
     return await transaction(async (connection) => {
       const [sampleRows] = await connection.execute(
@@ -58,14 +62,14 @@ export const POST = withPermission(
 
       const sampleOrder = (sampleRows as DbRow[])[0];
       if (!sampleOrder) {
-        throw new Error('打样订单不存在');
+        throw new Error(ts('k_151pm55'));
       }
 
       if (
         sampleOrder.delivery_status === SAMPLE_DELIVERY_STATUS.DELIVERED ||
         sampleOrder.delivery_status === SAMPLE_DELIVERY_STATUS.SIGNED
       ) {
-        throw new Error('打样订单已交付，不能创建工单');
+        throw new Error(ts('k_addhnp'));
       }
 
       const [existingWO] = await connection.query(
@@ -76,11 +80,11 @@ export const POST = withPermission(
       );
 
       if ((existingWO as DbRow[])[0].cnt > 0) {
-        throw new Error('该打样订单已存在未取消的工单');
+        throw new Error(ts('k_fykb41'));
       }
 
       const workOrderNo = await generateWorkOrderNo(connection);
-      logger.info(ctx, '生成工单号', { workOrderNo });
+      logger.info(ctx, ts('k_lxp8y5'), { workOrderNo });
 
       const productDesc =
         `${sampleOrder.product_name} ${sampleOrder.size_spec || ''} ${sampleOrder.version || ''}`.trim();
@@ -105,7 +109,7 @@ export const POST = withPermission(
       );
 
       const workOrderId = (orderResult as DbRow).insertId;
-      logger.info(ctx, '工单已创建', { workOrderId, workOrderNo, sampleOrderId: sample_order_id });
+      logger.info(ctx, ts('k_1viwive'), { workOrderId, workOrderNo, sampleOrderId: sample_order_id });
 
       await connection.execute(
         `INSERT INTO prod_work_order_item
@@ -176,16 +180,17 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'PUT_linkage', traceId };
     const body = await request.json();
     const { sample_order_id, action, actual_delivery_date } = body;
 
     if (!sample_order_id) {
-      return errorResponse('打样订单ID不能为空', 400, 400);
+      return errorResponse(ts('k_qcdlp'), 400, 400);
     }
 
-    logger.info(ctx, '交付状态变更请求', { sample_order_id, action, actual_delivery_date });
+    logger.info(ctx, ts('k_wqxwz1'), { sample_order_id, action, actual_delivery_date });
 
     return await transaction(async (connection) => {
       const [sampleRows] = await connection.execute(
@@ -195,12 +200,12 @@ export const PUT = withPermission(
 
       const sampleOrder = (sampleRows as DbRow[])[0];
       if (!sampleOrder) {
-        throw new Error('打样订单不存在');
+        throw new Error(ts('k_151pm55'));
       }
 
       if (action === 'deliver') {
         if (sampleOrder.delivery_status !== SAMPLE_DELIVERY_STATUS.PENDING) {
-          throw new Error('打样订单不在待交付状态');
+          throw new Error(ts('k_1pidykj'));
         }
 
         const [woRows] = await connection.query(
@@ -212,7 +217,7 @@ export const PUT = withPermission(
 
         const workOrder = (woRows as DbRow[])[0];
         if (workOrder && workOrder.status !== WORK_ORDER_STATUS.COMPLETED) {
-          throw new Error('关联工单尚未完成，不能交付');
+          throw new Error(ts('k_cwvm8u'));
         }
 
         await connection.execute(
@@ -231,13 +236,13 @@ export const PUT = withPermission(
             sample_order_id,
             delivery_status: SAMPLE_DELIVERY_STATUS.DELIVERED,
           },
-          '打样订单已标记为已交付'
+          ts('k_1lsz3vj')
         );
       }
 
       if (action === 'sign') {
         if (sampleOrder.delivery_status !== SAMPLE_DELIVERY_STATUS.DELIVERED) {
-          throw new Error('打样订单不在已交付状态，不能签收');
+          throw new Error(ts('k_7hzyfs'));
         }
 
         await connection.execute(
@@ -252,34 +257,35 @@ export const PUT = withPermission(
             sample_order_id,
             delivery_status: SAMPLE_DELIVERY_STATUS.SIGNED,
           },
-          '打样订单已签收'
+          ts('k_1s2mzn4')
         );
       }
 
-      return errorResponse('无效的操作类型', 400, 400);
+      return errorResponse(ts('k_4ty90w'), 400, 400);
     });
   },
   { logTitle: '打样订单状态更新' }
 );
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const traceId = generateTraceId();
   const ctx = { module: 'sample', action: 'GET_linkage', traceId };
   const { searchParams } = new URL(request.url);
   const sample_order_id = searchParams.get('sample_order_id');
 
   if (!sample_order_id) {
-    return errorResponse('打样订单ID不能为空', 400, 400);
+    return errorResponse(ts('k_qcdlp'), 400, 400);
   }
 
-  logger.info(ctx, '查询联动信息', { sample_order_id });
+  logger.info(ctx, ts('k_idp416'), { sample_order_id });
 
   const sampleOrder = await query(`SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0`, [
     sample_order_id,
   ]);
 
   if ((sampleOrder as DbRow[]).length === 0) {
-    return commonErrors.notFound('打样订单不存在');
+    return commonErrors.notFound(ts('k_151pm55'));
   }
 
   const workOrders = await query(

@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -44,6 +45,7 @@ export function WorkshopPickDialog({
   operatorName,
   onSuccess,
 }: Props) {
+  const ts = useTranslations('Warehouse');
   const router = useRouter();
   const fromWarehouseId = sourceRecords[0]?.warehouse_id;
   const aggregated = useMemo<AggItem[]>(
@@ -77,16 +79,16 @@ export function WorkshopPickDialog({
 
   const handleConfirm = async () => {
     if (!fromWarehouseId) {
-      toast.error('无法确定领料仓库');
+      toast.error(ts('k_x7wkjd'));
       return;
     }
     if (!noWo && !selectedWO) {
-      toast.error('请选择工单，或勾选“无工单领料”');
+      toast.error(ts('k_14ucen1'));
       return;
     }
     const valid = items.filter((it) => it.material_id && Number(it.quantity) > 0);
     if (valid.length === 0) {
-      toast.error('请至少填写一项有效数量');
+      toast.error(ts('k_482f8l'));
       return;
     }
     setSubmitting(true);
@@ -116,7 +118,7 @@ export function WorkshopPickDialog({
       });
       const result = await res.json();
       if (!result.success) {
-        toast.error(result.message || '创建领料单失败');
+        toast.error(result.message || ts('k_1c2fnhi'));
         setSubmitting(false);
         return;
       }
@@ -133,11 +135,11 @@ export function WorkshopPickDialog({
           return;
         }
       }
-      toast.success('领料单已创建并过账，库存将按先进先出扣减');
+      toast.success(ts('k_lh12t4'));
       onOpenChange(false);
       onSuccess();
     } catch {
-      toast.error('操作失败，请稍后重试');
+      toast.error(ts('k_1yojo3u'));
     } finally {
       setSubmitting(false);
     }
@@ -150,17 +152,16 @@ export function WorkshopPickDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl" resizable>
         <DialogHeader>
-          <DialogTitle>出库到车间生产（领料）</DialogTitle>
+          <DialogTitle>{ts('k_1pisd7i')}</DialogTitle>
           <DialogDescription>
-            从入库单发起生产领料，将原料发往车间。可关联已有工单，或新建工单。
-          </DialogDescription>
+            {ts('k_106oopf')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2 max-h-[62vh] overflow-y-auto">
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <Label>
-                关联工单 <span className="text-red-500">*</span>
+                {ts('k_1yxsmpc')}<span className="text-red-500">*</span>
               </Label>
               <Button
                 type="button"
@@ -168,8 +169,7 @@ export function WorkshopPickDialog({
                 variant="outline"
                 onClick={() => router.push('/production/workorder')}
               >
-                新建工单
-              </Button>
+                {ts('k_1qnotqp')}</Button>
             </div>
             <select
               value={selectedWO}
@@ -177,7 +177,7 @@ export function WorkshopPickDialog({
               onChange={(e) => setSelectedWO(e.target.value)}
               className={inputCls}
             >
-              <option value="">请选择生产工单</option>
+              <option value="">{ts('k_1djjuk8')}</option>
               {workOrders.map((w) => (
                 <option key={w.work_order_no} value={w.work_order_no}>
                   {w.work_order_no} - {w.product_name}
@@ -190,18 +190,17 @@ export function WorkshopPickDialog({
                 checked={noWo}
                 onChange={(e) => setNoWo(e.target.checked)}
               />
-              无工单领料（跳过工单与 BOM 校验）
-            </label>
+              {ts('k_6kawh0')}</label>
           </div>
 
           <OutboundItemsEditor items={items} onQtyChange={updateQty} />
 
           <div className="space-y-1">
-            <Label>备注</Label>
+            <Label>{ts('k_b5m1l6')}</Label>
             <input
               value={remark}
               onChange={(e) => setRemark(e.target.value)}
-              placeholder="可选"
+              placeholder={ts('k_zflkxh')}
               className={inputCls}
             />
           </div>
@@ -209,10 +208,9 @@ export function WorkshopPickDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            取消
-          </Button>
+            {ts('k_1589w37')}</Button>
           <Button onClick={handleConfirm} disabled={submitting}>
-            {submitting ? '处理中...' : '创建并过账领料'}
+            {submitting ? ts('k_1j4vco4') : ts('k_1asb8fu')}
           </Button>
         </DialogFooter>
       </DialogContent>

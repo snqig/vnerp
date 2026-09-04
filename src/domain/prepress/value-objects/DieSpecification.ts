@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '@/domain/shared/DomainTypes';
 import { FieldMapper, assertField, assertPositive, assertMaxUsage } from './FieldMapping';
 
@@ -37,12 +39,13 @@ export class DieSpecification {
   readonly piecesPerImpression: number;
 
   constructor(props: DieSpecificationProps) {
-    assertField(props.dieCode, '刀模编码');
-    assertField(props.dieName, '刀模名称');
-    assertPositive(props.maxUsage, '最大使用次数');
+  const ts = t;
+    assertField(props.dieCode, ts('k_1o00wsf'));
+    assertField(props.dieName, ts('k_1jfuufz'));
+    assertPositive(props.maxUsage, ts('k_fc0ina'));
     assertMaxUsage(props.currentUsage, props.maxUsage);
     if (props.warningThreshold < 0 || props.warningThreshold > 100) {
-      throw new DomainError('预警阈值必须在 0-100 之间');
+      throw new DomainError(ts('k_uw30qq'));
     }
 
     this.dieCode = props.dieCode;

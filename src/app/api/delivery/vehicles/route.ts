@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { execute, queryOne, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -67,6 +70,7 @@ function buildQueryConditions(params: { status: string | null; keyword: string |
 
 // GET - 获取车辆列表或单个车辆
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const status = searchParams.get('status');
@@ -82,7 +86,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
 
     if (!vehicle) {
-      return commonErrors.notFound('车辆不存在');
+      return commonErrors.notFound(ts('k_1qifu74'));
     }
 
     return successResponse(vehicle);
@@ -106,6 +110,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // POST - 创建车辆
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body: Vehicle = await request.json();
 
     // 验证必填字段
@@ -122,7 +127,7 @@ export const POST = withPermission(
     );
 
     if (existing) {
-      return errorResponse('车牌号已存在', 409, 409);
+      return errorResponse(ts('k_13pzvtq'), 409, 409);
     }
 
     const result = await execute(
@@ -153,7 +158,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId }, '车辆创建成功');
+    return successResponse({ id: result.insertId }, ts('k_7p5n79'));
   },
   { logTitle: '创建车辆', logType: 'business' }
 );
@@ -161,11 +166,12 @@ export const POST = withPermission(
 // PUT - 更新车辆
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('缺少车辆ID');
+      return commonErrors.badRequest(ts('k_dfpwa5'));
     }
 
     const body: Vehicle = await request.json();
@@ -186,7 +192,7 @@ export const PUT = withPermission(
     );
 
     if (!existingVehicle) {
-      return commonErrors.notFound('车辆不存在');
+      return commonErrors.notFound(ts('k_1qifu74'));
     }
 
     // 检查车牌号是否已被其他车辆使用
@@ -196,7 +202,7 @@ export const PUT = withPermission(
     );
 
     if (codeExists) {
-      return errorResponse('车牌号已存在', 409, 409);
+      return errorResponse(ts('k_13pzvtq'), 409, 409);
     }
 
     const result = await execute(
@@ -230,10 +236,10 @@ export const PUT = withPermission(
     );
 
     if (result.affectedRows === 0) {
-      return commonErrors.notFound('车辆不存在');
+      return commonErrors.notFound(ts('k_1qifu74'));
     }
 
-    return successResponse(null, '车辆更新成功');
+    return successResponse(null, ts('k_1y8nodg'));
   },
   { logTitle: '更新车辆', logType: 'business' }
 );
@@ -241,11 +247,12 @@ export const PUT = withPermission(
 // DELETE - 删除车辆（软删除）
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('缺少车辆ID');
+      return commonErrors.badRequest(ts('k_dfpwa5'));
     }
 
     const vehicleId = parseInt(id);
@@ -257,13 +264,13 @@ export const DELETE = withPermission(
     );
 
     if (!existingVehicle) {
-      return commonErrors.notFound('车辆不存在');
+      return commonErrors.notFound(ts('k_1qifu74'));
     }
 
     // 软删除
     await execute('UPDATE delivery_vehicle SET deleted = 1 WHERE id = ?', [vehicleId]);
 
-    return successResponse(null, '车辆删除成功');
+    return successResponse(null, ts('k_sacxvw'));
   },
   { logTitle: '删除车辆', logType: 'business' }
 );

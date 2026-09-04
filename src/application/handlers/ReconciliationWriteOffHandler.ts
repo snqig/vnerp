@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { ReconciliationWrittenOffEvent } from '@/domain/sales/events/ReconciliationEvents';
 import { transaction } from '@/lib/db';
@@ -14,6 +16,7 @@ import { logger, secureLog } from '@/lib/logger';
  */
 export class ReconciliationWriteOffHandler implements EventHandler<ReconciliationWrittenOffEvent> {
   async handle(event: ReconciliationWrittenOffEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { reconciliationId, reconciliationNo, customerId, totalWriteOffAmount, writeOffRecords } =
       event.payload;
     const ctx = {
@@ -24,7 +27,7 @@ export class ReconciliationWriteOffHandler implements EventHandler<Reconciliatio
     };
 
     if (!writeOffRecords || writeOffRecords.length === 0) {
-      logger.info(ctx, '跳过：无核销记录', { reconciliationNo });
+      logger.info(ctx, ts('k_z9vl46'), { reconciliationNo });
       return;
     }
 
@@ -47,7 +50,7 @@ export class ReconciliationWriteOffHandler implements EventHandler<Reconciliatio
         )) as DbResult;
 
         if (!receivableRow || receivableRow.length === 0) {
-          secureLog('warn', '应收单不存在或已删除，跳过', {
+          secureLog('warn', ts('k_ftzzf5'), {
             receivableId: record.receivableId,
             reconciliationNo,
           });
@@ -61,14 +64,14 @@ export class ReconciliationWriteOffHandler implements EventHandler<Reconciliatio
         let writeOffAmount = Number(record.amount);
         // 透支保护：并发核销可能导致应收单余额不足，截断为当前余额
         if (writeOffAmount > currentBalance && currentBalance > 0) {
-          secureLog('warn', '核销金额超过应收单当前余额，截断为余额', {
+          secureLog('warn', ts('k_6ndmox'), {
             receivableId: record.receivableId,
             requestedAmount: writeOffAmount,
             currentBalance,
           });
           writeOffAmount = currentBalance;
         } else if (currentBalance <= 0) {
-          secureLog('warn', '应收单余额已为0，跳过核销', {
+          secureLog('warn', ts('k_xxe1ga'), {
             receivableId: record.receivableId,
             requestedAmount: writeOffAmount,
           });
@@ -92,7 +95,7 @@ export class ReconciliationWriteOffHandler implements EventHandler<Reconciliatio
           [newReceivedAmount, newBalance, newStatus, record.receivableId]
         );
 
-        secureLog('info', '更新应收单核销状态', {
+        secureLog('info', ts('k_w5444v'), {
           receivableId: record.receivableId,
           receivableNo: receivable.receivable_no,
           writeOffAmount,
@@ -109,7 +112,7 @@ export class ReconciliationWriteOffHandler implements EventHandler<Reconciliatio
       processedCount: writeOffRecords.length,
     });
 
-    logger.info(ctx, '对账核销完成，应收单已同步更新', {
+    logger.info(ctx, ts('k_ialg58'), {
       reconciliationNo,
       totalWriteOffAmount,
       recordCount: writeOffRecords.length,

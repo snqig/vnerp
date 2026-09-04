@@ -7,6 +7,7 @@
  * 依据: docs/打样工艺卡录入页统一完善方案.md
  */
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
@@ -89,6 +90,8 @@ const emptyForm = (): SampleProcessCardData => ({
 });
 
 export function useSampleProcessForm(cardId?: number) {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Common');
   const { toast } = useToast();
   const [formData, setFormData] = useState<SampleProcessCardData>(emptyForm());
   const [cost, setCost] = useState<CostBreakdown>({
@@ -106,6 +109,7 @@ export function useSampleProcessForm(cardId?: number) {
   // 加载已有工艺卡数据
   const loadCard = useCallback(
     async (id: number) => {
+  
       setLoading(true);
       try {
         const res = await authFetch(`/api/dcprint/sample-card/${id}`);
@@ -119,7 +123,7 @@ export function useSampleProcessForm(cardId?: number) {
           });
         }
       } catch {
-        toast({ title: '加载失败', variant: 'destructive' });
+        toast({ title: tc('loadFail'), variant: 'destructive' });
       } finally {
         setLoading(false);
       }
@@ -258,12 +262,13 @@ export function useSampleProcessForm(cardId?: number) {
 
   // 恢复草稿
   const restoreDraft = useCallback(() => {
+  
     const draft = localStorage.getItem(DRAFT_KEY);
     if (draft) {
       try {
         const parsed = JSON.parse(draft);
         setFormData({ ...emptyForm(), ...parsed });
-        toast({ title: '草稿已恢复' });
+        toast({ title: ts('k_gs14z8') });
       } catch {
         // ignore
       }
@@ -278,6 +283,7 @@ export function useSampleProcessForm(cardId?: number) {
   // 上传工艺图示（图文混排）
   const uploadDiagram = useCallback(
     async (file: File): Promise<string | null> => {
+  
       const fd = new FormData();
       fd.append('file', file);
       try {
@@ -288,13 +294,13 @@ export function useSampleProcessForm(cardId?: number) {
         const result = await res.json();
         if (result.success) {
           updateField('diagram_url', result.data.url);
-          toast({ title: '图示上传成功' });
+          toast({ title: ts('k_xxm8o2') });
           return result.data.url;
         }
-        toast({ title: '上传失败', description: result.message, variant: 'destructive' });
+        toast({ title: ts('k_du2mcl'), description: result.message, variant: 'destructive' });
         return null;
       } catch {
-        toast({ title: '上传失败', variant: 'destructive' });
+        toast({ title: ts('k_du2mcl'), variant: 'destructive' });
         return null;
       }
     },
@@ -304,6 +310,8 @@ export function useSampleProcessForm(cardId?: number) {
   // 从标准模板导入（录入即沉淀 / 快速翻单）
   const importFromTemplate = useCallback(
     async (templateId: number): Promise<boolean> => {
+  
+  
       setLoading(true);
       try {
         const res = await authFetch(`/api/dcprint/sample-card/template/${templateId}`);
@@ -330,13 +338,13 @@ export function useSampleProcessForm(cardId?: number) {
             items: t.items?.length ? t.items : [emptyItem()],
             steps: t.steps?.length ? t.steps : [emptyStep()],
           });
-          toast({ title: '模板已导入' });
+          toast({ title: ts('k_texpja') });
           return true;
         }
-        toast({ title: '导入失败', variant: 'destructive' });
+        toast({ title: tc('importFailed'), variant: 'destructive' });
         return false;
       } catch {
-        toast({ title: '导入失败', variant: 'destructive' });
+        toast({ title: tc('importFailed'), variant: 'destructive' });
         return false;
       } finally {
         setLoading(false);
@@ -367,6 +375,7 @@ export function useSampleProcessForm(cardId?: number) {
 
   // 保存（草稿）
   const saveDraft = useCallback(async (): Promise<number | null> => {
+  
     setSaving(true);
     try {
       const isEdit = !!cardId;
@@ -379,15 +388,15 @@ export function useSampleProcessForm(cardId?: number) {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: isEdit ? '更新成功' : '保存成功' });
+        toast({ title: isEdit ? ts('k_1795bzg') : ts('k_16krn1') });
         if (!isEdit) clearDraft();
         return result.data.id;
       } else {
-        toast({ title: '保存失败', description: result.message, variant: 'destructive' });
+        toast({ title: ts('k_1q9u8le'), description: result.message, variant: 'destructive' });
         return null;
       }
     } catch {
-      toast({ title: '保存失败', variant: 'destructive' });
+      toast({ title: ts('k_1q9u8le'), variant: 'destructive' });
       return null;
     } finally {
       setSaving(false);
@@ -396,8 +405,9 @@ export function useSampleProcessForm(cardId?: number) {
 
   // 提交（草稿→打样中，自动生成工单）
   const submit = useCallback(async (): Promise<{ success: boolean; workOrderNo?: string }> => {
+  
     if (!validate()) {
-      toast({ title: '校验失败', description: '请检查必填项', variant: 'destructive' });
+      toast({ title: ts('k_fs1m36'), description: ts('k_1arc8l4'), variant: 'destructive' });
       return { success: false };
     }
     setSaving(true);
@@ -412,15 +422,15 @@ export function useSampleProcessForm(cardId?: number) {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '提交成功', description: `打样工单: ${result.data.workOrderNo}` });
+        toast({ title: ts('k_qp8dfo'), description: `打样工单: ${result.data.workOrderNo}` });
         clearDraft();
         return { success: true, workOrderNo: result.data.workOrderNo };
       } else {
-        toast({ title: '提交失败', description: result.message, variant: 'destructive' });
+        toast({ title: ts('k_f66edb'), description: result.message, variant: 'destructive' });
         return { success: false };
       }
     } catch {
-      toast({ title: '提交失败', variant: 'destructive' });
+      toast({ title: ts('k_f66edb'), variant: 'destructive' });
       return { success: false };
     } finally {
       setSaving(false);

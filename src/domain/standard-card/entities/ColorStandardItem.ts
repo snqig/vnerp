@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface ColorStandardItemProps {
   id?: number;
   standardCardId?: number;
@@ -35,14 +37,15 @@ export class ColorStandardItem {
   }
 
   private validate(props: ColorStandardItemProps): void {
+  const ts = t;
     if (!props.colorName || props.colorName.trim() === '') {
-      throw new Error('颜色名称不能为空');
+      throw new Error(ts('k_wm44n4'));
     }
     if (props.cmykValue && !/^(\d{1,3},){3}\d{1,3}$/.test(props.cmykValue)) {
-      throw new Error('CMYK值格式错误，应为 C,M,Y,K 格式');
+      throw new Error(ts('k_1rc8pu5'));
     }
     if (props.rgbValue && !/^(\d{1,3},){2}\d{1,3}$/.test(props.rgbValue)) {
-      throw new Error('RGB值格式错误，应为 R,G,B 格式');
+      throw new Error(ts('k_1ab8odl'));
     }
   }
 

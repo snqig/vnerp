@@ -1,15 +1,19 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, queryOne, execute } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 export const POST = withPermission(async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     const body = await request.json();
     const { qr_code, label_type, label_spec, printer_id, copies = 1, data = {} } = body;
 
     if (!qr_code) {
-      return errorResponse('缺少二维码编码', 400);
+      return errorResponse(ts('k_m4aj8u'), 400);
     }
 
     // 验证二维码是否存在
@@ -19,7 +23,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
     );
 
     if (!qrRecord) {
-      return errorResponse('二维码不存在', 404);
+      return errorResponse(ts('k_1o9pxv'), 404);
     }
 
     // 记录打印任务
@@ -53,22 +57,23 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       label_spec,
       copies,
       status: 'success',
-      message: '打印任务已发送',
+      message: ts('k_1kygkeu'),
     };
 
-    return successResponse(printResult, '打印任务已创建');
+    return successResponse(printResult, ts('k_1a0gbn5'));
   } catch (error) {
-    return errorResponse('创建打印任务失败: ' + (error as Error).message, 500);
+    return errorResponse(ts('k_ea40jf') + (error as Error).message, 500);
   }
 });
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     const { searchParams } = new URL(request.url);
     const qr_code = searchParams.get('qr_code');
 
     if (!qr_code) {
-      return errorResponse('缺少二维码编码', 400);
+      return errorResponse(ts('k_m4aj8u'), 400);
     }
 
     const records = await query(
@@ -79,8 +84,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       [qr_code]
     );
 
-    return successResponse(records, '获取打印记录成功');
+    return successResponse(records, ts('k_1ibuu1d'));
   } catch (error) {
-    return errorResponse('获取打印记录失败: ' + (error as Error).message, 500);
+    return errorResponse(ts('k_1o6wku4') + (error as Error).message, 500);
   }
 });

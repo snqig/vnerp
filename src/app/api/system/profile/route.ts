@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { UserInfo } from '@/lib/api-auth';
@@ -13,6 +16,7 @@ import bcrypt from 'bcryptjs';
 
 export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const rows = await query(
       `SELECT id, username, real_name, avatar, email, phone, department_id,
               last_login_time, last_login_ip, pwd_update_time
@@ -21,7 +25,7 @@ export const GET = withPermission(
     );
 
     if (rows.length === 0) {
-      return errorResponse('用户不存在', 404, 404);
+      return errorResponse(ts('k_17nv4bz'), 404, 404);
     }
 
     const user = rows[0];
@@ -43,6 +47,8 @@ export const GET = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { action } = body;
 
@@ -51,22 +57,22 @@ export const PUT = withPermission(
       const { oldPassword, newPassword } = body;
 
       if (!oldPassword || !newPassword) {
-        return errorResponse('请填写完整密码信息', 400, 400);
+        return errorResponse(tc('passwordInfoRequired'), 400, 400);
       }
 
       if (newPassword.length < 6) {
-        return errorResponse('新密码长度不能少于6位', 400, 400);
+        return errorResponse(ts('k_nincqz'), 400, 400);
       }
 
       const users = await query('SELECT password FROM sys_user WHERE id = ?', [userInfo.userId]);
 
       if (users.length === 0) {
-        return errorResponse('用户不存在', 404, 404);
+        return errorResponse(ts('k_17nv4bz'), 404, 404);
       }
 
       const isValid = await bcrypt.compare(oldPassword, users[0].password);
       if (!isValid) {
-        return errorResponse('当前密码不正确', 400, 400);
+        return errorResponse(ts('k_1tgtlh2'), 400, 400);
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -75,7 +81,7 @@ export const PUT = withPermission(
         [hashedPassword, userInfo.userId]
       );
 
-      return successResponse(null, '密码修改成功');
+      return successResponse(null, ts('k_4xbt44'));
     }
 
     // 更新基本信息
@@ -97,7 +103,7 @@ export const PUT = withPermission(
     }
 
     if (updates.length === 0) {
-      return errorResponse('没有需要更新的字段', 400, 400);
+      return errorResponse(ts('k_1kyikfw'), 400, 400);
     }
 
     updates.push('update_time = NOW()');
@@ -105,7 +111,7 @@ export const PUT = withPermission(
 
     await execute(`UPDATE sys_user SET ${updates.join(', ')} WHERE id = ?`, params);
 
-    return successResponse(null, '个人信息更新成功');
+    return successResponse(null, ts('k_1h5grhs'));
   },
   { errorMessage: '操作失败' }
 );

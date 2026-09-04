@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
 import {
@@ -112,6 +115,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, [
       'template_code',
@@ -127,7 +131,7 @@ export const POST = withPermission(
       [body.template_code]
     );
     if (existing) {
-      return errorResponse('刀模板/网版编号已存在', 409, 409);
+      return errorResponse(ts('k_1b0eb70'), 409, 409);
     }
 
     const maxUsage = body.max_usage || 0;
@@ -185,7 +189,7 @@ export const POST = withPermission(
 
     return successResponse(
       FieldMapper.addCamelCase({ id: result.insertId }),
-      '刀模板/网版创建成功'
+      ts('k_aguxb5')
     );
   },
   { errorMessage: '创建刀模板/网版失败' }
@@ -193,14 +197,15 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
-    if (!body.id) return commonErrors.badRequest('ID不能为空');
+    if (!body.id) return commonErrors.badRequest(ts('k_32pxya'));
 
     const existing = await queryOne(
       'SELECT id FROM prd_die_template WHERE id = ? AND deleted = 0',
       [body.id]
     );
-    if (!existing) return commonErrors.notFound('刀模板/网版不存在');
+    if (!existing) return commonErrors.notFound(ts('k_12kfs50'));
 
     return await transaction(async (conn) => {
       const maxUsage = body.max_usage;
@@ -279,7 +284,7 @@ export const PUT = withPermission(
         ]
       );
 
-      return successResponse(null, '刀模板/网版更新成功');
+      return successResponse(null, ts('k_1it93go'));
     });
   },
   { errorMessage: '更新刀模板/网版失败' }
@@ -287,12 +292,13 @@ export const PUT = withPermission(
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return commonErrors.badRequest('ID不能为空');
+    if (!id) return commonErrors.badRequest(ts('k_32pxya'));
 
     await execute('UPDATE prd_die_template SET deleted = 1 WHERE id = ?', [parseInt(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除刀模板/网版', logType: 'business' }
 );

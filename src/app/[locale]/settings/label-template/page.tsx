@@ -42,6 +42,7 @@ const defaultTemplate = `<div style="text-align:center;font-family:sans-serif;pa
 </div>`;
 
 export default function LabelTemplatePage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('trace');
   const tc = useTranslations('Common');
   const [list, setList] = useState<LabelTemplateItem[]>([]);
@@ -57,7 +58,7 @@ export default function LabelTemplatePage() {
     qr_size_mm: 20,
   });
   const [previewData] = useState({
-    materialName: '示例物料',
+    materialName: ts('k_123k4dk'),
     batchNo: 'BATCH-2026-001',
     quantity: '100.0000',
     qrContent: 'QR-EXAMPLE-001',

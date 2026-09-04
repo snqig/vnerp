@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -26,6 +29,7 @@ async function checkIsVisibleColumn(): Promise<boolean> {
 }
 
 export const GET = withPermission(async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
   const cached = getCachedPermissions(userInfo.userId);
   if (cached) {
     return successResponse(
@@ -33,7 +37,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         menus: cached.menus,
         permissions: cached.permissions,
       },
-      '获取成功（缓存）'
+      ts('k_2koftj')
     );
   }
 
@@ -85,6 +89,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
   clearCachedPermissions(userInfo.userId);
-  return successResponse(null, '缓存已清除');
+  return successResponse(null, ts('k_qk9tvp'));
 });

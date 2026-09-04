@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -5,11 +8,12 @@ import type { NextRequest } from 'next/server';
 import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const plateId = searchParams.get('plateId');
 
   if (!plateId) {
-    return errorResponse('缺少网版ID', 400);
+    return errorResponse(ts('k_tf0fjk'), 400);
   }
 
   const rows = await query(
@@ -21,16 +25,17 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     [plateId]
   );
 
-  return successResponse(rows, '网版生命周期记录');
+  return successResponse(rows, ts('k_9cvhm'));
 });
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { plateId, action, tensionValue, lifeIncrement, remark, operatorId, operatorName } = body;
 
     if (!plateId || !action) {
-      return errorResponse('缺少必要参数', 400);
+      return errorResponse(ts('k_fifqlw'), 400);
     }
 
     const result = await execute(
@@ -84,7 +89,7 @@ export const POST = withPermission(
       await execute(`UPDATE prd_screen_plate SET ${updateFields.join(', ')} WHERE id = ?`, params);
     }
 
-    return successResponse({ historyId: (result as DbRow).insertId }, '生命周期记录添加成功');
+    return successResponse({ historyId: (result as DbRow).insertId }, ts('k_1wbhvnx'));
   },
   { logTitle: '添加网版生命周期记录', logType: 'business' }
 );

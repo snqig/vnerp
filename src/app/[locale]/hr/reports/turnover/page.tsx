@@ -36,6 +36,8 @@ interface TurnoverData {
 }
 
 export default function TurnoverPage() {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Common');
   const t = useTranslations('Hr');
   const _tc = useTranslations('Common');
   const [data, setData] = useState<TurnoverData | null>(null);
@@ -77,13 +79,13 @@ export default function TurnoverPage() {
     <MainLayout>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">{t('turnover') || '人员流动分析'}</h1>
+          <h1 className="text-3xl font-bold">{t('turnover') || ts('k_a9h8w')}</h1>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('headcount') || '在职人数'}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('headcount') || ts('k_497jib')}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -92,7 +94,7 @@ export default function TurnoverPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('resignations') || '离职人数'}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('resignations') || ts('k_5rbwdk')}</CardTitle>
               <UserMinus className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -101,7 +103,7 @@ export default function TurnoverPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('avgTenure') || '平均在职天数'}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('avgTenure') || ts('k_2lg9bm')}</CardTitle>
               <CalendarDays className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -110,7 +112,7 @@ export default function TurnoverPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('turnoverRate') || '综合流动率'}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('turnoverRate') || ts('k_1s8qmr9')}</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -122,16 +124,16 @@ export default function TurnoverPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">{t('monthlyTrend') || '月度流动趋势'}</CardTitle>
+              <CardTitle className="text-lg">{t('monthlyTrend') || ts('k_p3lqro')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('month') || '月份'}</TableHead>
-                    <TableHead className="text-right">{t('newHires') || '新入职'}</TableHead>
-                    <TableHead className="text-right">{t('resignations') || '离职'}</TableHead>
-                    <TableHead className="text-right">{t('netChange') || '净变化'}</TableHead>
+                    <TableHead>{t('month') || ts('k_1fsw60u')}</TableHead>
+                    <TableHead className="text-right">{t('newHires') || ts('k_a0odrq')}</TableHead>
+                    <TableHead className="text-right">{t('resignations') || ts('k_1v4n1r6')}</TableHead>
+                    <TableHead className="text-right">{t('netChange') || ts('k_e3fn55')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -152,16 +154,16 @@ export default function TurnoverPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">{t('departmentTurnoverRate') || '各部门流动率'}</CardTitle>
+              <CardTitle className="text-lg">{t('departmentTurnoverRate') || ts('k_1xzb8v3')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('departmentName') || '部门'}</TableHead>
-                    <TableHead className="text-right">{t('totalEmployees') || '总人数'}</TableHead>
-                    <TableHead className="text-right">{t('resigned') || '已离职'}</TableHead>
-                    <TableHead className="text-right">{t('turnoverRate') || '流动率'}</TableHead>
+                    <TableHead>{t('departmentName') || tc('department')}</TableHead>
+                    <TableHead className="text-right">{t('totalEmployees') || ts('k_k1kv74')}</TableHead>
+                    <TableHead className="text-right">{t('resigned') || ts('k_h7ds5u')}</TableHead>
+                    <TableHead className="text-right">{t('turnoverRate') || ts('k_17ttkoh')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

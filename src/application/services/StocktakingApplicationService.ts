@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { IStocktakingOrderRepository } from '@/domain/warehouse/repositories/IStocktakingOrderRepository';
 import { StocktakingOrder, StocktakingOrderProps } from '@/domain/warehouse/aggregates/StocktakingOrder';
 import {
@@ -14,9 +16,10 @@ export class StocktakingApplicationService {
   ) {}
 
   async getOrderById(id: number): Promise<StocktakingOrder> {
+  const ts = await getTranslations('Common');
     const order = await this.orderRepo.findById(id);
     if (!order) {
-      throw new NotFoundError('盘点单不存在');
+      throw new NotFoundError(ts('k_rt4j0w'));
     }
     return order;
   }
@@ -120,10 +123,11 @@ export class StocktakingApplicationService {
     actualQty: number,
     scanOperator?: string
   ): Promise<void> {
+  const ts = await getTranslations('Common');
     const order = await this.getOrderById(orderId);
     const item = order.items.find((i) => i.id === itemId);
     if (!item) {
-      throw new NotFoundError('盘点项不存在');
+      throw new NotFoundError(ts('k_1324jzg'));
     }
 
     item.recordActualQty(actualQty, scanOperator);
@@ -143,9 +147,10 @@ export class StocktakingApplicationService {
   }
 
   async deleteOrder(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const order = await this.getOrderById(id);
     if (!order.canDelete()) {
-      throw new DomainError('当前状态的盘点单不能删除');
+      throw new DomainError(ts('k_ao7cio'));
     }
     await this.orderRepo.softDelete(id);
   }

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -5,11 +8,12 @@ import { autoScheduleWorkOrders, saveScheduleResult } from '@/lib/production-sch
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { work_order_ids, start_date, respect_deadline = true } = body;
 
     if (!work_order_ids || !Array.isArray(work_order_ids) || work_order_ids.length === 0) {
-      return errorResponse('请提供工单ID列表', 400, 400);
+      return errorResponse(ts('k_1i67zxr'), 400, 400);
     }
 
     const results = await autoScheduleWorkOrders(work_order_ids, {
@@ -33,7 +37,7 @@ export const POST = withPermission(
           with_conflicts: results.filter((r) => r.conflicts.length > 0).length,
         },
       },
-      '自动排程完成'
+      ts('k_16zal5k')
     );
   },
   { logTitle: '自动排产', logType: 'business' }

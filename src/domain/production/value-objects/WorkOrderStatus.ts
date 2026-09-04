@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '../../shared/DomainTypes';
 
 /** 工单状态：与 prod_work_order.status 字段对齐 */
@@ -128,14 +130,15 @@ export class WorkOrderStatusVO {
   }
 
   label(): string {
+  const ts = t;
     const labels: Record<WorkOrderStatus, string> = {
-      draft: '草稿',
-      approved: '已审核',
-      picking: '领料中',
-      in_progress: '生产中',
-      completed: '已完工',
-      closed: '已结案',
-      cancelled: '已作废',
+      draft: ts('k_oc54qp'),
+      approved: ts('k_7j2xv0'),
+      picking: ts('k_ngsv7b'),
+      in_progress: ts('k_1rcb0fm'),
+      completed: ts('k_vuhsey'),
+      closed: ts('k_kigq32'),
+      cancelled: ts('k_1o0kows'),
     };
     return labels[this.value];
   }

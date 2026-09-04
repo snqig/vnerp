@@ -11,6 +11,7 @@
     "lint:fix": "eslint src/ --fix",
     "lint:baseline": "eslint src/ --format json --output-file eslint-baseline.json",
     "lint:gate": "node scripts/lint-gate.mjs",
+    "lint:i18n": "node scripts/lint-gate.mjs",
     "i18n:extract": "node scripts/i18n-extract.mjs",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json}\"",

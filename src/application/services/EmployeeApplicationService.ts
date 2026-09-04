@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { IEmployeeRepository } from '@/domain/hr/repositories/IEmployeeRepository';
 import { Employee } from '@/domain/hr/aggregates/Employee';
 import { EmployeeStatus } from '@/domain/hr/aggregates/Employee';
@@ -44,22 +46,25 @@ export class EmployeeApplicationService {
   }
 
   async confirm(employeeId: number, confirmedBy: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const employee = await this.employeeRepo.getById(employeeId);
-    if (!employee) throw new Error('员工不存在');
+    if (!employee) throw new Error(ts('k_1k6rrmh'));
     employee.confirm(confirmedBy);
     await this.employeeRepo.update(employee);
   }
 
   async transfer(employeeId: number, newDeptId: number, newPositionId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const employee = await this.employeeRepo.getById(employeeId);
-    if (!employee) throw new Error('员工不存在');
+    if (!employee) throw new Error(ts('k_1k6rrmh'));
     employee.transfer(newDeptId, newPositionId);
     await this.employeeRepo.update(employee);
   }
 
   async resign(employeeId: number, resignDate: Date, reason: string): Promise<void> {
+  const ts = await getTranslations('Common');
     const employee = await this.employeeRepo.getById(employeeId);
-    if (!employee) throw new Error('员工不存在');
+    if (!employee) throw new Error(ts('k_1k6rrmh'));
     employee.resign(resignDate, reason);
     await this.employeeRepo.update(employee);
   }

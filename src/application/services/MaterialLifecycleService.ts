@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { db, type SqlValue } from '@/lib/db';
 import { getCacheManager, type CacheManager } from '@/lib/cache';
 
@@ -282,33 +284,9 @@ export class MaterialLifecycleService {
   }
 
   async getStockAnalysis(): Promise<MaterialStockAnalysis[]> {
+  const ts = await getTranslations('Common');
     const rows = await db.query<StockAnalysisRow>(
-      `SELECT
-        id,
-        material_no,
-        material_name,
-        spec,
-        unit,
-        stock_qty as current_stock,
-        COALESCE(min_stock, 0) as min_stock,
-        COALESCE(max_stock, 0) as max_stock,
-        unit_price,
-        ROUND(stock_qty * unit_price, 2) as stock_value,
-        CASE
-          WHEN stock_qty <= 0 THEN '缺货'
-          WHEN stock_qty <= min_stock THEN '库存不足'
-          WHEN stock_qty >= max_stock THEN '库存过高'
-          ELSE '正常'
-        END as stock_status,
-        CASE
-          WHEN stock_qty <= 0 THEN 3
-          WHEN stock_qty <= min_stock THEN 2
-          WHEN stock_qty >= max_stock THEN 1
-          ELSE 0
-        END as warning_level
-      FROM inv_material
-      WHERE deleted = 0
-      ORDER BY warning_level DESC, stock_value DESC`
+      ts('k_rli3nz')
     );
 
     return rows.map((row) => ({
@@ -328,33 +306,9 @@ export class MaterialLifecycleService {
   }
 
   async getBatchList(materialId: number): Promise<MaterialBatchInfo[]> {
+  const ts = await getTranslations('Common');
     const rows = await db.query<BatchInfoRow>(
-      `SELECT
-        b.id as batch_id,
-        b.batch_no,
-        b.quantity,
-        b.available_qty,
-        COALESCE(b.locked_qty, 0) as locked_qty,
-        b.inbound_date,
-        b.expire_date,
-        b.opened_at,
-        b.production_date,
-        COALESCE(b.supplier_name, '') as supplier_name,
-        COALESCE(b.source_inbound_no, '') as source_inbound_no,
-        CASE
-          WHEN b.expire_date IS NOT NULL AND b.expire_date <= CURDATE() THEN '已过期'
-          WHEN b.expire_date IS NOT NULL AND b.expire_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN '30天内过期'
-          WHEN b.opened_at IS NOT NULL THEN '已开封'
-          ELSE '正常'
-        END as batch_status,
-        DATEDIFF(b.expire_date, CURDATE()) as days_until_expiry
-      FROM inv_inventory_batch b
-      WHERE b.material_id = ? AND b.deleted = 0
-      ORDER BY
-        CASE WHEN b.opened_at IS NOT NULL THEN b.opened_at ELSE b.inbound_date END ASC,
-        b.expire_date ASC,
-        b.inbound_date ASC,
-        b.id ASC`,
+      ts('k_chudez'),
       [materialId]
     );
 
@@ -605,13 +559,14 @@ export class MaterialLifecycleService {
   }
 
   async runExpiryCheck(): Promise<{ processed: number; notified: number; expired: number }> {
+  const ts = await getTranslations('Common');
     const rows = await db.query<ExpiryCheckRow>(
       `SELECT id, material_name, expire_date, warning_days
       FROM inv_material
       WHERE deleted = 0
         AND expire_date IS NOT NULL
         AND expire_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)
-        AND status = 'normal'`
+        AND status = 1`
     );
 
     let processed = 0;
@@ -625,7 +580,7 @@ export class MaterialLifecycleService {
       );
 
       if (daysUntilExpiry <= 0) {
-        await db.execute(`UPDATE inv_material SET status = 'expired' WHERE id = ?`, [row.id]);
+        await db.execute(`UPDATE inv_material SET status = 0 WHERE id = ?`, [row.id]);
         expired++;
       } else if (daysUntilExpiry <= row.warning_days) {
         const existing = await db.query<{ 1: number }>(
@@ -640,7 +595,7 @@ export class MaterialLifecycleService {
 
           for (const user of users) {
             await db.insert('sys_notification', {
-              title: '物料即将过期',
+              title: ts('k_1o9ecnw'),
               content: `物料【${row.material_name}】将在${daysUntilExpiry}天后过期，请及时处理`,
               type: 'material_expiry_warning',
               source_type: 'material',

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -44,9 +47,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
               u1.real_name as checker_name,
               u2.real_name as approver_name
        FROM inv_stocktaking_item si
-       LEFT JOIN materials m ON si.material_id = m.id
-       LEFT JOIN inv_stocktaking s ON si.check_id = s.id
-       LEFT JOIN warehouses w ON s.warehouse_id = w.id
+       LEFT JOIN inv_material m ON si.material_id = m.id
+       LEFT JOIN inv_stocktaking s ON si.taking_id = s.id
+       LEFT JOIN inv_warehouse w ON s.warehouse_id = w.id
        LEFT JOIN sys_user u1 ON si.check_by = u1.id
        LEFT JOIN sys_user u2 ON si.diff_approver = u2.id
        ${where}
@@ -79,6 +82,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
 // 差异审批/处理
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { action } = body;
 
@@ -86,7 +90,7 @@ export const POST = withPermission(
       // 审批差异
       const { item_ids, reason } = body;
       if (!item_ids || !Array.isArray(item_ids) || item_ids.length === 0) {
-        return errorResponse('请选择需要审批的差异项', 400, 400);
+        return errorResponse(ts('k_7uxbkm'), 400, 400);
       }
 
       for (const itemId of item_ids) {
@@ -113,7 +117,7 @@ export const POST = withPermission(
       // 处理已审批的差异（调整库存）
       const { item_ids } = body;
       if (!item_ids || !Array.isArray(item_ids) || item_ids.length === 0) {
-        return errorResponse('请选择需要处理的差异项', 400, 400);
+        return errorResponse(ts('k_hsxcaa'), 400, 400);
       }
 
       let processedCount = 0;
@@ -121,7 +125,7 @@ export const POST = withPermission(
       for (const itemId of item_ids) {
         const items = await query(
           `SELECT si.*, s.warehouse_id FROM inv_stocktaking_item si
-           LEFT JOIN inv_stocktaking s ON si.check_id = s.id
+           LEFT JOIN inv_stocktaking s ON si.taking_id = s.id
            WHERE si.id = ? AND si.diff_status = 'approved'`,
           [itemId]
         );
@@ -135,14 +139,14 @@ export const POST = withPermission(
         if (difference > 0) {
           // 盘盈：增加库存
           await execute(
-            `UPDATE stock SET quantity = quantity + ?, update_time = NOW() 
+            `UPDATE inv_inventory SET quantity = quantity + ?, update_time = NOW() 
              WHERE material_id = ? AND warehouse_id = ?`,
             [difference, item.material_id, item.warehouse_id]
           );
         } else {
           // 盘亏：减少库存
           await execute(
-            `UPDATE stock SET quantity = GREATEST(quantity + ?, 0), update_time = NOW() 
+            `UPDATE inv_inventory SET quantity = GREATEST(quantity + ?, 0), update_time = NOW() 
              WHERE material_id = ? AND warehouse_id = ?`,
             [difference, item.material_id, item.warehouse_id]
           );
@@ -150,12 +154,12 @@ export const POST = withPermission(
 
         // 记录库存变动
         await execute(
-          `INSERT INTO stock_movement (material_id, warehouse_id, movement_type, quantity, unit_price, source_type, source_no, operator_id, create_time)
+          `INSERT INTO inv_inventory_transaction (material_id, warehouse_id, trans_type, quantity, unit_price, source_type, source_no, create_by, create_time)
            VALUES (?, ?, ?, ?, 0, 'stocktaking', ?, ?, NOW())`,
           [
             item.material_id,
             item.warehouse_id,
-            difference > 0 ? 'stock_gain' : 'stock_loss',
+            difference > 0 ? 'in' : 'out',
             Math.abs(difference),
             item.taking_no || '',
             userInfo.userId,
@@ -178,7 +182,7 @@ export const POST = withPermission(
       // 驳回差异
       const { item_ids, reason } = body;
       if (!item_ids || !Array.isArray(item_ids)) {
-        return errorResponse('请选择需要驳回的差异项', 400, 400);
+        return errorResponse(ts('k_1m6mo2l'), 400, 400);
       }
 
       for (const itemId of item_ids) {
@@ -186,14 +190,14 @@ export const POST = withPermission(
           `UPDATE inv_stocktaking_item 
            SET diff_status = 'rejected', diff_reason = ?, update_time = NOW()
            WHERE id = ? AND diff_status = 'pending'`,
-          [reason || '驳回', itemId]
+          [reason || ts('k_h89l90'), itemId]
         );
       }
 
       return successResponse(null, `已驳回 ${item_ids.length} 项差异`);
     }
 
-    return errorResponse('无效的操作类型', 400, 400);
+    return errorResponse(ts('k_4ty90w'), 400, 400);
   },
   { errorMessage: '操作失败' }
 );

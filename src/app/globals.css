@@ -916,3 +916,38 @@
   background: var(--sidebar-primary);
   color: var(--sidebar-primary-foreground);
 }
+
+/* ============================================================
+   纵向无缝无限循环滚动（垂直跑马灯）
+   用法：内容渲染两份，轨道整体从 translateY(0) 平移到 translateY(-50%)。
+   -50% 恰好等于「一份内容的高度」，因此终点时第二份的开头对齐容器顶部，
+   与第一份的开头视觉位置完全一致 —— 循环回到起点时无缝、无跳变。
+   duration 由组件按内容高度 / speed(px每秒) 动态换算，保证速度恒定。
+   ============================================================ */
+@keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+/* ============================================================
+   尊重「减少动态效果」系统偏好（prefers-reduced-motion）
+   审计发现：全仓库大量动画（登录轮播、看板、进度条、跑马灯等）
+   未对 reduced-motion 做兜底，敏感用户在系统开启「减少动态」时
+   仍会看到动画。此处统一关闭 transition / animation / scroll-behavior，
+   使所有动效对偏好减少动态的用户即时完成、不产生位移。
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}

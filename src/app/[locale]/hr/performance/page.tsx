@@ -47,6 +47,7 @@ const calculateTotal = (row: {
 };
 
 export default function PerformancePage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
 
@@ -111,12 +112,12 @@ export default function PerformancePage() {
       });
       const json = await res.json();
       if (json.code === 200) {
-        toast.success(t('saveSuccess') || '保存成功');
+        toast.success(t('saveSuccess') || ts('k_16krn1'));
       } else {
         toast.error(json.message || tc('error'));
       }
     } catch {
-      toast.error(t('saveFailed') || '保存失败');
+      toast.error(t('saveFailed') || ts('k_1q9u8le'));
     }
   };
 
@@ -125,12 +126,12 @@ export default function PerformancePage() {
   );
 
   return (
-    <MainLayout title={t('performance') || '绩效评分'}>
+    <MainLayout title={t('performance') || ts('k_1g8d66q')}>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <TrendingUp className="h-6 w-6 text-blue-500" />
-            <h1 className="text-2xl font-bold">{t('performance') || '绩效评分'}</h1>
+            <h1 className="text-2xl font-bold">{t('performance') || ts('k_1g8d66q')}</h1>
           </div>
           <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
             <Save className="h-4 w-4 mr-2" />
@@ -144,7 +145,7 @@ export default function PerformancePage() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder={t('searchEmployee') || '搜索员工姓名...'}
+                  placeholder={t('searchEmployee') || ts('k_1stef0e')}
                   className="pl-10"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -156,21 +157,21 @@ export default function PerformancePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('employeeName') || '姓名'}</TableHead>
+                  <TableHead>{t('employeeName') || ts('k_10ld5dp')}</TableHead>
                   <TableHead className="text-right">
-                    {t('outputRate40') || '产量达成率(40%)'}
+                    {t('outputRate40') || ts('k_sc91k0')}
                   </TableHead>
                   <TableHead className="text-right">
-                    {t('qualityRate30') || '质量合格率(30%)'}
+                    {t('qualityRate30') || ts('k_yspo8i')}
                   </TableHead>
                   <TableHead className="text-right">
-                    {t('equipmentRate15') || '设备稼动率(15%)'}
+                    {t('equipmentRate15') || ts('k_jacx39')}
                   </TableHead>
                   <TableHead className="text-right">
-                    {t('siteManagement15') || '5S现场管理(15%)'}
+                    {t('siteManagement15') || ts('k_3f0n70')}
                   </TableHead>
                   <TableHead className="text-right text-blue-600 font-bold">
-                    {t('totalScore') || '总分'}
+                    {t('totalScore') || ts('k_x4ssb8')}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -210,7 +211,7 @@ export default function PerformancePage() {
                 {filtered.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      {t('noData') || '暂无数据'}
+                      {t('noData') || ts('k_6tzr61')}
                     </TableCell>
                   </TableRow>
                 )}

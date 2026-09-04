@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, queryOne, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -13,11 +16,12 @@ import {
 // POST /api/standard-cards/scan - 扫码查看标准卡（设计文档 6.3 节）
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { qr_code } = body;
 
     if (!qr_code) {
-      return errorResponse('缺少二维码编码', 400, 400);
+      return errorResponse(ts('k_m4aj8u'), 400, 400);
     }
 
     // 通过二维码查找关联的工单
@@ -27,7 +31,7 @@ export const POST = withPermission(
     );
 
     if (!qrRecord) {
-      return errorResponse('未找到对应的二维码记录', 404, 404);
+      return errorResponse(ts('k_pn7c6u'), 404, 404);
     }
 
     let workOrderNo = qrRecord.work_order_no;
@@ -46,7 +50,7 @@ export const POST = withPermission(
     }
 
     if (!workOrderId) {
-      return errorResponse('该二维码未关联生产工单', 404, 404);
+      return errorResponse(ts('k_s8ykq8'), 404, 404);
     }
 
     // 查询工单关联的标准卡

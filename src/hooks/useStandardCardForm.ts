@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -16,6 +17,8 @@ interface UseStandardCardFormOptions {
 }
 
 export function useStandardCardForm({ mode }: UseStandardCardFormOptions) {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Common');
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -67,6 +70,8 @@ export function useStandardCardForm({ mode }: UseStandardCardFormOptions) {
   }, [fetchCustomers]);
 
   const loadData = useCallback(async (id: string) => {
+  
+  
     try {
       setLoading(true);
       const response = await authFetch(`/api/standard-cards?id=${id}`);
@@ -77,10 +82,10 @@ export function useStandardCardForm({ mode }: UseStandardCardFormOptions) {
         originalApiRef.current = apiData as Record<string, unknown>;
         setData(mapApiDataToCardData(apiData));
       } else {
-        setError(result.message || '加载失败');
+        setError(result.message || tc('loadFail'));
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : '加载数据失败');
+      setError(e instanceof Error ? e.message : ts('k_vjx0f2'));
     } finally {
       setLoading(false);
     }
@@ -146,21 +151,23 @@ export function useStandardCardForm({ mode }: UseStandardCardFormOptions) {
   const filteredCustomersLimited = filteredCustomers.slice(0, 20);
 
   const validate = (): string | null => {
-    if (!data.customer) return '请选择客户';
-    if (!data.customerCode) return '请输入客户料号';
-    if (!data.productName) return '请输入品名';
+  
+    if (!data.customer) return ts('k_1dm2yuf');
+    if (!data.customerCode) return ts('k_194misl');
+    if (!data.productName) return ts('k_iufw28');
     return null;
   };
 
   const handleSave = async (): Promise<number | null> => {
+  
     // 编辑模式下数据未加载完成或加载失败时禁止保存：
     // 此时表单为空，直接提交会把已有数据（如印序 sequences）整体清空覆盖。
     if (isEditMode && loading) {
-      toast({ title: '数据仍在加载中，请稍候再保存', variant: 'destructive' });
+      toast({ title: ts('k_1yeex3v'), variant: 'destructive' });
       return null;
     }
     if (isEditMode && error) {
-      toast({ title: '数据加载失败，无法保存（请刷新后重试）', variant: 'destructive' });
+      toast({ title: ts('k_1nh280p'), variant: 'destructive' });
       return null;
     }
 
@@ -172,7 +179,7 @@ export function useStandardCardForm({ mode }: UseStandardCardFormOptions) {
 
     // 编辑模式下提交前做二次保护：若当前表单核心字段全空（说明数据未成功回填），拒绝保存
     if (isEditMode && !data.customer && !data.productName && !data.cardNo) {
-      toast({ title: '表单数据为空，拒绝保存，防止覆盖已有数据', variant: 'destructive' });
+      toast({ title: ts('k_9srxwn'), variant: 'destructive' });
       return null;
     }
 
@@ -208,12 +215,12 @@ export function useStandardCardForm({ mode }: UseStandardCardFormOptions) {
       const result = await response.json();
 
       if (!result.success) {
-        toast({ title: result.message || '保存失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_1q9u8le'), variant: 'destructive' });
         return null;
       }
 
       const newId = result.data?.id || parseInt(editId || '0');
-      toast({ title: isEditMode ? '标准卡更新成功' : '标准卡保存成功' });
+      toast({ title: isEditMode ? ts('k_40e9li') : ts('k_1npdhef') });
       setSavedCardId(newId);
 
       if (!isEditMode && newId) {
@@ -222,8 +229,8 @@ export function useStandardCardForm({ mode }: UseStandardCardFormOptions) {
 
       return newId;
     } catch (e) {
-      console.error('[StandardCard:Save] 异常:', e instanceof Error ? e.message : e, e);
-      toast({ title: '保存失败，请检查网络连接', variant: 'destructive' });
+      console.error(ts('k_tr8cpr'), e instanceof Error ? e.message : e, e);
+      toast({ title: ts('k_ztg78'), variant: 'destructive' });
       return null;
     } finally {
       setSaving(false);

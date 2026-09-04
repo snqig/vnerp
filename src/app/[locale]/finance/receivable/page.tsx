@@ -36,6 +36,7 @@ import { useTranslations } from 'next-intl';
 import { authFetch } from '@/lib/auth-fetch';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
+import { formatDate } from '@/lib/date-utils';
 
 interface Receivable {
   id: number;
@@ -76,6 +77,7 @@ interface ReceivableDetail extends Receivable {
 
 export default function ReceivablePage() {
   // 翻译钩子
+  const ts = useTranslations('Common');
   const t = useTranslations('Finance');
   const tc = useTranslations('Common');
 
@@ -153,7 +155,7 @@ export default function ReceivablePage() {
         setShowDialog(true);
       }
     } catch {
-      toast({ title: '获取详情失败', variant: 'destructive' });
+      toast({ title: ts('k_1sa4q0b'), variant: 'destructive' });
     }
   };
 
@@ -171,11 +173,11 @@ export default function ReceivablePage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '收款成功' });
+        toast({ title: ts('k_ve78hs') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '收款失败', description: result.message, variant: 'destructive' });
+        toast({ title: ts('k_axf5wr'), description: result.message, variant: 'destructive' });
       }
     } catch {
       toast({ title: tc('error'), variant: 'destructive' });
@@ -276,7 +278,7 @@ export default function ReceivablePage() {
                   list.map((r) => (
                     <TableRow key={r.id}>
                       <TableCell>
-                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectAll')} />
+                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectRow', { id: r.id })} />
                       </TableCell>
                       <TableCell className="font-mono text-sm">{r.receivable_no}</TableCell>
                       <TableCell className="font-mono text-sm">
@@ -310,7 +312,7 @@ export default function ReceivablePage() {
                       <TableCell>
                         {r.currency || <span className="text-muted-foreground">-</span>}
                       </TableCell>
-                      <TableCell>{r.due_date ? r.due_date.slice(0, 10) : ''}</TableCell>
+                      <TableCell>{r.due_date ? formatDate(r.due_date) : ''}</TableCell>
                       <TableCell>
                         <Badge variant={statusMap[r.status]?.variant || 'outline'}>
                           {statusMap[r.status]?.label || tc('unknown')}
@@ -390,7 +392,7 @@ export default function ReceivablePage() {
                   </div>
                   <div>
                     <span className="text-muted-foreground">{t('dueDate')}：</span>
-                    {detailItem.due_date?.slice(0, 10)}
+                    {formatDate(detailItem.due_date)}
                   </div>
                 </div>
                 {Number(detailItem.balance) > 0 && (
@@ -432,7 +434,7 @@ export default function ReceivablePage() {
                     <h4 className="font-medium mb-2">{t('receiptRecords')}</h4>
                     {detailItem.receipts.map((rc: Loose) => (
                       <div key={rc.id} className="flex justify-between text-sm py-1 border-b">
-                        <span>{rc.receipt_date?.slice(0, 10)}</span>
+                        <span>{formatDate(rc.receipt_date)}</span>
                         <span>
                           <MoneyDisplay
                             amount={toAmount(rc.amount)}

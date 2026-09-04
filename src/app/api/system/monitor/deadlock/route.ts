@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -10,11 +13,12 @@ export const GET = withPermission(async (_request: NextRequest) => {
 
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     if (body.action === 'kill-transaction') {
       if (!body.trxId) {
-        return errorResponse('缺少事务ID (trxId)', 400, 400);
+        return errorResponse(ts('k_osnskr'), 400, 400);
       }
       const killed = await DeadlockMonitor.killLongTransaction(body.trxId);
       if (killed) {

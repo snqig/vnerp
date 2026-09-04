@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -5,6 +8,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { CostAnalysis } from '@/domain/cost/aggregates/CostAnalysis';
 
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { action } = await request.json();
 
   switch (action) {
@@ -59,6 +63,6 @@ export const POST = withPermission(async (request: NextRequest) => {
     }
 
     default:
-      return errorResponse('未知操作', 400, 400);
+      return errorResponse(ts('k_ztn3ax'), 400, 400);
   }
 });

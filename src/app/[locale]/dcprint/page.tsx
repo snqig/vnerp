@@ -61,26 +61,26 @@ const stats = [
 ];
 
 export default function DCPrintPage() {
+  const ts = useTranslations('Dcprint');
   // 翻译钩子
   const tc = useTranslations('Common');
 
   return (
-    <MainLayout title="全程二维码追溯系统">
+    <MainLayout title={ts('k_8421l9')}>
       <div className="space-y-6">
         {/* 欢迎区域 */}
         <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0">
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold mb-2">全程二维码追溯系统</h1>
+                <h1 className="text-3xl font-bold mb-2">{ts('k_8421l9')}</h1>
                 <p className="text-blue-100">{tc('dcWelcomeSubtitle')}</p>
               </div>
               <div className="flex gap-3">
                 <Link href="/warehouse/inbound/cutting">
                   <Button variant="secondary" className="bg-white text-blue-600 hover:bg-blue-50">
                     <Scissors className="h-4 w-4 mr-2" />
-                    开始分切
-                  </Button>
+                    {ts('k_owy2cr')}</Button>
                 </Link>
                 <Link href="/dcprint/process-cards">
                   <Button
@@ -88,8 +88,7 @@ export default function DCPrintPage() {
                     className="bg-white text-purple-600 hover:bg-purple-50"
                   >
                     <FileText className="h-4 w-4 mr-2" />
-                    生成流程卡
-                  </Button>
+                    {ts('k_9jljyl')}</Button>
                 </Link>
               </div>
             </div>
@@ -143,7 +142,7 @@ export default function DCPrintPage() {
         {/* 快捷操作 */}
         <Card>
           <CardHeader>
-            <CardTitle>快捷操作</CardTitle>
+            <CardTitle>{ts('k_2h5sbq')}</CardTitle>
             <CardDescription>{tc('dcQuickActionsDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -163,7 +162,7 @@ export default function DCPrintPage() {
         {/* 系统说明 */}
         <Card>
           <CardHeader>
-            <CardTitle>系统说明</CardTitle>
+            <CardTitle>{ts('k_rrc5pp')}</CardTitle>
             <CardDescription>{tc('dcSystemDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -175,8 +174,7 @@ export default function DCPrintPage() {
                 <div>
                   <h4 className="font-medium">{tc('dcQrLabelMgmt')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    通过二维码标签管理物料入库、出库，实现先进先出的库存管理
-                  </p>
+                    {ts('k_1p03o5w')}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -184,10 +182,9 @@ export default function DCPrintPage() {
                   <Scissors className="h-4 w-4" />
                 </div>
                 <div>
-                  <h4 className="font-medium">物料分切</h4>
+                  <h4 className="font-medium">{ts('k_13izgbg')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    支持母材分切操作，自动生成分切后的新标签，保持追溯链完整
-                  </p>
+                    {ts('k_wuw7vr')}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -195,10 +192,9 @@ export default function DCPrintPage() {
                   <FileText className="h-4 w-4" />
                 </div>
                 <div>
-                  <h4 className="font-medium">生产流程卡</h4>
+                  <h4 className="font-medium">{ts('k_tenmqy')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    扫描工单和物料生成流程卡，关联主材和辅料，支持配料管理
-                  </p>
+                    {ts('k_10gdwmg')}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -208,8 +204,7 @@ export default function DCPrintPage() {
                 <div>
                   <h4 className="font-medium">{tc('dcMaterialTrace')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    通过流程卡二维码追溯产品使用的所有物料信息，支持正向和反向追溯
-                  </p>
+                    {ts('k_1wpg4su')}</p>
                 </div>
               </div>
             </div>

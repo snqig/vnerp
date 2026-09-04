@@ -80,6 +80,7 @@ const getStatusLabel = (status: number, t: (k: string) => string, tc: (k: string
 };
 
 export default function BOMPage() {
+  const ts = useTranslations('Orders');
   const t = useTranslations('Orders');
   const tc = useTranslations('Common');
 
@@ -209,14 +210,14 @@ export default function BOMPage() {
         fetchBOMList();
       } else {
         toast({
-          title: '错误',
+          title: ts('k_v9pftt'),
           description: data.message || tc('error'),
           variant: 'destructive',
         });
       }
     } catch {
       toast({
-        title: '错误',
+        title: ts('k_v9pftt'),
         description: tc('error'),
         variant: 'destructive',
       });
@@ -326,7 +327,7 @@ export default function BOMPage() {
                 bomList.map((bom) => (
                   <TableRow key={bom.id}>
                     <TableCell>
-                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(bom.id))} onChange={() => toggle(String(bom.id))} aria-label={tc('selectAll')} />
+                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(bom.id))} onChange={() => toggle(String(bom.id))} aria-label={tc('selectRow', { id: bom.id })} />
                     </TableCell>
                     <TableCell className="font-medium">{bom.bom_no}</TableCell>
                     <TableCell>

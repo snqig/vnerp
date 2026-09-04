@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface VoucherLineProps {
   id?: number;
   voucherId?: number;
@@ -46,17 +48,18 @@ export class VoucherLine {
   }
 
   static create(props: VoucherLineProps): VoucherLine {
+  const ts = t;
     if (!props.accountId) {
-      throw new Error('科目ID不能为空');
+      throw new Error(ts('k_3dd0rx'));
     }
     if (!props.lineNo || props.lineNo <= 0) {
-      throw new Error('行号必须大于0');
+      throw new Error(ts('k_1auqtjv'));
     }
     if ((props.debitAmount || 0) === 0 && (props.creditAmount || 0) === 0) {
-      throw new Error('借贷金额不能同时为0');
+      throw new Error(ts('k_v41r7'));
     }
     if ((props.debitAmount || 0) > 0 && (props.creditAmount || 0) > 0) {
-      throw new Error('借贷金额不能同时大于0');
+      throw new Error(ts('k_vzwv4c'));
     }
     return new VoucherLine(props);
   }

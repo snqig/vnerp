@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import { Eye, Download, Copy, ExternalLink, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeTypeLabels, QRCodeStatusLabels } from './qr-code-types';
 import type { QRCodeRecord } from './qr-code-types';
+import { formatDate } from '@/lib/date-utils';
 
 interface QRCodeViewerProps {
   qrCode: string;
@@ -30,6 +32,8 @@ export function QRCodeViewer({
   onDialogChange,
   onTrace,
 }: QRCodeViewerProps) {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Common');
   const { toast } = useToast();
   const [internalShowDialog, setInternalShowDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,7 +69,7 @@ export function QRCodeViewer({
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({ title: '已复制到剪贴板' });
+    toast({ title: ts('k_1r3wdvp') });
   };
 
   const handleDownload = () => {
@@ -94,13 +98,12 @@ export function QRCodeViewer({
     <>
       <Button variant="outline" size="sm" onClick={() => setShowDialog(true)}>
         <Eye className="h-4 w-4 mr-1" />
-        查看
-      </Button>
+        {ts('k_10fbkvl')}</Button>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>二维码详情</DialogTitle>
+            <DialogTitle>{ts('k_pu9cbd')}</DialogTitle>
           </DialogHeader>
 
           {isLoading ? (
@@ -131,8 +134,8 @@ export function QRCodeViewer({
               <div className="col-span-2">
                 <Tabs defaultValue="info">
                   <TabsList className="w-full">
-                    <TabsTrigger value="info">基本信息</TabsTrigger>
-                    <TabsTrigger value="extend">扩展信息</TabsTrigger>
+                    <TabsTrigger value="info">{ts('k_z5lkkb')}</TabsTrigger>
+                    <TabsTrigger value="extend">{ts('k_132n2j')}</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="info" className="space-y-3 mt-4">
@@ -140,55 +143,55 @@ export function QRCodeViewer({
                       <>
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <div>
-                            <span className="text-muted-foreground">类型：</span>
+                            <span className="text-muted-foreground">{ts('k_1k0pyqj')}</span>
                             <Badge variant="outline">
                               {QRCodeTypeLabels[record.qr_type] || record.qr_type}
                             </Badge>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">状态：</span>
+                            <span className="text-muted-foreground">{ts('k_1pwh7dy')}</span>
                             <Badge variant={QRCodeStatusLabels[record.status]?.variant}>
-                              {QRCodeStatusLabels[record.status]?.label || '未知'}
+                              {QRCodeStatusLabels[record.status]?.label || ts('k_1lpnuh4')}
                             </Badge>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">关联单号：</span>
+                            <span className="text-muted-foreground">{ts('k_1maaz4k')}</span>
                             <span className="font-mono">{record.ref_no || '-'}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">批次号：</span>
+                            <span className="text-muted-foreground">{ts('k_ooweuu')}</span>
                             <span>{record.batch_no || '-'}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">物料名称：</span>
+                            <span className="text-muted-foreground">{ts('k_8mdfm8')}</span>
                             <span>{record.material_name || '-'}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">规格：</span>
+                            <span className="text-muted-foreground">{ts('k_1gnvyud')}</span>
                             <span>{record.specification || '-'}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">数量：</span>
+                            <span className="text-muted-foreground">{ts('k_1b3179q')}</span>
                             <span>
                               {record.quantity} {record.unit || ''}
                             </span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">仓库：</span>
+                            <span className="text-muted-foreground">{ts('k_1gt4rsr')}</span>
                             <span>{record.warehouse_name || '-'}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">供应商：</span>
+                            <span className="text-muted-foreground">{ts('k_1lrnm7u')}</span>
                             <span>{record.supplier_name || '-'}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">客户：</span>
+                            <span className="text-muted-foreground">{tc('customerLabel')}</span>
                             <span>{record.customer_name || '-'}</span>
                           </div>
                         </div>
                       </>
                     ) : (
-                      <div className="text-center py-8 text-muted-foreground">暂无详细信息</div>
+                      <div className="text-center py-8 text-muted-foreground">{ts('k_51tctj')}</div>
                     )}
                   </TabsContent>
 
@@ -196,38 +199,38 @@ export function QRCodeViewer({
                     {record ? (
                       <div className="grid grid-cols-2 gap-3 text-sm">
                         <div>
-                          <span className="text-muted-foreground">工单编号：</span>
+                          <span className="text-muted-foreground">{ts('k_11v3fq2')}</span>
                           <span>{record.work_order_no || '-'}</span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">生产日期：</span>
-                          <span>{record.production_date?.slice(0, 10) || '-'}</span>
+                          <span className="text-muted-foreground">{ts('k_1jk755b')}</span>
+                          <span>{formatDate(record.production_date) || '-'}</span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">有效期：</span>
-                          <span>{record.expiry_date?.slice(0, 10) || '-'}</span>
+                          <span className="text-muted-foreground">{ts('k_dbt4ox')}</span>
+                          <span>{formatDate(record.expiry_date) || '-'}</span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">打印次数：</span>
+                          <span className="text-muted-foreground">{ts('k_ln1jpb')}</span>
                           <span>{record.print_count}</span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">扫描次数：</span>
+                          <span className="text-muted-foreground">{ts('k_6fgodo')}</span>
                           <span>{record.scan_count}</span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">创建时间：</span>
+                          <span className="text-muted-foreground">{ts('k_1rmmf2g')}</span>
                           <span>{record.create_time?.slice(0, 19).replace('T', ' ') || '-'}</span>
                         </div>
                         {record.remark && (
                           <div className="col-span-2">
-                            <span className="text-muted-foreground">备注：</span>
+                            <span className="text-muted-foreground">{ts('k_1ohyab4')}</span>
                             <span>{record.remark}</span>
                           </div>
                         )}
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-muted-foreground">暂无扩展信息</div>
+                      <div className="text-center py-8 text-muted-foreground">{ts('k_143wrd5')}</div>
                     )}
                   </TabsContent>
                 </Tabs>
@@ -245,12 +248,10 @@ export function QRCodeViewer({
                 }}
               >
                 <ExternalLink className="h-4 w-4 mr-1" />
-                追溯
-              </Button>
+                {ts('k_bb05tx')}</Button>
             )}
             <Button variant="outline" onClick={() => setShowDialog(false)}>
-              关闭
-            </Button>
+              {ts('k_g0fanx')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

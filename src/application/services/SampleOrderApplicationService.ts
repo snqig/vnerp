@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import {
   ISampleOrderRepository,
   SampleOrderFilters,
@@ -28,8 +30,9 @@ export class SampleOrderApplicationService {
   ) {}
 
   async getOrderById(id: number): Promise<SampleOrder> {
+  const ts = await getTranslations('Common');
     const order = await this.orderRepo.findById(id);
-    if (!order) throw new NotFoundError('打样单不存在');
+    if (!order) throw new NotFoundError(ts('k_uv7869'));
     return order;
   }
 
@@ -38,18 +41,20 @@ export class SampleOrderApplicationService {
     page: number,
     pageSize: number
   ): Promise<{ list: SampleOrder[]; total: number }> {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'listOrders', traceId };
-    logger.stepStart(ctx, '列表查询', { filters, page, pageSize });
+    logger.stepStart(ctx, ts('k_1apexnh'), { filters, page, pageSize });
     const result = await this.orderRepo.findByFilters(filters, page, pageSize);
-    logger.stepEnd(ctx, '列表查询', { total: result.total, count: result.list.length });
+    logger.stepEnd(ctx, ts('k_1apexnh'), { total: result.total, count: result.list.length });
     return result;
   }
 
   async createOrder(props: Partial<SampleOrderProps>): Promise<{ id: number; orderNo: string }> {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'createOrder', traceId };
-    logger.stepStart(ctx, '创建打样单', {
+    logger.stepStart(ctx, ts('k_b4qke5'), {
       customerName: props.customerName,
       productName: props.productName,
       materialNo: props.materialNo,
@@ -64,14 +69,14 @@ export class SampleOrderApplicationService {
     }
 
     const orderNo = await this.orderRepo.getNextSequence();
-    logger.info(ctx, '生成打样单号', { orderNo });
+    logger.info(ctx, ts('k_oqulf0'), { orderNo });
 
     const order = SampleOrder.create({ ...props, orderNo } as SampleOrderProps);
 
     // 聚合写入与事件 Outbox 写入必须在同一事务内，保证 Transactional Outbox 契约
     const id = await transaction(async (conn) => {
       const newId = await this.orderRepo.save(order, conn);
-      logger.info(ctx, '打样单已保存', { id: newId, orderNo });
+      logger.info(ctx, ts('k_1k4wao9'), { id: newId, orderNo });
       if (newId) {
         await this.persistEvents(newId, order, ctx, conn);
       }
@@ -80,17 +85,18 @@ export class SampleOrderApplicationService {
     if (id) {
       order.clearDomainEvents();
     }
-    logger.stepEnd(ctx, '创建打样单', { id, orderNo });
+    logger.stepEnd(ctx, ts('k_b4qke5'), { id, orderNo });
     return { id, orderNo };
   }
 
   async updateOrder(id: number, props: Partial<SampleOrderProps>): Promise<void> {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'updateOrder', traceId };
-    logger.stepStart(ctx, '更新打样单', { id, fields: Object.keys(props) });
+    logger.stepStart(ctx, ts('k_199k416'), { id, fields: Object.keys(props) });
 
     const order = await this.getOrderById(id);
-    logger.info(ctx, '更新前状态', {
+    logger.info(ctx, ts('k_1kvjygt'), {
       id,
       status: order.status,
       deliveryStatus: order.deliveryStatus,
@@ -98,31 +104,33 @@ export class SampleOrderApplicationService {
 
     const updated = SampleOrder.reconstitute({ ...order.toProps(), ...props });
     await this.orderRepo.update(updated);
-    logger.info(ctx, '更新后状态', {
+    logger.info(ctx, ts('k_1hpb5bs'), {
       id,
       status: updated.status,
       deliveryStatus: updated.deliveryStatus,
     });
-    logger.stepEnd(ctx, '更新打样单', { id });
+    logger.stepEnd(ctx, ts('k_199k416'), { id });
   }
 
   async deleteOrder(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'deleteOrder', traceId };
-    logger.stepStart(ctx, '删除打样单', { id });
+    logger.stepStart(ctx, ts('k_remthu'), { id });
     await this.orderRepo.delete(id);
-    logger.stepEnd(ctx, '删除打样单', { id });
+    logger.stepEnd(ctx, ts('k_remthu'), { id });
   }
 
   async submitOrder(id: number, userId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'submitOrder', traceId, userId };
-    logger.stepStart(ctx, '提交打样单', { id, userId });
+    logger.stepStart(ctx, ts('k_1v2kn7m'), { id, userId });
 
     const order = await this.getOrderById(id);
-    logger.info(ctx, '状态流转前', { id, status: order.status });
+    logger.info(ctx, ts('k_3x8l6w'), { id, status: order.status });
     order.submit(userId);
-    logger.info(ctx, '状态流转后', {
+    logger.info(ctx, ts('k_miv8ap'), {
       id,
       status: order.status,
       events: order.domainEvents.map((e) => e.eventType),
@@ -133,18 +141,19 @@ export class SampleOrderApplicationService {
       await this.persistEvents(id, order, ctx, conn);
     });
     order.clearDomainEvents();
-    logger.stepEnd(ctx, '提交打样单', { id });
+    logger.stepEnd(ctx, ts('k_1v2kn7m'), { id });
   }
 
   async startProduction(id: number, userId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'startProduction', traceId, userId };
-    logger.stepStart(ctx, '开始打样生产', { id, userId });
+    logger.stepStart(ctx, ts('k_1n6voak'), { id, userId });
 
     const order = await this.getOrderById(id);
-    logger.info(ctx, '状态流转前', { id, status: order.status });
+    logger.info(ctx, ts('k_3x8l6w'), { id, status: order.status });
     order.startProduction(userId);
-    logger.info(ctx, '状态流转后', {
+    logger.info(ctx, ts('k_miv8ap'), {
       id,
       status: order.status,
       events: order.domainEvents.map((e) => e.eventType),
@@ -155,18 +164,19 @@ export class SampleOrderApplicationService {
       await this.persistEvents(id, order, ctx, conn);
     });
     order.clearDomainEvents();
-    logger.stepEnd(ctx, '开始打样生产', { id });
+    logger.stepEnd(ctx, ts('k_1n6voak'), { id });
   }
 
   async completeOrder(id: number, userId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'completeOrder', traceId, userId };
-    logger.stepStart(ctx, '完成打样', { id, userId });
+    logger.stepStart(ctx, ts('k_iz0ggj'), { id, userId });
 
     const order = await this.getOrderById(id);
-    logger.info(ctx, '状态流转前', { id, status: order.status });
+    logger.info(ctx, ts('k_3x8l6w'), { id, status: order.status });
     order.complete(userId);
-    logger.info(ctx, '状态流转后', {
+    logger.info(ctx, ts('k_miv8ap'), {
       id,
       status: order.status,
       events: order.domainEvents.map((e) => e.eventType),
@@ -177,18 +187,19 @@ export class SampleOrderApplicationService {
       await this.persistEvents(id, order, ctx, conn);
     });
     order.clearDomainEvents();
-    logger.stepEnd(ctx, '完成打样', { id });
+    logger.stepEnd(ctx, ts('k_iz0ggj'), { id });
   }
 
   async confirmOrder(id: number, userId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'confirmOrder', traceId, userId };
-    logger.stepStart(ctx, '确认打样', { id, userId });
+    logger.stepStart(ctx, ts('k_1omwee1'), { id, userId });
 
     const order = await this.getOrderById(id);
-    logger.info(ctx, '状态流转前', { id, status: order.status });
+    logger.info(ctx, ts('k_3x8l6w'), { id, status: order.status });
     order.confirm(userId);
-    logger.info(ctx, '状态流转后', {
+    logger.info(ctx, ts('k_miv8ap'), {
       id,
       status: order.status,
       events: order.domainEvents.map((e) => e.eventType),
@@ -199,7 +210,7 @@ export class SampleOrderApplicationService {
       await this.persistEvents(id, order, ctx, conn);
     });
     order.clearDomainEvents();
-    logger.stepEnd(ctx, '确认打样', { id });
+    logger.stepEnd(ctx, ts('k_1omwee1'), { id });
   }
 
   /**
@@ -327,14 +338,15 @@ export class SampleOrderApplicationService {
   }
 
   async convertOrder(id: number, salesOrderId: number, userId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'convertOrder', traceId, userId };
-    logger.stepStart(ctx, '转大货', { id, salesOrderId, userId });
+    logger.stepStart(ctx, ts('k_1ki65eh'), { id, salesOrderId, userId });
 
     const order = await this.getOrderById(id);
-    logger.info(ctx, '状态流转前', { id, status: order.status });
+    logger.info(ctx, ts('k_3x8l6w'), { id, status: order.status });
     order.convertToSalesOrder(salesOrderId, userId);
-    logger.info(ctx, '状态流转后', {
+    logger.info(ctx, ts('k_miv8ap'), {
       id,
       status: order.status,
       salesOrderId,
@@ -346,18 +358,19 @@ export class SampleOrderApplicationService {
       await this.persistEvents(id, order, ctx, conn);
     });
     order.clearDomainEvents();
-    logger.stepEnd(ctx, '转大货', { id, salesOrderId });
+    logger.stepEnd(ctx, ts('k_1ki65eh'), { id, salesOrderId });
   }
 
   async cancelOrder(id: number, reason: string, userId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'cancelOrder', traceId, userId };
-    logger.stepStart(ctx, '作废打样单', { id, reason, userId });
+    logger.stepStart(ctx, ts('k_17uscn5'), { id, reason, userId });
 
     const order = await this.getOrderById(id);
-    logger.info(ctx, '状态流转前', { id, status: order.status });
+    logger.info(ctx, ts('k_3x8l6w'), { id, status: order.status });
     order.cancel(reason, userId);
-    logger.info(ctx, '状态流转后', {
+    logger.info(ctx, ts('k_miv8ap'), {
       id,
       status: order.status,
       events: order.domainEvents.map((e) => e.eventType),
@@ -368,7 +381,7 @@ export class SampleOrderApplicationService {
       await this.persistEvents(id, order, ctx, conn);
     });
     order.clearDomainEvents();
-    logger.stepEnd(ctx, '作废打样单', { id });
+    logger.stepEnd(ctx, ts('k_17uscn5'), { id });
   }
 
   /**
@@ -383,6 +396,7 @@ export class SampleOrderApplicationService {
     parentCtx?: Record<string, unknown>,
     conn?: PoolConnection
   ): Promise<void> {
+  const ts = await getTranslations('Common');
     const events = [...(aggregate.domainEvents || [])];
     if (events.length === 0) return;
     const ctx = {
@@ -390,7 +404,7 @@ export class SampleOrderApplicationService {
       action: 'persistEvents',
       traceId: (parentCtx?.traceId as string) || generateTraceId(),
     };
-    logger.info(ctx, '持久化领域事件', {
+    logger.info(ctx, ts('k_14k9tht'), {
       aggregateId,
       eventCount: events.length,
       eventTypes: events.map((e: DomainEvent) => e.eventType),
@@ -398,34 +412,36 @@ export class SampleOrderApplicationService {
     const aggregateType = aggregate.constructor.name;
     if (conn) {
       await getDomainEventOutbox().saveEvents(conn, aggregateType, aggregateId, events);
-      logger.info(ctx, '领域事件已写入 Outbox（外部事务）', { aggregateId });
+      logger.info(ctx, ts('k_12eae3j'), { aggregateId });
       return;
     }
     await transaction(async (tx) => {
       await getDomainEventOutbox().saveEvents(tx, aggregateType, aggregateId, events);
     });
     aggregate.clearDomainEvents();
-    logger.info(ctx, '领域事件已持久化', { aggregateId, cleared: true });
+    logger.info(ctx, ts('k_1iiuqf5'), { aggregateId, cleared: true });
   }
 
   async linkProcessCard(id: number, processCardId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'linkProcessCard', traceId };
-    logger.stepStart(ctx, '关联工艺卡', { id, processCardId });
+    logger.stepStart(ctx, ts('k_12h8twk'), { id, processCardId });
     const order = await this.getOrderById(id);
     order.linkProcessCard(processCardId);
     await this.orderRepo.update(order);
-    logger.stepEnd(ctx, '关联工艺卡', { id, processCardId });
+    logger.stepEnd(ctx, ts('k_12h8twk'), { id, processCardId });
   }
 
   async linkWorkOrder(id: number, workOrderId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'linkWorkOrder', traceId };
-    logger.stepStart(ctx, '关联工单', { id, workOrderId });
+    logger.stepStart(ctx, ts('k_1yxsmpc'), { id, workOrderId });
     const order = await this.getOrderById(id);
     order.linkWorkOrder(workOrderId);
     await this.orderRepo.update(order);
-    logger.stepEnd(ctx, '关联工单', { id, workOrderId });
+    logger.stepEnd(ctx, ts('k_1yxsmpc'), { id, workOrderId });
   }
 
   async updateSampleFee(
@@ -434,41 +450,46 @@ export class SampleOrderApplicationService {
     charged: number,
     deductible: number
   ): Promise<void> {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'updateSampleFee', traceId };
-    logger.stepStart(ctx, '更新打样费用', { id, fee, charged, deductible });
+    logger.stepStart(ctx, ts('k_fmgu2y'), { id, fee, charged, deductible });
     const order = await this.getOrderById(id);
     order.updateSampleFee(fee, charged, deductible);
     await this.orderRepo.update(order);
-    logger.stepEnd(ctx, '更新打样费用', { id, fee });
+    logger.stepEnd(ctx, ts('k_fmgu2y'), { id, fee });
   }
 
   // ==================== 反馈管理 ====================
 
   async getFeedbacks(sampleOrderId: number): Promise<SampleFeedback[]> {
-    if (!this.feedbackRepo) throw new DomainError('反馈仓储未启用');
+  const ts = await getTranslations('Common');
+    if (!this.feedbackRepo) throw new DomainError(ts('k_hjzga4'));
     return this.feedbackRepo.findBySampleOrderId(sampleOrderId);
   }
 
   async addFeedback(props: SampleFeedbackProps): Promise<number> {
-    if (!this.feedbackRepo) throw new DomainError('反馈仓储未启用');
+  const ts = await getTranslations('Common');
+    if (!this.feedbackRepo) throw new DomainError(ts('k_hjzga4'));
     const feedback = SampleFeedback.create(props);
     const id = await this.feedbackRepo.save(feedback);
     return id;
   }
 
   async approveFeedback(id: number): Promise<void> {
-    if (!this.feedbackRepo) throw new DomainError('反馈仓储未启用');
+  const ts = await getTranslations('Common');
+    if (!this.feedbackRepo) throw new DomainError(ts('k_hjzga4'));
     const feedback = await this.feedbackRepo.findById(id);
-    if (!feedback) throw new NotFoundError('反馈不存在');
+    if (!feedback) throw new NotFoundError(ts('k_wffz5r'));
     feedback.approve();
     await this.feedbackRepo.update(feedback);
   }
 
   async rejectFeedback(id: number): Promise<void> {
-    if (!this.feedbackRepo) throw new DomainError('反馈仓储未启用');
+  const ts = await getTranslations('Common');
+    if (!this.feedbackRepo) throw new DomainError(ts('k_hjzga4'));
     const feedback = await this.feedbackRepo.findById(id);
-    if (!feedback) throw new NotFoundError('反馈不存在');
+    if (!feedback) throw new NotFoundError(ts('k_wffz5r'));
     feedback.reject();
     await this.feedbackRepo.update(feedback);
   }

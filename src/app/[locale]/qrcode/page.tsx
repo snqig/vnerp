@@ -37,6 +37,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslations, useLocale } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import type { ExportColumn } from '@/lib/global-export-service';
+import { formatDate } from '@/lib/date-utils';
 
 interface QRRecord {
   id: number;
@@ -65,6 +66,7 @@ interface QRRecord {
 }
 
 export default function QRCodePage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('QRCode');
   const tc = useTranslations('Common');
   const locale = useLocale();
@@ -262,28 +264,28 @@ export default function QRCodePage() {
               <RefreshCw className="h-4 w-4" />
             </Button>
             <GlobalExportToolbar
-              filename="二维码记录列表"
-              title="二维码记录列表"
+              filename={ts('k_1u3hjck')}
+              title={ts('k_1u3hjck')}
               columns={
                 [
-                  { key: 'qr_code', label: '二维码编码', width: 25 },
-                  { key: 'qr_type', label: '类型', width: 12 },
-                  { key: 'ref_no', label: '关联单号', width: 18 },
-                  { key: 'material_code', label: '物料编码', width: 15 },
-                  { key: 'material_name', label: '物料名称', width: 20 },
-                  { key: 'batch_no', label: '批次号', width: 15 },
-                  { key: 'quantity', label: '数量', width: 10 },
-                  { key: 'unit', label: '单位', width: 8 },
-                  { key: 'warehouse_name', label: '仓库', width: 12 },
-                  { key: 'print_count', label: '打印次数', width: 10 },
-                  { key: 'scan_count', label: '扫描次数', width: 10 },
+                  { key: 'qr_code', label: ts('k_7d0emt'), width: 25 },
+                  { key: 'qr_type', label: ts('k_anh4cj'), width: 12 },
+                  { key: 'ref_no', label: ts('k_15evjra'), width: 18 },
+                  { key: 'material_code', label: ts('k_zsv6bq'), width: 15 },
+                  { key: 'material_name', label: ts('k_a60ciy'), width: 20 },
+                  { key: 'batch_no', label: ts('k_h19meg'), width: 15 },
+                  { key: 'quantity', label: ts('k_1i54xuo'), width: 10 },
+                  { key: 'unit', label: ts('k_1xadx6v'), width: 8 },
+                  { key: 'warehouse_name', label: ts('k_bq2r6r'), width: 12 },
+                  { key: 'print_count', label: ts('k_11vmj5r'), width: 10 },
+                  { key: 'scan_count', label: ts('k_11nxjlq'), width: 10 },
                   {
                     key: 'status',
-                    label: '状态',
+                    label: ts('k_1ccx4t4'),
                     width: 10,
-                    formatter: (v: Loose) => ['', '有效', '已用', '过期', '作废'][v] || String(v),
+                    formatter: (v: Loose) => ['', ts('k_kgwvlw'), ts('k_y7lj0n'), tc('expired'), ts('k_wph6a4')][v] || String(v),
                   },
-                  { key: 'create_time', label: '创建时间', width: 18 },
+                  { key: 'create_time', label: tc('createdAt'), width: 18 },
                 ] as ExportColumn[]
               }
               data={list}
@@ -657,11 +659,11 @@ export default function QRCodePage() {
                     </div>
                     <div>
                       <span className="text-muted-foreground">{t('productionDate')}：</span>
-                      {traceData.record?.production_date?.slice(0, 10) || '-'}
+                      {formatDate(traceData.record?.production_date) || '-'}
                     </div>
                     <div>
                       <span className="text-muted-foreground">{t('expiryDate')}：</span>
-                      {traceData.record?.expiry_date?.slice(0, 10) || '-'}
+                      {formatDate(traceData.record?.expiry_date) || '-'}
                     </div>
                     <div>
                       <span className="text-muted-foreground">{t('printCount')}：</span>

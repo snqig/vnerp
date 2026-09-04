@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { execute, queryOne, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -120,6 +123,7 @@ export const GET = withPermission(
 // POST - 生成物料标签
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     // 验证必填字段
@@ -211,7 +215,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ labelId }, '物料标签生成成功');
+    return successResponse({ labelId }, ts('k_xjq3tk'));
   },
   { errorMessage: '生成物料标签失败' }
 );
@@ -219,11 +223,12 @@ export const POST = withPermission(
 // PUT - 更新标签状态（分切、使用、作废等）
 export const PUT = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, labelStatus, auditStatus, auditorId, auditorName } = body;
 
     if (!id) {
-      return commonErrors.badRequest('标签ID不能为空');
+      return commonErrors.badRequest(ts('k_5bpgnj'));
     }
 
     // 检查标签是否存在
@@ -233,7 +238,7 @@ export const PUT = withPermission(
     );
 
     if (!existingLabel) {
-      return commonErrors.notFound('标签不存在');
+      return commonErrors.notFound(ts('k_1buaqs7'));
     }
 
     const updates: string[] = [];
@@ -264,7 +269,7 @@ export const PUT = withPermission(
     }
 
     if (updates.length === 0) {
-      return commonErrors.badRequest('没有要更新的字段');
+      return commonErrors.badRequest(ts('k_ovfx8a'));
     }
 
     params.push(id);
@@ -275,10 +280,10 @@ export const PUT = withPermission(
     );
 
     if (result.affectedRows === 0) {
-      return commonErrors.notFound('标签不存在');
+      return commonErrors.notFound(ts('k_1buaqs7'));
     }
 
-    return successResponse(null, '标签状态更新成功');
+    return successResponse(null, ts('k_yk1ei0'));
   },
   { errorMessage: '更新标签状态失败' }
 );
@@ -286,11 +291,12 @@ export const PUT = withPermission(
 // DELETE - 删除物料标签（软删除）
 export const DELETE = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('标签ID不能为空');
+      return commonErrors.badRequest(ts('k_5bpgnj'));
     }
 
     const labelId = parseInt(id);
@@ -302,17 +308,17 @@ export const DELETE = withPermission(
     );
 
     if (!existingLabel) {
-      return commonErrors.notFound('标签不存在');
+      return commonErrors.notFound(ts('k_1buaqs7'));
     }
 
     // 检查标签状态，已使用的标签不能删除
     if (existingLabel.label_status === 'used') {
-      return errorResponse('已使用的标签不能删除', 409, 409);
+      return errorResponse(ts('k_1w3dpht'), 409, 409);
     }
 
     await execute('UPDATE inv_inbound_label SET deleted = 1 WHERE id = ?', [labelId]);
 
-    return successResponse(null, '物料标签删除成功');
+    return successResponse(null, ts('k_gbmupb'));
   },
   { errorMessage: '删除物料标签失败' }
 );

@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { IPurchaseReturnRepository } from '@/domain/purchase/repositories/IPurchaseReturnRepository';
 import { IPurchaseOrderRepository } from '@/domain/purchase/repositories/IPurchaseOrderRepository';
 import {
@@ -39,16 +41,18 @@ export class PurchaseReturnApplicationService {
   }
 
   async getReturnById(id: number): Promise<PurchaseReturn> {
+  const ts = await getTranslations('Common');
     const ret = await this.returnRepo.findById(id);
-    if (!ret) throw new NotFoundError('采购退货单不存在');
+    if (!ret) throw new NotFoundError(ts('k_130ojle'));
     return ret;
   }
 
   async createReturn(props: PurchaseReturnProps): Promise<{ id: number; returnNo: string }> {
+  const ts = await getTranslations('Common');
     // 从原采购单继承币种信息
     const originalOrder = await this.orderRepo.findById(props.orderId);
     if (!originalOrder) {
-      throw new NotFoundError('原采购订单不存在');
+      throw new NotFoundError(ts('k_1osdeh2'));
     }
 
     // 引用完整性校验（写入前）：供应商、仓库、各退货明细物料
@@ -243,9 +247,10 @@ export class PurchaseReturnApplicationService {
   }
 
   async deleteReturn(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const ret = await this.getReturnById(id);
     if (!ret.canDelete()) {
-      throw new DomainError('仅待审核状态的退货单可删除');
+      throw new DomainError(ts('k_a6lxvo'));
     }
     await this.returnRepo.softDelete(id);
   }

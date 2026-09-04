@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 import mysql from 'mysql2/promise';
 import QRCode from 'qrcode';
 import { query, execute, transaction } from '@/lib/db';
@@ -364,14 +367,15 @@ export class QRCodeService {
   }
 
   private static getEventLabel(transType: string): string {
+  const ts = t;
     const labels: Record<string, string> = {
-      in: '入库',
-      out: '出库',
-      inbound: '入库',
-      outbound: '出库',
-      transfer: '调拨',
-      adjust: '调整',
-      return: '退货',
+      in: ts('k_16y3uo9'),
+      out: ts('k_dwwra2'),
+      inbound: ts('k_16y3uo9'),
+      outbound: ts('k_dwwra2'),
+      transfer: ts('k_10lrhda'),
+      adjust: ts('k_1ul01iq'),
+      return: ts('k_1il6wq0'),
     };
     return labels[transType] || transType;
   }

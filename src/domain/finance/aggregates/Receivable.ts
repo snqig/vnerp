@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { Money } from '../../shared/value-objects/Money';
 import { ReceivableStatus, ReceivableStatusEnum } from '../value-objects/ReceivableStatus';
@@ -54,11 +56,12 @@ export class Receivable {
   ) {}
 
   static create(props: ReceivableProps): Receivable {
+  const ts = t;
     if (!props.customerId) {
-      throw new DomainError('客户ID不能为空');
+      throw new DomainError(ts('k_ct4431'));
     }
     if (!props.amount || props.amount <= 0) {
-      throw new DomainError('应收金额必须大于0');
+      throw new DomainError(ts('k_1rjcpak'));
     }
 
     const amount = Money.create(props.amount);
@@ -117,11 +120,12 @@ export class Receivable {
    * T305: 销售退货审核后生成负金额红字应收单，冲减对应客户应收余额。
    */
   static createRedLetter(props: ReceivableProps): Receivable {
+  const ts = t;
     if (!props.customerId) {
-      throw new DomainError('客户ID不能为空');
+      throw new DomainError(ts('k_ct4431'));
     }
     if (!props.amount || props.amount >= 0) {
-      throw new DomainError('红字应收金额必须为负数');
+      throw new DomainError(ts('k_1uamefj'));
     }
 
     const amount = Money.redLetter(props.amount);
@@ -217,11 +221,12 @@ export class Receivable {
   }
 
   recordReceipt(receiptAmount: number, receiptNo?: string): void {
+  const ts = t;
     if (this._status.isTerminal()) {
-      throw new DomainError('应收款已结清或已坏账，不能再记录收款');
+      throw new DomainError(ts('k_14ejk5s'));
     }
     if (receiptAmount <= 0) {
-      throw new DomainError('收款金额必须大于0');
+      throw new DomainError(ts('k_1wgy3sa'));
     }
 
     const receipt = Money.create(receiptAmount);
@@ -261,8 +266,9 @@ export class Receivable {
   }
 
   writeOff(reason?: string): void {
+  const ts = t;
     if (this._status.isTerminal()) {
-      throw new DomainError('应收款已结清或已坏账，不能再坏账处理');
+      throw new DomainError(ts('k_1ramre0'));
     }
     this._status = this._status.transitionTo(ReceivableStatusEnum.BAD_DEBT);
     this._domainEvents.push(

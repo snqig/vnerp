@@ -533,6 +533,7 @@ function getConfigGroup(key: string): string {
 }
 
 export default function ConfigPage() {
+  const ts = useTranslations('Common');
   const tc = useTranslations('Common');
   const t = useTranslations('Common');
   const { toast } = useToast();
@@ -568,10 +569,10 @@ export default function ConfigPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       } else {
-        setInitError(result.message || '获取配置列表失败');
+        setInitError(result.message || ts('k_6d5x6m'));
       }
     } catch (e) {
-      setInitError((e as Error)?.message || '网络异常，请检查连接');
+      setInitError((e as Error)?.message || ts('k_1858xlx'));
     } finally {
       setLoading(false);
     }
@@ -596,11 +597,11 @@ export default function ConfigPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: editing ? '更新成功' : '创建成功' });
+        toast({ title: editing ? ts('k_1795bzg') : ts('k_kiombh') });
         setDialogOpen(false);
         fetchData();
       } else {
-        toast({ title: result.message || '操作失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_ydow7a'), variant: 'destructive' });
       }
     } catch {
       toast({ title: tc('error'), variant: 'destructive' });
@@ -741,19 +742,17 @@ export default function ConfigPage() {
         {loading && (
           <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
             <span className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-            加载中...
-          </div>
+            {tc('loading')}</div>
         )}
 
         {initError && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
             <span className="mt-0.5">⚠</span>
             <div>
-              <p className="font-medium">加载失败</p>
+              <p className="font-medium">{tc('loadFail')}</p>
               <p>{initError}</p>
               <Button size="sm" variant="outline" className="mt-2 h-7 text-xs" onClick={fetchData}>
-                重试
-              </Button>
+                {tc('retry')}</Button>
             </div>
           </div>
         )}
@@ -832,10 +831,9 @@ export default function ConfigPage() {
                         <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                           <div className="flex flex-col items-center gap-2">
                             <Settings className="w-8 h-8 opacity-30" />
-                            <p>暂无系统配置项</p>
+                            <p>{ts('k_cyo8p9')}</p>
                             <p className="text-xs">
-                              请点击上方「初始化预设配置」按钮或手动添加配置
-                            </p>
+                              {ts('k_9la505')}</p>
                           </div>
                         </TableCell>
                       </TableRow>

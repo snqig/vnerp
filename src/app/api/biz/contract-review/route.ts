@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -37,11 +40,12 @@ export const GET = withPermission(async (request: NextRequest) => {
 });
 
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { order_id, order_no, customer_id, customer_name, total_amount, delivery_date } = body;
 
   if (!order_id || !order_no) {
-    return errorResponse('缺少必填字段: order_id, order_no', 400, 400);
+    return errorResponse(ts('k_g6kscw'), 400, 400);
   }
 
   const result = await transaction(async (conn) => {
@@ -51,7 +55,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     );
 
     if (existingReview.length > 0 && existingReview[0].status >= 3) {
-      throw new Error('该订单已完成合同评审');
+      throw new Error(ts('k_1ne9rzu'));
     }
 
     const now = new Date();
@@ -85,15 +89,16 @@ export const POST = withPermission(async (request: NextRequest) => {
     return { id: insertResult.insertId, review_no: reviewNo };
   });
 
-  return successResponse(result, '合同评审创建成功');
+  return successResponse(result, ts('k_6qmzbu'));
 });
 
 export const PUT = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id, department, opinion, reviewer, result: deptResult } = body;
 
   if (!id || !department) {
-    return errorResponse('缺少必填字段: id, department', 400, 400);
+    return errorResponse(ts('k_17whpet'), 400, 400);
   }
 
   const validDepts = ['production', 'purchase', 'finance', 'quality', 'engineering'];
@@ -108,12 +113,12 @@ export const PUT = withPermission(async (request: NextRequest) => {
     );
 
     if (reviewRows.length === 0) {
-      throw new Error('合同评审不存在');
+      throw new Error(ts('k_141jfbh'));
     }
 
     const review = reviewRows[0];
     if (review.status >= 3) {
-      throw new Error('合同评审已通过，不能再修改');
+      throw new Error(ts('k_koz1cb'));
     }
 
     const opinionField = `${department}_opinion`;
@@ -182,5 +187,5 @@ export const PUT = withPermission(async (request: NextRequest) => {
     return { id, department, updated: true };
   });
 
-  return successResponse(result, '部门评审提交成功');
+  return successResponse(result, ts('k_jpujsz'));
 });

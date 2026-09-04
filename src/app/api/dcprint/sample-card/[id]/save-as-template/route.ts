@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -13,10 +16,11 @@ export const POST = withPermission(
     userInfo: DbRow,
     { params }: { params: Promise<{ id: string }> }
   ) => {
+  const ts = await getTranslations('Common');
     const { id } = await params;
     const body = await request.json().catch(() => ({}));
     if (!body.templateName?.trim()) {
-      return errorResponse('模板名称不能为空', 400, 400);
+      return errorResponse(ts('k_10gd1pi'), 400, 400);
     }
     try {
       const templateId = await service.saveAsTemplate(
@@ -25,7 +29,7 @@ export const POST = withPermission(
         body.category || null,
         userInfo.userId
       );
-      return successResponse({ id: templateId }, '已保存为标准工艺模板');
+      return successResponse({ id: templateId }, ts('k_8t03j4'));
     } catch (e) {
       return errorResponse((e as Error).message, 400, 400);
     }

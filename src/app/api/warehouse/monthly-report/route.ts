@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -43,6 +46,7 @@ function getDateColumnKey(day: number, opKey: string, field: 'qty' | 'amount'): 
 
 export const GET = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const year = parseInt(searchParams.get('year') || String(new Date().getFullYear()));
     const month = parseInt(searchParams.get('month') || String(new Date().getMonth() + 1));
@@ -72,9 +76,9 @@ export const GET = withPermission(
         m.specification,
         m.width,
         m.length,
-        m.unit_mark,
+        m.unit as unit_mark,
         COALESCE(l.unit, m.unit) as unit,
-        mc.name as category_name,
+        mc.category_name as category_name,
         s.supplier_name,
         w.warehouse_name,
         DATE_FORMAT(l.create_time, '%d') as day_num,
@@ -155,7 +159,7 @@ export const GET = withPermission(
     if (exportFlag) {
       const colDefs: ReportColumnDef[] = [
         {
-          header: '基础信息',
+          header: ts('k_17qypnb'),
           children: BASE_COLUMNS.map((c) => ({
             key: c.key,
             header: c.header,

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import type { NextRequest } from 'next/server';
@@ -14,6 +17,7 @@ function generateLabelNo(): string {
 }
 
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const labelNo = searchParams.get('labelNo');
@@ -32,7 +36,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     `,
       [id]
     );
-    return successResponse((rows as DbRow[])[0], '标签详情');
+    return successResponse((rows as DbRow[])[0], ts('k_1u9501p'));
   }
 
   if (labelNo) {
@@ -46,7 +50,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     `,
       [labelNo]
     );
-    return successResponse((rows as DbRow[])[0], '标签详情');
+    return successResponse((rows as DbRow[])[0], ts('k_1u9501p'));
   }
 
   const page = parseInt(searchParams.get('page') || '1');
@@ -98,11 +102,12 @@ export const GET = withPermission(async (request: NextRequest) => {
       page,
       pageSize,
     },
-    '标签列表'
+    ts('k_1fu1khr')
   );
 });
 
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { type } = body;
 
@@ -132,7 +137,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   } = body;
 
   if (!materialCode || !materialName || !quantity) {
-    return errorResponse('缺少必要参数：materialCode, materialName, quantity', 400);
+    return errorResponse(ts('k_14ezx99'), 400);
   }
 
   const labelNo = generateLabelNo();
@@ -173,14 +178,15 @@ export const POST = withPermission(async (request: NextRequest) => {
     ]
   );
 
-  return successResponse({ id: (result as DbRow).insertId, labelNo }, '标签创建成功');
+  return successResponse({ id: (result as DbRow).insertId, labelNo }, ts('k_14r8ecs'));
 });
 
 async function handleCut(body: DbRow) {
+  const ts = await getTranslations('Common');
   const { parentLabelId, cutWidths, operatorName: _operatorName } = body;
 
   if (!parentLabelId || !cutWidths || !Array.isArray(cutWidths) || cutWidths.length === 0) {
-    return errorResponse('缺少必要参数', 400);
+    return errorResponse(ts('k_fifqlw'), 400);
   }
 
   const parentLabel = await query(
@@ -193,11 +199,11 @@ async function handleCut(body: DbRow) {
   const parent = (parentLabel as DbRow[])[0];
 
   if (!parent) {
-    return errorResponse('父标签不存在', 404);
+    return errorResponse(ts('k_191xpqj'), 404);
   }
 
   if (parent.is_cut === 1) {
-    return errorResponse('该标签已被分切', 400);
+    return errorResponse(ts('k_1fupl51'), 400);
   }
 
   const totalCutWidth = cutWidths.reduce((sum: number, w: number) => sum + w, 0);
@@ -273,16 +279,17 @@ async function handleCut(body: DbRow) {
       newLabels,
       remainingWidth: parent.width - totalCutWidth,
     },
-    '分切成功'
+    ts('k_1rj81pv')
   );
 }
 
 export const PUT = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id } = body;
 
   if (!id) {
-    return errorResponse('缺少标签ID', 400);
+    return errorResponse(ts('k_1c3e7u8'), 400);
   }
 
   const updateFields: string[] = [];
@@ -304,7 +311,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
   }
 
   if (updateFields.length === 0) {
-    return errorResponse('没有需要更新的字段', 400);
+    return errorResponse(ts('k_1kyikfw'), 400);
   }
 
   updateFields.push('update_time = NOW()');
@@ -312,20 +319,21 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
   await execute(`UPDATE inv_material_label SET ${updateFields.join(', ')} WHERE id = ?`, params);
 
-  return successResponse(null, '标签更新成功');
+  return successResponse(null, ts('k_aap5ch'));
 });
 
 export const DELETE = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
   if (!id) {
-    return errorResponse('缺少标签ID', 400);
+    return errorResponse(ts('k_1c3e7u8'), 400);
   }
 
   await execute('UPDATE inv_material_label SET deleted = 1, update_time = NOW() WHERE id = ?', [
     id,
   ]);
 
-  return successResponse(null, '标签删除成功');
+  return successResponse(null, ts('k_1p9zch5'));
 });

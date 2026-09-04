@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { transaction, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -26,6 +29,8 @@ function randomAmount(min: number, max: number): number {
 }
 
 export const POST = withPermission(async (_request: NextRequest) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
   const result = await transaction(async (conn) => {
     const stats: Record<string, number> = {};
     const now = new Date();
@@ -100,21 +105,21 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== 重建基础数据：仓库 =====
     const whNames = [
-      '原材料仓',
-      '半成品仓',
-      '成品仓',
-      '辅料仓',
-      '油墨仓',
-      '危化品仓',
-      '冷藏仓',
-      '待检仓',
-      '退货仓',
-      '废品仓',
-      '包材仓',
-      '备件仓',
-      '样品仓',
-      '暂存仓',
-      '外协仓',
+      ts('k_tkxvoe'),
+      ts('k_llwvwj'),
+      ts('k_93mh3v'),
+      ts('k_6jdwbc'),
+      ts('k_359r5x'),
+      ts('k_mm26ai'),
+      ts('k_15ys8xk'),
+      ts('k_1r16jah'),
+      ts('k_1degaw1'),
+      ts('k_mjllii'),
+      ts('k_1u2d3kp'),
+      ts('k_b4io61'),
+      ts('k_1kkagc2'),
+      ts('k_xwi5uk'),
+      ts('k_1pwbrdf'),
     ];
     const whCodes = [
       'Y01',
@@ -142,8 +147,8 @@ export const POST = withPermission(async (_request: NextRequest) => {
           whCodes[i],
           whNames[i],
           (i % 10) + 1,
-          '广东省',
-          '东莞',
+          ts('k_1vky111'),
+          ts('k_1xfq867'),
           `广东省东莞市工业园区${i + 1}号`,
           whUser.id,
           `0769-${randomInt(22000000, 22999999)}`,
@@ -160,50 +165,50 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const matTypes = [
       {
         prefix: 'PET',
-        name: 'PET薄膜',
-        unit: '张',
+        name: ts('k_1nvc7li'),
+        unit: ts('k_accfpb'),
         cat_type: 1,
         specs: ['0.1mm×500mm', '0.125mm×600mm', '0.188mm×700mm', '0.25mm×800mm'],
         price_range: [0.5, 5.0],
       },
       {
         prefix: 'PVC',
-        name: 'PVC薄膜',
-        unit: '张',
+        name: ts('k_qa51ew'),
+        unit: ts('k_accfpb'),
         cat_type: 1,
         specs: ['0.1mm×500mm', '0.15mm×600mm', '0.2mm×700mm'],
         price_range: [0.3, 3.5],
       },
       {
         prefix: 'INK',
-        name: '丝印油墨',
+        name: ts('k_yofn3l'),
         unit: 'kg',
         cat_type: 2,
-        specs: ['溶剂型-黑色', '溶剂型-白色', 'UV-透明', 'UV-彩色', '导电银浆'],
+        specs: [ts('k_4om20u'), ts('k_1vezdzu'), ts('k_roo0m0'), ts('k_16nsb4q'), ts('k_sonvqu')],
         price_range: [50, 500],
       },
       {
         prefix: 'SOL',
-        name: '溶剂',
+        name: ts('k_1xxx1ch'),
         unit: 'L',
         cat_type: 2,
-        specs: ['783慢干水', '719快干水', '洗网水', '开油水'],
+        specs: [ts('k_1fwa6y5'), ts('k_11tok9n'), ts('k_wh590j'), ts('k_14het1u')],
         price_range: [15, 80],
       },
       {
         prefix: 'AUX',
-        name: '辅助材料',
-        unit: '个',
+        name: ts('k_1m3pn7s'),
+        unit: ts('k_d5a1x9'),
         cat_type: 3,
-        specs: ['网框-铝合金', '网纱-77T', '刮胶-65度', '保护膜-50μm'],
+        specs: [ts('k_2dpuuf'), ts('k_q5h3u8'), ts('k_1cia1ht'), ts('k_wazh8d')],
         price_range: [5, 200],
       },
       {
         prefix: 'LBL',
-        name: '标签成品',
-        unit: '张',
+        name: ts('k_19bsl0r'),
+        unit: ts('k_accfpb'),
         cat_type: 4,
-        specs: ['空调面板标签', '洗衣机面板标签', '冰箱贴标', '电子产品标签', '酒类防伪标'],
+        specs: [ts('k_1o50n6w'), ts('k_1sgtu09'), ts('k_1y8p4hj'), ts('k_1cj6vh9'), ts('k_17icwxf')],
         price_range: [0.05, 2.0],
       },
     ];
@@ -225,7 +230,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           catType?.id || null,
           mt.cat_type,
           mt.unit,
-          randomItem(['3M', '杜邦', '东洋', '精工', '国产']),
+          randomItem(['3M', ts('k_51q4lj'), ts('k_10kpi28'), ts('k_qkwmj0'), ts('k_1xk2srh')]),
           randomInt(100, 1000),
           randomInt(5000, 50000),
           randomInt(50, 500),
@@ -259,16 +264,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== 重建基础数据：客户 =====
     const industries = [
-      '家电制造',
-      '电子产品',
-      '汽车配件',
-      '食品饮料',
-      '日化用品',
-      '医药保健',
-      '物流快递',
-      '商超零售',
-      '通信设备',
-      '新能源',
+      ts('k_14iwecy'),
+      ts('k_7n1y5o'),
+      ts('k_17lz91l'),
+      ts('k_10bzumo'),
+      ts('k_1gcjolp'),
+      ts('k_wpk5rd'),
+      ts('k_h1zu16'),
+      ts('k_1479nc'),
+      ts('k_10hgkbv'),
+      ts('k_10z71bm'),
     ];
     const cusIds: number[] = [];
     for (let i = 1; i <= 30; i++) {
@@ -281,16 +286,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
           `${industry.substring(0, 2)}`,
           (i % 3) + 1,
           industry,
-          randomItem(['大型', '中型', '小型']),
+          randomItem([ts('k_jppm47'), ts('k_j44jpl'), ts('k_18esshb')]),
           randomItem(['AAA', 'AA', 'A']),
-          '广东',
-          '东莞',
+          ts('k_1m883h2'),
+          ts('k_1xfq867'),
           `广东省东莞市工业区${i}号`,
           `联系人${i}`,
           `1${randomInt(3000000000, 3999999999)}`,
           `c${i}@example.com`,
           `91440100MA5C${pad(i, 6)}`,
-          randomItem(['工商银行', '建设银行']),
+          randomItem([ts('k_b7ls4g'), ts('k_14b4exf')]),
           `6222${String(randomInt(1000000000000, 9999999999999))}`,
           adminUser.id,
           (i % 5) + 1,
@@ -305,7 +310,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     // ===== 重建基础数据：供应商 =====
     const supIds: number[] = [];
     for (let i = 1; i <= 30; i++) {
-      const sType = randomItem(['原材料', '油墨', '设备', '辅料', '包材']);
+      const sType = randomItem([ts('k_52g5tl'), ts('k_w1cwb8'), ts('k_1kb4ymq'), ts('k_14rp9uj'), tc('packaging')]);
       await conn.execute(
         `INSERT INTO pur_supplier (supplier_code, supplier_name, short_name, supplier_type, province, city, address, contact_name, contact_phone, contact_email, tax_number, bank_name, bank_account, credit_level, cooperation_status, settlement_method, payment_terms, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
@@ -313,19 +318,19 @@ export const POST = withPermission(async (_request: NextRequest) => {
           `东莞${sType}供应商${i}有限公司`,
           `${sType.substring(0, 2)}`,
           (i % 3) + 1,
-          '广东',
-          '东莞',
+          ts('k_1m883h2'),
+          ts('k_1xfq867'),
           `广东省东莞市供应商路${i}号`,
           `供应商联系人${i}`,
           `1${randomInt(3800000000, 3999999999)}`,
           `s${i}@example.com`,
           `91440100MA5D${pad(i, 6)}`,
-          randomItem(['工商银行', '建设银行']),
+          randomItem([ts('k_b7ls4g'), ts('k_14b4exf')]),
           `6228${String(randomInt(1000000000000, 9999999999999))}`,
           randomItem(['AAA', 'AA', 'A']),
           1,
-          randomItem(['月结30天', '月结60天']),
-          randomItem(['月结30天', '货到付款']),
+          randomItem([ts('k_isj9pm'), ts('k_g2lx0p')]),
+          randomItem([ts('k_isj9pm'), ts('k_16x2l80')]),
           1,
         ]
       );
@@ -347,20 +352,20 @@ export const POST = withPermission(async (_request: NextRequest) => {
     }));
     const suppliers = supIds.map((id, i) => ({
       id,
-      supplier_name: `东莞${randomItem(['原材料', '油墨', '辅料'])}供应商${i + 1}有限公司`,
+      supplier_name: `东莞${randomItem([ts('k_52g5tl'), ts('k_w1cwb8'), ts('k_14rp9uj')])}供应商${i + 1}有限公司`,
     }));
 
     const productNames = [
-      '空调面板标签',
-      '洗衣机控制面板',
-      '冰箱温控标签',
-      '电子产品铭牌',
-      '酒类防伪标',
-      '食品包装标签',
-      '日化用品标签',
-      '药品追溯标',
-      '物流快递面单',
-      '商超价签',
+      ts('k_1o50n6w'),
+      ts('k_1d31fut'),
+      ts('k_1mbu5t7'),
+      ts('k_1t0mg5p'),
+      ts('k_17icwxf'),
+      ts('k_sg3uru'),
+      ts('k_1bbz0u8'),
+      ts('k_152s9ge'),
+      ts('k_vmu8d3'),
+      ts('k_2j669x'),
     ];
     const customerProductMap: Record<string, string> = {};
     for (let i = 0; i < customers.length; i++) {
@@ -404,7 +409,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           totalWithTax,
           0,
           'CNY',
-          randomItem(['月结30天', '月结60天', '货到付款']),
+          randomItem([ts('k_isj9pm'), ts('k_g2lx0p'), ts('k_16x2l80')]),
           deliveryDate,
           `CT-${now.getFullYear()}-${pad(i, 4)}`,
           status,
@@ -420,7 +425,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           orderId,
           prodMat?.id || null,
           qty,
-          prodMat?.unit || '张',
+          prodMat?.unit || ts('k_accfpb'),
           unitPrice,
           taxRate,
           amount,
@@ -476,7 +481,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           od.customerName,
           od.productName,
           od.qty,
-          '张',
+          ts('k_accfpb'),
           status,
           randomItem(['urgent', 'high', 'normal', 'low']),
           planStart,
@@ -548,7 +553,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           mainMat?.specification,
           batchNo,
           totalQty,
-          mainMat?.unit || '张',
+          mainMat?.unit || ts('k_accfpb'),
           mainMat?.purchase_price || 2,
           totalAmount,
         ]
@@ -567,7 +572,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           mainMat?.material_code,
           mainMat?.material_name,
           mainMat?.specification,
-          mainMat?.unit || '张',
+          mainMat?.unit || ts('k_accfpb'),
           batchNo,
           totalQty,
           width,
@@ -825,7 +830,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           label.labelNo,
           card.cardNo,
           1,
-          '扫码配料成功',
+          ts('k_u749gu'),
           prodUser.id,
           prodUser.real_name,
           randomDate(yearStart, now),
@@ -912,7 +917,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           `WR-${pad(i, 5)}`,
           wo.id,
           wo.woNo,
-          randomItem(['丝印', '模切', '分条', '覆膜', '品检']),
+          randomItem([ts('k_1o7ehgo'), ts('k_12b93ht'), ts('k_1qefmtk'), ts('k_1p0kpz3'), ts('k_64p2zo')]),
           randomInt(1, 5),
           null,
           prodUser.id,
@@ -970,7 +975,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           prodMat?.material_code,
           prodMat?.material_name,
           prodQty,
-          '张',
+          ts('k_accfpb'),
           prodBatchNo,
           prodQty,
         ]
@@ -987,7 +992,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           prodMat?.material_code,
           prodMat?.material_name,
           prodQty,
-          '张',
+          ts('k_accfpb'),
           prodBatchNo,
           1,
           1,
@@ -1089,5 +1094,5 @@ export const POST = withPermission(async (_request: NextRequest) => {
     return stats;
   });
 
-  return successResponse(result, '核心业务流转数据初始化成功');
+  return successResponse(result, ts('k_12q4afh'));
 });

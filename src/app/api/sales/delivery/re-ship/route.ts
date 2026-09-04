@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -7,15 +10,16 @@ import { getShPrefix, generateDocNo } from '@/lib/global-config';
 // POST /api/sales/delivery/re-ship - 提交补发申请（符合设计文档 5.4 节）
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { parent_shipment_id, quantity, reason } = body;
 
     if (!parent_shipment_id) {
-      return errorResponse('缺少原发货单ID', 400, 400);
+      return errorResponse(ts('k_vfor59'), 400, 400);
     }
 
     if (!quantity || parseFloat(quantity) <= 0) {
-      return errorResponse('补发数量必须大于0', 400, 400);
+      return errorResponse(ts('k_9xle0h'), 400, 400);
     }
 
     // 查询原发货单
@@ -25,7 +29,7 @@ export const POST = withPermission(
     );
 
     if (!parentShipment) {
-      return commonErrors.notFound('原发货单不存在');
+      return commonErrors.notFound(ts('k_19jajgk'));
     }
 
     // 创建补发发货单
@@ -82,7 +86,7 @@ export const POST = withPermission(
         type: 're_ship',
         status: 2, // 待审批
       },
-      '补发申请提交成功'
+      ts('k_e5e7ic')
     );
   },
   { logTitle: '提交补发申请', logType: 'business' }

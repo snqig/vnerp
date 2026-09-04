@@ -43,6 +43,7 @@ interface CuttingRecord {
 }
 
 export default function CuttingRecordsPage() {
+  const ts = useTranslations('Warehouse');
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
@@ -144,7 +145,7 @@ export default function CuttingRecordsPage() {
       } catch (error) {
         // AbortError 是组件卸载/依赖变化时主动取消请求，静默忽略
         if ((error as Error).name !== 'AbortError') {
-          console.error('切件记录查询失败:', error);
+          console.error(ts('k_29ma58'), error);
         }
       } finally {
         setLoading(false);
@@ -224,8 +225,8 @@ export default function CuttingRecordsPage() {
               </div>
               <div className="flex gap-2">
                 <GlobalExportToolbar
-                  filename="分切记录"
-                  title="分切记录"
+                  filename={ts('k_1e1td5d')}
+                  title={ts('k_1e1td5d')}
                   landscape
                   columns={[
                     { key: 'recordNo', label: t('recordNoCol'), width: 15 },

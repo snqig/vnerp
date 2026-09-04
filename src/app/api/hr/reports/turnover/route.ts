@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
@@ -6,6 +9,7 @@ import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(
   async (_request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const [totals] = await query<DbRow>(
       `SELECT
         COUNT(*) as totalEmployees,
@@ -25,13 +29,7 @@ export const GET = withPermission(
     );
 
     const deptRows = await query<DbRow>(
-      `SELECT
-        COALESCE(dept_name, '未分配') as dept_name,
-        COUNT(*) as total,
-        SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as resigned
-      FROM sys_employee WHERE deleted = 0
-      GROUP BY dept_name
-      ORDER BY total DESC`
+      ts('k_1abh1xt')
     );
 
     const [tenure] = await query<DbRow>(

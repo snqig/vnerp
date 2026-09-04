@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -15,6 +18,7 @@ import { withPermission } from '@/lib/api-permissions';
  */
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
 
   const id = searchParams.get('id');
@@ -27,7 +31,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       [Number(id)]
     );
     if (!rows || rows.length === 0) {
-      return errorResponse('维保记录不存在', 404, 404);
+      return errorResponse(ts('k_1kxzz1g'), 404, 404);
     }
     return successResponse(rows[0]);
   }
@@ -89,6 +93,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       equipment_id,
@@ -113,7 +118,7 @@ export const POST = withPermission(
     } = body;
 
     if (!equipment_id) {
-      return errorResponse('设备ID不能为空', 400, 400);
+      return errorResponse(ts('k_1trm375'), 400, 400);
     }
 
     // 维保日期：优先 maintenance_date，否则从开始时间(start_time)取日期部分
@@ -122,7 +127,7 @@ export const POST = withPermission(
       mDate = String(start_time).slice(0, 10);
     }
     if (!mDate) {
-      return errorResponse('维保日期不能为空（请填写开始时间或维保日期）', 400, 400);
+      return errorResponse(ts('k_1shnfgm'), 400, 400);
     }
 
     // 字段别名兼容（前端表单字段名为 downtime_hours/cost/maintenance_content/fault_desc）
@@ -153,7 +158,7 @@ export const POST = withPermission(
       Number(equipment_id),
     ]);
     if (!equipRows || equipRows.length === 0) {
-      return errorResponse('设备不存在', 404, 404);
+      return errorResponse(ts('k_19l0z6t'), 404, 404);
     }
 
     // 生成记录编号
@@ -230,17 +235,18 @@ export const POST = withPermission(
       }
     }
 
-    return successResponse({ id: result2.insertId, record_no: recordNo }, '维保记录创建成功');
+    return successResponse({ id: result2.insertId, record_no: recordNo }, ts('k_u00p3l'));
   },
   { logTitle: '创建维保记录', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...fields } = body;
 
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     const allowedFields = [
       'maintenance_type',
@@ -274,7 +280,7 @@ export const PUT = withPermission(
     }
 
     if (updateFields.length === 0) {
-      return errorResponse('没有可更新的字段', 400, 400);
+      return errorResponse(ts('k_15vo87k'), 400, 400);
     }
 
     updateFields.push('update_by = ?');
@@ -286,23 +292,24 @@ export const PUT = withPermission(
       updateValues
     );
 
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新维保记录', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     await execute('UPDATE eq_maintenance_record SET deleted = 1, update_by = ? WHERE id = ?', [
       userInfo?.userId || null,
       Number(id),
     ]);
 
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除维保记录', logType: 'business' }
 );

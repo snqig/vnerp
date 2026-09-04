@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { SalesOrderShippedEvent } from '@/domain/sales/events/SalesOrderEvents';
 import { transaction } from '@/lib/db';
@@ -5,12 +7,13 @@ import { logger, secureLog } from '@/lib/logger';
 
 export class SalesReceivableHandler implements EventHandler<SalesOrderShippedEvent> {
   async handle(event: SalesOrderShippedEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { orderId, orderNo, customerId, totalShippedAmount } = event.payload;
     const ctx = { module: 'sales-receivable', action: 'create', orderId, orderNo };
     let phase = 'init';
 
     if (totalShippedAmount <= 0) {
-      logger.info(ctx, '跳过：出库金额为 0', { orderNo });
+      logger.info(ctx, ts('k_m0pkpg'), { orderNo });
       return;
     }
 
@@ -19,7 +22,7 @@ export class SalesReceivableHandler implements EventHandler<SalesOrderShippedEve
       await transaction(async (conn) => {
         phase = 'check_duplicate';
         const receivableNo = 'AR' + Date.now();
-        logger.info(ctx, '开始处理应收账款创建', { receivableNo, customerId, totalShippedAmount });
+        logger.info(ctx, ts('k_1w3nnex'), { receivableNo, customerId, totalShippedAmount });
         const [existing] = (await conn.execute(
           'SELECT id FROM fin_receivable WHERE source_no = ? AND deleted = 0 LIMIT 1',
           [orderNo]
@@ -29,10 +32,10 @@ export class SalesReceivableHandler implements EventHandler<SalesOrderShippedEve
             orderNo,
             orderId,
           });
-          logger.info(ctx, `跳过：应收账款已存在`, { orderNo, existingId: existing[0].id });
+          logger.info(ctx, ts('k_1easwul'), { orderNo, existingId: existing[0].id });
           return;
         }
-        logger.info(ctx, '无重复记录，准备创建应收账款', { orderNo, receivableNo });
+        logger.info(ctx, ts('k_82y3g6'), { orderNo, receivableNo });
 
         phase = 'insert_receivable';
         const insertParams = [
@@ -43,7 +46,7 @@ export class SalesReceivableHandler implements EventHandler<SalesOrderShippedEve
           totalShippedAmount,
           `Sales order ${orderNo} outbound auto-generated`,
         ];
-        logger.info(ctx, 'INSERT fin_receivable 参数详情', {
+        logger.info(ctx, ts('k_1wgapvr'), {
           paramCount: insertParams.length,
           params: insertParams,
         });
@@ -54,7 +57,7 @@ export class SalesReceivableHandler implements EventHandler<SalesOrderShippedEve
           insertParams
         );
         created = true;
-        logger.info(ctx, `应收账款创建完成`, {
+        logger.info(ctx, ts('k_iyloe6'), {
           receivableNo,
           customerId,
           orderNo,
@@ -64,9 +67,9 @@ export class SalesReceivableHandler implements EventHandler<SalesOrderShippedEve
 
       if (created) {
         secureLog('info', 'Receivable created for sales shipment', { orderNo, totalShippedAmount });
-        logger.info(ctx, '应收账款流程成功结束', { orderNo, totalShippedAmount });
+        logger.info(ctx, ts('k_1ewya04'), { orderNo, totalShippedAmount });
       } else {
-        logger.info(ctx, '应收账款流程跳过（未创建）', { orderNo });
+        logger.info(ctx, ts('k_1og1wpl'), { orderNo });
       }
     } catch (err) {
       logger.error(ctx, `SalesReceivable 失败 [phase=${phase}]`, {

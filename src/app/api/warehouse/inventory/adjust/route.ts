@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -5,6 +8,7 @@ import { adjustInventory } from '@/lib/inventory-sync';
 
 // 库存调整（统一入口）
 export const POST = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const {
     materialId,
@@ -19,7 +23,7 @@ export const POST = withPermission(async (request: NextRequest, _userInfo) => {
   } = body;
 
   if (!materialId || !warehouseId || quantity === undefined || !businessNo) {
-    return errorResponse('缺少必要参数: materialId, warehouseId, quantity, businessNo', 400, 400);
+    return errorResponse(ts('k_chslos'), 400, 400);
   }
 
   const result = await adjustInventory({
@@ -28,7 +32,7 @@ export const POST = withPermission(async (request: NextRequest, _userInfo) => {
     batchNo,
     quantity,
     operationType: operationType || 'adjust',
-    businessType: businessType || '库存调整',
+    businessType: businessType || ts('k_leccqh'),
     businessNo,
     remark,
     operatorId,

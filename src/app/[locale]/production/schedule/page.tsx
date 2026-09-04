@@ -873,7 +873,7 @@ export default function ProductionSchedulePage() {
                               className="h-4 w-4 cursor-pointer accent-blue-600"
                               checked={isSelected(String(schedule.id))}
                               onChange={() => toggle(String(schedule.id))}
-                              aria-label={tc('selectAll')}
+                              aria-label={tc('selectRow', { id: schedule.id })}
                             />
                           </TableCell>
                           <TableCell className="font-medium">{schedule.schedule_no}</TableCell>
@@ -1350,7 +1350,7 @@ export default function ProductionSchedulePage() {
                       </div>
                       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all duration-500 ${
+                          className={`h-full rounded-full transition-[width] duration-500 ${
                             cap.utilizationRate > 90
                               ? 'bg-red-500'
                               : cap.utilizationRate > 70

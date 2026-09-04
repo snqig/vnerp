@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -33,6 +36,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       equipment_id,
@@ -63,31 +67,33 @@ export const POST = withPermission(
         remark || null,
       ]
     );
-    return successResponse({ id: result.insertId, scrap_no: scrapNo }, '报废单创建成功');
+    return successResponse({ id: result.insertId, scrap_no: scrapNo }, ts('k_14ufz0s'));
   },
   { logTitle: '创建设备报废单', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, status, remark } = body;
     if (status !== undefined)
       await execute('UPDATE eqp_scrap SET status = ? WHERE id = ? AND deleted = 0', [status, id]);
     if (remark !== undefined)
       await execute('UPDATE eqp_scrap SET remark = ? WHERE id = ? AND deleted = 0', [remark, id]);
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新设备报废单', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
+    if (!id) return NextResponse.json({ success: false, message: ts('k_js4lo9') }, { status: 400 });
     await execute('UPDATE eqp_scrap SET deleted = 1 WHERE id = ?', [Number(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除设备报废单', logType: 'business' }
 );

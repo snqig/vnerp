@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 /**
  * 配方版本仓储 — MySQL 实现
  * 基于 mysql2/promise，支持事务连接传入
@@ -185,8 +187,9 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
   }
 
   async update(version: InkFormulaVersion): Promise<void> {
+  const ts = await getTranslations('Common');
     const props = version.toProps();
-    if (!props.id) throw new Error('更新版本时 id 不能为空');
+    if (!props.id) throw new Error(ts('k_lgn3uc'));
     const id = props.id;
 
     await transaction(async (conn) => {
@@ -260,10 +263,9 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
     excludeVersionId: number,
     operatorId: number
   ): Promise<void> {
+  const ts = await getTranslations('Common');
     await execute(
-      `UPDATE dcprint_ink_formula_version
-       SET status = 3, cancel_by = ?, cancel_time = NOW(), cancel_reason = '新版本生效自动归档', update_by = ?
-       WHERE color_id = ? AND status = 2 AND is_deleted = 0 AND id != ?`,
+      ts('k_2xpt3x'),
       [operatorId, operatorId, colorId, excludeVersionId]
     );
   }

@@ -34,6 +34,7 @@ import {
 import { Plus, Search, Edit, Trash2, Star, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
+import { formatDate } from '@/lib/date-utils';
 
 interface Skill {
   id: number;
@@ -67,10 +68,6 @@ const categoryOptions = [
 
 const levelLabels = ['', 'skillLevel1', 'skillLevel2', 'skillLevel3', 'skillLevel4', 'skillLevel5'];
 
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '-';
-  return dateStr.slice(0, 10);
-};
 
 export default function SkillsPage() {
   const [list, setList] = useState<Skill[]>([]);

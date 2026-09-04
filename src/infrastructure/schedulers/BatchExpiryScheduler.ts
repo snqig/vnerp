@@ -20,8 +20,8 @@ export class BatchExpiryScheduler {
     try {
       const batchResult = await execute(
         `UPDATE inv_inventory_batch
-         SET status = 'expired'
-         WHERE status = 'normal'
+         SET alert_level = 'expired', status = 0
+         WHERE alert_level = 'normal'
          AND expire_date IS NOT NULL
          AND expire_date < CURDATE()
          AND deleted = 0`
@@ -64,7 +64,7 @@ export class BatchExpiryScheduler {
       const warningBatches = await query<any>(
         `SELECT id, batch_no, material_code, material_name, expire_date
          FROM inv_inventory_batch
-         WHERE status = 'normal'
+         WHERE alert_level = 'normal'
          AND expire_date IS NOT NULL
          AND expire_date >= CURDATE()
          AND expire_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)

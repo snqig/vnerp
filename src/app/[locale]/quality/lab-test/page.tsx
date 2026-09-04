@@ -86,6 +86,7 @@ const statusMap: Record<
 };
 
 export default function LabTestPage() {
+  const ts = useTranslations('Quality');
   // 翻译钩子
   const t = useTranslations('Quality');
   const tc = useTranslations('Common');
@@ -200,8 +201,8 @@ export default function LabTestPage() {
                 {t('newTest')}
               </Button>
               <GlobalExportToolbar
-                filename="实验室检验报告"
-                title="实验室检验报告"
+                filename={ts('k_owvau6')}
+                title={ts('k_owvau6')}
                 columns={[
                   { key: 'test_no', label: t('testNo'), width: 18 },
                   { key: 'product_name', label: tc('productName'), width: 20 },

@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useMemo, useEffect } from 'react';
 import {
@@ -43,6 +44,7 @@ export function PurchaseReturnDialog({
   operatorName,
   onSuccess,
 }: Props) {
+  const ts = useTranslations('Warehouse');
   const fromWarehouseId = sourceRecords[0]?.warehouse_id;
   const fromWarehouseName =
     warehouses.find((w) => w.id === fromWarehouseId)?.warehouse_name ||
@@ -61,16 +63,16 @@ export function PurchaseReturnDialog({
 
   // 校验：所选入库单必须同来源采购单（source_order_id）+ 同仓库
   const consistency = useMemo(() => {
-    if (sourceRecords.length === 0) return { ok: false, message: '未选择入库单' };
+    if (sourceRecords.length === 0) return { ok: false, message: ts('k_iwrj52') };
     const first = sourceRecords[0];
     const so = first.source_order_id ?? null;
     if (!so) {
-      return { ok: false, message: '该入库单不是采购入库（无来源采购单），无法发起采购退料' };
+      return { ok: false, message: ts('k_q3f1xk') };
     }
     const sameSO = sourceRecords.every((r) => (r.source_order_id ?? null) === so);
-    if (!sameSO) return { ok: false, message: '所选入库单的来源采购单不一致' };
+    if (!sameSO) return { ok: false, message: ts('k_5lrogc') };
     const sameWh = sourceRecords.every((r) => r.warehouse_id === first.warehouse_id);
-    if (!sameWh) return { ok: false, message: '所选入库单的仓库不一致' };
+    if (!sameWh) return { ok: false, message: ts('k_ah6dts') };
     return { ok: true, sourceOrderId: so as number };
   }, [sourceRecords]);
 
@@ -96,7 +98,7 @@ export function PurchaseReturnDialog({
               setPoLookupMsg(`未找到采购单 #${soId}，无法发起退货`);
             }
           })
-          .catch(() => setPoLookupMsg('采购单查询失败'));
+          .catch(() => setPoLookupMsg(ts('k_v47sj5')));
       }
     }
   }, [open, aggregated, consistency]);
@@ -108,12 +110,12 @@ export function PurchaseReturnDialog({
 
   const handleConfirm = async () => {
     if (!canSubmit || !fromWarehouseId || !po) {
-      toast.error(poLookupMsg || '请先填写退货原因并确认采购单');
+      toast.error(poLookupMsg || ts('k_1musrof'));
       return;
     }
     const valid = items.filter((it) => it.material_id && Number(it.quantity) > 0);
     if (valid.length === 0) {
-      toast.error('请至少填写一项有效数量');
+      toast.error(ts('k_482f8l'));
       return;
     }
     setSubmitting(true);
@@ -133,7 +135,7 @@ export function PurchaseReturnDialog({
             material_code: it.material_code,
             material_name: it.material_name,
             material_spec: it.material_spec || '',
-            unit: it.unit || '件',
+            unit: it.unit || ts('k_w0gthl'),
             quantity: Number(it.quantity),
             unit_price: Number(it.unitPrice) || 0,
             batch_no: it.batch_no || '',
@@ -144,7 +146,7 @@ export function PurchaseReturnDialog({
       });
       const result = await res.json();
       if (!result.success) {
-        toast.error(result.message || '创建采购退货单失败');
+        toast.error(result.message || ts('k_162xnsa'));
         setSubmitting(false);
         return;
       }
@@ -163,11 +165,11 @@ export function PurchaseReturnDialog({
           return;
         }
       }
-      toast.success('采购退货单已创建并审核，可在采购退货模块完成出库扣减');
+      toast.success(ts('k_1b5pefw'));
       onOpenChange(false);
       onSuccess();
     } catch {
-      toast.error('操作失败，请稍后重试');
+      toast.error(ts('k_1yojo3u'));
     } finally {
       setSubmitting(false);
     }
@@ -180,24 +182,23 @@ export function PurchaseReturnDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl" resizable>
         <DialogHeader>
-          <DialogTitle>采购退料（退供应商）</DialogTitle>
+          <DialogTitle>{ts('k_10daqbw')}</DialogTitle>
           <DialogDescription>
-            把物料退回供应商，库存将在采购退货模块「完成」时扣减。仅支持来源为采购单的入库单。
-          </DialogDescription>
+            {ts('k_17uk0xn')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2 max-h-[62vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label>退料仓库</Label>
+              <Label>{ts('k_7kduo')}</Label>
               <div className="flex h-9 items-center rounded-md border border-muted bg-muted/50 px-3 text-sm">
                 {fromWarehouseName}
               </div>
             </div>
             <div className="space-y-1">
-              <Label>来源采购单</Label>
+              <Label>{ts('k_1ym01if')}</Label>
               <div className="flex h-9 items-center rounded-md border border-muted bg-muted/50 px-3 text-sm">
-                {consistency.ok ? (po ? `${po.po_no}（${po.supplier_name}）` : '查询中…') : poLookupMsg || '—'}
+                {consistency.ok ? (po ? `${po.po_no}（${po.supplier_name}）` : ts('k_2k6bx1')) : poLookupMsg || '—'}
               </div>
             </div>
           </div>
@@ -217,12 +218,12 @@ export function PurchaseReturnDialog({
 
           <div className="space-y-1">
             <Label>
-              退货原因 <span className="text-red-500">*</span>
+              {ts('k_63q1tb')}<span className="text-red-500">*</span>
             </Label>
             <input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="必填，如 质量不合格 / 多送 / 规格不符"
+              placeholder={ts('k_3d47k9')}
               className={inputCls}
             />
           </div>
@@ -230,10 +231,9 @@ export function PurchaseReturnDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            取消
-          </Button>
+            {ts('k_1589w37')}</Button>
           <Button onClick={handleConfirm} disabled={submitting || !canSubmit}>
-            {submitting ? '处理中...' : '创建并审核退货'}
+            {submitting ? ts('k_1j4vco4') : ts('k_1nmom96')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface VersionChangeLogProps {
   id?: number;
   standardCardId: number;
@@ -32,29 +34,31 @@ export class VersionChangeLog {
   }
 
   private validate(props: VersionChangeLogProps): void {
+  const ts = t;
     if (!props.standardCardId) {
-      throw new Error('标准卡ID不能为空');
+      throw new Error(ts('k_abbfyw'));
     }
     if (!props.version || props.version.trim() === '') {
-      throw new Error('版本号不能为空');
+      throw new Error(ts('k_1whf9q4'));
     }
     if (!['create', 'update', 'obsolete', 'restore'].includes(props.changeType)) {
-      throw new Error('变更类型无效');
+      throw new Error(ts('k_dw5qlz'));
     }
     if (!props.changeContent || props.changeContent.trim() === '') {
-      throw new Error('变更内容不能为空');
+      throw new Error(ts('k_1t2ak9'));
     }
     if (!props.changedBy) {
-      throw new Error('操作人不能为空');
+      throw new Error(ts('k_1ut87p8'));
     }
   }
 
   get changeTypeLabel(): string {
+  const ts = t;
     const labels: Record<string, string> = {
-      create: '创建',
-      update: '更新',
-      obsolete: '作废',
-      restore: '恢复',
+      create: ts('k_khvw5c'),
+      update: ts('k_v6g9yh'),
+      obsolete: ts('k_wph6a4'),
+      restore: ts('k_13bnw3c'),
     };
     return labels[this.changeType] || this.changeType;
   }

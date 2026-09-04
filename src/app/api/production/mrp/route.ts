@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -11,11 +14,12 @@ import {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { work_order_ids, warehouse_id, auto_generate_pr = false } = body;
 
     if (!work_order_ids || !Array.isArray(work_order_ids) || work_order_ids.length === 0) {
-      return errorResponse('请提供工单ID列表', 400, 400);
+      return errorResponse(ts('k_1i67zxr'), 400, 400);
     }
 
     const result = await transaction(async (conn) => {
@@ -35,13 +39,14 @@ export const POST = withPermission(
 );
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
 
   if (action === 'bom-explode') {
     const productId = parseInt(searchParams.get('product_id') || '0');
     const quantity = parseFloat(searchParams.get('quantity') || '1');
-    if (!productId) return errorResponse('请提供产品ID', 400, 400);
+    if (!productId) return errorResponse(ts('k_1ve2ooi'), 400, 400);
     const result = await transaction(async (conn) => {
       return await explodeBOM(conn, productId, quantity);
     });
@@ -56,7 +61,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       searchParams.get('end_date') ||
       new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
     const bucketSize = (searchParams.get('bucket_size') || 'week') as 'day' | 'week' | 'month';
-    if (!materialId) return errorResponse('请提供物料ID', 400, 400);
+    if (!materialId) return errorResponse(ts('k_3gnago'), 400, 400);
     const result = await transaction(async (conn) => {
       return await calculateTimeBuckets(
         conn,
@@ -77,12 +82,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       .split(',')
       .map(Number)
       .filter((n) => n > 0);
-    if (workOrderIds.length === 0) return errorResponse('请提供工单ID列表', 400, 400);
+    if (workOrderIds.length === 0) return errorResponse(ts('k_1i67zxr'), 400, 400);
     const result = await transaction(async (conn) => {
       return await calculateNetRequirements(conn, workOrderIds, warehouseId);
     });
     return successResponse(result);
   }
 
-  return errorResponse('未知操作', 400, 400);
+  return errorResponse(ts('k_ztn3ax'), 400, 400);
 });

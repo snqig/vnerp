@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { SalesOrderShippedEvent } from '@/domain/sales/events/SalesOrderEvents';
 import { transaction } from '@/lib/db';
@@ -9,6 +11,7 @@ export class SalesShippedHandler implements EventHandler<SalesOrderShippedEvent>
     const { orderId, orderNo, shippedItems } = event.payload;
 
     await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
       for (const item of shippedItems) {
         const [existingInv] = await conn.execute(
           'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
@@ -66,8 +69,8 @@ export class SalesShippedHandler implements EventHandler<SalesOrderShippedEvent>
           referenceNo: orderNo,
           remark: `销售出库: ${item.materialName || ''}`,
           createBy: null,
-          accountDr: '应收账款',
-          accountCr: '成品库存',
+          accountDr: ts('k_1vuoc0f'),
+          accountCr: ts('k_1gi7g6x'),
         });
       }
     });

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -9,6 +12,7 @@ import type { DbRow } from '@/types/db';
  * 标准成本 vs 实际成本对比
  */
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');
@@ -50,7 +54,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         standardCost > 0 ? Math.round((costVariance / standardCost) * 100) : 0;
 
       return {
-        workshop: row.workshop || '未分配',
+        workshop: row.workshop || ts('k_1bgs62s'),
         workOrderCount: row.work_order_count,
         planQty: parseFloat(row.total_plan_qty),
         completedQty: parseFloat(row.total_completed_qty),
@@ -81,7 +85,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
               : 0,
         },
       },
-      '获取车间成本报表成功'
+      ts('k_isoql6')
     );
   } else {
     // 按产品统计
@@ -117,8 +121,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
       return {
         materialId: row.material_id,
-        materialCode: row.material_code || '未知',
-        materialName: row.material_name || '未知产品',
+        materialCode: row.material_code || ts('k_1lpnuh4'),
+        materialName: row.material_name || ts('k_1es56us'),
         workOrderCount: row.work_order_count,
         planQty: parseFloat(row.total_plan_qty),
         completedQty: parseFloat(row.total_completed_qty),
@@ -141,7 +145,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
           totalVariance: result.reduce((sum: number, r: DbRow) => sum + r.costVariance, 0),
         },
       },
-      '获取产品成本报表成功'
+      ts('k_3cso4o')
     );
   }
 });

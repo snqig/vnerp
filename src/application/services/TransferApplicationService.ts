@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { ITransferOrderRepository } from '@/domain/warehouse/repositories/ITransferOrderRepository';
 import { TransferOrder, TransferOrderProps } from '@/domain/warehouse/aggregates/TransferOrder';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
@@ -9,9 +11,10 @@ export class TransferApplicationService {
   constructor(private readonly orderRepo: ITransferOrderRepository) {}
 
   async getOrderById(id: number): Promise<TransferOrder> {
+  const ts = await getTranslations('Common');
     const order = await this.orderRepo.findById(id);
     if (!order) {
-      throw new NotFoundError('调拨单不存在');
+      throw new NotFoundError(ts('k_118ryb8'));
     }
     return order;
   }
@@ -130,9 +133,10 @@ export class TransferApplicationService {
   }
 
   async deleteOrder(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const order = await this.getOrderById(id);
     if (!order.canDelete()) {
-      throw new DomainError('当前状态的调拨单不能删除');
+      throw new DomainError(ts('k_1mkwyts'));
     }
     await this.orderRepo.softDelete(id);
   }

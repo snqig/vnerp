@@ -1,3 +1,7 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -20,8 +24,10 @@ export const GET = withPermission(async (request: NextRequest) => {
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const checkNo = searchParams.get('checkNo') || '';
-  const status = searchParams.get('status') !== '' ? Number(searchParams.get('status')) : undefined;
-  const type = searchParams.get('type') !== '' ? Number(searchParams.get('type')) : undefined;
+  const statusRaw = searchParams.get('status');
+  const status = statusRaw !== null && statusRaw !== '' ? Number(statusRaw) : undefined;
+  const typeRaw = searchParams.get('type');
+  const type = typeRaw !== null && typeRaw !== '' ? Number(typeRaw) : undefined;
 
   let where = 'WHERE s.deleted = 0';
   const params: SqlValue[] = [];
@@ -60,12 +66,15 @@ export const GET = withPermission(async (request: NextRequest) => {
   );
 
   return successResponse({
-    list: rows.map((row: DbRow) => ({
+    list: rows.map((row: DbRow) => {
+  const ts = t;
+  return  ({
       ...row,
       check_no: row.taking_no,
-      type_name: TYPE_MAP[row.taking_type] || '未知',
-      status_name: STATUS_MAP[row.status] || '未知',
-    })),
+      type_name: TYPE_MAP[row.taking_type] || ts('k_1lpnuh4'),
+      status_name: STATUS_MAP[row.status] || ts('k_1lpnuh4'),
+    });
+}),
     total,
     page,
     pageSize,
@@ -73,6 +82,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 });
 
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { type = 1, warehouse_id, checker_id, remark } = body;
 
@@ -152,18 +162,19 @@ export const POST = withPermission(async (request: NextRequest) => {
       item_count: inventoryItems.length,
       locked: true,
     },
-    '盘点单生成成功，库存已锁定'
+    ts('k_uu2zhr')
   );
 });
 
 export const PUT = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id, action, approver_id, items } = body;
 
   const check = await queryOne(`SELECT * FROM inv_stocktaking WHERE id = ? AND deleted = 0`, [id]);
 
   if (!check) {
-    return commonErrors.notFound('盘点单不存在');
+    return commonErrors.notFound(ts('k_rt4j0w'));
   }
 
   switch (action) {
@@ -249,7 +260,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
             afterQty: beforeQty !== null ? beforeQty + diffQty : null,
             businessType: 'stocktaking',
             businessNo: check.taking_no,
-            remark: '盘点调整',
+            remark: ts('k_1fkc9ul'),
           });
         }
 
@@ -335,7 +346,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
           total_count: stats.total_count,
           progress: Math.round((stats.checked_count / stats.total_count) * 100),
         },
-        '盘点数据更新成功'
+        ts('k_10hw13d')
       );
 
     default:
@@ -344,6 +355,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 });
 
 export const DELETE = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -356,7 +368,7 @@ export const DELETE = withPermission(async (request: NextRequest) => {
   ]);
 
   if (!check) {
-    return commonErrors.notFound('盘点单不存在');
+    return commonErrors.notFound(ts('k_rt4j0w'));
   }
 
   if (![4].includes(check.status)) {

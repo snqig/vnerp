@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { execute, queryOne, query, SqlValue } from '@/lib/db';
 import {
@@ -34,6 +37,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 // POST - 新建币种
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, ['code', 'name']);
     if (!validation.valid) {
@@ -43,7 +47,7 @@ export const POST = withPermission(
     // 检查 code 是否已存在
     const existing = await queryOne('SELECT id FROM sys_currency WHERE code = ?', [body.code]);
     if (existing) {
-      return errorResponse('币种代码已存在', 409, 409);
+      return errorResponse(ts('k_1xc9bqj'), 409, 409);
     }
 
     const result = await execute(
@@ -60,7 +64,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId }, '币种创建成功');
+    return successResponse({ id: result.insertId }, ts('k_nep0qv'));
   },
   { logTitle: '创建币种' }
 );
@@ -68,21 +72,22 @@ export const POST = withPermission(
 // PUT - 更新币种
 export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id } = body;
     if (!id) {
-      return commonErrors.badRequest('币种ID不能为空');
+      return commonErrors.badRequest(ts('k_1h6brvc'));
     }
 
     const existing = await queryOne('SELECT id FROM sys_currency WHERE id = ? AND deleted = 0', [
       id,
     ]);
     if (!existing) {
-      return commonErrors.notFound('币种不存在');
+      return commonErrors.notFound(ts('k_1pzvbsa'));
     }
 
     if (!body.name) {
-      return errorResponse('币种名称不能为空', 400, 400);
+      return errorResponse(ts('k_1tvmfg8'), 400, 400);
     }
 
     await execute(
@@ -98,7 +103,7 @@ export const PUT = withPermission(
       ]
     );
 
-    return successResponse(null, '币种更新成功');
+    return successResponse(null, ts('k_vnrxee'));
   },
   { logTitle: '更新币种' }
 );
@@ -106,10 +111,11 @@ export const PUT = withPermission(
 // DELETE - 删除币种（软删除）
 export const DELETE = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) {
-      return commonErrors.badRequest('币种ID不能为空');
+      return commonErrors.badRequest(ts('k_1h6brvc'));
     }
 
     // 先获取币种 code
@@ -117,7 +123,7 @@ export const DELETE = withPermission(
       parseInt(id),
     ]);
     if (!currency) {
-      return commonErrors.notFound('币种不存在');
+      return commonErrors.notFound(ts('k_1pzvbsa'));
     }
     // 检查引用：汇率记录或公司本位币
     const inUse = await queryOne(
@@ -127,14 +133,14 @@ export const DELETE = withPermission(
       [currency.code, currency.code, currency.code]
     );
     if (inUse) {
-      return errorResponse('该币种已被汇率记录或公司本位币引用，无法删除', 409, 409);
+      return errorResponse(ts('k_2jwrjc'), 409, 409);
     }
 
     await execute('UPDATE sys_currency SET deleted = 1, update_by = ? WHERE id = ?', [
       userInfo.userId,
       parseInt(id),
     ]);
-    return successResponse(null, '币种删除成功');
+    return successResponse(null, ts('k_13d4a26'));
   },
   { logTitle: '删除币种' }
 );

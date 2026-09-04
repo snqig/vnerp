@@ -39,7 +39,7 @@ async function doSync() {
 }
 
 function openDB() {
-  return new Promise<IDBDatabase>((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const req = indexedDB.open('dcprint-offline-scan', 1);
     req.onupgradeneeded = () => {
       const db = req.result;
@@ -53,11 +53,11 @@ function openDB() {
   });
 }
 
-function getAllPending(db: IDBDatabase) {
-  return new Promise<any[]>((resolve, reject) => {
+function getAllPending(db) {
+  return new Promise((resolve, reject) => {
     const tx = db.transaction('pending-scans', 'readonly');
     const store = tx.objectStore('pending-scans');
-    const results: any[] = [];
+    const results = [];
     const req = store.openCursor();
     req.onsuccess = () => {
       const cursor = req.result;
@@ -74,8 +74,8 @@ function getAllPending(db: IDBDatabase) {
   });
 }
 
-function markDone(db: IDBDatabase, id: number) {
-  return new Promise<void>((resolve, reject) => {
+function markDone(db, id) {
+  return new Promise((resolve, reject) => {
     const tx = db.transaction('pending-scans', 'readwrite');
     const store = tx.objectStore('pending-scans');
     const getReq = store.get(id);
@@ -92,8 +92,8 @@ function markDone(db: IDBDatabase, id: number) {
   });
 }
 
-function markFailed(db: IDBDatabase, id: number, error: string) {
-  return new Promise<void>((resolve, reject) => {
+function markFailed(db, id, error) {
+  return new Promise((resolve, reject) => {
     const tx = db.transaction('pending-scans', 'readwrite');
     const store = tx.objectStore('pending-scans');
     const getReq = store.get(id);

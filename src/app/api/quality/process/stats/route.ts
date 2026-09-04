@@ -1,9 +1,13 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
 
 // 获取品质检验统计
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     // 待检验数量（已排产和生产的）
     const [pendingResult] = await query(
@@ -45,6 +49,6 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       },
     });
   } catch {
-    return NextResponse.json({ success: false, message: '获取品质统计失败' }, { status: 500 });
+    return NextResponse.json({ success: false, message: ts('k_bvu033') }, { status: 500 });
   }
 });

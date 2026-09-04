@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
 import {
@@ -45,6 +48,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, ['route_code', 'route_name']);
     if (!validation.valid) {
@@ -94,21 +98,22 @@ export const POST = withPermission(
       return { id: routeId, route_code: body.route_code };
     });
 
-    return successResponse(result, '工艺路线创建成功');
+    return successResponse(result, ts('k_b5jc3k'));
   },
   { logTitle: '创建工艺路线', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
-    if (!body.id) return commonErrors.badRequest('工艺路线ID不能为空');
+    if (!body.id) return commonErrors.badRequest(ts('k_xea08j'));
 
     const existing = await queryOne(
       'SELECT id FROM prd_process_route WHERE id = ? AND deleted = 0',
       [body.id]
     );
-    if (!existing) return commonErrors.notFound('工艺路线不存在');
+    if (!existing) return commonErrors.notFound(ts('k_9i4chf'));
 
     await execute(
       `UPDATE prd_process_route SET route_name = ?, version = ?, is_default = ?, status = ?, remark = ? WHERE id = ?`,
@@ -138,20 +143,21 @@ export const PUT = withPermission(
       }
     }
 
-    return successResponse(null, '工艺路线更新成功');
+    return successResponse(null, ts('k_mbkdp9'));
   },
   { logTitle: '更新工艺路线', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return commonErrors.badRequest('工艺路线ID不能为空');
+    if (!id) return commonErrors.badRequest(ts('k_xea08j'));
 
     await execute('UPDATE prd_process_route SET deleted = 1 WHERE id = ?', [parseInt(id)]);
     await execute('DELETE FROM prd_process_route_step WHERE route_id = ?', [parseInt(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除工艺路线', logType: 'business' }
 );

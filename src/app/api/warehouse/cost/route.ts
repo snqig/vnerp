@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { UserInfo } from '@/lib/api-auth';
@@ -23,11 +26,11 @@ export const GET = withPermission(
     if (materialId) {
       // 查询指定物料的成本信息
       const rows = await query(
-        `SELECT s.*, m.material_name, m.material_code, m.material_spec, m.unit,
+        `SELECT s.*, m.material_name, m.material_code, m.specification, m.unit,
                 w.warehouse_name
-         FROM stock s
-         LEFT JOIN materials m ON s.material_id = m.id
-         LEFT JOIN warehouses w ON s.warehouse_id = w.id
+         FROM inv_inventory s
+         LEFT JOIN inv_material m ON s.material_id = m.id
+         LEFT JOIN inv_warehouse w ON s.warehouse_id = w.id
          WHERE s.material_id = ? ${warehouseId ? 'AND s.warehouse_id = ?' : ''}
          ORDER BY s.warehouse_id`,
         warehouseId ? [Number(materialId), Number(warehouseId)] : [Number(materialId)]
@@ -36,10 +39,10 @@ export const GET = withPermission(
       // 查询成本变动历史
       const history = await query(
         `SELECT sm.*, m.material_name, m.material_code
-         FROM stock_movement sm
-         LEFT JOIN materials m ON sm.material_id = m.id
+         FROM inv_inventory_transaction sm
+         LEFT JOIN inv_material m ON sm.material_id = m.id
          WHERE sm.material_id = ?
-         AND sm.movement_type IN ('purchase_inbound', 'sales_return', 'production_inbound', 'transfer_in')
+         AND sm.trans_type IN ('purchase_inbound', 'sales_return', 'production_inbound', 'transfer_in')
          ORDER BY sm.create_time DESC
          LIMIT 20`,
         [Number(materialId)]
@@ -51,23 +54,23 @@ export const GET = withPermission(
     // 查询所有物料的成本汇总
     const countRows = await query(
       `SELECT COUNT(DISTINCT s.material_id) as total
-       FROM stock s
+       FROM inv_inventory s
        WHERE s.quantity > 0`
     );
     const total = countRows[0]?.total || 0;
 
     const rows = await query(
-      `SELECT s.material_id, m.material_name, m.material_code, m.material_spec, m.unit,
+      `SELECT s.material_id, m.material_name, m.material_code, m.specification, m.unit,
               SUM(s.quantity) as total_quantity,
               SUM(s.quantity * s.cost_price) as total_cost_amount,
               AVG(s.cost_price) as avg_cost_price,
               MIN(s.cost_price) as min_cost_price,
               MAX(s.cost_price) as max_cost_price,
               COUNT(DISTINCT s.warehouse_id) as warehouse_count
-       FROM stock s
-       LEFT JOIN materials m ON s.material_id = m.id
+       FROM inv_inventory s
+       LEFT JOIN inv_material m ON s.material_id = m.id
        WHERE s.quantity > 0
-       GROUP BY s.material_id, m.material_name, m.material_code, m.material_spec, m.unit
+       GROUP BY s.material_id, m.material_name, m.material_code, m.specification, m.unit
        ORDER BY total_cost_amount DESC
        LIMIT ? OFFSET ?`,
       [pageSize, (page - 1) * pageSize]
@@ -86,26 +89,27 @@ export const GET = withPermission(
 // 手动触发成本重算
 export const POST = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { materialId, warehouseId } = body;
 
     if (!materialId) {
-      return errorResponse('物料ID不能为空', 400, 400);
+      return errorResponse(ts('k_1f11b1g'), 400, 400);
     }
 
     // 基于历史入库记录重新计算移动加权平均成本
     const movements = await query(
-      `SELECT sm.movement_type, sm.quantity, sm.unit_price, sm.create_time
-       FROM stock_movement sm
+      `SELECT sm.trans_type, sm.quantity, sm.unit_price, sm.create_time
+       FROM inv_inventory_transaction sm
        WHERE sm.material_id = ?
        ${warehouseId ? 'AND sm.warehouse_id = ?' : ''}
-       AND sm.movement_type IN ('purchase_inbound', 'sales_return', 'production_inbound', 'transfer_in')
+       AND sm.trans_type IN ('purchase_inbound', 'sales_return', 'production_inbound', 'transfer_in')
        ORDER BY sm.create_time ASC`,
       warehouseId ? [Number(materialId), Number(warehouseId)] : [Number(materialId)]
     );
 
     if (movements.length === 0) {
-      return errorResponse('没有找到入库记录，无法计算成本', 400, 400);
+      return errorResponse(ts('k_nv0rq5'), 400, 400);
     }
 
     // 模拟移动加权平均计算
@@ -151,7 +155,7 @@ export const POST = withPermission(
         totalCostAmount: totalAmount,
         movementCount: movements.length,
       },
-      '成本重算完成'
+      ts('k_vggiut')
     );
   },
   { errorMessage: '操作失败' }

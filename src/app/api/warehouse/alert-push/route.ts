@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -15,13 +18,14 @@ import type { DbRow } from '@/types/db';
 // 获取预警推送配置
 export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'config';
 
     if (type === 'config') {
       // 获取推送配置
       const configs = await query(
-        'SELECT * FROM sys_config WHERE config_group = ? ORDER BY sort_order',
+        'SELECT * FROM sys_config WHERE category = ? ORDER BY sort_order',
         ['inventory_alert']
       );
       return successResponse({ configs });
@@ -66,7 +70,7 @@ export const GET = withPermission(
       return successResponse({ rules });
     }
 
-    return errorResponse('无效的查询类型', 400, 400);
+    return errorResponse(ts('k_txfxzi'), 400, 400);
   },
   { errorMessage: '操作失败' }
 );
@@ -74,6 +78,7 @@ export const GET = withPermission(
 // 创建/更新预警规则 或 手动触发推送
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { action } = body;
 
@@ -95,7 +100,7 @@ export const POST = withPermission(
       } = body;
 
       if (!rule_name || !alert_type || threshold === undefined) {
-        return errorResponse('规则名称、预警类型和阈值不能为空', 400, 400);
+        return errorResponse(ts('k_rpqj9w'), 400, 400);
       }
 
       const result = await execute(
@@ -114,23 +119,23 @@ export const POST = withPermission(
         ]
       );
 
-      return successResponse({ id: result.insertId }, '预警规则创建成功');
+      return successResponse({ id: result.insertId }, ts('k_1ulljvg'));
     }
 
     if (action === 'mark_read') {
       // 标记通知已读
       const { notification_ids } = body;
       if (!notification_ids || !Array.isArray(notification_ids)) {
-        return errorResponse('通知ID列表不能为空', 400, 400);
+        return errorResponse(ts('k_10hwa1g'), 400, 400);
       }
       await execute(
         `UPDATE sys_notification SET is_read = 1, read_time = NOW() WHERE id IN (${notification_ids.map(() => '?').join(',')})`,
         notification_ids
       );
-      return successResponse(null, '已标记为已读');
+      return successResponse(null, ts('k_16612jj'));
     }
 
-    return errorResponse('无效的操作类型', 400, 400);
+    return errorResponse(ts('k_4ty90w'), 400, 400);
   },
   { errorMessage: '操作失败' }
 );
@@ -138,11 +143,12 @@ export const POST = withPermission(
 // 更新预警规则
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, rule_name, alert_type, threshold, notify_method, notify_users, enabled } = body;
 
     if (!id) {
-      return errorResponse('规则ID不能为空', 400, 400);
+      return errorResponse(ts('k_1cho29x'), 400, 400);
     }
 
     const updates: string[] = [];
@@ -174,7 +180,7 @@ export const PUT = withPermission(
     }
 
     if (updates.length === 0) {
-      return errorResponse('没有需要更新的字段', 400, 400);
+      return errorResponse(ts('k_1kyikfw'), 400, 400);
     }
 
     updates.push('update_time = NOW()');
@@ -182,31 +188,32 @@ export const PUT = withPermission(
 
     await execute(`UPDATE inv_alert_rule SET ${updates.join(', ')} WHERE id = ?`, params);
 
-    return successResponse(null, '预警规则更新成功');
+    return successResponse(null, ts('k_1acrge9'));
   },
   { errorMessage: '操作失败' }
 );
 
 // 触发预警推送
 async function triggerAlertPush(userInfo: UserInfo) {
+  const ts = await getTranslations('Common');
   // 查询所有低于安全库存的物料
   const alerts = await query(
     `SELECT s.material_id, s.warehouse_id, s.quantity, m.material_name, m.material_code, m.safety_stock, m.unit,
             w.warehouse_name
-     FROM stock s
-     LEFT JOIN materials m ON s.material_id = m.id
-     LEFT JOIN warehouses w ON s.warehouse_id = w.id
+     FROM inv_inventory s
+     LEFT JOIN inv_material m ON s.material_id = m.id
+     LEFT JOIN inv_warehouse w ON s.warehouse_id = w.id
      WHERE s.quantity <= COALESCE(m.safety_stock, 0) AND s.quantity >= 0 AND m.safety_stock > 0`
   );
 
   if (alerts.length === 0) {
-    return successResponse({ alertCount: 0 }, '当前无库存预警');
+    return successResponse({ alertCount: 0 }, ts('k_uhm0re'));
   }
 
   // 获取需要通知的用户（仓库管理员和系统管理员）
   const notifyUsers = await query(
     `SELECT u.id, u.real_name, u.email FROM sys_user u
-     WHERE u.status = 1 AND (u.role_id IN (SELECT id FROM sys_role WHERE role_key IN ('admin', 'warehouse_manager')) OR u.id = ?)`,
+     WHERE u.status = 1 AND (u.role_id IN (SELECT id FROM sys_role WHERE role_code IN ('admin', 'warehouse_manager')) OR u.id = ?)`,
     [userInfo.userId]
   );
 

@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -15,6 +16,7 @@ interface ProfitRow {
 }
 
 export default function CostAnalysisPage() {
+  const ts = useTranslations('Common');
   const [_activeTab, _setActiveTab] = useState('profit');
   const [profitData, setProfitData] = useState<ProfitRow[]>([]);
   const [abcData, setAbcData] = useState<{ A: number[]; B: number[]; C: number[] }>({
@@ -41,12 +43,12 @@ export default function CostAnalysisPage() {
   }, []);
 
   return (
-    <MainLayout title="成本分析中心">
+    <MainLayout title={ts('k_1tht3uv')}>
       <div className="space-y-6">
         <div className="grid grid-cols-3 gap-4">
           <Card>
             <CardHeader>
-              <CardTitle>A 类物料</CardTitle>
+              <CardTitle>{ts('k_jz14y7')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{abcData.A.length}</div>
@@ -54,7 +56,7 @@ export default function CostAnalysisPage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>B 类物料</CardTitle>
+              <CardTitle>{ts('k_1p8kqhe')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{abcData.B.length}</div>
@@ -62,7 +64,7 @@ export default function CostAnalysisPage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>C 类物料</CardTitle>
+              <CardTitle>{ts('k_797oqh')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{abcData.C.length}</div>
@@ -72,18 +74,18 @@ export default function CostAnalysisPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>产品利润分析</CardTitle>
+            <CardTitle>{ts('k_we5x4g')}</CardTitle>
           </CardHeader>
           <CardContent>
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2">产品ID</th>
-                  <th className="text-right p-2">收入</th>
-                  <th className="text-right p-2">直接成本</th>
-                  <th className="text-right p-2">间接费用</th>
-                  <th className="text-right p-2">毛利率</th>
-                  <th className="text-right p-2">净利率</th>
+                  <th className="text-left p-2">{ts('k_1f46wps')}</th>
+                  <th className="text-right p-2">{ts('k_bovgck')}</th>
+                  <th className="text-right p-2">{ts('k_1jm63j2')}</th>
+                  <th className="text-right p-2">{ts('k_5ux6bf')}</th>
+                  <th className="text-right p-2">{ts('k_v25ve2')}</th>
+                  <th className="text-right p-2">{ts('k_anob33')}</th>
                 </tr>
               </thead>
               <tbody>

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -9,34 +12,23 @@ import type { DbRow } from '@/types/db';
  * GET /api/orders/bom/{id}
  */
 export const GET = withPermission(async (request: NextRequest, userInfo, context) => {
+  const ts = await getTranslations('Common');
   const { id } = await context.params;
 
   if (!id || isNaN(parseInt(id))) {
-    return errorResponse('无效的BOM ID', 400, 400);
+    return errorResponse(ts('k_1h3fptg'), 400, 400);
   }
 
   const bomId = parseInt(id);
 
   // 查询BOM主表
   const bomHeader = await query(
-    `SELECT 
-       bh.id, bh.bom_no, bh.product_id, bh.product_code, bh.product_name, bh.product_spec,
-       bh.version, bh.is_default, bh.status, bh.unit, bh.base_qty,
-       bh.total_material_count, bh.total_cost, bh.remark,
-       bh.create_time, bh.update_time,
-       CASE bh.status
-         WHEN 10 THEN '草稿'
-         WHEN 20 THEN '已审核'
-         WHEN 30 THEN '已发布'
-         WHEN 90 THEN '已停用'
-       END as status_name
-     FROM bom_header bh
-     WHERE bh.id = ? AND bh.deleted = 0`,
+    ts('k_7uw71j'),
     [bomId]
   );
 
   if ((bomHeader as DbRow[]).length === 0) {
-    return errorResponse('BOM不存在', 404, 404);
+    return errorResponse(ts('k_ksotfg'), 404, 404);
   }
 
   // 查询BOM明细（使用实际表列名）

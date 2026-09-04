@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -25,6 +28,7 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const parsed = sampleProcessCardSchema.safeParse(body);
     if (!parsed.success) {
@@ -36,7 +40,7 @@ export const POST = withPermission(
     }
     try {
       const id = await service.createCard(parsed.data, userInfo.userId);
-      return successResponse({ id }, '工艺卡创建成功');
+      return successResponse({ id }, ts('k_3xqbk5'));
     } catch (e) {
       return errorResponse((e as Error).message, 400, 400);
     }

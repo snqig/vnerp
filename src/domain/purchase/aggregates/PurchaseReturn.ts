@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import {
   PurchaseReturnStatus,
@@ -91,20 +93,21 @@ export class PurchaseReturn {
   ) {}
 
   static create(props: PurchaseReturnProps): PurchaseReturn {
+  const ts = t;
     if (!props.orderId || props.orderId <= 0) {
-      throw new DomainError('采购订单ID不能为空');
+      throw new DomainError(ts('k_1ukkv4z'));
     }
     if (!props.supplierId || props.supplierId <= 0) {
-      throw new DomainError('供应商ID不能为空');
+      throw new DomainError(ts('k_h5paib'));
     }
     if (!props.warehouseId || props.warehouseId <= 0) {
-      throw new DomainError('仓库ID不能为空');
+      throw new DomainError(ts('k_1t9r8nc'));
     }
     if (!props.lines || props.lines.length === 0) {
-      throw new DomainError('退货明细不能为空');
+      throw new DomainError(ts('k_13rzlse'));
     }
     if (!props.reason || !props.reason.trim()) {
-      throw new DomainError('退货原因不能为空');
+      throw new DomainError(ts('k_k1lmap'));
     }
 
     const lines = props.lines.map((line, index) =>
@@ -255,11 +258,12 @@ export class PurchaseReturn {
   }
 
   approve(approveBy: number): void {
+  const ts = t;
     if (!this._status.canApprove()) {
       throw new DomainError(`当前状态"${this._status.label}"不允许审核`);
     }
     if (!approveBy || approveBy <= 0) {
-      throw new DomainError('审核人不能为空');
+      throw new DomainError(ts('k_1myt2j0'));
     }
     this._status = this._status.transitionTo(2);
     this._approveBy = approveBy;
@@ -321,11 +325,12 @@ export class PurchaseReturn {
       returnNo: string
     ) => PayableRefundResult
   ): void {
+  const ts = t;
     if (!this._status.canComplete()) {
       throw new DomainError(`当前状态"${this._status.label}"不允许完成`);
     }
     if (!completeBy || completeBy <= 0) {
-      throw new DomainError('完成人不能为空');
+      throw new DomainError(ts('k_eheezv'));
     }
 
     const items = this._lines.map((l) => ({
@@ -339,7 +344,7 @@ export class PurchaseReturn {
 
     const outboundResult = outboundCallback(items, this.warehouseId, this.id!, this.returnNo);
     if (!outboundResult || !outboundResult.outboundOrderId || !outboundResult.outboundOrderNo) {
-      throw new DomainError('出库单创建失败，无法完成退货');
+      throw new DomainError(ts('k_6tf0xc'));
     }
 
     const payableResult = payableCallback(
@@ -349,7 +354,7 @@ export class PurchaseReturn {
       this.returnNo
     );
     if (!payableResult || !payableResult.payableId || !payableResult.payableNo) {
-      throw new DomainError('红字应付单创建失败，无法完成退货');
+      throw new DomainError(ts('k_6hhgls'));
     }
 
     this._outboundOrderId = outboundResult.outboundOrderId;

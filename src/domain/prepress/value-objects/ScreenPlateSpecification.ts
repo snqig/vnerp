@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '@/domain/shared/DomainTypes';
 import { FieldMapper, assertField, assertPositive } from './FieldMapping';
 
@@ -43,11 +45,12 @@ export class ScreenPlateSpecification {
   readonly tensionDate: string;
 
   constructor(props: ScreenPlateSpecificationProps) {
-    assertField(props.plateCode, '网版编码');
-    assertField(props.plateName, '网版名称');
-    assertPositive(props.maxUseCount, '最大使用次数');
+  const ts = t;
+    assertField(props.plateCode, ts('k_3nrpbh'));
+    assertField(props.plateName, ts('k_v34npl'));
+    assertPositive(props.maxUseCount, ts('k_fc0ina'));
     if (props.usedCount > props.maxUseCount) {
-      throw new DomainError('当前使用次数不能超过最大使用次数');
+      throw new DomainError(ts('k_1olnnl2'));
     }
 
     this.plateCode = props.plateCode;

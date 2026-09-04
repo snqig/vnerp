@@ -44,6 +44,7 @@ interface DbRelations {
 }
 
 export default function DbRelationsPage() {
+  const ts = useTranslations('Common');
   // 翻译钩子
   const tc = useTranslations('Common');
 
@@ -60,15 +61,15 @@ export default function DbRelationsPage() {
   };
 
   const moduleLabels: Record<string, string> = {
-    system: '系统管理',
-    order: '订单管理',
-    product: '产品管理',
-    partner: '合作伙伴',
-    production: '生产管理',
-    inventory: '库存管理',
-    finance: '财务管理',
-    sample: '样品管理',
-    other: '其他',
+    system: ts('k_1hdwiac'),
+    order: ts('k_18cjym7'),
+    product: ts('k_1356gf2'),
+    partner: ts('k_4jzt2c'),
+    production: ts('k_1e172y0'),
+    inventory: ts('k_1s6r84h'),
+    finance: ts('k_p1ttj7'),
+    sample: ts('k_1o6evqm'),
+    other: ts('k_dcd4ul'),
   };
 
   const [data, setData] = useState<DbRelations | null>(null);
@@ -214,7 +215,7 @@ export default function DbRelationsPage() {
                 {Object.entries(data.modules).map(([module, tables]) => (
                   <Card
                     key={module}
-                    className={`cursor-pointer transition-all hover:shadow-lg ${selectedModule === module ? 'ring-2 ring-primary' : ''}`}
+                    className={`cursor-pointer transition hover:shadow-lg ${selectedModule === module ? 'ring-2 ring-primary' : ''}`}
                     onClick={() => setSelectedModule(selectedModule === module ? null : module)}
                   >
                     <CardHeader className="pb-2">
@@ -358,8 +359,7 @@ export default function DbRelationsPage() {
               <CardTitle>{tc('analysisLogicalTitle')}</CardTitle>
               <CardDescription>
                 {tc('analysisLogicalDesc')}
-                {totalLogicalRelations}个
-              </CardDescription>
+                {totalLogicalRelations}{ts('k_d5a1x9')}</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>

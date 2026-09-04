@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -72,14 +75,16 @@ export const GET = withPermission(
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (id) {
       await query(`DELETE FROM sys_operation_log WHERE id = ?`, [Number(id)]);
-      return successResponse(null, '删除成功');
+      return successResponse(null, ts('k_1hlqs'));
     }
     await query(`TRUNCATE TABLE sys_operation_log`);
-    return successResponse(null, '清空成功');
+    return successResponse(null, tc('clearSuccess'));
   },
   { logTitle: '清空操作日志', logType: 'system' }
 );
@@ -87,6 +92,7 @@ export const DELETE = withPermission(
 // 导出操作日志
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { action } = body;
 
@@ -120,15 +126,15 @@ export const POST = withPermission(
       // 转换为CSV格式
       const headers = [
         'ID',
-        '操作',
-        '操作人',
-        '请求方法',
-        '请求URL',
+        ts('k_501w24'),
+        ts('k_15sp2wy'),
+        ts('k_q4uify'),
+        ts('k_3og21h'),
         'IP',
-        '状态',
-        '业务类型',
-        '业务ID',
-        '操作时间',
+        ts('k_1ccx4t4'),
+        ts('k_zp4vde'),
+        ts('k_lirv7t'),
+        ts('k_12ec3ny'),
       ];
       const csvRows = rows.map((row: DbRow) => [
         row.id,
@@ -137,7 +143,7 @@ export const POST = withPermission(
         row.method || '',
         row.request_url || '',
         row.ip || '',
-        row.status === 1 ? '成功' : '失败',
+        row.status === 1 ? ts('k_1rraohc') : ts('k_12db3qz'),
         row.business_type || '',
         row.business_id || '',
         row.create_time || '',
@@ -149,10 +155,10 @@ export const POST = withPermission(
         )
         .join('\n');
 
-      return successResponse({ csv, count: rows.length }, '导出成功');
+      return successResponse({ csv, count: rows.length }, ts('k_1hkfymq'));
     }
 
-    return errorResponse('不支持的操作', 400, 400);
+    return errorResponse(ts('k_12cy0bd'), 400, 400);
   },
   { logTitle: '导出操作日志', logType: 'system' }
 );

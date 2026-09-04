@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import {
   PickOrderCreatedEvent,
@@ -52,8 +54,9 @@ export class PickOrderItem {
   ) {}
 
   static create(props: PickOrderItemProps): PickOrderItem {
-    if (!props.materialId) throw new DomainError('物料不能为空');
-    if (props.actualQty <= 0) throw new DomainError('实领数量必须大于0');
+  const ts = t;
+    if (!props.materialId) throw new DomainError(ts('k_ed1q6x'));
+    if (props.actualQty <= 0) throw new DomainError(ts('k_ee3zxj'));
     return new PickOrderItem(
       props.id,
       props.materialId,
@@ -107,9 +110,10 @@ export class PickOrder {
   }
 
   static create(props: PickOrderProps): PickOrder {
-    if (!props.pickNo) throw new DomainError('领料单号不能为空');
-    if (!props.workOrderId) throw new DomainError('关联工单不能为空');
-    if (!props.items || props.items.length === 0) throw new DomainError('领料明细不能为空');
+  const ts = t;
+    if (!props.pickNo) throw new DomainError(ts('k_xv0v0q'));
+    if (!props.workOrderId) throw new DomainError(ts('k_1emjamq'));
+    if (!props.items || props.items.length === 0) throw new DomainError(ts('k_73rf7a'));
 
     const items = props.items.map((i) => PickOrderItem.create(i));
     const totalQty = items.reduce((s, i) => s + i.actualQty, 0);
@@ -163,7 +167,8 @@ export class PickOrder {
   }
 
   approve(userId: number): void {
-    if (this._status !== 'draft') throw new DomainError('只有草稿状态的领料单才能审核');
+  const ts = t;
+    if (this._status !== 'draft') throw new DomainError(ts('k_1jyq3ky'));
     this._status = 'approved';
     this._domainEvents.push(
       new PickOrderApprovedEvent({
@@ -182,8 +187,9 @@ export class PickOrder {
   }
 
   cancel(reason: string, userId: number): void {
+  const ts = t;
     if (this._status !== 'draft' && this._status !== 'approved') {
-      throw new DomainError('当前状态不允许作废');
+      throw new DomainError(ts('k_1atqguz'));
     }
     this._status = 'cancelled';
     this._domainEvents.push(

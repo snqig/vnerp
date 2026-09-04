@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -37,6 +40,7 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { notice_title, notice_type, notice_content, status } = body;
 
@@ -45,13 +49,14 @@ export const POST = withPermission(
       [notice_title, notice_type, notice_content || null, status ?? 1]
     );
 
-    return successResponse({ id: result.insertId }, '创建成功');
+    return successResponse({ id: result.insertId }, ts('k_kiombh'));
   },
   { logTitle: '创建通知', logType: 'system' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, notice_title, notice_type, notice_content, status } = body;
 
@@ -60,19 +65,20 @@ export const PUT = withPermission(
       [notice_title, notice_type, notice_content || null, status ?? 1, id]
     );
 
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新通知', logType: 'system' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
+    if (!id) return NextResponse.json({ success: false, message: ts('k_js4lo9') }, { status: 400 });
 
     await execute('UPDATE sys_notice SET deleted = 1 WHERE id = ?', [Number(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除通知', logType: 'system' }
 );

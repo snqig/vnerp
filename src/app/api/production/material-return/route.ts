@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -41,6 +44,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       work_order_id,
@@ -66,28 +70,27 @@ export const POST = withPermission(
     if (items && Array.isArray(items)) {
       for (const item of items) {
         await execute(
-          'INSERT INTO prd_material_return_item (return_order_id, material_id, material_name, quantity, batch_no, batch_id, original_inbound_date, unit_cost, line_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO prd_material_return_item (return_id, material_id, material_code, material_name, return_qty, unit, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?)',
           [
             result.insertId,
             item.material_id || null,
+            item.material_code || null,
             item.material_name || null,
-            item.quantity || item.return_qty || 0,
+            item.return_qty ?? item.quantity ?? 0,
+            item.unit || null,
             item.batch_no || null,
-            item.batch_id || null,
-            item.original_inbound_date || null,
-            item.unit_cost || null,
-            item.line_amount || null,
           ]
         );
       }
     }
-    return successResponse({ id: result.insertId, return_no: returnNo }, '退料单创建成功');
+    return successResponse({ id: result.insertId, return_no: returnNo }, ts('k_7t942l'));
   },
   { logTitle: '创建退料单', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, status, remark, action } = body;
 
@@ -97,18 +100,18 @@ export const PUT = withPermission(
         [id]
       );
       if (!returnOrder || returnOrder.length === 0) {
-        return errorResponse('退料单不存在', 404, 404);
+        return errorResponse(ts('k_1dhfct4'), 404, 404);
       }
       const order = returnOrder[0];
       if (order.status !== 1) {
-        return errorResponse('退料单状态不允许确认', 400, 400);
+        return errorResponse(ts('k_18yzvtw'), 400, 400);
       }
 
       const itemRows = await query('SELECT * FROM prd_material_return_item WHERE return_id = ?', [
         id,
       ]);
       if (!itemRows || itemRows.length === 0) {
-        return errorResponse('退料单无明细', 400, 400);
+        return errorResponse(ts('k_mvhh5r'), 400, 400);
       }
 
       await transaction(async (conn) => {
@@ -129,7 +132,7 @@ export const PUT = withPermission(
               materialId: item.material_id,
               materialCode: null,
               materialName: item.material_name || null,
-              quantity: Number(item.quantity),
+              quantity: Number(item.return_qty),
               unit: null,
               batchNo: item.batch_no || null,
               batchId: item.batch_id || null,
@@ -139,7 +142,7 @@ export const PUT = withPermission(
         ]);
       });
 
-      return successResponse(null, '退料单确认成功，库存已增加');
+      return successResponse(null, ts('k_n8v8x7'));
     }
 
     if (status !== undefined)
@@ -152,18 +155,19 @@ export const PUT = withPermission(
         remark,
         id,
       ]);
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新退料单', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
+    if (!id) return NextResponse.json({ success: false, message: ts('k_js4lo9') }, { status: 400 });
     await execute('UPDATE prd_material_return SET deleted = 1 WHERE id = ?', [Number(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除退料单', logType: 'business' }
 );

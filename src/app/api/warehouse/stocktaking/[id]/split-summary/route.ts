@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -5,13 +8,14 @@ import { withPermission } from '@/lib/api-permissions';
 
 export const GET = withPermission(
   async (request: NextRequest, userInfo, { params }: { params: Promise<{ id: string }> }) => {
+  const ts = await getTranslations('Common');
     const resolvedParams = await params;
     const checkId = parseInt(resolvedParams.id);
     const { searchParams } = new URL(request.url);
     const parentQrCode = searchParams.get('parent_qr_code');
 
     if (!parentQrCode) {
-      return errorResponse('缺少父二维码参数', 400, 400);
+      return errorResponse(ts('k_10yzxw7'), 400, 400);
     }
 
     const check = await queryOne(`SELECT * FROM inventory_checks WHERE id = ? AND deleted = 0`, [
@@ -19,7 +23,7 @@ export const GET = withPermission(
     ]);
 
     if (!check) {
-      return commonErrors.notFound('盘点单不存在');
+      return commonErrors.notFound(ts('k_rt4j0w'));
     }
 
     const parentItem = await query(
@@ -34,7 +38,7 @@ export const GET = withPermission(
     );
 
     if (parentItem.length === 0) {
-      return errorResponse('未找到整料盘点记录', 404, 404);
+      return errorResponse(ts('k_98nmso'), 404, 404);
     }
 
     const smallItems = await query(

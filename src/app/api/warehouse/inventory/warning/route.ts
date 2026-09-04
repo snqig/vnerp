@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -5,6 +8,7 @@ import { getNegativeStockWarnings } from '@/lib/inventory-sync';
 
 // 获取库存预警列表
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const warnings = await getNegativeStockWarnings();
 
   const critical = warnings.filter((w) => w.warningLevel === 'critical');
@@ -21,6 +25,6 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       criticalList: critical,
       warningList: lowStock,
     },
-    '获取库存预警成功'
+    ts('k_1pvzevw')
   );
 });

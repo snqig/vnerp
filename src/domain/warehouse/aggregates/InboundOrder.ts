@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { OrderStatus, InboundStatus } from '../value-objects/OrderStatus';
 import { Money } from '../../shared/value-objects/Money';
@@ -71,18 +73,19 @@ export class InboundOrder {
   ) {}
 
   static create(props: InboundOrderProps): InboundOrder {
+  const ts = t;
     if (!props.warehouseId) {
-      throw new DomainError('仓库ID不能为空');
+      throw new DomainError(ts('k_1t9r8nc'));
     }
     if (!props.items || props.items.length === 0) {
-      throw new DomainError('入库项不能为空');
+      throw new DomainError(ts('k_5wfvaq'));
     }
 
     const sourceType = props.sourceType || (props.poId ? 'purchase_order' : '');
     if (sourceType === 'purchase_order') {
-      if (!props.poId) throw new DomainError('采购入库必须关联采购订单');
-      if (!props.poNo) throw new DomainError('采购入库缺少采购订单号');
-      if (!props.supplierId) throw new DomainError('采购入库缺少供应商');
+      if (!props.poId) throw new DomainError(ts('k_15fxe1r'));
+      if (!props.poNo) throw new DomainError(ts('k_xkrfw6'));
+      if (!props.supplierId) throw new DomainError(ts('k_119kr33'));
     }
 
     const items = props.items.map((item) => InboundItem.create(item));
@@ -226,8 +229,18 @@ export class InboundOrder {
   }
 
   approve(warehouseName: string): void {
+  const ts = t;
     if (this._items.length === 0) {
-      throw new DomainError('入库单不能为空');
+      throw new DomainError(ts('k_zekht2'));
+    }
+
+    // 仅在质检显式判定为「不合格」(2) 时禁止审核。
+    // 严禁改回 `!== 3`：inspection_status=3 只由本方法在下方（transitionTo 之后）设置，
+    // 而质检模块最多只能把它置为 1(检验中)/2(不合格)，永远写不出 3。
+    // 用 `!== 3` 会导致「必须已通过质检才能审核、而只有审核才会置为已通过」的死锁，
+    // 使所有入库单都无法审核，下游库存/应付/采购收货事件链全部不触发。
+    if (this._inspectionStatus === 2) {
+      throw new DomainError(ts('k_inbound_approve_requires_qc'));
     }
 
     this._status = this._status.transitionTo('completed');

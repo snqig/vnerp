@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 /**
  * @module 生产排程增强模块
  * @description 提供基于颜色工序依赖关系的生产排程功能，支持设备自动匹配、时间槽查找、优先级排序和甘特图数据生成。
@@ -230,6 +233,7 @@ export function calculateScheduleWithColorDependencies(
   existingSchedules: ScheduleSlot[],
   startDate: Date = new Date()
 ): SchedulingResultEnhanced {
+  const ts = t;
   const result: SchedulingResultEnhanced = {
     work_order_id: workOrder.id,
     work_order_no: workOrder.work_order_no,
@@ -273,7 +277,7 @@ export function calculateScheduleWithColorDependencies(
         seq_no: colorSeq.seq_no,
         color_name: colorSeq.color_name,
         equipment_id: 0,
-        equipment_name: '无可用设备',
+        equipment_name: ts('k_1vg29cv'),
         start_time: '',
         end_time: '',
         duration_hours: colorSeq.estimated_duration_hours,
@@ -313,7 +317,7 @@ export function calculateScheduleWithColorDependencies(
     if (!foundSlot) {
       result.conflicts.push({
         seq_no: colorSeq.seq_no,
-        reason: '无法在计划时间内找到可用时间槽',
+        reason: ts('k_10oy18k'),
       });
       result.color_sequences.push({
         seq_no: colorSeq.seq_no,
@@ -478,6 +482,7 @@ export async function autoScheduleWorkOrders(
     priorityWeight?: number;
   }
 ): Promise<SchedulingResultEnhanced[]> {
+  const ts = await getTranslations('Common');
   const startDate = options?.startDate ? new Date(options.startDate) : new Date();
   const respectDeadline = options?.respectDeadline ?? true;
 
@@ -508,7 +513,7 @@ export async function autoScheduleWorkOrders(
           : [
               {
                 seq_no: 1,
-                color_name: '默认工序',
+                color_name: ts('k_1p6hykh'),
                 screen_plate_id: 0,
                 ink_formula_id: 0,
                 estimated_duration_hours: 4,
@@ -541,7 +546,7 @@ export async function autoScheduleWorkOrders(
     );
     results.push(result);
 
-    secureLog('info', '自动排程完成', {
+    secureLog('info', ts('k_16zal5k'), {
       workOrderNo: wo.work_order_no,
       colorSeqCount: wo.color_sequences.length,
       scheduledCount: result.color_sequences.filter((s) => s.status === 'scheduled').length,
@@ -562,6 +567,7 @@ export async function autoScheduleWorkOrders(
  * @returns 保存成功返回 true，失败时记录错误日志并返回 false
  */
 export async function saveScheduleResult(result: SchedulingResultEnhanced): Promise<boolean> {
+  const ts = await getTranslations('Common');
   try {
     await transaction(async (conn) => {
       // 1. 查询工单信息（用于填充 prd_schedule 字段）
@@ -648,7 +654,7 @@ export async function saveScheduleResult(result: SchedulingResultEnhanced): Prom
 
     return true;
   } catch (error) {
-    secureLog('error', '保存排程结果失败', {
+    secureLog('error', ts('k_pkbf4y'), {
       error: (error as Error).message,
       workOrderId: result.work_order_id,
     });

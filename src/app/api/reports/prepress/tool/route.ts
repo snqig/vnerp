@@ -1,9 +1,13 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const period = searchParams.get('period') || '30';
   const days = parseInt(period);
@@ -39,15 +43,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   const recentActivities = await query(
-    `SELECT
-      t.tool_code, t.tool_name,
-      CASE WHEN t.tool_type = 1 THEN '刀模' WHEN t.tool_type = 2 THEN '网版' ELSE '其他' END as tool_type_label,
-      u.use_count, u.amortized_cost, u.process_name, u.use_time
-    FROM dcprint_tool_usage u
-    INNER JOIN dcprint_tool t ON t.id = u.tool_id
-    WHERE u.use_time >= ?
-    ORDER BY u.use_time DESC
-    LIMIT 20`,
+    ts('k_8vocol'),
     [startDateStr]
   );
 

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -5,12 +8,13 @@ import { recordReceipt } from '@/lib/finance-core';
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo, { params }: { params: Promise<{ id: string }> }) => {
+  const ts = await getTranslations('Common');
     const resolvedParams = await params;
     const body = await request.json();
     const { amount, receiptMethod, receiptDate, bankAccount, referenceNo, operatorId } = body;
 
     if (!amount || !receiptMethod || !receiptDate) {
-      return errorResponse('缺少必要参数', 400, 400);
+      return errorResponse(ts('k_fifqlw'), 400, 400);
     }
 
     const result = await recordReceipt(

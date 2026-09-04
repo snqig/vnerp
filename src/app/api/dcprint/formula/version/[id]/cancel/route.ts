@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -11,15 +14,16 @@ export const POST = withPermission(
     userInfo: DbRow,
     { params }: { params: Promise<{ id: string }> }
   ) => {
+  const ts = await getTranslations('Common');
     const { id } = await params;
     const body = await request.json().catch(() => ({}));
-    const reason = body.reason || '手动作废';
+    const reason = body.reason || ts('k_fponfn');
 
     try {
       await cancelVersion(Number(id), userInfo.userId, reason);
-      return successResponse(null, '版本已作废');
+      return successResponse(null, ts('k_187gfcg'));
     } catch (e) {
-      return errorResponse((e as Error).message || '作废失败', 400, 400);
+      return errorResponse((e as Error).message || ts('k_agd11i'), 400, 400);
     }
   },
   { logTitle: '油墨配方版本作废', logType: 'business' }

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -50,18 +53,19 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
 });
 
 export const POST = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { username, password, real_name, email, phone, department_id, role_ids, status } = body;
 
   if (!username || !password) {
-    return NextResponse.json({ success: false, message: '用户名和密码不能为空' }, { status: 400 });
+    return NextResponse.json({ success: false, message: ts('k_ezkh6m') }, { status: 400 });
   }
 
   const existing = await query('SELECT id FROM sys_user WHERE username = ? AND deleted = 0', [
     username,
   ]);
   if (existing && existing.length > 0) {
-    return NextResponse.json({ success: false, message: '用户名已存在' }, { status: 409 });
+    return NextResponse.json({ success: false, message: ts('k_1tff7b') }, { status: 409 });
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -93,15 +97,16 @@ export const POST = withPermission(async (request: NextRequest, _userInfo: UserI
     return { id: userId };
   });
 
-  return successResponse(result, '用户创建成功');
+  return successResponse(result, ts('k_115m4no'));
 });
 
 export const PUT = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id, real_name, email, phone, department_id, role_ids, status } = body;
 
   if (!id) {
-    return NextResponse.json({ success: false, message: '缺少用户ID' }, { status: 400 });
+    return NextResponse.json({ success: false, message: ts('k_673luk') }, { status: 400 });
   }
 
   await transaction(async (conn) => {
@@ -130,14 +135,15 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo: UserIn
     }
   });
 
-  return successResponse(null, '更新成功');
+  return successResponse(null, ts('k_1795bzg'));
 });
 
 export const DELETE = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
-  if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
+  if (!id) return NextResponse.json({ success: false, message: ts('k_js4lo9') }, { status: 400 });
 
   await execute('UPDATE sys_user SET deleted = 1 WHERE id = ?', [Number(id)]);
-  return successResponse(null, '删除成功');
+  return successResponse(null, ts('k_1hlqs'));
 });

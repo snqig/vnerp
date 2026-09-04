@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 /**
  * 配方明细值对象 — 封装比例合法性校验
  * 依据: docs/油墨配方版本管理完整落地方案.md 第一节
@@ -60,11 +62,12 @@ export class FormulaItemVO {
   }
 
   private validate(props: FormulaItemProps): void {
+  const ts = t;
     if (!props.materialCode || props.materialCode.trim() === '') {
-      throw new DomainError('物料编码不能为空');
+      throw new DomainError(ts('k_1i8zyjk'));
     }
     if (!props.materialName || props.materialName.trim() === '') {
-      throw new DomainError('物料名称不能为空');
+      throw new DomainError(ts('k_1foxs10'));
     }
     if (props.ratio < 0) {
       throw new DomainError(`配比比例不能为负数: ${props.materialCode}`);

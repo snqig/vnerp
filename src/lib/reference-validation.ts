@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 /**
  * 引用完整性 —— 应用层存在性校验共享模块
  *
@@ -66,18 +69,20 @@ export async function assertEntityExists(
 
 /** 仓库存在性断言；返回行含 warehouse_name，可复用避免二次查询。 */
 export async function assertWarehouseExists(id: number | null | undefined): Promise<DbRow> {
+  const ts = await getTranslations('Common');
   return assertEntityExists(id, {
     table: 'inv_warehouse',
-    label: '仓库',
+    label: ts('k_bq2r6r'),
     nameColumn: 'warehouse_name',
   });
 }
 
 /** 物料存在性断言；返回行含 material_name。 */
 export async function assertMaterialExists(id: number | null | undefined): Promise<DbRow> {
+  const ts = await getTranslations('Common');
   return assertEntityExists(id, {
     table: 'inv_material',
-    label: '物料',
+    label: ts('k_1h2cbqf'),
     nameColumn: 'material_name',
   });
 }
@@ -88,8 +93,9 @@ export async function assertMaterialExists(id: number | null | undefined): Promi
  * 故提供按编码查重的变体，逻辑与 assertEntityExists 一致（只读 + 软删过滤）。
  */
 export async function assertMaterialByCode(code: string | null | undefined): Promise<DbRow> {
+  const ts = await getTranslations('Common');
   if (!code || typeof code !== 'string' || code.trim() === '') {
-    throw AppError.badRequest('指定的物料编码为空');
+    throw AppError.badRequest(ts('k_he5703'));
   }
   const rows = (await query(
     `SELECT material_code, material_name FROM inv_material WHERE material_code = ? AND deleted = 0 LIMIT 1`,
@@ -103,45 +109,50 @@ export async function assertMaterialByCode(code: string | null | undefined): Pro
 
 /** 供应商存在性断言；返回行含 supplier_name。 */
 export async function assertSupplierExists(id: number | null | undefined): Promise<DbRow> {
+  const ts = await getTranslations('Common');
   return assertEntityExists(id, {
     table: 'pur_supplier',
-    label: '供应商',
+    label: ts('k_1x7qpl0'),
     nameColumn: 'supplier_name',
   });
 }
 
 /** 客户存在性断言（crm_customer，sal_order.customer_id 引用目标）。 */
 export async function assertCustomerExists(id: number | null | undefined): Promise<DbRow> {
+  const ts = await getTranslations('Common');
   return assertEntityExists(id, {
     table: 'crm_customer',
-    label: '客户',
+    label: ts('k_ush9hy'),
     nameColumn: 'customer_name',
   });
 }
 
 /** 销售订单存在性断言（sal_order，退货单/发货单的 order_id 引用目标）。 */
 export async function assertSalesOrderExists(id: number | null | undefined): Promise<DbRow> {
+  const ts = await getTranslations('Common');
   return assertEntityExists(id, {
     table: 'sal_order',
-    label: '销售订单',
+    label: ts('k_m6144y'),
     nameColumn: 'order_no',
   });
 }
 
 /** 发货单存在性断言（sal_delivery，退货单的 delivery_id 引用目标）。 */
 export async function assertDeliveryExists(id: number | null | undefined): Promise<DbRow> {
+  const ts = await getTranslations('Common');
   return assertEntityExists(id, {
     table: 'sal_delivery',
-    label: '发货单',
+    label: ts('k_54mzy4'),
     nameColumn: 'delivery_no',
   });
 }
 
 /** 生产工单存在性断言（prod_work_order，领料/报工/完工单的 work_order_id 引用目标）。 */
 export async function assertWorkOrderExists(id: number | null | undefined): Promise<DbRow> {
+  const ts = await getTranslations('Common');
   return assertEntityExists(id, {
     table: 'prod_work_order',
-    label: '生产工单',
+    label: ts('k_1h58b1'),
     nameColumn: 'work_order_no',
   });
 }
@@ -167,12 +178,13 @@ export interface SplittableMaterialInput {
 export function assertMaterialSplittable(
   material: SplittableMaterialInput | undefined | null
 ): void {
+  const ts = t;
   if (!material) {
-    throw AppError.badRequest('无法校验可分切性：母料对应的物料不存在或已删除');
+    throw AppError.badRequest(ts('k_1a8clbk'));
   }
   const flag = material.isSplittable;
   if (!flag) {
-    const name = material.materialName || `ID=${material.id ?? '未知'}`;
+    const name = material.materialName || `ID=${material.id ?? ts('k_1lpnuh4')}`;
     throw AppError.badRequest(
       `该物料【${name}】不允许分切（仅薄膜/纸张/包装/原材料等卷材类物料允许分切）`
     );

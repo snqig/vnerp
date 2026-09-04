@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface InboundItemProps {
   id?: number;
   orderId?: number;
@@ -40,6 +42,7 @@ export class InboundItem {
   public readonly produceDate?: string;
 
   private constructor(props: InboundItemProps) {
+  const ts = t;
     this.id = props.id;
     this.orderId = props.orderId;
     this._purchaseOrderItemId = props.purchaseOrderItemId;
@@ -54,19 +57,20 @@ export class InboundItem {
     this.locationId = props.locationId ?? null;
     this.qrCode = props.qrCode ?? null;
     this.quantity = props.quantity;
-    this.unit = props.unit || '件';
+    this.unit = props.unit || ts('k_w0gthl');
     this.unitPrice = props.unitPrice || 0;
     this.warehouseLocation = props.warehouseLocation || '';
     this.produceDate = props.produceDate;
   }
 
   static create(props: InboundItemProps): InboundItem {
+  const ts = t;
     // 允许 materialId 为 0：手动入库自由录入物料（未关联主数据）时合法；仅拒绝缺失或负数
     if (props.materialId === null || props.materialId === undefined || props.materialId < 0) {
-      throw new Error('物料ID不能为空');
+      throw new Error(ts('k_1f11b1g'));
     }
     if (!props.quantity || props.quantity <= 0) {
-      throw new Error('入库数量必须大于0');
+      throw new Error(ts('k_eg3g3'));
     }
     return new InboundItem(props);
   }

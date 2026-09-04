@@ -45,6 +45,7 @@ export function EditDialog({
   onSuccess,
 }: EditDialogProps) {
   const t = useTranslations('Warehouse');
+  const ts = useTranslations('Warehouse');
   const tc = useTranslations('Common');
 
   const handleSubmit = async () => {
@@ -91,7 +92,7 @@ export function EditDialog({
           batch_no: editable?.batchNo || it.batch_no || '',
           quantity: parseFloat(editable?.quantity || String(it.quantity ?? '0')),
           // unit / unit_price 表单无对应输入，必须从原记录保留
-          unit: it.unit || '件',
+          unit: it.unit || ts('k_w0gthl'),
           unit_price: editable?.unitPrice ?? it.unit_price ?? 0,
         };
       });

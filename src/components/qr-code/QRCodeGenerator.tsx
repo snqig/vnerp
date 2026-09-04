@@ -40,6 +40,7 @@ export function QRCodeGenerator({
   showDialog: externalShowDialog,
   onDialogChange,
 }: QRCodeGeneratorProps) {
+  const ts = useTranslations('Common');
   const { toast } = useToast();
   const t = useTranslations('QRCode');
   const tc = useTranslations('Common');
@@ -72,7 +73,7 @@ export function QRCodeGenerator({
 
     setIsGenerating(true);
     try {
-      logger.info(ctx, '调用生成接口', { payload: formData });
+      logger.info(ctx, ts('k_1y4x4v9'), { payload: formData });
       const res = await fetch('/api/qrcode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -86,11 +87,11 @@ export function QRCodeGenerator({
         toast({ title: t('generateSuccess'), description: result.data?.qr_code });
         onSuccess?.(result.data?.qr_code, result.data);
       } else {
-        logger.warn(ctx, '生成接口返回失败', { message: result.message });
+        logger.warn(ctx, ts('k_xqapd2'), { message: result.message });
         toast({ title: t('generateFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (error) {
-      logger.error(ctx, '生成异常', {
+      logger.error(ctx, ts('k_131t8pc'), {
         error: error instanceof Error ? error.message : String(error),
       });
       toast({ title: tc('operationFailed'), variant: 'destructive' });

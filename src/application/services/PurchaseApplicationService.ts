@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { IPurchaseOrderRepository } from '@/domain/purchase/repositories/IPurchaseOrderRepository';
 import { PurchaseOrder, PurchaseOrderProps } from '@/domain/purchase/aggregates/PurchaseOrder';
 import { PurchaseOrderStatus } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
@@ -22,9 +24,10 @@ export class PurchaseApplicationService {
   ) {}
 
   async getOrderById(id: number): Promise<PurchaseOrder> {
+  const ts = await getTranslations('Common');
     const order = await this.orderRepo.findById(id);
     if (!order) {
-      throw new NotFoundError('采购单不存在');
+      throw new NotFoundError(ts('k_1m3z88r'));
     }
     return order;
   }
@@ -232,8 +235,9 @@ export class PurchaseApplicationService {
     _id: number,
     _lineReceives: Array<{ lineNo: number; quantity: number; batchNo: string; warehouseId: number }>
   ): Promise<{ id: number; status: string }> {
+  const ts = await getTranslations('Common');
     throw new DomainError(
-      '收货功能已迁移至入库单流程，请使用 POST /api/warehouse/inbound/from-po 创建入库单'
+      ts('k_11ghmr0')
     );
   }
 
@@ -254,10 +258,11 @@ export class PurchaseApplicationService {
   }
 
   async deleteOrder(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const order = await this.getOrderById(id);
 
     if (!order.canDelete()) {
-      throw new DomainError('当前状态的采购单不能删除');
+      throw new DomainError(ts('k_1wll6vl'));
     }
 
     await this.orderRepo.softDelete(id);

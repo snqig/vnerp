@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -50,6 +53,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       workorder_id,
@@ -73,7 +77,7 @@ export const POST = withPermission(
     } = body;
 
     if (!workorder_no || !items || !Array.isArray(items) || items.length === 0) {
-      return errorResponse('缺少必填字段: workorder_no, items', 400, 400);
+      return errorResponse(ts('k_1ap41gv'), 400, 400);
     }
 
     const result = await transaction(async (conn) => {
@@ -192,7 +196,7 @@ export const POST = withPermission(
       );
 
       const [whRows] = await conn.execute(
-        "SELECT id FROM inv_warehouse WHERE warehouse_name LIKE '%调色%' AND deleted = 0 LIMIT 1"
+        ts('k_rtrnf6')
       );
       const warehouseId = whRows.length > 0 ? whRows[0].id : null;
 
@@ -216,18 +220,19 @@ export const POST = withPermission(
       return { id: dispatchId, dispatch_no: dispatchNo, batch_no: batchNo, qr_code: qrCode };
     });
 
-    return successResponse(result, '调色配料记录创建成功');
+    return successResponse(result, ts('k_x3xzmp'));
   },
   { logTitle: '调色配料', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action, status, tare_weight, net_weight, gross_weight, remark } = body;
 
     if (!id) {
-      return errorResponse('配料记录ID不能为空', 400, 400);
+      return errorResponse(ts('k_1yuo8r7'), 400, 400);
     }
 
     if (action === 'weigh') {
@@ -250,12 +255,12 @@ export const PUT = withPermission(
           );
         }
       });
-      return successResponse(null, '称重赋码完成');
+      return successResponse(null, ts('k_atv2pa'));
     }
 
     if (action === 'confirm') {
       await execute('UPDATE ink_dispatch SET status = 3 WHERE id = ?', [id]);
-      return successResponse(null, '配料确认完成');
+      return successResponse(null, ts('k_fpxvkd'));
     }
 
     if (status !== undefined) {
@@ -265,7 +270,7 @@ export const PUT = withPermission(
       await execute('UPDATE ink_dispatch SET remark = ? WHERE id = ?', [remark, id]);
     }
 
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新调色配料', logType: 'business' }
 );

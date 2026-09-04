@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { withPermission } from '@/lib/api-permissions';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -8,14 +11,15 @@ import { hrSalaryCalculation, sysEmployee } from '@/lib/db/schema';
 const db = getDrizzleDb();
 
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { employeeIds, month } = body;
 
   if (!Array.isArray(employeeIds) || employeeIds.length === 0) {
-    return errorResponse('缺少员工ID列表', 400, 400);
+    return errorResponse(ts('k_1nkhuzd'), 400, 400);
   }
   if (!month || !/^\d{4}-\d{2}$/.test(month)) {
-    return errorResponse('月份格式错误 (YYYY-MM)', 400, 400);
+    return errorResponse(ts('k_1i9m41z'), 400, 400);
   }
 
   const calculations = await db.select()
@@ -26,7 +30,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     ));
 
   if (calculations.length === 0) {
-    return errorResponse('未找到符合条件的薪资计算结果', 404, 404);
+    return errorResponse(ts('k_11bzkcz'), 404, 404);
   }
 
   const ids = calculations.map(c => c.id);

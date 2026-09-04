@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, logOperation } from '@/lib/api-response';
@@ -15,6 +18,8 @@ import type { DbRow } from '@/types/db';
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, remark } = body;
     // 操作人优先用前端传值，缺失时从 JWT 兜底
@@ -26,7 +31,7 @@ export const POST = withPermission(
     );
 
     if (!id) {
-      return errorResponse('出库单ID不能为空', 400);
+      return errorResponse(ts('k_1ddnsve'), 400);
     }
 
     const deductionDetails: SqlValue[] = [];
@@ -41,7 +46,7 @@ export const POST = withPermission(
       );
 
       if (!orderRows || orderRows.length === 0) {
-        throw new Error('NOT_FOUND:出库单不存在');
+        throw new Error(ts('k_uhw8cc'));
       }
 
       const orderRow = orderRows[0];
@@ -64,7 +69,7 @@ export const POST = withPermission(
       logger.debug(`[OUTBOUND] Found ${itemRows.length} items for order: ${id}`);
 
       if (!itemRows || itemRows.length === 0) {
-        throw new Error('BAD_REQUEST:出库单没有明细，不能确认');
+        throw new Error(ts('k_xb93o0'));
       }
 
       for (const item of itemRows) {
@@ -240,7 +245,7 @@ export const POST = withPermission(
         [operatorId, operatorName, remark || '', id, orderRow.version]
       );
       if (orderUpdateResult.affectedRows === 0) {
-        throw new Error(`出库单版本冲突，可能已被其他操作修改，请刷新后重试`);
+        throw new Error(ts('k_166xnaj'));
       }
 
       // 自动生成应收单（如果出库单关联了客户）
@@ -321,7 +326,7 @@ export const POST = withPermission(
     });
 
     await logOperation({
-      title: '确认出库',
+      title: tc('confirmIssue'),
       oper_name: operatorName,
       oper_type: 'warehouse',
       oper_method: 'POST',
@@ -337,7 +342,7 @@ export const POST = withPermission(
         deductionDetails,
         totalDeductedBatches: deductionDetails.length,
       },
-      '出库单确认成功，库存已按先进先出扣减'
+      ts('k_1k441j5')
     );
   },
   { errorMessage: '确认出库失败' }
@@ -345,6 +350,7 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, remark } = body;
     // 操作人优先用前端传值，缺失时从 JWT 兜底
@@ -352,7 +358,7 @@ export const PUT = withPermission(
     const operatorName = body.operatorName || userInfo.realName || userInfo.username;
 
     if (!id) {
-      return errorResponse('出库单ID不能为空', 400);
+      return errorResponse(ts('k_1ddnsve'), 400);
     }
 
     let orderNo = '';
@@ -365,7 +371,7 @@ export const PUT = withPermission(
       );
 
       if (!orderRows || orderRows.length === 0) {
-        throw new Error('NOT_FOUND:出库单不存在');
+        throw new Error(ts('k_uhw8cc'));
       }
 
       const order = orderRows[0];
@@ -478,7 +484,7 @@ export const PUT = withPermission(
     });
 
     await logOperation({
-      title: '撤销出库',
+      title: ts('k_1pv4eum'),
       oper_name: operatorName,
       oper_type: 'warehouse',
       oper_method: 'PUT',
@@ -490,7 +496,7 @@ export const PUT = withPermission(
 
     return successResponse(
       { orderId: id, orderNo, status: 'pending' },
-      '出库单撤销成功，库存已恢复'
+      ts('k_10s3gya')
     );
   },
   { errorMessage: '撤销出库失败' }

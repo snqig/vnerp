@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, queryOne, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -7,15 +10,16 @@ import { ProcessStandardItem, StandardCard } from '../route';
 // POST /api/standard-cards/check-deviation - 参数偏差检测（设计文档 6.5 节）
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { standard_card_id, actual_params } = body;
 
     if (!standard_card_id) {
-      return errorResponse('缺少标准卡ID', 400, 400);
+      return errorResponse(ts('k_1ql7lmh'), 400, 400);
     }
 
     if (!actual_params || !Array.isArray(actual_params) || actual_params.length === 0) {
-      return errorResponse('缺少实际参数数据', 400, 400);
+      return errorResponse(ts('k_1qrq4hp'), 400, 400);
     }
 
     // 查询标准卡信息
@@ -25,7 +29,7 @@ export const POST = withPermission(
     );
 
     if (!card) {
-      return commonErrors.notFound('标准卡不存在');
+      return commonErrors.notFound(ts('k_10y4j6y'));
     }
 
     // 查询标准卡的工艺参数明细
@@ -56,7 +60,7 @@ export const POST = withPermission(
           tolerance: 'N/A',
           deviation: 'N/A',
           is_within_tolerance: false,
-          message: '未找到对应的标准值',
+          message: ts('k_1syckzt'),
         });
         hasDeviation = true;
         warningLevel = 'warning';

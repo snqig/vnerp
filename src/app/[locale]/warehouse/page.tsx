@@ -54,6 +54,7 @@ interface BatchInventory {
 }
 
 export default function WarehousePage() {
+  const ts = useTranslations('Warehouse');
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
@@ -76,7 +77,7 @@ export default function WarehousePage() {
         material_code: '',
         material_name: '',
         quantity: '',
-        unit: '张',
+        unit: ts('k_accfpb'),
         batch_no: '',
       },
     ],
@@ -94,7 +95,7 @@ export default function WarehousePage() {
         material_code: '',
         material_name: '',
         quantity: '',
-        unit: '张',
+        unit: ts('k_accfpb'),
         batch_inventory_id: '',
       },
     ],
@@ -358,7 +359,7 @@ export default function WarehousePage() {
                             material_code: '',
                             material_name: '',
                             quantity: '',
-                            unit: '张',
+                            unit: ts('k_accfpb'),
                             batch_no: '',
                           },
                         ],
@@ -507,7 +508,7 @@ export default function WarehousePage() {
                             material_code: '',
                             material_name: '',
                             quantity: '',
-                            unit: '张',
+                            unit: ts('k_accfpb'),
                             batch_inventory_id: '',
                           },
                         ],

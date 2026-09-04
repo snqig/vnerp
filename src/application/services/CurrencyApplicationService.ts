@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import type { ICurrencyService } from '@/domain/shared/CurrencyService';
 import { Money } from '@/domain/shared/value-objects/Money';
 import { NotFoundError } from '@/domain/shared/DomainTypes';
@@ -36,6 +38,7 @@ export class CurrencyApplicationService {
    * 换算金额为本位币
    */
   async convertToBaseCurrency(money: Money, baseCurrency: string): Promise<Money> {
+  const ts = await getTranslations('Common');
     if (money.currency === baseCurrency) return money;
 
     const rate = await this.getLatestRate(money.currency, baseCurrency);
@@ -45,7 +48,7 @@ export class CurrencyApplicationService {
     }
     const decimalPlaces = target.decimalPlaces;
 
-    logger.info({ module: 'Currency', action: 'convertToBaseCurrency' }, '汇率换算', {
+    logger.info({ module: 'Currency', action: 'convertToBaseCurrency' }, ts('k_180rtmk'), {
       from: money.currency,
       to: baseCurrency,
       rate,

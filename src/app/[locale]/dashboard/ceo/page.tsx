@@ -2,6 +2,7 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { MainLayout } from '@/components/layout';
+import { VerticalMarquee } from '@/components/ui/VerticalMarquee';
 import { useEffect, useState, useRef } from 'react';
 import {
   Package,
@@ -273,15 +274,16 @@ function RingProgress({
 
 /* ═══ 滚动预警条 ═══ */
 function AlertTicker({ alerts }: { alerts: { level: string; msg: string }[] }) {
+  const ts = useTranslations('Dashboard');
   const list =
     alerts.length > 0
       ? alerts
       : [
-          { level: 'info', msg: '系统运行正常，所有产线在线' },
-          { level: 'warning', msg: '原材料仓库 B-3 区油墨库存偏低，建议补货' },
-          { level: 'info', msg: '今日已完成 3 批次出货，合计 12,500 PCS' },
-          { level: 'warning', msg: '设备 SP-003 计划保养倒计时 2 天' },
-          { level: 'success', msg: '客户「深圳电子」追加订单已确认，交期 7/28' },
+          { level: 'info', msg: ts('k_a1s95c') },
+          { level: 'warning', msg: ts('k_2faw8g') },
+          { level: 'info', msg: ts('k_vnxg3f') },
+          { level: 'warning', msg: ts('k_b17raw') },
+          { level: 'success', msg: ts('k_1y86uhd') },
         ];
   return (
     <div
@@ -299,8 +301,7 @@ function AlertTicker({ alerts }: { alerts: { level: string; msg: string }[] }) {
       >
         <AlertTriangle className="h-3.5 w-3.5" style={{ color: C.orange }} />
         <span className="text-xs font-medium" style={{ color: C.orange }}>
-          预警
-        </span>
+          {ts('k_1qswpkf')}</span>
       </div>
       <div className="flex-1 overflow-hidden relative">
         <div
@@ -330,37 +331,26 @@ function AlertTicker({ alerts }: { alerts: { level: string; msg: string }[] }) {
   );
 }
 
-/* ═══ 自动滚动列表 ═══ */
-function AutoScrollList({ children, speed = 30 }: { children: React.ReactNode; speed?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || el.scrollHeight <= el.clientHeight) return;
-    const tick = () => {
-      if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
-        el.scrollTo({ top: 0, behavior: 'instant' });
-      } else {
-        el.scrollBy({ top: 1, behavior: 'instant' });
-      }
-    };
-    const id = setInterval(tick, speed);
-    return () => clearInterval(id);
-  }, [speed]);
-
+/* ═══ 自动滚动列表（纵向无缝循环，基于 VerticalMarquee）═══ */
+function AutoScrollList({
+  children,
+  maxHeight = 220,
+  speed = 30,
+}: {
+  children: React.ReactNode;
+  maxHeight?: number;
+  speed?: number;
+}) {
   return (
-    <div
-      ref={ref}
-      className="flex-1 overflow-y-auto min-h-0 space-y-1"
-      style={{ scrollBehavior: 'smooth' }}
-    >
-      {children}
-    </div>
+    <VerticalMarquee maxHeight={maxHeight} speed={speed}>
+      <div className="space-y-1">{children}</div>
+    </VerticalMarquee>
   );
 }
 
 /* ═══ 主组件 ═══ */
 export default function CEODashboard() {
+  const ts = useTranslations('Dashboard');
   const tc = useTranslations('Common');
   const locale = useLocale();
 
@@ -397,7 +387,7 @@ export default function CEODashboard() {
   const fmtMoney = (v: number) =>
     '¥' + v.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtNum = (v: number) => v.toLocaleString(locale);
-  const fmtQty = (v: number) => (v >= 10000 ? (v / 10000).toFixed(1) + '万' : fmtNum(v));
+  const fmtQty = (v: number) => (v >= 10000 ? (v / 10000).toFixed(1) + ts('k_nrxpi') : fmtNum(v));
   const fmtPct = (v: number) => (v > 0 ? '+' : '') + v.toFixed(1) + '%';
 
   const wo = data.production.activeWorkOrders || [];
@@ -449,8 +439,7 @@ export default function CEODashboard() {
               <div className="tech-title-line-left" />
               <div className="text-center">
                 <h1 className="text-2xl font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
-                  VNERP丝网印刷管理系统
-                </h1>
+                  {ts('k_1b5qbpo')}</h1>
                 <p className="text-xs mt-0.5" style={{ color: C.silver + '88' }}>
                   CEO
                 </p>
@@ -471,7 +460,7 @@ export default function CEODashboard() {
               onClick={toggleFullscreen}
               className="p-2 rounded-lg transition-colors"
               style={{ background: 'rgba(255,255,255,0.08)', color: C.cyan }}
-              title="全屏"
+              title={ts('k_1es5xoo')}
             >
               <Maximize className="h-4 w-4" />
             </button>
@@ -479,8 +468,7 @@ export default function CEODashboard() {
               className="px-3 py-1 rounded-full text-xs"
               style={{ background: C.cyan + '22', border: `1px solid ${C.cyan}44`, color: C.cyan }}
             >
-              ● 实时
-            </div>
+              {ts('k_1admy0e')}</div>
           </div>
         </div>
 
@@ -489,15 +477,14 @@ export default function CEODashboard() {
           {/* ═══ 左列 ═══ */}
           <div className="col-span-2 flex flex-col gap-3 overflow-hidden">
             {/* 1. 销售订单 */}
-            <GlassPanel title="销售订单" icon={ShoppingCart} accent={C.cyan} className="flex-1">
+            <GlassPanel title={ts('k_m6144y')} icon={ShoppingCart} accent={C.cyan} className="flex-1">
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <div
                   className="rounded-lg p-2"
                   style={{ background: C.cyan + '11', border: `1px solid ${C.cyan}22` }}
                 >
                   <p className="text-[10px]" style={{ color: C.silver + '88' }}>
-                    今日新增
-                  </p>
+                    {ts('k_y5a8iq')}</p>
                   <p className="text-xl font-bold" style={{ color: C.cyan }}>
                     {data.overview.todayOrders}
                   </p>
@@ -513,8 +500,7 @@ export default function CEODashboard() {
                   style={{ background: C.orange + '11', border: `1px solid ${C.orange}22` }}
                 >
                   <p className="text-[10px]" style={{ color: C.silver + '88' }}>
-                    待交付
-                  </p>
+                    {ts('k_1rt8ajg')}</p>
                   <p className="text-xl font-bold" style={{ color: C.orange }}>
                     {data.overview.todayDelivery}
                   </p>
@@ -527,8 +513,7 @@ export default function CEODashboard() {
                 </div>
               </div>
               <p className="text-xs mb-1.5" style={{ color: C.silver + '66' }}>
-                近 7 日趋势
-              </p>
+                {ts('k_17p1cwk')}</p>
               <Sparkline
                 data={
                   data.orderTrend.length > 0
@@ -542,7 +527,7 @@ export default function CEODashboard() {
 
             {/* 2. 生产工单 */}
             <GlassPanel
-              title="生产工单"
+              title={ts('k_1h58b1')}
               icon={Factory}
               accent={C.green}
               className="flex-1 flex flex-col"
@@ -550,24 +535,21 @@ export default function CEODashboard() {
               <div className="grid grid-cols-3 gap-2 mb-3 shrink-0">
                 <div className="text-center rounded-lg p-2" style={{ background: C.green + '11' }}>
                   <p className="text-[10px]" style={{ color: C.green + '88' }}>
-                    在产
-                  </p>
+                    {ts('k_2sa51s')}</p>
                   <p className="text-lg font-bold" style={{ color: C.green }}>
                     {data.production.activeOrders}
                   </p>
                 </div>
                 <div className="text-center rounded-lg p-2" style={{ background: C.cyan + '11' }}>
                   <p className="text-[10px]" style={{ color: C.cyan + '88' }}>
-                    完成
-                  </p>
+                    {ts('k_8cfjmp')}</p>
                   <p className="text-lg font-bold" style={{ color: C.cyan }}>
                     {data.production.completedToday}
                   </p>
                 </div>
                 <div className="text-center rounded-lg p-2" style={{ background: C.amber + '11' }}>
                   <p className="text-[10px]" style={{ color: C.amber + '88' }}>
-                    预警
-                  </p>
+                    {ts('k_1qswpkf')}</p>
                   <p className="text-lg font-bold" style={{ color: C.amber }}>
                     {data.production.warningCount}
                   </p>
@@ -608,8 +590,7 @@ export default function CEODashboard() {
                           className="px-1 rounded text-[9px]"
                           style={{ background: C.red + '22', color: C.red }}
                         >
-                          急
-                        </span>
+                          {ts('k_920vxc')}</span>
                       )}
                     </div>
                   ))
@@ -622,29 +603,29 @@ export default function CEODashboard() {
             </GlassPanel>
 
             {/* 3. 质量合格率 */}
-            <GlassPanel title="质量合格率" icon={CheckCircle2} accent={C.cyan} className="flex-1">
+            <GlassPanel title={tc('qualityPassRate')} icon={CheckCircle2} accent={C.cyan} className="flex-1">
               <div className="flex items-center justify-around">
                 <RingProgress
                   value={data.quality.passRate || 96}
-                  label="合格率"
+                  label={ts('k_8wg6le')}
                   color={C.cyan}
                   size={68}
                 />
                 <div className="space-y-1.5 flex-1 ml-4">
                   <div className="flex justify-between text-xs">
-                    <span style={{ color: C.silver + '88' }}>检验总数</span>
+                    <span style={{ color: C.silver + '88' }}>{ts('k_1dx1cnm')}</span>
                     <span className="font-mono" style={{ color: C.silver }}>
                       {data.quality.totalInspections || 0}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span style={{ color: C.green + '88' }}>合格</span>
+                    <span style={{ color: C.green + '88' }}>{ts('k_109sg5t')}</span>
                     <span className="font-mono" style={{ color: C.green }}>
                       {data.quality.passedInspections || 0}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span style={{ color: C.red + '88' }}>不合格</span>
+                    <span style={{ color: C.red + '88' }}>{ts('k_1ujsxic')}</span>
                     <span className="font-mono" style={{ color: C.red }}>
                       {data.quality.failedInspections || 0}
                     </span>
@@ -673,15 +654,14 @@ export default function CEODashboard() {
                   style={{ background: C.cyan, boxShadow: `0 0 8px ${C.cyan}` }}
                 />
                 <span className="text-xs" style={{ color: C.cyan }}>
-                  全息投影 · 丝网印刷机
-                </span>
+                  {ts('k_1fmp2yc')}</span>
               </div>
               <div
                 className="absolute top-2 right-2 z-10 flex items-center gap-2 text-xs"
                 style={{ color: C.silver + '88' }}
               >
                 <span>SP-2026</span>
-                <span style={{ color: C.green }}>● 在线</span>
+                <span style={{ color: C.green }}>{ts('k_1t7yonf')}</span>
               </div>
 
               {/* 3D 全息丝网印刷机 */}
@@ -695,7 +675,7 @@ export default function CEODashboard() {
                 />
                 <img
                   src="/bj.jpg"
-                  alt="3D 全息丝网印刷机"
+                  alt={ts('k_104bo0m')}
                   className="w-full h-full object-cover animate-hologram"
                 />
                 {/* 扫描线 */}
@@ -716,18 +696,18 @@ export default function CEODashboard() {
               >
                 {[
                   {
-                    label: '生产效率',
+                    label: ts('k_vl7muy'),
                     val: data.production.efficiency || 78,
                     unit: '%',
                     color: C.green,
                   },
                   {
-                    label: '设备运转',
+                    label: ts('k_1b7wm4e'),
                     val: data.inventory.warehouseUtilization || 85,
                     unit: '%',
                     color: C.cyan,
                   },
-                  { label: '产能负载', val: 67, unit: '%', color: C.orange },
+                  { label: ts('k_1ifdilh'), val: 67, unit: '%', color: C.orange },
                 ].map((m, i) => (
                   <div key={i} className="text-center">
                     <p className="text-[10px]" style={{ color: C.silver + '88' }}>
@@ -746,7 +726,7 @@ export default function CEODashboard() {
 
               {/* 右侧悬浮效率仪表 */}
               <div className="absolute bottom-16 right-3 z-10 flex flex-col gap-2">
-                <GlassPanel title="综合效率" icon={Activity} accent={C.green} className="!p-2">
+                <GlassPanel title={ts('k_16k3i7w')} icon={Activity} accent={C.green} className="!p-2">
                   <RingProgress
                     value={data.production.efficiency || 78}
                     label=""
@@ -754,7 +734,7 @@ export default function CEODashboard() {
                     size={60}
                   />
                 </GlassPanel>
-                <GlassPanel title="质量合格率" icon={CheckCircle2} accent={C.cyan} className="!p-2">
+                <GlassPanel title={tc('qualityPassRate')} icon={CheckCircle2} accent={C.cyan} className="!p-2">
                   <RingProgress
                     value={data.quality.passRate || 96}
                     label=""
@@ -783,20 +763,18 @@ export default function CEODashboard() {
           {/* ═══ 右列 ═══ */}
           <div className="col-span-2 flex flex-col gap-2 overflow-hidden">
             {/* 4. 原材料库存 */}
-            <GlassPanel title="原材料库存" icon={Package} accent={C.blue} className="flex-1">
+            <GlassPanel title={ts('k_w6mo36')} icon={Package} accent={C.blue} className="flex-1">
               <div className="grid grid-cols-2 gap-1.5 mb-2">
                 <div className="rounded-md p-1.5" style={{ background: C.blue + '11' }}>
                   <p className="text-[9px]" style={{ color: C.silver + '88' }}>
-                    物料种类
-                  </p>
+                    {ts('k_j0w4fz')}</p>
                   <p className="text-base font-bold" style={{ color: C.blue }}>
                     {fmtQty(data.inventory.totalItems)}
                   </p>
                 </div>
                 <div className="rounded-md p-1.5" style={{ background: C.orange + '11' }}>
                   <p className="text-[9px]" style={{ color: C.orange + '88' }}>
-                    低库存
-                  </p>
+                    {ts('k_1izdrtm')}</p>
                   <p className="text-base font-bold" style={{ color: C.orange }}>
                     {data.inventory.lowStock}
                   </p>
@@ -804,8 +782,7 @@ export default function CEODashboard() {
               </div>
               <div className="flex justify-between items-center mb-1.5">
                 <span className="text-[10px]" style={{ color: C.silver + '88' }}>
-                  仓库利用率
-                </span>
+                  {ts('k_jk4wcf')}</span>
                 <span className="text-xs font-bold" style={{ color: C.cyan }}>
                   {data.inventory.warehouseUtilization}%
                 </span>
@@ -815,7 +792,7 @@ export default function CEODashboard() {
                 style={{ background: 'rgba(255,255,255,0.06)' }}
               >
                 <div
-                  className="h-full rounded-full transition-all duration-1000"
+                  className="h-full rounded-full transition-[width] duration-1000"
                   style={{
                     width: `${data.inventory.warehouseUtilization}%`,
                     background: `linear-gradient(90deg, ${C.blue}, ${C.cyan})`,
@@ -841,102 +818,98 @@ export default function CEODashboard() {
                   ))
                 ) : (
                   <div className="text-center py-1 text-[10px]" style={{ color: C.silver + '44' }}>
-                    库存正常
-                  </div>
+                    {ts('k_p7zcxp')}</div>
                 )}
               </div>
             </GlassPanel>
 
             {/* 5. 设备状态 */}
-            <GlassPanel title="设备状态" icon={Cpu} accent={C.orange} className="flex-1">
+            <GlassPanel title={ts('k_irm0pj')} icon={Cpu} accent={C.orange} className="flex-1">
               <div className="grid grid-cols-3 gap-1.5 mb-1.5 text-center">
                 <div className="rounded p-1" style={{ background: C.green + '11' }}>
                   <p className="text-[8px]" style={{ color: C.green + '88' }}>
-                    运行
-                  </p>
+                    {ts('k_1kn0p6h')}</p>
                   <p className="text-sm font-bold" style={{ color: C.green }}>
                     {eqList.filter((e) => e.status === 'running').length}
                   </p>
                 </div>
                 <div className="rounded p-1" style={{ background: C.amber + '11' }}>
                   <p className="text-[8px]" style={{ color: C.amber + '88' }}>
-                    保养
-                  </p>
+                    {ts('k_1ltui15')}</p>
                   <p className="text-sm font-bold" style={{ color: C.amber }}>
                     {eqList.filter((e) => e.status === 'maintenance').length}
                   </p>
                 </div>
                 <div className="rounded p-1" style={{ background: C.red + '11' }}>
                   <p className="text-[8px]" style={{ color: C.red + '88' }}>
-                    故障
-                  </p>
+                    {tc('fault')}</p>
                   <p className="text-sm font-bold" style={{ color: C.red }}>
                     {eqList.filter((e) => e.status === 'fault').length}
                   </p>
                 </div>
               </div>
-              <div className="space-y-0.5 overflow-y-auto" style={{ maxHeight: '100px' }}>
+              <VerticalMarquee maxHeight={120} speed={20} fadeEdges={false}>
                 {eqList.length > 0 ? (
-                  eqList.slice(0, 4).map((eq, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-1.5 px-1.5 py-0.5 rounded"
-                      style={{ background: 'rgba(255,255,255,0.03)' }}
-                    >
+                  <div className="space-y-0.5">
+                    {eqList.map((eq, i) => (
                       <div
-                        className="w-1 h-1 rounded-full shrink-0"
-                        style={{
-                          background:
-                            eq.status === 'running'
-                              ? C.green
-                              : eq.status === 'idle'
-                                ? C.blue
-                                : eq.status === 'maintenance'
-                                  ? C.amber
-                                  : C.red,
-                          animation: eq.status === 'running' ? 'pulse 2s infinite' : 'none',
-                        }}
-                      />
-                      <span
-                        className="text-[9px] truncate flex-1"
-                        style={{ color: C.silver + 'aa' }}
+                        key={i}
+                        className="flex items-center gap-1.5 px-1.5 py-0.5 rounded"
+                        style={{ background: 'rgba(255,255,255,0.03)' }}
                       >
-                        {eq.name}
-                      </span>
-                      <span
-                        className="text-[9px] font-mono"
-                        style={{
-                          color:
-                            eq.efficiency > 80 ? C.green : eq.efficiency > 60 ? C.amber : C.red,
-                        }}
-                      >
-                        {eq.efficiency}%
-                      </span>
-                    </div>
-                  ))
+                        <div
+                          className="w-1 h-1 rounded-full shrink-0"
+                          style={{
+                            background:
+                              eq.status === 'running'
+                                ? C.green
+                                : eq.status === 'idle'
+                                  ? C.blue
+                                  : eq.status === 'maintenance'
+                                    ? C.amber
+                                    : C.red,
+                            animation: eq.status === 'running' ? 'pulse 2s infinite' : 'none',
+                          }}
+                        />
+                        <span
+                          className="text-[9px] truncate flex-1"
+                          style={{ color: C.silver + 'aa' }}
+                        >
+                          {eq.name}
+                        </span>
+                        <span
+                          className="text-[9px] font-mono"
+                          style={{
+                            color:
+                              eq.efficiency > 80 ? C.green : eq.efficiency > 60 ? C.amber : C.red,
+                          }}
+                        >
+                          {eq.efficiency}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
                   <div className="text-center py-1 text-[10px]" style={{ color: C.silver + '44' }}>
                     {tc('noData')}
                   </div>
                 )}
-              </div>
+              </VerticalMarquee>
             </GlassPanel>
 
             {/* 6. 财务日报 */}
-            <GlassPanel title="财务日报" icon={DollarSign} accent={C.green} className="flex-1">
+            <GlassPanel title={ts('k_12mlt6')} icon={DollarSign} accent={C.green} className="flex-1">
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px]" style={{ color: C.silver + '88' }}>
-                    应收总额
-                  </span>
+                    {ts('k_1qzm86r')}</span>
                   <span className="text-xs font-mono font-bold" style={{ color: C.green }}>
                     {fmtMoney(data.finance.totalReceivable)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[10px]" style={{ color: C.silver + '88' }}>
-                    应付总额
-                  </span>
+                    {ts('k_a9seax')}</span>
                   <span className="text-xs font-mono font-bold" style={{ color: C.red + 'cc' }}>
                     {fmtMoney(data.finance.totalPayable)}
                   </span>
@@ -944,16 +917,14 @@ export default function CEODashboard() {
                 <div className="h-px" style={{ background: C.silver + '11' }} />
                 <div className="flex justify-between items-center">
                   <span className="text-[10px]" style={{ color: C.silver + '88' }}>
-                    月度收入
-                  </span>
+                    {ts('k_to20vy')}</span>
                   <span className="text-xs font-mono font-bold" style={{ color: C.cyan }}>
                     {fmtMoney(data.finance.monthRevenue)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[10px]" style={{ color: C.silver + '88' }}>
-                    月度支出
-                  </span>
+                    {ts('k_1vpljkq')}</span>
                   <span className="text-xs font-mono font-bold" style={{ color: C.amber }}>
                     {fmtMoney(data.finance.monthExpense)}
                   </span>
@@ -961,8 +932,7 @@ export default function CEODashboard() {
                 <div className="h-px" style={{ background: C.silver + '11' }} />
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-medium" style={{ color: C.silver + 'aa' }}>
-                    净利润
-                  </span>
+                    {ts('k_j9p97w')}</span>
                   <span className="text-sm font-mono font-extrabold" style={{ color: C.orange }}>
                     {fmtMoney(data.finance.monthRevenue - data.finance.monthExpense)}
                   </span>

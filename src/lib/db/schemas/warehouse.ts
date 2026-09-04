@@ -161,6 +161,12 @@ export const invInboundOrders = mysqlTable(
     totalQuantity: decimal('total_quantity', { precision: 18, scale: 4 }).default('0.0000'),
     status: varchar('status', { length: 20 }).default('draft'),
     qcStatus: varchar('qc_status', { length: 20 }).default('pending'),
+    // 以下三列由 scripts/migrate-add-inbound-inspection-columns.cjs 补进真实库
+    // （此前 Drizzle schema 与代码都假设它们存在，但库里没有，导致 UPDATE 报 1054）。
+    // 注意：真实库里 status / qc_status 是 enum，这里用 varchar 只是 Drizzle 侧的宽松声明。
+    inspectionStatus: int('inspection_status').default(0),
+    financePosted: tinyint('finance_posted').default(0),
+    inspectionId: int('inspection_id'),
     inboundDate: date('inbound_date'),
     remark: text('remark'),
     createBy: int('create_by', { unsigned: true }),

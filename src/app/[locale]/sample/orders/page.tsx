@@ -81,6 +81,7 @@ const lifecycleStatusMap: Record<string, { label: string; color: string }> = {
 };
 
 export default function SampleOrdersPage() {
+  const ts = useTranslations('Common');
   // 翻译钩子
   const t = useTranslations('SampleOrders');
   const tc = useTranslations('Common');
@@ -570,8 +571,8 @@ export default function SampleOrdersPage() {
               </div>
               <div className="flex gap-2 items-center">
                 <GlobalExportToolbar
-                  filename="样品订单列表"
-                  title="样品订单列表"
+                  filename={ts('k_enl3xj')}
+                  title={ts('k_enl3xj')}
                   columns={[
                     {
                       key: 'notify_date',

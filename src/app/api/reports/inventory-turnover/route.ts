@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -9,6 +12,7 @@ import type { DbRow } from '@/types/db';
  * 按品类/仓库统计库存周转情况
  */
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');
@@ -36,7 +40,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         COALESCE(MAX(ii.quantity), 0) as current_stock,
         COALESCE(MAX(ii.locked_qty), 0) as locked_qty,
         COALESCE(MAX(ii.available_qty), 0) as available_qty
-      FROM material m
+      FROM inv_material m
       LEFT JOIN inv_inventory ii ON m.id = ii.material_id AND ii.deleted = 0
       LEFT JOIN inv_inventory_log iil ON m.id = iil.material_id ${dateFilter}
       WHERE m.deleted = 0
@@ -88,7 +92,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
               : 0,
         },
       },
-      '获取库存周转率报表成功'
+      ts('k_w6ewzk')
     );
   } else {
     // 按仓库统计
@@ -103,7 +107,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         COALESCE(SUM(ii.available_qty), 0) as total_available,
         COALESCE(SUM(CASE WHEN iil.operation_type = 1 THEN iil.operation_qty ELSE 0 END), 0) as inbound_qty,
         COALESCE(SUM(CASE WHEN iil.operation_type = 2 THEN iil.operation_qty ELSE 0 END), 0) as outbound_qty
-      FROM warehouse w
+      FROM inv_warehouse w
       LEFT JOIN inv_inventory ii ON w.id = ii.warehouse_id AND ii.deleted = 0
       LEFT JOIN inv_inventory_log iil ON w.id = iil.warehouse_id ${dateFilter}
       WHERE w.deleted = 0
@@ -140,7 +144,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
           totalOutbound: result.reduce((sum: number, r: DbRow) => sum + r.outboundQty, 0),
         },
       },
-      '获取仓库库存报表成功'
+      ts('k_161bjot')
     );
   }
 });

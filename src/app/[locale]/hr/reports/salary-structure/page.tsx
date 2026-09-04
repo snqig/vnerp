@@ -27,6 +27,7 @@ interface SalaryStructureData {
 }
 
 export default function SalaryStructurePage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('Hr');
   const _tc = useTranslations('Common');
   const [data, setData] = useState<SalaryStructureData | null>(null);
@@ -78,7 +79,7 @@ export default function SalaryStructurePage() {
     <MainLayout>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">{t('salaryStructure') || '薪资结构分析'}</h1>
+          <h1 className="text-3xl font-bold">{t('salaryStructure') || ts('k_wnc2a')}</h1>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={() => changeMonth(-1)}>
               <ChevronLeft className="h-4 w-4" />
@@ -93,7 +94,7 @@ export default function SalaryStructurePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('avgSalary') || '平均薪资'}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('avgSalary') || ts('k_mhqbe9')}</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -104,7 +105,7 @@ export default function SalaryStructurePage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('medianSalary') || '中位数薪资'}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('medianSalary') || ts('k_1atqar7')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -118,7 +119,7 @@ export default function SalaryStructurePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">{t('salaryStructure') || '薪资构成'}</CardTitle>
+              <CardTitle className="text-lg">{t('salaryStructure') || ts('k_8bjnr')}</CardTitle>
             </CardHeader>
             <CardContent>
               <SalaryStructureChart data={data?.componentBreakdown || []} />
@@ -127,14 +128,14 @@ export default function SalaryStructurePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">{t('salaryDistribution') || '薪资分布'}</CardTitle>
+              <CardTitle className="text-lg">{t('salaryDistribution') || ts('k_3s84jw')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('salaryRange') || '薪资区间'}</TableHead>
-                    <TableHead className="text-right">{t('headcount') || '人数'}</TableHead>
+                    <TableHead>{t('salaryRange') || ts('k_z8qk4l')}</TableHead>
+                    <TableHead className="text-right">{t('headcount') || ts('k_1qpwf8n')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { TOOL_TYPE_LABEL, TOOL_STATUS_LABEL } from '@/lib/status-labels';
@@ -122,6 +123,8 @@ const STATUS_MAP: Record<
 const TYPE_MAP = TOOL_TYPE_LABEL;
 
 export default function ToolManagementPage() {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Dcprint');
   const { toast } = useToast();
 
   const [tools, setTools] = useState<Tool[]>([]);
@@ -326,12 +329,12 @@ export default function ToolManagementPage() {
     });
     const data = await res.json();
     if (data.success) {
-      toast({ title: editTool ? '更新成功' : '创建成功' });
+      toast({ title: editTool ? ts('k_1795bzg') : ts('k_kiombh') });
       setCreateOpen(false);
       fetchTools();
       fetchDashboard();
     } else {
-      toast({ title: '操作失败', description: data.message, variant: 'destructive' });
+      toast({ title: ts('k_ydow7a'), description: data.message, variant: 'destructive' });
     }
   };
 
@@ -355,13 +358,13 @@ export default function ToolManagementPage() {
     });
     const data = await res.json();
     if (data.success) {
-      toast({ title: '使用记录已登记' });
+      toast({ title: ts('k_1umgyqi') });
       setUsageDialogTool(null);
       setUsageForm({ useCount: 1, workOrderNo: '', processName: '', remark: '' });
       fetchTools();
       fetchDashboard();
     } else {
-      toast({ title: '操作失败', description: data.message, variant: 'destructive' });
+      toast({ title: ts('k_ydow7a'), description: data.message, variant: 'destructive' });
     }
   };
 
@@ -382,7 +385,7 @@ export default function ToolManagementPage() {
     });
     const data = await res.json();
     if (data.success) {
-      toast({ title: maintForm.completeAction ? '维修已完成' : '维修已开始' });
+      toast({ title: maintForm.completeAction ? ts('k_172ojqz') : ts('k_10kx2wi') });
       setMaintDialogTool(null);
       setMaintForm({
         maintenanceType: 1,
@@ -395,7 +398,7 @@ export default function ToolManagementPage() {
       fetchTools();
       fetchDashboard();
     } else {
-      toast({ title: '操作失败', description: data.message, variant: 'destructive' });
+      toast({ title: ts('k_ydow7a'), description: data.message, variant: 'destructive' });
     }
   };
 
@@ -408,13 +411,13 @@ export default function ToolManagementPage() {
     });
     const data = await res.json();
     if (data.success) {
-      toast({ title: '工装已报废' });
+      toast({ title: ts('k_15g5muj') });
       setScrapDialogTool(null);
       setScrapForm({ scrapReason: '' });
       fetchTools();
       fetchDashboard();
     } else {
-      toast({ title: '操作失败', description: data.message, variant: 'destructive' });
+      toast({ title: ts('k_ydow7a'), description: data.message, variant: 'destructive' });
     }
   };
 
@@ -422,11 +425,11 @@ export default function ToolManagementPage() {
     const res = await authFetch(`/api/dcprint/tool/${tool.id}/activate`, { method: 'POST' });
     const data = await res.json();
     if (data.success) {
-      toast({ title: '工装已激活' });
+      toast({ title: ts('k_77f5be') });
       fetchTools();
       fetchDashboard();
     } else {
-      toast({ title: '操作失败', description: data.message, variant: 'destructive' });
+      toast({ title: ts('k_ydow7a'), description: data.message, variant: 'destructive' });
     }
   };
 
@@ -435,11 +438,11 @@ export default function ToolManagementPage() {
     const res = await authFetch(`/api/dcprint/tool/${tool.id}`, { method: 'DELETE' });
     const data = await res.json();
     if (data.success) {
-      toast({ title: '删除成功' });
+      toast({ title: ts('k_1hlqs') });
       fetchTools();
       fetchDashboard();
     } else {
-      toast({ title: '操作失败', description: data.message, variant: 'destructive' });
+      toast({ title: ts('k_ydow7a'), description: data.message, variant: 'destructive' });
     }
   };
 
@@ -452,48 +455,47 @@ export default function ToolManagementPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{'刀具管理'}</h1>
+          <h1 className="text-2xl font-bold">{tc('dcDieMgmtTitle')}</h1>
           <Button onClick={openCreate}>
             <Plus className="mr-2 h-4 w-4" />
-            新增工装
-          </Button>
+            {ts('k_l7139x')}</Button>
         </div>
 
         {/* Dashboard */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">{'刀具总数'}</p>
+              <p className="text-sm text-muted-foreground">{ts('k_p51e5n')}</p>
               <p className="text-2xl font-bold">{dashboard.totalTools}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">在用</p>
+              <p className="text-sm text-muted-foreground">{ts('k_16d9hd9')}</p>
               <p className="text-2xl font-bold text-green-600">{dashboard.activeTools}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">预警</p>
+              <p className="text-sm text-muted-foreground">{ts('k_1qswpkf')}</p>
               <p className="text-2xl font-bold text-orange-600">{dashboard.warningTools}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">维修中</p>
+              <p className="text-sm text-muted-foreground">{ts('k_1jvastq')}</p>
               <p className="text-2xl font-bold text-blue-600">{dashboard.maintenanceTools}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">已报废</p>
+              <p className="text-sm text-muted-foreground">{ts('k_oy744d')}</p>
               <p className="text-2xl font-bold text-red-600">{dashboard.scrappedTools}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">{'净值合计'}</p>
+              <p className="text-sm text-muted-foreground">{ts('k_11rvyiu')}</p>
               <p className="text-2xl font-bold">¥{dashboard.totalNetValue.toFixed(2)}</p>
             </CardContent>
           </Card>
@@ -503,26 +505,26 @@ export default function ToolManagementPage() {
         <div className="flex gap-4 items-center">
           <Tabs value={filterType} onValueChange={setFilterType}>
             <TabsList>
-              <TabsTrigger value="">全部</TabsTrigger>
-              <TabsTrigger value="1">刀模</TabsTrigger>
-              <TabsTrigger value="2">网版</TabsTrigger>
+              <TabsTrigger value="">{ts('k_q6w6ul')}</TabsTrigger>
+              <TabsTrigger value="1">{ts('k_1c01k7u')}</TabsTrigger>
+              <TabsTrigger value="2">{ts('k_cu41ng')}</TabsTrigger>
             </TabsList>
           </Tabs>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-32">
-              <SelectValue placeholder="全部状态" />
+              <SelectValue placeholder={ts('k_igzce8')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">全部状态</SelectItem>
-              <SelectItem value="1">{'闲置'}</SelectItem>
-              <SelectItem value="2">在用</SelectItem>
-              <SelectItem value="3">维修中</SelectItem>
-              <SelectItem value="4">预警</SelectItem>
-              <SelectItem value="5">已报废</SelectItem>
+              <SelectItem value="">{ts('k_igzce8')}</SelectItem>
+              <SelectItem value="1">{ts('k_1uo0lr5')}</SelectItem>
+              <SelectItem value="2">{ts('k_16d9hd9')}</SelectItem>
+              <SelectItem value="3">{ts('k_1jvastq')}</SelectItem>
+              <SelectItem value="4">{ts('k_1qswpkf')}</SelectItem>
+              <SelectItem value="5">{ts('k_oy744d')}</SelectItem>
             </SelectContent>
           </Select>
           <Input
-            placeholder="编码/名称搜索"
+            placeholder={ts('k_n1bcu2')}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             className="w-64"
@@ -539,21 +541,20 @@ export default function ToolManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>类型</TableHead>
-                  <TableHead>编码</TableHead>
-                  <TableHead>名称</TableHead>
-                  <TableHead>{'使用寿命'}</TableHead>
-                  <TableHead>净值</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{ts('k_anh4cj')}</TableHead>
+                  <TableHead>{ts('k_1lqzgmw')}</TableHead>
+                  <TableHead>{ts('k_hzx914')}</TableHead>
+                  <TableHead>{ts('k_icsrfi')}</TableHead>
+                  <TableHead>{ts('k_2dlv89')}</TableHead>
+                  <TableHead>{ts('k_1ccx4t4')}</TableHead>
+                  <TableHead>{ts('k_501w24')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {tools.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      暂无数据
-                    </TableCell>
+                      {ts('k_6tzr61')}</TableCell>
                   </TableRow>
                 ) : (
                   tools.map((tool) => (
@@ -594,7 +595,7 @@ export default function ToolManagementPage() {
                               size="sm"
                               variant="ghost"
                               onClick={() => activateTool(tool)}
-                              title="激活"
+                              title={ts('k_sgmlm4')}
                             >
                               <Play className="h-4 w-4" />
                             </Button>
@@ -604,7 +605,7 @@ export default function ToolManagementPage() {
                               size="sm"
                               variant="ghost"
                               onClick={() => setUsageDialogTool(tool)}
-                              title="登记使用"
+                              title={ts('k_dbhsap')}
                             >
                               <Activity className="h-4 w-4" />
                             </Button>
@@ -614,7 +615,7 @@ export default function ToolManagementPage() {
                               size="sm"
                               variant="ghost"
                               onClick={() => setMaintDialogTool(tool)}
-                              title="维修"
+                              title={ts('k_v1x3nb')}
                             >
                               <Wrench className="h-4 w-4" />
                             </Button>
@@ -624,7 +625,7 @@ export default function ToolManagementPage() {
                               size="sm"
                               variant="ghost"
                               onClick={() => setScrapDialogTool(tool)}
-                              title="报废"
+                              title={ts('k_19qx965')}
                             >
                               <Ban className="h-4 w-4" />
                             </Button>
@@ -633,7 +634,7 @@ export default function ToolManagementPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => openEdit(tool)}
-                            title="编辑"
+                            title={ts('k_qreyeg')}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -641,7 +642,7 @@ export default function ToolManagementPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => deleteTool(tool)}
-                            title="删除"
+                            title={ts('k_1t2vi4h')}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -659,13 +660,13 @@ export default function ToolManagementPage() {
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>{editTool ? '编辑工装' : '新增工装'}</DialogTitle>
+              <DialogTitle>{editTool ? ts('k_1fn4ph2') : ts('k_l7139x')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               {!editTool && (
                 <>
                   <div>
-                    <Label>{'工装类型'}</Label>
+                    <Label>{ts('k_l1tjwl')}</Label>
                     <Select
                       value={String(formData.tool_type)}
                       onValueChange={(v) => setFormData({ ...formData, tool_type: Number(v) })}
@@ -673,14 +674,14 @@ export default function ToolManagementPage() {
                       <SelectTrigger>
                         <SelectValue />
                         <SelectContent>
-                          <SelectItem value="1">刀模</SelectItem>
-                          <SelectItem value="2">网版</SelectItem>
+                          <SelectItem value="1">{ts('k_1c01k7u')}</SelectItem>
+                          <SelectItem value="2">{ts('k_cu41ng')}</SelectItem>
                         </SelectContent>
                       </SelectTrigger>
                     </Select>
                   </div>
                   <div>
-                    <Label>{'工装编码'}</Label>
+                    <Label>{ts('k_1luw1xa')}</Label>
                     <Input
                       value={formData.tool_code}
                       onChange={(e) => setFormData({ ...formData, tool_code: e.target.value })}
@@ -689,21 +690,21 @@ export default function ToolManagementPage() {
                 </>
               )}
               <div className="col-span-2">
-                <Label>{'工装名称'}</Label>
+                <Label>{ts('k_mr44aa')}</Label>
                 <Input
                   value={formData.tool_name}
                   onChange={(e) => setFormData({ ...formData, tool_name: e.target.value })}
                 />
               </div>
               <div className="col-span-2">
-                <Label>规格</Label>
+                <Label>{ts('k_1h40xod')}</Label>
                 <Input
                   value={formData.spec}
                   onChange={(e) => setFormData({ ...formData, spec: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{'总寿命(次)'}</Label>
+                <Label>{ts('k_1oqt4so')}</Label>
                 <Input
                   type="number"
                   value={formData.total_life}
@@ -711,7 +712,7 @@ export default function ToolManagementPage() {
                 />
               </div>
               <div>
-                <Label>{'预警阈值(次)'}</Label>
+                <Label>{ts('k_oymdqb')}</Label>
                 <Input
                   type="number"
                   value={formData.warning_threshold}
@@ -722,7 +723,7 @@ export default function ToolManagementPage() {
               </div>
               {!editTool && (
                 <div>
-                  <Label>{'原值(成本)'}</Label>
+                  <Label>{ts('k_1eoe4rx')}</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -734,14 +735,14 @@ export default function ToolManagementPage() {
                 </div>
               )}
               <div>
-                <Label>存放位置</Label>
+                <Label>{ts('k_d69pno')}</Label>
                 <Input
                   value={formData.warehouse_location}
                   onChange={(e) => setFormData({ ...formData, warehouse_location: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{'生产日期'}</Label>
+                <Label>{ts('k_1o091e7')}</Label>
                 <Input
                   type="date"
                   value={formData.manufacture_date}
@@ -752,21 +753,21 @@ export default function ToolManagementPage() {
               {formData.tool_type === 1 && (
                 <>
                   <div>
-                    <Label>{'资产类型'}</Label>
+                    <Label>{ts('k_1lx7ycq')}</Label>
                     <Input
                       value={formData.asset_type}
                       onChange={(e) => setFormData({ ...formData, asset_type: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label>{'版面类型'}</Label>
+                    <Label>{ts('k_lplv3p')}</Label>
                     <Input
                       value={formData.layout_type}
                       onChange={(e) => setFormData({ ...formData, layout_type: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label>{'每版印张数'}</Label>
+                    <Label>{ts('k_qtro5y')}</Label>
                     <Input
                       type="number"
                       value={formData.pieces_per_impression}
@@ -776,14 +777,14 @@ export default function ToolManagementPage() {
                     />
                   </div>
                   <div>
-                    <Label>{'材质'}</Label>
+                    <Label>{ts('k_1unntut')}</Label>
                     <Input
                       value={formData.material}
                       onChange={(e) => setFormData({ ...formData, material: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label>{'保养间隔(印数)'}</Label>
+                    <Label>{ts('k_ylv7q')}</Label>
                     <Input
                       type="number"
                       value={formData.maintenance_interval}
@@ -798,28 +799,28 @@ export default function ToolManagementPage() {
               {formData.tool_type === 2 && (
                 <>
                   <div>
-                    <Label>{'目数'}</Label>
+                    <Label>{ts('k_1if2z7')}</Label>
                     <Input
                       value={formData.mesh_count}
                       onChange={(e) => setFormData({ ...formData, mesh_count: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label>{'丝网材质'}</Label>
+                    <Label>{ts('k_i5tiuz')}</Label>
                     <Input
                       value={formData.mesh_material}
                       onChange={(e) => setFormData({ ...formData, mesh_material: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label>{'尺寸'}</Label>
+                    <Label>{ts('k_d1l9cf')}</Label>
                     <Input
                       value={formData.size}
                       onChange={(e) => setFormData({ ...formData, size: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label>{'张力值'}</Label>
+                    <Label>{tc('dcTensionHead')}</Label>
                     <Input
                       type="number"
                       step="0.1"
@@ -830,7 +831,7 @@ export default function ToolManagementPage() {
                     />
                   </div>
                   <div>
-                    <Label>{'网框类型'}</Label>
+                    <Label>{ts('k_17500oc')}</Label>
                     <Input
                       value={formData.frame_type}
                       onChange={(e) => setFormData({ ...formData, frame_type: e.target.value })}
@@ -839,7 +840,7 @@ export default function ToolManagementPage() {
                 </>
               )}
               <div className="col-span-2">
-                <Label>备注</Label>
+                <Label>{ts('k_b5m1l6')}</Label>
                 <Textarea
                   value={formData.remark}
                   onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
@@ -848,9 +849,8 @@ export default function ToolManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setCreateOpen(false)}>
-                取消
-              </Button>
-              <Button onClick={submitForm}>确定</Button>
+                {ts('k_1589w37')}</Button>
+              <Button onClick={submitForm}>{tc('ok')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -860,7 +860,7 @@ export default function ToolManagementPage() {
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {'刀具详情'}
+                {ts('k_1mxcral')}
                 {detailTool?.tool_code}
               </DialogTitle>
             </DialogHeader>
@@ -868,69 +868,69 @@ export default function ToolManagementPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-4 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">{'类型'}</span>{' '}
+                    <span className="text-muted-foreground">{ts('k_anh4cj')}</span>{' '}
                     {TYPE_MAP[detailTool.tool_type]}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{'名称'}</span> {detailTool.tool_name}
+                    <span className="text-muted-foreground">{ts('k_hzx914')}</span> {detailTool.tool_name}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{'规格'}</span> {detailTool.spec || '-'}
+                    <span className="text-muted-foreground">{ts('k_1h40xod')}</span> {detailTool.spec || '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{'状态'}</span>{' '}
+                    <span className="text-muted-foreground">{ts('k_1ccx4t4')}</span>{' '}
                     <Badge variant={STATUS_MAP[detailTool.status]?.variant}>
                       {STATUS_MAP[detailTool.status]?.label}
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{'总寿命'}</span>{' '}
+                    <span className="text-muted-foreground">{ts('k_h6uj8m')}</span>{' '}
                     {detailTool.total_life}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{'已用次数'}</span>{' '}
+                    <span className="text-muted-foreground">{ts('k_zss8zq')}</span>{' '}
                     {detailTool.used_count}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{'剩余寿命'}</span>{' '}
+                    <span className="text-muted-foreground">{ts('k_537igf')}</span>{' '}
                     {detailTool.remain_life}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{'预警阈值'}</span>{' '}
+                    <span className="text-muted-foreground">{ts('k_8u838b')}</span>{' '}
                     {detailTool.warning_threshold}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{'原值'}</span> ¥
+                    <span className="text-muted-foreground">{ts('k_12o2s46')}</span> ¥
                     {Number(detailTool.original_cost).toFixed(2)}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{'累计折旧'}</span> ¥
+                    <span className="text-muted-foreground">{ts('k_1xx8wuw')}</span> ¥
                     {Number(detailTool.accumulated_cost).toFixed(2)}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{'净值'}</span> ¥
+                    <span className="text-muted-foreground">{ts('k_2dlv89')}</span> ¥
                     {Number(detailTool.net_value).toFixed(2)}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{'单位成本'}</span> ¥
+                    <span className="text-muted-foreground">{tc('unitCost')}</span> ¥
                     {Number(detailTool.unit_cost).toFixed(4)}
                   </div>
                 </div>
                 <Tabs defaultValue="usage">
                   <TabsList>
-                    <TabsTrigger value="usage">使用记录</TabsTrigger>
-                    <TabsTrigger value="maintenance">维修记录</TabsTrigger>
+                    <TabsTrigger value="usage">{ts('k_1l1uap5')}</TabsTrigger>
+                    <TabsTrigger value="maintenance">{ts('k_11672sw')}</TabsTrigger>
                   </TabsList>
                   <TabsContent value="usage">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>时间</TableHead>
-                          <TableHead>工单号</TableHead>
-                          <TableHead>工序</TableHead>
-                          <TableHead>{'使用时长'}</TableHead>
-                          <TableHead>{'日期'}</TableHead>
-                          <TableHead>操作人</TableHead>
+                          <TableHead>{ts('k_1f90xvr')}</TableHead>
+                          <TableHead>{ts('k_jzt8aw')}</TableHead>
+                          <TableHead>{ts('k_x2eipp')}</TableHead>
+                          <TableHead>{ts('k_lk7ip5')}</TableHead>
+                          <TableHead>{ts('k_14s86i5')}</TableHead>
+                          <TableHead>{ts('k_15sp2wy')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -940,8 +940,7 @@ export default function ToolManagementPage() {
                               colSpan={6}
                               className="text-center text-muted-foreground py-4"
                             >
-                              暂无记录
-                            </TableCell>
+                              {ts('k_11itye0')}</TableCell>
                           </TableRow>
                         ) : (
                           usageRecords.map((r) => (
@@ -962,12 +961,12 @@ export default function ToolManagementPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>类型</TableHead>
-                          <TableHead>费用</TableHead>
-                          <TableHead>{'备注'}</TableHead>
-                          <TableHead>状态</TableHead>
-                          <TableHead>时间</TableHead>
-                          <TableHead>描述</TableHead>
+                          <TableHead>{ts('k_anh4cj')}</TableHead>
+                          <TableHead>{ts('k_1j4app0')}</TableHead>
+                          <TableHead>{ts('k_b5m1l6')}</TableHead>
+                          <TableHead>{ts('k_1ccx4t4')}</TableHead>
+                          <TableHead>{ts('k_1f90xvr')}</TableHead>
+                          <TableHead>{ts('k_1kxyax6')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -977,13 +976,12 @@ export default function ToolManagementPage() {
                               colSpan={6}
                               className="text-center text-muted-foreground py-4"
                             >
-                              暂无记录
-                            </TableCell>
+                              {ts('k_11itye0')}</TableCell>
                           </TableRow>
                         ) : (
                           maintenanceRecords.map((r) => (
                             <TableRow key={r.id}>
-                              <TableCell>{r.maintenance_type === 1 ? '维修' : '保养'}</TableCell>
+                              <TableCell>{r.maintenance_type === 1 ? ts('k_v1x3nb') : ts('k_1ltui15')}</TableCell>
                               <TableCell>¥{Number(r.maintenance_cost).toFixed(2)}</TableCell>
                               <TableCell>
                                 {r.life_before} → {r.life_after} (
@@ -992,9 +990,9 @@ export default function ToolManagementPage() {
                               </TableCell>
                               <TableCell>
                                 {r.status === 1 ? (
-                                  <Badge variant="outline">进行中</Badge>
+                                  <Badge variant="outline">{ts('k_1tclykd')}</Badge>
                                 ) : (
-                                  <Badge>已完成</Badge>
+                                  <Badge>{ts('k_19j4h')}</Badge>
                                 )}
                               </TableCell>
                               <TableCell>
@@ -1018,14 +1016,14 @@ export default function ToolManagementPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {'使用记录'}
+                {ts('k_1l1uap5')}
                 {usageDialogTool?.tool_code}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label>
-                  {'剩余寿命'}
+                  {ts('k_537igf')}
                   {usageDialogTool?.remain_life})
                 </Label>
                 <Input
@@ -1035,21 +1033,21 @@ export default function ToolManagementPage() {
                 />
               </div>
               <div>
-                <Label>{'使用时长'}</Label>
+                <Label>{ts('k_lk7ip5')}</Label>
                 <Input
                   value={usageForm.workOrderNo}
                   onChange={(e) => setUsageForm({ ...usageForm, workOrderNo: e.target.value })}
                 />
               </div>
               <div>
-                <Label>工序名称</Label>
+                <Label>{ts('k_2jnrc0')}</Label>
                 <Input
                   value={usageForm.processName}
                   onChange={(e) => setUsageForm({ ...usageForm, processName: e.target.value })}
                 />
               </div>
               <div>
-                <Label>备注</Label>
+                <Label>{ts('k_b5m1l6')}</Label>
                 <Input
                   value={usageForm.remark}
                   onChange={(e) => setUsageForm({ ...usageForm, remark: e.target.value })}
@@ -1058,9 +1056,8 @@ export default function ToolManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setUsageDialogTool(null)}>
-                取消
-              </Button>
-              <Button onClick={submitUsage}>确定</Button>
+                {ts('k_1589w37')}</Button>
+              <Button onClick={submitUsage}>{tc('ok')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1070,7 +1067,7 @@ export default function ToolManagementPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {'保养记录'}
+                {ts('k_153mfl6')}
                 {maintDialogTool?.tool_code}
               </DialogTitle>
             </DialogHeader>
@@ -1080,19 +1077,19 @@ export default function ToolManagementPage() {
                   variant={!maintForm.completeAction ? 'default' : 'outline'}
                   onClick={() => setMaintForm({ ...maintForm, completeAction: false })}
                 >
-                  {'确认保养'}
+                  {ts('k_1muy07r')}
                 </Button>
                 <Button
                   variant={maintForm.completeAction ? 'default' : 'outline'}
                   onClick={() => setMaintForm({ ...maintForm, completeAction: true })}
                 >
-                  {'取消'}
+                  {ts('k_1589w37')}
                 </Button>
               </div>
               {!maintForm.completeAction ? (
                 <>
                   <div>
-                    <Label>维修类型</Label>
+                    <Label>{ts('k_1migccd')}</Label>
                     <Select
                       value={String(maintForm.maintenanceType)}
                       onValueChange={(v) =>
@@ -1102,14 +1099,14 @@ export default function ToolManagementPage() {
                       <SelectTrigger>
                         <SelectValue />
                         <SelectContent>
-                          <SelectItem value="1">维修</SelectItem>
-                          <SelectItem value="2">保养</SelectItem>
+                          <SelectItem value="1">{ts('k_v1x3nb')}</SelectItem>
+                          <SelectItem value="2">{ts('k_1ltui15')}</SelectItem>
                         </SelectContent>
                       </SelectTrigger>
                     </Select>
                   </div>
                   <div>
-                    <Label>{'备注'}</Label>
+                    <Label>{ts('k_b5m1l6')}</Label>
                     <Textarea
                       value={maintForm.description}
                       onChange={(e) => setMaintForm({ ...maintForm, description: e.target.value })}
@@ -1119,7 +1116,7 @@ export default function ToolManagementPage() {
               ) : (
                 <>
                   <div>
-                    <Label>{'保养费用'}</Label>
+                    <Label>{ts('k_1cy40a0')}</Label>
                     <Input
                       type="number"
                       value={maintForm.maintenanceId}
@@ -1129,7 +1126,7 @@ export default function ToolManagementPage() {
                     />
                   </div>
                   <div>
-                    <Label>维修费用</Label>
+                    <Label>{ts('k_m3ig3q')}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -1140,7 +1137,7 @@ export default function ToolManagementPage() {
                     />
                   </div>
                   <div>
-                    <Label>{'经办人'}</Label>
+                    <Label>{ts('k_1jnzi')}</Label>
                     <Input
                       type="number"
                       value={maintForm.lifeAfter}
@@ -1150,7 +1147,7 @@ export default function ToolManagementPage() {
                     />
                   </div>
                   <div>
-                    <Label>{'备注'}</Label>
+                    <Label>{ts('k_b5m1l6')}</Label>
                     <Input
                       value={maintForm.description}
                       onChange={(e) => setMaintForm({ ...maintForm, description: e.target.value })}
@@ -1161,9 +1158,8 @@ export default function ToolManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setMaintDialogTool(null)}>
-                取消
-              </Button>
-              <Button onClick={submitMaintenance}>确定</Button>
+                {ts('k_1589w37')}</Button>
+              <Button onClick={submitMaintenance}>{tc('ok')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1173,17 +1169,17 @@ export default function ToolManagementPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {'刀具报废'}
+                {ts('k_1fxm0bs')}
                 {scrapDialogTool?.tool_code}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-orange-600">
                 <AlertTriangle className="h-5 w-5" />
-                <span>{'确认报废此刀具？报废后不可恢复。'}</span>
+                <span>{ts('k_1vmfys2')}</span>
               </div>
               <div>
-                <Label>报废原因</Label>
+                <Label>{ts('k_1h3xyle')}</Label>
                 <Textarea
                   value={scrapForm.scrapReason}
                   onChange={(e) => setScrapForm({ ...scrapForm, scrapReason: e.target.value })}
@@ -1192,11 +1188,9 @@ export default function ToolManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setScrapDialogTool(null)}>
-                取消
-              </Button>
+                {ts('k_1589w37')}</Button>
               <Button variant="destructive" onClick={submitScrap}>
-                确认报废
-              </Button>
+                {ts('k_1hma1hv')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -1,3 +1,5 @@
+
+import { getTranslations } from 'next-intl/server';
 /**
  * Token 黑名单与撤销管理
  *
@@ -25,6 +27,7 @@ const USER_REVOKE_TTL_SEC = JWT_DEFAULT_TTL_SEC + 60;
  * @param expiresAtSec - token 的绝对过期时间戳（秒）。若传入毫秒会自动识别并转换。
  */
 export async function revokeToken(tokenKey: string, expiresAtSec: number): Promise<void> {
+  const ts = await getTranslations({ namespace: 'Common' });
   const cm = getCacheManager();
   // 兼容毫秒/秒：若数值远大于当前秒级时间戳，判定为毫秒
   const nowSec = Math.floor(Date.now() / 1000);
@@ -39,7 +42,7 @@ export async function revokeToken(tokenKey: string, expiresAtSec: number): Promi
   ttlSec = Math.min(ttlSec, JWT_DEFAULT_TTL_SEC);
 
   await cm.set(`revoked_token:${tokenKey}`, { revoked: true }, ttlSec);
-  secureLog('info', 'revokeToken: token 已加入黑名单', { tokenKey, ttlSec });
+  secureLog('info', ts('k_nv3g7b'), { tokenKey, ttlSec });
 }
 
 /**
@@ -62,12 +65,13 @@ export async function isTokenRevoked(tokenKey: string): Promise<boolean> {
  * @param beforeTs - 可选，撤销该时间戳之前签发的 token（毫秒），默认当前时间
  */
 export async function revokeAllUserTokens(userId: number, beforeTs?: number): Promise<void> {
+  const ts = await getTranslations({ namespace: 'Common' });
   const cm = getCacheManager();
-  const ts = beforeTs ?? Date.now();
-  await cm.set(`revoked_user:${userId}`, { ts }, USER_REVOKE_TTL_SEC);
-  secureLog('warn', 'revokeAllUserTokens: 已撤销用户所有 token', {
+  const tsValue = beforeTs ?? Date.now();
+  await cm.set(`revoked_user:${userId}`, { ts: tsValue }, USER_REVOKE_TTL_SEC);
+  secureLog('warn', ts('k_1of04tu'), {
     userId,
-    revokeBeforeTs: ts,
+    revokeBeforeTs: tsValue,
   });
 }
 

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -75,11 +78,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body: WarehouseCategory = await request.json();
 
     const name = (body.name ?? '').trim();
     if (!name) {
-      return errorResponse('仓库分类名称不能为空', 400, 400);
+      return errorResponse(ts('k_hjo6qr'), 400, 400);
     }
 
     // 统一校验：编码规则来自 sys_calc_param（迁移 074），不再散落在各路由
@@ -107,7 +111,7 @@ export const POST = withPermission(
       { id: result.insertId, warnings: validation.warnings },
       validation.warnings.length > 0
         ? `仓库分类创建成功（注意：${validation.warnings.join('；')}）`
-        : '仓库分类创建成功'
+        : ts('k_h2gge0')
     );
   },
   { logTitle: '创建仓库分类' }
@@ -115,16 +119,17 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body: WarehouseCategory = await request.json();
     const { id } = body;
 
     if (!id) {
-      return commonErrors.badRequest('缺少分类ID');
+      return commonErrors.badRequest(ts('k_2myxfe'));
     }
 
     const name = (body.name ?? '').trim();
     if (!name) {
-      return errorResponse('仓库分类名称不能为空', 400, 400);
+      return errorResponse(ts('k_hjo6qr'), 400, 400);
     }
 
     const existingCategory = await queryOne<{ id: number }>(
@@ -133,7 +138,7 @@ export const PUT = withPermission(
     );
 
     if (!existingCategory) {
-      return commonErrors.notFound('仓库分类不存在');
+      return commonErrors.notFound(ts('k_lojzv'));
     }
 
     // 编辑走宽松策略：编码不合规仅提示，不锁死存量数据；
@@ -162,14 +167,14 @@ export const PUT = withPermission(
     );
 
     if (result.affectedRows === 0) {
-      return commonErrors.notFound('仓库分类不存在');
+      return commonErrors.notFound(ts('k_lojzv'));
     }
 
     return successResponse(
       { warnings: validation.warnings },
       validation.warnings.length > 0
         ? `仓库分类更新成功（注意：${validation.warnings.join('；')}）`
-        : '仓库分类更新成功'
+        : ts('k_1pde31x')
     );
   },
   { logTitle: '更新仓库分类' }
@@ -177,16 +182,17 @@ export const PUT = withPermission(
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('缺少分类ID');
+      return commonErrors.badRequest(ts('k_2myxfe'));
     }
 
     const categoryId = parseInt(id);
     if (!Number.isInteger(categoryId) || categoryId <= 0) {
-      return commonErrors.badRequest('分类ID非法');
+      return commonErrors.badRequest(ts('k_1fl1qou'));
     }
 
     const existingCategory = await queryOne<{ id: number }>(
@@ -195,7 +201,7 @@ export const DELETE = withPermission(
     );
 
     if (!existingCategory) {
-      return commonErrors.notFound('仓库分类不存在');
+      return commonErrors.notFound(ts('k_lojzv'));
     }
 
     const hasWarehouses = await queryOne<{ count: number }>(
@@ -219,10 +225,10 @@ export const DELETE = withPermission(
     );
 
     if (result.affectedRows === 0) {
-      return commonErrors.notFound('仓库分类不存在');
+      return commonErrors.notFound(ts('k_lojzv'));
     }
 
-    return successResponse(null, '仓库分类删除成功');
+    return successResponse(null, ts('k_dm5n19'));
   },
   { logTitle: '删除仓库分类' }
 );

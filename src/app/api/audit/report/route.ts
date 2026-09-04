@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 /**
  * 审计报告API路由
  * 功能：生成审计报告、导出审计数据
@@ -9,6 +12,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { generateAuditReport } from '@/lib/audit-logger';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
 
   const startTime = searchParams.get('startTime');
@@ -16,7 +20,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const moduleName = searchParams.get('module') || undefined;
 
   if (!startTime || !endTime) {
-    return errorResponse('请提供开始时间和结束时间', 400, 400);
+    return errorResponse(ts('k_fjdnzk'), 400, 400);
   }
 
   const report = await generateAuditReport({
@@ -25,5 +29,5 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     module: moduleName,
   });
 
-  return successResponse(report, '审计报告生成成功');
+  return successResponse(report, ts('k_1b7a70y'));
 });

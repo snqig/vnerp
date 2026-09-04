@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -45,6 +48,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 });
 
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const {
     formula_no,
@@ -60,7 +64,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   } = body;
 
   if (!total_qty || !mixed_date || !details || !Array.isArray(details) || details.length === 0) {
-    return errorResponse('缺少必填字段: total_qty, mixed_date, details', 400, 400);
+    return errorResponse(ts('k_ryhwqn'), 400, 400);
   }
 
   const result = await transaction(async (conn) => {
@@ -127,16 +131,14 @@ export const POST = withPermission(async (request: NextRequest) => {
 
       const transNo = 'TRX' + Date.now() + String(detail.source_batch_no).slice(-4);
       await conn.execute(
-        `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, source_id, material_id, material_code, batch_no, warehouse_id, quantity, unit_price, total_amount, account_dr, account_cr, create_time)
-         SELECT ?, 'out', 'ink_mixing', ?, ib.material_id, ib.material_code, ib.batch_no, ib.warehouse_id, ?, ib.unit_price, ? * ib.unit_price, '生产成本', '原材料库存', NOW()
-         FROM inv_inventory_batch ib WHERE ib.id = ?`,
+        ts('k_1x8q1vb'),
         [transNo, mixedBatchId, -detail.used_qty, detail.used_qty, sourceBatch.id]
       );
     }
 
     const [warehouseRows] = await conn.execute(
       'SELECT id FROM inv_warehouse WHERE warehouse_name LIKE ? AND deleted = 0 LIMIT 1',
-      ['%调色%']
+      [ts('k_4gh0ak')]
     );
     const warehouseId = warehouseRows.length > 0 ? warehouseRows[0].id : 1;
 
@@ -157,15 +159,16 @@ export const POST = withPermission(async (request: NextRequest) => {
     return { id: mixedBatchId, batch_no: batchNo };
   });
 
-  return successResponse(result, '调色油墨混合批次创建成功');
+  return successResponse(result, ts('k_17e1bhs'));
 });
 
 export const PUT = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id, status, remark } = body;
 
   if (!id) {
-    return errorResponse('混合批次ID不能为空', 400, 400);
+    return errorResponse(ts('k_lx53vz'), 400, 400);
   }
 
   if (status === 2) {
@@ -174,7 +177,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
         'SELECT batch_no FROM ink_mixed_batch WHERE id = ? AND deleted = 0',
         [id]
       );
-      if (batchRows.length === 0) throw new Error('混合批次不存在');
+      if (batchRows.length === 0) throw new Error(ts('k_xwqu9j'));
 
       await conn.execute(
         'UPDATE inv_inventory_batch SET available_qty = 0 WHERE batch_no = ? AND deleted = 0',
@@ -188,10 +191,10 @@ export const PUT = withPermission(async (request: NextRequest) => {
         'SELECT batch_no FROM ink_mixed_batch WHERE id = ? AND deleted = 0',
         [id]
       );
-      if (batchRows.length === 0) throw new Error('混合批次不存在');
+      if (batchRows.length === 0) throw new Error(ts('k_xwqu9j'));
 
       await conn.execute(
-        "UPDATE inv_inventory_batch SET available_qty = 0, status = 'expired' WHERE batch_no = ? AND deleted = 0",
+        "UPDATE inv_inventory_batch SET available_qty = 0, alert_level = 'expired', status = 0 WHERE batch_no = ? AND deleted = 0",
         [batchRows[0].batch_no]
       );
       await conn.execute('UPDATE ink_mixed_batch SET status = 3 WHERE id = ?', [id]);
@@ -203,5 +206,5 @@ export const PUT = withPermission(async (request: NextRequest) => {
       await execute('UPDATE ink_mixed_batch SET remark = ? WHERE id = ?', [remark, id]);
   }
 
-  return successResponse(null, '更新成功');
+  return successResponse(null, ts('k_1795bzg'));
 });

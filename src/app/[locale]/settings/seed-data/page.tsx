@@ -24,6 +24,7 @@ interface SeedStats {
 }
 
 export default function SeedDataPage() {
+  const ts = useTranslations('Common');
   const tc = useTranslations('Common');
   // 翻译钩子
 
@@ -52,12 +53,12 @@ export default function SeedDataPage() {
         setSystemStats(result.data);
         toast.success(tc('seedSystemSuccess'));
       } else {
-        setError(result.message || '初始化失败');
-        toast.error(result.message || '初始化失败');
+        setError(result.message || ts('k_145ng7n'));
+        toast.error(result.message || ts('k_145ng7n'));
       }
     } catch (e) {
-      setError((e as Error).message || '网络错误');
-      toast.error('初始化失败: ' + (e as Error).message);
+      setError((e as Error).message || ts('k_gsz8cc'));
+      toast.error(ts('k_1pb71f5') + (e as Error).message);
     } finally {
       setSystemLoading(false);
     }
@@ -82,26 +83,26 @@ export default function SeedDataPage() {
         setBusinessStats(result.data);
         toast.success(tc('seedBusinessSuccess'));
       } else {
-        setError(result.message || '初始化失败');
-        toast.error(result.message || '初始化失败');
+        setError(result.message || ts('k_145ng7n'));
+        toast.error(result.message || ts('k_145ng7n'));
       }
     } catch (e) {
-      setError((e as Error).message || '网络错误');
-      toast.error('初始化失败: ' + (e as Error).message);
+      setError((e as Error).message || ts('k_gsz8cc'));
+      toast.error(ts('k_1pb71f5') + (e as Error).message);
     } finally {
       setBusinessLoading(false);
     }
   };
 
   return (
-    <MainLayout title="数据种子管理">
+    <MainLayout title={ts('k_nuvho1')}>
       <div className="container mx-auto py-6 space-y-6">
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-start gap-3">
               <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
               <div className="flex-1">
-                <h4 className="font-medium text-red-800">初始化失败</h4>
+                <h4 className="font-medium text-red-800">{ts('k_145ng7n')}</h4>
                 <p className="mt-1 text-sm text-red-700">{error}</p>
               </div>
             </div>
@@ -113,22 +114,20 @@ export default function SeedDataPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="w-5 h-5" />
-              系统数据种子初始化
-            </CardTitle>
+              {ts('k_82pa1u')}</CardTitle>
             <CardDescription>
-              初始化系统基础数据，包括部门、角色、用户、仓库分类、物料分类、字典配置等。
-            </CardDescription>
+              {ts('k_gm737h')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
                 <div className="flex-1">
-                  <h4 className="font-medium text-amber-800">注意事项</h4>
+                  <h4 className="font-medium text-amber-800">{ts('k_et3mbk')}</h4>
                   <ul className="mt-2 text-sm text-amber-700 space-y-1">
-                    <li>• 此操作会清空系统设置相关表的数据</li>
-                    <li>• 建议在首次部署或需要重置系统配置时使用</li>
-                    <li>• 初始化后默认管理员账号：admin，密码：admin123</li>
+                    <li>{ts('k_i6vtfk')}</li>
+                    <li>{ts('k_1t02ig2')}</li>
+                    <li>{ts('k_1b2frda')}</li>
                   </ul>
                 </div>
               </div>
@@ -143,13 +142,11 @@ export default function SeedDataPage() {
               {systemLoading ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  初始化中...
-                </>
+                  {ts('k_mad3iu')}</>
               ) : (
                 <>
                   <Database className="w-4 h-4 mr-2" />
-                  初始化系统数据
-                </>
+                  {ts('k_8hm841')}</>
               )}
             </Button>
 
@@ -158,7 +155,7 @@ export default function SeedDataPage() {
                 <div className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
                   <div className="flex-1">
-                    <h4 className="font-medium text-green-800">系统数据初始化成功</h4>
+                    <h4 className="font-medium text-green-800">{ts('k_1bupk9o')}</h4>
                     <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
                       {Object.entries(systemStats).map(([key, value]) => (
                         <div
@@ -166,7 +163,7 @@ export default function SeedDataPage() {
                           className="flex items-center justify-between p-2 bg-white rounded"
                         >
                           <span className="text-sm text-gray-600">{key}</span>
-                          <Badge variant="secondary">{value} 条</Badge>
+                          <Badge variant="secondary">{value} {ts('k_1rfm5gs')}</Badge>
                         </div>
                       ))}
                     </div>
@@ -182,22 +179,20 @@ export default function SeedDataPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Package className="w-5 h-5" />
-              业务数据种子初始化
-            </CardTitle>
+              {ts('k_1b5yjm7')}</CardTitle>
             <CardDescription>
-              初始化业务数据，包括客户、销售订单、生产工单、入库单、物料标签、库存、质量检验记录等。
-            </CardDescription>
+              {ts('k_1vbnd1t')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
                 <div className="flex-1">
-                  <h4 className="font-medium text-amber-800">注意事项</h4>
+                  <h4 className="font-medium text-amber-800">{ts('k_et3mbk')}</h4>
                   <ul className="mt-2 text-sm text-amber-700 space-y-1">
-                    <li>• 此操作会清空业务相关表的数据</li>
-                    <li>• 建议在需要重置业务数据时使用</li>
-                    <li>• 包含演示用的真实业务场景数据</li>
+                    <li>{ts('k_brgoub')}</li>
+                    <li>{ts('k_9ovkwn')}</li>
+                    <li>{ts('k_kovkkk')}</li>
                   </ul>
                 </div>
               </div>
@@ -212,13 +207,11 @@ export default function SeedDataPage() {
               {businessLoading ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  初始化中...
-                </>
+                  {ts('k_mad3iu')}</>
               ) : (
                 <>
                   <Package className="w-4 h-4 mr-2" />
-                  初始化业务数据
-                </>
+                  {ts('k_1b6xb8u')}</>
               )}
             </Button>
 
@@ -227,7 +220,7 @@ export default function SeedDataPage() {
                 <div className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
                   <div className="flex-1">
-                    <h4 className="font-medium text-green-800">业务数据初始化成功</h4>
+                    <h4 className="font-medium text-green-800">{ts('k_z7xbn9')}</h4>
                     <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
                       {Object.entries(businessStats).map(([key, value]) => (
                         <div
@@ -235,7 +228,7 @@ export default function SeedDataPage() {
                           className="flex items-center justify-between p-2 bg-white rounded"
                         >
                           <span className="text-sm text-gray-600">{key}</span>
-                          <Badge variant="secondary">{value} 条</Badge>
+                          <Badge variant="secondary">{value} {ts('k_1rfm5gs')}</Badge>
                         </div>
                       ))}
                     </div>
@@ -249,38 +242,36 @@ export default function SeedDataPage() {
         {/* 数据说明 */}
         <Card>
           <CardHeader>
-            <CardTitle>数据说明</CardTitle>
-            <CardDescription>初始化后将包含以下数据</CardDescription>
+            <CardTitle>{ts('k_3h9k4x')}</CardTitle>
+            <CardDescription>{ts('k_i99yy3')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h4 className="font-medium mb-3 flex items-center gap-2">
                   <Database className="w-4 h-4" />
-                  系统数据
-                </h4>
+                  {ts('k_62x2g9')}</h4>
                 <div className="space-y-2 text-sm text-gray-600">
-                  <p>• 10个部门（管理部、业务部、工程技术部等）</p>
-                  <p>• 10个角色（超级管理员、业务经理、业务员等）</p>
-                  <p>• 10个用户（admin、zhangwei、lina等）</p>
-                  <p>• 10个仓库分类（原材料仓、半成品仓、成品仓等）</p>
-                  <p>• 10个物料分类（薄膜材料、油墨材料等）</p>
-                  <p>• 100+条字典数据（仓库类型、物料类型等）</p>
+                  <p>{ts('k_h0yqyz')}</p>
+                  <p>{ts('k_12rgmfw')}</p>
+                  <p>{ts('k_9kako7')}</p>
+                  <p>{ts('k_gp7qhy')}</p>
+                  <p>{ts('k_4u10gj')}</p>
+                  <p>{ts('k_1pbbi5m')}</p>
                 </div>
               </div>
               <div>
                 <h4 className="font-medium mb-3 flex items-center gap-2">
                   <Package className="w-4 h-4" />
-                  业务数据
-                </h4>
+                  {ts('k_xummk6')}</h4>
                 <div className="space-y-2 text-sm text-gray-600">
-                  <p>• 5个客户（美的集团、格力电器、海尔集团等）</p>
-                  <p>• 10个销售订单</p>
-                  <p>• 8个生产工单</p>
-                  <p>• 8个入库单</p>
-                  <p>• 10个物料标签</p>
-                  <p>• 6个库存记录</p>
-                  <p>• 10个质量检验记录</p>
+                  <p>{ts('k_1e6uaoo')}</p>
+                  <p>{ts('k_1o5vlhv')}</p>
+                  <p>{ts('k_1u4qg8l')}</p>
+                  <p>{ts('k_752sgs')}</p>
+                  <p>{ts('k_xds3c3')}</p>
+                  <p>{ts('k_ocjr1j')}</p>
+                  <p>{ts('k_180rdvi')}</p>
                 </div>
               </div>
             </div>
@@ -292,17 +283,16 @@ export default function SeedDataPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
-              默认账号密码
-            </CardTitle>
+              {ts('k_1un0tzv')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {[
-                { username: 'admin', role: '超级管理员', password: 'admin123' },
-                { username: 'zhangwei', role: '业务经理', password: 'admin123' },
-                { username: 'lina', role: '业务员', password: 'admin123' },
-                { username: 'wangqiang', role: '工程师', password: 'admin123' },
-                { username: 'liuyang', role: '生产主管', password: 'admin123' },
+                { username: 'admin', role: ts('k_1fcdmqa'), password: 'admin123' },
+                { username: 'zhangwei', role: ts('k_ojn305'), password: 'admin123' },
+                { username: 'lina', role: ts('k_15vw6tw'), password: 'admin123' },
+                { username: 'wangqiang', role: ts('k_1tyjla3'), password: 'admin123' },
+                { username: 'liuyang', role: ts('k_d1s7gj'), password: 'admin123' },
               ].map((user) => (
                 <div
                   key={user.username}
@@ -317,7 +307,7 @@ export default function SeedDataPage() {
                   </Badge>
                 </div>
               ))}
-              <p className="text-sm text-gray-500 mt-4">提示：首次登录后建议修改密码</p>
+              <p className="text-sm text-gray-500 mt-4">{ts('k_xvtbw4')}</p>
             </div>
           </CardContent>
         </Card>
@@ -327,44 +317,35 @@ export default function SeedDataPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ClipboardList className="w-5 h-5" />
-              快速导航
-            </CardTitle>
+              {ts('k_1bld6m1')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Button variant="outline" onClick={() => window.open('/settings/user', '_blank')}>
-                用户管理
-              </Button>
+                {ts('k_1oim33')}</Button>
               <Button
                 variant="outline"
                 onClick={() => window.open('/settings/organization', '_blank')}
               >
-                组织设置
-              </Button>
+                {ts('k_1gn6di0')}</Button>
               <Button variant="outline" onClick={() => window.open('/warehouse/inbound', '_blank')}>
-                入库管理
-              </Button>
+                {ts('k_pep7q2')}</Button>
               <Button variant="outline" onClick={() => window.open('/dcprint/labels', '_blank')}>
-                标签管理
-              </Button>
+                {ts('k_1anu4hj')}</Button>
               <Button variant="outline" onClick={() => window.open('/dashboard/quality', '_blank')}>
-                质量仪表板
-              </Button>
+                {ts('k_11wyqof')}</Button>
               <Button variant="outline" onClick={() => window.open('/orders/sales', '_blank')}>
-                销售订单
-              </Button>
+                {ts('k_m6144y')}</Button>
               <Button
                 variant="outline"
                 onClick={() => window.open('/production/work-orders', '_blank')}
               >
-                生产工单
-              </Button>
+                {ts('k_1h58b1')}</Button>
               <Button
                 variant="outline"
                 onClick={() => window.open('/warehouse/inventory', '_blank')}
               >
-                库存管理
-              </Button>
+                {ts('k_1s6r84h')}</Button>
             </div>
           </CardContent>
         </Card>

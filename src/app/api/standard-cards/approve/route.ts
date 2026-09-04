@@ -1,3 +1,7 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -29,19 +33,20 @@ const STATUS_FLOW: Record<ApproveType, { from: number; to: number }> = {
 // 审核标准卡
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, type, userId: _userId, userName: _userName, remark: _remark } = body;
 
     if (!id) {
-      return errorResponse('标准卡ID不能为空', 400);
+      return errorResponse(ts('k_abbfyw'), 400);
     }
 
     if (!type || !APPROVE_FIELD_MAP[type as ApproveType]) {
-      return errorResponse('审核类型无效', 400);
+      return errorResponse(ts('k_mwm8gy'), 400);
     }
 
     if (!_userId || !_userName) {
-      return errorResponse('审核人信息不能为空', 400);
+      return errorResponse(ts('k_vv2mmk'), 400);
     }
 
     const approveType = type as ApproveType;
@@ -58,7 +63,7 @@ export const POST = withPermission(
     ]);
 
     if (!card) {
-      return errorResponse('标准卡不存在', 404);
+      return errorResponse(ts('k_10y4j6y'), 404);
     }
 
     const flow = STATUS_FLOW[approveType];
@@ -112,7 +117,7 @@ export const POST = withPermission(
         _userName,
         status: approveType === 'approve' ? 3 : approveType === 'reject' ? 1 : 2,
       },
-      approveType === 'reject' ? '驳回成功，已回退到草稿' : `${getApproveTypeName(approveType)}成功`
+      approveType === 'reject' ? ts('k_cs1jxf') : `${getApproveTypeName(approveType)}成功`
     );
   },
   { logTitle: '标准卡审核', logType: 'business' }
@@ -121,15 +126,16 @@ export const POST = withPermission(
 // 撤销审核
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, type, userId: _userId, userName: _userName, remark: _remark } = body;
 
     if (!id) {
-      return errorResponse('标准卡ID不能为空', 400);
+      return errorResponse(ts('k_abbfyw'), 400);
     }
 
     if (!type || !APPROVE_FIELD_MAP[type as ApproveType]) {
-      return errorResponse('审核类型无效', 400);
+      return errorResponse(ts('k_mwm8gy'), 400);
     }
 
     const approveType = type as ApproveType;
@@ -143,12 +149,12 @@ export const PUT = withPermission(
     }>(`SELECT id, status, ${field} FROM prd_standard_card WHERE id = ? AND deleted = 0`, [id]);
 
     if (!card) {
-      return errorResponse('标准卡不存在', 404);
+      return errorResponse(ts('k_10y4j6y'), 404);
     }
 
     // 检查是否已审核
     if (!card[field]) {
-      return errorResponse('该环节未审核，无法撤销', 400);
+      return errorResponse(ts('k_3bss43'), 400);
     }
 
     // 如果是核准环节撤销，需要将状态回退到待审核
@@ -178,11 +184,12 @@ export const PUT = withPermission(
 
 // 获取审核状态
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
   if (!id) {
-    return errorResponse('标准卡ID不能为空', 400);
+    return errorResponse(ts('k_abbfyw'), 400);
   }
 
   const [card] = await query<{
@@ -202,7 +209,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   if (!card) {
-    return errorResponse('标准卡不存在', 404);
+    return errorResponse(ts('k_10y4j6y'), 404);
   }
 
   const approvalStatus = {
@@ -212,31 +219,31 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     steps: [
       {
         type: 'review',
-        name: '审核',
+        name: ts('k_1ws11do'),
         approver: card.reviewer,
         status: card.reviewer ? 'completed' : card.status >= 2 ? 'pending' : 'waiting',
       },
       {
         type: 'factory',
-        name: '厂务',
+        name: ts('k_wggui4'),
         approver: card.factory_manager,
         status: card.factory_manager ? 'completed' : card.status >= 2 ? 'pending' : 'waiting',
       },
       {
         type: 'quality',
-        name: '品管',
+        name: ts('k_x0pd7b'),
         approver: card.quality_manager,
         status: card.quality_manager ? 'completed' : card.status >= 2 ? 'pending' : 'waiting',
       },
       {
         type: 'sales',
-        name: '业务',
+        name: ts('k_5a82is'),
         approver: card.sales,
         status: card.sales ? 'completed' : card.status >= 2 ? 'pending' : 'waiting',
       },
       {
         type: 'approve',
-        name: '核准',
+        name: ts('k_wueo0j'),
         approver: card.approver,
         status: card.approver ? 'completed' : card.status >= 2 ? 'pending' : 'waiting',
       },
@@ -248,23 +255,25 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 // 辅助函数
 function getStatusLabel(status: number): string {
+  const ts = t;
   const labels: Record<number, string> = {
-    1: '草稿',
-    2: '待审核',
-    3: '已启用',
-    4: '已归档',
+    1: ts('k_oc54qp'),
+    2: ts('k_a2uv9t'),
+    3: ts('k_1w2s4cy'),
+    4: ts('k_1gje7de'),
   };
-  return labels[status] || '未知';
+  return labels[status] || ts('k_1lpnuh4');
 }
 
 function getApproveTypeName(type: ApproveType): string {
+  const ts = t;
   const names: Record<ApproveType, string> = {
-    review: '审核',
-    factory: '厂务审核',
-    quality: '品管审核',
-    sales: '业务审核',
-    approve: '核准',
-    reject: '驳回',
+    review: ts('k_1ws11do'),
+    factory: ts('k_x0rp5p'),
+    quality: ts('k_11y0826'),
+    sales: ts('k_1mpj0hx'),
+    approve: ts('k_wueo0j'),
+    reject: ts('k_h89l90'),
   };
   return names[type];
 }

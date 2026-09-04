@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -16,7 +17,7 @@ interface SearchInputProps {
 }
 
 export function SearchInput({
-  placeholder = '搜索...',
+  placeholder = ts('k_lha7zb'),
   value: controlledValue,
   onChange,
   onSearch,
@@ -24,6 +25,7 @@ export function SearchInput({
   className = '',
   inputClassName = '',
 }: SearchInputProps) {
+  const ts = useTranslations('Common');
   const [internalValue, setInternalValue] = useState(controlledValue ?? '');
   const isControlled = controlledValue !== undefined;
   const currentValue = isControlled ? controlledValue : internalValue;

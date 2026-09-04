@@ -54,6 +54,7 @@ const EditableTextarea = ({
 
 // A4 表格式录入组件（不含 MainLayout 包装，由父页面统一提供）
 export function InputCardForm() {
+  const ts = useTranslations('StandardCard');
   const { companyName } = useCompanyName();
   const router = useRouter();
   const tc = useTranslations('Common');
@@ -302,15 +303,14 @@ export function InputCardForm() {
                 />
               </td>
               <td colSpan={2} className="border">
-                m/m宽x
-              </td>
+                {ts('k_c7qkqd')}</td>
               <td className="border">
                 <EditableCell
                   value={data.sheetSpecs.length}
                   onChange={(v) => updateField('sheetSpecs', { ...data.sheetSpecs, length: v })}
                 />
               </td>
-              <td className="border">m/m长</td>
+              <td className="border">{ts('k_glc4np')}</td>
               <td colSpan={2} className="border font-bold">
                 {t('cardStandardUsage')}
               </td>

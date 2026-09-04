@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { DomainEvent } from '@/domain/shared/DomainTypes';
 import { db } from '@/lib/db';
@@ -34,6 +36,7 @@ export class StandardCardNotificationHandler implements EventHandler {
   private async handleCreated(_event: DomainEvent): Promise<void> {}
 
   private async handleSubmitted(event: DomainEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { standardCardId, code, version, userId } = event.payload as {
       standardCardId: number;
       code: string;
@@ -47,11 +50,11 @@ export class StandardCardNotificationHandler implements EventHandler {
       userId,
       standardCardId,
     };
-    logger.stepStart(ctx, '通知流程开始', { code, version });
+    logger.stepStart(ctx, ts('k_jswesh'), { code, version });
 
     try {
       await db.insert('sys_notification', {
-        title: '标准卡待审核',
+        title: ts('k_t3v0k3'),
         content: `标准卡 ${code} V${version} 已提交，请尽快审核`,
         type: 'standard_card_audit',
         source_type: 'standard_card',
@@ -62,9 +65,9 @@ export class StandardCardNotificationHandler implements EventHandler {
       logger.db(ctx, 'insert', 'sys_notification', { source_id: standardCardId });
 
       await getCacheManager().delete(`standard_card_list`);
-      logger.stepEnd(ctx, '通知流程完成');
+      logger.stepEnd(ctx, ts('k_1h4z0gc'));
     } catch (err) {
-      logger.error(ctx, '通知流程异常', {
+      logger.error(ctx, ts('k_qqjxpm'), {
         error: err instanceof Error ? err.message : String(err),
       });
       throw err;
@@ -72,6 +75,7 @@ export class StandardCardNotificationHandler implements EventHandler {
   }
 
   private async handleApproved(event: DomainEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { standardCardId, code, version, userId, approvalLevel } = event.payload as {
       standardCardId: number;
       code: string;
@@ -80,11 +84,11 @@ export class StandardCardNotificationHandler implements EventHandler {
       approvalLevel: string;
     };
     const ctx = { module: 'standard-card', action: 'handleApproved', userId, standardCardId };
-    logger.stepStart(ctx, '审批通知流程开始', { code, version, approvalLevel });
+    logger.stepStart(ctx, ts('k_52ix53'), { code, version, approvalLevel });
 
     try {
       await db.insert('sys_notification', {
-        title: '标准卡待总经理审批',
+        title: ts('k_1p8dpzg'),
         content: `标准卡 ${code} V${version} 已通过技术主管审核，请总经理审批`,
         type: 'standard_card_approve',
         source_type: 'standard_card',
@@ -95,9 +99,9 @@ export class StandardCardNotificationHandler implements EventHandler {
       logger.db(ctx, 'insert', 'sys_notification', { source_id: standardCardId });
 
       await getCacheManager().delete(`standard_card_${standardCardId}`);
-      logger.stepEnd(ctx, '审批通知流程完成');
+      logger.stepEnd(ctx, ts('k_3nojsu'));
     } catch (err) {
-      logger.error(ctx, '审批通知流程异常', {
+      logger.error(ctx, ts('k_6gwqns'), {
         error: err instanceof Error ? err.message : String(err),
       });
       throw err;
@@ -105,6 +109,7 @@ export class StandardCardNotificationHandler implements EventHandler {
   }
 
   private async handleConfirmed(event: DomainEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { standardCardId, code, version, materialId, userId } = event.payload as {
       standardCardId: number;
       code: string;
@@ -114,7 +119,7 @@ export class StandardCardNotificationHandler implements EventHandler {
     };
 
     await db.insert('sys_notification', {
-      title: '标准卡已生效',
+      title: ts('k_7gb3z8'),
       content: `标准卡 ${code} V${version} 已确认并生效，可用于生产工单`,
       type: 'standard_card_confirmed',
       source_type: 'standard_card',
@@ -147,6 +152,7 @@ export class StandardCardNotificationHandler implements EventHandler {
   }
 
   private async handleRejected(event: DomainEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { standardCardId, code, version, reason, userId } = event.payload as {
       standardCardId: number;
       code: string;
@@ -156,7 +162,7 @@ export class StandardCardNotificationHandler implements EventHandler {
     };
 
     await db.insert('sys_notification', {
-      title: '标准卡审核被驳回',
+      title: ts('k_es9yy'),
       content: `标准卡 ${code} V${version} 被驳回，原因：${reason}，请修改后重新提交`,
       type: 'standard_card_rejected',
       source_type: 'standard_card',

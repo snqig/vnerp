@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, queryOne, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -59,11 +62,12 @@ interface QualityStandardItem {
 }
 
 export const GET = withPermission(async (request: NextRequest, userInfo, context) => {
+  const ts = await getTranslations('Common');
   const { material_id: materialIdStr } = await context.params;
   const materialId = parseInt(materialIdStr);
 
   if (isNaN(materialId)) {
-    return errorResponse('无效的产品ID', 400, 400);
+    return errorResponse(ts('k_1g7lyca'), 400, 400);
   }
 
   const card = await queryOne<StandardCard>(
@@ -74,7 +78,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo, context
   );
 
   if (!card) {
-    return errorResponse('未找到该产品的标准卡', 404, 404);
+    return errorResponse(ts('k_1020hvi'), 404, 404);
   }
 
   let items: SqlValue[] = [];

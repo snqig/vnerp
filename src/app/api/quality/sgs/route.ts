@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -50,6 +53,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       cert_no,
@@ -72,14 +76,14 @@ export const POST = withPermission(
     } = body;
 
     if (!cert_no) {
-      return errorResponse('SGS证书编号不能为空', 400, 400);
+      return errorResponse(ts('k_18bh15u'), 400, 400);
     }
 
     const existing = await query('SELECT id FROM qms_sgs_cert WHERE cert_no = ? AND deleted = 0', [
       cert_no,
     ]);
     if (existing.length > 0) {
-      return errorResponse('证书编号已存在', 400, 400);
+      return errorResponse(ts('k_e8zr9x'), 400, 400);
     }
 
     const result = await execute(
@@ -127,18 +131,19 @@ export const POST = withPermission(
       }
     }
 
-    return successResponse({ id: certId, cert_no }, 'SGS认证记录创建成功');
+    return successResponse({ id: certId, cert_no }, ts('k_d6rpds'));
   },
   { logTitle: '创建SGS认证记录', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, items, ...fields } = body;
 
     if (!id) {
-      return errorResponse('ID不能为空', 400, 400);
+      return errorResponse(ts('k_32pxya'), 400, 400);
     }
 
     const updateFields: string[] = [];
@@ -197,23 +202,24 @@ export const PUT = withPermission(
       }
     }
 
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新SGS认证记录', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('ID不能为空', 400, 400);
+      return errorResponse(ts('k_32pxya'), 400, 400);
     }
 
     await execute('UPDATE qms_sgs_cert SET deleted = 1 WHERE id = ?', [id]);
 
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除SGS认证记录', logType: 'business' }
 );

@@ -43,6 +43,7 @@ export function MixedAddDialog({
   onSuccess,
 }: MixedAddDialogProps) {
   const t = useTranslations('Warehouse');
+  const ts = useTranslations('Warehouse');
   const tc = useTranslations('Common');
 
   const resetForm = () => setFormData({ ...INITIAL_FORM_DATA });
@@ -72,7 +73,7 @@ export function MixedAddDialog({
               material_spec: formData.specification,
               batch_no: formData.batchNo,
               quantity: parseFloat(formData.quantity),
-              unit: formData.unit || '卷',
+              unit: formData.unit || ts('k_1v8rak6'),
               unit_price: 0,
               warehouse_location: '',
               color_code: formData.colorCode,

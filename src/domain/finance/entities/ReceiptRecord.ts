@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface ReceiptRecordProps {
   id?: number;
   receiptNo: string;
@@ -43,14 +45,15 @@ export class ReceiptRecord {
   }
 
   static create(props: ReceiptRecordProps): ReceiptRecord {
+  const ts = t;
     if (!props.customerId) {
-      throw new Error('客户ID不能为空');
+      throw new Error(ts('k_ct4431'));
     }
     if (!props.amount || props.amount <= 0) {
-      throw new Error('收款金额必须大于0');
+      throw new Error(ts('k_1wgy3sa'));
     }
     if (!props.receiptNo) {
-      throw new Error('收款单号不能为空');
+      throw new Error(ts('k_zx8cj3'));
     }
     return new ReceiptRecord(props);
   }

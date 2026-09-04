@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '@/domain/shared/DomainTypes';
 import { SampleOrderStatus, canTransition } from '@/domain/sample/value-objects/SampleOrderStatus';
 import {
@@ -89,7 +91,8 @@ export class SampleOrder {
   ) {}
 
   static create(props: SampleOrderProps): SampleOrder {
-    if (!props.orderNo) throw new DomainError('打样单编号不能为空');
+  const ts = t;
+    if (!props.orderNo) throw new DomainError(ts('k_yuuayv'));
 
     const order = new SampleOrder(
       props.id,

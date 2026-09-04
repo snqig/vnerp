@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
@@ -11,13 +13,14 @@ export async function createWorkOrderFromSalesOrder(
   salesOrderId: number
 ): Promise<WorkOrderResult> {
   return await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
     const [salesRows]: Loose = await conn.execute(
       `SELECT id, order_no, customer_id, total_amount FROM sal_order WHERE id = ? AND deleted = 0`,
       [salesOrderId]
     );
 
     if (!salesRows || salesRows.length === 0) {
-      throw new Error('销售订单不存在');
+      throw new Error(ts('k_1gccwsl'));
     }
 
     const _salesOrder = salesRows[0];
@@ -28,14 +31,14 @@ export async function createWorkOrderFromSalesOrder(
     );
 
     if (!orderItems || orderItems.length === 0) {
-      throw new Error('销售订单无物料明细，无法创建工单');
+      throw new Error(ts('k_aus6gs'));
     }
 
     const orderItem = orderItems[0];
     const productId = orderItem.material_id;
 
     if (!productId) {
-      throw new Error('销售订单缺少产品ID，无法查找BOM');
+      throw new Error(ts('k_171dlu4'));
     }
 
     const [bomRows]: Loose = await conn.execute(

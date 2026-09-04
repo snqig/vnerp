@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '@/domain/shared/DomainTypes';
 
 /** 打样反馈实体属性 — 与 sal_sample_feedback 表字段一一对齐 */
@@ -30,8 +32,9 @@ export class SampleFeedback {
 
   /** 创建新反馈 */
   static create(props: SampleFeedbackProps): SampleFeedback {
-    if (!props.sampleOrderId) throw new DomainError('所属打样单不能为空');
-    if (!props.round) throw new DomainError('反馈轮次不能为空');
+  const ts = t;
+    if (!props.sampleOrderId) throw new DomainError(ts('k_9g1blu'));
+    if (!props.round) throw new DomainError(ts('k_dzrdwr'));
 
     return new SampleFeedback(
       props.id,
@@ -84,16 +87,18 @@ export class SampleFeedback {
 
   /** 确认反馈 */
   approve(): void {
+  const ts = t;
     if (this._confirmationStatus !== 'pending') {
-      throw new DomainError('该反馈已经处理，不能重复确认');
+      throw new DomainError(ts('k_1op9afu'));
     }
     this._confirmationStatus = 'approved';
   }
 
   /** 拒绝 */
   reject(): void {
+  const ts = t;
     if (this._confirmationStatus !== 'pending') {
-      throw new DomainError('该反馈已经处理，不能重复拒绝');
+      throw new DomainError(ts('k_1ta5fs1'));
     }
     this._confirmationStatus = 'rejected';
   }

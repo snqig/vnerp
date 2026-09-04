@@ -43,6 +43,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useDebounce } from '@/hooks/use-debounce';
 import { SearchInput } from '@/components/ui/search-input';
 import { useCompanyName } from '@/hooks/useCompanyName';
+import { formatDate as sharedFormatDate } from '@/lib/date-utils';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 
 interface PurchaseRequest {
@@ -79,6 +80,7 @@ interface RequestItem {
 }
 
 export default function PurchaseRequestPage() {
+  const ts = useTranslations('Purchase');
   const t = useTranslations('Purchase');
   const tc = useTranslations('Common');
   const { companyName } = useCompanyName();
@@ -282,13 +284,13 @@ export default function PurchaseRequestPage() {
           </tr>`
                 )
                 .join('')
-            : '<tr><td colspan="8" style="color:#999;text-align:center;padding:6px;">暂无明细数据</td></tr>';
+            : ts('k_bhw2m9');
 
         return `
         <div class="order-block">
           <div class="order-header">
             <span class="order-no">${r.request_no}</span>
-            <span class="order-info">申请部门：${r.request_dept || '-'} | 申请人：${r.requester_name || '-'} | 申请日期：${formatDate(r.request_date)} | 优先级：${priorityMapCN[r.priority] || '中'} | 状态：${statusMapCN[r.status] || '未知'}</span>
+            <span class="order-info">申请部门：${r.request_dept || '-'} | 申请人：${r.requester_name || '-'} | 申请日期：${formatDate(r.request_date)} | 优先级：${priorityMapCN[r.priority] || ts('k_b7cu2g')} | 状态：${statusMapCN[r.status] || ts('k_1lpnuh4')}</span>
           </div>
           <table>
             <thead><tr><th>{tc("serialNo")}</th><th>物料编码</th><th>物料名称</th><th>规格型号</th><th>{tc("unit")}</th><th>{tc("quantity")}</th><th>单价</th><th>{tc("amount")}</th></tr></thead>
@@ -345,14 +347,14 @@ export default function PurchaseRequestPage() {
       return;
     }
     const headers = [
-      '申请单号',
-      '申请日期',
-      '申请部门',
-      '申请人',
-      '类型',
-      '优先级',
-      '金额',
-      '状态',
+      ts('k_1vi4xbv'),
+      ts('k_1i2qe7n'),
+      ts('k_1x9z28n'),
+      ts('k_3fdyof'),
+      ts('k_anh4cj'),
+      ts('k_f4scha'),
+      ts('k_1jl9r8z'),
+      ts('k_1ccx4t4'),
     ];
     const rows = recordsToExport.map((r) => [
       r.request_no,
@@ -360,9 +362,9 @@ export default function PurchaseRequestPage() {
       r.request_dept || '',
       r.requester_name || '',
       r.request_type || '',
-      priorityMapCN[r.priority] || '中',
+      priorityMapCN[r.priority] || ts('k_b7cu2g'),
       String(r.total_amount),
-      statusMapCN[r.status] || '未知',
+      statusMapCN[r.status] || ts('k_1lpnuh4'),
     ]);
     const BOM = '\uFEFF';
     const csvContent =
@@ -396,9 +398,9 @@ export default function PurchaseRequestPage() {
       <td>${r.request_dept || '-'}</td>
       <td>${r.requester_name || '-'}</td>
       <td>${r.request_type || '-'}</td>
-      <td>${priorityMapCN[r.priority] || '中'}</td>
+      <td>${priorityMapCN[r.priority] || ts('k_b7cu2g')}</td>
       <td>${formatAmount(r.total_amount, r.currency)}</td>
-      <td>${statusMapCN[r.status] || '未知'}</td>
+      <td>${statusMapCN[r.status] || ts('k_1lpnuh4')}</td>
     </tr>`
       )
       .join('');
@@ -436,12 +438,7 @@ export default function PurchaseRequestPage() {
     }).format(amount);
   };
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return '-';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
-  };
+  const formatDate = (dateStr: string) => sharedFormatDate(dateStr) || '-';
 
   return (
     <MainLayout>
@@ -474,8 +471,8 @@ export default function PurchaseRequestPage() {
                 {tc('print')}
               </Button>
               <GlobalExportToolbar
-                filename="采购申请"
-                title="采购申请列表"
+                filename={ts('k_fmaw3')}
+                title={ts('k_8102xo')}
                 columns={[
                   { key: 'request_no', label: t('requestNo'), width: 18 },
                   {

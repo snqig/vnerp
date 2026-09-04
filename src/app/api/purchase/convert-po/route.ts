@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -8,6 +11,7 @@ import {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { requestId, requestIds } = body;
 
@@ -17,11 +21,11 @@ export const POST = withPermission(
     }
 
     if (!requestId) {
-      return errorResponse('请提供requestId或requestIds', 400);
+      return errorResponse(ts('k_1lfi6ek'), 400);
     }
 
     const result = await convertRequestToPurchaseOrder(requestId);
-    return successResponse(result, '请购单转采购订单成功');
+    return successResponse(result, ts('k_1rw2ll0'));
   },
   { logTitle: '请购单转采购订单', logType: 'business' }
 );

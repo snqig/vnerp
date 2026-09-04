@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 /**
  * DrizzlePurchaseOrderRepository
  *
@@ -277,6 +280,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     const orderNo = await generateDocumentNo('purchase_order');
 
     const result = await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
       const [orderResult] = await conn.execute(
         `INSERT INTO pur_purchase_order
          (po_no, supplier_id, supplier_name, supplier_code, order_date, delivery_date,
@@ -321,7 +325,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
             line.materialCode,
             line.materialName,
             line.materialSpec || null,
-            line.unit || '件',
+            line.unit || ts('k_w0gthl'),
             line.orderQty,
             line.receivedQty || 0,
             line.returnedQty || 0,
@@ -481,7 +485,9 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
       createBy: order.createBy ?? undefined,
       auditBy: order.auditBy ?? undefined,
       auditTime: order.auditTime ? String(order.auditTime) : undefined,
-      lines: lines.map((line) => ({
+      lines: lines.map((line) => {
+  const ts = t;
+  return  ({
         id: line.id,
         orderId: line.poId,
         lineNo: line.lineNo,
@@ -489,7 +495,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
         materialCode: line.materialCode ?? '',
         materialName: line.materialName ?? '',
         materialSpec: line.materialSpec ?? '',
-        unit: line.unit ?? '件',
+        unit: line.unit ?? ts('k_w0gthl'),
         orderQty: Number(line.orderQty ?? 0),
         receivedQty: Number(line.receivedQty ?? 0),
         returnedQty: Number(line.returnedQty ?? 0),
@@ -500,7 +506,8 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
         lineTotal: Number(line.lineTotal ?? 0),
         requireDate: line.requireDate ? String(line.requireDate) : undefined,
         remark: line.remark ?? undefined,
-      })),
+      });
+}),
       createTime: order.createTime ? String(order.createTime) : undefined,
       updateTime: order.updateTime ? String(order.updateTime) : undefined,
     };

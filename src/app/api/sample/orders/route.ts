@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import {
   successResponse,
@@ -75,6 +78,7 @@ function camelPropsToSnake(props: SampleOrderProps): unknown {
 }
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const traceId = generateTraceId();
   const ctx = { module: 'sample', action: 'GET_orders', traceId };
   const { searchParams } = new URL(request.url);
@@ -87,7 +91,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
-  logger.info(ctx, '查询打样单列表', {
+  logger.info(ctx, ts('k_1ok6dbc'), {
     keyword,
     customerName,
     status,
@@ -107,7 +111,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     pageSize
   );
 
-  logger.info(ctx, '查询结果', { total: result.total, page, pageSize });
+  logger.info(ctx, ts('k_km7o3t'), { total: result.total, page, pageSize });
 
   const totalPages = Math.ceil(result.total / pageSize);
   return paginatedResponse(
@@ -118,11 +122,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'POST_orders', traceId };
     const body = await request.json();
 
-    logger.info(ctx, '创建打样单请求', {
+    logger.info(ctx, ts('k_1mau0l0'), {
       snakeCaseFields: Object.keys(body),
       customerName: body.customer_name,
       materialNo: body.material_no,
@@ -136,7 +141,7 @@ export const POST = withPermission(
     ]);
 
     if (!validation.valid) {
-      logger.warn(ctx, '创建打样单校验失败', { missing: validation.missing });
+      logger.warn(ctx, ts('k_3glcai'), { missing: validation.missing });
       return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
     }
 
@@ -144,50 +149,52 @@ export const POST = withPermission(
     if (props.quantity !== undefined) {
       props.quantity = Number(props.quantity) || 0;
     }
-    logger.info(ctx, 'snake_case→camelCase转换完成', { camelCaseFields: Object.keys(props) });
+    logger.info(ctx, ts('k_8m3r86'), { camelCaseFields: Object.keys(props) });
     const result = await service.createOrder(props);
-    logger.info(ctx, '创建打样单成功', { id: result.id, orderNo: result.orderNo });
-    return successResponse({ id: result.id, order_no: result.orderNo }, '打样订单创建成功');
+    logger.info(ctx, ts('k_a1lazc'), { id: result.id, orderNo: result.orderNo });
+    return successResponse({ id: result.id, order_no: result.orderNo }, ts('k_sw0qfy'));
   },
   { logTitle: '创建打样订单' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'sample', action: 'PUT_orders', traceId };
     const body = await request.json();
     const { id, ...rest } = body;
 
     if (!id) {
-      return errorResponse('打样订单ID不能为空', 400, 400);
+      return errorResponse(ts('k_qcdlp'), 400, 400);
     }
 
-    logger.info(ctx, '更新打样单请求', { id, snakeCaseFields: Object.keys(rest) });
+    logger.info(ctx, ts('k_1luhywv'), { id, snakeCaseFields: Object.keys(rest) });
 
     const props = snakeBodyToCamelProps(rest);
     if (props.quantity !== undefined) {
       props.quantity = Number(props.quantity) || 0;
     }
-    logger.info(ctx, 'snake_case→camelCase转换完成', { id, camelCaseFields: Object.keys(props) });
+    logger.info(ctx, ts('k_8m3r86'), { id, camelCaseFields: Object.keys(props) });
     await service.updateOrder(Number(id), props);
-    logger.info(ctx, '更新打样单成功', { id });
-    return successResponse({ id }, '打样订单更新成功');
+    logger.info(ctx, ts('k_1qsbv43'), { id });
+    return successResponse({ id }, ts('k_1clhq7v'));
   },
   { logTitle: '更新打样订单' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('打样订单ID不能为空', 400, 400);
+      return errorResponse(ts('k_qcdlp'), 400, 400);
     }
 
     await service.deleteOrder(parseInt(id));
-    return successResponse(null, '打样订单删除成功');
+    return successResponse(null, ts('k_h84zd7'));
   },
   { logTitle: '删除打样订单' }
 );

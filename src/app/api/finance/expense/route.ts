@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -48,6 +51,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
 // 创建报销单
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, ['expense_type', 'amount', 'expense_date']);
 
@@ -103,7 +107,7 @@ export const POST = withPermission(
       }
     }
 
-    return successResponse({ id: expenseId, expense_no: expenseNo }, '报销单创建成功');
+    return successResponse({ id: expenseId, expense_no: expenseNo }, ts('k_14lk24b'));
   },
   { errorMessage: '操作失败' }
 );
@@ -111,17 +115,18 @@ export const POST = withPermission(
 // 审核报销单
 export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action } = body;
 
-    if (!id) return errorResponse('报销单ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_1uqxc64'), 400, 400);
 
     if (action === 'approve') {
       await execute(
         `UPDATE finance_expense SET status = 'approved', approve_by = ?, approve_time = NOW(), update_time = NOW() WHERE id = ? AND status = 'pending'`,
         [userInfo.userId, id]
       );
-      return successResponse(null, '报销单已审核');
+      return successResponse(null, ts('k_2oa0am'));
     }
 
     if (action === 'reject') {
@@ -130,10 +135,10 @@ export const PUT = withPermission(
         `UPDATE finance_expense SET status = 'rejected', approve_by = ?, approve_time = NOW(), reject_reason = ?, update_time = NOW() WHERE id = ? AND status = 'pending'`,
         [userInfo.userId, reject_reason || '', id]
       );
-      return successResponse(null, '报销单已驳回');
+      return successResponse(null, ts('k_1lfncna'));
     }
 
-    return errorResponse('无效的操作类型', 400, 400);
+    return errorResponse(ts('k_4ty90w'), 400, 400);
   },
   { errorMessage: '操作失败' }
 );

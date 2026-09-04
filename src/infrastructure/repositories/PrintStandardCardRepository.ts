@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 /**
  * PrintStandardCardRepository
  * --------------------------------------------------------------------------
@@ -47,6 +49,7 @@ export class PrintStandardCardRepository {
    *   - name 在 print 表恒为 NULL（print 表单用 product_name），构造实体时回退避免校验报错。
    */
   async findById(id: number): Promise<StandardCard | null> {
+  const ts = await getTranslations('Common');
     const rows = await db.query(
       `SELECT id, card_no, name, type, customer_id, customer_name, product_name, version, status, create_by, update_by
        FROM prd_standard_card WHERE id = ? AND deleted = 0`,
@@ -60,7 +63,7 @@ export class PrintStandardCardRepository {
       code: row.card_no,
       version: row.version || '1.0',
       // print 表 name 恒为空，回退保证领域实体可构造
-      name: row.name || row.product_name || row.card_no || '标准卡',
+      name: row.name || row.product_name || row.card_no || ts('k_19s2wpf'),
       type: (row.type || 'process') as StandardCardType,
       materialId: undefined,
       customerId: row.customer_id ?? undefined,

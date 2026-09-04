@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
@@ -21,11 +24,12 @@ function generateUniqueFilename(originalName: string): string {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
     if (!file) {
-      return commonErrors.badRequest('未找到上传的文件');
+      return commonErrors.badRequest(ts('k_j0pe42'));
     }
 
     const extension = file.name.split('.').pop()?.toLowerCase() || '';
@@ -68,7 +72,7 @@ export const POST = withPermission(
         size: file.size,
         type: file.type,
       },
-      '上传成功'
+      ts('k_wip5q')
     );
   },
   { logTitle: '上传营业执照' }

@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import GlassGauge from '@/components/GlassGauge';
+import VerticalMarquee from '@/components/ui/VerticalMarquee';
 import { ChartImage, ChartPlaceholder } from '@/components/WarehouseCharts';
 import {
   Package,
@@ -59,57 +60,27 @@ interface WarehouseData {
   }[];
 }
 
+/**
+ * 纵向无缝无限循环滚动（垂直跑马灯）
+ * 已统一为共享组件 `VerticalMarquee`（src/components/ui/VerticalMarquee.tsx），
+ * 此处保留同名包装以便页面内多处调用最小化改动。
+ *
+ * 相比旧实现修复：悬停用 animationPlayState 暂停（不再重建动画导致跳回顶部）、
+ * 用 CSS transform（GPU 合成）替代逐帧 scrollTop 重排、内容不足一屏自动停滚只渲染一份。
+ */
 function AutoScroll({
   children,
   maxHeight = 320,
+  speed = 30,
 }: {
   children: React.ReactNode;
   maxHeight?: number;
+  speed?: number;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const innerRef = useRef<HTMLDivElement>(null);
-  const [isPaused, setIsPaused] = useState(false);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    const inner = innerRef.current;
-    if (!container || !inner) return;
-
-    let animId: number;
-    let scrollPos = 0;
-    const contentHeight = inner.scrollHeight / 2;
-    const viewportHeight = maxHeight;
-
-    if (contentHeight <= viewportHeight) return;
-
-    const step = () => {
-      if (!isPaused) {
-        scrollPos += 0.3;
-        if (scrollPos >= contentHeight) {
-          scrollPos = 0;
-        }
-        container.scrollTop = scrollPos;
-      }
-      animId = requestAnimationFrame(step);
-    };
-
-    animId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(animId);
-  }, [isPaused, maxHeight, children]);
-
   return (
-    <div
-      ref={containerRef}
-      className="overflow-hidden"
-      style={{ maxHeight: `${maxHeight}px` }}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
-      <div ref={innerRef}>
-        {children}
-        {children}
-      </div>
-    </div>
+    <VerticalMarquee maxHeight={maxHeight} speed={speed}>
+      {children}
+    </VerticalMarquee>
   );
 }
 
@@ -128,6 +99,7 @@ const COLORS = [
 
 export default function WarehouseDashboard() {
   // 翻译钩子
+  const ts = useTranslations('Dashboard');
   const t = useTranslations('Dashboard');
   const tc = useTranslations('Common');
   const locale = useLocale();
@@ -161,7 +133,7 @@ export default function WarehouseDashboard() {
         const result = await res.json();
         if (result.success && result.data) setData(result.data);
       } catch (err) {
-        console.error('[dashboard/warehouse] 仓库看板数据加载失败:', err);
+        console.error(ts('k_1imwg1m'), err);
       } finally {
         setLoading(false);
       }
@@ -385,7 +357,7 @@ export default function WarehouseDashboard() {
                       tickLine={{ stroke: 'rgba(255,255,255,0.1)' }}
                     />
                     <Tooltip
-                      formatter={(value: number) => [`${value.toFixed(1)}%`, '利用率']}
+                      formatter={(value: number) => [`${value.toFixed(1)}%`, ts('k_1vl41vd')]}
                       contentStyle={{
                         backgroundColor: 'rgba(15,23,42,0.95)',
                         borderColor: 'rgba(6,182,212,0.3)',
@@ -542,7 +514,7 @@ export default function WarehouseDashboard() {
                           </span>
                           <div className="flex-1 bg-white/10 rounded-full h-5 relative overflow-hidden">
                             <div
-                              className="h-full rounded-full transition-all duration-500"
+                              className="h-full rounded-full transition-[width] duration-500"
                               style={{
                                 width: `${(c.count / maxCount) * 100}%`,
                                 background: 'linear-gradient(90deg, #06b6d4, #3b82f6)',
@@ -611,67 +583,44 @@ export default function WarehouseDashboard() {
             {data.recentTransactions.length === 0 ? (
               <p className="text-white/40 text-center py-8">{tc('noRecords')}</p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
-                        {tc('inspectionType')}
-                      </th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
-                        {tc('materialCode')}
-                      </th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
-                        {tc('materialName')}
-                      </th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
-                        {tc('planQty')}
-                      </th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
-                        {tc('time')}
-                      </th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
-                        {tc('remark')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.recentTransactions.slice(0, 10).map((t, i) => (
-                      <tr
-                        key={i}
-                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                      >
-                        <td className="py-2 px-3">
-                          <span
-                            className={`px-2 py-0.5 rounded text-xs ${
-                              t.transaction_type === 'inbound'
-                                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                            }`}
-                          >
-                            {t.transaction_type === 'inbound'
-                              ? tc('inbound')
-                              : t.transaction_type === 'outbound'
-                                ? tc('outbound')
-                                : t.transaction_type}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 font-mono text-cyan-300 text-xs">
-                          {t.material_code}
-                        </td>
-                        <td className="py-2 px-3 text-white/80 text-xs">{t.material_name}</td>
-                        <td className="py-2 px-3 text-white/60 text-xs font-medium">
+              <VerticalMarquee maxHeight={320} speed={28}>
+                <div className="space-y-2">
+                  {data.recentTransactions.slice(0, 12).map((t, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10"
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs shrink-0 ${
+                            t.transaction_type === 'inbound'
+                              ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                              : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                          }`}
+                        >
+                          {t.transaction_type === 'inbound'
+                            ? tc('inbound')
+                            : t.transaction_type === 'outbound'
+                              ? tc('outbound')
+                              : t.transaction_type}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-xs text-white/80 truncate">{t.material_name}</p>
+                          <p className="text-[10px] text-white/40 font-mono truncate">
+                            {t.material_code}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-xs text-white/70 font-medium">
                           {Number(t.quantity).toLocaleString()} {t.unit}
-                        </td>
-                        <td className="py-2 px-3 text-white/50 text-xs">
-                          {t.create_time?.substring(5, 16)}
-                        </td>
-                        <td className="py-2 px-3 text-white/40 text-xs">{t.remark || '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </p>
+                        <p className="text-[10px] text-white/40">{t.create_time?.substring(5, 16)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </VerticalMarquee>
             )}
           </div>
         </div>

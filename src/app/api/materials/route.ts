@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -42,6 +45,7 @@ interface MaterialRow {
 }
 
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const pageSize = parseInt(searchParams.get('pageSize') || '100');
   const page = parseInt(searchParams.get('page') || '1');
@@ -60,7 +64,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     const resolved = await resolveCategoryByCode('material', categoryCode);
     if (!resolved.ok) {
       // 关键：不静默降级为"无筛选"，直接把原因告诉调用方
-      return errorResponse(resolved.message || '物料分类编码无效', 400, 400);
+      return errorResponse(resolved.message || ts('k_1h1qyep'), 400, 400);
     }
     resolvedCategory = {
       id: resolved.categoryId!,
@@ -73,7 +77,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   } else if (categoryIdParam) {
     const cid = Number(categoryIdParam);
     if (!Number.isInteger(cid) || cid <= 0) {
-      return errorResponse('物料分类ID非法', 400, 400);
+      return errorResponse(ts('k_df4r98'), 400, 400);
     }
     const ids = await getCategoryIdWithDescendants('material', cid);
     where.push(`m.category_id IN (${ids.map(() => '?').join(',')})`);
@@ -132,7 +136,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     categoryHint:
       uncategorizedInPage > 0
         ? `当前结果中有 ${uncategorizedInPage} 个物料未设置物料分类${
-            categoryRequired ? '，无法用于业务单据' : '，建议先归类'
+            categoryRequired ? ts('k_18n5pr4') : ts('k_dcu5ky')
           }`
         : null,
     rules: {

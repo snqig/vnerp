@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -40,7 +43,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const offset = (page - 1) * pageSize;
   const rows = await query(
     `SELECT bi.*, w.warehouse_name, m.is_splittable
-     FROM inv_batch_inventory bi
+     FROM inv_inventory_batch bi
      LEFT JOIN inv_warehouse w ON bi.warehouse_id = w.id
      LEFT JOIN inv_material m ON bi.material_id = m.id
      ${whereClause}
@@ -50,7 +53,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   );
 
   const countRows = await query(
-    `SELECT COUNT(*) as total FROM inv_batch_inventory bi ${whereClause}`,
+    `SELECT COUNT(*) as total FROM inv_inventory_batch bi ${whereClause}`,
     params
   );
 
@@ -64,11 +67,12 @@ export const GET = withPermission(async (request: NextRequest) => {
 
 // 获取可用批次列表（用于出库时选择）
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { material_id, warehouse_id, required_qty } = body;
 
   if (!material_id) {
-    return errorResponse('物料ID不能为空', 400, 400);
+    return errorResponse(ts('k_1f11b1g'), 400, 400);
   }
 
   let whereClause = 'WHERE bi.material_id = ? AND bi.available_quantity > 0 AND bi.status = 1';
@@ -82,7 +86,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   // 按入库日期升序（先进先出）
   const rows = await query(
     `SELECT bi.*, w.warehouse_name 
-     FROM inv_batch_inventory bi
+     FROM inv_inventory_batch bi
      LEFT JOIN inv_warehouse w ON bi.warehouse_id = w.id
      ${whereClause}
      ORDER BY bi.inbound_date ASC, bi.batch_no ASC`,
@@ -122,18 +126,18 @@ export const POST = withPermission(async (request: NextRequest) => {
 
 // 入库操作（新增批次库存）
 export const PUT = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { inbound_no, warehouse_id, inbound_date, items, remark } = body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
-    return errorResponse('入库明细不能为空', 400, 400);
+    return errorResponse(ts('k_1oa14sj'), 400, 400);
   }
 
   return await transaction(async (conn) => {
     // 1. 创建入库单
     const [orderResult] = await conn.execute(
-      `INSERT INTO inv_production_inbound (inbound_no, warehouse_id, inbound_date, qc_status, status, operator_name, remark) 
-       VALUES (?, ?, ?, 1, 2, '系统', ?)`,
+      ts('k_1weiu17'),
       [
         inbound_no || `IN${Date.now()}`,
         warehouse_id,
@@ -181,7 +185,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
       // 2b. 检查批次库存是否已存在
       const [existing] = await conn.execute(
-        `SELECT id, inbound_quantity, available_quantity FROM inv_batch_inventory 
+        `SELECT id, inbound_quantity, available_quantity FROM inv_inventory_batch 
          WHERE batch_no = ? AND material_id = ? AND warehouse_id = ?`,
         [finalBatchNo, material_id, warehouse_id]
       );
@@ -189,7 +193,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
       if (existing.length > 0) {
         // 更新已有批次
         await conn.execute(
-          `UPDATE inv_batch_inventory 
+          `UPDATE inv_inventory_batch 
            SET inbound_quantity = inbound_quantity + ?, 
                available_quantity = available_quantity + ?,
                status = 1
@@ -199,7 +203,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
       } else {
         // 创建新批次
         await conn.execute(
-          `INSERT INTO inv_batch_inventory (batch_no, material_id, material_code, material_name, specification, unit, warehouse_id, inbound_no, inbound_date, inbound_quantity, outbound_quantity, available_quantity, supplier_id, supplier_name, qc_status, status) 
+          `INSERT INTO inv_inventory_batch (batch_no, material_id, material_code, material_name, specification, unit, warehouse_id, inbound_no, inbound_date, inbound_quantity, outbound_quantity, available_quantity, supplier_id, supplier_name, qc_status, status) 
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, 1, 1)`,
           [
             finalBatchNo,
@@ -231,18 +235,19 @@ export const PUT = withPermission(async (request: NextRequest) => {
       );
     }
 
-    return successResponse({ inbound_id: inboundId, inbound_no }, '入库成功，批次库存已更新');
+    return successResponse({ inbound_id: inboundId, inbound_no }, ts('k_ou6xdd'));
   });
 });
 
 // 出库操作（扣减批次库存）
 export const PATCH = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { outbound_no, customer_id, customer_name, warehouse_id, outbound_date, items, remark } =
     body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
-    return errorResponse('出库明细不能为空', 400, 400);
+    return errorResponse(ts('k_15xvt0o'), 400, 400);
   }
 
   return await transaction(async (conn) => {
@@ -280,7 +285,7 @@ export const PATCH = withPermission(async (request: NextRequest) => {
       // 如果没有指定批次，自动按先进先出分配
       if (!targetBatchId) {
         const [availableBatches] = await conn.execute(
-          `SELECT id, batch_no, available_quantity FROM inv_batch_inventory 
+          `SELECT id, batch_no, available_quantity FROM inv_inventory_batch 
            WHERE material_id = ? AND warehouse_id = ? AND available_quantity > 0 AND status = 1
            ORDER BY inbound_date ASC, batch_no ASC`,
           [material_id, warehouse_id]
@@ -309,12 +314,12 @@ export const PATCH = withPermission(async (request: NextRequest) => {
       // 3. 校验批次库存
       const [batch] = await conn.execute(
         `SELECT id, batch_no, material_code, material_name, available_quantity, unit 
-         FROM inv_batch_inventory WHERE id = ? FOR UPDATE`,
+         FROM inv_inventory_batch WHERE id = ? FOR UPDATE`,
         [targetBatchId]
       );
 
       if (batch.length === 0) {
-        return errorResponse(`批次库存不存在`, 400, 400);
+        return errorResponse(ts('k_t62g5v'), 400, 400);
       }
 
       const availableQty = parseFloat(batch[0].available_quantity);
@@ -328,7 +333,7 @@ export const PATCH = withPermission(async (request: NextRequest) => {
 
       // 4. 扣减批次库存
       await conn.execute(
-        `UPDATE inv_batch_inventory 
+        `UPDATE inv_inventory_batch 
          SET outbound_quantity = outbound_quantity + ?, 
              available_quantity = available_quantity - ?,
              status = CASE WHEN (available_quantity - ?) <= 0 THEN 2 ELSE status END
@@ -364,6 +369,6 @@ export const PATCH = withPermission(async (request: NextRequest) => {
       );
     }
 
-    return successResponse({ outbound_id: outboundId, outbound_no }, '出库成功，批次库存已扣减');
+    return successResponse({ outbound_id: outboundId, outbound_no }, ts('k_v73xng'));
   });
 });

@@ -1,9 +1,33 @@
 /**
  * 前端统一错误处理工具
  * 将后端错误信息转换为用户友好的提示
+ *
+ * i18n 主链路：IntlProvider 在挂载时通过 setErrorTranslator 注入译员，
+ * 错误码（errorCode / code / HTTP_<status>）优先走 i18n 译员；
+ * 译员返回 null（如 en/vi/zh-TW 命名空间缺 key）时回退到本文件的本地映射。
  */
 
-// 错误码到友好消息的映射
+// 模块级译员，由 IntlProvider 注入
+let errorTranslator: ((code: string) => string | null) | null = null;
+
+/**
+ * 注入 i18n 译员，打通「错误码 → i18n 消息」主链路。
+ * 传入函数应：命中时返回翻译后的消息，未命中返回 null。
+ */
+export function setErrorTranslator(fn: (code: string) => string | null): void {
+  errorTranslator = fn;
+}
+
+function translateError(code: string): string | null {
+  if (!errorTranslator) return null;
+  try {
+    return errorTranslator(code) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// 错误码到友好消息的映射（译员缺失时的兜底）
 const ERROR_MESSAGES: Record<string, string> = {
   // 认证相关
   UNAUTHORIZED: '登录已过期，请重新登录',
@@ -42,7 +66,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   SERVICE_UNAVAILABLE: '服务暂时不可用，请稍后重试',
 };
 
-// HTTP状态码到友好消息的映射
+// HTTP状态码到友好消息的映射（译员缺失时的兜底）
 const HTTP_ERROR_MESSAGES: Record<number, string> = {
   400: '请求参数错误，请检查输入',
   401: '登录已过期，请重新登录',
@@ -58,6 +82,7 @@ const HTTP_ERROR_MESSAGES: Record<number, string> = {
 
 export interface AppErrorInfo {
   code?: string;
+  errorCode?: string;
   message?: string;
   status?: number;
   details?: unknown;
@@ -72,26 +97,35 @@ export function getErrorMessage(error: unknown): string {
     return '网络连接失败，请检查网络设置';
   }
 
-  // Response对象
+  // Response对象：优先按 HTTP_<status> 走 i18n 译员
   if (error instanceof Response) {
-    return HTTP_ERROR_MESSAGES[error.status] || `请求失败 (${error.status})`;
+    return (
+      translateError(`HTTP_${error.status}`) ||
+      HTTP_ERROR_MESSAGES[error.status] ||
+      `请求失败 (${error.status})`
+    );
   }
 
   // 自定义错误对象
   if (error && typeof error === 'object') {
     const err = error as AppErrorInfo;
 
-    // 优先使用错误码映射
+    // 1) i18n 译员优先（errorCode / code / HTTP_xxx）
+    const code = err.errorCode ?? err.code;
+    if (code) {
+      const translated = translateError(code);
+      if (translated) return translated;
+    }
+
+    // 2) 本地映射（译员缺 key 时回退，兼容 en/vi/zh-TW）
     if (err.code && ERROR_MESSAGES[err.code]) {
       return ERROR_MESSAGES[err.code];
     }
-
-    // HTTP状态码映射
     if (err.status && HTTP_ERROR_MESSAGES[err.status]) {
       return HTTP_ERROR_MESSAGES[err.status];
     }
 
-    // 直接使用错误消息（但过滤掉技术性信息）
+    // 3) 直接使用错误消息（但过滤掉技术性信息）
     if (err.message) {
       // 过滤掉SQL错误、堆栈信息等技术性内容
       if (err.message.includes('SQL') || err.message.includes('ER_')) {
@@ -139,6 +173,7 @@ export async function handleApiResponse<T = unknown>(
 
     const message = getErrorMessage({
       code: result.code,
+      errorCode: result.errorCode,
       message: result.message,
       status: response.status,
     });

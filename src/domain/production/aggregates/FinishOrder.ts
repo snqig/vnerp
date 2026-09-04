@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import {
   FinishOrderCreatedEvent,
@@ -39,10 +41,11 @@ export class FinishOrder {
   }
 
   static create(props: FinishOrderProps): FinishOrder {
-    if (!props.finishNo) throw new DomainError('完工单号不能为空');
-    if (!props.workOrderId) throw new DomainError('关联工单不能为空');
-    if (!props.warehouseId) throw new DomainError('入库仓库不能为空');
-    if (props.qualifiedQty <= 0) throw new DomainError('合格数量必须大于0');
+  const ts = t;
+    if (!props.finishNo) throw new DomainError(ts('k_kbfvmw'));
+    if (!props.workOrderId) throw new DomainError(ts('k_1emjamq'));
+    if (!props.warehouseId) throw new DomainError(ts('k_1wa8aih'));
+    if (props.qualifiedQty <= 0) throw new DomainError(ts('k_e6ila3'));
 
     const order = new FinishOrder(
       props.id,
@@ -87,7 +90,8 @@ export class FinishOrder {
   }
 
   approve(userId: number, workOrderNo: string, productName: string): void {
-    if (this._status !== 'draft') throw new DomainError('只有草稿状态的完工单才能审核');
+  const ts = t;
+    if (this._status !== 'draft') throw new DomainError(ts('k_107utp0'));
     this._status = 'approved';
     this._domainEvents.push(
       new FinishOrderApprovedEvent({
@@ -105,8 +109,9 @@ export class FinishOrder {
   }
 
   cancel(reason: string, userId: number): void {
+  const ts = t;
     if (this._status !== 'draft' && this._status !== 'approved') {
-      throw new DomainError('当前状态不允许作废');
+      throw new DomainError(ts('k_1atqguz'));
     }
     this._status = 'cancelled';
     this._domainEvents.push(

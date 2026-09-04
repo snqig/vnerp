@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryOne, transaction } from '@/lib/db';
 import {
@@ -56,6 +59,8 @@ function validateEmail(email: string): boolean {
 // POST - 用户注册
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     // 限流：每 IP 15 分钟最多 5 次注册，防批量注册
     const clientIP = getClientIP(request);
     const rateResult = await checkRateLimit(clientIP, {
@@ -89,17 +94,17 @@ export const POST = withPermission(
 
     // 验证用户名格式
     if (!validateUsername(username)) {
-      return errorResponse('用户名只能包含字母、数字和下划线，长度4-20位', 400, 400);
+      return errorResponse(ts('k_15dtqad'), 400, 400);
     }
 
     // 验证密码强度
     if (!validatePassword(password)) {
-      return errorResponse('密码长度不能少于6位', 400, 400);
+      return errorResponse(tc('passwordTooShort'), 400, 400);
     }
 
     // 验证邮箱格式
     if (email && !validateEmail(email)) {
-      return errorResponse('邮箱格式不正确', 400, 400);
+      return errorResponse(ts('k_1u3yg0h'), 400, 400);
     }
 
     // 检查用户名是否已存在
@@ -109,7 +114,7 @@ export const POST = withPermission(
     );
 
     if (existingUser) {
-      return errorResponse('用户名已存在', 409, 409);
+      return errorResponse(ts('k_1tff7b'), 409, 409);
     }
 
     // 检查邮箱是否已存在
@@ -119,21 +124,21 @@ export const POST = withPermission(
         [email]
       );
       if (existingEmail) {
-        return errorResponse('邮箱已被注册', 409, 409);
+        return errorResponse(ts('k_qg0osj'), 409, 409);
       }
     }
 
     // 检查手机号是否已存在
     if (phone) {
       if (!/^1[3-9]\d{9}$/.test(phone)) {
-        return errorResponse('手机号格式不正确', 400, 400);
+        return errorResponse(ts('k_ya5aay'), 400, 400);
       }
       const existingPhone = await queryOne<{ id: number }>(
         'SELECT id FROM sys_user WHERE phone = ? AND deleted = 0',
         [phone]
       );
       if (existingPhone) {
-        return errorResponse('手机号已被注册', 409, 409);
+        return errorResponse(ts('k_1jgybse'), 409, 409);
       }
     }
 
@@ -143,7 +148,7 @@ export const POST = withPermission(
         [department_id]
       );
       if (!deptExists) {
-        return errorResponse('指定的部门不存在', 400, 400);
+        return errorResponse(ts('k_49h1e7'), 400, 400);
       }
     }
 
@@ -156,10 +161,10 @@ export const POST = withPermission(
         [role_id]
       );
       if (!roleRow) {
-        return errorResponse('指定的角色不存在', 400, 400);
+        return errorResponse(ts('k_8vvcb'), 400, 400);
       }
       if (!ALLOWED_SELF_REGISTER_ROLES.includes(roleRow.role_code)) {
-        return errorResponse('无权限注册为该角色，请联系管理员在用户管理中分配', 403, 403);
+        return errorResponse(ts('k_vfn6y6'), 403, 403);
       }
       resolvedRoleId = roleRow.id;
     }
@@ -207,14 +212,14 @@ export const POST = withPermission(
       }
 
       if (!roleBound) {
-        throw new Error('无法绑定角色，请确认系统已配置默认角色（operator）');
+        throw new Error(ts('k_tmgvye'));
       }
 
       return newUserId;
     });
 
     await logOperation({
-      title: '用户注册',
+      title: ts('k_1q4vn5o'),
       oper_name: username,
       oper_type: 'auth',
       oper_method: 'POST',
@@ -229,7 +234,7 @@ export const POST = withPermission(
       status: 1,
     });
 
-    return successResponse({ userId }, '注册成功');
+    return successResponse({ userId }, ts('k_1wcuqz8'));
   },
   { errorMessage: '注册失败' }
 );

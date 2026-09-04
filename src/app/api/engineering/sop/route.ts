@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -32,6 +35,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       product_id,
@@ -49,7 +53,7 @@ export const POST = withPermission(
       remark,
     } = body;
 
-    if (!product_name) return errorResponse('产品名称不能为空', 400, 400);
+    if (!product_name) return errorResponse(ts('k_1bhfx0a'), 400, 400);
 
     const now = new Date();
     const sopNo =
@@ -81,16 +85,17 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId, sop_no: sopNo }, 'SOP创建成功');
+    return successResponse({ id: result.insertId, sop_no: sopNo }, ts('k_8fy9od'));
   },
   { logTitle: '创建SOP', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...fields } = body;
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     const updateFields: string[] = [];
     const updateValues: SqlValue[] = [];
@@ -121,18 +126,19 @@ export const PUT = withPermission(
         id,
       ]);
     }
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新SOP', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
     await execute('UPDATE eng_sop SET deleted = 1 WHERE id = ?', [id]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除SOP', logType: 'business' }
 );

@@ -45,6 +45,7 @@ const mockShifts = [
 ];
 
 export default function SchedulesPage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
 
@@ -89,7 +90,7 @@ export default function SchedulesPage() {
 
   const handleSave = async () => {
     if (!form.employeeId || !form.shiftId || !form.startDate || !form.endDate) {
-      toast.error(t('fillRequired') || '请填写完整信息');
+      toast.error(t('fillRequired') || ts('k_p6jf36'));
       return;
     }
     try {
@@ -99,14 +100,14 @@ export default function SchedulesPage() {
       });
       const json = await res.json();
       if (json.code === 200) {
-        toast.success(t('createSuccess') || '创建成功');
+        toast.success(t('createSuccess') || ts('k_kiombh'));
         setDialogOpen(false);
         fetchSchedules();
       } else {
         toast.error(json.message || tc('error'));
       }
     } catch {
-      toast.error(t('saveFailed') || '保存失败');
+      toast.error(t('saveFailed') || ts('k_1q9u8le'));
     }
   };
 

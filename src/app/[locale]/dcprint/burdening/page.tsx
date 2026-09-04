@@ -34,6 +34,7 @@ interface ProcessCard {
 }
 
 export default function BurdeningPage() {
+  const ts = useTranslations('Dcprint');
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
   const [cards, setCards] = useState<ProcessCard[]>([]);
@@ -91,11 +92,11 @@ export default function BurdeningPage() {
           const card = cards.find((c) => c.cardNo === data.cardNo || c.id === data.id);
           if (card) {
             selectCard(card);
-            setSuccess(t('cardSelected') || '已选择流程卡');
-          } else setError(t('cardNotFound') || '流程卡未找到');
+            setSuccess(t('cardSelected') || ts('k_9q8vou'));
+          } else setError(t('cardNotFound') || ts('k_1ra6q7w'));
         } else if (type === '0' || type === '1' || type === '2') {
-          if (!selectedCard) setError(t('pleaseSelectCardFirst') || '请先选择流程卡');
-          else if (selectedCard.lockStatus) setError(t('cardLockedCannotAdd') || '流程卡已锁定');
+          if (!selectedCard) setError(t('pleaseSelectCardFirst') || ts('k_4d4iob'));
+          else if (selectedCard.lockStatus) setError(t('cardLockedCannotAdd') || ts('k_1aqepup'));
           else if (materials.find((m) => m.labelNo === data.labelNo))
             setError(t('auxiliaryAlreadyAdded'));
           else {
@@ -118,7 +119,7 @@ export default function BurdeningPage() {
               setSuccess(t('auxiliaryAdded'));
             } else setError(r2j.message || t('addMaterialFailed'));
           }
-        } else setError(t('scanInvalidType') || '请扫描流程卡或物料标签');
+        } else setError(t('scanInvalidType') || ts('k_10gms6s'));
       } else setError(result.message || tc('scanFailed'));
     } catch {
       setError(t('scanQueryFailed'));
@@ -148,7 +149,7 @@ export default function BurdeningPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: selectedCard.id, action: 'lock', lockStatus: 'locked' }),
         });
-        setSuccess(t('burdeningCompleted') || '配料完成');
+        setSuccess(t('burdeningCompleted') || ts('k_laocx3'));
         setSelectedCard(null);
         setMaterials([]);
         fetchPendingCards();

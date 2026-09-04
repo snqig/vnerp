@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 
 export default function NewSampleOrderPage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('SampleOrders');
   const tc = useTranslations('Common');
   const { toast } = useToast();
@@ -42,11 +43,11 @@ export default function NewSampleOrderPage() {
 
   const handleSave = async () => {
     if (!formData.customer_name) {
-      toast({ title: tc('customer') + tc('required') || '请输入客户名称', variant: 'destructive' });
+      toast({ title: tc('customer') + tc('required') || ts('k_fu88no'), variant: 'destructive' });
       return;
     }
     if (!formData.notify_date) {
-      toast({ title: t('notifyDate') + '必填' || '请选择通知日期', variant: 'destructive' });
+      toast({ title: t('notifyDate') + ts('k_166c1v5') || ts('k_1n6ctm5'), variant: 'destructive' });
       return;
     }
 
@@ -93,14 +94,14 @@ export default function NewSampleOrderPage() {
           </div>
           <Button onClick={handleSave} disabled={isSaving}>
             <Save className="h-4 w-4 mr-2" />
-            {isSaving ? tc('saving') || '保存中...' : tc('save')}
+            {isSaving ? tc('saving') || ts('k_rr6ulf') : tc('save')}
           </Button>
         </div>
 
         <div className="grid grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{t('basicInfo') || '基本信息'}</CardTitle>
+              <CardTitle className="text-base">{t('basicInfo') || ts('k_z5lkkb')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -167,7 +168,7 @@ export default function NewSampleOrderPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{t('specInfo') || '规格信息'}</CardTitle>
+              <CardTitle className="text-base">{t('specInfo') || ts('k_8wqf4x')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -187,9 +188,9 @@ export default function NewSampleOrderPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('specification') || '规格型号'}</Label>
+                <Label>{t('specification') || ts('k_17faar3')}</Label>
                 <Input
-                  placeholder={t('specification') || '规格型号'}
+                  placeholder={t('specification') || ts('k_17faar3')}
                   value={formData.specification}
                   onChange={(e) => handleChange('specification', e.target.value)}
                 />
@@ -199,11 +200,11 @@ export default function NewSampleOrderPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{t('dateInfo') || '日期信息'}</CardTitle>
+              <CardTitle className="text-base">{t('dateInfo') || ts('k_1tb31ld')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>{t('orderDate') || '订单日期'}</Label>
+                <Label>{t('orderDate') || ts('k_u2zaog')}</Label>
                 <Input
                   type="date"
                   value={formData.order_date}
@@ -219,7 +220,7 @@ export default function NewSampleOrderPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('deliveryDate') || '交付日期'}</Label>
+                <Label>{t('deliveryDate') || ts('k_lf2t09')}</Label>
                 <Input
                   type="date"
                   value={formData.delivery_date}
@@ -231,7 +232,7 @@ export default function NewSampleOrderPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{tc('remark') || '备注'}</CardTitle>
+              <CardTitle className="text-base">{tc('remark') || ts('k_b5m1l6')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <Textarea

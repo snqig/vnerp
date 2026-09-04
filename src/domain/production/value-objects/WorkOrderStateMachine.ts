@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export type WorkOrderStatus =
   | 'pending'
   | 'confirmed'
@@ -177,6 +179,7 @@ export class WorkOrderStateMachine {
   }
 
   static getTransitionError(from: WorkOrderStatus, to: WorkOrderStatus): string {
+  const tc = t;
     if (from === to) return '';
     const config = workOrderStateMachineConfig[from];
     if (config.allowedTransitions.includes(to)) return '';
@@ -185,7 +188,7 @@ export class WorkOrderStateMachine {
     const allowedLabels = config.allowedTransitions
       .map((s) => workOrderStateMachineConfig[s].label)
       .join('、');
-    return `工单状态不允许从"${fromLabel}"流转到"${toLabel}"，允许的流转目标：${allowedLabels || '无'}`;
+    return `工单状态不允许从"${fromLabel}"流转到"${toLabel}"，允许的流转目标：${allowedLabels || tc('none')}`;
   }
 
   static validateTransition(from: WorkOrderStatus, to: WorkOrderStatus): void {

@@ -79,6 +79,7 @@ const STATUS_MAP: Record<
 };
 
 export default function InkFormulaPage() {
+  const ts = useTranslations('Dcprint');
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
   const router = useRouter();
@@ -110,7 +111,7 @@ export default function InkFormulaPage() {
         setColors(data.data?.list || data.data || []);
       }
     } catch {
-      toast({ title: '错误', description: '加载色号失败', variant: 'destructive' });
+      toast({ title: ts('k_v9pftt'), description: ts('k_1igc1i7'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -124,7 +125,7 @@ export default function InkFormulaPage() {
         setVersions(data.data?.list || data.data || []);
       }
     } catch {
-      toast({ title: '错误', description: '加载配方版本失败', variant: 'destructive' });
+      toast({ title: ts('k_v9pftt'), description: ts('k_8le5m6'), variant: 'destructive' });
     }
   }, []);
 
@@ -137,7 +138,7 @@ export default function InkFormulaPage() {
 
   const handleSaveColor = async () => {
     if (!colorForm.color_code || !colorForm.color_name) {
-      toast({ title: '警告', description: '色号编码和名称不能为空', variant: 'destructive' });
+      toast({ title: tc('warning'), description: ts('k_x3hboi'), variant: 'destructive' });
       return;
     }
     try {
@@ -152,7 +153,7 @@ export default function InkFormulaPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast({ title: '成功', description: editingColor ? '更新成功' : '创建成功' });
+        toast({ title: ts('k_1rraohc'), description: editingColor ? ts('k_1795bzg') : ts('k_kiombh') });
         setIsColorDialogOpen(false);
         setEditingColor(null);
         setColorForm({
@@ -164,10 +165,10 @@ export default function InkFormulaPage() {
         });
         fetchColors();
       } else {
-        toast({ title: '错误', description: data.message || '操作失败', variant: 'destructive' });
+        toast({ title: ts('k_v9pftt'), description: data.message || ts('k_ydow7a'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '错误', description: '操作失败', variant: 'destructive' });
+      toast({ title: ts('k_v9pftt'), description: ts('k_ydow7a'), variant: 'destructive' });
     }
   };
 
@@ -178,13 +179,13 @@ export default function InkFormulaPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast({ title: '成功', description: '配方版本已生效' });
+        toast({ title: ts('k_1rraohc'), description: ts('k_1v6t9lk') });
         if (selectedColor) fetchVersions(selectedColor.id);
       } else {
-        toast({ title: '错误', description: data.message || '操作失败', variant: 'destructive' });
+        toast({ title: ts('k_v9pftt'), description: data.message || ts('k_ydow7a'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '错误', description: '操作失败', variant: 'destructive' });
+      toast({ title: ts('k_v9pftt'), description: ts('k_ydow7a'), variant: 'destructive' });
     }
   };
 
@@ -195,13 +196,13 @@ export default function InkFormulaPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast({ title: '成功', description: '配方版本已作废' });
+        toast({ title: ts('k_1rraohc'), description: ts('k_1jwfe6q') });
         if (selectedColor) fetchVersions(selectedColor.id);
       } else {
-        toast({ title: '错误', description: data.message || '操作失败', variant: 'destructive' });
+        toast({ title: ts('k_v9pftt'), description: data.message || ts('k_ydow7a'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '错误', description: '操作失败', variant: 'destructive' });
+      toast({ title: ts('k_v9pftt'), description: ts('k_ydow7a'), variant: 'destructive' });
     }
   };
 
@@ -212,13 +213,13 @@ export default function InkFormulaPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast({ title: '成功', description: '新版本已创建' });
+        toast({ title: ts('k_1rraohc'), description: ts('k_11k3qq6') });
         if (selectedColor) fetchVersions(selectedColor.id);
       } else {
-        toast({ title: '错误', description: data.message || '操作失败', variant: 'destructive' });
+        toast({ title: ts('k_v9pftt'), description: data.message || ts('k_ydow7a'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '错误', description: '操作失败', variant: 'destructive' });
+      toast({ title: ts('k_v9pftt'), description: ts('k_ydow7a'), variant: 'destructive' });
     }
   };
 
@@ -260,8 +261,7 @@ export default function InkFormulaPage() {
                 }}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                {tc('add')}色号
-              </Button>
+                {tc('add')}{ts('k_14gayme')}</Button>
             </div>
 
             {loading ? (
@@ -275,12 +275,12 @@ export default function InkFormulaPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>色号编码</TableHead>
-                    <TableHead>色号名称</TableHead>
-                    <TableHead>色系</TableHead>
-                    <TableHead>基墨类型</TableHead>
+                    <TableHead>{ts('k_vjmear')}</TableHead>
+                    <TableHead>{ts('k_1r6bl4j')}</TableHead>
+                    <TableHead>{ts('k_17peoq2')}</TableHead>
+                    <TableHead>{ts('k_qip0th')}</TableHead>
                     <TableHead>Pantone</TableHead>
-                    <TableHead>状态</TableHead>
+                    <TableHead>{ts('k_1ccx4t4')}</TableHead>
                     <TableHead>{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -298,7 +298,7 @@ export default function InkFormulaPage() {
                       <TableCell>{color.pantone_code}</TableCell>
                       <TableCell>
                         <Badge variant={color.status === 1 ? 'default' : 'secondary'}>
-                          {color.status === 1 ? '正常' : '停用'}
+                          {color.status === 1 ? ts('k_tt5vxa') : ts('k_6q9o5l')}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -341,30 +341,29 @@ export default function InkFormulaPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>{selectedColor.color_name} - 配方版本</span>
+                <span>{selectedColor.color_name} {ts('k_1t2aw12')}</span>
                 <Button
                   onClick={() =>
                     router.push(`/dcprint/ink-formula/new?colorId=${selectedColor.id}`)
                   }
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  新建版本
-                </Button>
+                  {ts('k_sgzqmj')}</Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {versions.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">暂无配方版本</div>
+                <div className="text-center py-8 text-muted-foreground">{ts('k_qtzd7d')}</div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>版本号</TableHead>
-                      <TableHead>版本名称</TableHead>
-                      <TableHead>总重量</TableHead>
-                      <TableHead>理论成本</TableHead>
-                      <TableHead>状态</TableHead>
-                      <TableHead>生效时间</TableHead>
+                      <TableHead>{ts('k_1ctz3eq')}</TableHead>
+                      <TableHead>{ts('k_v6bi4')}</TableHead>
+                      <TableHead>{ts('k_h0onm6')}</TableHead>
+                      <TableHead>{ts('k_w8xmat')}</TableHead>
+                      <TableHead>{ts('k_1ccx4t4')}</TableHead>
+                      <TableHead>{ts('k_1xp7hag')}</TableHead>
                       <TableHead>{tc('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -379,7 +378,7 @@ export default function InkFormulaPage() {
                         <TableCell>¥{ver.theoretical_cost?.toFixed(2) || '0.00'}</TableCell>
                         <TableCell>
                           <Badge variant={STATUS_MAP[ver.status]?.variant || 'secondary'}>
-                            {STATUS_MAP[ver.status]?.label || '未知'}
+                            {STATUS_MAP[ver.status]?.label || ts('k_1lpnuh4')}
                           </Badge>
                         </TableCell>
                         <TableCell>{ver.activate_time || '-'}</TableCell>
@@ -434,13 +433,13 @@ export default function InkFormulaPage() {
       <Dialog open={isColorDialogOpen} onOpenChange={setIsColorDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingColor ? '编辑色号' : '新建色号'}</DialogTitle>
-            <DialogDescription>填写色号基础信息</DialogDescription>
+            <DialogTitle>{editingColor ? ts('k_p2u7iz') : ts('k_yjhrdc')}</DialogTitle>
+            <DialogDescription>{ts('k_6nrjp8')}</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>
-                色号编码 <span className="text-red-500">*</span>
+                {ts('k_vjmear')}<span className="text-red-500">*</span>
               </Label>
               <Input
                 value={colorForm.color_code}
@@ -449,7 +448,7 @@ export default function InkFormulaPage() {
             </div>
             <div className="space-y-1">
               <Label>
-                色号名称 <span className="text-red-500">*</span>
+                {ts('k_1r6bl4j')}<span className="text-red-500">*</span>
               </Label>
               <Input
                 value={colorForm.color_name}
@@ -457,21 +456,21 @@ export default function InkFormulaPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label>色系</Label>
+              <Label>{ts('k_17peoq2')}</Label>
               <Input
                 value={colorForm.color_series}
                 onChange={(e) => setColorForm({ ...colorForm, color_series: e.target.value })}
               />
             </div>
             <div className="space-y-1">
-              <Label>基墨类型</Label>
+              <Label>{ts('k_qip0th')}</Label>
               <Input
                 value={colorForm.base_ink_type}
                 onChange={(e) => setColorForm({ ...colorForm, base_ink_type: e.target.value })}
               />
             </div>
             <div className="space-y-1 col-span-2">
-              <Label>Pantone色号</Label>
+              <Label>{ts('k_8qbk1z')}</Label>
               <Input
                 value={colorForm.pantone_code}
                 onChange={(e) => setColorForm({ ...colorForm, pantone_code: e.target.value })}

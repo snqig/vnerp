@@ -108,6 +108,7 @@ const getFinalInspectItems = (t: (key: string) => string) => [
 ];
 
 export default function QualityFinalPage() {
+  const ts = useTranslations('Quality');
   // 翻译钩子
   const t = useTranslations('Quality');
   const tc = useTranslations('Common');
@@ -162,12 +163,12 @@ export default function QualityFinalPage() {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
 
   const fetchFinals = async () => {
-    logger.info({ module: 'Quality', action: 'fetchFinals' }, '开始获取终检数据');
+    logger.info({ module: 'Quality', action: 'fetchFinals' }, ts('k_1l16c5f'));
     try {
       setLoading(true);
 
       if (USE_MOCK) {
-        logger.info({ module: 'Quality', action: 'fetchFinals' }, '使用 mock 数据');
+        logger.info({ module: 'Quality', action: 'fetchFinals' }, ts('k_1b38xbu'));
         setFinals(mockQualityFinal);
         const pendingCount = mockQualityFinal.filter(
           (f: FinalInspect) => f.burdening_status === 1
@@ -237,12 +238,12 @@ export default function QualityFinalPage() {
           week: list.length,
           passRate: list.length > 0 ? Math.round((passedCount / list.length) * 100) : 0,
         });
-        logger.info({ module: 'Quality', action: 'fetchFinals' }, '终检数据获取成功', {
+        logger.info({ module: 'Quality', action: 'fetchFinals' }, ts('k_nv9wtr'), {
           count: list.length,
         });
       }
     } catch (error) {
-      logger.error({ module: 'Quality', action: 'fetchFinals' }, '获取终检数据失败', {
+      logger.error({ module: 'Quality', action: 'fetchFinals' }, ts('k_1uy7a0k'), {
         error: (error as Error).message,
       });
     } finally {
@@ -495,8 +496,8 @@ export default function QualityFinalPage() {
                   {tc('print')}
                 </Button>
                 <GlobalExportToolbar
-                  filename="成品检验报告"
-                  title="成品检验报告"
+                  filename={ts('k_zudbo9')}
+                  title={ts('k_zudbo9')}
                   landscape
                   columns={[
                     { key: 'card_no', label: tc('processCardNo'), width: 18 },

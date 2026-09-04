@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -26,11 +29,12 @@ interface StandardCard {
 }
 
 export const GET = withPermission(async (request: NextRequest, userInfo, context) => {
+  const ts = await getTranslations('Common');
   const { work_order_id: workOrderIdStr } = await context.params;
   const workOrderId = parseInt(workOrderIdStr);
 
   if (isNaN(workOrderId)) {
-    return errorResponse('无效的工单ID', 400, 400);
+    return errorResponse(ts('k_1amaan4'), 400, 400);
   }
 
   const cards = await query<StandardCard>(
@@ -42,7 +46,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo, context
   );
 
   if (!cards || cards.length === 0) {
-    return errorResponse('未找到该工单关联的标准卡', 404, 404);
+    return errorResponse(ts('k_1qtyayv'), 404, 404);
   }
 
   return successResponse(cards);

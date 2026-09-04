@@ -1,29 +1,33 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { logger } from '@/lib/logger';
 export const POST = withPermission(async (_request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const startTime = Date.now();
-  logger.info('[MENU_INIT] ==================== 菜单初始化开始 ====================');
+  logger.info(ts('k_1vfxxoh'));
   logger.info(`[MENU_INIT] 时间: ${new Date().toISOString()}`);
 
   try {
     const result = await transaction(async (conn) => {
       const results: string[] = [];
-      logger.info('[MENU_INIT] 步骤1: 开始处理顶级菜单...');
+      logger.info(ts('k_5dd3ag'));
 
       const topLevelMenus = [
-        { menu_name: '看板中心', menu_code: 'dashboard_center', icon: 'BarChart3', sort_order: 1 },
-        { menu_name: '业务部', menu_code: 'orders', icon: 'ShoppingCart', sort_order: 2 },
-        { menu_name: '工程技术部', menu_code: 'engineering', icon: 'Wrench', sort_order: 3 },
-        { menu_name: '生产部', menu_code: 'production', icon: 'Factory', sort_order: 4 },
-        { menu_name: '仓库管理', menu_code: 'warehouse', icon: 'Warehouse', sort_order: 5 },
-        { menu_name: '采购部', menu_code: 'purchase', icon: 'ShoppingBag', sort_order: 6 },
-        { menu_name: '品质部', menu_code: 'quality', icon: 'ShieldCheck', sort_order: 7 },
-        { menu_name: '财务管理', menu_code: 'finance', icon: 'Banknote', sort_order: 8 },
-        { menu_name: '人事行政部', menu_code: 'hr', icon: 'Users', sort_order: 9 },
-        { menu_name: '系统设置', menu_code: 'settings', icon: 'Settings', sort_order: 10 },
+        { menu_name: ts('k_1nwl7pb'), menu_code: 'dashboard_center', icon: 'BarChart3', sort_order: 1 },
+        { menu_name: ts('k_axb29w'), menu_code: 'orders', icon: 'ShoppingCart', sort_order: 2 },
+        { menu_name: ts('k_boxyuc'), menu_code: 'engineering', icon: 'Wrench', sort_order: 3 },
+        { menu_name: ts('k_18glq49'), menu_code: 'production', icon: 'Factory', sort_order: 4 },
+        { menu_name: ts('k_1wg46ow'), menu_code: 'warehouse', icon: 'Warehouse', sort_order: 5 },
+        { menu_name: ts('k_1rgc4zf'), menu_code: 'purchase', icon: 'ShoppingBag', sort_order: 6 },
+        { menu_name: ts('k_11g5fpo'), menu_code: 'quality', icon: 'ShieldCheck', sort_order: 7 },
+        { menu_name: ts('k_p1ttj7'), menu_code: 'finance', icon: 'Banknote', sort_order: 8 },
+        { menu_name: ts('k_bv4mdx'), menu_code: 'hr', icon: 'Users', sort_order: 9 },
+        { menu_name: ts('k_1a2tyf'), menu_code: 'settings', icon: 'Settings', sort_order: 10 },
       ];
 
       for (const menu of topLevelMenus) {
@@ -87,7 +91,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       logger.info(`[MENU_INIT] 步骤1完成: 顶级菜单处理完毕, 数量: ${topLevelMenus.length}`);
 
       const menuMigrations: { from: string; to: string; new_name?: string }[] = [
-        { from: 'dashboard', to: 'dashboard_center', new_name: '看板中心' },
+        { from: 'dashboard', to: 'dashboard_center', new_name: ts('k_1nwl7pb') },
         { from: 'sample', to: 'engineering' },
         { from: 'prepress', to: 'engineering' },
         { from: 'plm', to: 'engineering' },
@@ -162,7 +166,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           results.push(`${code}: 已删除重复菜单`);
         }
       }
-      logger.info('[MENU_INIT] 步骤3完成: 重复菜单删除完毕');
+      logger.info(ts('k_vy28t9'));
 
       const [pathDups] = await conn.execute(
         `SELECT m1.id, m1.menu_code, m1.menu_name, m1.path
@@ -175,7 +179,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         await conn.execute('DELETE FROM sys_menu WHERE id = ?', [dup.id]);
         results.push(`${dup.menu_code}(${dup.menu_name}): 路径重复删除, path=${dup.path}`);
       }
-      logger.info('[MENU_INIT] 步骤4完成: 路径重复菜单删除完毕, 删除数:', pathDups.length || 0);
+      logger.info(ts('k_vpjo4l'), pathDups.length || 0);
 
       const moveMenusToEngineering = ['dcprint_ink', 'dcprint_process_cards', 'dcprint_labels'];
 
@@ -197,13 +201,13 @@ export const POST = withPermission(async (_request: NextRequest) => {
           }
         }
       }
-      logger.info('[MENU_INIT] 步骤5完成: 菜单移动完毕');
+      logger.info(ts('k_hht2fe'));
 
-      logger.info('[MENU_INIT] 步骤6: 开始处理二级菜单项...');
+      logger.info(ts('k_og6zxy'));
       const newMenus = [
         {
           parent_code: 'dashboard_center',
-          menu_name: '总览看板',
+          menu_name: ts('k_16va3ew'),
           menu_code: 'dashboard_main',
           menu_type: 2,
           icon: null,
@@ -214,7 +218,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'dashboard_center',
-          menu_name: '生产看板',
+          menu_name: ts('k_1ovr9sd'),
           menu_code: 'dashboard_production',
           menu_type: 2,
           icon: null,
@@ -225,7 +229,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'dashboard_center',
-          menu_name: '仓库看板',
+          menu_name: ts('k_fj3blx'),
           menu_code: 'dashboard_warehouse',
           menu_type: 2,
           icon: null,
@@ -236,7 +240,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'dashboard_center',
-          menu_name: '销售看板',
+          menu_name: ts('k_75z0jp'),
           menu_code: 'dashboard_sales',
           menu_type: 2,
           icon: null,
@@ -247,7 +251,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'dashboard_center',
-          menu_name: '质量看板',
+          menu_name: ts('k_14loasy'),
           menu_code: 'dashboard_quality',
           menu_type: 2,
           icon: null,
@@ -258,7 +262,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'dashboard_center',
-          menu_name: '财务看板',
+          menu_name: ts('k_19symku'),
           menu_code: 'dashboard_finance',
           menu_type: 2,
           icon: null,
@@ -269,7 +273,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'dashboard_center',
-          menu_name: 'CEO驾驶舱',
+          menu_name: ts('k_ptw9yx'),
           menu_code: 'dashboard_ceo',
           menu_type: 2,
           icon: null,
@@ -281,7 +285,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
         {
           parent_code: 'orders',
-          menu_name: '销售订单',
+          menu_name: ts('k_m6144y'),
           menu_code: 'orders_sales',
           menu_type: 2,
           icon: null,
@@ -292,7 +296,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'orders',
-          menu_name: '客户管理',
+          menu_name: ts('k_1mow4yx'),
           menu_code: 'orders_customers',
           menu_type: 2,
           icon: null,
@@ -303,7 +307,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'orders',
-          menu_name: '产品管理',
+          menu_name: ts('k_1356gf2'),
           menu_code: 'orders_products',
           menu_type: 2,
           icon: null,
@@ -314,7 +318,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'orders',
-          menu_name: 'BOM管理',
+          menu_name: ts('k_15fkb2y'),
           menu_code: 'orders_bom',
           menu_type: 2,
           icon: null,
@@ -325,7 +329,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'orders',
-          menu_name: '合同评审',
+          menu_name: ts('k_1btk7qy'),
           menu_code: 'orders_contract_review',
           menu_type: 2,
           icon: null,
@@ -336,7 +340,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'orders',
-          menu_name: '发货管理',
+          menu_name: ts('k_zztljm'),
           menu_code: 'orders_delivery',
           menu_type: 2,
           icon: null,
@@ -347,7 +351,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'orders',
-          menu_name: '退货管理',
+          menu_name: ts('k_1yzad7b'),
           menu_code: 'orders_return',
           menu_type: 2,
           icon: null,
@@ -358,7 +362,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'orders',
-          menu_name: '对账管理',
+          menu_name: ts('k_zk784p'),
           menu_code: 'orders_reconciliation',
           menu_type: 2,
           icon: null,
@@ -369,7 +373,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'orders',
-          menu_name: '客户跟进',
+          menu_name: ts('k_1ey5t8w'),
           menu_code: 'crm_follow',
           menu_type: 2,
           icon: null,
@@ -380,7 +384,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'orders',
-          menu_name: '客户分析',
+          menu_name: ts('k_gi0aw0'),
           menu_code: 'crm_analysis',
           menu_type: 2,
           icon: null,
@@ -392,7 +396,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
         {
           parent_code: 'engineering',
-          menu_name: '打样管理',
+          menu_name: ts('k_1nojqmc'),
           menu_code: 'sample_management',
           menu_type: 2,
           icon: null,
@@ -403,7 +407,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'engineering',
-          menu_name: '打样订单',
+          menu_name: ts('k_1gvmwiu'),
           menu_code: 'sample_orders',
           menu_type: 2,
           icon: null,
@@ -414,7 +418,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'engineering',
-          menu_name: '标准卡',
+          menu_name: ts('k_19s2wpf'),
           menu_code: 'sample_standard_card',
           menu_type: 2,
           icon: null,
@@ -425,7 +429,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'engineering',
-          menu_name: '样品转量产',
+          menu_name: ts('k_1eaagm9'),
           menu_code: 'engineering_sample_to_mass',
           menu_type: 2,
           icon: null,
@@ -436,7 +440,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'engineering',
-          menu_name: 'SOP管理',
+          menu_name: ts('k_fv8yn2'),
           menu_code: 'engineering_sop',
           menu_type: 2,
           icon: null,
@@ -447,7 +451,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'engineering',
-          menu_name: '刀模/网版管理',
+          menu_name: ts('k_1pzl8mh'),
           menu_code: 'prepress_die_template',
           menu_type: 2,
           icon: null,
@@ -458,7 +462,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'engineering',
-          menu_name: '油墨管理',
+          menu_name: ts('k_ttcrbf'),
           menu_code: 'dcprint_ink',
           menu_type: 2,
           icon: null,
@@ -469,7 +473,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'engineering',
-          menu_name: '油墨配方版本管理',
+          menu_name: ts('k_7xqxy5'),
           menu_code: 'dcprint_ink_formula',
           menu_type: 2,
           icon: null,
@@ -480,7 +484,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'engineering',
-          menu_name: '刀模/网版工装管理',
+          menu_name: ts('k_1dv147v'),
           menu_code: 'dcprint_tool',
           menu_type: 2,
           icon: 'Wrench',
@@ -491,7 +495,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'engineering',
-          menu_name: '打样工艺卡',
+          menu_name: ts('k_xht4tz'),
           menu_code: 'dcprint_sample_card',
           menu_type: 2,
           icon: 'FileText',
@@ -502,7 +506,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'engineering',
-          menu_name: '流程卡管理',
+          menu_name: ts('k_10sjnxf'),
           menu_code: 'dcprint_process_cards',
           menu_type: 2,
           icon: null,
@@ -513,7 +517,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'engineering',
-          menu_name: '物料标签管理',
+          menu_name: ts('k_1nk5mf9'),
           menu_code: 'dcprint_labels',
           menu_type: 2,
           icon: null,
@@ -524,7 +528,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'engineering',
-          menu_name: '产品生命周期',
+          menu_name: ts('k_1oux5gk'),
           menu_code: 'plm_lifecycle',
           menu_type: 2,
           icon: null,
@@ -535,7 +539,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'engineering',
-          menu_name: '工程变更单',
+          menu_name: ts('k_1o4raco'),
           menu_code: 'plm_eco',
           menu_type: 2,
           icon: null,
@@ -547,7 +551,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
         {
           parent_code: 'production',
-          menu_name: '生产工单',
+          menu_name: ts('k_1h58b1'),
           menu_code: 'production_workorder',
           menu_type: 2,
           icon: null,
@@ -558,7 +562,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '生产排程',
+          menu_name: ts('k_15gb18w'),
           menu_code: 'production_schedule',
           menu_type: 2,
           icon: null,
@@ -569,7 +573,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '工艺管理',
+          menu_name: ts('k_j9n8zl'),
           menu_code: 'production_process',
           menu_type: 2,
           icon: null,
@@ -580,7 +584,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '生产报工',
+          menu_name: ts('k_8xhdtp'),
           menu_code: 'production_report',
           menu_type: 2,
           icon: null,
@@ -591,7 +595,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '生产订单',
+          menu_name: ts('k_e6tnx6'),
           menu_code: 'production_orders',
           menu_type: 2,
           icon: null,
@@ -602,7 +606,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '生产发料',
+          menu_name: ts('k_jrk0qd'),
           menu_code: 'production_material_issue',
           menu_type: 2,
           icon: null,
@@ -613,7 +617,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '生产退料',
+          menu_name: ts('k_18y1htk'),
           menu_code: 'production_material_return',
           menu_type: 2,
           icon: null,
@@ -624,7 +628,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '成品标签',
+          menu_name: ts('k_s7ph9n'),
           menu_code: 'production_product_label',
           menu_type: 2,
           icon: null,
@@ -635,7 +639,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '油墨开罐管理',
+          menu_name: ts('k_1c0pvy3'),
           menu_code: 'dcprint_ink_opening',
           menu_type: 2,
           icon: null,
@@ -646,7 +650,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '调色油墨入库',
+          menu_name: ts('k_1ae68l'),
           menu_code: 'dcprint_ink_mixed',
           menu_type: 2,
           icon: null,
@@ -657,7 +661,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '物料追溯',
+          menu_name: ts('k_1iaqhub'),
           menu_code: 'dcprint_trace',
           menu_type: 2,
           icon: null,
@@ -668,7 +672,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '设备保养',
+          menu_name: ts('k_1q6ppqq'),
           menu_code: 'equipment_maintenance',
           menu_type: 2,
           icon: null,
@@ -679,7 +683,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '设备维修',
+          menu_name: ts('k_15hkir8'),
           menu_code: 'equipment_repair',
           menu_type: 2,
           icon: null,
@@ -690,7 +694,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '设备检定',
+          menu_name: ts('k_1knvan8'),
           menu_code: 'equipment_calibration',
           menu_type: 2,
           icon: null,
@@ -701,7 +705,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'production',
-          menu_name: '设备报废',
+          menu_name: ts('k_1dfoqke'),
           menu_code: 'equipment_scrap',
           menu_type: 2,
           icon: null,
@@ -713,7 +717,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
         {
           parent_code: 'warehouse',
-          menu_name: '入库管理',
+          menu_name: ts('k_pep7q2'),
           menu_code: 'warehouse_inbound',
           menu_type: 2,
           icon: null,
@@ -724,7 +728,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'warehouse',
-          menu_name: '出库管理',
+          menu_name: ts('k_1m5xmhx'),
           menu_code: 'warehouse_outbound',
           menu_type: 2,
           icon: null,
@@ -735,7 +739,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'warehouse',
-          menu_name: '库存查询',
+          menu_name: ts('k_197ip7t'),
           menu_code: 'warehouse_inventory',
           menu_type: 2,
           icon: null,
@@ -746,7 +750,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'warehouse',
-          menu_name: '分切管理',
+          menu_name: ts('k_1g2rizp'),
           menu_code: 'warehouse_cutting',
           menu_type: 2,
           icon: null,
@@ -757,7 +761,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'warehouse',
-          menu_name: '库存调拨',
+          menu_name: ts('k_1sok5cd'),
           menu_code: 'warehouse_transfer',
           menu_type: 2,
           icon: null,
@@ -768,7 +772,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'warehouse',
-          menu_name: '库存盘点',
+          menu_name: ts('k_dywdfl'),
           menu_code: 'warehouse_stocktaking',
           menu_type: 2,
           icon: null,
@@ -779,7 +783,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'warehouse',
-          menu_name: '库存调整',
+          menu_name: ts('k_leccqh'),
           menu_code: 'warehouse_stock_adjust',
           menu_type: 2,
           icon: null,
@@ -790,7 +794,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'warehouse',
-          menu_name: '生产入库',
+          menu_name: ts('k_1k71bbv'),
           menu_code: 'warehouse_production_inbound',
           menu_type: 2,
           icon: null,
@@ -801,7 +805,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'warehouse',
-          menu_name: '销售出库',
+          menu_name: ts('k_270k8'),
           menu_code: 'warehouse_sales_outbound',
           menu_type: 2,
           icon: null,
@@ -812,7 +816,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'warehouse',
-          menu_name: '二维码追溯',
+          menu_name: ts('k_76vhek'),
           menu_code: 'warehouse_trace',
           menu_type: 2,
           icon: null,
@@ -824,7 +828,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
         {
           parent_code: 'purchase',
-          menu_name: '采购订单',
+          menu_name: ts('k_1sy8pjo'),
           menu_code: 'purchase_orders',
           menu_type: 2,
           icon: null,
@@ -835,7 +839,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'purchase',
-          menu_name: '供应商管理',
+          menu_name: ts('k_jm06rf'),
           menu_code: 'purchase_suppliers',
           menu_type: 2,
           icon: null,
@@ -846,7 +850,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'purchase',
-          menu_name: '采购申请',
+          menu_name: ts('k_fmaw3'),
           menu_code: 'purchase_request',
           menu_type: 2,
           icon: null,
@@ -857,7 +861,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'purchase',
-          menu_name: '供应商评估',
+          menu_name: ts('k_yi8jm8'),
           menu_code: 'srm_evaluation',
           menu_type: 2,
           icon: null,
@@ -868,7 +872,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'purchase',
-          menu_name: '委外订单',
+          menu_name: ts('k_18yqlt2'),
           menu_code: 'outsource_order',
           menu_type: 2,
           icon: null,
@@ -879,7 +883,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'purchase',
-          menu_name: '委外发料',
+          menu_name: ts('k_1tqtq1l'),
           menu_code: 'outsource_issue',
           menu_type: 2,
           icon: null,
@@ -890,7 +894,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'purchase',
-          menu_name: '委外收货',
+          menu_name: ts('k_1d0nr2s'),
           menu_code: 'outsource_receive',
           menu_type: 2,
           icon: null,
@@ -901,7 +905,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'purchase',
-          menu_name: '委外结算',
+          menu_name: ts('k_f882wp'),
           menu_code: 'outsource_settlement',
           menu_type: 2,
           icon: null,
@@ -913,7 +917,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
         {
           parent_code: 'finance',
-          menu_name: '应收款管理',
+          menu_name: ts('k_18qugw0'),
           menu_code: 'fin_receivable',
           menu_type: 2,
           icon: null,
@@ -924,7 +928,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'finance',
-          menu_name: '成本管理',
+          menu_name: ts('k_ei2sa2'),
           menu_code: 'finance_cost',
           menu_type: 2,
           icon: null,
@@ -935,7 +939,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'finance',
-          menu_name: '财务报表',
+          menu_name: ts('k_1eujvrt'),
           menu_code: 'finance_report',
           menu_type: 2,
           icon: null,
@@ -947,7 +951,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
         {
           parent_code: 'quality',
-          menu_name: '来料检验',
+          menu_name: ts('k_109mrrr'),
           menu_code: 'quality_incoming',
           menu_type: 2,
           icon: null,
@@ -958,7 +962,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'quality',
-          menu_name: '过程检验',
+          menu_name: ts('k_1q7pfzv'),
           menu_code: 'quality_process',
           menu_type: 2,
           icon: null,
@@ -969,7 +973,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'quality',
-          menu_name: '成品检验',
+          menu_name: ts('k_nwgik6'),
           menu_code: 'quality_final',
           menu_type: 2,
           icon: null,
@@ -980,7 +984,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'quality',
-          menu_name: '质量追溯',
+          menu_name: ts('k_1u4l05c'),
           menu_code: 'quality_trace',
           menu_type: 2,
           icon: null,
@@ -991,7 +995,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'quality',
-          menu_name: '不合格品处理',
+          menu_name: ts('k_1h21kkl'),
           menu_code: 'quality_unqualified',
           menu_type: 2,
           icon: null,
@@ -1002,7 +1006,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'quality',
-          menu_name: 'SGS认证管理',
+          menu_name: ts('k_1obhpps'),
           menu_code: 'quality_sgs',
           menu_type: 2,
           icon: null,
@@ -1013,7 +1017,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'quality',
-          menu_name: '客诉8D管理',
+          menu_name: ts('k_1ubms3j'),
           menu_code: 'quality_complaint',
           menu_type: 2,
           icon: null,
@@ -1024,7 +1028,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'quality',
-          menu_name: '实验室测试',
+          menu_name: ts('k_1wnv1gp'),
           menu_code: 'quality_lab_test',
           menu_type: 2,
           icon: null,
@@ -1035,7 +1039,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'quality',
-          menu_name: '供应商质量审核',
+          menu_name: ts('k_1qyvet4'),
           menu_code: 'quality_supplier_audit',
           menu_type: 2,
           icon: null,
@@ -1046,7 +1050,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'quality',
-          menu_name: '二维码追溯',
+          menu_name: ts('k_76vhek'),
           menu_code: 'qrcode_manage',
           menu_type: 2,
           icon: null,
@@ -1058,7 +1062,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
         {
           parent_code: 'hr',
-          menu_name: '员工档案',
+          menu_name: ts('k_1o93jxx'),
           menu_code: 'hr_employee',
           menu_type: 2,
           icon: null,
@@ -1069,7 +1073,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '考勤管理',
+          menu_name: ts('k_11exze5'),
           menu_code: 'hr_attendance',
           menu_type: 2,
           icon: null,
@@ -1080,7 +1084,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '薪资管理',
+          menu_name: ts('k_wt6lbs'),
           menu_code: 'hr_salary',
           menu_type: 2,
           icon: null,
@@ -1091,7 +1095,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '培训管理',
+          menu_name: ts('k_b91dg8'),
           menu_code: 'hr_training',
           menu_type: 2,
           icon: null,
@@ -1102,7 +1106,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '组织架构',
+          menu_name: ts('k_m2i11q'),
           menu_code: 'hr_organization',
           menu_type: 2,
           icon: null,
@@ -1113,7 +1117,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '班次管理',
+          menu_name: ts('k_4ndpw8'),
           menu_code: 'hr_shifts',
           menu_type: 2,
           icon: null,
@@ -1124,7 +1128,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '排班管理',
+          menu_name: ts('k_s7o56f'),
           menu_code: 'hr_schedules',
           menu_type: 2,
           icon: null,
@@ -1135,7 +1139,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '绩效评分',
+          menu_name: ts('k_1g8d66q'),
           menu_code: 'hr_performance',
           menu_type: 2,
           icon: null,
@@ -1146,7 +1150,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '技能认证',
+          menu_name: ts('k_4xeq6d'),
           menu_code: 'hr_skills',
           menu_type: 2,
           icon: null,
@@ -1157,7 +1161,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '证书管理',
+          menu_name: ts('k_151q2i9'),
           menu_code: 'hr_certificates',
           menu_type: 2,
           icon: null,
@@ -1168,7 +1172,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '人力报表',
+          menu_name: ts('k_7n75tj'),
           menu_code: 'hr_reports',
           menu_type: 2,
           icon: null,
@@ -1179,7 +1183,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: 'MES同步',
+          menu_name: ts('k_1bldhxr'),
           menu_code: 'hr_mes_sync',
           menu_type: 2,
           icon: null,
@@ -1190,7 +1194,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '薪资计算',
+          menu_name: ts('k_n4mh8b'),
           menu_code: 'hr_salary_calculate',
           menu_type: 2,
           icon: null,
@@ -1201,7 +1205,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '工序单价',
+          menu_name: ts('k_dlp3dp'),
           menu_code: 'hr_piece_rate',
           menu_type: 2,
           icon: null,
@@ -1212,7 +1216,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '计件产量',
+          menu_name: ts('k_8kbc4s'),
           menu_code: 'hr_piece_work',
           menu_type: 2,
           icon: null,
@@ -1223,7 +1227,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '银行报盘',
+          menu_name: ts('k_b9kvdu'),
           menu_code: 'hr_bank_report',
           menu_type: 2,
           icon: null,
@@ -1234,7 +1238,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'hr',
-          menu_name: '工资条',
+          menu_name: ts('k_1qarlpz'),
           menu_code: 'hr_payslips',
           menu_type: 2,
           icon: null,
@@ -1246,7 +1250,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
         {
           parent_code: 'settings',
-          menu_name: '用户管理',
+          menu_name: ts('k_1oim33'),
           menu_code: 'settings_user',
           menu_type: 2,
           icon: null,
@@ -1257,7 +1261,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'settings',
-          menu_name: '角色权限',
+          menu_name: ts('k_qea0w6'),
           menu_code: 'settings_roles',
           menu_type: 2,
           icon: null,
@@ -1268,7 +1272,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'settings',
-          menu_name: '菜单管理',
+          menu_name: ts('k_1u2bhqt'),
           menu_code: 'settings_menus',
           menu_type: 2,
           icon: null,
@@ -1279,7 +1283,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'settings',
-          menu_name: '组织架构',
+          menu_name: ts('k_m2i11q'),
           menu_code: 'settings_organization',
           menu_type: 2,
           icon: null,
@@ -1290,7 +1294,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'settings',
-          menu_name: '仓库分类',
+          menu_name: ts('k_1vvmozw'),
           menu_code: 'settings_warehouse_category',
           menu_type: 2,
           icon: null,
@@ -1301,7 +1305,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'settings',
-          menu_name: '物料分类',
+          menu_name: ts('k_195l80o'),
           menu_code: 'settings_material_category',
           menu_type: 2,
           icon: null,
@@ -1312,7 +1316,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'settings',
-          menu_name: '字典管理',
+          menu_name: ts('k_hldx6d'),
           menu_code: 'settings_dict',
           menu_type: 2,
           icon: null,
@@ -1323,7 +1327,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'settings',
-          menu_name: '系统配置',
+          menu_name: ts('k_j28prc'),
           menu_code: 'settings_config',
           menu_type: 2,
           icon: null,
@@ -1334,7 +1338,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'settings',
-          menu_name: '通知公告',
+          menu_name: ts('k_11hk6gy'),
           menu_code: 'settings_notice',
           menu_type: 2,
           icon: null,
@@ -1345,7 +1349,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'settings',
-          menu_name: '登录日志',
+          menu_name: ts('k_8u1v59'),
           menu_code: 'settings_login_log',
           menu_type: 2,
           icon: null,
@@ -1356,7 +1360,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'settings',
-          menu_name: '操作日志',
+          menu_name: ts('k_t9qa38'),
           menu_code: 'settings_oper_log',
           menu_type: 2,
           icon: null,
@@ -1367,7 +1371,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'settings',
-          menu_name: '跨模块一致性监控',
+          menu_name: ts('k_p0ffp4'),
           menu_code: 'settings_consistency_monitor',
           menu_type: 2,
           icon: 'Activity',
@@ -1378,7 +1382,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         },
         {
           parent_code: 'settings',
-          menu_name: '标签模板配置',
+          menu_name: ts('k_8yyqfr'),
           menu_code: 'settings_label_template',
           menu_type: 2,
           icon: null,
@@ -1462,7 +1466,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       }
       logger.info(`[MENU_INIT] 步骤6完成: 二级菜单项处理完毕, 总数: ${newMenus.length}`);
 
-      logger.info('[MENU_INIT] 步骤7: 开始更新系统管理员菜单权限...');
+      logger.info(ts('k_1im9wz9'));
       const [roles] = await conn.execute(
         "SELECT id FROM sys_role WHERE role_code = 'super_admin' LIMIT 1"
       );
@@ -1482,25 +1486,25 @@ export const POST = withPermission(async (_request: NextRequest) => {
             ]);
           }
         }
-        results.push('系统管理员菜单权限已更新');
+        results.push(ts('k_1839e12'));
       }
-      logger.info('[MENU_INIT] 步骤7完成: 系统管理员菜单权限更新完毕');
+      logger.info(ts('k_wk9i1x'));
 
       return results;
     });
 
     const endTime = Date.now();
-    logger.info('[MENU_INIT] ==================== 菜单初始化完成 ====================');
+    logger.info(ts('k_5hym9y'));
     logger.info(`[MENU_INIT] 耗时: ${(endTime - startTime) / 1000} 秒`);
     logger.info(`[MENU_INIT] 结果记录数: ${result.length}`);
 
-    return successResponse(result, '菜单优化初始化成功');
+    return successResponse(result, ts('k_1ibpbfb'));
   } catch (error) {
     const endTime = Date.now();
-    logger.error('[MENU_INIT] ==================== 菜单初始化失败 ====================');
+    logger.error(ts('k_2ebbpk'));
     logger.error(`[MENU_INIT] 耗时: ${(endTime - startTime) / 1000} 秒`);
     logger.error(`[MENU_INIT] 错误: ${error}`);
 
-    return errorResponse('菜单初始化失败: ' + (error as Error).message, 500);
+    return errorResponse(ts('k_1q4mmhw') + (error as Error).message, 500);
   }
 });

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -5,6 +8,7 @@ import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 export const POST = withPermission(async (_request: NextRequest) => {
   const result = await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
     const stats: Record<string, number> = {};
 
     const isEmpty = async (table: string): Promise<boolean> => {
@@ -57,38 +61,38 @@ export const POST = withPermission(async (_request: NextRequest) => {
     );
 
     const wh = existingWarehouses[0] || { id: 1 };
-    const sup = existingSuppliers[0] || { id: 1, supplier_name: '默认供应商' };
-    const cust = existingCustomers[0] || { id: 1, customer_name: '默认客户' };
+    const sup = existingSuppliers[0] || { id: 1, supplier_name: ts('k_1u5p0s0') };
+    const cust = existingCustomers[0] || { id: 1, customer_name: ts('k_1mzyh6q') };
     const mat = existingMaterials[0] || {
       id: 1,
       material_code: 'MAT001',
-      material_name: '默认物料',
-      specification: '默认规格',
-      unit: '张',
+      material_name: ts('k_qf3r9n'),
+      specification: ts('k_1dj9d0h'),
+      unit: ts('k_accfpb'),
     };
     const eq = existingEquipment[0] || {
       id: 1,
       equipment_code: 'EQP001',
-      equipment_name: '默认设备',
+      equipment_name: ts('k_1uwjhuu'),
     };
     const wo = existingWorkOrders[0] || { id: 1, order_no: 'WO001' };
-    const prod = existingProducts[0] || { id: 1, product_code: 'PRD001', product_name: '默认产品' };
+    const prod = existingProducts[0] || { id: 1, product_code: 'PRD001', product_name: ts('k_1vvmzl') };
 
     // ===== base_ink =====
     if (await isEmpty('base_ink')) {
       for (let i = 1; i <= 10; i++) {
-        const inkTypes = ['溶剂型', 'UV型', '水性', '导电型', '绝缘型'];
+        const inkTypes = [ts('k_u0oodq'), ts('k_1lwyoyj'), ts('k_krqaz0'), ts('k_1gh1mz7'), ts('k_rde3hd')];
         const colors = [
-          '黑色',
-          '白色',
-          '红色',
-          '蓝色',
-          '绿色',
-          '黄色',
-          '银色',
-          '金色',
-          '透明',
-          '灰色',
+          ts('k_1peuqkq'),
+          ts('k_6hu6um'),
+          ts('k_1xpfks5'),
+          ts('k_3atm1a'),
+          ts('k_2g1g8k'),
+          ts('k_1j92b77'),
+          ts('k_1sdxy3l'),
+          ts('k_1w1464q'),
+          ts('k_prcqfk'),
+          ts('k_amwt9j'),
         ];
         const s = existingSuppliers[(i - 1) % existingSuppliers.length] || sup;
         await conn.execute(
@@ -162,7 +166,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     }
 
     // ===== crm_follow_record =====
-    const followTypes = ['电话', '拜访', '邮件', '微信', '会议'];
+    const followTypes = [ts('k_teuwl3'), ts('k_tdzvw'), ts('k_sbaikl'), ts('k_d7g4hc'), ts('k_1r81w9')];
     if (await isEmpty('crm_follow_record')) {
       for (let i = 1; i <= 10; i++) {
         const c = existingCustomers[(i - 1) % existingCustomers.length] || cust;
@@ -187,7 +191,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     if ((await isEmpty('delivery_vehicle_cost')) && existingVehicles.length > 0) {
       for (let i = 1; i <= 10; i++) {
         const v = existingVehicles[(i - 1) % existingVehicles.length];
-        const costTypes = ['加油', '过路费', '保险', '维修', '年检'];
+        const costTypes = [ts('k_14qklde'), ts('k_swsyza'), ts('k_1gifq7n'), ts('k_v1x3nb'), ts('k_fj5w49')];
         await conn.execute(
           `INSERT INTO delivery_vehicle_cost (vehicle_id, cost_date, cost_type, amount, mileage, fuel_volume, unit_price, location, operator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
@@ -215,7 +219,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           [
             v.id,
             `2026-04-${String(i).padStart(2, '0')}`,
-            i % 2 === 0 ? '定期保养' : '故障维修',
+            i % 2 === 0 ? ts('k_1ajsw0u') : ts('k_4ebikq'),
             5000 + i * 1000,
             `维修内容-${i}`,
             500 + i * 100,
@@ -257,16 +261,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
       for (let i = 1; i <= 10; i++) {
         const e = existingEquipment[(i - 1) % existingEquipment.length] || eq;
         const faultDescs = [
-          '丝印刮刀磨损需更换',
-          'UV灯管老化需更换',
-          '传送带松动需调整',
-          '模切刀模磨损',
-          '温控系统偏差',
-          '定位系统精度下降',
-          '导轨润滑不足',
-          '传感器灵敏度降低',
-          '气缸压力不足',
-          '电机异响',
+          ts('k_hlpvy3'),
+          ts('k_1vdrkx'),
+          ts('k_rflisx'),
+          ts('k_15vwdsf'),
+          ts('k_1vhv5cm'),
+          ts('k_1duegee'),
+          ts('k_5tfiug'),
+          ts('k_p3d9m9'),
+          ts('k_1dg3f27'),
+          ts('k_1i6oi8r'),
         ];
         await conn.execute(
           `INSERT INTO eqp_repair (repair_no, equipment_id, equipment_code, equipment_name, fault_date, fault_desc, repair_type, repair_person, repair_start_time, repair_end_time, repair_cost, repair_result, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -282,7 +286,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             '2026-04-02 08:00:00',
             '2026-04-02 17:00:00',
             300 + i * 100,
-            '维修完成，设备恢复正常',
+            ts('k_14z97b8'),
             3,
           ]
         );
@@ -302,7 +306,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             e.equipment_code || `EQP00${i}`,
             e.equipment_name || `设备${i}`,
             '2026-04-01',
-            `设备使用年限到期，无法继续维修`,
+            ts('k_1q1292t'),
             50000 + i * 10000,
             1000 + i * 500,
             `审批人${i}`,
@@ -314,7 +318,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== fin_cost_record =====
     const costTypes = ['material', 'labor', 'equipment', 'energy', 'other'];
-    const depts = ['生产部', '工程技术部', '品质部', '仓库管理', '采购部'];
+    const depts = [ts('k_18glq49'), ts('k_boxyuc'), ts('k_11g5fpo'), ts('k_1wg46ow'), ts('k_1rgc4zf')];
     if (await isEmpty('fin_cost_record')) {
       for (let i = 1; i <= 10; i++) {
         await conn.execute(
@@ -322,7 +326,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           [
             `COST202604${String(i).padStart(3, '0')}`,
             costTypes[(i - 1) % 5],
-            i % 2 === 0 ? '生产工单' : '采购订单',
+            i % 2 === 0 ? ts('k_1h58b1') : ts('k_1sy8pjo'),
             `REF${String(i).padStart(6, '0')}`,
             depts[(i - 1) % 5],
             1000 + i * 500,
@@ -336,16 +340,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== hr_training =====
     const trainingNames = [
-      'ISO 9001质量体系培训',
-      '丝印工艺技术培训',
-      '安全生产培训',
-      '5S管理培训',
-      'ERP系统操作培训',
-      '品质检验标准培训',
-      '设备操作规程培训',
-      '化学品安全培训',
-      '团队协作培训',
-      '精益生产培训',
+      ts('k_l920sh'),
+      ts('k_1wtad7s'),
+      ts('k_1pp7uk4'),
+      ts('k_1r1sy5o'),
+      ts('k_1fcgbqb'),
+      ts('k_n9umbz'),
+      ts('k_3n7vzg'),
+      ts('k_11x5qqb'),
+      ts('k_cx3177'),
+      ts('k_178h7fp'),
     ];
     if (await isEmpty('hr_training')) {
       for (let i = 1; i <= 10; i++) {
@@ -394,16 +398,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
           ink_name: `油墨${i}`,
         };
         const colors = [
-          '黑色',
-          '白色',
-          '红色',
-          '蓝色',
-          '绿色',
-          '黄色',
-          '银色',
-          '金色',
-          '透明',
-          '灰色',
+          ts('k_1peuqkq'),
+          ts('k_6hu6um'),
+          ts('k_1xpfks5'),
+          ts('k_3atm1a'),
+          ts('k_2g1g8k'),
+          ts('k_1j92b77'),
+          ts('k_1sdxy3l'),
+          ts('k_1w1464q'),
+          ts('k_prcqfk'),
+          ts('k_amwt9j'),
         ];
         const w = existingWarehouses[(i - 1) % existingWarehouses.length] || wh;
         const loc = existingLocations[(i - 1) % existingLocations.length] || { id: 1 };
@@ -418,7 +422,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             colors[i - 1],
             `C${String(i).padStart(3, '0')}`,
             1,
-            'DC印刷',
+            ts('k_1it5ic5'),
             `调墨师${i}`,
             5 + i,
             'kg',
@@ -443,7 +447,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             i % 2 === 0 ? 'in' : 'out',
             100 + i * 10,
             `REF${i}`,
-            i % 2 === 0 ? '采购入库' : '生产出库',
+            i % 2 === 0 ? ts('k_136sbj1') : ts('k_g4v5tc'),
           ]
         );
       }
@@ -477,7 +481,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             m.material_code || `MAT00${i}`,
             m.material_name || `物料${i}`,
             1000 + i * 100,
-            m.unit || '张',
+            m.unit || ts('k_accfpb'),
             `B202604${String(i).padStart(2, '0')}`,
           ]
         );
@@ -514,7 +518,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             m.material_code || `MAT00${i}`,
             m.material_name || `物料${i}`,
             500 + i * 50,
-            m.unit || '张',
+            m.unit || ts('k_accfpb'),
             `B202604${String(i).padStart(2, '0')}`,
           ]
         );
@@ -543,7 +547,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             100,
             i % 2 === 0 ? 10 : -10,
             i % 2 === 0 ? 110 : 90,
-            m.unit || '张',
+            m.unit || ts('k_accfpb'),
             `B202604${String(i).padStart(2, '0')}`,
           ]
         );
@@ -573,7 +577,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             100,
             98 + (i % 5),
             2 - (i % 5),
-            m.unit || '张',
+            m.unit || ts('k_accfpb'),
             `B202604${String(i).padStart(2, '0')}`,
             loc.id,
           ]
@@ -609,7 +613,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             m.material_code || `MAT00${i}`,
             m.material_name || `物料${i}`,
             50 + i * 10,
-            m.unit || '张',
+            m.unit || ts('k_accfpb'),
             `B202604${String(i).padStart(2, '0')}`,
           ]
         );
@@ -660,7 +664,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             m.material_code || `MAT00${i}`,
             m.material_name || `物料${i}`,
             m.specification || `规格${i}`,
-            m.unit || '张',
+            m.unit || ts('k_accfpb'),
             1 + i * 0.5,
             2 + i * 0.5,
             i,
@@ -686,16 +690,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
         'DRY002',
       ];
       const processNames = [
-        '晒版',
-        '调墨',
-        '丝印印刷',
-        '烘干',
-        '模切',
-        '全检',
-        '晒版2',
-        '调墨2',
-        '丝印印刷2',
-        '烘干2',
+        ts('k_up6rlz'),
+        ts('k_iv310u'),
+        ts('k_kkulp'),
+        ts('k_5i3tcf'),
+        ts('k_12b93ht'),
+        ts('k_eywvjp'),
+        ts('k_191ufcf'),
+        ts('k_1qpd3kk'),
+        ts('k_84foy5'),
+        ts('k_1eetfwn'),
       ];
       for (let i = 1; i <= 10; i++) {
         const p = existingProducts[(i - 1) % existingProducts.length] || prod;
@@ -816,16 +820,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
       for (let i = 1; i <= 10; i++) {
         const s = existingSuppliers[(i - 1) % existingSuppliers.length] || sup;
         const colors = [
-          '黑色',
-          '白色',
-          '红色',
-          '蓝色',
-          '绿色',
-          '黄色',
-          '银色',
-          '金色',
-          '透明',
-          '灰色',
+          ts('k_1peuqkq'),
+          ts('k_6hu6um'),
+          ts('k_1xpfks5'),
+          ts('k_3atm1a'),
+          ts('k_2g1g8k'),
+          ts('k_1j92b77'),
+          ts('k_1sdxy3l'),
+          ts('k_1w1464q'),
+          ts('k_prcqfk'),
+          ts('k_amwt9j'),
         ];
         const inkTypes = [1, 2, 1, 2, 1, 2, 3, 3, 1, 2];
         await conn.execute(
@@ -877,7 +881,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             m.material_name || `物料${i}`,
             1000 + i * 100,
             1000 + i * 100,
-            m.unit || '张',
+            m.unit || ts('k_accfpb'),
             `B202604${String(i).padStart(2, '0')}`,
           ]
         );
@@ -911,7 +915,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             m.material_code || `MAT00${i}`,
             m.material_name || `物料${i}`,
             10 + i * 5,
-            m.unit || '张',
+            m.unit || ts('k_accfpb'),
             `B202604${String(i).padStart(2, '0')}`,
           ]
         );
@@ -938,7 +942,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
               m.material_code || `MAT00${i + 10}`,
               m.material_name || `产品${i + 10}`,
               100 + i * 10,
-              m.unit || '张',
+              m.unit || ts('k_accfpb'),
               `B202604${String(i).padStart(2, '0')}`,
               1,
               1,
@@ -978,7 +982,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
                 m.specification || `规格${i + 1}`,
                 `B202604${String(i + 1).padStart(2, '0')}`,
                 100 + (i + 1) * 10,
-                m.unit || '张',
+                m.unit || ts('k_accfpb'),
               ]
             );
           }
@@ -1027,7 +1031,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         const bl = existingBomLines[(i - 1) % existingBomLines.length] || { id: i };
         await conn.execute(
           `INSERT INTO prod_work_order_material_req (work_order_id, bom_line_id, material_id, material_name, required_qty, unit) VALUES (?, ?, ?, ?, ?, ?)`,
-          [woItem.id, bl.id, m.id, m.material_name || `物料${i}`, 1000 + i * 100, m.unit || '张']
+          [woItem.id, bl.id, m.id, m.material_name || `物料${i}`, 1000 + i * 100, m.unit || ts('k_accfpb')]
         );
       }
       stats.prod_work_order_material_req = 10;
@@ -1060,7 +1064,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             poRows[0].id,
             m.id,
             qty,
-            m.unit || '张',
+            m.unit || ts('k_accfpb'),
             price,
             13.0,
             qty * price,
@@ -1097,7 +1101,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             m.material_code || `MAT00${i}`,
             m.material_name || `物料${i}`,
             m.specification || `规格${i}`,
-            m.unit || '张',
+            m.unit || ts('k_accfpb'),
             qty,
             price,
             qty * price,
@@ -1165,7 +1169,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             m.specification || `规格${i}`,
             `B202604${String(i).padStart(2, '0')}`,
             100 + i * 10,
-            m.unit || '张',
+            m.unit || ts('k_accfpb'),
             1,
             1,
             98 + i,
@@ -1174,7 +1178,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           ]
         );
         const [qciRows] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-        const items = ['外观检查', '尺寸测量', '色差检测', '附着力测试', '耐溶剂性'];
+        const items = [ts('k_1e1yf1u'), ts('k_1elhbp5'), ts('k_ld1hbc'), ts('k_6y374m'), ts('k_1nhyu50')];
         for (let j = 0; j < Math.min(3, items.length); j++) {
           await conn.execute(
             `INSERT INTO qc_incoming_inspection_item (inspection_id, item_name, standard, actual_value, result) VALUES (?, ?, ?, ?, ?)`,
@@ -1191,16 +1195,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
         const woItem = existingWorkOrders[(i - 1) % existingWorkOrders.length] || wo;
         const m = existingMaterials[(i + 9) % existingMaterials.length] || mat;
         const processNames = [
-          '晒版',
-          '调墨',
-          '丝印印刷',
-          '烘干',
-          '模切',
-          '全检',
-          '晒版',
-          '调墨',
-          '丝印印刷',
-          '烘干',
+          ts('k_up6rlz'),
+          ts('k_iv310u'),
+          ts('k_kkulp'),
+          ts('k_5i3tcf'),
+          ts('k_12b93ht'),
+          ts('k_eywvjp'),
+          ts('k_up6rlz'),
+          ts('k_iv310u'),
+          ts('k_kkulp'),
+          ts('k_5i3tcf'),
         ];
         await conn.execute(
           `INSERT INTO qc_process_inspection (inspection_no, inspection_date, work_order_id, work_order_no, process_name, product_id, product_code, product_name, inspection_qty, qualified_qty, unqualified_qty, inspection_result, inspector_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -1284,16 +1288,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
     // ===== sys_notice =====
     if (await isEmpty('sys_notice')) {
       const noticeTitles = [
-        '系统升级通知',
-        '五一放假通知',
-        '质量月活动通知',
-        '安全生产通知',
-        '设备维护通知',
-        '培训安排通知',
-        '新功能上线通知',
-        '库存盘点通知',
-        '供应商评审通知',
-        '月度例会通知',
+        ts('k_aqbls'),
+        ts('k_195pyf7'),
+        ts('k_15rreuq'),
+        ts('k_wlz9nr'),
+        ts('k_158pguv'),
+        ts('k_16atbnp'),
+        ts('k_4hgsnd'),
+        ts('k_jkagks'),
+        ts('k_13um3hm'),
+        ts('k_ffcolf'),
       ];
       for (let i = 1; i <= 10; i++) {
         await conn.execute(
@@ -1307,16 +1311,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
     if (await isEmpty('sys_oper_log')) {
       const operMethods = ['GET', 'POST', 'PUT', 'DELETE'];
       const operModules = [
-        '订单管理',
-        '仓库管理',
-        '生产管理',
-        '采购管理',
-        '品质管理',
-        '财务管理',
-        '设备管理',
-        '客户管理',
-        '供应商管理',
-        '系统设置',
+        ts('k_18cjym7'),
+        ts('k_1wg46ow'),
+        ts('k_1e172y0'),
+        ts('k_18u5dya'),
+        ts('k_17sww4j'),
+        ts('k_p1ttj7'),
+        ts('k_14ygvtp'),
+        ts('k_1mow4yx'),
+        ts('k_jm06rf'),
+        ts('k_1a2tyf'),
       ];
       for (let i = 1; i <= 10; i++) {
         await conn.execute(
@@ -1349,16 +1353,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
         'export',
       ];
       const opModules = [
-        '订单管理',
-        '仓库管理',
-        '生产管理',
-        '采购管理',
-        '品质管理',
-        '财务管理',
-        '设备管理',
-        '客户管理',
-        '供应商管理',
-        '系统设置',
+        ts('k_18cjym7'),
+        ts('k_1wg46ow'),
+        ts('k_1e172y0'),
+        ts('k_18u5dya'),
+        ts('k_17sww4j'),
+        ts('k_p1ttj7'),
+        ts('k_14ygvtp'),
+        ts('k_1mow4yx'),
+        ts('k_jm06rf'),
+        ts('k_1a2tyf'),
       ];
       const opMethods = ['GET', 'POST', 'PUT', 'DELETE'];
       for (let i = 1; i <= 10; i++) {

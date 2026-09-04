@@ -83,6 +83,7 @@ const STATUS_MAP: Record<
 };
 
 export default function ToolManagePage() {
+  const ts = useTranslations('Dcprint');
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
 
@@ -119,7 +120,7 @@ export default function ToolManagePage() {
         setTools(data.data?.list || data.data || []);
       }
     } catch {
-      toast.error('加载工装列表失败');
+      toast.error(ts('k_qjlczt'));
     } finally {
       setLoading(false);
     }
@@ -131,7 +132,7 @@ export default function ToolManagePage() {
 
   const handleSave = async () => {
     if (!form.tool_code || !form.tool_name) {
-      toast.warning('工装编号和名称不能为空');
+      toast.warning(ts('k_1ujtx2v'));
       return;
     }
     try {
@@ -144,15 +145,15 @@ export default function ToolManagePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(editingTool ? '更新成功' : '创建成功');
+        toast.success(editingTool ? ts('k_1795bzg') : ts('k_kiombh'));
         setIsDialogOpen(false);
         setEditingTool(null);
         fetchTools();
       } else {
-        toast.error(data.message || '操作失败');
+        toast.error(data.message || ts('k_ydow7a'));
       }
     } catch {
-      toast.error('操作失败');
+      toast.error(ts('k_ydow7a'));
     }
   };
 
@@ -161,41 +162,41 @@ export default function ToolManagePage() {
       const res = await authFetch(`/api/dcprint/tool/${id}/activate`, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        toast.success('工装已启用');
+        toast.success(ts('k_169ob6o'));
         fetchTools();
       } else {
-        toast.error(data.message || '操作失败');
+        toast.error(data.message || ts('k_ydow7a'));
       }
     } catch {
-      toast.error('操作失败');
+      toast.error(ts('k_ydow7a'));
     }
   };
 
   const handleScrap = async (id: number) => {
-    if (!confirm('确认报废此工装？')) return;
+    if (!confirm(ts('k_iu3do0'))) return;
     try {
       const res = await authFetch(`/api/dcprint/tool/${id}/scrap`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: '手动报废' }),
+        body: JSON.stringify({ reason: ts('k_1jghbzm') }),
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('工装已报废');
+        toast.success(ts('k_15g5muj'));
         fetchTools();
       } else {
-        toast.error(data.message || '操作失败');
+        toast.error(data.message || ts('k_ydow7a'));
       }
     } catch {
-      toast.error('操作失败');
+      toast.error(ts('k_ydow7a'));
     }
   };
 
   const getLifeStatus = (tool: Tool) => {
     const remainPercent = tool.total_life > 0 ? (tool.remain_life / tool.total_life) * 100 : 0;
-    if (remainPercent <= 5) return { color: 'text-red-500', label: '红色预警' };
-    if (remainPercent <= 20) return { color: 'text-yellow-500', label: '黄色预警' };
-    return { color: 'text-green-500', label: '正常' };
+    if (remainPercent <= 5) return { color: 'text-red-500', label: ts('k_15ytcv3') };
+    if (remainPercent <= 20) return { color: 'text-yellow-500', label: ts('k_894hs9') };
+    return { color: 'text-green-500', label: ts('k_tt5vxa') };
   };
 
   return (
@@ -220,25 +221,25 @@ export default function ToolManagePage() {
               </div>
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger className="w-32">
-                  <SelectValue placeholder="类型" />
+                  <SelectValue placeholder={ts('k_anh4cj')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部类型</SelectItem>
-                  <SelectItem value="1">刀模</SelectItem>
-                  <SelectItem value="2">网版</SelectItem>
+                  <SelectItem value="all">{ts('k_zao217')}</SelectItem>
+                  <SelectItem value="1">{ts('k_1c01k7u')}</SelectItem>
+                  <SelectItem value="2">{ts('k_cu41ng')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger className="w-32">
-                  <SelectValue placeholder="状态" />
+                  <SelectValue placeholder={ts('k_1ccx4t4')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部状态</SelectItem>
-                  <SelectItem value="1">待用</SelectItem>
-                  <SelectItem value="2">在用</SelectItem>
-                  <SelectItem value="3">维修</SelectItem>
-                  <SelectItem value="4">预警</SelectItem>
-                  <SelectItem value="5">报废</SelectItem>
+                  <SelectItem value="all">{ts('k_igzce8')}</SelectItem>
+                  <SelectItem value="1">{ts('k_1nblm48')}</SelectItem>
+                  <SelectItem value="2">{ts('k_16d9hd9')}</SelectItem>
+                  <SelectItem value="3">{ts('k_v1x3nb')}</SelectItem>
+                  <SelectItem value="4">{ts('k_1qswpkf')}</SelectItem>
+                  <SelectItem value="5">{ts('k_19qx965')}</SelectItem>
                 </SelectContent>
               </Select>
               <Button onClick={() => fetchTools()} variant="outline">
@@ -279,15 +280,15 @@ export default function ToolManagePage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>工装编号</TableHead>
-                    <TableHead>工装名称</TableHead>
-                    <TableHead>类型</TableHead>
-                    <TableHead>规格</TableHead>
-                    <TableHead>额定寿命</TableHead>
-                    <TableHead>已用/剩余</TableHead>
-                    <TableHead>单次成本</TableHead>
-                    <TableHead>状态</TableHead>
-                    <TableHead>寿命状态</TableHead>
+                    <TableHead>{ts('k_1i0rj5g')}</TableHead>
+                    <TableHead>{ts('k_mr44aa')}</TableHead>
+                    <TableHead>{ts('k_anh4cj')}</TableHead>
+                    <TableHead>{ts('k_1h40xod')}</TableHead>
+                    <TableHead>{ts('k_pz2nya')}</TableHead>
+                    <TableHead>{ts('k_1ymhc32')}</TableHead>
+                    <TableHead>{ts('k_vrhoin')}</TableHead>
+                    <TableHead>{ts('k_1ccx4t4')}</TableHead>
+                    <TableHead>{ts('k_1twio04')}</TableHead>
                     <TableHead>{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -302,7 +303,7 @@ export default function ToolManagePage() {
                           <Badge variant="outline">{TOOL_TYPE_MAP[tool.tool_type]}</Badge>
                         </TableCell>
                         <TableCell>{tool.spec || tool.mesh_count || '-'}</TableCell>
-                        <TableCell>{tool.total_life}次</TableCell>
+                        <TableCell>{tool.total_life}{ts('k_a5jtgs')}</TableCell>
                         <TableCell>
                           <span className={lifeStatus.color}>
                             {tool.used_count}/{tool.remain_life}
@@ -311,7 +312,7 @@ export default function ToolManagePage() {
                         <TableCell>¥{tool.unit_cost?.toFixed(2) || '0.00'}</TableCell>
                         <TableCell>
                           <Badge variant={STATUS_MAP[tool.status]?.variant || 'secondary'}>
-                            {STATUS_MAP[tool.status]?.label || '未知'}
+                            {STATUS_MAP[tool.status]?.label || ts('k_1lpnuh4')}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -352,14 +353,12 @@ export default function ToolManagePage() {
                               {tool.status === 1 && (
                                 <DropdownMenuItem onClick={() => handleActivate(tool.id)}>
                                   <CheckCircle className="h-4 w-4 mr-2" />
-                                  启用
-                                </DropdownMenuItem>
+                                  {ts('k_5pm2ma')}</DropdownMenuItem>
                               )}
                               {tool.status !== 5 && (
                                 <DropdownMenuItem onClick={() => handleScrap(tool.id)}>
                                   <XCircle className="h-4 w-4 mr-2 text-red-500" />
-                                  报废
-                                </DropdownMenuItem>
+                                  {ts('k_19qx965')}</DropdownMenuItem>
                               )}
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -377,13 +376,13 @@ export default function ToolManagePage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingTool ? '编辑工装' : '新建工装'}</DialogTitle>
-            <DialogDescription>填写工装基础信息</DialogDescription>
+            <DialogTitle>{editingTool ? ts('k_1fn4ph2') : ts('k_vojsqp')}</DialogTitle>
+            <DialogDescription>{ts('k_4xkpm5')}</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>
-                工装类型 <span className="text-red-500">*</span>
+                {ts('k_l1tjwl')}<span className="text-red-500">*</span>
               </Label>
               <Select
                 value={String(form.tool_type)}
@@ -393,14 +392,14 @@ export default function ToolManagePage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">刀模</SelectItem>
-                  <SelectItem value="2">网版</SelectItem>
+                  <SelectItem value="1">{ts('k_1c01k7u')}</SelectItem>
+                  <SelectItem value="2">{ts('k_cu41ng')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label>
-                工装编号 <span className="text-red-500">*</span>
+                {ts('k_1i0rj5g')}<span className="text-red-500">*</span>
               </Label>
               <Input
                 value={form.tool_code}
@@ -409,7 +408,7 @@ export default function ToolManagePage() {
             </div>
             <div className="space-y-1">
               <Label>
-                工装名称 <span className="text-red-500">*</span>
+                {ts('k_mr44aa')}<span className="text-red-500">*</span>
               </Label>
               <Input
                 value={form.tool_name}
@@ -417,14 +416,14 @@ export default function ToolManagePage() {
               />
             </div>
             <div className="space-y-1">
-              <Label>规格</Label>
+              <Label>{ts('k_1h40xod')}</Label>
               <Input
                 value={form.spec}
                 onChange={(e) => setForm({ ...form, spec: e.target.value })}
               />
             </div>
             <div className="space-y-1">
-              <Label>额定寿命（次）</Label>
+              <Label>{ts('k_1ysb1os')}</Label>
               <Input
                 type="number"
                 value={form.total_life}
@@ -432,7 +431,7 @@ export default function ToolManagePage() {
               />
             </div>
             <div className="space-y-1">
-              <Label>原始成本</Label>
+              <Label>{ts('k_m4f3yb')}</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -443,28 +442,28 @@ export default function ToolManagePage() {
             {form.tool_type === 2 && (
               <>
                 <div className="space-y-1">
-                  <Label>目数</Label>
+                  <Label>{ts('k_1if2z7')}</Label>
                   <Input
                     value={form.mesh_count}
                     onChange={(e) => setForm({ ...form, mesh_count: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>网材</Label>
+                  <Label>{ts('k_al17lw')}</Label>
                   <Input
                     value={form.mesh_material}
                     onChange={(e) => setForm({ ...form, mesh_material: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>尺寸</Label>
+                  <Label>{ts('k_d1l9cf')}</Label>
                   <Input
                     value={form.size}
                     onChange={(e) => setForm({ ...form, size: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>张力值</Label>
+                  <Label>{tc('dcTensionHead')}</Label>
                   <Input
                     type="number"
                     step="0.1"

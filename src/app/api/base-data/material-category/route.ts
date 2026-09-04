@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -104,12 +107,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { category_code, category_name, parent_id, sort_order, status, category_type, remark } =
       body;
 
     if (!String(category_name ?? '').trim()) {
-      return errorResponse('物料分类名称不能为空', 400);
+      return errorResponse(ts('k_u7qe7b'), 400);
     }
 
     // 前端有"分类类型"下拉，原实现完全不落库 → 用户选了等于没选
@@ -150,7 +155,7 @@ export const POST = withPermission(
       { id: result.insertId, warnings: validation.warnings },
       validation.warnings.length > 0
         ? `分类创建成功（提示：${validation.warnings.join('；')}）`
-        : '分类创建成功'
+        : tc('categoryCreated')
     );
   },
   { logTitle: '创建物料分类' }
@@ -158,6 +163,7 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       id,
@@ -170,7 +176,7 @@ export const PUT = withPermission(
       remark,
     } = body;
 
-    if (!id) return errorResponse('缺少分类ID', 400);
+    if (!id) return errorResponse(ts('k_2myxfe'), 400);
 
     const typeErr = checkCategoryType(category_type);
     if (typeErr) return errorResponse(typeErr, 400);
@@ -180,7 +186,7 @@ export const PUT = withPermission(
       [Number(id)]
     )) as DbRow[];
     if (existing.length === 0) {
-      return errorResponse('物料分类不存在或已删除', 404);
+      return errorResponse(ts('k_17d0sn'), 404);
     }
 
     const validation = await validateCategoryForUpdate('material', {
@@ -202,7 +208,7 @@ export const PUT = withPermission(
     }
     if (category_name !== undefined) {
       if (!String(category_name).trim()) {
-        return errorResponse('物料分类名称不能为空', 400);
+        return errorResponse(ts('k_u7qe7b'), 400);
       }
       sets.push('category_name = ?');
       params.push(String(category_name).trim());
@@ -229,7 +235,7 @@ export const PUT = withPermission(
     }
 
     if (sets.length === 0) {
-      return successResponse(null, '无字段变更');
+      return successResponse(null, ts('k_zw023v'));
     }
 
     params.push(Number(id));
@@ -242,7 +248,7 @@ export const PUT = withPermission(
       { warnings: validation.warnings },
       validation.warnings.length > 0
         ? `更新成功（提示：${validation.warnings.join('；')}）`
-        : '更新成功'
+        : ts('k_1795bzg')
     );
   },
   { logTitle: '更新物料分类' }
@@ -250,9 +256,10 @@ export const PUT = withPermission(
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('缺少id', 400);
+    if (!id) return errorResponse(ts('k_js4lo9'), 400);
 
     const categoryId = Number(id);
 
@@ -278,7 +285,7 @@ export const DELETE = withPermission(
     }
 
     await execute('UPDATE inv_material_category SET deleted = 1 WHERE id = ?', [categoryId]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除物料分类' }
 );

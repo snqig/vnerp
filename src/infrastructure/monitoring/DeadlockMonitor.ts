@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { query } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 
@@ -31,6 +33,7 @@ export interface MonitorResult {
 
 export class DeadlockMonitor {
   static async checkDeadlocks(): Promise<MonitorResult> {
+  const ts = await getTranslations('Common');
     const result: MonitorResult = {
       innodbStatus: { deadlocks: [], lockWaitCount: 0, avgLockWaitTime: 0 },
       longTransactions: [],
@@ -43,7 +46,7 @@ export class DeadlockMonitor {
 
       const deadlockMatch = statusText.match(/LATEST DETECTED DEADLOCK[\s\S]*?TRANSACTIONS/);
       if (deadlockMatch) {
-        result.alerts.push('检测到最近发生死锁，请检查 InnoDB 状态');
+        result.alerts.push(ts('k_1cjloma'));
         secureLog('warn', 'Deadlock detected in InnoDB status', {
           snippet: deadlockMatch[0].substring(0, 500),
         });

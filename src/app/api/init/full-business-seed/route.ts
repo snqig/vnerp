@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -26,6 +29,8 @@ function randomAmount(min: number, max: number): number {
 }
 
 export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
   const result = await transaction(async (conn) => {
     const stats: Record<string, number> = {};
 
@@ -125,12 +130,12 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     let equipment: DbRow[] = eqpRows;
     if (equipment.length === 0) {
       const eqpTypes = [
-        { code: 'SMP', name: '半自动丝印机' },
-        { code: 'SMP', name: '全自动丝印机' },
-        { code: 'DIE', name: '平压平模切机' },
-        { code: 'DRY', name: 'UV固化机' },
-        { code: 'INS', name: '品检机' },
-        { code: 'AUX', name: '覆膜机' },
+        { code: 'SMP', name: ts('k_gj6rls') },
+        { code: 'SMP', name: ts('k_1q8v5a6') },
+        { code: 'DIE', name: ts('k_uz95ru') },
+        { code: 'DRY', name: ts('k_nfnjlc') },
+        { code: 'INS', name: ts('k_ambmd6') },
+        { code: 'AUX', name: ts('k_vu6aov') },
       ];
       for (let i = 1; i <= 20; i++) {
         const et = eqpTypes[(i - 1) % eqpTypes.length];
@@ -140,13 +145,13 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
             `EQP-${et.code}-${String(i).padStart(4, '0')}`,
             et.name,
             (i % 5) + 1,
-            randomItem(['东远', '永创', '精工']),
+            randomItem([ts('k_gp5epx'), ts('k_jm4fkk'), ts('k_qkwmj0')]),
             `MODEL-${String(i).padStart(3, '0')}`,
             `SN-${String(i).padStart(6, '0')}`,
             null,
-            randomItem(['丝印车间', '模切车间', '品检车间']),
+            randomItem([ts('k_1i2no0q'), ts('k_18ldhlf'), ts('k_hj2vti')]),
             randomDate(new Date(2019, 0, 1), new Date()),
-            `${randomItem(['东远', '永创'])}制造`,
+            `${randomItem([ts('k_gp5epx'), ts('k_jm4fkk')])}制造`,
             randomDate(new Date(), new Date(2028, 11, 31)),
             randomInt(500, 5000),
             1,
@@ -176,33 +181,33 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     const yearStart = new Date(now.getFullYear(), 0, 1);
     const yearEnd = new Date(now.getFullYear(), 11, 31);
     const defaultUserId = users.length > 0 ? users[0].id : 1;
-    const defaultUserName = users.length > 0 ? users[0].real_name : '系统管理员';
+    const defaultUserName = users.length > 0 ? users[0].real_name : ts('k_1csar6s');
 
     if (customers.length === 0 || materials.length === 0 || warehouses.length === 0) {
-      throw new Error('基础数据不足，请先初始化客户、物料和仓库数据');
+      throw new Error(ts('k_h2iibm'));
     }
 
     const productNames = [
-      '空调控制面板标签',
-      '洗衣机控制面板',
-      '手机电池标签',
-      '新能源电池标签',
-      '医疗设备面板',
-      '工业设备铭牌',
-      '电子元器件标签',
-      '电池防伪标签',
-      '汽车仪表盘面板',
-      '智能家居面板',
-      '冰箱温控面板',
-      '微波炉控制面板',
-      '电视背光模组标签',
-      '笔记本电脑铭牌',
-      '无人机操控面板',
-      '充电桩标识标签',
-      '安防设备面板',
-      '电动工具铭牌',
-      '智能手表表盘',
-      '蓝牙耳机标签',
+      ts('k_1085ar9'),
+      ts('k_1d31fut'),
+      ts('k_1u8tdc0'),
+      ts('k_hd09uq'),
+      ts('k_e0f7iv'),
+      ts('k_18cwdu4'),
+      ts('k_kbbj1u'),
+      ts('k_4nmn45'),
+      ts('k_1yfxa7v'),
+      ts('k_13ae7oe'),
+      ts('k_dcsarp'),
+      ts('k_1t9le8a'),
+      ts('k_1cy4l8l'),
+      ts('k_qy1rec'),
+      ts('k_oy99lw'),
+      ts('k_1vwgk6m'),
+      ts('k_ql36ga'),
+      ts('k_1royxq9'),
+      ts('k_73sqk3'),
+      ts('k_1bp9f27'),
     ];
     const productSpecs = [
       '120×80mm',
@@ -227,49 +232,49 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       '30×15mm',
     ];
     const productUnits = [
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '张',
-      '片',
-      '张',
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_accfpb'),
+      ts('k_1hzbc86'),
+      ts('k_accfpb'),
     ];
-    const categoryNames = ['丝印标签', '丝印面板', '丝印铭牌', '导电线路', '防伪标签'];
+    const categoryNames = [ts('k_p84cjd'), ts('k_lkgocz'), ts('k_ihjq7d'), ts('k_1dp5y0w'), ts('k_ce5fj4')];
     const shortNames = [
-      '空调面板',
-      '洗衣机面板',
-      '手机电池标',
-      '电池标签',
-      '医疗面板',
-      '工业铭牌',
-      '元器件标',
-      '防伪标',
-      '仪表盘',
-      '智能面板',
-      '冰箱面板',
-      '微波炉面板',
-      '电视标签',
-      '笔记本铭牌',
-      '无人机面板',
-      '充电桩标',
-      '安防面板',
-      '工具铭牌',
-      '手表表盘',
-      '耳机标',
+      ts('k_1mti1ph'),
+      ts('k_h2sp88'),
+      ts('k_1v9uata'),
+      ts('k_18zx15d'),
+      ts('k_1lb2dqo'),
+      ts('k_1kuuuxb'),
+      ts('k_lwrvq5'),
+      ts('k_1ammjtq'),
+      ts('k_1hgvoqd'),
+      ts('k_78kwej'),
+      ts('k_o5qw5x'),
+      ts('k_1bd5pi3'),
+      ts('k_3inqvn'),
+      ts('k_275mr2'),
+      ts('k_1g467ig'),
+      ts('k_1l1w2wf'),
+      ts('k_n57oa5'),
+      ts('k_1itwy4'),
+      ts('k_cb4uk6'),
+      ts('k_ps5em5'),
     ];
 
     const productIds: number[] = [];
@@ -301,16 +306,16 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     }
     stats.mdm_product = 20;
 
-    const sampleTypes = ['新样', '返样', '修改样', '确认样'];
-    const printMethods = ['丝印', '移印', '烫印', '丝印+模切', 'UV丝印'];
-    const colorSequences = ['单色', '双色', '三色', '四色', '专色+四色'];
-    const progressStatuses = ['待接单', '制版中', '印刷中', '待确认', '已完成'];
-    const sampleReasons = ['客户新品开发', '产品改版', '材料更换', '工艺优化', '客户确认样'];
-    const trackers = ['张跟单', '李跟单', '王跟单', '赵跟单', '刘跟单'];
-    const providedMaterials = ['客户供版', '客户供墨', '客户供料', '自备', '部分客供'];
-    const mylarInfos = ['Mylar 0.125mm', 'Mylar 0.175mm', 'Mylar 0.25mm', '无Mylar', 'Mylar 0.1mm'];
-    const sampleStocks = ['A区货架', 'B区货架', '样品柜', '客户取回', '已寄出'];
-    const customerConfirms = ['待确认', '已确认OK', '确认需修改', '确认不OK', '已签回'];
+    const sampleTypes = [ts('k_1xrmwnc'), ts('k_d8md5o'), ts('k_1ugi7st'), ts('k_zwqu20')];
+    const printMethods = [ts('k_1o7ehgo'), ts('k_1m4h9a'), ts('k_7p3zse'), ts('k_5u37od'), ts('k_1034o47')];
+    const colorSequences = [ts('k_1h1n7mu'), ts('k_1loe7mj'), ts('k_1muvx42'), ts('k_1iogdaw'), ts('k_1n7z07o')];
+    const progressStatuses = [ts('k_1khjpni'), ts('k_1adnx0a'), ts('k_1g5a05b'), ts('k_vlu9xm'), ts('k_19j4h')];
+    const sampleReasons = [ts('k_4fa6y6'), ts('k_1oeg6ic'), ts('k_1cinzeo'), ts('k_1a3rpks'), ts('k_1hich49')];
+    const trackers = [ts('k_1qnoc1b'), ts('k_va5swd'), ts('k_1hp6qwe'), ts('k_pqzh94'), ts('k_1l6p8ef')];
+    const providedMaterials = [ts('k_1chmrn1'), ts('k_1lbmci5'), ts('k_1phn0q2'), ts('k_11y9h8u'), ts('k_abwpx4')];
+    const mylarInfos = ['Mylar 0.125mm', 'Mylar 0.175mm', 'Mylar 0.25mm', ts('k_15dzhvg'), 'Mylar 0.1mm'];
+    const sampleStocks = [ts('k_7y3qi3'), ts('k_gfxjbs'), ts('k_1lfo4bv'), ts('k_1ksu60q'), ts('k_o6t4sb')];
+    const customerConfirms = [ts('k_vlu9xm'), ts('k_zfkkgx'), ts('k_lw7tao'), ts('k_vdjbls'), ts('k_1knn2m5')];
 
     for (let i = 0; i < 20; i++) {
       const cust = customers[i % customers.length];
@@ -331,7 +336,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           cust.customer_name,
           randomItem(printMethods),
           randomItem(colorSequences),
-          productNames[i] + '(打样)',
+          productNames[i] + ts('k_1nu87vc'),
           mat.material_code,
           productSpecs[i],
           mat.material_name,
@@ -342,7 +347,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           randomItem([0, 1, 0]),
           randomItem([0, 1, 0]),
           randomInt(10, 100),
-          `制版→印刷→质检→寄样`,
+          ts('k_jkg59v'),
           randomInt(1, 5),
           randomItem(sampleReasons),
           randomItem(trackers),
@@ -375,9 +380,9 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           `联系人${i + 1}`,
           user.real_name,
           nextDate,
-          randomItem(['新品开发机会', '批量订单机会', '长期合作意向', '样品确认中']),
+          randomItem([ts('k_iqn6el'), ts('k_i96gu8'), ts('k_1ti15ob'), ts('k_1arhfg6')]),
           randomItem([1, 2]),
-          `客户反馈良好，需持续跟进`,
+          ts('k_9zl0jb'),
           defaultUserId,
         ]
       );
@@ -416,8 +421,8 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     }
     stats.crm_customer_analysis = 20;
 
-    const templateMaterials = ['钢版', '激光版', '树脂版', '镍版', '钢版'];
-    const storageLocations = ['模切车间D1', '模切车间D2', '丝印车间A1', '丝印车间A2', '晒版车间B1'];
+    const templateMaterials = [ts('k_1w68fx3'), ts('k_qlmqji'), ts('k_142pgd2'), ts('k_1jsyqcw'), ts('k_1w68fx3')];
+    const storageLocations = [ts('k_1mbqzik'), ts('k_1n5pslh'), ts('k_13tvggg'), ts('k_14nu9jd'), ts('k_1830jdo')];
     const templateIds: number[] = [];
     for (let i = 0; i < 20; i++) {
       const maxUsage = randomInt(50000, 200000);
@@ -483,26 +488,26 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     stats.prd_die = 20;
 
     const formulaNames = [
-      '丝印黑色标准配方',
-      '丝印白色UV配方',
-      '导电银浆配方',
-      '丝印红色溶剂配方',
-      '丝印蓝色UV配方',
-      '丝印金色溶剂配方',
-      'UV透明光油配方',
-      '丝印绿色UV配方',
-      '丝印黄色溶剂配方',
-      '导电碳浆配方',
-      '丝印银色UV配方',
-      '丝印紫色溶剂配方',
-      '防伪荧光配方',
-      '磁性油墨配方',
-      '温变油墨配方',
-      '光变油墨配方',
-      '夜光油墨配方',
-      '导热油墨配方',
-      '绝缘油墨配方',
-      '可剥胶配方',
+      ts('k_u6im54'),
+      ts('k_xkwia2'),
+      ts('k_1lqjbt4'),
+      ts('k_1jaoqsu'),
+      ts('k_uixpka'),
+      ts('k_1wflftp'),
+      ts('k_hk4ikb'),
+      ts('k_1q7n0m4'),
+      ts('k_dq5zt0'),
+      ts('k_1iaw9ad'),
+      ts('k_1ydpk0p'),
+      ts('k_11in0cz'),
+      ts('k_fa0tb7'),
+      ts('k_1b0s0u2'),
+      ts('k_vhidp7'),
+      ts('k_188addn'),
+      ts('k_1d0rkjx'),
+      ts('k_1mggyoh'),
+      ts('k_1gzkan'),
+      ts('k_2p8lab'),
     ];
     const pantoneCodes = [
       'PANTONE Black C',
@@ -527,29 +532,29 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       'PANTONE 801 C',
     ];
     const colorNames = [
-      '黑色',
-      '白色',
-      '银色',
-      '红色',
-      '蓝色',
-      '金色',
-      '透明',
-      '绿色',
-      '黄色',
-      '碳黑',
-      '银色',
-      '紫色',
-      '荧光绿',
-      '磁性黑',
-      '温变',
-      '光变',
-      '夜光绿',
-      '导热灰',
-      '绝缘白',
-      '透明',
+      ts('k_1peuqkq'),
+      ts('k_6hu6um'),
+      ts('k_1sdxy3l'),
+      ts('k_1xpfks5'),
+      ts('k_3atm1a'),
+      ts('k_1w1464q'),
+      ts('k_prcqfk'),
+      ts('k_2g1g8k'),
+      ts('k_1j92b77'),
+      ts('k_p6ymeh'),
+      ts('k_1sdxy3l'),
+      ts('k_1y3vpxk'),
+      ts('k_1lavv2e'),
+      ts('k_xnkiqo'),
+      ts('k_11vcfro'),
+      ts('k_stszqs'),
+      ts('k_1pjh9hn'),
+      ts('k_17vc2ty'),
+      ts('k_wf1a47'),
+      ts('k_prcqfk'),
     ];
     const inkTypes = ['solvent', 'uv', 'conductive'];
-    const baseInkTypes = ['溶剂型基墨', 'UV型基墨', '导电型基墨'];
+    const baseInkTypes = [ts('k_6zse9o'), ts('k_34cfgh'), ts('k_hi1ro9')];
     const formulaIds: number[] = [];
     for (let i = 0; i < 20; i++) {
       const inkType = randomItem(inkTypes);
@@ -576,10 +581,10 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
 
     const inkMaterials = materials.filter(
       (m: DbRow) =>
-        m.material_name?.includes('油墨') ||
-        m.material_name?.includes('银浆') ||
-        m.material_name?.includes('光油') ||
-        m.material_name?.includes('感光胶')
+        m.material_name?.includes(ts('k_w1cwb8')) ||
+        m.material_name?.includes(ts('k_1fshh99')) ||
+        m.material_name?.includes(ts('k_120z5rb')) ||
+        m.material_name?.includes(ts('k_1x5vg2x'))
     );
     const inkMats = inkMaterials.length > 0 ? inkMaterials : materials.slice(0, 5);
 
@@ -652,7 +657,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     stats.ink_mixed_record = 20;
 
     const lifecycleStages = ['design', 'trial', 'production', 'mature', 'decline'];
-    const lifecycleStageNames = ['设计阶段', '试产阶段', '量产阶段', '成熟阶段', '衰退阶段'];
+    const lifecycleStageNames = [ts('k_1vm0ufp'), ts('k_ocj2w4'), ts('k_126kps6'), ts('k_1sb06f9'), ts('k_pjioz0')];
     for (let i = 0; i < 20; i++) {
       const pIdx = i % productIds.length;
       const stage = lifecycleStages[i % lifecycleStages.length];
@@ -705,7 +710,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           newVer,
           `${productNames[pIdx]}${ecoType}变更需求`,
           `变更${ecoType}相关参数以满足客户要求`,
-          `对生产计划及物料采购有轻微影响`,
+          ts('k_ewhwxt'),
           statusVal,
           user.real_name,
           applyTime,
@@ -758,7 +763,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           mat.material_name,
           mat.specification,
           matType,
-          randomItem(['薄膜', '油墨', '溶剂', '辅料']),
+          randomItem([ts('k_1bjxal9'), ts('k_w1cwb8'), ts('k_1xxx1ch'), ts('k_14rp9uj')]),
           mat.unit,
           mat.purchase_price || 0,
           100,
@@ -771,16 +776,16 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
 
     const materialTypes = ['RAW', 'SEMI', 'SUB', 'PKG', 'OTHER'];
     const processNames = [
-      '丝印',
-      '模切',
-      'UV固化',
-      '烫印',
-      '检品',
-      '分条',
-      '覆膜',
-      '冲压',
-      '烘干',
-      '包装',
+      ts('k_1o7ehgo'),
+      ts('k_12b93ht'),
+      ts('k_a84lt6'),
+      ts('k_7p3zse'),
+      ts('k_1avl262'),
+      ts('k_1qefmtk'),
+      ts('k_1p0kpz3'),
+      ts('k_xrdj7e'),
+      ts('k_5i3tcf'),
+      ts('k_55mvdr'),
     ];
     for (let i = 0; i < 20; i++) {
       const bomId = bomIds[i % bomIds.length];
@@ -819,7 +824,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     stats.bom_line = 20;
 
     const deliveryIds: number[] = [];
-    const logisticsCompanies = ['顺丰速运', '德邦物流', '中通快递', '圆通速递', '京东物流'];
+    const logisticsCompanies = [ts('k_twsprc'), ts('k_x89sz2'), ts('k_tt5xlr'), ts('k_xhwleo'), ts('k_17z1aa7')];
     for (let i = 0; i < 20; i++) {
       const so = salesOrders[i % salesOrders.length];
       const [custRow] = await conn.execute('SELECT customer_name FROM crm_customer WHERE id = ?', [
@@ -841,7 +846,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           randomDate(yearStart, now),
           `联系人${i + 1}`,
           `0769-${randomInt(22000000, 22999999)}`,
-          `广东省东莞市长安镇${randomItem(['乌沙路', '沙头路', '锦厦路'])}${randomInt(1, 200)}号`,
+          `广东省东莞市长安镇${randomItem([ts('k_1u92brv'), ts('k_1v7sdb1'), ts('k_p8l31i')])}${randomInt(1, 200)}号`,
           wh.id,
           randomItem(logisticsCompanies),
           `SF${randomInt(1000000000, 9999999999)}`,
@@ -886,16 +891,16 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     stats.sal_delivery_detail = 20;
 
     const returnReasons = [
-      '丝印偏色超出标准',
-      '套位偏差不合格',
-      '模切毛刺不符合要求',
-      '尺寸偏差超标',
-      '表面划痕影响品质',
-      '油墨附着力不足',
-      '色差超出客户标准',
-      '印刷内容错误',
-      '材料规格不符',
-      '客户需求变更',
+      ts('k_1egjmg7'),
+      ts('k_a0ojs7'),
+      ts('k_lw2kwa'),
+      ts('k_12nxvim'),
+      ts('k_144s06h'),
+      ts('k_2ifpr9'),
+      ts('k_emv08g'),
+      ts('k_ll6coi'),
+      ts('k_1cz4w8p'),
+      ts('k_j10ogk'),
     ];
     const returnIds: number[] = [];
     for (let i = 0; i < 20; i++) {
@@ -1061,7 +1066,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           eq.id,
           randomItem([1, 2, 3, 4, 5]),
           `${eq.equipment_name}定期保养检查`,
-          `清洁润滑关键部件，检查磨损情况并校准参数`,
+          ts('k_wf1kcy'),
           startTime,
           endTime,
           downtimeHours,
@@ -1074,16 +1079,16 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     stats.eqp_maintenance_record = 20;
 
     const faultDescs = [
-      '丝印刮刀磨损异常',
-      'UV灯管亮度不足',
-      '模切刀模断裂',
-      '传送带跑偏',
-      '温控系统失灵',
-      '对位系统精度下降',
-      '导轨润滑不足',
-      '传感器灵敏度降低',
-      '电机异响',
-      '气缸漏气',
+      ts('k_o3qjal'),
+      ts('k_1nk69fa'),
+      ts('k_1nzscvd'),
+      ts('k_1lvlv2o'),
+      ts('k_11bkbht'),
+      ts('k_e9zfvh'),
+      ts('k_5tfiug'),
+      ts('k_p3d9m9'),
+      ts('k_1i6oi8r'),
+      ts('k_wuhhy2'),
     ];
     for (let i = 0; i < 20; i++) {
       const eq = equipment[i % equipment.length];
@@ -1100,11 +1105,11 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           randomDate(yearStart, now),
           randomItem(faultDescs),
           randomItem([1, 2]),
-          randomItem(['张师傅', '李师傅', '王师傅', '赵工', '陈工']),
+          randomItem([ts('k_dfpu9c'), ts('k_4i4ny2'), ts('k_cwpqhl'), ts('k_y0ajlb'), ts('k_vrzjo6')]),
           repairStartTime,
           repairEndTime,
           repairCost,
-          '更换损坏部件，重新校准设备参数',
+          ts('k_18n6iz6'),
           randomItem([1, 2]),
           defaultUserId,
         ]
@@ -1113,11 +1118,11 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     stats.eqp_repair = 20;
 
     const calibrationOrgs = [
-      '广东省计量科学研究院',
-      '深圳市计量质量检测研究院',
-      '东莞市计量所',
-      '国家印刷机械质量检验中心',
-      '第三方校准机构',
+      ts('k_c04lsi'),
+      ts('k_enx5xr'),
+      ts('k_4cxeyt'),
+      ts('k_d7rffw'),
+      ts('k_1d2vtww'),
     ];
     for (let i = 0; i < 20; i++) {
       const eq = equipment[i % equipment.length];
@@ -1146,11 +1151,11 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     stats.eqp_calibration = 20;
 
     const scrapReasons = [
-      '设备老化无法维修',
-      '技术淘汰无法满足生产要求',
-      '多次维修仍无法正常使用',
-      '安全风险无法继续使用',
-      '精度严重下降无法校准',
+      ts('k_1ajgjs'),
+      ts('k_5cyhzy'),
+      ts('k_n3xqlm'),
+      ts('k_op2nhp'),
+      ts('k_q95rmb'),
     ];
     for (let i = 0; i < 20; i++) {
       const eq = equipment[i % equipment.length];
@@ -1191,7 +1196,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           randomItem([1, 2, 3]),
           user.id,
           user.real_name,
-          `调拨备注`,
+          ts('k_1pio315'),
           defaultUserId,
         ]
       );
@@ -1232,7 +1237,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           randomItem([1, 2, 3]),
           user.id,
           user.real_name,
-          `盘点备注`,
+          ts('k_5wpbul'),
           defaultUserId,
         ]
       );
@@ -1278,7 +1283,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           randomItem([1, 2]),
           user.id,
           user.real_name,
-          `调整备注`,
+          ts('k_1f9yccl'),
           defaultUserId,
         ]
       );
@@ -1358,7 +1363,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     stats.inv_sales_outbound_item = 20;
 
     const poIds: number[] = [];
-    const paymentTermsList = ['月结30天', '月结60天', '月结90天', '货到付款', '预付款50%'];
+    const paymentTermsList = [ts('k_isj9pm'), ts('k_g2lx0p'), ts('k_yyuqrw'), ts('k_16x2l80'), ts('k_c7em3r')];
     for (let i = 0; i < 20; i++) {
       const sup = suppliers[i % suppliers.length];
       const orderDate = randomDate(yearStart, now);
@@ -1432,7 +1437,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     stats.pur_purchase_order_line = 20;
 
     const requestIds: number[] = [];
-    const requestDepts = ['生产部', '品质部', '工程技术部', '仓储部', '采购部'];
+    const requestDepts = [ts('k_18glq49'), ts('k_11g5fpo'), ts('k_boxyuc'), ts('k_10hgjfm'), ts('k_1rgc4zf')];
     for (let i = 0; i < 20; i++) {
       const sup = suppliers[i % suppliers.length];
       const totalAmount = randomAmount(1000, 200000);
@@ -1523,16 +1528,16 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     stats.qc_final_inspection = 20;
 
     const defectTypes = [
-      '丝印偏色',
-      '套位偏差',
-      '模切毛刺',
-      '表面划痕',
-      '油墨脱落',
-      '尺寸偏差',
-      '附着力不足',
-      '色差超标',
-      '印刷模糊',
-      '漏印',
+      ts('k_1f857zp'),
+      ts('k_bnrquk'),
+      ts('k_zzinqk'),
+      ts('k_uc4c46'),
+      ts('k_n7qsva'),
+      ts('k_nr7ega'),
+      ts('k_bt382e'),
+      ts('k_1n9i6r5'),
+      ts('k_45n7tf'),
+      ts('k_dzq7ii'),
     ];
     for (let i = 0; i < 20; i++) {
       const inspId = inspectionIds[i % inspectionIds.length];
@@ -1553,7 +1558,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           `${mat.material_name}出现${randomItem(defectTypes)}缺陷`,
           randomItem([1, 2, 3]),
           randomItem([1, 2]),
-          randomItem(['张质检', '李质检', '王质检', '赵主管']),
+          randomItem([ts('k_x2wm7j'), ts('k_hurroh'), ts('k_ad8acy'), ts('k_1r0ff3k')]),
           handleDate,
         ]
       );
@@ -1620,12 +1625,12 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defectRate,
           user.real_name,
           reportTime,
-          randomItem(['品质经理赵六', '品质主管李四', '品质工程师王五']),
-          '隔离不合格品并通知客户',
-          randomItem(['制程控制不足', '原材料批次问题', '设备参数偏差', '操作人员失误']),
-          '加强制程巡检频次',
-          '建立预防性检查机制',
-          randomItem(['有效', '需持续跟踪']),
+          randomItem([ts('k_13lyufz'), ts('k_1m2czfb'), ts('k_3md17r')]),
+          ts('k_uqfmiq'),
+          randomItem([ts('k_hrikbj'), ts('k_1hga3x'), ts('k_1n011xl'), ts('k_cdps06')]),
+          ts('k_mg9d1n'),
+          ts('k_14crwu'),
+          randomItem([ts('k_kgwvlw'), ts('k_pr0cpo')]),
           defaultUserName,
           reportTime,
           status,
@@ -1655,19 +1660,19 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           `B2026${pad(i + 1, 4)}`,
           randomItem(sampleSources),
           randomItem([
-            '附着力测试/百格测试',
-            '耐磨测试/摩擦测试',
-            '色差检测/光谱分析',
-            '粘度测试/流变分析',
-            '厚度测量/千分尺检测',
+            ts('k_1rujdfd'),
+            ts('k_1bptjtd'),
+            ts('k_1egu5k1'),
+            ts('k_1c5x1hj'),
+            ts('k_1w6v268'),
           ]),
-          randomItem(['合格', '合格', '合格', '不合格']),
+          randomItem([ts('k_109sg5t'), ts('k_109sg5t'), ts('k_109sg5t'), ts('k_1ujsxic')]),
           randomItem(['qualified', 'qualified', 'unqualified']),
           user.real_name,
           testTime,
           reviewer.real_name,
           reviewTime,
-          randomItem(['百格刀', '摩擦试验机', '色差仪', '粘度计', '千分尺']),
+          randomItem([ts('k_125e0x1'), ts('k_5gz273'), ts('k_11iyglt'), ts('k_16im9o6'), ts('k_1k05lua')]),
           defaultUserId,
         ]
       );
@@ -1691,15 +1696,15 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           sup.id,
           sup.supplier_name,
           randomItem(auditTypes),
-          randomItem(['质量管理体系', '生产过程控制', '原材料管控', '环境与安全']),
+          randomItem([ts('k_9696gl'), ts('k_5ne8rs'), ts('k_zfw9rx'), ts('k_1c5xrt6')]),
           randomDate(yearStart, now),
           user.real_name,
-          '质量体系/过程控制/产品检验/交付能力',
+          ts('k_xmbufi'),
           `体系${randomInt(15, 25)}/过程${randomInt(15, 25)}/检验${randomInt(15, 25)}/交付${randomInt(15, 25)}`,
           totalScore,
           randomItem(['qualified', 'conditional', 'unqualified']),
-          randomItem(['无', '文件管控不足', '检验记录不完整', '交付偶尔延迟']),
-          randomItem(['完善文件管控流程', '补充检验记录', '优化交付计划']),
+          randomItem([tc('none'), ts('k_1cixpc0'), ts('k_12cqfpp'), ts('k_h024gg')]),
+          randomItem([ts('k_hlbu8s'), ts('k_1r4ysg4'), ts('k_b1x868')]),
           deadline,
           randomItem([1, 2]),
           defaultUserId,
@@ -1775,7 +1780,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
 
     const costTypes = ['material', 'labor', 'overhead', 'equipment'];
     const sourceTypes = ['work_order', 'purchase', 'maintenance'];
-    const departments = ['生产部', '品质部', '工程技术部', '仓储部', '采购部', '财务部'];
+    const departments = [ts('k_18glq49'), ts('k_11g5fpo'), ts('k_boxyuc'), ts('k_10hgjfm'), ts('k_1rgc4zf'), ts('k_x7q7u4')];
     for (let i = 0; i < 20; i++) {
       const wo = workOrders[i % workOrders.length];
       const costType = randomItem(costTypes);
@@ -1801,35 +1806,35 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     stats.fin_cost_record = 20;
 
     const trainingNames = [
-      '新员工入职培训',
-      '安全生产培训',
-      'ERP系统操作培训',
-      '品质标准培训',
-      '丝印工艺培训',
-      '5S管理培训',
-      '消防安全培训',
-      '设备操作培训',
-      '化学品安全培训',
-      '团队建设培训',
-      '管理技能培训',
-      '成本控制培训',
-      '客户服务培训',
-      '精益生产培训',
-      'ISO质量体系培训',
-      '丝印调墨培训',
-      '模切操作培训',
-      '仓库管理培训',
-      '采购流程培训',
-      '财务制度培训',
+      ts('k_s5ga0n'),
+      ts('k_1pp7uk4'),
+      ts('k_1fcgbqb'),
+      ts('k_1likwi3'),
+      ts('k_pfrs5'),
+      ts('k_1r1sy5o'),
+      ts('k_1iiwgqg'),
+      ts('k_1yl3fx5'),
+      ts('k_11x5qqb'),
+      ts('k_1wfjz28'),
+      ts('k_7jui57'),
+      ts('k_15a2qm'),
+      ts('k_6869aa'),
+      ts('k_178h7fp'),
+      ts('k_x2kbrv'),
+      ts('k_1w04r5d'),
+      ts('k_a8hkey'),
+      ts('k_p54fuq'),
+      ts('k_rfufi7'),
+      ts('k_1rv134q'),
     ];
-    const trainers = ['张伟', '刘洋', '王强', '周杰', '赵磊', '吴芳', '外部讲师'];
+    const trainers = [ts('k_3vr19c'), ts('k_9nfhqc'), ts('k_nqtivk'), ts('k_1gmpisl'), ts('k_qkv38u'), ts('k_vy0n74'), ts('k_1sq1uu9')];
     const trainingPlaces = [
-      '公司培训室A',
-      '公司培训室B',
-      '生产车间',
-      '会议室1',
-      '会议室2',
-      '线上培训',
+      ts('k_18duo5k'),
+      ts('k_197th8h'),
+      ts('k_13m5q49'),
+      ts('k_1qap342'),
+      ts('k_1q0phf3'),
+      ts('k_x8m0o6'),
     ];
     const trainingIds: number[] = [];
     for (let i = 0; i < 20; i++) {
@@ -1869,5 +1874,5 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     return stats;
   });
 
-  return successResponse(result, '全业务数据初始化成功');
+  return successResponse(result, ts('k_157xqrj'));
 });

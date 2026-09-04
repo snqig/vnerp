@@ -75,6 +75,7 @@ const units = [
 ];
 
 export default function EditBOMPage() {
+  const ts = useTranslations('Orders');
   const t = useTranslations('Orders');
   const tc = useTranslations('Common');
 
@@ -90,7 +91,7 @@ export default function EditBOMPage() {
     product_spec: '',
     version: 'V1.0',
     base_qty: 1,
-    unit: '件',
+    unit: ts('k_w0gthl'),
     remark: '',
   });
 
@@ -121,7 +122,7 @@ export default function EditBOMPage() {
             product_spec: header.product_spec || '',
             version: header.version || 'V1.0',
             base_qty: header.base_qty || 1,
-            unit: header.unit || '件',
+            unit: header.unit || ts('k_w0gthl'),
             remark: header.remark || '',
           });
 
@@ -132,7 +133,7 @@ export default function EditBOMPage() {
               material_code: line.material_code || '',
               material_name: line.material_name || '',
               material_spec: line.material_spec || '',
-              unit: line.unit || '件',
+              unit: line.unit || ts('k_w0gthl'),
               consumption_qty: parseFloat(String(line.consumption_qty || 0)),
               loss_rate: parseFloat(String(line.loss_rate || 0)),
               unit_cost: parseFloat(String(line.unit_cost || 0)),
@@ -189,7 +190,7 @@ export default function EditBOMPage() {
       material_code: '',
       material_name: '',
       material_spec: '',
-      unit: '件',
+      unit: ts('k_w0gthl'),
       consumption_qty: 1,
       loss_rate: 0,
       unit_cost: 0,

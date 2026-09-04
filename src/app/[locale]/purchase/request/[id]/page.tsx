@@ -54,6 +54,7 @@ interface RequestItem {
 }
 
 export default function PurchaseRequestDetailPage() {
+  const ts = useTranslations('Purchase');
   // 翻译钩子
   const tc = useTranslations('Common');
 
@@ -67,16 +68,16 @@ export default function PurchaseRequestDetailPage() {
       color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
     },
     2: {
-      label: '已批准',
+      label: ts('k_10hmnl2'),
       color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
     },
-    3: { label: '已拒绝', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+    3: { label: ts('k_16h1qdk'), color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
     4: {
       label: tc('convertedToPurchase'),
       color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
     },
     5: {
-      label: '已完成',
+      label: ts('k_19j4h'),
       color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
     },
   };
@@ -119,21 +120,21 @@ export default function PurchaseRequestDetailPage() {
       if (result.success) {
         setRequest(result.data);
       } else {
-        toast.error(result.message || '获取采购申请失败');
+        toast.error(result.message || ts('k_i82tec'));
       }
     } catch {
-      toast.error('获取采购申请失败');
+      toast.error(ts('k_i82tec'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleApprove = async () => {
-    toast.info('审批功能开发中');
+    toast.info(ts('k_10h1w4z'));
   };
 
   const handleReject = async () => {
-    toast.info('审批功能开发中');
+    toast.info(ts('k_10h1w4z'));
   };
 
   const formatAmount = (amount: number, currency: string) => {
@@ -147,7 +148,7 @@ export default function PurchaseRequestDetailPage() {
     return (
       <MainLayout>
         <div className="container mx-auto py-6">
-          <div className="text-center py-20">加载中...</div>
+          <div className="text-center py-20">{tc('loading')}</div>
         </div>
       </MainLayout>
     );
@@ -157,7 +158,7 @@ export default function PurchaseRequestDetailPage() {
     return (
       <MainLayout>
         <div className="container mx-auto py-6">
-          <div className="text-center py-20 text-muted-foreground">采购申请不存在或已被删除</div>
+          <div className="text-center py-20 text-muted-foreground">{ts('k_j6p1hr')}</div>
         </div>
       </MainLayout>
     );
@@ -175,8 +176,7 @@ export default function PurchaseRequestDetailPage() {
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 <FileText className="h-6 w-6" />
-                采购申请详情
-              </h1>
+                {ts('k_9o6zla')}</h1>
               <p className="text-sm text-muted-foreground">
                 {tc('requestNoLabelPrefix')}
                 {request.request_no}
@@ -186,24 +186,20 @@ export default function PurchaseRequestDetailPage() {
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => window.print()}>
               <Printer className="h-4 w-4 mr-2" />
-              打印
-            </Button>
+              {ts('k_fx6uxi')}</Button>
             {request.status <= 1 && (
               <Button onClick={() => router.push(`/purchase/request/${id}/edit`)}>
                 <Edit className="h-4 w-4 mr-2" />
-                编辑
-              </Button>
+                {ts('k_qreyeg')}</Button>
             )}
             {request.status === 1 && (
               <>
                 <Button variant="outline" className="text-green-600" onClick={handleApprove}>
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  批准
-                </Button>
+                  {ts('k_1tmnt86')}</Button>
                 <Button variant="outline" className="text-red-600" onClick={handleReject}>
                   <XCircle className="h-4 w-4 mr-2" />
-                  拒绝
-                </Button>
+                  {tc('auditReject')}</Button>
               </>
             )}
           </div>
@@ -227,20 +223,20 @@ export default function PurchaseRequestDetailPage() {
         {/* 基本信息 */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>基本信息</CardTitle>
+            <CardTitle>{ts('k_z5lkkb')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div>
-                <div className="text-sm text-muted-foreground">申请日期</div>
+                <div className="text-sm text-muted-foreground">{ts('k_1i2qe7n')}</div>
                 <div className="font-medium">{request.request_date}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">申请类型</div>
+                <div className="text-sm text-muted-foreground">{ts('k_1subwph')}</div>
                 <div className="font-medium">{request.request_type || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">申请部门</div>
+                <div className="text-sm text-muted-foreground">{ts('k_1x9z28n')}</div>
                 <div className="font-medium">{request.request_dept || '-'}</div>
               </div>
               <div>
@@ -252,7 +248,7 @@ export default function PurchaseRequestDetailPage() {
                 <div className="font-medium">{request.expected_date || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">建议供应商</div>
+                <div className="text-sm text-muted-foreground">{ts('k_yrjgkw')}</div>
                 <div className="font-medium">{request.supplier_name || '-'}</div>
               </div>
               <div>
@@ -272,19 +268,19 @@ export default function PurchaseRequestDetailPage() {
         {/* 物料明细 */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>采购物料明细</CardTitle>
+            <CardTitle>{ts('k_1fk0uv7')}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>行号</TableHead>
-                  <TableHead>物料编码</TableHead>
-                  <TableHead>物料名称</TableHead>
-                  <TableHead>规格型号</TableHead>
+                  <TableHead>{ts('k_11vy4t0')}</TableHead>
+                  <TableHead>{tc('materialCode')}</TableHead>
+                  <TableHead>{tc('materialName')}</TableHead>
+                  <TableHead>{ts('k_17faar3')}</TableHead>
                   <TableHead>{tc('unit')}</TableHead>
                   <TableHead className="text-right">{tc('quantity')}</TableHead>
-                  <TableHead className="text-right">单价</TableHead>
+                  <TableHead className="text-right">{ts('k_isc1c5')}</TableHead>
                   <TableHead className="text-right">{tc('amount')}</TableHead>
                   <TableHead>{tc('remark')}</TableHead>
                 </TableRow>
@@ -313,8 +309,7 @@ export default function PurchaseRequestDetailPage() {
             {/* 合计 */}
             <div className="flex justify-end mt-4 pt-4 border-t">
               <div className="text-lg font-bold">
-                合计金额：
-                <span className="text-blue-600">
+                {ts('k_71hi4y')}<span className="text-blue-600">
                   {formatAmount(request.total_amount, request.currency)}
                 </span>
               </div>
@@ -326,7 +321,7 @@ export default function PurchaseRequestDetailPage() {
         {(request.approver_name || request.approve_remark) && (
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>审批信息</CardTitle>
+              <CardTitle>{ts('k_14w3di7')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
@@ -339,7 +334,7 @@ export default function PurchaseRequestDetailPage() {
                   <div className="font-medium">{request.approve_date || '-'}</div>
                 </div>
                 <div className="md:col-span-3">
-                  <div className="text-sm text-muted-foreground">审批意见</div>
+                  <div className="text-sm text-muted-foreground">{ts('k_15z9tqr')}</div>
                   <div className="font-medium">{request.approve_remark || '-'}</div>
                 </div>
               </div>

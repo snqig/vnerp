@@ -51,6 +51,7 @@ const defaultForm = {
 };
 
 export default function ShiftsPage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
 
@@ -71,7 +72,7 @@ export default function ShiftsPage() {
         setShifts(list);
       }
     } catch {
-      toast.error(t('fetchFailed') || '获取失败');
+      toast.error(t('fetchFailed') || ts('k_1hljxzm'));
     } finally {
       setLoading(false);
     }
@@ -81,7 +82,7 @@ export default function ShiftsPage() {
 
   const handleSave = async () => {
     if (!form.shiftName) {
-      toast.error(t('enterShiftName') || '请输入班次名称');
+      toast.error(t('enterShiftName') || ts('k_1we4by5'));
       return;
     }
     try {
@@ -92,28 +93,28 @@ export default function ShiftsPage() {
       });
       const json = await res.json();
       if (json.code === 200) {
-        toast.success(editing ? (t('updateSuccess') || '更新成功') : (t('createSuccess') || '创建成功'));
+        toast.success(editing ? (t('updateSuccess') || ts('k_1795bzg')) : (t('createSuccess') || ts('k_kiombh')));
         setDialogOpen(false);
         fetchShifts();
       } else {
         toast.error(json.message || tc('error'));
       }
     } catch {
-      toast.error(t('saveFailed') || '保存失败');
+      toast.error(t('saveFailed') || ts('k_1q9u8le'));
     }
   };
 
   const handleDelete = async (shift: Shift) => {
-    if (!confirm(t('deleteConfirm') || '确认删除?')) return;
+    if (!confirm(t('deleteConfirm') || ts('k_1r6qelo'))) return;
     try {
       const res = await authFetch(`/api/hr/shifts?id=${shift.id}`, { method: 'DELETE' });
       const json = await res.json();
       if (json.code === 200) {
-        toast.success(t('deleteSuccess') || '删除成功');
+        toast.success(t('deleteSuccess') || ts('k_1hlqs'));
         fetchShifts();
       }
     } catch {
-      toast.error(t('deleteFailed') || '删除失败');
+      toast.error(t('deleteFailed') || ts('k_1ijrr73'));
     }
   };
 
@@ -134,12 +135,12 @@ export default function ShiftsPage() {
   );
 
   return (
-    <MainLayout title={t('shift') || '班次管理'}>
+    <MainLayout title={t('shift') || ts('k_4ndpw8')}>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Clock className="h-6 w-6 text-blue-500" />
-            <h1 className="text-2xl font-bold">{t('shift') || '班次管理'}</h1>
+            <h1 className="text-2xl font-bold">{t('shift') || ts('k_4ndpw8')}</h1>
           </div>
           <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" />{tc('add')}</Button>
         </div>
@@ -156,19 +157,19 @@ export default function ShiftsPage() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <Badge variant="secondary">{t('totalCount') || '共'} {filtered.length} {t('records') || '条'}</Badge>
+              <Badge variant="secondary">{t('totalCount') || ts('k_1vsm2qk')} {filtered.length} {t('records') || ts('k_1rfm5gs')}</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('shiftName') || '班次名称'}</TableHead>
-                  <TableHead>{t('startTime') || '开始时间'}</TableHead>
-                  <TableHead>{t('endTime') || '结束时间'}</TableHead>
-                  <TableHead>{t('allowOvertime') || '允许加班'}</TableHead>
-                  <TableHead>{t('overtimeRate') || '加班倍率'}</TableHead>
-                  <TableHead>{t('nightAllowance') || '夜班津贴'}</TableHead>
+                  <TableHead>{t('shiftName') || ts('k_cc9p5i')}</TableHead>
+                  <TableHead>{t('startTime') || ts('k_j6x7pa')}</TableHead>
+                  <TableHead>{t('endTime') || ts('k_9uebcl')}</TableHead>
+                  <TableHead>{t('allowOvertime') || ts('k_1udmajf')}</TableHead>
+                  <TableHead>{t('overtimeRate') || ts('k_1fqrsmq')}</TableHead>
+                  <TableHead>{t('nightAllowance') || ts('k_gw3gw3')}</TableHead>
                   <TableHead>{tc('status')}</TableHead>
                   <TableHead className="text-right">{tc('actions')}</TableHead>
                 </TableRow>
@@ -186,7 +187,7 @@ export default function ShiftsPage() {
                     <TableCell>¥{shift.nightAllowance}</TableCell>
                     <TableCell>
                       <Badge className={shift.status === 1 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}>
-                        {shift.status === 1 ? (tc('active') || '启用') : (tc('inactive') || '停用')}
+                        {shift.status === 1 ? (tc('active') || ts('k_5pm2ma')) : (tc('inactive') || ts('k_6q9o5l'))}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -202,7 +203,7 @@ export default function ShiftsPage() {
                 {filtered.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      {t('noData') || '暂无数据'}
+                      {t('noData') || ts('k_6tzr61')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -214,39 +215,39 @@ export default function ShiftsPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{editing ? (t('editShift') || '编辑班次') : (t('addShift') || '新增班次')}</DialogTitle>
+              <DialogTitle>{editing ? (t('editShift') || ts('k_lb7w2i')) : (t('addShift') || ts('k_18jwn3l'))}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2 col-span-2">
-                <Label>{t('shiftName') || '班次名称'}</Label>
-                <Input value={form.shiftName || ''} onChange={(e) => setForm({ ...form, shiftName: e.target.value })} placeholder="例如：白班" />
+                <Label>{t('shiftName') || ts('k_cc9p5i')}</Label>
+                <Input value={form.shiftName || ''} onChange={(e) => setForm({ ...form, shiftName: e.target.value })} placeholder={ts('k_zmvcec')} />
               </div>
               <div className="space-y-2">
-                <Label>{t('startTime') || '开始时间'}</Label>
+                <Label>{t('startTime') || ts('k_j6x7pa')}</Label>
                 <Input type="time" value={form.startTime || '08:00'} onChange={(e) => setForm({ ...form, startTime: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>{t('endTime') || '结束时间'}</Label>
+                <Label>{t('endTime') || ts('k_9uebcl')}</Label>
                 <Input type="time" value={form.endTime || '17:00'} onChange={(e) => setForm({ ...form, endTime: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>{t('overtimeRate') || '加班倍率'}</Label>
+                <Label>{t('overtimeRate') || ts('k_1fqrsmq')}</Label>
                 <Input type="number" step="0.1" value={form.overtimeRate ?? 1.5} onChange={(e) => setForm({ ...form, overtimeRate: parseFloat(e.target.value) || 1 })} />
               </div>
               <div className="space-y-2">
-                <Label>{t('nightAllowance') || '夜班津贴'}</Label>
+                <Label>{t('nightAllowance') || ts('k_gw3gw3')}</Label>
                 <Input type="number" value={form.nightAllowance ?? 0} onChange={(e) => setForm({ ...form, nightAllowance: parseFloat(e.target.value) || 0 })} />
               </div>
               <div className="space-y-2">
-                <Label>{t('lateThreshold') || '迟到阈值(分钟)'}</Label>
+                <Label>{t('lateThreshold') || ts('k_1t3lnmo')}</Label>
                 <Input type="number" value={form.lateThreshold ?? 30} onChange={(e) => setForm({ ...form, lateThreshold: parseInt(e.target.value) || 0 })} />
               </div>
               <div className="space-y-2">
-                <Label>{t('earlyLeaveThreshold') || '早退阈值(分钟)'}</Label>
+                <Label>{t('earlyLeaveThreshold') || ts('k_c2t5wy')}</Label>
                 <Input type="number" value={form.earlyLeaveThreshold ?? 30} onChange={(e) => setForm({ ...form, earlyLeaveThreshold: parseInt(e.target.value) || 0 })} />
               </div>
               <div className="space-y-2">
-                <Label>{t('workingHours') || '工时(小时)'}</Label>
+                <Label>{t('workingHours') || ts('k_1gec5qq')}</Label>
                 <Input type="number" step="0.5" value={form.workingHours ?? 8} onChange={(e) => setForm({ ...form, workingHours: parseFloat(e.target.value) || 8 })} />
               </div>
               <div className="flex items-center gap-2 pt-6">
@@ -255,7 +256,7 @@ export default function ShiftsPage() {
                   checked={form.allowOvertime || false}
                   onCheckedChange={(v) => setForm({ ...form, allowOvertime: !!v })}
                 />
-                <Label htmlFor="allowOvertime">{t('allowOvertime') || '允许加班'}</Label>
+                <Label htmlFor="allowOvertime">{t('allowOvertime') || ts('k_1udmajf')}</Label>
               </div>
               <div className="flex items-center gap-2 pt-6">
                 <Select value={String(form.status ?? 1)} onValueChange={(v) => setForm({ ...form, status: parseInt(v) })}>
@@ -263,8 +264,8 @@ export default function ShiftsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">{tc('active') || '启用'}</SelectItem>
-                    <SelectItem value="0">{tc('inactive') || '停用'}</SelectItem>
+                    <SelectItem value="1">{tc('active') || ts('k_5pm2ma')}</SelectItem>
+                    <SelectItem value="0">{tc('inactive') || ts('k_6q9o5l')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

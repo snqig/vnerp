@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useMemo, useEffect } from 'react';
 import {
@@ -41,6 +42,8 @@ export function TransferOutDialog({
   operatorId,
   onSuccess,
 }: TransferOutDialogProps) {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Warehouse');
   const fromWarehouseId = sourceRecords[0]?.warehouse_id;
   const fromWarehouseName =
     warehouses.find((w) => w.id === fromWarehouseId)?.warehouse_name ||
@@ -94,16 +97,16 @@ export function TransferOutDialog({
 
   const handleConfirm = async () => {
     if (!fromWarehouseId) {
-      toast.error('无法确定调出仓库');
+      toast.error(ts('k_17mo9j1'));
       return;
     }
     if (!toWarehouseId) {
-      toast.error('请选择调入仓库');
+      toast.error(ts('k_l4ganq'));
       return;
     }
     const validItems = items.filter((it) => it.material_id && Number(it.quantity) > 0);
     if (validItems.length === 0) {
-      toast.error('请至少填写一项有效数量');
+      toast.error(ts('k_482f8l'));
       return;
     }
 
@@ -127,7 +130,7 @@ export function TransferOutDialog({
       });
       const result = await res.json();
       if (!result.success) {
-        toast.error(result.message || '创建调拨单失败');
+        toast.error(result.message || ts('k_tl5ox0'));
         setSubmitting(false);
         return;
       }
@@ -144,11 +147,11 @@ export function TransferOutDialog({
         }
       }
 
-      toast.success('调拨单已创建并提交，请在「仓库调拨」模块完成出库/入库');
+      toast.success(ts('k_1yd5zzz'));
       onOpenChange(false);
       onSuccess();
     } catch {
-      toast.error('操作失败，请稍后重试');
+      toast.error(ts('k_1yojo3u'));
     } finally {
       setSubmitting(false);
     }
@@ -161,30 +164,29 @@ export function TransferOutDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl" resizable>
         <DialogHeader>
-          <DialogTitle>调拨出库到其他仓库</DialogTitle>
+          <DialogTitle>{ts('k_1a4ifv9')}</DialogTitle>
           <DialogDescription>
-            从入库单发起仓库调拨。调出仓库已自动带出，请选择调入仓库并确认明细后提交。
-          </DialogDescription>
+            {ts('k_1esbcjt')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2 max-h-[62vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label>调出仓库</Label>
+              <Label>{ts('k_1s0itwm')}</Label>
               <div className="flex h-9 items-center rounded-md border border-muted bg-muted/50 px-3 text-sm">
                 {fromWarehouseName}
               </div>
             </div>
             <div className="space-y-1">
               <Label>
-                调入仓库 <span className="text-red-500">*</span>
+                {ts('k_1g9nv0z')}<span className="text-red-500">*</span>
               </Label>
               <select
                 value={toWarehouseId}
                 onChange={(e) => setToWarehouseId(e.target.value ? Number(e.target.value) : '')}
                 className={inputCls}
               >
-                <option value="">请选择调入仓库</option>
+                <option value="">{ts('k_l4ganq')}</option>
                 {targetWarehouses.map((w) => (
                   <option key={w.id} value={w.id}>
                     {w.warehouse_name}
@@ -196,27 +198,25 @@ export function TransferOutDialog({
 
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <Label>调拨明细</Label>
+              <Label>{ts('k_o3qdhu')}</Label>
               <span className="text-xs text-muted-foreground">
-                共 {items.length} 项 / {totalQty} 件
-              </span>
+                {ts('k_1vsm2qk')}{items.length} {ts('k_djlht5')}{totalQty} {ts('k_w0gthl')}</span>
             </div>
             <div className="rounded-md border">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-xs text-muted-foreground">
                   <tr>
-                    <th className="px-2 py-2 text-left font-medium">物料</th>
-                    <th className="px-2 py-2 text-left font-medium">批次</th>
-                    <th className="px-2 py-2 text-left font-medium">单位</th>
-                    <th className="px-2 py-2 text-right font-medium">数量</th>
+                    <th className="px-2 py-2 text-left font-medium">{ts('k_1h2cbqf')}</th>
+                    <th className="px-2 py-2 text-left font-medium">{tc('batch')}</th>
+                    <th className="px-2 py-2 text-left font-medium">{ts('k_1xadx6v')}</th>
+                    <th className="px-2 py-2 text-right font-medium">{ts('k_1i54xuo')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="px-2 py-4 text-center text-muted-foreground">
-                        所选入库单没有可调拨的物料明细
-                      </td>
+                        {ts('k_1g6f21j')}</td>
                     </tr>
                   ) : (
                     items.map((it, idx) => (
@@ -245,11 +245,11 @@ export function TransferOutDialog({
           </div>
 
           <div className="space-y-1">
-            <Label>备注</Label>
+            <Label>{ts('k_b5m1l6')}</Label>
             <input
               value={remark}
               onChange={(e) => setRemark(e.target.value)}
-              placeholder="可选，如调拨原因"
+              placeholder={ts('k_xaxhg7')}
               className={inputCls}
             />
           </div>
@@ -257,10 +257,9 @@ export function TransferOutDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            取消
-          </Button>
+            {ts('k_1589w37')}</Button>
           <Button onClick={handleConfirm} disabled={submitting}>
-            {submitting ? '处理中...' : '创建调拨单'}
+            {submitting ? ts('k_1j4vco4') : ts('k_mcugde')}
           </Button>
         </DialogFooter>
       </DialogContent>

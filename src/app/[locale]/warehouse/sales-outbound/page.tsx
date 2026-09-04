@@ -49,6 +49,7 @@ interface Item {
 }
 
 export default function SalesOutboundPage() {
+  const ts = useTranslations('Warehouse');
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
@@ -163,7 +164,7 @@ export default function SalesOutboundPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">销售出库</h1>
+          <h1 className="text-2xl font-bold">{ts('k_270k8')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
@@ -184,8 +185,7 @@ export default function SalesOutboundPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增出库
-            </Button>
+              {ts('k_1r8y9zs')}</Button>
           </div>
         </div>
         <Card>
@@ -193,12 +193,12 @@ export default function SalesOutboundPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">出库单号</TableHead>
-                  <TableHead className="text-xs">销售订单</TableHead>
+                  <TableHead className="text-xs">{ts('k_1bwocym')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_m6144y')}</TableHead>
                   <TableHead className="text-xs">{tc('customer')}</TableHead>
                   <TableHead className="text-xs">{tc('warehouse')}</TableHead>
-                  <TableHead className="text-xs">出库日期</TableHead>
-                  <TableHead className="text-xs">发货人</TableHead>
+                  <TableHead className="text-xs">{ts('k_1au3mgm')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_1x8vy1t')}</TableHead>
                   <TableHead className="text-xs">{tc('status')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
@@ -228,8 +228,7 @@ export default function SalesOutboundPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 2)}
                             >
-                              确认出库
-                            </Button>
+                              {tc('confirmIssue')}</Button>
                           )}
                           <Button
                             size="sm"
@@ -309,7 +308,7 @@ export default function SalesOutboundPage() {
                 />
               </div>
               <div>
-                <Label>出库日期</Label>
+                <Label>{ts('k_1au3mgm')}</Label>
                 <Input
                   type="date"
                   value={editItem.outbound_date || ''}
@@ -324,7 +323,7 @@ export default function SalesOutboundPage() {
                 />
               </div>
               <div>
-                <Label>客户名称</Label>
+                <Label>{ts('k_1o7upb7')}</Label>
                 <Select
                   value={editItem.customer_name || ''}
                   onValueChange={(v) => setEditItem({ ...editItem, customer_name: v })}

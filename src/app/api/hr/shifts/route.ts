@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { getDrizzleDb } from '@/lib/db';
 import { eq, and, like, desc } from 'drizzle-orm';
@@ -31,15 +34,17 @@ export const POST = withPermission(async (request: NextRequest) => {
 }, { errorMessage: '创建班次失败' });
 
 export const PUT = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
-  if (!body.id) return errorResponse('缺少班次ID', 400, 400);
+  if (!body.id) return errorResponse(ts('k_1nhn83'), 400, 400);
   await db.update(hrShift).set(body).where(eq(hrShift.id, body.id));
   return successResponse(null);
 }, { errorMessage: '更新班次失败' });
 
 export const DELETE = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { id } = await request.json();
-  if (!id) return errorResponse('缺少班次ID', 400, 400);
+  if (!id) return errorResponse(ts('k_1nhn83'), 400, 400);
   await db.update(hrShift).set({ deleted: 1 }).where(eq(hrShift.id, id));
   return successResponse(null);
 }, { errorMessage: '删除班次失败' });

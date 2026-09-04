@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -6,6 +9,7 @@ import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
 export const GET = withPermission(
   async (_request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const results: string[] = [];
 
     const addColumnIfNotExists = async (table: string, column: string, definition: string) => {
@@ -39,38 +43,38 @@ export const GET = withPermission(
     await addColumnIfNotExists(
       'pur_request',
       'request_dept_id',
-      "INT UNSIGNED DEFAULT NULL COMMENT '申请部门ID' AFTER request_type"
+      ts('k_60cvy5')
     );
     await addColumnIfNotExists(
       'pur_request',
       'requester_id',
-      "INT UNSIGNED DEFAULT NULL COMMENT '申请人ID' AFTER request_dept"
+      ts('k_x4gcxi')
     );
     await addColumnIfNotExists(
       'pur_request',
       'reviewer_id',
-      "INT UNSIGNED DEFAULT NULL COMMENT '审校人ID' AFTER requester_name"
+      ts('k_wcp3xf')
     );
     await addColumnIfNotExists(
       'pur_request',
       'reviewer_name',
-      "VARCHAR(50) DEFAULT NULL COMMENT '审校人姓名' AFTER reviewer_id"
+      ts('k_19wyrby')
     );
     await addColumnIfNotExists(
       'pur_request',
       'approver_id',
-      "INT UNSIGNED DEFAULT NULL COMMENT '批准人ID' AFTER reviewer_name"
+      ts('k_6wy2pr')
     );
     await addColumnIfNotExists(
       'pur_request',
       'approver_name',
-      "VARCHAR(50) DEFAULT NULL COMMENT '批准人姓名' AFTER approver_id"
+      ts('k_14nixxx')
     );
 
     await addColumnIfNotExists(
       'pur_request_item',
       'material_id',
-      "INT UNSIGNED DEFAULT NULL COMMENT '物料ID' AFTER line_no"
+      ts('k_1mtf411')
     );
     await addIndexIfNotExists('pur_request_item', 'idx_material_id', 'material_id');
 
@@ -110,7 +114,7 @@ export const GET = withPermission(
       results.push(`Backfill material_id skipped: ${(e as Error).message}`);
     }
 
-    return successResponse(results, '迁移完成');
+    return successResponse(results, ts('k_ey185t'));
   },
   { errorMessage: '迁移失败' }
 );

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -6,11 +9,12 @@ import type { DbRow } from '@/types/db';
 
 // 获取角色的数据权限配置
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const roleId = searchParams.get('roleId');
 
   if (!roleId) {
-    return errorResponse('角色ID不能为空', 400, 400);
+    return errorResponse(ts('k_2gmrs2'), 400, 400);
   }
 
   const rows = await query(
@@ -33,6 +37,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 
 // 保存角色的数据权限配置
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { roleId, scopes } = body as {
     roleId: number;
@@ -40,7 +45,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   };
 
   if (!roleId) {
-    return errorResponse('角色ID不能为空', 400, 400);
+    return errorResponse(ts('k_2gmrs2'), 400, 400);
   }
 
   // 先删除旧配置
@@ -60,5 +65,5 @@ export const POST = withPermission(async (request: NextRequest) => {
     ]);
   }
 
-  return successResponse(null, '数据权限保存成功');
+  return successResponse(null, ts('k_1d3g0bs'));
 });

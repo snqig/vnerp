@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '../../shared/DomainTypes';
 
 export interface PurchaseWriteOffRecordProps {
@@ -30,14 +32,15 @@ export class PurchaseWriteOffRecord {
   }
 
   static create(props: PurchaseWriteOffRecordProps): PurchaseWriteOffRecord {
+  const ts = t;
     if (!props.payableId || props.payableId <= 0) {
-      throw new DomainError('应付单ID不能为空');
+      throw new DomainError(ts('k_1w6kuuz'));
     }
     if (!props.amount || props.amount <= 0) {
-      throw new DomainError('核销金额必须大于0');
+      throw new DomainError(ts('k_4is2uy'));
     }
     if (!props.writeOffDate) {
-      throw new DomainError('核销日期不能为空');
+      throw new DomainError(ts('k_w2exlz'));
     }
     return new PurchaseWriteOffRecord(props);
   }

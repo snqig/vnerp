@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { getDrizzleDb } from '@/lib/db';
 import { eq } from 'drizzle-orm';
@@ -27,10 +30,11 @@ const parentKeyMap: Record<string, string> = {
 };
 
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { type, parentId, code, name, sortOrder, remark } = body;
-  if (!type || !code || !name) return errorResponse('缺少必填字段', 400);
-  if (!tableMap[type]) return errorResponse('无效的节点类型', 400);
+  if (!type || !code || !name) return errorResponse(ts('k_1g8af20'), 400);
+  if (!tableMap[type]) return errorResponse(ts('k_4pmg4c'), 400);
 
   const table = tableMap[type];
   const insertData: Record<string, any> = { code, name, sortOrder: sortOrder || 0, remark: remark || null };
@@ -44,10 +48,11 @@ export const POST = withPermission(async (request: NextRequest) => {
 }, { errorMessage: '创建组织节点失败' });
 
 export const PUT = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id, type, code, name, sortOrder, status, remark, ...extra } = body;
-  if (!id || !type) return errorResponse('缺少ID或类型', 400);
-  if (!tableMap[type]) return errorResponse('无效的节点类型', 400);
+  if (!id || !type) return errorResponse(ts('k_6krvjv'), 400);
+  if (!tableMap[type]) return errorResponse(ts('k_4pmg4c'), 400);
 
   const table = tableMap[type];
   const setData: Record<string, any> = {};
@@ -68,18 +73,19 @@ export const PUT = withPermission(async (request: NextRequest) => {
   if (type === 'legal_entity' && extra.taxId !== undefined) setData.taxId = extra.taxId;
   if (type === 'legal_entity' && extra.legalPerson !== undefined) setData.legalPerson = extra.legalPerson;
 
-  if (Object.keys(setData).length === 0) return errorResponse('没有需要更新的字段', 400);
+  if (Object.keys(setData).length === 0) return errorResponse(ts('k_1kyikfw'), 400);
 
   await db.update(table).set(setData).where(eq(table.id, id));
   return successResponse(null);
 }, { errorMessage: '更新组织节点失败' });
 
 export const DELETE = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = parseInt(searchParams.get('id') || '');
   const type = searchParams.get('type');
-  if (!id || !type) return errorResponse('缺少ID或类型', 400);
-  if (!tableMap[type]) return errorResponse('无效的节点类型', 400);
+  if (!id || !type) return errorResponse(ts('k_6krvjv'), 400);
+  if (!tableMap[type]) return errorResponse(ts('k_4pmg4c'), 400);
 
   const table = tableMap[type];
   await db.update(table).set({ deleted: 1 }).where(eq(table.id, id));

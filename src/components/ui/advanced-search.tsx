@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
@@ -47,6 +48,7 @@ export function AdvancedSearch({
   onRemoveFilter,
   className = '',
 }: AdvancedSearchProps) {
+  const ts = useTranslations('Common');
   const [open, setOpen] = useState(false);
   const [filters, setFilters] = useState<Record<string, string>>({});
 
@@ -72,8 +74,7 @@ export function AdvancedSearch({
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className="gap-1">
             <SlidersHorizontal className="h-3.5 w-3.5" />
-            高级搜索
-            {activeCount > 0 && (
+            {ts('k_1em1q0y')}{activeCount > 0 && (
               <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
                 {activeCount}
               </Badge>
@@ -83,10 +84,9 @@ export function AdvancedSearch({
         <PopoverContent className="w-[400px] p-4" align="start">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-sm">筛选条件</h4>
+              <h4 className="font-medium text-sm">{ts('k_1klma2y')}</h4>
               <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleReset}>
-                重置
-              </Button>
+                {ts('k_1wq9feq')}</Button>
             </div>
             <div className="space-y-3 max-h-[400px] overflow-y-auto">
               {fields.map((field) => (
@@ -109,7 +109,7 @@ export function AdvancedSearch({
                         <SelectValue placeholder={field.placeholder || `选择${field.label}`} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="__all__">全部</SelectItem>
+                        <SelectItem value="__all__">{ts('k_q6w6ul')}</SelectItem>
                         {field.options.map((opt) => (
                           <SelectItem key={opt.value} value={opt.value}>
                             {opt.label}
@@ -131,12 +131,10 @@ export function AdvancedSearch({
             </div>
             <div className="flex justify-end gap-2 pt-2 border-t">
               <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
-                取消
-              </Button>
+                {ts('k_1589w37')}</Button>
               <Button size="sm" onClick={handleSearch}>
                 <Search className="h-3 w-3 mr-1" />
-                搜索
-              </Button>
+                {ts('k_367f3v')}</Button>
             </div>
           </div>
         </PopoverContent>
@@ -162,8 +160,7 @@ export function AdvancedSearch({
             className="h-6 text-xs text-muted-foreground"
             onClick={handleReset}
           >
-            清除全部
-          </Button>
+            {ts('k_1en2e7g')}</Button>
         </div>
       )}
     </div>

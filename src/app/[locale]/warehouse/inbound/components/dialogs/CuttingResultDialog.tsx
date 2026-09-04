@@ -29,6 +29,7 @@ export function CuttingResultDialog({
   printLabels,
 }: CuttingResultDialogProps) {
   const t = useTranslations('Warehouse');
+  const ts = useTranslations('Warehouse');
   const tc = useTranslations('Common');
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -50,12 +51,12 @@ export function CuttingResultDialog({
                           <div class="label-no">${label.labelNo}</div>
                           <div class="material-name">${label.materialName}</div>
                         </div>
-                        <div class="status-badge" style="background:${isRem ? '#fef9c3' : '#ffedd5'};color:${isRem ? '#854d0e' : '#9a3412'};">${isRem ? '余料' : '分切'}</div>
+                        <div class="status-badge" style="background:${isRem ? '#fef9c3' : '#ffedd5'};color:${isRem ? '#854d0e' : '#9a3412'};">${isRem ? ts('k_1wtck8n') : ts('k_jnipy2')}</div>
                       </div>
                       <div class="label-info">
                         <div class="info-row"><span class="info-label">源标签：</span><span class="info-value">${label.sourceLabelNo}</span></div>
                         <div class="info-row"><span class="info-label">入库单号：</span><span class="info-value">${label.orderNo}</span></div>
-                        <div class="info-row"><span class="info-label">${isRem ? '余料宽幅：' : '分切宽幅：'}</span><span class="info-value" style="color:${isRem ? '#eab308' : '#ea580c'};font-weight:600;">${label.cutWidth}mm</span></div>
+                        <div class="info-row"><span class="info-label">${isRem ? ts('k_jk2owx') : ts('k_iq8026')}</span><span class="info-value" style="color:${isRem ? '#eab308' : '#ea580c'};font-weight:600;">${label.cutWidth}mm</span></div>
                         <div class="info-row"><span class="info-label">规格：</span><span class="info-value">${label.specification || '-'}</span></div>
                         <div class="info-row"><span class="info-label">数量/单位：</span><span class="info-value">${label.quantity} ${label.unit}</span></div>
                         <div class="info-row"><span class="info-label">供应商：</span><span class="info-value">${label.supplier || '-'}</span></div>

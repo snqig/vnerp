@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '@/domain/shared/DomainTypes';
 
 export const QR_TYPE = {
@@ -112,9 +114,10 @@ export class QRCode {
   }
 
   static create(props: QRCodeProps): QRCode {
-    if (!props.qrCode) throw new DomainError('二维码编码不能为空');
-    if (!props.qrType) throw new DomainError('二维码类型不能为空');
-    if (props.quantity !== undefined && props.quantity < 0) throw new DomainError('数量不能为负数');
+  const ts = t;
+    if (!props.qrCode) throw new DomainError(ts('k_qp3e27'));
+    if (!props.qrType) throw new DomainError(ts('k_be2iz0'));
+    if (props.quantity !== undefined && props.quantity < 0) throw new DomainError(ts('k_w3h4vv'));
     return new QRCode(props);
   }
 
@@ -123,10 +126,11 @@ export class QRCode {
   }
 
   split(quantity: number, totalSplits: number, index: number): QRCode {
-    if (quantity <= 0) throw new DomainError('拆分数量必须大于0');
-    if (quantity > this._quantity) throw new DomainError('拆分数量不能超过父码剩余数量');
-    if (index <= 0) throw new DomainError('拆分子码索引必须大于0');
-    if (index > totalSplits) throw new DomainError('拆分子码索引不能超过总数');
+  const ts = t;
+    if (quantity <= 0) throw new DomainError(ts('k_sqwxe7'));
+    if (quantity > this._quantity) throw new DomainError(ts('k_63371w'));
+    if (index <= 0) throw new DomainError(ts('k_by6v6e'));
+    if (index > totalSplits) throw new DomainError(ts('k_1ewn4l6'));
     return new QRCode({
       qrCode: `${this.qrCode}-S${index}`,
       qrType: QR_TYPE.SPLIT,
@@ -144,8 +148,9 @@ export class QRCode {
   }
 
   reduceQuantity(amount: number): void {
-    if (amount < 0) throw new DomainError('扣减数量不能为负数');
-    if (amount > this._quantity) throw new DomainError('扣减数量不能超过当前数量');
+  const ts = t;
+    if (amount < 0) throw new DomainError(ts('k_168lxdh'));
+    if (amount > this._quantity) throw new DomainError(ts('k_1kkhwg5'));
     this._quantity -= amount;
   }
 

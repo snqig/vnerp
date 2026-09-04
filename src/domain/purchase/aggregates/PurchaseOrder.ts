@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { PurchaseOrderStatus, PurchaseStatus } from '../value-objects/PurchaseOrderStatus';
 import { PurchaseOrderLine, PurchaseOrderLineProps } from '../entities/PurchaseOrderLine';
@@ -78,11 +80,12 @@ export class PurchaseOrder {
   ) {}
 
   static create(props: PurchaseOrderProps): PurchaseOrder {
+  const ts = t;
     if (!props.supplierId || props.supplierId <= 0) {
-      throw new DomainError('供应商不能为空');
+      throw new DomainError(ts('k_4o0inq'));
     }
     if (!props.lines || props.lines.length === 0) {
-      throw new DomainError('采购明细不能为空');
+      throw new DomainError(ts('k_193r78b'));
     }
 
     const lines = props.lines.map((line, index) =>

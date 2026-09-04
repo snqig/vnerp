@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 export interface ParsedSpec {
   width: number;
   length: number | null;
@@ -33,11 +36,13 @@ export function formatSmallSpec(width: number | string): string {
 export const UNIT_MARK = { NORMAL: 0, ZHIZ: 1, JUAN: 2 } as const;
 
 export function getUnitLabel(unitMark: number): string {
-  const map: Record<number, string> = { 0: '', 1: '支', 2: '卷' };
+  const ts = t;
+  const map: Record<number, string> = { 0: '', 1: ts('k_btluu6'), 2: ts('k_1v8rak6') };
   return map[unitMark] ?? '';
 }
 
 export function getBatchTypeLabel(batchType: number): string {
-  const map: Record<number, string> = { 0: '大料批次', 1: '小料批次' };
-  return map[batchType] ?? '未知';
+  const ts = t;
+  const map: Record<number, string> = { 0: ts('k_1qvls07'), 1: ts('k_997lb') };
+  return map[batchType] ?? ts('k_1lpnuh4');
 }

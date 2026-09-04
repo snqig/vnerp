@@ -1,0 +1,482 @@
+
+===== MODULE: /engineering =====
+routes(3): \src\app\api\engineering\sample-to-mass\route.ts, \src\app\api\engineering\sop\route.ts, \src\app\api\engineering\standard-card\route.ts
+pages(3): \src\app\[locale]\engineering\error.tsx, \src\app\[locale]\engineering\sample-to-mass\page.tsx, \src\app\[locale]\engineering\sop\page.tsx
+tables: eng_sample_to_mass, eng_sop, prod_work_order, prd_bom, prd_process_card
+INSERT cols: {"eng_sample_to_mass":["transfer_no","sample_order_id","sample_order_no","product_id","product_code","product_name","customer_id","customer_name","standard_card_id","standard_card_no","process_card_id","process_card_no","bom_id","bom_version","sample_params","mass_params","sop_file","process_route","check_standard","special_note","remark","create_by","status"],"eng_sop":["sop_no","sop_name","product_id","product_code","product_name","process_code","process_name","version","sop_type","content","file_url","workshop","equipment_type","effective_date","remark"]}
+UPDATE cols: {"eng_sample_to_mass":["product_id","product_code","product_name","customer_id","customer_name","standard_card_id","standard_card_no","process_card_id","process_card_no","bom_id","bom_version","sample_params","mass_params","sop_file","process_route","check_standard","special_note","remark","create_by","bom_id","workorder_id","workorder_no","conversion_date","approved_by","status","remark","status","update_time","deleted","update_time"],"prod_work_order":["sales_order_id","standard_card_id","process_card_id"],"eng_sop":["deleted"]}
+json destructure: status
+validateRequestBody fields: 
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: status
+  [prod_work_order] NOT NULL 疑似缺控件: work_order_no, product_id, product_code, planned_qty, completed_qty, process_name, warehouse_id
+  [prod_work_order] 前端字段疑似不在该表列: (无)
+  [prd_bom] NOT NULL 疑似缺控件: bom_name
+  [prd_bom] 前端字段疑似不在该表列: (无)
+  [prd_process_card] NOT NULL 疑似缺控件: card_no
+  [prd_process_card] 前端字段疑似不在该表列: (无)
+
+===== MODULE: /sample/management =====
+routes(0): (none)
+pages(1): \src\app\[locale]\sample\management\page.tsx
+apiRefsFromPage: /api/sample/orders
+tables: 
+INSERT cols: {}
+UPDATE cols: {}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: notify_date, customer_name, product_name, material_no, version, size_spec, material_spec, quantity, customer_require_date, remark
+frontend table accessorKey: 
+frontend fetch body keys: 
+
+===== MODULE: /sample/orders =====
+routes(3): \src\app\api\sample\orders\linkage\route.ts, \src\app\api\sample\orders\route.ts, \src\app\api\sample\orders\status\route.ts
+pages(4): \src\app\[locale]\sample\orders\new\page.tsx, \src\app\[locale]\sample\orders\page.tsx, \src\app\[locale]\sample\orders\[id]\edit\page.tsx, \src\app\[locale]\sample\orders\[id]\page.tsx
+tables: prod_work_order, prod_work_order_item, prod_work_order_material_req, sal_sample_order, bom_header, mdm_product, bom_line, inv_inventory, sample
+INSERT cols: {"prod_work_order":["work_order_no","order_id","order_no","order_type","customer_name","product_name","quantity","unit","status","priority","plan_start_date","plan_end_date","create_time"],"prod_work_order_item":["work_order_id","line_no","material_id","material_name","quantity","unit","unit_price","total_price","create_time"],"prod_work_order_material_req":["work_order_id","bom_line_id","material_id","material_name","required_qty","unit","create_time"]}
+UPDATE cols: {"prod_work_order":["bom_id"],"sal_sample_order":["delivery_status","actual_delivery_date","update_time","delivery_status","update_time"]}
+json destructure: customer_name, material_no
+validateRequestBody fields: notify_date, customer_name, product_name, material_no
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: quantity, id, sample_order_id, actual_delivery_date, sample_count, is_confirmed, is_urgent, is_produce_together
+  [prod_work_order] NOT NULL 疑似缺控件: product_id, product_code, planned_qty, completed_qty, process_name, warehouse_id
+  [prod_work_order] 前端字段疑似不在该表列: sample_order_id, actual_delivery_date, sample_count, is_confirmed, is_urgent, is_produce_together
+  [prod_work_order_item] NOT NULL 疑似缺控件: (无)
+  [prod_work_order_item] 前端字段疑似不在该表列: sample_order_id, actual_delivery_date, sample_count, is_confirmed, is_urgent, is_produce_together
+  [prod_work_order_material_req] NOT NULL 疑似缺控件: (无)
+  [prod_work_order_material_req] 前端字段疑似不在该表列: quantity, sample_order_id, actual_delivery_date, sample_count, is_confirmed, is_urgent, is_produce_together
+  [sal_sample_order] NOT NULL 疑似缺控件: order_no
+  [sal_sample_order] 前端字段疑似不在该表列: sample_order_id, sample_count, is_confirmed, is_urgent, is_produce_together
+  [bom_header] NOT NULL 疑似缺控件: bom_no
+  [bom_header] 前端字段疑似不在该表列: quantity, sample_order_id, actual_delivery_date, sample_count, is_confirmed, is_urgent, is_produce_together
+  [mdm_product] NOT NULL 疑似缺控件: product_code
+  [mdm_product] 前端字段疑似不在该表列: quantity, sample_order_id, actual_delivery_date, sample_count, is_confirmed, is_urgent, is_produce_together
+  [bom_line] NOT NULL 疑似缺控件: bom_id, line_no, usage_qty
+  [bom_line] 前端字段疑似不在该表列: quantity, sample_order_id, actual_delivery_date, sample_count, is_confirmed, is_urgent, is_produce_together
+  [inv_inventory] NOT NULL 疑似缺控件: material_id, warehouse_id
+  [inv_inventory] 前端字段疑似不在该表列: sample_order_id, actual_delivery_date, sample_count, is_confirmed, is_urgent, is_produce_together
+
+===== MODULE: /sample/standard-card =====
+routes(0): (none)
+pages(10): \src\app\[locale]\sample\standard-card\input\page.tsx, \src\app\[locale]\sample\standard-card\input-card\page.tsx, \src\app\[locale]\sample\standard-card\input-card\utils.ts, \src\app\[locale]\sample\standard-card\input-v2\FileUploadCell.tsx, \src\app\[locale]\sample\standard-card\input-v2\page.tsx, \src\app\[locale]\sample\standard-card\InputCardForm.tsx, \src\app\[locale]\sample\standard-card\InputV2Form.tsx, \src\app\[locale]\sample\standard-card\page.tsx, \src\app\[locale]\sample\standard-card\print\page.tsx, \src\app\[locale]\sample\standard-card\template\page.tsx
+apiRefsFromPage: /api/dcprint/sample-card/template, /api/customers, /api/inventory/materials, /api/dcprint/formula/color, /api/dcprint/tool, /api/production/process-route, /api/standard-cards, /api/dcprint/sample-card/template/
+tables: 
+INSERT cols: {}
+UPDATE cols: {}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: formData, 
+frontend table accessorKey: 
+frontend fetch body keys: 
+
+===== MODULE: /engineering/sample-to-mass =====
+routes(1): \src\app\api\engineering\sample-to-mass\route.ts
+pages(1): \src\app\[locale]\engineering\sample-to-mass\page.tsx
+tables: eng_sample_to_mass, prod_work_order, prd_bom
+INSERT cols: {"eng_sample_to_mass":["transfer_no","sample_order_id","sample_order_no","product_id","product_code","product_name","customer_id","customer_name","standard_card_id","standard_card_no","process_card_id","process_card_no","bom_id","bom_version","sample_params","mass_params","sop_file","process_route","check_standard","special_note","remark","create_by","status"]}
+UPDATE cols: {"eng_sample_to_mass":["product_id","product_code","product_name","customer_id","customer_name","standard_card_id","standard_card_no","process_card_id","process_card_no","bom_id","bom_version","sample_params","mass_params","sop_file","process_route","check_standard","special_note","remark","create_by","bom_id","workorder_id","workorder_no","conversion_date","approved_by","status","remark","status","update_time","deleted","update_time"],"prod_work_order":["sales_order_id","standard_card_id","process_card_id"]}
+json destructure: status
+validateRequestBody fields: 
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: status
+  [prod_work_order] NOT NULL 疑似缺控件: work_order_no, product_id, product_code, planned_qty, completed_qty, process_name, warehouse_id
+  [prod_work_order] 前端字段疑似不在该表列: (无)
+  [prd_bom] NOT NULL 疑似缺控件: bom_name
+  [prd_bom] 前端字段疑似不在该表列: (无)
+
+===== MODULE: /engineering/sop =====
+routes(1): \src\app\api\engineering\sop\route.ts
+pages(1): \src\app\[locale]\engineering\sop\page.tsx
+tables: eng_sop
+INSERT cols: {"eng_sop":["sop_no","sop_name","product_id","product_code","product_name","process_code","process_name","version","sop_type","content","file_url","workshop","equipment_type","effective_date","remark"]}
+UPDATE cols: {"eng_sop":["deleted"]}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: 
+
+===== MODULE: /prepress/die-template =====
+routes(1): \src\app\api\prepress\die-template\route.ts
+pages(1): \src\app\[locale]\prepress\die-template\page.tsx
+tables: prd_die_template
+INSERT cols: {"prd_die_template":["template_code","template_name","asset_type","layout_type","pieces_per_impression","template_type","specification","material","max_usage","current_usage","remaining_usage","warning_usage","max_impressions","cumulative_impressions","warning_threshold","maintenance_interval","maintenance_count","last_maintenance_impressions","status","die_status","storage_location","purchase_date","supplier_id","unit_price","qr_code","remark"]}
+UPDATE cols: {"prd_die_template":["template_name","asset_type","layout_type","pieces_per_impression","template_type","specification","material","max_usage","current_usage","remaining_usage","warning_usage","max_impressions","cumulative_impressions","warning_threshold","maintenance_interval","maintenance_count","last_maintenance_impressions","last_maintenance_date","last_used_date","status","die_status","storage_location","unit_price","qr_code","remark","deleted"]}
+json destructure: template_code, max_usage, current_usage, warning_usage, max_impressions, cumulative_impressions, warning_threshold, maintenance_interval, asset_type, template_type, layout_type, pieces_per_impression, template_name, specification, material, status, storage_location, purchase_date, supplier_id, unit_price, qr_code, remark, id, die_status, force_die_status, maintenance_count, last_maintenance_impressions, last_maintenance_date, last_used_date
+validateRequestBody fields: template_code, template_name, template_type
+frontend form fields: template_code, template_name, template_type, asset_type, layout_type, pieces_per_impression, specification, material, max_impressions, cumulative_impressions, warning_threshold, maintenance_interval, unit_price, storage_location, remark
+frontend table accessorKey: 
+frontend fetch body keys: template_code, template_name, template_type, asset_type, layout_type, pieces_per_impression, specification, material, max_usage, current_usage, warning_usage, max_impressions, cumulative_impressions, warning_threshold, maintenance_interval, unit_price, storage_location, purchase_date, remark, id, die_id, impressions, maintenance_type, cost, technician_name, complete_immediately, status, force_die_status
+  [prd_die_template] NOT NULL 疑似缺控件: (无)
+  [prd_die_template] 前端字段疑似不在该表列: die_id, impressions, maintenance_type, cost, technician_name, complete_immediately, force_die_status
+
+===== MODULE: /dcprint/ink =====
+routes(1): \src\app\api\dcprint\ink\route.ts
+pages(1): \src\app\[locale]\dcprint\ink\page.tsx
+tables: 
+INSERT cols: {}
+UPDATE cols: {}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: 
+
+===== MODULE: /dcprint/process-cards =====
+routes(1): \src\app\api\dcprint\process-cards\route.ts
+pages(1): \src\app\[locale]\dcprint\process-cards\page.tsx
+tables: prd_process_card, prd_process_card_material, inv_material_label
+INSERT cols: {"prd_process_card":["card_no","qr_code","work_order_id","work_order_no","product_code","product_name","material_spec","work_order_date","plan_qty","main_label_id","main_label_no","burdening_status","lock_status","create_user_id","create_user_name","deleted"],"prd_process_card_material":["card_id","card_no","label_id","label_no","material_type","material_code","material_name","specification","batch_no","quantity","unit","card_id","card_no","label_id","label_no","material_type","material_code","material_name","specification","batch_no","quantity","unit"]}
+UPDATE cols: {"inv_material_label":["is_used","is_used"],"prd_process_card":["burdening_status","lock_status","deleted"]}
+json destructure: id, cardNo
+validateRequestBody fields: workOrderId, workOrderNo, mainLabelId, mainLabelNo, createUserId, createUserName
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: qrContent, scanType, workOrderId, workOrderNo, productCode, productName, materialSpec, planQty, mainLabelId, mainLabelNo, createUserId, createUserName
+  [prd_process_card] NOT NULL 疑似缺控件: (无)
+  [prd_process_card] 前端字段疑似不在该表列: qrContent, scanType, workOrderId, workOrderNo, productCode, productName, materialSpec, planQty, mainLabelId, mainLabelNo, createUserId, createUserName
+  [prd_process_card_material] NOT NULL 疑似缺控件: (无)
+  [prd_process_card_material] 前端字段疑似不在该表列: qrContent, scanType, workOrderId, workOrderNo, productCode, productName, materialSpec, planQty, mainLabelId, mainLabelNo, createUserId, createUserName
+  [inv_material_label] NOT NULL 疑似缺控件: label_no, material_code
+  [inv_material_label] 前端字段疑似不在该表列: qrContent, scanType, workOrderId, workOrderNo, productCode, productName, materialSpec, planQty, mainLabelId, mainLabelNo, createUserId, createUserName
+
+===== MODULE: /dcprint/labels =====
+routes(1): \src\app\api\dcprint\labels\route.ts
+pages(1): \src\app\[locale]\dcprint\labels\page.tsx
+tables: inv_material_label, inv_warehouse, inv_location
+INSERT cols: {"inv_material_label":["label_no","qr_code","purchase_order_no","supplier_name","receive_date","material_code","material_name","specification","unit","batch_no","quantity","package_qty","width","length_per_roll","remark","color_code","mix_remark","warehouse_id","location_id","is_main_material","parent_label_id","status","deleted"]}
+UPDATE cols: {"inv_material_label":["deleted"]}
+json destructure: id
+validateRequestBody fields: labelNo, materialCode
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: sourceLabelId, operatorId, operatorName, remark
+  [inv_material_label] NOT NULL 疑似缺控件: (无)
+  [inv_material_label] 前端字段疑似不在该表列: sourceLabelId, operatorId, operatorName
+  [inv_warehouse] NOT NULL 疑似缺控件: warehouse_code, warehouse_name, include_in_calculation, capacity, used_capacity
+  [inv_warehouse] 前端字段疑似不在该表列: sourceLabelId, operatorId, operatorName
+  [inv_location] NOT NULL 疑似缺控件: location_code, location_name, warehouse_id
+  [inv_location] 前端字段疑似不在该表列: sourceLabelId, operatorId, operatorName
+
+===== MODULE: /dcprint/ink-opening =====
+routes(1): \src\app\api\dcprint\ink-opening\route.ts
+pages(1): \src\app\[locale]\dcprint\ink-opening\page.tsx
+tables: ink_opening_record, ink_usage, qrcode_record, inv_inventory_batch
+INSERT cols: {"ink_opening_record":["record_no","material_id","material_code","material_name","batch_no","label_id","ink_type","open_time","expire_hours","expire_time","remaining_qty","unit","status","operator_id","operator_name","remark"],"ink_usage":["usage_no","usage_type","batch_no","workorder_id","workorder_no","color_name","weight","unit","operator_id","operator_name","status","remark"],"qrcode_record":["qr_code","qr_type","ref_id","ref_no","material_id","material_code","material_name","batch_no","quantity","unit","expiry_date","status","extra_data"]}
+UPDATE cols: {"inv_inventory_batch":["expire_date","status"],"ink_opening_record":["status","deleted"]}
+json destructure: id, status
+validateRequestBody fields: material_id, open_time, expire_hours
+frontend form fields: material_id, material_name, ink_type, batch_no, open_time, remaining_qty, unit, operator_name, remark
+frontend table accessorKey: 
+frontend fetch body keys: material_id, material_code, material_name, batch_no, ink_type, open_time, expire_hours, remaining_qty, unit, operator_name, remark
+  [ink_usage] NOT NULL 疑似缺控件: (无)
+  [ink_usage] 前端字段疑似不在该表列: material_id, material_name, ink_type, open_time, remaining_qty, material_code, expire_hours
+  [qrcode_record] NOT NULL 疑似缺控件: print_count, scan_count
+  [qrcode_record] 前端字段疑似不在该表列: ink_type, open_time, remaining_qty, operator_name, expire_hours
+  [inv_inventory_batch] NOT NULL 疑似缺控件: warehouse_id
+  [inv_inventory_batch] 前端字段疑似不在该表列: ink_type, open_time, operator_name, remark, expire_hours
+
+===== MODULE: /dcprint/ink-mixed =====
+routes(1): \src\app\api\dcprint\ink-mixed\route.ts
+pages(1): \src\app\[locale]\dcprint\ink-mixed\page.tsx
+tables: ink_mixed_record, qrcode_record
+INSERT cols: {"ink_mixed_record":["record_no","base_ink_id","base_ink_code","base_ink_name","mix_ratio","color_name","color_code","company_id","company_name","mix_time","operator_id","operator_name","quantity","unit","warehouse_id","location_id","status","expire_time","remark"],"qrcode_record":["qr_code","qr_type","ref_id","ref_no","material_id","material_code","material_name","quantity","unit","warehouse_id","expiry_date","status","extra_data"]}
+UPDATE cols: {"ink_mixed_record":["status","remark","deleted"]}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: 
+  [qrcode_record] NOT NULL 疑似缺控件: print_count, scan_count
+  [qrcode_record] 前端字段疑似不在该表列: (无)
+
+===== MODULE: /dcprint/trace =====
+routes(1): \src\app\api\dcprint\trace\route.ts
+pages(1): \src\app\[locale]\dcprint\trace\page.tsx
+tables: inv_trace_record, inv_trace_detail, prd_process_card, inv_material_label, prd_process_card_material
+INSERT cols: {"inv_trace_record":["trace_no","card_id","card_no","work_order_no","product_code","main_label_id","trace_type","operator_id","operator_name","remark","deleted"],"inv_trace_detail":["trace_id","label_id","label_no","material_code","material_name","specification","batch_no","supplier_name","receive_date","material_type","remark"]}
+UPDATE cols: {}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: cardNo, traceType, operatorId, operatorName
+  [inv_trace_record] NOT NULL 疑似缺控件: (无)
+  [inv_trace_record] 前端字段疑似不在该表列: cardNo, traceType, operatorId, operatorName
+  [inv_trace_detail] NOT NULL 疑似缺控件: (无)
+  [inv_trace_detail] 前端字段疑似不在该表列: cardNo, traceType, operatorId, operatorName
+  [prd_process_card] NOT NULL 疑似缺控件: card_no
+  [prd_process_card] 前端字段疑似不在该表列: cardNo, traceType, operatorId, operatorName
+  [inv_material_label] NOT NULL 疑似缺控件: label_no, material_code
+  [inv_material_label] 前端字段疑似不在该表列: cardNo, traceType, operatorId, operatorName
+  [prd_process_card_material] NOT NULL 疑似缺控件: card_id, label_id, label_no
+  [prd_process_card_material] 前端字段疑似不在该表列: cardNo, traceType, operatorId, operatorName
+
+===== MODULE: /plm/lifecycle =====
+routes(1): \src\app\api\plm\lifecycle\route.ts
+pages(1): \src\app\[locale]\plm\lifecycle\page.tsx
+tables: plm_product_lifecycle
+INSERT cols: {"plm_product_lifecycle":["product_id","product_code","product_name","lifecycle_stage","stage_status","version","change_type","change_reason","change_desc","effective_date","remark"]}
+UPDATE cols: {"plm_product_lifecycle":["deleted"]}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: product_code, product_name, lifecycle_stage, version, change_type, effective_date, change_reason, change_desc, remark, stage_status
+frontend table accessorKey: 
+frontend fetch body keys: 
+
+===== MODULE: /plm/eco =====
+routes(1): \src\app\api\plm\eco\route.ts
+pages(1): \src\app\[locale]\plm\eco\page.tsx
+tables: plm_eco
+INSERT cols: {"plm_eco":["eco_no","eco_type","product_id","product_code","product_name","old_version","new_version","change_reason","change_content","impact_analysis","applicant","apply_time","remark"]}
+UPDATE cols: {"plm_eco":["deleted"]}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: eco_type, product_name, product_code, applicant, old_version, new_version, change_reason, change_content, impact_analysis, remark, status
+frontend table accessorKey: 
+frontend fetch body keys: 
+  [plm_eco] NOT NULL 疑似缺控件: eco_title
+  [plm_eco] 前端字段疑似不在该表列: eco_type, product_name, applicant, old_version, new_version, change_reason, change_content, impact_analysis, remark
+
+===== MODULE: /production =====
+routes(18): \src\app\api\production\bom\route.ts, \src\app\api\production\material-issue\route.ts, \src\app\api\production\material-return\route.ts, \src\app\api\production\mrp\route.ts, \src\app\api\production\orders\route.ts, \src\app\api\production\process\route.ts, \src\app\api\production\process\stats\route.ts, \src\app\api\production\process-route\route.ts, \src\app\api\production\product-label\route.ts, \src\app\api\production\schedule\auto\route.ts, \src\app\api\production\schedule\capacity\route.ts, \src\app\api\production\schedule\route.ts, \src\app\api\production\schedule\stats\route.ts, \src\app\api\production\trace\route.ts, \src\app\api\production\work-order\color-seq\route.ts, \src\app\api\production\work-order\create-multi-color\route.ts, \src\app\api\production\work-orders\route.ts, \src\app\api\production\work-report\route.ts
+pages(10): \src\app\[locale]\production\error.tsx, \src\app\[locale]\production\material-issue\page.tsx, \src\app\[locale]\production\material-return\page.tsx, \src\app\[locale]\production\mrp\page.tsx, \src\app\[locale]\production\orders\page.tsx, \src\app\[locale]\production\process\page.tsx, \src\app\[locale]\production\product-label\page.tsx, \src\app\[locale]\production\report\page.tsx, \src\app\[locale]\production\schedule\page.tsx, \src\app\[locale]\production\workorder\page.tsx
+tables: prd_material_issue, prd_material_issue_item, prd_material_return, prd_material_return_item, inv_trace_record, prd_process_route, prd_process_route_step, prd_product_label, prd_schedule, prd_product_trace_link, prd_work_report, prd_die_usage_log, prd_process_card, prod_work_order, prd_die_template, inv_warehouse, prd_bom, prd_bom_detail, inv_inventory, prd_standard_card, inv_material, eqp_equipment, prd_schedule_detail
+INSERT cols: {"prd_material_issue":["issue_no","work_order_id","work_order_no","warehouse_id","issue_date","issue_type","operator_name","status","remark"],"prd_material_issue_item":["issue_id","material_id","material_code","material_name","required_qty","issued_qty","unit","batch_no"],"prd_material_return":["return_no","work_order_id","warehouse_id","return_reason","remark"],"prd_material_return_item":["return_order_id","material_id","material_name","quantity","batch_no","batch_id","original_inbound_date","unit_cost","line_amount"],"inv_trace_record":["trace_no","card_id","card_no","trace_type","operator_id","operator_name","trace_time","remark","create_time"],"prd_process_route":["route_code","route_name","product_id","version","is_default","status","remark"],"prd_process_route_step":["route_id","step_seq","step_name","step_type","equipment_type","standard_time","setup_time","is_key_process","is_first_piece_required","quality_check","remark","route_id","step_seq","step_name","step_type","equipment_type","standard_time","setup_time","is_key_process","is_first_piece_required","quality_check","remark"],"prd_product_label":["label_no","work_order_id","work_order_no","material_id","material_code","material_name","quantity","unit","batch_no","qc_result","remark"],"prd_schedule":["schedule_no","order_id","order_no","product_id","product_code","product_name","workshop","planned_qty","planned_start","planned_end","priority","scheduler","remark"],"prd_product_trace_link":["sn","parent_sn","material_batch","workorder_id","workorder_no","material_id","material_code","material_name","supplier_id","supplier_name","inbound_date","inbound_no","inspection_id","inspection_result","trace_level","trace_type"],"prd_work_report":["report_no","work_order_id","work_order_no","process_name","process_seq","equipment_id","operator_id","operator_name","plan_qty","completed_qty","qualified_qty","defective_qty","scrap_qty","start_time","end_time","work_hours","is_first_piece","first_piece_status","first_piece_inspector","remark","tool_id","screen_plate_id"],"prd_die_usage_log":["die_id","die_code","work_report_id","work_order_id","work_order_no","process_name","impressions","cumulative_after","operator_id","operator_name","equipment_id","usage_date","remark"]}
+UPDATE cols: {"prd_material_issue":["status","update_time","status","remark","deleted"],"prd_material_return":["status","update_time","status","remark","deleted"],"prd_process_card":["burdening_status","update_time","deleted","update_time"],"prd_process_route":["route_name","version","is_default","status","remark","deleted"],"prd_product_label":["qc_result","remark","deleted"],"prod_work_order":["plan_start_date","plan_end_date","status","update_time","status","plan_start_date","plan_end_date","update_time","status","plan_start_date","plan_end_date","update_time"],"prd_schedule":["work_order_id","deleted"],"prd_product_trace_link":["parent_sn","workorder_id","workorder_no","material_id","material_code","material_name","supplier_id","supplier_name","inbound_date","inbound_no","inspection_id","inspection_result","trace_level","trace_type"],"prd_die_template":["cumulative_impressions","current_usage","remaining_usage","last_used_date","die_status","status"],"prd_work_report":["deleted"]}
+json destructure: route_code, route_name, product_id, version, is_default, status, remark, steps, id, action, work_order_id, completed_qty, qualified_qty, defective_qty, scrap_qty, work_order_no, process_name, process_seq, equipment_id, operator_id, operator_name, plan_qty, start_time, end_time, work_hours, is_first_piece, first_piece_status, first_piece_inspector, tool_id, screen_plate_id, die_template_id
+validateRequestBody fields: route_code, route_name, work_order_id, process_name
+frontend form fields: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, remark, work_order_id, equipment_id, die_template_id
+frontend table accessorKey: 
+frontend fetch body keys: workOrderIds, warehouseId, id, processStatus, cardNo, currentProcess, operatorName, remark, status, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, unit_price, work_order_no, bom_id, priority, plan_start_date, plan_end_date
+  [prd_material_issue] NOT NULL 疑似缺控件: (无)
+  [prd_material_issue] 前端字段疑似不在该表列: process_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, unit_price, bom_id, priority, plan_start_date, plan_end_date
+  [prd_material_issue_item] NOT NULL 疑似缺控件: (无)
+  [prd_material_issue_item] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, remark, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, quantity, unit_price, work_order_no, bom_id, priority, plan_start_date, plan_end_date
+  [prd_material_return] NOT NULL 疑似缺控件: (无)
+  [prd_material_return] 前端字段疑似不在该表列: process_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, unit_price, bom_id, priority, plan_start_date, plan_end_date
+  [prd_material_return_item] NOT NULL 疑似缺控件: return_id
+  [prd_material_return_item] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, remark, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, quantity, unit_price, work_order_no, bom_id, priority, plan_start_date, plan_end_date
+  [inv_trace_record] NOT NULL 疑似缺控件: (无)
+  [inv_trace_record] 前端字段疑似不在该表列: process_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, unit_price, bom_id, priority, plan_start_date, plan_end_date
+  [prd_process_route] NOT NULL 疑似缺控件: (无)
+  [prd_process_route] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, unit_price, work_order_no, bom_id, priority, plan_start_date, plan_end_date
+  [prd_process_route_step] NOT NULL 疑似缺控件: (无)
+  [prd_process_route_step] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, unit_price, work_order_no, bom_id, priority, plan_start_date, plan_end_date
+  [prd_product_label] NOT NULL 疑似缺控件: (无)
+  [prd_product_label] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, unit_price, bom_id, priority, plan_start_date, plan_end_date
+  [prd_schedule] NOT NULL 疑似缺控件: (无)
+  [prd_schedule] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, customer_name, items, material_name, quantity, unit, unit_price, bom_id, plan_start_date, plan_end_date
+  [prd_work_report] NOT NULL 疑似缺控件: (无)
+  [prd_work_report] 前端字段疑似不在该表列: die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, unit_price, bom_id, priority, plan_start_date, plan_end_date
+  [prd_die_usage_log] NOT NULL 疑似缺控件: (无)
+  [prd_die_usage_log] 前端字段疑似不在该表列: plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, remark, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, unit_price, bom_id, priority, plan_start_date, plan_end_date
+  [prd_process_card] NOT NULL 疑似缺控件: card_no
+  [prd_process_card] 前端字段疑似不在该表列: process_name, operator_name, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, remark, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, unit_price, bom_id, priority, plan_start_date, plan_end_date
+  [prod_work_order] NOT NULL 疑似缺控件: product_code, planned_qty, warehouse_id
+  [prod_work_order] 前端字段疑似不在该表列: operator_name, plan_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, items, material_name, unit_price
+  [prd_die_template] NOT NULL 疑似缺控件: template_code, template_name
+  [prd_die_template] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, work_order_no, bom_id, priority, plan_start_date, plan_end_date
+  [inv_warehouse] NOT NULL 疑似缺控件: warehouse_code, warehouse_name, include_in_calculation, capacity, used_capacity
+  [inv_warehouse] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, unit_price, work_order_no, bom_id, priority, plan_start_date, plan_end_date
+  [prd_bom] NOT NULL 疑似缺控件: bom_name
+  [prd_bom] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, unit_price, work_order_no, bom_id, priority, plan_start_date, plan_end_date
+  [prd_bom_detail] NOT NULL 疑似缺控件: material_id
+  [prd_bom_detail] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, unit_price, work_order_no, priority, plan_start_date, plan_end_date
+  [inv_inventory] NOT NULL 疑似缺控件: material_id, warehouse_id
+  [inv_inventory] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, remark, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, unit_price, work_order_no, bom_id, priority, plan_start_date, plan_end_date
+  [prd_standard_card] NOT NULL 疑似缺控件: card_no
+  [prd_standard_card] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, items, quantity, unit, unit_price, work_order_no, bom_id, priority, plan_start_date, plan_end_date
+  [inv_material] NOT NULL 疑似缺控件: material_code, is_splittable
+  [inv_material] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, quantity, unit_price, work_order_no, bom_id, priority, plan_start_date, plan_end_date
+  [eqp_equipment] NOT NULL 疑似缺控件: equipment_code, equipment_name
+  [eqp_equipment] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, work_order_id, equipment_id, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, unit_price, work_order_no, bom_id, priority, plan_start_date, plan_end_date
+  [prd_schedule_detail] NOT NULL 疑似缺控件: schedule_id, color_seq_no
+  [prd_schedule_detail] 前端字段疑似不在该表列: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, remark, die_template_id, workOrderIds, warehouseId, processStatus, cardNo, currentProcess, operatorName, work_order_ids, start_date, respect_deadline, order_no, customer_name, items, material_name, quantity, unit, unit_price, work_order_no, bom_id, priority, plan_start_date, plan_end_date
+
+===== MODULE: /production/workorder =====
+routes(0): (none)
+pages(1): \src\app\[locale]\production\workorder\page.tsx
+apiRefsFromPage: /api/workorders, /api/orders, /api/orders/bom
+tables: 
+INSERT cols: {}
+UPDATE cols: {}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: order_no, customer_name, items, material_name, quantity, unit, unit_price, work_order_no, status, bom_id, priority, plan_start_date, plan_end_date, remark
+
+===== MODULE: /production/schedule =====
+routes(4): \src\app\api\production\schedule\auto\route.ts, \src\app\api\production\schedule\capacity\route.ts, \src\app\api\production\schedule\route.ts, \src\app\api\production\schedule\stats\route.ts
+pages(1): \src\app\[locale]\production\schedule\page.tsx
+tables: prd_schedule, prod_work_order, eqp_equipment, prd_schedule_detail, prd_process_card
+INSERT cols: {"prd_schedule":["schedule_no","order_id","order_no","product_id","product_code","product_name","workshop","planned_qty","planned_start","planned_end","priority","scheduler","remark"]}
+UPDATE cols: {"prod_work_order":["plan_start_date","plan_end_date","status","update_time","status","plan_start_date","plan_end_date","update_time","status","plan_start_date","plan_end_date","update_time"],"prd_schedule":["work_order_id","deleted"]}
+json destructure: action, work_order_id
+validateRequestBody fields: 
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: id, status, work_order_ids, start_date, respect_deadline
+  [prd_schedule] NOT NULL 疑似缺控件: (无)
+  [prd_schedule] 前端字段疑似不在该表列: work_order_ids, start_date, respect_deadline
+  [prod_work_order] NOT NULL 疑似缺控件: work_order_no, product_id, product_code, planned_qty, completed_qty, process_name, warehouse_id
+  [prod_work_order] 前端字段疑似不在该表列: work_order_ids, start_date, respect_deadline
+  [eqp_equipment] NOT NULL 疑似缺控件: equipment_code, equipment_name
+  [eqp_equipment] 前端字段疑似不在该表列: work_order_ids, start_date, respect_deadline
+  [prd_schedule_detail] NOT NULL 疑似缺控件: schedule_id, color_seq_no
+  [prd_schedule_detail] 前端字段疑似不在该表列: work_order_ids, start_date, respect_deadline
+  [prd_process_card] NOT NULL 疑似缺控件: card_no
+  [prd_process_card] 前端字段疑似不在该表列: work_order_ids, start_date, respect_deadline
+
+===== MODULE: /production/process =====
+routes(2): \src\app\api\production\process\route.ts, \src\app\api\production\process\stats\route.ts
+pages(1): \src\app\[locale]\production\process\page.tsx
+tables: inv_trace_record, prd_process_card, prd_standard_card
+INSERT cols: {"inv_trace_record":["trace_no","card_id","card_no","trace_type","operator_id","operator_name","trace_time","remark","create_time"]}
+UPDATE cols: {"prd_process_card":["burdening_status","update_time","deleted","update_time"]}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: id, processStatus, cardNo, currentProcess, operatorName, remark
+  [inv_trace_record] NOT NULL 疑似缺控件: (无)
+  [inv_trace_record] 前端字段疑似不在该表列: processStatus, cardNo, currentProcess, operatorName
+  [prd_process_card] NOT NULL 疑似缺控件: card_no
+  [prd_process_card] 前端字段疑似不在该表列: processStatus, cardNo, currentProcess, operatorName, remark
+  [prd_standard_card] NOT NULL 疑似缺控件: card_no
+  [prd_standard_card] 前端字段疑似不在该表列: processStatus, cardNo, currentProcess, operatorName
+
+===== MODULE: /production/report =====
+routes(0): (none)
+pages(1): \src\app\[locale]\production\report\page.tsx
+apiRefsFromPage: /api/production/work-report, /api/workorders, /api/equipment, /api/prepress/die-template
+tables: 
+INSERT cols: {}
+UPDATE cols: {}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: process_name, operator_name, plan_qty, completed_qty, qualified_qty, scrap_qty, start_time, end_time, work_hours, remark, work_order_id, equipment_id, die_template_id
+frontend table accessorKey: 
+frontend fetch body keys: 
+
+===== MODULE: /production/orders =====
+routes(1): \src\app\api\production\orders\route.ts
+pages(1): \src\app\[locale]\production\orders\page.tsx
+tables: prod_work_order
+INSERT cols: {}
+UPDATE cols: {}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: 
+  [prod_work_order] NOT NULL 疑似缺控件: work_order_no, product_id, product_code, planned_qty, completed_qty, process_name, warehouse_id
+  [prod_work_order] 前端字段疑似不在该表列: (无)
+
+===== MODULE: /production/material-issue =====
+routes(1): \src\app\api\production\material-issue\route.ts
+pages(1): \src\app\[locale]\production\material-issue\page.tsx
+tables: prd_material_issue, prd_material_issue_item, inv_warehouse, prod_work_order, prd_bom, prd_bom_detail, inv_inventory
+INSERT cols: {"prd_material_issue":["issue_no","work_order_id","work_order_no","warehouse_id","issue_date","issue_type","operator_name","status","remark"],"prd_material_issue_item":["issue_id","material_id","material_code","material_name","required_qty","issued_qty","unit","batch_no"]}
+UPDATE cols: {"prd_material_issue":["status","update_time","status","remark","deleted"]}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: 
+  [inv_warehouse] NOT NULL 疑似缺控件: warehouse_code, warehouse_name, include_in_calculation, capacity, used_capacity
+  [inv_warehouse] 前端字段疑似不在该表列: (无)
+  [prod_work_order] NOT NULL 疑似缺控件: work_order_no, product_id, product_code, planned_qty, completed_qty, process_name, warehouse_id
+  [prod_work_order] 前端字段疑似不在该表列: (无)
+  [prd_bom] NOT NULL 疑似缺控件: bom_name
+  [prd_bom] 前端字段疑似不在该表列: (无)
+  [prd_bom_detail] NOT NULL 疑似缺控件: bom_id, material_id
+  [prd_bom_detail] 前端字段疑似不在该表列: (无)
+  [inv_inventory] NOT NULL 疑似缺控件: material_id, warehouse_id
+  [inv_inventory] 前端字段疑似不在该表列: (无)
+
+===== MODULE: /production/material-return =====
+routes(1): \src\app\api\production\material-return\route.ts
+pages(1): \src\app\[locale]\production\material-return\page.tsx
+tables: prd_material_return, prd_material_return_item, inv_warehouse
+INSERT cols: {"prd_material_return":["return_no","work_order_id","warehouse_id","return_reason","remark"],"prd_material_return_item":["return_order_id","material_id","material_name","quantity","batch_no","batch_id","original_inbound_date","unit_cost","line_amount"]}
+UPDATE cols: {"prd_material_return":["status","update_time","status","remark","deleted"]}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: 
+  [prd_material_return_item] NOT NULL 疑似缺控件: return_id
+  [prd_material_return_item] 前端字段疑似不在该表列: (无)
+  [inv_warehouse] NOT NULL 疑似缺控件: warehouse_code, warehouse_name, include_in_calculation, capacity, used_capacity
+  [inv_warehouse] 前端字段疑似不在该表列: (无)
+
+===== MODULE: /production/product-label =====
+routes(1): \src\app\api\production\product-label\route.ts
+pages(1): \src\app\[locale]\production\product-label\page.tsx
+tables: prd_product_label
+INSERT cols: {"prd_product_label":["label_no","work_order_id","work_order_no","material_id","material_code","material_name","quantity","unit","batch_no","qc_result","remark"]}
+UPDATE cols: {"prd_product_label":["qc_result","remark","deleted"]}
+json destructure: 
+validateRequestBody fields: 
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: 
+  [prd_product_label] NOT NULL 疑似缺控件: status
+  [prd_product_label] 前端字段疑似不在该表列: (无)
+
+===== MODULE: /warehouse/inbound =====
+routes(7): \src\app\api\warehouse\inbound\audit\route.ts, \src\app\api\warehouse\inbound\cutting\route.ts, \src\app\api\warehouse\inbound\from-po\route.ts, \src\app\api\warehouse\inbound\labels\route.ts, \src\app\api\warehouse\inbound\route.ts, \src\app\api\warehouse\inbound\scan\route.ts, \src\app\api\warehouse\inbound\with-po\route.ts
+pages(39): \src\app\[locale]\warehouse\inbound\components\dialogs\AddDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\aggregateInboundItems.ts, \src\app\[locale]\warehouse\inbound\components\dialogs\AuditDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\CuttingDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\CuttingResultDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\EditDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\GenerateDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\index.ts, \src\app\[locale]\warehouse\inbound\components\dialogs\MixedAddDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\OutboundDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\OutboundItemsEditor.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\PrintPreviewDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\ProductionReturnDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\PurchaseReturnDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\QRCodeDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\QRScanDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\SourceLabelQueryDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\TransferOutDialog.tsx, \src\app\[locale]\warehouse\inbound\components\dialogs\WorkshopPickDialog.tsx, \src\app\[locale]\warehouse\inbound\components\InboundDialogs.tsx, \src\app\[locale]\warehouse\inbound\components\InboundStatsCards.tsx, \src\app\[locale]\warehouse\inbound\components\InboundToolbar.tsx, \src\app\[locale]\warehouse\inbound\cutting\page.tsx, \src\app\[locale]\warehouse\inbound\hooks\useCutting.ts, \src\app\[locale]\warehouse\inbound\hooks\useInboundData.ts, \src\app\[locale]\warehouse\inbound\hooks\useInboundDialogs.ts, \src\app\[locale]\warehouse\inbound\hooks\usePrintLabels.ts, \src\app\[locale]\warehouse\inbound\hooks\usePurchaseOrderSearch.ts, \src\app\[locale]\warehouse\inbound\page.tsx, \src\app\[locale]\warehouse\inbound\types.ts, \src\app\[locale]\warehouse\inbound\utils\generatePrintContent.ts, \src\app\[locale]\warehouse\inbound\utils\mapRecordsToLabels.ts, \src\app\[locale]\warehouse\inbound\__tests__\generatePrintContent.test.ts, \src\app\[locale]\warehouse\inbound\__tests__\mapRecordsToLabels.test.ts, \src\app\[locale]\warehouse\inbound\__tests__\useCutting.test.ts, \src\app\[locale]\warehouse\inbound\__tests__\useInboundData.test.ts, \src\app\[locale]\warehouse\inbound\__tests__\useInboundDialogs.test.ts, \src\app\[locale]\warehouse\inbound\__tests__\usePrintLabels.test.ts, \src\app\[locale]\warehouse\inbound\__tests__\usePurchaseOrderSearch.test.ts
+tables: inv_cutting_record, inv_material_label, inv_cutting_detail, inv_inbound_label, inv_inbound_order, inv_material, inv_inbound_item
+INSERT cols: {"inv_cutting_record":["record_no","source_label_id","source_label_no","cut_width_str","original_width","cut_total_width","remain_width","operator_id","operator_name","remark","status"],"inv_material_label":["label_no","qr_code","purchase_order_no","supplier_name","receive_date","material_code","material_name","specification","unit","batch_no","quantity","width","length_per_roll","remark","warehouse_id","location_id","is_used","is_cut","parent_label_id","label_type","status","deleted","label_no","qr_code","purchase_order_no","supplier_name","receive_date","material_code","material_name","specification","unit","batch_no","quantity","width","remaining_width","length_per_roll","remark","warehouse_id","location_id","is_used","is_cut","parent_label_id","label_type","status","deleted"],"inv_cutting_detail":["record_id","new_label_id","new_label_no","cut_width","sequence"],"inv_inbound_label":["label_id","order_id","order_no","item_id","purchase_order_no","supplier_name","inbound_date","warehouse_code","material_code","material_name","specification","width","batch_no","qty","unit","is_raw_material","package_qty","label_qty","label_status","operator_id","operator_name","color_code","mixed_material_remark","machine_no","remark"]}
+UPDATE cols: {"inv_material_label":["specification","width","is_cut","status"],"inv_inbound_label":["deleted"],"inv_inbound_order":["remark","update_time","deleted","update_time"]}
+json destructure: po_id, warehouse_id, items
+validateRequestBody fields: orderId, materialCode, materialName, qty, unit, operatorId, operatorName
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: po_id, warehouse_id, items, material_id, material_code, material_name, material_spec, unit, batch_no, unit_price, supplier_name, inbound_date, currency, remark, id, status, materialName, batchNo, quantity, count, action, warehouse_location, color_code, machine_no, width, mixed_material_remark, type, from_warehouse_id, to_warehouse_id, operator_id, orderDate, warehouseId, warehouseCode, warehouseName, operatorId, operatorName, specification, qty, unitPrice, work_order_id, work_order_no, return_date, operator_name, return_qty, order_id, order_no, supplier_id, reason, required_qty, issued_qty, operator
+  [inv_cutting_record] NOT NULL 疑似缺控件: (无)
+  [inv_cutting_record] 前端字段疑似不在该表列: po_id, warehouse_id, items, material_id, material_code, material_name, material_spec, unit, batch_no, unit_price, supplier_name, inbound_date, currency, materialName, batchNo, quantity, count, action, warehouse_location, color_code, machine_no, width, mixed_material_remark, type, from_warehouse_id, to_warehouse_id, orderDate, warehouseId, warehouseCode, warehouseName, operatorId, operatorName, specification, qty, unitPrice, work_order_id, work_order_no, return_date, return_qty, order_id, order_no, supplier_id, reason, required_qty, issued_qty, operator
+  [inv_material_label] NOT NULL 疑似缺控件: (无)
+  [inv_material_label] 前端字段疑似不在该表列: po_id, items, material_id, material_spec, unit_price, inbound_date, currency, materialName, batchNo, count, action, warehouse_location, machine_no, mixed_material_remark, type, from_warehouse_id, to_warehouse_id, operator_id, orderDate, warehouseId, warehouseCode, warehouseName, operatorId, operatorName, qty, unitPrice, work_order_id, work_order_no, return_date, operator_name, return_qty, order_id, order_no, supplier_id, reason, required_qty, issued_qty, operator
+  [inv_cutting_detail] NOT NULL 疑似缺控件: (无)
+  [inv_cutting_detail] 前端字段疑似不在该表列: po_id, warehouse_id, items, material_id, material_code, material_name, material_spec, unit, batch_no, unit_price, supplier_name, inbound_date, currency, remark, materialName, batchNo, quantity, count, action, warehouse_location, color_code, machine_no, width, mixed_material_remark, type, from_warehouse_id, to_warehouse_id, operator_id, orderDate, warehouseId, warehouseCode, warehouseName, operatorId, operatorName, specification, qty, unitPrice, work_order_id, work_order_no, return_date, operator_name, return_qty, order_id, order_no, supplier_id, reason, required_qty, issued_qty, operator
+  [inv_inbound_label] NOT NULL 疑似缺控件: (无)
+  [inv_inbound_label] 前端字段疑似不在该表列: po_id, warehouse_id, items, material_id, material_spec, unit_price, currency, materialName, batchNo, quantity, count, action, warehouse_location, type, from_warehouse_id, to_warehouse_id, orderDate, warehouseId, warehouseCode, warehouseName, operatorId, operatorName, unitPrice, work_order_id, work_order_no, return_date, return_qty, supplier_id, reason, required_qty, issued_qty, operator
+  [inv_inbound_order] NOT NULL 疑似缺控件: (无)
+  [inv_inbound_order] 前端字段疑似不在该表列: items, material_id, material_code, material_name, material_spec, unit, batch_no, unit_price, materialName, batchNo, quantity, count, action, warehouse_location, color_code, machine_no, width, mixed_material_remark, type, from_warehouse_id, to_warehouse_id, orderDate, warehouseId, warehouseCode, warehouseName, operatorId, operatorName, specification, qty, unitPrice, work_order_id, work_order_no, return_date, return_qty, order_id, reason, required_qty, issued_qty, operator
+  [inv_material] NOT NULL 疑似缺控件: is_splittable
+  [inv_material] 前端字段疑似不在该表列: po_id, items, material_id, material_spec, batch_no, unit_price, supplier_name, inbound_date, currency, materialName, batchNo, quantity, count, action, warehouse_location, color_code, machine_no, mixed_material_remark, type, from_warehouse_id, to_warehouse_id, operator_id, orderDate, warehouseId, warehouseCode, warehouseName, operatorId, operatorName, qty, unitPrice, work_order_id, work_order_no, return_date, operator_name, return_qty, order_id, order_no, supplier_id, reason, required_qty, issued_qty, operator
+  [inv_inbound_item] NOT NULL 疑似缺控件: (无)
+  [inv_inbound_item] 前端字段疑似不在该表列: po_id, items, supplier_name, inbound_date, currency, materialName, batchNo, count, action, color_code, machine_no, width, mixed_material_remark, type, from_warehouse_id, to_warehouse_id, operator_id, orderDate, warehouseId, warehouseCode, warehouseName, operatorId, operatorName, specification, qty, unitPrice, work_order_id, work_order_no, return_date, operator_name, return_qty, order_no, supplier_id, reason, required_qty, issued_qty, operator
+
+===== MODULE: /warehouse/outbound =====
+routes(3): \src\app\api\warehouse\outbound\confirm\route.ts, \src\app\api\warehouse\outbound\fifo\route.ts, \src\app\api\warehouse\outbound\route.ts
+pages(1): \src\app\[locale]\warehouse\outbound\page.tsx
+tables: fin_receivable, inv_outbound_order, inv_outbound_item, sales_order, inv_inventory_batch, inv_material, sales_order_item, inv_outbound_batch_allocation, inv_inventory
+INSERT cols: {"fin_receivable":["receivable_no","customer_id","customer_name","amount","received_amount","status","source_type","source_no","source_id","due_date","remark","create_time","update_time","deleted"],"inv_outbound_order":["order_no","order_date","outbound_type","warehouse_id","warehouse_code","warehouse_name","total_qty","total_amount","remark","operator_id","operator_name","status","order_no","order_date","outbound_type","warehouse_id","warehouse_code","warehouse_name","total_qty","total_amount","currency","remark","operator_id","operator_name","status"],"inv_outbound_item":["order_id","material_id","material_name","material_spec","quantity","unit","unit_price","amount","batch_no","remark","order_id","material_id","material_name","material_spec","quantity","unit","unit_price","amount","batch_no","remark","width"]}
+UPDATE cols: {"inv_outbound_item":["batch_no","batch_id","original_inbound_date","batch_no","batch_id","original_inbound_date","deleted"],"inv_outbound_order":["status","audit_status","auditor_id","auditor_name","audit_time","audit_remark","version","update_time","status","audit_status","auditor_id","auditor_name","audit_time","version","audit_remark","update_time","status","audit_status","auditor_id","auditor_name","audit_time","audit_remark","version","update_time","order_date","outbound_type","warehouse_id","warehouse_code","warehouse_name","remark","update_time","deleted","update_time"],"sales_order":["total_out_quantity","update_time","status","update_time","status","update_time"],"inv_inventory_batch":["quantity","available_qty","area","available_area","version","update_time","locked_qty","available_qty","locked_qty","quantity","version","update_time"]}
+json destructure: operatorId, operatorName
+validateRequestBody fields: orderDate, warehouseId, warehouseCode, warehouseName, items
+frontend form fields: 
+frontend table accessorKey: 
+frontend fetch body keys: qrContent, scanType, id, status, auditStatus, auditorName, auditTime, operatorId, operatorName, remark
+  [fin_receivable] NOT NULL 疑似缺控件: source_currency, source_amount
+  [fin_receivable] 前端字段疑似不在该表列: qrContent, scanType, auditStatus, auditorName, auditTime, operatorId, operatorName
+  [inv_outbound_order] NOT NULL 疑似缺控件: (无)
+  [inv_outbound_order] 前端字段疑似不在该表列: qrContent, scanType, auditStatus, auditorName, auditTime, operatorId, operatorName
+  [inv_outbound_item] NOT NULL 疑似缺控件: (无)
+  [inv_outbound_item] 前端字段疑似不在该表列: qrContent, scanType, auditStatus, auditorName, auditTime, operatorId, operatorName
+  [inv_inventory_batch] NOT NULL 疑似缺控件: batch_no, material_id, material_name, warehouse_id
+  [inv_inventory_batch] 前端字段疑似不在该表列: qrContent, scanType, auditStatus, auditorName, auditTime, operatorId, operatorName, remark
+  [inv_material] NOT NULL 疑似缺控件: material_code, material_name, is_splittable
+  [inv_material] 前端字段疑似不在该表列: qrContent, scanType, auditStatus, auditorName, auditTime, operatorId, operatorName
+  [inv_outbound_batch_allocation] NOT NULL 疑似缺控件: source_type, source_id, source_no, warehouse_id, material_id, batch_id, batch_no, allocated_qty
+  [inv_outbound_batch_allocation] 前端字段疑似不在该表列: qrContent, scanType, auditStatus, auditorName, auditTime, operatorId, operatorName, remark
+  [inv_inventory] NOT NULL 疑似缺控件: material_id, warehouse_id
+  [inv_inventory] 前端字段疑似不在该表列: qrContent, scanType, auditStatus, auditorName, auditTime, operatorId, operatorName, remark

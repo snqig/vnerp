@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -13,6 +16,7 @@ function generateIssueNo(): string {
 }
 
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -59,7 +63,7 @@ export const GET = withPermission(async (request: NextRequest) => {
       page,
       pageSize,
     },
-    '获取领料单列表成功'
+    ts('k_jd6unu')
   );
 });
 
@@ -68,6 +72,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 // 新建领料单经 POST 落 prd_material_issue，不会出现在 GET 的 material_requisitions 结果中。
 // 完整迁移需统一写路径到 material_requisitions，超出本次字段映射修复范围。
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const {
     workOrderId,
@@ -80,11 +85,11 @@ export const POST = withPermission(async (request: NextRequest) => {
   } = body;
 
   if (!workOrderId) {
-    return errorResponse('缺少工单ID', 400, 400);
+    return errorResponse(ts('k_729j1r'), 400, 400);
   }
 
   if (!warehouseId) {
-    return errorResponse('缺少仓库ID', 400, 400);
+    return errorResponse(ts('k_1hxcz4f'), 400, 400);
   }
 
   const workOrder = await queryOne(
@@ -93,28 +98,28 @@ export const POST = withPermission(async (request: NextRequest) => {
   );
 
   if (!workOrder) {
-    return errorResponse('工单不存在', 400, 400);
+    return errorResponse(ts('k_lmufdi'), 400, 400);
   }
 
   // 系统设置 category.require_on_business：领料单要求物料已归类
   const materialIds = (items as DbRow[]).map((item: DbRow) => item.materialId).filter(Boolean);
-  secureLog('info', '[material-requisitions] 开始物料分类校验', {
+  secureLog('info', ts('k_i23jzv'), {
     itemCount: items.length,
     materialIds,
   });
   const categoryCheck = await checkMaterialsCategorized(materialIds);
-  secureLog('info', '[material-requisitions] 物料分类校验完成', {
+  secureLog('info', ts('k_1vi4o9y'), {
     blocked: categoryCheck.blocked,
     uncategorizedCount: categoryCheck.uncategorized.length,
   });
   if (categoryCheck.blocked) {
-    secureLog('warn', '[material-requisitions] 物料分类校验阻断提交', {
+    secureLog('warn', ts('k_lcpwda'), {
       message: categoryCheck.message,
     });
     return errorResponse(categoryCheck.message!, 400, 400);
   }
   if (categoryCheck.message) {
-    secureLog('warn', '[material-requisitions] 物料分类校验警告', {
+    secureLog('warn', ts('k_19mjmwa'), {
       message: categoryCheck.message,
     });
   }
@@ -176,16 +181,17 @@ export const POST = withPermission(async (request: NextRequest) => {
       status: 1,
       uncategorizedMaterials: categoryCheck.uncategorized,
     },
-    categoryCheck.message ? `领料单创建成功。${categoryCheck.message}` : '领料单创建成功'
+    categoryCheck.message ? `领料单创建成功。${categoryCheck.message}` : ts('k_1492dmj')
   );
 });
 
 export const PUT = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id, action, items, approverId: _approverId, approverName: _approverName } = body;
 
   if (!id) {
-    return errorResponse('缺少领料单ID', 400, 400);
+    return errorResponse(ts('k_3un9np'), 400, 400);
   }
 
   const issue = await queryOne(`SELECT * FROM prd_material_issue WHERE id = ? AND deleted = 0`, [
@@ -193,12 +199,12 @@ export const PUT = withPermission(async (request: NextRequest) => {
   ]);
 
   if (!issue) {
-    return errorResponse('领料单不存在', 400, 400);
+    return errorResponse(ts('k_1uzqc9i'), 400, 400);
   }
 
   if (action === 'issue') {
     if (issue.status !== 1) {
-      return errorResponse('只有待出库的领料单才能出库', 400, 400);
+      return errorResponse(ts('k_18fuhb1'), 400, 400);
     }
 
     if (items && Array.isArray(items)) {
@@ -216,20 +222,20 @@ export const PUT = withPermission(async (request: NextRequest) => {
       Number(id),
     ]);
 
-    return successResponse(null, '领料出库成功');
+    return successResponse(null, ts('k_laok9q'));
   }
 
   if (action === 'cancel') {
     if (issue.status !== 1) {
-      return errorResponse('只有待出库的领料单才能取消', 400, 400);
+      return errorResponse(ts('k_x1hmyo'), 400, 400);
     }
 
     await execute(`UPDATE prd_material_issue SET status = 3, update_time = NOW() WHERE id = ?`, [
       Number(id),
     ]);
 
-    return successResponse(null, '领料单已取消');
+    return successResponse(null, ts('k_1aphn01'));
   }
 
-  return errorResponse('未知的操作类型', 400, 400);
+  return errorResponse(ts('k_6u6nbn'), 400, 400);
 });

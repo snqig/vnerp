@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -44,6 +47,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 });
 
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const {
     material_id,
@@ -61,7 +65,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   } = body;
 
   if (!material_id || !open_time || !expire_hours) {
-    return errorResponse('缺少必填字段: material_id, open_time, expire_hours', 400, 400);
+    return errorResponse(ts('k_3ar75k'), 400, 400);
   }
 
   const result = await transaction(async (conn) => {
@@ -103,15 +107,16 @@ export const POST = withPermission(async (request: NextRequest) => {
     return { id: insertResult.insertId, record_no: recordNo, expire_time: expireTime };
   });
 
-  return successResponse(result, '油墨开罐记录创建成功');
+  return successResponse(result, ts('k_1iho8wf'));
 });
 
 export const PUT = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id, status, remark } = body;
 
   if (!id) {
-    return errorResponse('开罐记录ID不能为空', 400, 400);
+    return errorResponse(ts('k_156461p'), 400, 400);
   }
 
   if (status === 3) {
@@ -122,14 +127,14 @@ export const PUT = withPermission(async (request: NextRequest) => {
       );
 
       if (recordRows.length === 0) {
-        throw new Error('开罐记录不存在');
+        throw new Error(ts('k_1lo9es9'));
       }
 
       const record = recordRows[0];
 
       if (record.batch_no) {
         await conn.execute(
-          `UPDATE inv_inventory_batch SET available_qty = 0, status = 'expired' WHERE batch_no = ? AND deleted = 0`,
+          `UPDATE inv_inventory_batch SET available_qty = 0, alert_level = 'expired', status = 0 WHERE batch_no = ? AND deleted = 0`,
           [record.batch_no]
         );
       }
@@ -143,5 +148,5 @@ export const PUT = withPermission(async (request: NextRequest) => {
       await execute('UPDATE ink_opening_record SET remark = ? WHERE id = ?', [remark, id]);
   }
 
-  return successResponse(null, '更新成功');
+  return successResponse(null, ts('k_1795bzg'));
 });

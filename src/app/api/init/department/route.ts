@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -70,6 +73,7 @@ const subDepartmentData = [
 // POST - 初始化部门数据
 export const POST = withPermission(
   async (_request: NextRequest) => {
+  const ts = await getTranslations('Common');
     // 使用事务初始化数据
     await transaction(async (connection) => {
       // 清空现有部门数据
@@ -128,7 +132,7 @@ export const POST = withPermission(
         level1Count: departmentData.length,
         level2Count: subDepartmentData.length,
       },
-      '部门数据初始化成功'
+      ts('k_z1dcny')
     );
   },
   { errorMessage: '初始化部门数据失败' }

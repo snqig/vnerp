@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -19,15 +22,16 @@ class PartialShipError extends Error {
 // POST /api/sales/delivery/partial - 提交部分发货申请（符合设计文档 5.3 节）
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { sales_order_id, quantity, remark } = body;
 
     if (!sales_order_id) {
-      return errorResponse('缺少销售订单ID', 400, 400);
+      return errorResponse(ts('k_14w3lty'), 400, 400);
     }
 
     if (!quantity || parseFloat(quantity) <= 0) {
-      return errorResponse('发货数量必须大于0', 400, 400);
+      return errorResponse(ts('k_1yz9w6j'), 400, 400);
     }
 
     try {
@@ -40,7 +44,7 @@ export const POST = withPermission(
         const order = orderRows[0] as DbRow | undefined;
 
         if (!order) {
-          throw new PartialShipError(404, '销售订单不存在');
+          throw new PartialShipError(404, ts('k_1gccwsl'));
         }
 
         // 验证部分发货数量不超过订单剩余数量（行已锁定，此处计算安全）
@@ -83,7 +87,7 @@ export const POST = withPermission(
           type: 'partial',
           status: 2, // 待审批
         },
-        '部分发货申请提交成功'
+        ts('k_132ep6s')
       );
     } catch (error) {
       if (error instanceof PartialShipError) {

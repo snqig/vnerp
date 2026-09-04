@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -38,6 +41,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       work_order_id,
@@ -56,7 +60,7 @@ export const POST = withPermission(
       remark,
     } = body;
 
-    if (!supplier_id) return errorResponse('供应商不能为空', 400, 400);
+    if (!supplier_id) return errorResponse(ts('k_4o0inq'), 400, 400);
 
     const now = new Date();
     const orderNo =
@@ -91,21 +95,22 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId, order_no: orderNo }, '委外订单创建成功');
+    return successResponse({ id: result.insertId, order_no: orderNo }, ts('k_w5ssv2'));
   },
   { logTitle: '创建委外订单', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action, status, remark, unit_price, delivery_date } = body;
 
-    if (!id) return errorResponse('订单ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_jibosn'), 400, 400);
 
     if (action === 'cancel') {
       await execute('UPDATE outsource_order SET status = 9 WHERE id = ? AND deleted = 0', [id]);
-      return successResponse(null, '委外订单已取消');
+      return successResponse(null, ts('k_h5kl9e'));
     }
 
     const fields: string[] = [];
@@ -146,18 +151,19 @@ export const PUT = withPermission(
       );
     }
 
-    return successResponse(null, '委外订单更新成功');
+    return successResponse(null, ts('k_1kl51rv'));
   },
   { logTitle: '更新委外订单', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('缺少id', 400, 400);
+    if (!id) return errorResponse(ts('k_js4lo9'), 400, 400);
     await execute('UPDATE outsource_order SET deleted = 1 WHERE id = ?', [Number(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除委外订单', logType: 'business' }
 );

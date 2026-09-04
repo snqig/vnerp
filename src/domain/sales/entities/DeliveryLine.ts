@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface DeliveryLineProps {
   id?: number;
   deliveryId?: number;
@@ -36,6 +38,7 @@ export class DeliveryLine {
   public readonly remark: string;
 
   private constructor(props: DeliveryLineProps) {
+  const ts = t;
     this.id = props.id;
     this.deliveryId = props.deliveryId;
     this.lineNo = props.lineNo;
@@ -44,7 +47,7 @@ export class DeliveryLine {
     this.materialCode = props.materialCode || '';
     this.materialName = props.materialName || '';
     this.materialSpec = props.materialSpec || '';
-    this.unit = props.unit || '件';
+    this.unit = props.unit || ts('k_w0gthl');
     this.quantity = Math.round(props.quantity * 10000) / 10000;
     this.unitPrice = Math.round((props.unitPrice || 0) * 100) / 100;
     this.amount = Math.round((props.amount ?? this.quantity * this.unitPrice) * 100) / 100;
@@ -55,14 +58,15 @@ export class DeliveryLine {
   }
 
   static create(props: DeliveryLineProps): DeliveryLine {
+  const ts = t;
     if (!props.materialId || props.materialId <= 0) {
-      throw new Error('物料ID不能为空');
+      throw new Error(ts('k_1f11b1g'));
     }
     if (!props.quantity || props.quantity <= 0) {
-      throw new Error('发货数量必须大于0');
+      throw new Error(ts('k_1yz9w6j'));
     }
     if (!props.lineNo || props.lineNo <= 0) {
-      throw new Error('行号不能为空');
+      throw new Error(ts('k_1cgjleu'));
     }
     return new DeliveryLine(props);
   }

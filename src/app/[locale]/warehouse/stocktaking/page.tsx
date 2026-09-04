@@ -85,6 +85,7 @@ const TYPE_MAP = STOCKTAKING_TYPE_LABEL;
 const SPLIT_FLAG_MAP = SPLIT_FLAG_LABEL;
 
 export default function StocktakingPage() {
+  const ts = useTranslations('Warehouse');
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
@@ -295,8 +296,8 @@ export default function StocktakingPage() {
               </Button>
             </div>
             <GlobalExportToolbar
-              filename="盘点单"
-              title="盘点单列表"
+              filename={ts('k_1uyxdj1')}
+              title={ts('k_zfkd36')}
               columns={[
                 { key: 'check_no', label: t('checkNo'), width: 18 },
                 { key: 'warehouse_name', label: t('warehouse'), width: 15 },

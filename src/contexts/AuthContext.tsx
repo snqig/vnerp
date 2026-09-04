@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import {
   createContext,
@@ -108,14 +109,18 @@ function _loadCachedMenus(): { menus: Menu[]; permissions: string[] } | null {
   return null;
 }
 
-/** 将菜单数据缓存到 localStorage */
-function saveCachedMenus(menus: Menu[], permissions: string[]) {
+/** 将菜单数据缓存到 localStorage（ts 由调用方传入，避免在普通函数内调用 hook） */
+function saveCachedMenus(
+  menus: Menu[],
+  permissions: string[],
+  ts: (key: string) => string
+) {
   try {
     localStorage.setItem(MENU_CACHE_KEY, JSON.stringify({ menus, permissions }));
     localStorage.setItem(MENU_CACHE_TS_KEY, String(Date.now()));
   } catch (error) {
     // localStorage 满了或不可用，静默忽略
-    console.error('[AuthContext] 保存菜单缓存失败:', error);
+    console.error(ts('k_ppycqp'), error);
   }
 }
 
@@ -140,6 +145,9 @@ export function AuthProvider({
   });
 
   const [isHydrated, setIsHydrated] = useState(false);
+
+  // 在组件渲染阶段调用 useTranslations（而非事件回调/普通函数内），避免 "Invalid hook call"
+  const ts = useTranslations('Common');
 
   useEffect(() => {
     setIsHydrated(true);
@@ -218,7 +226,7 @@ export function AuthProvider({
           menusCountRef.current = menus.length;
 
           // 持久化菜单缓存到 localStorage
-          saveCachedMenus(menus, permissions);
+          saveCachedMenus(menus, permissions, ts);
 
           setState((prev) => ({
             ...prev,
@@ -263,7 +271,7 @@ export function AuthProvider({
             });
             menusLoadedRef.current = true;
             menusCountRef.current = ssrInitial.menus.length;
-            saveCachedMenus(ssrInitial.menus, ssrInitial.permissions);
+            saveCachedMenus(ssrInitial.menus, ssrInitial.permissions, ts);
             // 后台静默刷新，不清除认证状态
             fetchMenus(token, true, false).catch(() => {});
             return;
@@ -336,7 +344,7 @@ export function AuthProvider({
           return { success: false, message: result.message };
         }
       } catch {
-        return { success: false, message: '登录失败' };
+        return { success: false, message: ts('k_rn5blf') };
       }
     },
     [fetchMenus]
@@ -352,7 +360,7 @@ export function AuthProvider({
       await authFetch('/api/auth/logout', { method: 'POST' });
     } catch (error) {
       // ignore：网络错误等，继续清除本地状态
-      console.error('[AuthContext] 登出请求失败:', error);
+      console.error(ts('k_1lknuvq'), error);
     }
 
     localStorage.removeItem('token');
@@ -391,7 +399,7 @@ export function AuthProvider({
       });
       return await response.json();
     } catch {
-      return { success: false, message: '注册失败' };
+      return { success: false, message: ts('k_osck6n') };
     }
   }, []);
 

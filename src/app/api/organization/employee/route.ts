@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { execute, queryOne, transaction, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -88,6 +91,7 @@ function buildQueryConditions(params: {
 
 // GET - 获取员工列表或单个员工
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const keyword = searchParams.get('keyword') || '';
@@ -104,7 +108,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     ]);
 
     if (!employee) {
-      return commonErrors.notFound('员工不存在');
+      return commonErrors.notFound(ts('k_1k6rrmh'));
     }
 
     return successResponse(employee);
@@ -130,6 +134,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // POST - 创建员工
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body: Employee = await request.json();
 
     // 验证必填字段
@@ -146,7 +151,7 @@ export const POST = withPermission(
     );
 
     if (existing) {
-      return errorResponse('员工编号已存在', 409, 409);
+      return errorResponse(ts('k_1n4lfot'), 409, 409);
     }
 
     const result = await execute(
@@ -183,7 +188,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId }, '员工创建成功');
+    return successResponse({ id: result.insertId }, ts('k_kn138e'));
   },
   { logTitle: '创建员工' }
 );
@@ -191,11 +196,12 @@ export const POST = withPermission(
 // PUT - 更新员工
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body: Employee = await request.json();
     const { id } = body;
 
     if (!id) {
-      return commonErrors.badRequest('员工ID不能为空');
+      return commonErrors.badRequest(ts('k_u1sobh'));
     }
 
     // 验证必填字段
@@ -212,7 +218,7 @@ export const PUT = withPermission(
     );
 
     if (!existingEmployee) {
-      return commonErrors.notFound('员工不存在');
+      return commonErrors.notFound(ts('k_1k6rrmh'));
     }
 
     // 检查员工编号是否已被其他员工使用
@@ -222,7 +228,7 @@ export const PUT = withPermission(
     );
 
     if (codeExists) {
-      return errorResponse('员工编号已存在', 409, 409);
+      return errorResponse(ts('k_1n4lfot'), 409, 409);
     }
 
     const result = await execute(
@@ -282,10 +288,10 @@ export const PUT = withPermission(
     );
 
     if (result.affectedRows === 0) {
-      return commonErrors.notFound('员工不存在');
+      return commonErrors.notFound(ts('k_1k6rrmh'));
     }
 
-    return successResponse(null, '员工更新成功');
+    return successResponse(null, ts('k_psgybf'));
   },
   { logTitle: '更新员工' }
 );
@@ -293,11 +299,12 @@ export const PUT = withPermission(
 // DELETE - 删除员工（软删除）
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('员工ID不能为空');
+      return commonErrors.badRequest(ts('k_u1sobh'));
     }
 
     const employeeId = parseInt(id);
@@ -309,7 +316,7 @@ export const DELETE = withPermission(
     );
 
     if (!existingEmployee) {
-      return commonErrors.notFound('员工不存在');
+      return commonErrors.notFound(ts('k_1k6rrmh'));
     }
 
     // 使用事务软删除
@@ -317,7 +324,7 @@ export const DELETE = withPermission(
       await connection.execute('UPDATE sys_employee SET status = 0 WHERE id = ?', [employeeId]);
     });
 
-    return successResponse(null, '员工删除成功');
+    return successResponse(null, ts('k_1q64wcr'));
   },
   { logTitle: '删除员工' }
 );

@@ -222,6 +222,7 @@ interface SidebarProps {
 const warnedKeys = new Set<string>();
 
 export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
+  const ts = useTranslations('Common');
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
@@ -565,7 +566,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
       <aside
         data-sidebar="true"
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-all duration-300 lg:static',
+          'fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-[width,transform] duration-300 lg:static',
           navigationMode === 'mixed' ? 'w-52' : collapsed ? 'w-16' : 'w-64',
           collapsed && navigationMode !== 'mixed'
             ? '-translate-x-full lg:translate-x-0'
@@ -576,12 +577,12 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
         {navigationMode !== 'mixed' && (
           <div className="h-16 flex items-center justify-center border-b border-border">
             {collapsed ? (
-              <img src="/loginlogo.png" alt="达昌" className="w-8 h-8 rounded-lg object-contain" />
+              <img src="/loginlogo.png" alt={ts('k_1jq3bkn')} className="w-8 h-8 rounded-lg object-contain" />
             ) : (
               <div className="flex items-center gap-2">
                 <img
                   src="/loginlogo.png"
-                  alt="达昌"
+                  alt={ts('k_1jq3bkn')}
                   className="w-8 h-8 rounded-lg object-contain"
                 />
                 <span
@@ -600,7 +601,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
           <div className="h-full flex flex-col">
             <div className="h-16 flex items-center px-4 border-b border-border">
               <span className="font-semibold text-sm text-foreground">
-                {getMenuName(orderedMenus.find((m) => m.code === activeParentCode)!) || '子菜单'}
+                {getMenuName(orderedMenus.find((m) => m.code === activeParentCode)!) || ts('k_1a6znp0')}
               </span>
             </div>
             <ScrollArea className="flex-1">

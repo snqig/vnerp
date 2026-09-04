@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, queryOne, transaction, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -76,6 +79,7 @@ function calculateTotalAmount(items: RequestItem[] | undefined): number {
 
 // GET - 获取采购申请列表或单个申请
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const status = searchParams.get('status');
@@ -91,7 +95,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
 
     if (!request) {
-      return commonErrors.notFound('采购申请不存在');
+      return commonErrors.notFound(ts('k_jgkf22'));
     }
 
     // 获取明细
@@ -151,6 +155,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // POST - 创建采购申请
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     // 验证必填字段
@@ -167,29 +172,29 @@ export const POST = withPermission(
 
     // 验证明细
     if (!body.items || body.items.length === 0) {
-      return errorResponse('采购申请必须包含至少一条明细', 400, 400);
+      return errorResponse(ts('k_xkrpzw'), 400, 400);
     }
 
     // 系统设置：采购单据要求物料已归类。
     // category.require_on_business = true 时拦截，否则仅在返回消息里提示。
     const materialIds = (body.items as RequestItem[]).map((i) => i.material_id).filter(Boolean);
-    secureLog('info', '[purchase/request] 开始物料分类校验', {
+    secureLog('info', ts('k_1imy34n'), {
       itemCount: body.items.length,
       materialIds,
     });
     const categoryCheck = await checkMaterialsCategorized(materialIds);
-    secureLog('info', '[purchase/request] 物料分类校验完成', {
+    secureLog('info', ts('k_1ad6one'), {
       blocked: categoryCheck.blocked,
       uncategorizedCount: categoryCheck.uncategorized.length,
     });
     if (categoryCheck.blocked) {
-      secureLog('warn', '[purchase/request] 物料分类校验阻断提交', {
+      secureLog('warn', ts('k_dqxeq2'), {
         message: categoryCheck.message,
       });
       return errorResponse(categoryCheck.message!, 400, 400);
     }
     if (categoryCheck.message) {
-      secureLog('warn', '[purchase/request] 物料分类校验警告', {
+      secureLog('warn', ts('k_zg0hdq'), {
         message: categoryCheck.message,
       });
     }
@@ -260,7 +265,7 @@ export const POST = withPermission(
 
     return successResponse(
       { ...result, uncategorizedMaterials: categoryCheck.uncategorized },
-      categoryCheck.message ? `采购申请创建成功。${categoryCheck.message}` : '采购申请创建成功'
+      categoryCheck.message ? `采购申请创建成功。${categoryCheck.message}` : ts('k_r3xg5z')
     );
   },
   { logTitle: '创建采购申请', logType: 'business' }
@@ -269,11 +274,12 @@ export const POST = withPermission(
 // PUT - 更新采购申请
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('缺少申请ID');
+      return commonErrors.badRequest(ts('k_qil80b'));
     }
 
     const requestId = parseInt(id);
@@ -286,34 +292,34 @@ export const PUT = withPermission(
     );
 
     if (!existingRequest) {
-      return commonErrors.notFound('采购申请不存在或已被删除');
+      return commonErrors.notFound(ts('k_j6p1hr'));
     }
 
     // 已审批的申请不能修改
     if (existingRequest.status >= 4 && existingRequest.status !== 6) {
-      return errorResponse('已批准的采购申请不能修改', 400, 400);
+      return errorResponse(ts('k_sawxzr'), 400, 400);
     }
 
     const materialIds = ((body.items || []) as RequestItem[])
       .map((i) => i.material_id)
       .filter(Boolean);
-    secureLog('info', '[purchase/request PUT] 开始物料分类校验', {
+    secureLog('info', ts('k_jixna2'), {
       itemCount: (body.items || []).length,
       materialIds,
     });
     const categoryCheck = await checkMaterialsCategorized(materialIds);
-    secureLog('info', '[purchase/request PUT] 物料分类校验完成', {
+    secureLog('info', ts('k_gaqxmf'), {
       blocked: categoryCheck.blocked,
       uncategorizedCount: categoryCheck.uncategorized.length,
     });
     if (categoryCheck.blocked) {
-      secureLog('warn', '[purchase/request PUT] 物料分类校验阻断提交', {
+      secureLog('warn', ts('k_kp9at7'), {
         message: categoryCheck.message,
       });
       return errorResponse(categoryCheck.message!, 400, 400);
     }
     if (categoryCheck.message) {
-      secureLog('warn', '[purchase/request PUT] 物料分类校验警告', {
+      secureLog('warn', ts('k_jk55wv'), {
         message: categoryCheck.message,
       });
     }
@@ -385,7 +391,7 @@ export const PUT = withPermission(
 
     return successResponse(
       { uncategorizedMaterials: categoryCheck.uncategorized },
-      categoryCheck.message ? `采购申请更新成功。${categoryCheck.message}` : '采购申请更新成功'
+      categoryCheck.message ? `采购申请更新成功。${categoryCheck.message}` : ts('k_b4t2g6')
     );
   },
   { logTitle: '更新采购申请', logType: 'business' }
@@ -394,11 +400,12 @@ export const PUT = withPermission(
 // DELETE - 删除采购申请
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('缺少申请ID');
+      return commonErrors.badRequest(ts('k_qil80b'));
     }
 
     const requestId = parseInt(id);
@@ -410,12 +417,12 @@ export const DELETE = withPermission(
     );
 
     if (!existingRequest) {
-      return commonErrors.notFound('采购申请不存在或已被删除');
+      return commonErrors.notFound(ts('k_j6p1hr'));
     }
 
     // 已审批的申请不能删除
     if (existingRequest.status >= 4) {
-      return errorResponse('已批准的采购申请不能删除', 400, 400);
+      return errorResponse(ts('k_ajtt86'), 400, 400);
     }
 
     const refCheck = await queryOne<{ cnt: number }>(
@@ -423,7 +430,7 @@ export const DELETE = withPermission(
       [`%PR-${existingRequest.id}%`]
     );
     if (refCheck && refCheck.cnt > 0) {
-      return errorResponse('该请购单已被采购订单引用，无法删除', 400, 400);
+      return errorResponse(ts('k_1br5y53'), 400, 400);
     }
 
     // 使用事务软删除主表和明细
@@ -434,7 +441,7 @@ export const DELETE = withPermission(
       ]);
     });
 
-    return successResponse(null, '采购申请删除成功');
+    return successResponse(null, ts('k_v0y1vi'));
   },
   { logTitle: '删除采购申请', logType: 'business' }
 );

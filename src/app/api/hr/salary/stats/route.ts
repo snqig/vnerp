@@ -1,9 +1,13 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
 
 // 获取薪资统计
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month') || format(new Date(), 'yyyy-MM');
@@ -69,7 +73,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       },
     });
   } catch {
-    return NextResponse.json({ success: false, message: '获取薪资统计失败' }, { status: 500 });
+    return NextResponse.json({ success: false, message: ts('k_6jjwsw') }, { status: 500 });
   }
 });
 

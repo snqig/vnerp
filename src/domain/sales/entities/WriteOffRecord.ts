@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface WriteOffRecordProps {
   id?: number;
   reconciliationId?: number;
@@ -28,14 +30,15 @@ export class WriteOffRecord {
   }
 
   static create(props: WriteOffRecordProps): WriteOffRecord {
+  const ts = t;
     if (!props.receivableId || props.receivableId <= 0) {
-      throw new Error('应收单ID不能为空');
+      throw new Error(ts('k_8tatth'));
     }
     if (!props.amount || props.amount <= 0) {
-      throw new Error('核销金额必须大于0');
+      throw new Error(ts('k_4is2uy'));
     }
     if (!props.writeOffDate) {
-      throw new Error('核销日期不能为空');
+      throw new Error(ts('k_w2exlz'));
     }
     return new WriteOffRecord(props);
   }

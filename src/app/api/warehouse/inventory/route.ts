@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -6,6 +9,7 @@ import { logger, generateTraceId } from '@/lib/logger';
 import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const traceId = generateTraceId();
   const ctx = { module: 'inventory', action: 'list', traceId };
 
@@ -17,7 +21,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const warehouseId = searchParams.get('warehouseId');
   const lowStock = searchParams.get('lowStock');
 
-  logger.stepStart(ctx, '查询库存列表', {
+  logger.stepStart(ctx, ts('k_1hkqatm'), {
     keyword,
     categoryId,
     warehouseId,
@@ -43,26 +47,26 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const values: SqlValue[] = [];
 
   if (keyword) {
-    logger.branch(ctx, '筛选条件', '关键词搜索', true, { keyword });
+    logger.branch(ctx, ts('k_1klma2y'), ts('k_1uy1t05'), true, { keyword });
     sql += ` AND (m.material_code LIKE ? OR m.material_name LIKE ?)`;
     const likeKeyword = `%${keyword}%`;
     values.push(likeKeyword, likeKeyword);
   }
 
   if (categoryId) {
-    logger.branch(ctx, '筛选条件', '分类筛选', true, { categoryId });
+    logger.branch(ctx, ts('k_1klma2y'), ts('k_1hw6hmy'), true, { categoryId });
     sql += ` AND m.category_id = ?`;
     values.push(parseInt(categoryId));
   }
 
   if (warehouseId) {
-    logger.branch(ctx, '筛选条件', '仓库筛选', true, { warehouseId });
+    logger.branch(ctx, ts('k_1klma2y'), ts('k_xy6beb'), true, { warehouseId });
     sql += ` AND m.warehouse_id = ?`;
     values.push(parseInt(warehouseId));
   }
 
   if (lowStock === 'true') {
-    logger.branch(ctx, '筛选条件', '低库存筛选', true);
+    logger.branch(ctx, ts('k_1klma2y'), ts('k_1b7r4by'), true);
     sql += ` AND m.safety_stock > 0 AND COALESCE(ib.stock_qty, 0) <= m.safety_stock`;
   }
 
@@ -126,7 +130,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const countResult = await query(countSql, countValues);
   const total = (countResult as DbRow[])[0]?.total || 0;
 
-  logger.stepEnd(ctx, '查询库存列表', { total, page, pageSize });
+  logger.stepEnd(ctx, ts('k_1hkqatm'), { total, page, pageSize });
   return successResponse({
     list: result,
     total,

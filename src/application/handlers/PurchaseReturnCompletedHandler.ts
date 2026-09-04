@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { PurchaseReturnCompletedEvent } from '@/domain/purchase/events/PurchaseReturnEvents';
 import { query, transaction } from '@/lib/db';
@@ -24,9 +26,10 @@ interface OrderReturnStatusRow {
  */
 export class PurchaseReturnCompletedHandler implements EventHandler<PurchaseReturnCompletedEvent> {
   async handle(event: PurchaseReturnCompletedEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { returnId, returnNo, orderId, items, completedBy } = event.payload;
 
-    secureLog('info', '采购退货完成，更新采购订单行已退货数量', {
+    secureLog('info', ts('k_7gn23z'), {
       returnId,
       returnNo,
       orderId,
@@ -42,7 +45,7 @@ export class PurchaseReturnCompletedHandler implements EventHandler<PurchaseRetu
     );
 
     if (!returnLines || returnLines.length === 0) {
-      secureLog('warn', '采购退货明细无关联的采购订单行，跳过更新', { returnId, returnNo });
+      secureLog('warn', ts('k_1hov66u'), { returnId, returnNo });
       return;
     }
 
@@ -55,7 +58,7 @@ export class PurchaseReturnCompletedHandler implements EventHandler<PurchaseRetu
           [Number(line.quantity), line.order_line_id]
         );
 
-        secureLog('info', '更新采购订单行已退货数量', {
+        secureLog('info', ts('k_1gr079u'), {
           orderLineId: line.order_line_id,
           materialId: line.material_id,
           returnQty: Number(line.quantity),
@@ -67,6 +70,7 @@ export class PurchaseReturnCompletedHandler implements EventHandler<PurchaseRetu
   }
 
   private async checkOrderReturnStatus(conn: PoolConnection, orderId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const [rows] = await conn.execute<RowDataPacket[]>(
       `SELECT
          COUNT(*) AS total_lines,
@@ -81,7 +85,7 @@ export class PurchaseReturnCompletedHandler implements EventHandler<PurchaseRetu
     const fullyReturnedLines = Number(result?.fully_returned_lines || 0);
 
     if (totalLines > 0 && fullyReturnedLines === totalLines) {
-      secureLog('info', '采购订单所有行已全部退货，标记为已关闭', { orderId });
+      secureLog('info', ts('k_ixv5uj'), { orderId });
     }
   }
 }

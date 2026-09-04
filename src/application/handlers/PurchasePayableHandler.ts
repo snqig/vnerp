@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { PurchaseOrderReceivedEvent } from '@/domain/purchase/events/PurchaseOrderEvents';
 import { transaction } from '@/lib/db';
@@ -6,13 +8,14 @@ import type { DbResult } from '@/types/db';
 
 export class PurchasePayableHandler implements EventHandler<PurchaseOrderReceivedEvent> {
   async handle(event: PurchaseOrderReceivedEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { orderId, orderNo, supplierId, supplierName, receivedItems, totalReceivedAmount } =
       event.payload;
     const ctx = { module: 'purchase-payable', action: 'create', orderId, orderNo };
     let phase = 'init';
 
     if (totalReceivedAmount <= 0) {
-      logger.info(ctx, '跳过：总收货金额为 0', { orderNo });
+      logger.info(ctx, ts('k_1rrkgap'), { orderNo });
       return;
     }
 
@@ -39,7 +42,7 @@ export class PurchasePayableHandler implements EventHandler<PurchaseOrderReceive
               `Purchase inbound ${orderNo} material ${item.materialName} qty ${item.quantity} batch ${item.batchNo}`,
             ]
           );
-          logger.info(ctx, `凭证创建`, {
+          logger.info(ctx, ts('k_1ydg4xa'), {
             voucherNo,
             materialId: item.materialId,
             materialName: item.materialName,
@@ -56,7 +59,7 @@ export class PurchasePayableHandler implements EventHandler<PurchaseOrderReceive
         )) as DbResult;
         const dbSupplierId = supplierRows.length > 0 ? supplierRows[0].id : null;
         if (supplierRows.length === 0) {
-          logger.warn(ctx, `供应商不存在，应付账款将无关联供应商`, { supplierId, supplierName });
+          logger.warn(ctx, ts('k_1lot7qb'), { supplierId, supplierName });
         }
 
         phase = 'insert_payable';
@@ -73,7 +76,7 @@ export class PurchasePayableHandler implements EventHandler<PurchaseOrderReceive
             `Purchase order ${orderNo} inbound auto-generated`,
           ]
         );
-        logger.info(ctx, `应付账款创建完成`, {
+        logger.info(ctx, ts('k_1wdvwg'), {
           payableNo,
           supplierId: dbSupplierId,
           orderNo,

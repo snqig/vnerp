@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, logOperation } from '@/lib/api-response';
@@ -31,6 +34,7 @@ interface FIFOAllocationResult {
 
 export const GET = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const materialId = searchParams.get('materialId');
     const materialCode = searchParams.get('materialCode');
@@ -38,7 +42,7 @@ export const GET = withPermission(
     const requiredQty = parseFloat(searchParams.get('requiredQty') || '0');
 
     if (!warehouseId) {
-      return errorResponse('warehouseId 不能为空', 400, 400);
+      return errorResponse(ts('k_mfawgd'), 400, 400);
     }
 
     // 解析物料：优先 materialId，其次用 materialCode 反查
@@ -61,7 +65,7 @@ export const GET = withPermission(
     }
     if (!resolvedMaterialId || isNaN(resolvedMaterialId)) {
       return errorResponse(
-        materialCode ? `物料编码不存在: ${materialCode}` : 'materialId 不能为空',
+        materialCode ? `物料编码不存在: ${materialCode}` : ts('k_xgqql5'),
         400,
         400
       );
@@ -129,6 +133,7 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       warehouseId,
@@ -142,7 +147,7 @@ export const POST = withPermission(
     } = body;
 
     if (!warehouseId || !items || !Array.isArray(items) || items.length === 0) {
-      return errorResponse('warehouseId 和 items 不能为空', 400, 400);
+      return errorResponse(ts('k_1yisuzp'), 400, 400);
     }
 
     return await transaction(async (conn) => {
@@ -293,7 +298,7 @@ export const POST = withPermission(
             obItem.material_id,
             obItem.material_name,
             obItem.qty,
-            obItem.unit || '个',
+            obItem.unit || ts('k_d5a1x9'),
             obItem.unit_cost,
             obItem.amount,
             obItem.batch_no,
@@ -312,7 +317,7 @@ export const POST = withPermission(
       };
 
       await logOperation({
-        title: 'FIFO出库',
+        title: ts('k_mw6d3g'),
         oper_name: operatorName,
         oper_type: 'warehouse',
         oper_method: 'POST',
@@ -322,7 +327,7 @@ export const POST = withPermission(
         status: 1,
       });
 
-      return successResponse(result, 'FIFO出库单创建成功');
+      return successResponse(result, ts('k_1kgbuyn'));
     });
   },
   { errorMessage: 'FIFO出库失败' }
@@ -330,11 +335,12 @@ export const POST = withPermission(
 
 export const PATCH = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { orderId, operatorId, operatorName, remark } = body;
 
     if (!orderId) {
-      return errorResponse('orderId 不能为空', 400, 400);
+      return errorResponse(ts('k_1ov2t54'), 400, 400);
     }
 
     return await transaction(async (conn) => {
@@ -344,13 +350,13 @@ export const PATCH = withPermission(
       );
 
       if (orders.length === 0) {
-        throw new Error('出库单不存在');
+        throw new Error(ts('k_14l2xo0'));
       }
 
       const order = orders[0];
 
       if (order.status === 'completed') {
-        throw new Error('出库单已完成，不能重复确认');
+        throw new Error(ts('k_1598o1d'));
       }
 
       const [items] = await conn.execute(
@@ -359,7 +365,7 @@ export const PATCH = withPermission(
       );
 
       if (items.length === 0) {
-        throw new Error('出库单没有明细');
+        throw new Error(ts('k_1q5was7'));
       }
 
       const deductionDetails: SqlValue[] = [];
@@ -460,7 +466,7 @@ export const PATCH = withPermission(
         [operatorId, operatorName, remark || '', orderId, order.version]
       );
       if (orderUpdateResult.affectedRows === 0) {
-        throw new Error('出库单版本冲突，可能已被其他操作修改，请刷新后重试');
+        throw new Error(ts('k_166xnaj'));
       }
 
       const result = {
@@ -472,7 +478,7 @@ export const PATCH = withPermission(
       };
 
       await logOperation({
-        title: 'FIFO出库确认',
+        title: ts('k_rfwhl2'),
         oper_name: operatorName,
         oper_type: 'warehouse',
         oper_method: 'PATCH',
@@ -482,7 +488,7 @@ export const PATCH = withPermission(
         status: 1,
       });
 
-      return successResponse(result, 'FIFO出库确认成功，库存已按先进先出扣减');
+      return successResponse(result, ts('k_8pi72y'));
     });
   },
   { errorMessage: 'FIFO出库确认失败' }

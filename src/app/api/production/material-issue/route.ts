@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -53,6 +56,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       work_order_id,
@@ -66,31 +70,31 @@ export const POST = withPermission(
     } = body;
 
     if (!warehouse_id) {
-      return errorResponse('仓库ID不能为空', 400, 400);
+      return errorResponse(ts('k_1t9r8nc'), 400, 400);
     }
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return errorResponse('发料明细不能为空', 400, 400);
+      return errorResponse(ts('k_1rr8p01'), 400, 400);
     }
 
     // 系统设置 category.require_on_business：生产领料单要求物料已归类
     const materialIds = (items as DbRow[]).map((item: DbRow) => item.material_id).filter(Boolean);
-    secureLog('info', '[production/material-issue] 开始物料分类校验', {
+    secureLog('info', ts('k_kmeudl'), {
       itemCount: items.length,
       materialIds,
     });
     const categoryCheck = await checkMaterialsCategorized(materialIds);
-    secureLog('info', '[production/material-issue] 物料分类校验完成', {
+    secureLog('info', ts('k_uxvprk'), {
       blocked: categoryCheck.blocked,
       uncategorizedCount: categoryCheck.uncategorized.length,
     });
     if (categoryCheck.blocked) {
-      secureLog('warn', '[production/material-issue] 物料分类校验阻断提交', {
+      secureLog('warn', ts('k_1yn4zhg'), {
         message: categoryCheck.message,
       });
       return errorResponse(categoryCheck.message!, 400, 400);
     }
     if (categoryCheck.message) {
-      secureLog('warn', '[production/material-issue] 物料分类校验警告', {
+      secureLog('warn', ts('k_8wmt8c'), {
         message: categoryCheck.message,
       });
     }
@@ -110,13 +114,13 @@ export const POST = withPermission(
           [work_order_id]
         );
         if (woRows.length === 0) {
-          throw new Error('工单不存在');
+          throw new Error(ts('k_lmufdi'));
         }
         if (woRows[0].status < 20) {
-          throw new Error('工单未审核，不能发料');
+          throw new Error(ts('k_11hglnu'));
         }
         if (woRows[0].status >= 90) {
-          throw new Error('工单已关闭，不能发料');
+          throw new Error(ts('k_121g1jl'));
         }
       }
 
@@ -235,7 +239,7 @@ export const POST = withPermission(
 
     return successResponse(
       { ...result, uncategorizedMaterials: categoryCheck.uncategorized },
-      categoryCheck.message ? `发料单创建成功。${categoryCheck.message}` : '发料单创建成功'
+      categoryCheck.message ? `发料单创建成功。${categoryCheck.message}` : ts('k_16hg18m')
     );
   },
   { logTitle: '创建发料单', logType: 'business' }
@@ -243,11 +247,12 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action, status, remark } = body;
 
     if (!id) {
-      return errorResponse('发料单ID不能为空', 400, 400);
+      return errorResponse(ts('k_1ok2wth'), 400, 400);
     }
 
     if (action === 'post') {
@@ -258,13 +263,13 @@ export const PUT = withPermission(
         );
 
         if (issueRows.length === 0) {
-          throw new Error('发料单不存在');
+          throw new Error(ts('k_14x793l'));
         }
 
         const issue = issueRows[0];
 
         if (issue.status >= 3) {
-          throw new Error('发料单已完成或已取消，不能重复过账');
+          throw new Error(ts('k_kic6xf'));
         }
 
         const [itemRows] = await conn.execute(
@@ -314,7 +319,7 @@ export const PUT = withPermission(
 
         return { id, status: 3 };
       });
-      return successResponse(result, '发料过账成功');
+      return successResponse(result, ts('k_evsx2b'));
     }
 
     if (status !== undefined)
@@ -327,30 +332,31 @@ export const PUT = withPermission(
         remark,
         id,
       ]);
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新发料单', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
+    if (!id) return NextResponse.json({ success: false, message: ts('k_js4lo9') }, { status: 400 });
 
     const issue = await query(
       'SELECT status FROM prd_material_issue WHERE id = ? AND deleted = 0',
       [Number(id)]
     );
     if (issue.length === 0) {
-      return errorResponse('发料单不存在', 404, 404);
+      return errorResponse(ts('k_14x793l'), 404, 404);
     }
     if (issue[0].status >= 3) {
-      return errorResponse('已完成的发料单不能删除', 400, 400);
+      return errorResponse(ts('k_1oqcapy'), 400, 400);
     }
 
     await execute('UPDATE prd_material_issue SET deleted = 1 WHERE id = ?', [Number(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除发料单', logType: 'business' }
 );

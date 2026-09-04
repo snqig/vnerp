@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { Link, usePathname } from '@/i18n/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -95,6 +96,7 @@ function findAncestorsByPathPrefix(menus: MenuItem[], currentPath: string): stri
 }
 
 export function DynamicMenu() {
+  const ts = useTranslations('Common');
   const { menus, isLoading } = useAuth();
   const pathname = usePathname();
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
@@ -114,7 +116,7 @@ export function DynamicMenu() {
   }, [pathname, menus]);
 
   if (isLoading) {
-    return <div className="p-4 text-muted-foreground">加载中...</div>;
+    return <div className="p-4 text-muted-foreground">{ts('k_ldc0z9')}</div>;
   }
 
   // 切换菜单展开状态

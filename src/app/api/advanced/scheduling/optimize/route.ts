@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -5,6 +8,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { GeneticScheduler, ProductionJob } from '@/lib/production-planning/genetic-scheduler';
 
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { machineIds, horizonDays = 7 } = await request.json();
 
   const workOrders = await query<{
@@ -29,7 +33,7 @@ export const POST = withPermission(async (request: NextRequest) => {
       makespan: 0,
       lateness: 0,
       cost: 0,
-      message: '没有待排产的工单',
+      message: ts('k_7impl'),
     });
   }
 

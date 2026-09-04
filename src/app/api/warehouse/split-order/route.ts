@@ -1,4 +1,8 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
+import { randomUUID } from 'crypto';
 import { query, transaction, execute } from '@/lib/db';
 import {
   successResponse,
@@ -76,11 +80,12 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { parentBatchId, warehouseId, remark, details, operatorId, operatorName } = body;
 
     if (!parentBatchId || !details || !Array.isArray(details) || details.length === 0) {
-      return errorResponse('母料批次和分切明细不能为空', 400, 400);
+      return errorResponse(ts('k_1ibwu6'), 400, 400);
     }
 
     return await transaction(async (conn) => {
@@ -91,7 +96,7 @@ export const POST = withPermission(
       );
 
       if (!parentBatch || parentBatch.length === 0) {
-        throw new Error('母料批次不存在');
+        throw new Error(ts('k_c37hds'));
       }
 
       const batch = parentBatch[0];
@@ -178,7 +183,7 @@ export const POST = withPermission(
       }
 
       await logOperation({
-        title: '创建分切单',
+        title: ts('k_i8yydq'),
         oper_name: operatorName,
         oper_type: 'warehouse',
         oper_method: 'POST',
@@ -188,7 +193,7 @@ export const POST = withPermission(
         status: 1,
       });
 
-      return successResponse({ splitId, splitNo }, '分切单创建成功');
+      return successResponse({ splitId, splitNo }, ts('k_x2npqd'));
     });
   },
   { errorMessage: '创建分切单失败' }
@@ -196,11 +201,12 @@ export const POST = withPermission(
 
 export const PATCH = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { splitId, action, operatorId, operatorName } = body;
 
     if (!splitId) {
-      return errorResponse('splitId不能为空', 400, 400);
+      return errorResponse(ts('k_k4y7oo'), 400, 400);
     }
 
     return await transaction(async (conn) => {
@@ -216,14 +222,14 @@ export const PATCH = withPermission(
       );
 
       if (!orders || orders.length === 0) {
-        throw new Error('分切单不存在');
+        throw new Error(ts('k_14f06o'));
       }
 
       const order = orders[0];
 
       if (action === 'audit') {
         if (order.status !== 0) {
-          throw new Error('分切单状态不正确，只能审核草稿状态的分切单');
+          throw new Error(ts('k_jinb8h'));
         }
 
         // #21 分切物料类型限制：审核时再次校验，防止绕过前端直接调用 API
@@ -238,7 +244,7 @@ export const PATCH = withPermission(
         ]);
 
         if (!details || details.length === 0) {
-          throw new Error('分切单没有明细');
+          throw new Error(ts('k_1wx1fpz'));
         }
 
         const parentAvailableQty = parseFloat(order.available_qty);
@@ -336,7 +342,7 @@ export const PATCH = withPermission(
               warehouseId,
               d.total_qty,
               d.total_qty,
-              order.unit || '米',
+              order.unit || ts('k_1wdvptu'),
               pieceCost.toNumber(),
               childWidth,
               childLength,
@@ -352,6 +358,27 @@ export const PATCH = withPermission(
           await conn.execute(
             `UPDATE split_order_detail SET child_batch_id = ?, child_batch_no = ?, allocated_cost = ? WHERE id = ?`,
             [childBatchId, childBatchNo, pieceCost.toNumber(), d.id]
+          );
+
+          // P1 拆批→QR：子批生成追溯二维码（与库存变更同事务，原子），使分切产物可扫码追溯
+          const childQrCode = 'MA-' + randomUUID().replace(/-/g, '').substring(0, 16);
+          await conn.execute(
+            `INSERT INTO qrcode_record (
+               qr_code, qr_type, ref_no, batch_no, material_id, material_code, material_name,
+               quantity, unit, warehouse_id, status, remark, create_time
+             ) VALUES (?, 'material', ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
+            [
+              childQrCode,
+              order.split_no,
+              childBatchNo,
+              order.material_id,
+              order.material_code || '',
+              order.material_name,
+              d.total_qty,
+              order.unit || ts('k_1wdvptu'),
+              warehouseId,
+              `分切子批-${order.split_no}`,
+            ]
           );
 
           // 财务级库存流水（子批 'in' 入库），与批次新增同事务。
@@ -408,7 +435,7 @@ export const PATCH = withPermission(
           affectedRows?: number;
         };
         if ((motherUpd?.affectedRows ?? 0) === 0) {
-          throw new Error('母料库存扣减失败：批次版本冲突或已被修改，请刷新后重试');
+          throw new Error(ts('k_1gjteir'));
         }
 
         // 财务级库存流水（母料 'out' 出库，含良品与损耗），与母料扣减同事务。
@@ -503,7 +530,7 @@ export const PATCH = withPermission(
         );
 
         await logOperation({
-          title: '审核分切单',
+          title: ts('k_k2g3kq'),
           oper_name: operatorName,
           oper_type: 'warehouse',
           oper_method: 'PATCH',
@@ -523,13 +550,13 @@ export const PATCH = withPermission(
             totalCost: totalCostDecimal.toNumber(),
             wasteQty: totalWasteQty.toNumber(),
           },
-          '分切单审核通过，库存已更新'
+          ts('k_4iywm4')
         );
       }
 
       if (action === 'void') {
         if (order.status !== 0) {
-          throw new Error('只能作废草稿状态的分切单');
+          throw new Error(ts('k_17xj96a'));
         }
 
         await conn.execute(
@@ -537,7 +564,7 @@ export const PATCH = withPermission(
           [splitId, order.version]
         );
 
-        return successResponse(null, '分切单已作废');
+        return successResponse(null, ts('k_1q8ddtw'));
       }
 
       throw new Error(`不支持的操作: ${action}`);

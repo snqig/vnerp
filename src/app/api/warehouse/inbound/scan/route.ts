@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -6,10 +9,11 @@ import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
 export const GET = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const qrCode = request.nextUrl.searchParams.get('qrCode');
 
     if (!qrCode) {
-      return errorResponse('二维码内容不能为空', 400, 400);
+      return errorResponse(ts('k_15lo7aw'), 400, 400);
     }
 
     const parts = qrCode.split('-');
@@ -24,7 +28,7 @@ export const GET = withPermission(
     );
 
     if (!orders || (orders as DbRow[]).length === 0) {
-      return errorResponse('未找到对应的入库记录', 404, 404);
+      return errorResponse(ts('k_ed6e19'), 404, 404);
     }
 
     const order = (orders as DbRow[])[0];
@@ -50,7 +54,7 @@ export const GET = withPermission(
       history.push({
         event: 'AUDIT',
         time: order.update_time || order.create_time,
-        detail: '审核通过',
+        detail: ts('k_1wqkzrj'),
       });
     }
 
@@ -68,7 +72,7 @@ export const GET = withPermission(
       batchNo: targetItem.batch_no || '',
       history,
       nextAction:
-        order.status === 'approved' || order.status === 'completed' ? '可分切/出库' : '待审核',
+        order.status === 'approved' || order.status === 'completed' ? ts('k_1e14bit') : ts('k_a2uv9t'),
     });
   },
   { errorMessage: '扫码查询失败' }

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -5,6 +8,7 @@ import { getInventoryLogs } from '@/lib/inventory-sync';
 
 // 获取库存流水
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
 
   const materialId = searchParams.get('materialId')
@@ -31,5 +35,5 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     pageSize
   );
 
-  return successResponse(result, '获取库存流水成功');
+  return successResponse(result, ts('k_4blu6v'));
 });

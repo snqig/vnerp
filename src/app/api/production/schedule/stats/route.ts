@@ -1,9 +1,13 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
 
 // 获取生产排程统计信息
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
@@ -80,6 +84,6 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       },
     });
   } catch {
-    return NextResponse.json({ success: false, message: '获取排程统计失败' }, { status: 500 });
+    return NextResponse.json({ success: false, message: ts('k_1fvhpdd') }, { status: 500 });
   }
 });

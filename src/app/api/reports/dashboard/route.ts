@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -7,6 +10,7 @@ import { withPermission } from '@/lib/api-permissions';
  * 报表仪表盘 - 核心指标汇总
  */
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const period = searchParams.get('period') || '30'; // 天数
 
@@ -121,6 +125,6 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         pendingPayable: parseFloat(financeRow.pending_payable) || 0,
       },
     },
-    '获取仪表盘数据成功'
+    ts('k_or2c9t')
   );
 });

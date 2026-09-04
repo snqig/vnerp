@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { getDrizzleDb } from '@/lib/db';
 import { eq, and, desc, count } from 'drizzle-orm';
@@ -52,6 +55,7 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const result = await db.insert(hrSkillMatrix).values({
       employeeId: body.employee_id,
@@ -66,15 +70,16 @@ export const POST = withPermission(
       nextAssessDate: body.next_assess_date,
       remark: body.remark,
     });
-    return successResponse({ id: Number(result[0].insertId) }, '技能记录创建成功');
+    return successResponse({ id: Number(result[0].insertId) }, ts('k_pc4gkt'));
   },
   { errorMessage: '创建技能记录失败' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
-    if (!body.id) return errorResponse('缺少技能ID', 400, 400);
+    if (!body.id) return errorResponse(ts('k_femcvy'), 400, 400);
     await db
       .update(hrSkillMatrix)
       .set({
@@ -91,21 +96,22 @@ export const PUT = withPermission(
         remark: body.remark,
       })
       .where(eq(hrSkillMatrix.id, body.id));
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { errorMessage: '更新技能记录失败' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('缺少技能ID', 400, 400);
+    if (!id) return errorResponse(ts('k_femcvy'), 400, 400);
     await db
       .update(hrSkillMatrix)
       .set({ deleted: 1 })
       .where(eq(hrSkillMatrix.id, Number(id)));
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { errorMessage: '删除技能记录失败' }
 );

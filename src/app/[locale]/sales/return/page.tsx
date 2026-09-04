@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { MoneyDisplay } from '@/components/ui/money-display';
+import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { Plus, Search, RefreshCw, RotateCcw, Eye, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRowSelection } from '@/lib/useRowSelection';
@@ -85,6 +86,7 @@ interface Customer {
 }
 
 export default function ReturnPage() {
+  const ts = useTranslations('Sales');
   // 翻译钩子
   const t = useTranslations('SalesReturn');
   const tc = useTranslations('Common');
@@ -131,7 +133,7 @@ export default function ReturnPage() {
         material_name: '',
         material_spec: '',
         quantity: 0,
-        unit: '张',
+        unit: ts('k_accfpb'),
         unit_price: 0,
         amount: 0,
         batch_no: '',
@@ -141,6 +143,7 @@ export default function ReturnPage() {
   });
   const [detailData, setDetailData] = useState<ReturnOrder | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [orders, setOrders] = useState<Loose[]>([]);
   const [total, setTotal] = useState(0);
 
   const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
@@ -196,10 +199,21 @@ export default function ReturnPage() {
     } catch {}
   }, []);
 
+  const fetchOrders = useCallback(async () => {
+    try {
+      const res = await authFetch('/api/orders');
+      const result = await res.json();
+      if (result.success) {
+        setOrders(result.data?.list || result.data || []);
+      }
+    } catch {}
+  }, []);
+
   useEffect(() => {
     fetchData();
     fetchCustomers();
-  }, [fetchData, fetchCustomers]);
+    fetchOrders();
+  }, [fetchData, fetchCustomers, fetchOrders]);
 
   const addItem = () => {
     setForm((prev) => ({
@@ -211,7 +225,7 @@ export default function ReturnPage() {
           material_name: '',
           material_spec: '',
           quantity: 0,
-          unit: '张',
+          unit: ts('k_accfpb'),
           unit_price: 0,
           amount: 0,
           batch_no: '',
@@ -243,6 +257,14 @@ export default function ReturnPage() {
   const saveReturn = async () => {
     if (!form.customer_id) {
       toast.error(t('selectCustomer'));
+      return;
+    }
+    if (!form.order_id) {
+      toast.error(t('selectOrder'));
+      return;
+    }
+    if (!form.warehouse_id) {
+      toast.error(t('selectWarehouse'));
       return;
     }
     if (!form.items || form.items.length === 0) {
@@ -326,7 +348,7 @@ export default function ReturnPage() {
                       material_name: '',
                       material_spec: '',
                       quantity: 0,
-                      unit: '张',
+                      unit: ts('k_accfpb'),
                       unit_price: 0,
                       amount: 0,
                       batch_no: '',
@@ -435,7 +457,7 @@ export default function ReturnPage() {
                   {list.map((r) => (
                     <TableRow key={r.id}>
                       <TableCell>
-                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectAll')} />
+                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectRow', { id: r.id })} />
                       </TableCell>
                       <TableCell className="font-medium">{r.return_no}</TableCell>
                       <TableCell>{r.order_no || '-'}</TableCell>
@@ -594,19 +616,41 @@ export default function ReturnPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{t('originalOrderNo')}</Label>
-                <Input
-                  value={form.order_no || ''}
-                  onChange={(e) => setForm((prev) => ({ ...prev, order_no: e.target.value }))}
-                  placeholder={t('relatedOrderPlaceholder')}
-                />
+                <Label>
+                  {t('originalOrderNo')} <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={String(form.order_id || '')}
+                  onValueChange={(v) => {
+                    const ord = orders.find((o: Loose) => String(o.id) === v);
+                    setForm((prev) => ({
+                      ...prev,
+                      order_id: parseInt(v),
+                      order_no: ord?.order_no || ord?.orderNo || '',
+                      customer_id: ord?.customer_id ? Number(ord.customer_id) : prev.customer_id,
+                      customer_name: ord?.customer_name || prev.customer_name,
+                    }));
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('relatedOrderPlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {orders.map((o: Loose) => (
+                      <SelectItem key={o.id} value={String(o.id)}>
+                        {o.order_no || o.orderNo || `#${o.id}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label>{t('originalDeliveryNo')}</Label>
-                <Input
-                  value={form.delivery_no || ''}
-                  onChange={(e) => setForm((prev) => ({ ...prev, delivery_no: e.target.value }))}
-                  placeholder={t('relatedDeliveryPlaceholder')}
+                <Label>
+                  {t('warehouse')} <span className="text-red-500">*</span>
+                </Label>
+                <WarehouseSelect
+                  value={form.warehouse_id}
+                  onChange={(v) => setForm((prev) => ({ ...prev, warehouse_id: v ? Number(v) : undefined }))}
                 />
               </div>
             </div>

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { successResponse } from '@/lib/api-response';
 import { extractToken, verifyToken, UserInfo } from '@/lib/auth';
@@ -25,6 +28,7 @@ function clearAuthCookies(response: NextResponse): void {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const ts = await getTranslations('Common');
   // 登出接口不要求有效 token：即使用户 token 已过期或无效，也必须能登出。
   // 这是修复"退不出登录"问题的关键设计：
   //   - 旧实现使用 withPermission 装饰，token 过期时返回 401，cookie 永远不会被清除
@@ -55,7 +59,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 不影响登出流程，继续清除 cookie
   }
 
-  const response = successResponse(null, '登出成功');
+  const response = successResponse(null, ts('k_c955b1'));
 
   // 清除 httpOnly cookie：access_token + refresh_token
   // 通过 maxAge=0 立即过期，确保后续 SSR 和 middleware 不再识别为登录态

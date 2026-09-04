@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export enum SampleOrderStatus {
   DRAFT = 'draft', // 草稿
   PENDING = 'pending', // 待打样
@@ -131,7 +133,8 @@ export function canTransition(current: SampleOrderStatus, target: SampleOrderSta
  * @returns 状态中文名称
  */
 export function getStatusLabel(status: SampleOrderStatus): string {
-  return sampleOrderStateMachine[status]?.label ?? '未知状态';
+  const ts = t;
+  return sampleOrderStateMachine[status]?.label ?? ts('k_drsrcx');
 }
 
 /**

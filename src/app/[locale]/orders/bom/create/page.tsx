@@ -74,6 +74,7 @@ const units = [
 ];
 
 export default function CreateBOMPage() {
+  const ts = useTranslations('Orders');
   // 翻译钩子
   const t = useTranslations('Orders');
   const tc = useTranslations('Common');
@@ -88,7 +89,7 @@ export default function CreateBOMPage() {
     product_spec: '',
     version: 'V1.0',
     base_qty: 1,
-    unit: '件',
+    unit: ts('k_w0gthl'),
     remark: '',
   });
 
@@ -121,7 +122,7 @@ export default function CreateBOMPage() {
       material_code: '',
       material_name: '',
       material_spec: '',
-      unit: '件',
+      unit: ts('k_w0gthl'),
       consumption_qty: 1,
       loss_rate: 0,
       unit_cost: 0,

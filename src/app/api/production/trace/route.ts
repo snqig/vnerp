@@ -1,16 +1,20 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const sn = searchParams.get('sn');
   const batchNo = searchParams.get('batchNo');
   const workorderNo = searchParams.get('workorderNo');
 
   if (!sn && !batchNo && !workorderNo) {
-    return errorResponse('请提供至少一个查询参数: sn, batchNo, workorderNo', 400, 400);
+    return errorResponse(ts('k_n38pb6'), 400, 400);
   }
 
   let traceLinks: SqlValue[] = [];
@@ -43,6 +47,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       sn,
@@ -64,7 +69,7 @@ export const POST = withPermission(
     } = body;
 
     if (!sn) {
-      return errorResponse('缺少必填字段: sn', 400, 400);
+      return errorResponse(ts('k_11kb07b'), 400, 400);
     }
 
     const result = await transaction(async (conn) => {
@@ -130,7 +135,7 @@ export const POST = withPermission(
       return { id: insertResult.insertId, sn, updated: false };
     });
 
-    return successResponse(result, '追溯链记录创建成功');
+    return successResponse(result, ts('k_17hloy'));
   },
   { logTitle: '创建追溯链记录', logType: 'business' }
 );

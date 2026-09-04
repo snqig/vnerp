@@ -86,6 +86,7 @@ export default function CustomerFollowPage() {
   const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
     useRowSelection(records, (r) => String(r.id));
   const [deleting, setDeleting] = useState(false);
+  const [customers, setCustomers] = useState<{ id: number; customer_name: string }[]>([]);
   const [form, setForm] = useState<Partial<FollowRecord>>({
     customer_id: 0,
     customer_name: '',
@@ -117,12 +118,23 @@ export default function CustomerFollowPage() {
     setLoading(false);
   };
 
+  const fetchCustomers = async () => {
+    try {
+      const res = await authFetch('/api/customers');
+      const data = await res.json();
+      if (data.success || data.code === 200) {
+        setCustomers(data.data?.list || data.data || []);
+      }
+    } catch {}
+  };
+
   useEffect(() => {
     fetchData();
+    fetchCustomers();
   }, [page]);
 
   const handleSave = async () => {
-    if (!form.customer_name) {
+    if (!form.customer_id) {
       toast({ title: t('enterCustomerName'), variant: 'destructive' });
       return;
     }
@@ -267,7 +279,7 @@ export default function CustomerFollowPage() {
                 {records.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell>
-                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectAll')} />
+                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectRow', { id: String(r.id) })} />
                     </TableCell>
                     <TableCell>{r.customer_name}</TableCell>
                     <TableCell>
@@ -339,10 +351,24 @@ export default function CustomerFollowPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>{t('customerNameRequired')}</Label>
-                  <Input
-                    value={form.customer_name || ''}
-                    onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
-                  />
+                  <Select
+                    value={String(form.customer_id || '')}
+                    onValueChange={(v) => {
+                      const cust = customers.find((c) => String(c.id) === v);
+                      setForm({ ...form, customer_id: parseInt(v), customer_name: cust?.customer_name || '' });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('selectCustomer')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customers.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.customer_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label>{t('followType')}</Label>

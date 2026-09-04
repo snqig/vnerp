@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -669,6 +672,8 @@ const DEFAULT_CONFIGS: SystemConfigItem[] = [
 
 // 迁移旧配置项到正确的分类
 async function migrateOldConfigs(): Promise<void> {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
   const migrations: Record<
     string,
     {
@@ -680,72 +685,72 @@ async function migrateOldConfigs(): Promise<void> {
     }
   > = {
     company_name: {
-      category: '系统基础配置',
-      display_name: '公司名称',
-      description: '公司全称',
+      category: ts('k_xj9vm2'),
+      display_name: tc('companyName'),
+      description: tc('companyFullName'),
       config_type_enum: 'string',
       sort_order: 94,
     },
     company_code: {
-      category: '系统基础配置',
-      display_name: '公司编码',
-      description: '公司简称编码',
+      category: ts('k_xj9vm2'),
+      display_name: tc('companyCode'),
+      description: ts('k_1vz2f8c'),
       config_type_enum: 'string',
       sort_order: 95,
     },
     default_warehouse: {
-      category: '仓库管理规则',
-      display_name: '默认仓库',
-      description: '系统默认仓库',
+      category: ts('k_185glin'),
+      display_name: ts('k_1yczi2f'),
+      description: ts('k_1mr113d'),
       config_type_enum: 'string',
       sort_order: 57,
     },
     fifo_mode: {
-      category: '仓库管理规则',
-      display_name: 'FIFO模式',
-      description: '先进先出模式',
+      category: ts('k_185glin'),
+      display_name: ts('k_1az2t13'),
+      description: ts('k_qre4qy'),
       config_type_enum: 'string',
       sort_order: 58,
     },
     auto_inbound_approve: {
-      category: '仓库管理规则',
-      display_name: '入库自动审批',
-      description: '入库单是否自动审批',
+      category: ts('k_185glin'),
+      display_name: ts('k_q2w7gt'),
+      description: ts('k_bfs4ix'),
       config_type_enum: 'boolean',
       sort_order: 59,
     },
     batch_no_prefix: {
-      category: '单据编码规则',
-      display_name: '批次号前缀',
-      description: '库存批次号前缀',
+      category: ts('k_6k0dvs'),
+      display_name: ts('k_ul0wdp'),
+      description: ts('k_91nefw'),
       config_type_enum: 'string',
       sort_order: 11,
     },
     order_no_prefix: {
-      category: '单据编码规则',
-      display_name: '订单编号前缀',
-      description: '销售订单编号前缀',
+      category: ts('k_6k0dvs'),
+      display_name: ts('k_fg8ale'),
+      description: ts('k_xa1mgc'),
       config_type_enum: 'string',
       sort_order: 12,
     },
     currency: {
-      category: '系统基础配置',
-      display_name: '默认货币',
-      description: '系统默认货币单位',
+      category: ts('k_xj9vm2'),
+      display_name: ts('k_uxhvfl'),
+      description: ts('k_1mskhhd'),
       config_type_enum: 'string',
       sort_order: 96,
     },
     tax_rate: {
-      category: '系统基础配置',
-      display_name: '默认税率',
-      description: '系统默认税率(%)',
+      category: ts('k_xj9vm2'),
+      display_name: ts('k_168fx7a'),
+      description: ts('k_z0pave'),
       config_type_enum: 'number',
       sort_order: 97,
     },
     print_label_on_inbound: {
-      category: '仓库管理规则',
-      display_name: '入库打印标签',
-      description: '入库时是否自动打印标签',
+      category: ts('k_185glin'),
+      display_name: ts('k_y43tbv'),
+      description: ts('k_1nuyja4'),
       config_type_enum: 'boolean',
       sort_order: 60,
     },
@@ -768,19 +773,20 @@ async function migrateOldConfigs(): Promise<void> {
 
 // 确保sys_config表有所需的列
 async function ensureConfigTableColumns(): Promise<void> {
+  const ts = await getTranslations('Common');
   // 先检查现有列
   const columns = await query(`SHOW COLUMNS FROM sys_config`);
   const existingColumns = new Set(columns.map((c: DbRow) => c.Field));
 
   const newColumns: [string, string][] = [
-    ['config_type_enum', '配置类型'],
-    ['category', '分类'],
-    ['display_name', '显示名称'],
-    ['description', '描述'],
-    ['sort_order', '排序'],
-    ['is_required', '是否必填'],
-    ['approval_required', '需要审批'],
-    ['status', '状态'],
+    ['config_type_enum', ts('k_1hoaz9s')],
+    ['category', ts('k_1kbcp7q')],
+    ['display_name', ts('k_wvzss')],
+    ['description', ts('k_1kxyax6')],
+    ['sort_order', ts('k_dqvmz2')],
+    ['is_required', ts('k_1bf9zas')],
+    ['approval_required', ts('k_51wqco')],
+    ['status', ts('k_1ccx4t4')],
   ];
 
   for (const [colName, colDef] of newColumns) {
@@ -903,6 +909,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     await initDefaultConfigs();
 
     const body = await request.json();
@@ -911,7 +918,7 @@ export const POST = withPermission(
     const configData = configs || updates;
 
     if (!configData || !Array.isArray(configData) || configData.length === 0) {
-      return errorResponse('缺少配置数据', 400, 400);
+      return errorResponse(ts('k_1lm5lx5'), 400, 400);
     }
 
     const requireApproval = await queryOne(
@@ -925,25 +932,7 @@ export const POST = withPermission(
       try {
         await execute(`SELECT 1 FROM sys_config_change_log LIMIT 1`);
       } catch {
-        await execute(`
-        CREATE TABLE IF NOT EXISTS sys_config_change_log (
-          id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-          config_key VARCHAR(100) NOT NULL COMMENT '配置键',
-          old_value TEXT NOT NULL COMMENT '旧值',
-          new_value TEXT NOT NULL COMMENT '新值',
-          operator_id INT NOT NULL COMMENT '操作人ID',
-          operator_name VARCHAR(50) COMMENT '操作人姓名',
-          remark VARCHAR(500) COMMENT '变更说明',
-          status TINYINT DEFAULT 0 COMMENT '0=待审批，1=已通过，2=已驳回',
-          approver_id INT NULL COMMENT '审批人ID',
-          approver_name VARCHAR(50) COMMENT '审批人姓名',
-          approve_time DATETIME NULL COMMENT '审批时间',
-          approve_remark VARCHAR(500) COMMENT '审批意见',
-          create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-          INDEX idx_config_key (config_key),
-          INDEX idx_status (status)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='配置变更审批记录表'
-      `);
+        await execute(ts('k_jyctof'));
       }
 
       for (const config of configData) {
@@ -967,7 +956,7 @@ export const POST = withPermission(
         );
       }
 
-      return successResponse(null, '配置修改申请已提交，等待审批');
+      return successResponse(null, ts('k_wl3nh7'));
     } else {
       for (const config of configData) {
         await execute(
@@ -978,7 +967,7 @@ export const POST = withPermission(
 
       clearConfigCache();
 
-      return successResponse(null, '配置更新成功');
+      return successResponse(null, ts('k_xmc3sn'));
     }
   },
   { logTitle: '保存系统配置' }
@@ -986,21 +975,22 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { log_id, action, approver_id } = body;
 
     if (!log_id) {
-      return errorResponse('缺少变更记录ID', 400, 400);
+      return errorResponse(ts('k_km5v1e'), 400, 400);
     }
 
     const log = await queryOne(`SELECT * FROM sys_config_change_log WHERE id = ?`, [log_id]);
 
     if (!log) {
-      return commonErrors.notFound('变更记录不存在');
+      return commonErrors.notFound(ts('k_a50pct'));
     }
 
     if (log.status !== 0) {
-      return errorResponse('该记录已处理', 400, 400);
+      return errorResponse(ts('k_19uwe71'), 400, 400);
     }
 
     switch (action) {
@@ -1017,7 +1007,7 @@ export const PUT = withPermission(
 
         clearConfigCache();
 
-        return successResponse(null, '配置变更已审批通过并生效');
+        return successResponse(null, ts('k_3agana'));
 
       case 'reject':
         await execute(
@@ -1025,10 +1015,10 @@ export const PUT = withPermission(
           [approver_id || 1, log_id]
         );
 
-        return successResponse(null, '配置变更已驳回');
+        return successResponse(null, ts('k_1nb7aqp'));
 
       default:
-        return errorResponse('无效的操作类型', 400, 400);
+        return errorResponse(ts('k_4ty90w'), 400, 400);
     }
   },
   { logTitle: '审批配置变更' }

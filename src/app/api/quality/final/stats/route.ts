@@ -1,9 +1,13 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
 
 // 获取终检统计
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     // 待终检数量（生产中的）
     const [pendingResult] = await query(
@@ -60,6 +64,6 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       },
     });
   } catch {
-    return NextResponse.json({ success: false, message: '获取终检统计失败' }, { status: 500 });
+    return NextResponse.json({ success: false, message: ts('k_17fel4m') }, { status: 500 });
   }
 });

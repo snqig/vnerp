@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import {
   PurchaseReconciliationStatus,
@@ -104,21 +106,22 @@ export class PurchaseReconciliation {
   ) {}
 
   static create(props: PurchaseReconciliationProps): PurchaseReconciliation {
+  const ts = t;
     if (!props.supplierId || props.supplierId <= 0) {
-      throw new DomainError('供应商ID不能为空');
+      throw new DomainError(ts('k_h5paib'));
     }
     if (!props.periodStart || !props.periodEnd) {
-      throw new DomainError('对账时段不能为空');
+      throw new DomainError(ts('k_eqx4x'));
     }
     if (props.periodStart > props.periodEnd) {
-      throw new DomainError('对账开始日期不能晚于结束日期');
+      throw new DomainError(ts('k_5jowz7'));
     }
 
     const receiptAmount = roundMoney(props.receiptAmount || 0);
     const returnAmount = roundMoney(props.returnAmount || 0);
 
     if (returnAmount > receiptAmount) {
-      throw new DomainError('退货金额不能超过收货金额');
+      throw new DomainError(ts('k_cffysd'));
     }
 
     const netAmount = roundMoney(receiptAmount - returnAmount);
@@ -329,8 +332,9 @@ export class PurchaseReconciliation {
   }
 
   confirm(confirmBy: number): void {
+  const ts = t;
     if (!confirmBy || confirmBy <= 0) {
-      throw new DomainError('确认人不能为空');
+      throw new DomainError(ts('k_333b35'));
     }
     this._status = this._status.transitionTo(2);
     this._confirmBy = confirmBy;
@@ -346,17 +350,18 @@ export class PurchaseReconciliation {
   }
 
   writeOff(payableId: number, amount: number, writeOffDate?: string): void {
+  const ts = t;
     if (!this._status.canWriteOff()) {
       throw new DomainError(`当前状态"${this._status.label}"不允许核销`);
     }
 
     if (!payableId || payableId <= 0) {
-      throw new DomainError('应付单ID不能为空');
+      throw new DomainError(ts('k_1w6kuuz'));
     }
 
     const roundedAmount = roundMoney(amount);
     if (roundedAmount <= 0) {
-      throw new DomainError('核销金额必须大于0');
+      throw new DomainError(ts('k_4is2uy'));
     }
 
     const currentBalance = roundMoney(this._balanceAmount);
@@ -408,8 +413,9 @@ export class PurchaseReconciliation {
   }
 
   close(closeBy: number): void {
+  const ts = t;
     if (!closeBy || closeBy <= 0) {
-      throw new DomainError('关闭人不能为空');
+      throw new DomainError(ts('k_4u0gsf'));
     }
 
     if (this._status.value === 3 && roundMoney(this._balanceAmount) <= 0) {

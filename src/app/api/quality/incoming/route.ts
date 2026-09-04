@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, transaction, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -114,6 +117,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // 创建进料检验单
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     // 验证必填字段
@@ -215,21 +219,21 @@ export const POST = withPermission(
       return { id: inspectionId, inspectionNo, inspectionResult };
     });
 
-    if (result.inspectionResult === 'qualified' || result.inspectionResult === '合格') {
+    if (result.inspectionResult === 'qualified' || result.inspectionResult === ts('k_109sg5t')) {
       await transaction(async (conn) => {
         await conn.execute(
-          `UPDATE inv_inventory_batch SET status = 'normal', freeze_reason = NULL, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
+          `UPDATE inv_inventory_batch SET alert_level = 'normal', status = 1, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
           [result.id, batchNo]
         );
         await conn.execute(
-          `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 1, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
+          `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 3, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
           [result.id, batchNo]
         );
       }).catch(() => {});
-    } else if (result.inspectionResult === 'unqualified' || result.inspectionResult === '不合格') {
+    } else if (result.inspectionResult === 'unqualified' || result.inspectionResult === ts('k_1ujsxic')) {
       await transaction(async (conn) => {
         await conn.execute(
-          `UPDATE inv_inventory_batch SET status = 'frozen', freeze_reason = '进料检验不合格', inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
+          `UPDATE inv_inventory_batch SET alert_level = 'frozen', status = 0, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
           [result.id, batchNo]
         );
         await conn.execute(
@@ -239,7 +243,7 @@ export const POST = withPermission(
       }).catch(() => {});
     }
 
-    return successResponse(result, '进料检验单创建成功');
+    return successResponse(result, ts('k_e70dsk'));
   },
   { logTitle: '创建进料检验单', logType: 'business' }
 );
@@ -247,11 +251,12 @@ export const POST = withPermission(
 // 更新进料检验单
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...updateData } = body;
 
     if (!id) {
-      return commonErrors.badRequest('检验单ID不能为空');
+      return commonErrors.badRequest(ts('k_sldnwj'));
     }
 
     // 检查检验单是否存在
@@ -261,7 +266,7 @@ export const PUT = withPermission(
     );
 
     if (!inspection) {
-      return commonErrors.notFound('检验单不存在');
+      return commonErrors.notFound(ts('k_np4sir'));
     }
 
     await execute(
@@ -296,10 +301,10 @@ export const PUT = withPermission(
       ]
     );
 
-    if (updateData.inspectionResult === 'qualified' || updateData.inspectionResult === '合格') {
+    if (updateData.inspectionResult === 'qualified' || updateData.inspectionResult === ts('k_109sg5t')) {
       await transaction(async (conn) => {
         await conn.execute(
-          `UPDATE inv_inventory_batch SET status = 'normal', freeze_reason = NULL, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
+          `UPDATE inv_inventory_batch SET alert_level = 'normal', status = 1, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
           [id, updateData.batchNo]
         );
         await conn.execute(
@@ -309,11 +314,11 @@ export const PUT = withPermission(
       }).catch(() => {});
     } else if (
       updateData.inspectionResult === 'unqualified' ||
-      updateData.inspectionResult === '不合格'
+      updateData.inspectionResult === ts('k_1ujsxic')
     ) {
       await transaction(async (conn) => {
         await conn.execute(
-          `UPDATE inv_inventory_batch SET status = 'frozen', freeze_reason = '进料检验不合格', inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
+          `UPDATE inv_inventory_batch SET alert_level = 'frozen', status = 0, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
           [id, updateData.batchNo]
         );
         await conn.execute(
@@ -350,7 +355,7 @@ export const PUT = withPermission(
       );
     }
 
-    return successResponse(null, '进料检验单更新成功');
+    return successResponse(null, ts('k_1g9pneh'));
   },
   { logTitle: '更新进料检验单', logType: 'business' }
 );
@@ -358,11 +363,12 @@ export const PUT = withPermission(
 // 删除进料检验单（软删除）
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('检验单ID不能为空');
+      return commonErrors.badRequest(ts('k_sldnwj'));
     }
 
     // 检查检验单是否存在
@@ -372,7 +378,7 @@ export const DELETE = withPermission(
     );
 
     if (!inspection) {
-      return commonErrors.notFound('检验单不存在');
+      return commonErrors.notFound(ts('k_np4sir'));
     }
 
     // 使用事务同时更新主表和明细表
@@ -384,7 +390,7 @@ export const DELETE = withPermission(
       );
     });
 
-    return successResponse(null, '进料检验单删除成功');
+    return successResponse(null, ts('k_7wb8oh'));
   },
   { logTitle: '删除进料检验单', logType: 'business' }
 );

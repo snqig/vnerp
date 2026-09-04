@@ -71,7 +71,7 @@ export default function EditSampleOrderPage() {
     order_date: '',
     sample_type: '',
     customer_name: '',
-    print_method: '卷料丝印',
+    print_method: ts('k_19ksts'),
     color_sequence: '',
     product_name: '',
     material_code: '',
@@ -88,7 +88,7 @@ export default function EditSampleOrderPage() {
     sample_count: 1,
     sample_reason: '',
     order_tracker: '',
-    provided_material: '电子档',
+    provided_material: ts('k_zzipuh'),
     receive_time: '',
     mylar_info: '',
     sample_stock: '',
@@ -116,7 +116,7 @@ export default function EditSampleOrderPage() {
           order_date: order.order_date,
           sample_type: order.sample_type || '',
           customer_name: order.customer_name,
-          print_method: order.print_method || '卷料丝印',
+          print_method: order.print_method || ts('k_19ksts'),
           color_sequence: order.color_sequence || '',
           product_name: order.product_name || '',
           material_code: order.material_code || '',
@@ -133,7 +133,7 @@ export default function EditSampleOrderPage() {
           sample_count: order.sample_count || 1,
           sample_reason: order.sample_reason || '',
           order_tracker: order.order_tracker || '',
-          provided_material: order.provided_material || '电子档',
+          provided_material: order.provided_material || ts('k_zzipuh'),
           receive_time: order.receive_time || '',
           mylar_info: order.mylar_info || '',
           sample_stock: order.sample_stock || '',
@@ -142,10 +142,10 @@ export default function EditSampleOrderPage() {
           status: order.status,
         });
       } else {
-        toast.error(result.message || '获取打样单详情失败');
+        toast.error(result.message || ts('k_m0o67a'));
       }
     } catch {
-      toast.error('获取打样单详情失败');
+      toast.error(ts('k_m0o67a'));
     } finally {
       setLoading(false);
     }
@@ -157,7 +157,7 @@ export default function EditSampleOrderPage() {
 
   const handleSave = async () => {
     if (!formData.customer_name) {
-      toast.error('请输入客户名称');
+      toast.error(ts('k_fu88no'));
       return;
     }
 
@@ -179,13 +179,13 @@ export default function EditSampleOrderPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success('打样单更新成功');
+        toast.success(ts('k_1xidkpf'));
         router.push('/sample/orders');
       } else {
-        toast.error(result.message || '更新失败');
+        toast.error(result.message || ts('k_10lkv9z'));
       }
     } catch {
-      toast.error('更新失败');
+      toast.error(ts('k_10lkv9z'));
     } finally {
       setIsSaving(false);
     }
@@ -195,7 +195,7 @@ export default function EditSampleOrderPage() {
     return (
       <MainLayout>
         <div className="container mx-auto py-6">
-          <div className="text-center py-12">加载中...</div>
+          <div className="text-center py-12">{tc('loading')}</div>
         </div>
       </MainLayout>
     );
@@ -213,14 +213,13 @@ export default function EditSampleOrderPage() {
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 <FlaskConical className="h-6 w-6 text-blue-500" />
-                编辑打样单
-              </h1>
+                {ts('k_8dj0lx')}</h1>
               <p className="text-sm text-muted-foreground mt-1">{ts('editDesc')}</p>
             </div>
           </div>
           <Button onClick={handleSave} disabled={isSaving}>
             <Save className="h-4 w-4 mr-2" />
-            {isSaving ? '保存中...' : tc('save')}
+            {isSaving ? ts('k_rr6ulf') : tc('save')}
           </Button>
         </div>
 
@@ -228,12 +227,12 @@ export default function EditSampleOrderPage() {
           {/* 基本信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">基本信息</CardTitle>
+              <CardTitle className="text-base">{ts('k_z5lkkb')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>月份</Label>
+                  <Label>{ts('k_1fsw60u')}</Label>
                   <Input
                     type="number"
                     value={formData.order_month}
@@ -251,7 +250,7 @@ export default function EditSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>客户名称 *</Label>
+                <Label>{ts('k_qpfi09')}</Label>
                 <Input
                   placeholder={tc('enterCustomerName')}
                   value={formData.customer_name}
@@ -260,18 +259,18 @@ export default function EditSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>种类</Label>
+                <Label>{ts('k_1xvvlg9')}</Label>
                 <Select
                   value={formData.sample_type}
                   onValueChange={(v) => handleChange('sample_type', v)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="请选择种类" />
+                    <SelectValue placeholder={ts('k_1cvgprs')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="设变">设变</SelectItem>
-                    <SelectItem value="测试">测试</SelectItem>
-                    <SelectItem value="新款">新款</SelectItem>
+                    <SelectItem value={ts('k_17t0qd7')}>{ts('k_17t0qd7')}</SelectItem>
+                    <SelectItem value={ts('k_11y31ql')}>{ts('k_11y31ql')}</SelectItem>
+                    <SelectItem value={ts('k_1vtwblv')}>{ts('k_1vtwblv')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -279,7 +278,7 @@ export default function EditSampleOrderPage() {
               <div className="space-y-2">
                 <Label>{ts('sampleOrderNoLabel')}</Label>
                 <Input
-                  placeholder="如: DY-A047-05914"
+                  placeholder={ts('k_1vkpcod')}
                   value={formData.sample_order_no}
                   onChange={(e) => handleChange('sample_order_no', e.target.value)}
                 />
@@ -288,7 +287,7 @@ export default function EditSampleOrderPage() {
               <div className="space-y-2">
                 <Label>{ts('orderTrackerLabel')}</Label>
                 <Input
-                  placeholder="请输入跟单人员"
+                  placeholder={ts('k_11sicls')}
                   value={formData.order_tracker}
                   onChange={(e) => handleChange('order_tracker', e.target.value)}
                 />
@@ -299,22 +298,22 @@ export default function EditSampleOrderPage() {
           {/* 产品信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">产品信息</CardTitle>
+              <CardTitle className="text-base">{ts('k_fv8aex')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>品名</Label>
+                <Label>{ts('k_1kddh77')}</Label>
                 <Input
-                  placeholder="请输入品名"
+                  placeholder={ts('k_iufw28')}
                   value={formData.product_name}
                   onChange={(e) => handleChange('product_name', e.target.value)}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>料号</Label>
+                <Label>{ts('k_1bawbh5')}</Label>
                 <Input
-                  placeholder="请输入料号"
+                  placeholder={ts('k_1v1d9om')}
                   value={formData.material_code}
                   onChange={(e) => handleChange('material_code', e.target.value)}
                 />
@@ -323,7 +322,7 @@ export default function EditSampleOrderPage() {
               <div className="space-y-2">
                 <Label>{tc('size')}</Label>
                 <Input
-                  placeholder="如: 296.3*96.8"
+                  placeholder={ts('k_fntxui')}
                   value={formData.size_spec}
                   onChange={(e) => handleChange('size_spec', e.target.value)}
                 />
@@ -332,7 +331,7 @@ export default function EditSampleOrderPage() {
               <div className="space-y-2">
                 <Label>{ts('materialDescLabel')}</Label>
                 <Textarea
-                  placeholder="请输入材料描述"
+                  placeholder={ts('k_1rx2j5i')}
                   value={formData.material_desc}
                   onChange={(e) => handleChange('material_desc', e.target.value)}
                   rows={3}
@@ -344,11 +343,11 @@ export default function EditSampleOrderPage() {
           {/* 印刷信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">印刷信息</CardTitle>
+              <CardTitle className="text-base">{ts('k_4eu88c')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>印刷方式</Label>
+                <Label>{ts('k_11ikudg')}</Label>
                 <Select
                   value={formData.print_method}
                   onValueChange={(v) => handleChange('print_method', v)}
@@ -357,9 +356,9 @@ export default function EditSampleOrderPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="卷料丝印">卷料丝印</SelectItem>
-                    <SelectItem value="轮转印">轮转印</SelectItem>
-                    <SelectItem value="空白">空白</SelectItem>
+                    <SelectItem value={ts('k_19ksts')}>{ts('k_19ksts')}</SelectItem>
+                    <SelectItem value={ts('k_dcrxo5')}>{ts('k_dcrxo5')}</SelectItem>
+                    <SelectItem value={ts('k_238fow')}>{ts('k_238fow')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -367,7 +366,7 @@ export default function EditSampleOrderPage() {
               <div className="space-y-2">
                 <Label>{ts('colorSequenceLabel')}</Label>
                 <Input
-                  placeholder="如: 4色"
+                  placeholder={ts('k_uei6q9')}
                   value={formData.color_sequence}
                   onChange={(e) => handleChange('color_sequence', e.target.value)}
                 />
@@ -384,7 +383,7 @@ export default function EditSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>需求日期</Label>
+                <Label>{ts('k_2dxkxn')}</Label>
                 <Input
                   type="date"
                   value={formData.required_date}
@@ -397,7 +396,7 @@ export default function EditSampleOrderPage() {
           {/* 打样信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">打样信息</CardTitle>
+              <CardTitle className="text-base">{ts('k_1uh4efz')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -407,19 +406,19 @@ export default function EditSampleOrderPage() {
                   onValueChange={(v) => handleChange('progress_detail', v)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="请选择进展" />
+                    <SelectValue placeholder={ts('k_3a0yo')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="产线拿">产线拿</SelectItem>
-                    <SelectItem value="等材料">等材料</SelectItem>
-                    <SelectItem value="冲压">冲压</SelectItem>
-                    <SelectItem value="印刷">印刷</SelectItem>
-                    <SelectItem value="切割">切割</SelectItem>
+                    <SelectItem value={ts('k_d8rn7w')}>{ts('k_d8rn7w')}</SelectItem>
+                    <SelectItem value={ts('k_qnpi8v')}>{ts('k_qnpi8v')}</SelectItem>
+                    <SelectItem value={ts('k_xrdj7e')}>{ts('k_xrdj7e')}</SelectItem>
+                    <SelectItem value={ts('k_5e3288')}>{ts('k_5e3288')}</SelectItem>
+                    <SelectItem value={ts('k_1jzxapo')}>{ts('k_1jzxapo')}</SelectItem>
                     <SelectItem value="UV">UV</SelectItem>
-                    <SelectItem value="嗮版">嗮版</SelectItem>
-                    <SelectItem value="出片">出片</SelectItem>
-                    <SelectItem value="检样">检样</SelectItem>
-                    <SelectItem value="做卡">做卡</SelectItem>
+                    <SelectItem value={ts('k_1s3jksb')}>{ts('k_1s3jksb')}</SelectItem>
+                    <SelectItem value={ts('k_1poo3xa')}>{ts('k_1poo3xa')}</SelectItem>
+                    <SelectItem value={ts('k_vvzvw8')}>{ts('k_vvzvw8')}</SelectItem>
+                    <SelectItem value={ts('k_1i79wec')}>{ts('k_1i79wec')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -437,7 +436,7 @@ export default function EditSampleOrderPage() {
               <div className="space-y-2">
                 <Label>{ts('sampleReasonLabel')}</Label>
                 <Input
-                  placeholder="如: 变更内容及版本"
+                  placeholder={ts('k_1mqipod')}
                   value={formData.sample_reason}
                   onChange={(e) => handleChange('sample_reason', e.target.value)}
                 />
@@ -453,8 +452,8 @@ export default function EditSampleOrderPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="电子档">电子档</SelectItem>
-                    <SelectItem value="打样单">打样单</SelectItem>
+                    <SelectItem value={ts('k_zzipuh')}>{ts('k_zzipuh')}</SelectItem>
+                    <SelectItem value={ts('k_2ccjou')}>{ts('k_2ccjou')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -473,14 +472,14 @@ export default function EditSampleOrderPage() {
           {/* 其他信息 */}
           <Card className="col-span-2">
             <CardHeader>
-              <CardTitle className="text-base">其他信息</CardTitle>
+              <CardTitle className="text-base">{ts('k_itylyp')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div className="space-y-2">
                   <Label>{ts('mylarInfoLabel')}</Label>
                   <Input
-                    placeholder="如: 内贴*2"
+                    placeholder={ts('k_1e7gdeq')}
                     value={formData.mylar_info}
                     onChange={(e) => handleChange('mylar_info', e.target.value)}
                   />
@@ -493,7 +492,7 @@ export default function EditSampleOrderPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>客户确认</Label>
+                  <Label>{ts('k_1priyqs')}</Label>
                   <Input
                     value={formData.customer_confirm}
                     onChange={(e) => handleChange('customer_confirm', e.target.value)}
@@ -517,8 +516,7 @@ export default function EditSampleOrderPage() {
                     onCheckedChange={(checked) => handleChange('is_urgent', checked)}
                   />
                   <Label htmlFor="is_urgent" className="text-red-600">
-                    是否急件
-                  </Label>
+                    {ts('k_16p17ir')}</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -533,7 +531,7 @@ export default function EditSampleOrderPage() {
               <div className="space-y-2">
                 <Label>{tc('remark')}</Label>
                 <Textarea
-                  placeholder="请输入备注信息"
+                  placeholder={ts('k_1xlhpvp')}
                   value={formData.remark}
                   onChange={(e) => handleChange('remark', e.target.value)}
                   rows={3}

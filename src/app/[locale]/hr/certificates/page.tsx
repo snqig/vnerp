@@ -35,6 +35,7 @@ import {
 import { Plus, Search, Edit, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
+import { formatDate } from '@/lib/date-utils';
 
 interface Certificate {
   id: number;
@@ -73,10 +74,6 @@ const statusOptions = [
   { value: 'expired', label: 'expired' },
 ];
 
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '-';
-  return dateStr.slice(0, 10);
-};
 
 const getDaysUntilExpiry = (expiryDate: string) => {
   if (!expiryDate) return Infinity;
@@ -88,6 +85,7 @@ const getDaysUntilExpiry = (expiryDate: string) => {
 };
 
 export default function CertificatesPage() {
+  const ts = useTranslations('Common');
   const [list, setList] = useState<Certificate[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -179,7 +177,7 @@ export default function CertificatesPage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="员工ID"
+                placeholder={ts('k_yg2hbv')}
                 value={employeeId}
                 onChange={(e) => setEmployeeId(e.target.value)}
                 className="w-28 h-8 text-sm"
@@ -499,7 +497,7 @@ export default function CertificatesPage() {
                 )}
                 {detailItem.file_url && (
                   <div className="text-sm">
-                    <span className="text-muted-foreground">附件：</span>
+                    <span className="text-muted-foreground">{ts('k_17kj27z')}</span>
                     <a
                       href={detailItem.file_url}
                       target="_blank"

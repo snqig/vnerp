@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -44,23 +47,24 @@ interface RefreshRoleRow {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const ts = await getTranslations('Common');
   try {
     const body = await request.json();
     const { refreshToken, userId } = body;
 
     if (!refreshToken || !userId) {
-      return errorResponse('缺少 refreshToken 或 userId', 400);
+      return errorResponse(ts('k_1o6vhsg'), 400);
     }
 
     const locked = await acquireRefreshLock(refreshToken);
     if (!locked) {
-      return errorResponse('正在刷新，请稍后重试', 429);
+      return errorResponse(ts('k_j4bvlx'), 429);
     }
 
     try {
       // 验证 refresh token
       if (!(await verifyRefreshToken(refreshToken, userId))) {
-        return errorResponse('refresh token 无效或已过期', 401);
+        return errorResponse(ts('k_kxtamd'), 401);
       }
 
       // 查询用户信息
@@ -70,7 +74,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
 
       if (!users || users.length === 0) {
-        return errorResponse('用户不存在或已禁用', 401);
+        return errorResponse(ts('k_1x9i5ky'), 401);
       }
 
       const user = users[0];
@@ -108,7 +112,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           token: newToken,
           refreshToken: newRefreshToken,
         },
-        'Token 刷新成功'
+        ts('k_uavbj0')
       );
 
       // 同步刷新 httpOnly cookie：access_token + refresh_token
@@ -134,6 +138,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   } catch (error) {
     console.error('[Refresh API] Error:', error);
-    return errorResponse('Token 刷新失败', 500);
+    return errorResponse(ts('k_o0y947'), 500);
   }
 }

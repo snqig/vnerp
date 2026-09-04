@@ -1,9 +1,13 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 export const POST = withPermission(async (_request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const result = await transaction(async (conn) => {
     const stats: Record<string, number> = {};
 
@@ -30,16 +34,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
     // 第二步：重新生成 10 条客户
     // ============================================================
     const customers = [
-      { code: 'CUS001', name: '美的集团', contact: '赵采购', phone: '0757-88880001', industry: '家电' },
-      { code: 'CUS002', name: '格力电器', contact: '钱经理', phone: '0756-88880002', industry: '家电' },
-      { code: 'CUS003', name: '华为技术', contact: '孙总监', phone: '0755-88880003', industry: '电子' },
-      { code: 'CUS004', name: '比亚迪汽车', contact: '周经理', phone: '0755-88880004', industry: '汽车' },
-      { code: 'CUS005', name: '迈瑞医疗', contact: '吴主任', phone: '0755-88880005', industry: '医疗' },
-      { code: 'CUS006', name: '大疆创新', contact: '郑经理', phone: '0755-88880006', industry: '无人机' },
-      { code: 'CUS007', name: '宁德时代', contact: '王总', phone: '0591-88880007', industry: '新能源' },
-      { code: 'CUS008', name: '宁德时代科技', contact: '李工', phone: '0591-88880008', industry: '新能源' },
-      { code: 'CUS009', name: '汇川技术', contact: '张经理', phone: '0755-88880009', industry: '自动化' },
-      { code: 'CUS010', name: '联想集团', contact: '褚经理', phone: '010-88880010', industry: '电子' },
+      { code: 'CUS001', name: ts('k_gx8egb'), contact: ts('k_1qztjm0'), phone: '0757-88880001', industry: ts('k_ym4c50') },
+      { code: 'CUS002', name: ts('k_1xr1xyd'), contact: ts('k_13ux5kt'), phone: '0756-88880002', industry: ts('k_ym4c50') },
+      { code: 'CUS003', name: ts('k_1a4dctg'), contact: ts('k_1bdpjno'), phone: '0755-88880003', industry: ts('k_1pmedts') },
+      { code: 'CUS004', name: ts('k_197dql0'), contact: ts('k_151y9ca'), phone: '0755-88880004', industry: ts('k_6vbkui') },
+      { code: 'CUS005', name: ts('k_bxab2d'), contact: ts('k_vbc1e1'), phone: '0755-88880005', industry: ts('k_w8c8c7') },
+      { code: 'CUS006', name: ts('k_z6l3vn'), contact: ts('k_11zgt9'), phone: '0755-88880006', industry: ts('k_8chs73') },
+      { code: 'CUS007', name: ts('k_1pza3xe'), contact: ts('k_nxfiar'), phone: '0591-88880007', industry: ts('k_10z71bm') },
+      { code: 'CUS008', name: ts('k_rnmtwr'), contact: ts('k_1gqe670'), phone: '0591-88880008', industry: ts('k_10z71bm') },
+      { code: 'CUS009', name: ts('k_1ntfw44'), contact: ts('k_100yj6q'), phone: '0755-88880009', industry: ts('k_11dsknv') },
+      { code: 'CUS010', name: ts('k_2hg0zk'), contact: ts('k_12otfds'), phone: '010-88880010', industry: ts('k_1pmedts') },
     ];
 
     const customerIds: number[] = [];
@@ -57,16 +61,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
     // 第三步：重新生成 10 条产品
     // ============================================================
     const products = [
-      { code: 'PRD001', name: '空调控制面板标签', spec: '120×80mm', unit: '张', category: '家电标签' },
-      { code: 'PRD002', name: '洗衣机铭牌', spec: '100×60mm', unit: '张', category: '家电标签' },
-      { code: 'PRD003', name: '手机电池标签', spec: '80×50mm', unit: '张', category: '电子标签' },
-      { code: 'PRD004', name: '新能源汽车电池包标签', spec: '200×150mm', unit: '张', category: '汽车标签' },
-      { code: 'PRD005', name: '医疗设备面板标签', spec: '150×100mm', unit: '张', category: '医疗标签' },
-      { code: 'PRD006', name: '无人机外壳标识', spec: '90×70mm', unit: '张', category: '无人机标签' },
-      { code: 'PRD007', name: '锂电池电芯标签', spec: '60×40mm', unit: '张', category: '新能源标签' },
-      { code: 'PRD008', name: '工业自动化PLC标签', spec: '110×70mm', unit: '张', category: '工业标签' },
-      { code: 'PRD009', name: '服务器机箱标签', spec: '130×90mm', unit: '张', category: '电子标签' },
-      { code: 'PRD010', name: '充电桩标识牌', spec: '180×120mm', unit: '张', category: '新能源标签' },
+      { code: 'PRD001', name: ts('k_1085ar9'), spec: '120×80mm', unit: ts('k_accfpb'), category: ts('k_lk7905') },
+      { code: 'PRD002', name: ts('k_45wtdq'), spec: '100×60mm', unit: ts('k_accfpb'), category: ts('k_lk7905') },
+      { code: 'PRD003', name: ts('k_1u8tdc0'), spec: '80×50mm', unit: ts('k_accfpb'), category: ts('k_mxscv5') },
+      { code: 'PRD004', name: ts('k_k0219y'), spec: '200×150mm', unit: ts('k_accfpb'), category: ts('k_13qzt2j') },
+      { code: 'PRD005', name: ts('k_m39zii'), spec: '150×100mm', unit: ts('k_accfpb'), category: ts('k_1xkwucq') },
+      { code: 'PRD006', name: ts('k_8260v5'), spec: '90×70mm', unit: ts('k_accfpb'), category: ts('k_u8cl2a') },
+      { code: 'PRD007', name: ts('k_1jjjrw1'), spec: '60×40mm', unit: ts('k_accfpb'), category: ts('k_i5qutf') },
+      { code: 'PRD008', name: ts('k_19oicsm'), spec: '110×70mm', unit: ts('k_accfpb'), category: ts('k_eeq4sv') },
+      { code: 'PRD009', name: ts('k_1fbqbkp'), spec: '130×90mm', unit: ts('k_accfpb'), category: ts('k_mxscv5') },
+      { code: 'PRD010', name: ts('k_2ov5z9'), spec: '180×120mm', unit: ts('k_accfpb'), category: ts('k_i5qutf') },
     ];
 
     const productIds: number[] = [];
@@ -128,11 +132,11 @@ export const POST = withPermission(async (_request: NextRequest) => {
       const mat = materials[i] as any;
       await conn.execute(
         `INSERT INTO sal_order_detail (order_id, material_id, material_name, quantity, unit, unit_price, amount, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [orderId, item.mid, mat?.material_name || '', item.qty, mat?.unit || '张', item.price, totalAmount, totalWithTax]
+        [orderId, item.mid, mat?.material_name || '', item.qty, mat?.unit || ts('k_accfpb'), item.price, totalAmount, totalWithTax]
       );
       await conn.execute(
         `INSERT INTO sal_order_item (order_id, material_name, quantity, unit, unit_price, total_price) VALUES (?, ?, ?, ?, ?, ?)`,
-        [orderId, mat?.material_name || '', item.qty, mat?.unit || '张', item.price, totalAmount]
+        [orderId, mat?.material_name || '', item.qty, mat?.unit || ts('k_accfpb'), item.price, totalAmount]
       );
     }
     stats.salesOrders = saleOrderIds.length;
@@ -141,16 +145,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
     // 第六步：重新生成 10 条 BOM
     // ============================================================
     const bomData = [
-      { pid: 1, name: '空调控制面板标签BOM', items: [{ mid: 1, qty: 55000, unit: '张', loss: 10 }, { mid: 6, qty: 5, unit: 'kg', loss: 0 }] },
-      { pid: 2, name: '洗衣机铭牌BOM', items: [{ mid: 2, qty: 33000, unit: '张', loss: 10 }, { mid: 7, qty: 4, unit: 'kg', loss: 0 }] },
-      { pid: 3, name: '手机电池标签BOM', items: [{ mid: 3, qty: 220000, unit: '张', loss: 10 }, { mid: 8, qty: 0.5, unit: 'kg', loss: 0 }] },
-      { pid: 4, name: '新能源电池包标签BOM', items: [{ mid: 4, qty: 15000, unit: '张', loss: 8 }, { mid: 9, qty: 3, unit: 'kg', loss: 0 }] },
-      { pid: 5, name: '医疗设备面板标签BOM', items: [{ mid: 5, qty: 28000, unit: '张', loss: 10 }, { mid: 10, qty: 2, unit: 'kg', loss: 0 }] },
-      { pid: 6, name: '无人机外壳标识BOM', items: [{ mid: 6, qty: 42000, unit: '张', loss: 12 }, { mid: 1, qty: 1, unit: 'kg', loss: 0 }] },
-      { pid: 7, name: '锂电池电芯标签BOM', items: [{ mid: 7, qty: 150000, unit: '张', loss: 5 }, { mid: 2, qty: 0.3, unit: 'kg', loss: 0 }] },
-      { pid: 8, name: '工业自动化PLC标签BOM', items: [{ mid: 8, qty: 35000, unit: '张', loss: 10 }, { mid: 3, qty: 2, unit: 'kg', loss: 0 }] },
-      { pid: 9, name: '服务器机箱标签BOM', items: [{ mid: 9, qty: 60000, unit: '张', loss: 8 }, { mid: 4, qty: 1.5, unit: 'kg', loss: 0 }] },
-      { pid: 10, name: '充电桩标识牌BOM', items: [{ mid: 10, qty: 18000, unit: '张', loss: 10 }, { mid: 5, qty: 3, unit: 'kg', loss: 0 }] },
+      { pid: 1, name: ts('k_2etgrd'), items: [{ mid: 1, qty: 55000, unit: ts('k_accfpb'), loss: 10 }, { mid: 6, qty: 5, unit: 'kg', loss: 0 }] },
+      { pid: 2, name: ts('k_1po9fd0'), items: [{ mid: 2, qty: 33000, unit: ts('k_accfpb'), loss: 10 }, { mid: 7, qty: 4, unit: 'kg', loss: 0 }] },
+      { pid: 3, name: ts('k_k1vs36'), items: [{ mid: 3, qty: 220000, unit: ts('k_accfpb'), loss: 10 }, { mid: 8, qty: 0.5, unit: 'kg', loss: 0 }] },
+      { pid: 4, name: ts('k_1711i9r'), items: [{ mid: 4, qty: 15000, unit: ts('k_accfpb'), loss: 8 }, { mid: 9, qty: 3, unit: 'kg', loss: 0 }] },
+      { pid: 5, name: ts('k_1n0571k'), items: [{ mid: 5, qty: 28000, unit: ts('k_accfpb'), loss: 10 }, { mid: 10, qty: 2, unit: 'kg', loss: 0 }] },
+      { pid: 6, name: ts('k_1skygl9'), items: [{ mid: 6, qty: 42000, unit: ts('k_accfpb'), loss: 12 }, { mid: 1, qty: 1, unit: 'kg', loss: 0 }] },
+      { pid: 7, name: ts('k_8p94tp'), items: [{ mid: 7, qty: 150000, unit: ts('k_accfpb'), loss: 5 }, { mid: 2, qty: 0.3, unit: 'kg', loss: 0 }] },
+      { pid: 8, name: ts('k_1qazmzg'), items: [{ mid: 8, qty: 35000, unit: ts('k_accfpb'), loss: 10 }, { mid: 3, qty: 2, unit: 'kg', loss: 0 }] },
+      { pid: 9, name: ts('k_txl2h1'), items: [{ mid: 9, qty: 60000, unit: ts('k_accfpb'), loss: 8 }, { mid: 4, qty: 1.5, unit: 'kg', loss: 0 }] },
+      { pid: 10, name: ts('k_1wdd1qh'), items: [{ mid: 10, qty: 18000, unit: ts('k_accfpb'), loss: 10 }, { mid: 5, qty: 3, unit: 'kg', loss: 0 }] },
     ];
 
     const bomIds: number[] = [];
@@ -184,16 +188,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
     // 第七步：重新生成 10 条打样订单
     // ============================================================
     const sampleData = [
-      { cid: 1, pname: '空调面板打样(单色)', spec: '120×80mm', qty: 20, date: '2026-08-01', delivery: '2026-08-10', status: 'pending' },
-      { cid: 2, pname: '洗衣机铭牌打样(双色)', spec: '100×60mm', qty: 15, date: '2026-08-02', delivery: '2026-08-12', status: 'in_progress' },
-      { cid: 3, pname: '手机电池标签打样(四色)', spec: '80×50mm', qty: 30, date: '2026-08-03', delivery: '2026-08-14', status: 'pending' },
-      { cid: 4, pname: '新能源电池包打样(单色)', spec: '200×150mm', qty: 10, date: '2026-08-04', delivery: '2026-08-16', status: 'done' },
-      { cid: 5, pname: '医疗设备面板打样(专色)', spec: '150×100mm', qty: 25, date: '2026-08-05', delivery: '2026-08-18', status: 'pending' },
-      { cid: 6, pname: '无人机标识打样(多色)', spec: '90×70mm', qty: 20, date: '2026-08-06', delivery: '2026-08-20', status: 'in_progress' },
-      { cid: 7, pname: '锂电电芯标签打样', spec: '60×40mm', qty: 50, date: '2026-08-07', delivery: '2026-08-22', status: 'pending' },
-      { cid: 8, pname: 'PLC标签打样(耐高温)', spec: '110×70mm', qty: 15, date: '2026-08-08', delivery: '2026-08-25', status: 'done' },
-      { cid: 9, pname: '服务器机箱标签打样', spec: '130×90mm', qty: 20, date: '2026-08-09', delivery: '2026-08-28', status: 'pending' },
-      { cid: 10, pname: '充电桩标识打样(户外耐候)', spec: '180×120mm', qty: 10, date: '2026-08-10', delivery: '2026-09-01', status: 'pending' },
+      { cid: 1, pname: ts('k_1vhqyl9'), spec: '120×80mm', qty: 20, date: '2026-08-01', delivery: '2026-08-10', status: 'pending' },
+      { cid: 2, pname: ts('k_yjid21'), spec: '100×60mm', qty: 15, date: '2026-08-02', delivery: '2026-08-12', status: 'in_progress' },
+      { cid: 3, pname: ts('k_jca45e'), spec: '80×50mm', qty: 30, date: '2026-08-03', delivery: '2026-08-14', status: 'pending' },
+      { cid: 4, pname: ts('k_19cwumq'), spec: '200×150mm', qty: 10, date: '2026-08-04', delivery: '2026-08-16', status: 'done' },
+      { cid: 5, pname: ts('k_1cbn9h'), spec: '150×100mm', qty: 25, date: '2026-08-05', delivery: '2026-08-18', status: 'pending' },
+      { cid: 6, pname: ts('k_sxqpc3'), spec: '90×70mm', qty: 20, date: '2026-08-06', delivery: '2026-08-20', status: 'in_progress' },
+      { cid: 7, pname: ts('k_kkcs83'), spec: '60×40mm', qty: 50, date: '2026-08-07', delivery: '2026-08-22', status: 'pending' },
+      { cid: 8, pname: ts('k_1xzz7rp'), spec: '110×70mm', qty: 15, date: '2026-08-08', delivery: '2026-08-25', status: 'done' },
+      { cid: 9, pname: ts('k_1k15uy3'), spec: '130×90mm', qty: 20, date: '2026-08-09', delivery: '2026-08-28', status: 'pending' },
+      { cid: 10, pname: ts('k_71ut78'), spec: '180×120mm', qty: 10, date: '2026-08-10', delivery: '2026-09-01', status: 'pending' },
     ];
 
     for (let i = 0; i < sampleData.length; i++) {
@@ -224,7 +228,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
   });
 
   return successResponse({
-    message: '订单域数据已重置并重新生成',
+    message: ts('k_mwby58'),
     stats: result.stats,
     skipped: ['sal_reconciliation', 'sal_reconciliation_detail', 'sal_return', 'sal_return_detail'],
   });

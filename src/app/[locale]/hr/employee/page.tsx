@@ -53,6 +53,7 @@ import { BatchPrintDialog } from './components/dialogs/BatchPrintDialog';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 
 export default function EmployeePage() {
+  const ts = useTranslations('Common');
   // 翻译钩子
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
@@ -94,7 +95,7 @@ export default function EmployeePage() {
 
   // 计算统计数据
   const calculateStats = useCallback((data: Employee[]) => {
-    logger.info({ module: 'Hr', action: 'calculateStats' }, '开始计算员工统计数据', {
+    logger.info({ module: 'Hr', action: 'calculateStats' }, ts('k_12c8hy5'), {
       employeeCount: data.length,
     });
     const total = data.length;
@@ -110,7 +111,7 @@ export default function EmployeePage() {
     });
 
     setStats({ total, male, female, avgAge, education });
-    logger.info({ module: 'Hr', action: 'calculateStats' }, '员工统计数据计算完成', {
+    logger.info({ module: 'Hr', action: 'calculateStats' }, ts('k_11dih8s'), {
       total,
       male,
       female,
@@ -155,8 +156,8 @@ export default function EmployeePage() {
 
   // 获取员工列表
   const fetchEmployees = useCallback(async () => {
-    logger.info({ module: 'Hr', action: 'fetchEmployees' }, '开始获取员工列表', {
-      keyword: debouncedSearch || '(全部)',
+    logger.info({ module: 'Hr', action: 'fetchEmployees' }, ts('k_uqsdg1'), {
+      keyword: debouncedSearch || ts('k_ijq81u'),
     });
     setLoading(true);
     try {
@@ -164,7 +165,7 @@ export default function EmployeePage() {
 
       if (USE_MOCK_HR_DATA) {
         // 使用模拟数据
-        logger.info({ module: 'Hr', action: 'fetchEmployees' }, '使用 mock 数据');
+        logger.info({ module: 'Hr', action: 'fetchEmployees' }, ts('k_1b38xbu'));
         const _mockResponse = mockApiListResponse(mockEmployees);
         employeeList = mockEmployees;
       } else {
@@ -182,11 +183,11 @@ export default function EmployeePage() {
 
       setEmployees(employeeList);
       calculateStats(employeeList);
-      logger.info({ module: 'Hr', action: 'fetchEmployees' }, '员工列表获取成功', {
+      logger.info({ module: 'Hr', action: 'fetchEmployees' }, ts('k_ya0ukx'), {
         count: employeeList.length,
       });
     } catch (error) {
-      logger.error({ module: 'Hr', action: 'fetchEmployees' }, '获取员工列表失败', {
+      logger.error({ module: 'Hr', action: 'fetchEmployees' }, ts('k_1rf9y7e'), {
         error: (error as Error).message,
       });
       toast.error(t('fetchEmployeesFailed'));
@@ -197,12 +198,12 @@ export default function EmployeePage() {
 
   // 获取部门列表
   const fetchDepartments = useCallback(async () => {
-    logger.info({ module: 'Hr', action: 'fetchDepartments' }, '开始获取部门列表');
+    logger.info({ module: 'Hr', action: 'fetchDepartments' }, ts('k_1f5w0sy'));
     try {
       let deptList: Department[] = [];
 
       if (USE_MOCK_HR_DATA) {
-        logger.info({ module: 'Hr', action: 'fetchDepartments' }, '使用 mock 数据');
+        logger.info({ module: 'Hr', action: 'fetchDepartments' }, ts('k_1b38xbu'));
         deptList = mockDepartments as unknown as Department[];
       } else {
         const response = await fetch('/api/organization/department');
@@ -213,11 +214,11 @@ export default function EmployeePage() {
       }
 
       setDepartments(deptList);
-      logger.info({ module: 'Hr', action: 'fetchDepartments' }, '部门列表获取成功', {
+      logger.info({ module: 'Hr', action: 'fetchDepartments' }, ts('k_1fjzgl6'), {
         count: deptList.length,
       });
     } catch (error) {
-      logger.error({ module: 'Hr', action: 'fetchDepartments' }, '获取部门列表失败', {
+      logger.error({ module: 'Hr', action: 'fetchDepartments' }, ts('k_zf75lh'), {
         error: (error as Error).message,
       });
     }
@@ -225,12 +226,12 @@ export default function EmployeePage() {
 
   // 获取角色列表
   const fetchRoles = useCallback(async () => {
-    logger.info({ module: 'Hr', action: 'fetchRoles' }, '开始获取角色列表');
+    logger.info({ module: 'Hr', action: 'fetchRoles' }, ts('k_5p35lm'));
     try {
       let roleList: Role[] = [];
 
       if (USE_MOCK_HR_DATA) {
-        logger.info({ module: 'Hr', action: 'fetchRoles' }, '使用 mock 数据');
+        logger.info({ module: 'Hr', action: 'fetchRoles' }, ts('k_1b38xbu'));
         roleList = mockRoles as unknown as Role[];
       } else {
         const response = await authFetch('/api/organization/role');
@@ -241,11 +242,11 @@ export default function EmployeePage() {
       }
 
       setRoles(roleList);
-      logger.info({ module: 'Hr', action: 'fetchRoles' }, '角色列表获取成功', {
+      logger.info({ module: 'Hr', action: 'fetchRoles' }, ts('k_146c2z6'), {
         count: roleList.length,
       });
     } catch (error) {
-      logger.error({ module: 'Hr', action: 'fetchRoles' }, '获取角色列表失败', {
+      logger.error({ module: 'Hr', action: 'fetchRoles' }, tc('fetchRoleListFailed'), {
         error: (error as Error).message,
       });
     }
@@ -272,7 +273,7 @@ export default function EmployeePage() {
 
     // 验证文件大小 (最大 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      logger.warn({ module: 'Hr', action: 'handleUpload' }, '图片大小超出限制', {
+      logger.warn({ module: 'Hr', action: 'handleUpload' }, ts('k_108xiy9'), {
         fileName: file.name,
         fileSize: file.size,
       });
@@ -285,7 +286,7 @@ export default function EmployeePage() {
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
 
-      logger.info({ module: 'Hr', action: 'handleUpload' }, '开始上传员工照片', {
+      logger.info({ module: 'Hr', action: 'handleUpload' }, ts('k_1u8ks63'), {
         fileName: file.name,
         fileSize: file.size,
       });
@@ -300,18 +301,18 @@ export default function EmployeePage() {
         const photoUrl = result.data?.url;
         // 使用函数式更新避免闭包陈旧问题：用最新 form state 而非闭包中的 form
         setForm((prev) => ({ ...prev, photo: photoUrl }));
-        logger.info({ module: 'Hr', action: 'handleUpload' }, '照片上传成功', {
+        logger.info({ module: 'Hr', action: 'handleUpload' }, ts('k_41h6es'), {
           url: photoUrl,
         });
         toast.success(t('uploadSuccess'));
       } else {
-        logger.warn({ module: 'Hr', action: 'handleUpload' }, '照片上传失败', {
+        logger.warn({ module: 'Hr', action: 'handleUpload' }, ts('k_6qor0v'), {
           message: result.message,
         });
         toast.error(result.message || t('uploadFailed'));
       }
     } catch (error) {
-      logger.error({ module: 'Hr', action: 'handleUpload' }, '上传照片异常', {
+      logger.error({ module: 'Hr', action: 'handleUpload' }, ts('k_2i789z'), {
         error: (error as Error).message,
       });
       toast.error(t('uploadPhotoFailed'));
@@ -326,7 +327,7 @@ export default function EmployeePage() {
 
   // 删除照片
   const handleRemovePhoto = () => {
-    logger.info({ module: 'Hr', action: 'handleRemovePhoto' }, '删除员工照片', {
+    logger.info({ module: 'Hr', action: 'handleRemovePhoto' }, ts('k_jh8xj4'), {
       employeeName: form.name,
     });
     setForm((prev) => ({ ...prev, photo: undefined }));
@@ -334,7 +335,7 @@ export default function EmployeePage() {
 
   // 保存员工
   const saveEmployee = async () => {
-    logger.info({ module: 'Hr', action: 'saveEmployee' }, `开始${editing ? '编辑' : '新增'}员工`, {
+    logger.info({ module: 'Hr', action: 'saveEmployee' }, `开始${editing ? ts('k_qreyeg') : ts('k_159s6ub')}员工`, {
       employeeName: form.name,
       employeeNo: form.employee_no,
       editing,
@@ -342,7 +343,7 @@ export default function EmployeePage() {
     try {
       // 验证必填字段
       if (!form.name) {
-        logger.warn({ module: 'Hr', action: 'saveEmployee' }, '员工姓名未填写');
+        logger.warn({ module: 'Hr', action: 'saveEmployee' }, ts('k_1rhr9rg'));
         toast.error(t('enterEmployeeName'));
         return;
       }
@@ -362,7 +363,7 @@ export default function EmployeePage() {
       if (result.success) {
         logger.info(
           { module: 'Hr', action: 'saveEmployee' },
-          `员工${editing ? '更新' : '创建'}成功`,
+          `员工${editing ? ts('k_v6g9yh') : ts('k_khvw5c')}成功`,
           { employeeName: submitData.name, employeeNo: submitData.employee_no }
         );
         toast.success(editing ? t('updateSuccess') : t('createSuccess'));
@@ -371,13 +372,13 @@ export default function EmployeePage() {
       } else {
         logger.warn(
           { module: 'Hr', action: 'saveEmployee' },
-          `员工${editing ? '更新' : '创建'}失败`,
+          `员工${editing ? ts('k_v6g9yh') : ts('k_khvw5c')}失败`,
           { message: result.message }
         );
         toast.error(result.message || tc('error'));
       }
     } catch (error) {
-      logger.error({ module: 'Hr', action: 'saveEmployee' }, '保存员工异常', {
+      logger.error({ module: 'Hr', action: 'saveEmployee' }, ts('k_dyslvp'), {
         error: (error as Error).message,
       });
       toast.error(t('saveFailed'));
@@ -387,12 +388,12 @@ export default function EmployeePage() {
   // 删除员工
   const deleteEmployee = async (id: number) => {
     const employee = employees.find((e) => e.id === id);
-    logger.info({ module: 'Hr', action: 'deleteEmployee' }, '请求删除员工', {
+    logger.info({ module: 'Hr', action: 'deleteEmployee' }, ts('k_1ylrjon'), {
       employeeId: id,
       employeeName: employee?.name,
     });
     if (!confirm(t('deleteConfirm'))) {
-      logger.info({ module: 'Hr', action: 'deleteEmployee' }, '用户取消删除', { employeeId: id });
+      logger.info({ module: 'Hr', action: 'deleteEmployee' }, ts('k_t2yflm'), { employeeId: id });
       return;
     }
     try {
@@ -401,21 +402,21 @@ export default function EmployeePage() {
       });
       const result = await response.json();
       if (result.success) {
-        logger.info({ module: 'Hr', action: 'deleteEmployee' }, '员工删除成功', {
+        logger.info({ module: 'Hr', action: 'deleteEmployee' }, ts('k_1q64wcr'), {
           employeeId: id,
           employeeName: employee?.name,
         });
         toast.success(t('deleteSuccess'));
         fetchEmployees();
       } else {
-        logger.warn({ module: 'Hr', action: 'deleteEmployee' }, '员工删除失败', {
+        logger.warn({ module: 'Hr', action: 'deleteEmployee' }, ts('k_ns0odg'), {
           employeeId: id,
           message: result.message,
         });
         toast.error(result.message || tc('deleteFailed'));
       }
     } catch (error) {
-      logger.error({ module: 'Hr', action: 'deleteEmployee' }, '删除员工异常', {
+      logger.error({ module: 'Hr', action: 'deleteEmployee' }, ts('k_1ocpgr4'), {
         employeeId: id,
         error: (error as Error).message,
       });
@@ -445,13 +446,13 @@ export default function EmployeePage() {
         ? employees.filter((emp) => selectedEmployees.includes(emp.id))
         : employees;
 
-    logger.info({ module: 'Hr', action: 'handlePrintList' }, '开始打印员工列表', {
+    logger.info({ module: 'Hr', action: 'handlePrintList' }, ts('k_1slnlfj'), {
       totalCount: dataToPrint.length,
       selectedCount: selectedEmployees.length,
     });
 
     if (dataToPrint.length === 0) {
-      logger.warn({ module: 'Hr', action: 'handlePrintList' }, '没有数据可打印');
+      logger.warn({ module: 'Hr', action: 'handlePrintList' }, ts('k_19vpmah'));
       toast.error(t('noDataToPrint'));
       return;
     }
@@ -464,7 +465,7 @@ export default function EmployeePage() {
     };
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      logger.error({ module: 'Hr', action: 'handlePrintList' }, '无法打开打印窗口');
+      logger.error({ module: 'Hr', action: 'handlePrintList' }, ts('k_y9s0jk'));
       toast.error(t('cannotOpenPrintWindow'));
       return;
     }
@@ -514,7 +515,7 @@ export default function EmployeePage() {
       </body></html>`;
     printWindow.document.write(html);
     printWindow.document.close();
-    logger.info({ module: 'Hr', action: 'handlePrintList' }, '打印列表窗口已打开', {
+    logger.info({ module: 'Hr', action: 'handlePrintList' }, ts('k_1776fpc'), {
       count: dataToPrint.length,
     });
     toast.success(t('printingRecords', { count: dataToPrint.length }));
@@ -522,11 +523,11 @@ export default function EmployeePage() {
 
   // 批量打印
   const handleBatchPrint = () => {
-    logger.info({ module: 'Hr', action: 'handleBatchPrint' }, '打开批量打印对话框', {
+    logger.info({ module: 'Hr', action: 'handleBatchPrint' }, ts('k_wir0of'), {
       selectedCount: selectedEmployees.length,
     });
     if (selectedEmployees.length === 0) {
-      logger.warn({ module: 'Hr', action: 'handleBatchPrint' }, '未选择员工');
+      logger.warn({ module: 'Hr', action: 'handleBatchPrint' }, ts('k_8mk9jk'));
       toast.error(t('selectEmployeesFirst'));
       return;
     }
@@ -540,13 +541,13 @@ export default function EmployeePage() {
         ? employees.filter((emp) => selectedEmployees.includes(emp.id))
         : employees;
 
-    logger.info({ module: 'Hr', action: 'exportToExcel' }, '开始导出Excel', {
+    logger.info({ module: 'Hr', action: 'exportToExcel' }, ts('k_1553xox'), {
       totalCount: dataToExport.length,
       selectedCount: selectedEmployees.length,
     });
 
     if (dataToExport.length === 0) {
-      logger.warn({ module: 'Hr', action: 'exportToExcel' }, '没有数据可导出');
+      logger.warn({ module: 'Hr', action: 'exportToExcel' }, ts('k_13yl59s'));
       toast.error(t('noDataToExport'));
       return;
     }
@@ -605,7 +606,7 @@ export default function EmployeePage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    logger.info({ module: 'Hr', action: 'exportToExcel' }, 'Excel导出成功', {
+    logger.info({ module: 'Hr', action: 'exportToExcel' }, ts('k_12007jn'), {
       count: dataToExport.length,
     });
     toast.success(t('exportSuccess', { count: dataToExport.length }));
@@ -618,20 +619,20 @@ export default function EmployeePage() {
         ? employees.filter((emp) => selectedEmployees.includes(emp.id))
         : employees;
 
-    logger.info({ module: 'Hr', action: 'exportToPDF' }, '开始导出PDF', {
+    logger.info({ module: 'Hr', action: 'exportToPDF' }, ts('k_22yaz8'), {
       totalCount: dataToExport.length,
       selectedCount: selectedEmployees.length,
     });
 
     if (dataToExport.length === 0) {
-      logger.warn({ module: 'Hr', action: 'exportToPDF' }, '没有数据可导出');
+      logger.warn({ module: 'Hr', action: 'exportToPDF' }, ts('k_13yl59s'));
       toast.error(t('noDataToExport'));
       return;
     }
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      logger.error({ module: 'Hr', action: 'exportToPDF' }, '无法打开PDF弹出窗口');
+      logger.error({ module: 'Hr', action: 'exportToPDF' }, ts('k_1dhd2vg'));
       toast.error(t('allowPopupPdf'));
       return;
     }
@@ -713,7 +714,7 @@ export default function EmployeePage() {
 
     printWindow.document.write(html);
     printWindow.document.close();
-    logger.info({ module: 'Hr', action: 'exportToPDF' }, 'PDF导出成功', {
+    logger.info({ module: 'Hr', action: 'exportToPDF' }, ts('k_bunhhe'), {
       count: dataToExport.length,
     });
     toast.success(t('preparingPdf', { count: dataToExport.length }));
@@ -723,13 +724,13 @@ export default function EmployeePage() {
   const handleBatchPrintAll = () => {
     const selectedEmps = employees.filter((emp) => selectedEmployees.includes(emp.id));
 
-    logger.info({ module: 'Hr', action: 'handleBatchPrintAll' }, '开始批量打印员工上岗证', {
+    logger.info({ module: 'Hr', action: 'handleBatchPrintAll' }, ts('k_1pueq42'), {
       count: selectedEmps.length,
     });
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      logger.error({ module: 'Hr', action: 'handleBatchPrintAll' }, '无法打开批量打印窗口');
+      logger.error({ module: 'Hr', action: 'handleBatchPrintAll' }, ts('k_1gb7h2c'));
       toast.error(t('allowPopup'));
       return;
     }
@@ -839,7 +840,7 @@ export default function EmployeePage() {
       printWindow.print();
     }, 500);
 
-    logger.info({ module: 'Hr', action: 'handleBatchPrintAll' }, '批量打印窗口已打开', {
+    logger.info({ module: 'Hr', action: 'handleBatchPrintAll' }, ts('k_1tv336x'), {
       count: selectedEmps.length,
     });
     toast.success(t('printWindowOpened'));
@@ -847,7 +848,7 @@ export default function EmployeePage() {
 
   // 生成员工查询二维码
   const generateEmployeeQR = async (employee: Employee) => {
-    logger.info({ module: 'Hr', action: 'generateEmployeeQR' }, '开始生成员工二维码', {
+    logger.info({ module: 'Hr', action: 'generateEmployeeQR' }, ts('k_8fjsrj'), {
       employeeId: employee.id,
       employeeName: employee.name,
     });
@@ -864,12 +865,12 @@ export default function EmployeePage() {
       setQrCodeUrl(url);
       setSelectedEmployee(employee);
       setPrintDialogOpen(true);
-      logger.info({ module: 'Hr', action: 'generateEmployeeQR' }, '员工二维码生成成功', {
+      logger.info({ module: 'Hr', action: 'generateEmployeeQR' }, ts('k_135l2mz'), {
         employeeId: employee.id,
         queryUrl,
       });
     } catch (error) {
-      logger.error({ module: 'Hr', action: 'generateEmployeeQR' }, '生成二维码失败', {
+      logger.error({ module: 'Hr', action: 'generateEmployeeQR' }, ts('k_e44vxj'), {
         employeeId: employee.id,
         error: (error as Error).message,
       });
@@ -879,15 +880,15 @@ export default function EmployeePage() {
 
   // 打印上岗证
   const handlePrint = () => {
-    logger.info({ module: 'Hr', action: 'handlePrint' }, '开始打印单张上岗证');
+    logger.info({ module: 'Hr', action: 'handlePrint' }, ts('k_1nyv1no'));
     if (!printRef.current) {
-      logger.warn({ module: 'Hr', action: 'handlePrint' }, '打印引用不存在');
+      logger.warn({ module: 'Hr', action: 'handlePrint' }, ts('k_g9yrbu'));
       return;
     }
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      logger.error({ module: 'Hr', action: 'handlePrint' }, '无法打开打印窗口');
+      logger.error({ module: 'Hr', action: 'handlePrint' }, ts('k_y9s0jk'));
       toast.error(t('allowPopup'));
       return;
     }
@@ -1070,7 +1071,7 @@ export default function EmployeePage() {
       </html>
     `);
     printWindow.document.close();
-    logger.info({ module: 'Hr', action: 'handlePrint' }, '单张上岗证打印窗口已打开');
+    logger.info({ module: 'Hr', action: 'handlePrint' }, ts('k_m563j8'));
   };
 
   // 初始化加载
@@ -1142,8 +1143,8 @@ export default function EmployeePage() {
                 {tc('print')}
               </Button>
               <GlobalExportToolbar
-                filename="员工列表"
-                title="员工列表"
+                filename={tc('employeeList')}
+                title={tc('employeeList')}
                 landscape
                 columns={[
                   { key: 'employee_no', label: tc('employeeNo'), width: 15 },

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -12,10 +15,11 @@ export const POST = withPermission(
     userInfo: DbRow,
     { params }: { params: Promise<{ id: string }> }
   ) => {
+  const ts = await getTranslations('Common');
     const { id } = await params;
     try {
       const newCardId = await service.duplicateVersion(Number(id), userInfo.userId);
-      return successResponse({ id: newCardId }, '新版本已创建');
+      return successResponse({ id: newCardId }, ts('k_11k3qq6'));
     } catch (e) {
       return errorResponse((e as Error).message, 400, 400);
     }

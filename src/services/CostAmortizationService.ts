@@ -1,3 +1,5 @@
+
+import { useTranslations } from 'next-intl';
 import { query, execute } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 
@@ -144,12 +146,13 @@ export class CostAmortizationService {
   }
 
   private getCostTypeName(costType: string): string {
+  const ts = useTranslations('Common');
     const nameMap: Record<string, string> = {
-      ink: '油墨',
-      screen_plate: '网版',
-      material: '材料',
-      labor: '人工',
-      overhead: '制造费用',
+      ink: ts('k_w1cwb8'),
+      screen_plate: ts('k_cu41ng'),
+      material: ts('k_q1ztlu'),
+      labor: ts('k_lf0peg'),
+      overhead: ts('k_12mzcfu'),
     };
     return nameMap[costType] || costType;
   }

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -36,7 +39,7 @@ export const GET = withPermission(
     const rows = await query(
       `SELECT u.*, m.material_name, m.material_code, m.unit as base_unit
        FROM inv_unit_conversion u
-       LEFT JOIN materials m ON u.material_id = m.id
+       LEFT JOIN inv_material m ON u.material_id = m.id
        ${where}
        ORDER BY u.material_id, u.ratio DESC
        LIMIT ? OFFSET ?`,
@@ -51,6 +54,7 @@ export const GET = withPermission(
 // 创建/更新单位换算
 export const POST = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, ['material_id', 'from_unit', 'to_unit', 'ratio']);
 
@@ -61,7 +65,7 @@ export const POST = withPermission(
     const { material_id, from_unit, to_unit, ratio, is_default } = body;
 
     if (ratio <= 0) {
-      return errorResponse('换算比例必须大于0', 400, 400);
+      return errorResponse(ts('k_22kvj2'), 400, 400);
     }
 
     // 检查是否已存在相同换算
@@ -76,7 +80,7 @@ export const POST = withPermission(
         'UPDATE inv_unit_conversion SET ratio = ?, is_default = ?, update_time = NOW() WHERE id = ?',
         [ratio, is_default ? 1 : 0, existing[0].id]
       );
-      return successResponse({ id: existing[0].id }, '换算关系已更新');
+      return successResponse({ id: existing[0].id }, ts('k_1tgkp1q'));
     }
 
     // 创建
@@ -87,7 +91,7 @@ export const POST = withPermission(
       [material_id, from_unit, to_unit, ratio, is_default ? 1 : 0]
     );
 
-    return successResponse({ id: result.insertId }, '换算关系创建成功');
+    return successResponse({ id: result.insertId }, ts('k_1ags9y0'));
   },
   { errorMessage: '操作失败' }
 );
@@ -95,15 +99,16 @@ export const POST = withPermission(
 // 删除换算关系
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('缺少ID参数', 400, 400);
+      return errorResponse(ts('k_g0g39f'), 400, 400);
     }
 
     await execute('DELETE FROM inv_unit_conversion WHERE id = ?', [Number(id)]);
-    return successResponse(null, '换算关系已删除');
+    return successResponse(null, ts('k_ergl1a'));
   },
   { errorMessage: '操作失败' }
 );
@@ -111,11 +116,12 @@ export const DELETE = withPermission(
 // 单位换算计算
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { material_id, from_unit, to_unit, quantity } = body;
 
     if (!material_id || !from_unit || !to_unit || !quantity) {
-      return errorResponse('物料ID、源单位、目标单位和数量不能为空', 400, 400);
+      return errorResponse(ts('k_fg2y90'), 400, 400);
     }
 
     // 查找换算关系
@@ -125,7 +131,7 @@ export const PUT = withPermission(
     );
 
     if (conversions.length === 0) {
-      return errorResponse('未找到对应的单位换算关系', 404, 404);
+      return errorResponse(ts('k_kmyj9h'), 404, 404);
     }
 
     const conv = conversions[0];
@@ -148,7 +154,7 @@ export const PUT = withPermission(
         to_quantity: resultQty,
         ratio: Number(conv.ratio),
       },
-      '换算完成'
+      ts('k_wmumre')
     );
   },
   { errorMessage: '操作失败' }

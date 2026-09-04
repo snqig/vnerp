@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, commonErrors } from '@/lib/api-response';
 import { SagaLogRepository, SagaStatus } from '@/infrastructure/repositories/SagaLogRepository';
@@ -7,6 +10,7 @@ const sagaLogRepository = new SagaLogRepository();
 
 export const GET = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const sagaId = searchParams.get('sagaId');
     const sagaType = searchParams.get('sagaType');
@@ -17,7 +21,7 @@ export const GET = withPermission(
     if (sagaId) {
       const saga = await sagaLogRepository.get(sagaId);
       if (!saga) {
-        return commonErrors.notFound('Saga 记录不存在');
+        return commonErrors.notFound(ts('k_1zhkz7'));
       }
       return successResponse(saga);
     }
@@ -42,42 +46,43 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { action, sagaId } = body;
 
     if (!action || !sagaId) {
-      return commonErrors.badRequest('缺少必要参数');
+      return commonErrors.badRequest(ts('k_fifqlw'));
     }
 
     if (action === 'retry') {
       const saga = await sagaLogRepository.get(sagaId);
       if (!saga) {
-        return commonErrors.notFound('Saga 记录不存在');
+        return commonErrors.notFound(ts('k_1zhkz7'));
       }
 
       if (saga.status !== 'failed') {
-        return commonErrors.badRequest('只能重试失败的 Saga');
+        return commonErrors.badRequest(ts('k_k8ql74'));
       }
 
       await sagaLogRepository.updateStatus(sagaId, 'pending');
-      return successResponse({ message: 'Saga 已重置为待处理状态，将在下一次调度时重试' });
+      return successResponse({ message: ts('k_t5ip7t') });
     }
 
     if (action === 'compensate') {
       const saga = await sagaLogRepository.get(sagaId);
       if (!saga) {
-        return commonErrors.notFound('Saga 记录不存在');
+        return commonErrors.notFound(ts('k_1zhkz7'));
       }
 
       if (saga.status === 'compensating' || saga.status === 'compensated') {
-        return commonErrors.badRequest('Saga 已在补偿中或已补偿完成');
+        return commonErrors.badRequest(ts('k_1w4qig8'));
       }
 
       await sagaLogRepository.updateStatus(sagaId, 'compensating');
-      return successResponse({ message: '补偿流程已触发' });
+      return successResponse({ message: ts('k_929d3k') });
     }
 
-    return commonErrors.badRequest('不支持的操作');
+    return commonErrors.badRequest(ts('k_12cy0bd'));
   },
   { errorMessage: 'Saga 操作失败' }
 );

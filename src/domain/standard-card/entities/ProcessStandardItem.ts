@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface ProcessStandardItemProps {
   id?: number;
   standardCardId?: number;
@@ -47,14 +49,15 @@ export class ProcessStandardItem {
   }
 
   private validate(props: ProcessStandardItemProps): void {
+  const ts = t;
     if (!props.processName || props.processName.trim() === '') {
-      throw new Error('工序名称不能为空');
+      throw new Error(ts('k_1pqo4pu'));
     }
     if (props.processOrder < 0) {
-      throw new Error('工序顺序不能为负数');
+      throw new Error(ts('k_1a7kyf9'));
     }
     if (props.standardTime !== undefined && props.standardTime < 0) {
-      throw new Error('标准工时不能为负数');
+      throw new Error(ts('k_1ytwx5m'));
     }
   }
 

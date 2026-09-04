@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -90,6 +93,7 @@ export const GET = withPermission(async (request: NextRequest, _user: UserInfo) 
 
 export const POST = withPermission(
   async (request: NextRequest, user: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       customer_id,
@@ -104,28 +108,28 @@ export const POST = withPermission(
     } = body;
 
     if (!customer_id || !items || items.length === 0) {
-      return errorResponse('客户和订单明细不能为空', 400, 400);
+      return errorResponse(ts('k_1odtqpx'), 400, 400);
     }
 
     // 系统设置 category.require_on_business：销售订单要求物料已归类
     const materialIds = (items as DbRow[]).map((item: DbRow) => item.material_id).filter(Boolean);
-    secureLog('info', '[orders/sales] 开始物料分类校验', {
+    secureLog('info', ts('k_cfmbx8'), {
       itemCount: items.length,
       materialIds,
     });
     const categoryCheck = await checkMaterialsCategorized(materialIds);
-    secureLog('info', '[orders/sales] 物料分类校验完成', {
+    secureLog('info', ts('k_rhfnp1'), {
       blocked: categoryCheck.blocked,
       uncategorizedCount: categoryCheck.uncategorized.length,
     });
     if (categoryCheck.blocked) {
-      secureLog('warn', '[orders/sales] 物料分类校验阻断提交', {
+      secureLog('warn', ts('k_14l170t'), {
         message: categoryCheck.message,
       });
       return errorResponse(categoryCheck.message!, 400, 400);
     }
     if (categoryCheck.message) {
-      secureLog('warn', '[orders/sales] 物料分类校验警告', {
+      secureLog('warn', ts('k_1xuziy5'), {
         message: categoryCheck.message,
       });
     }
@@ -191,7 +195,7 @@ export const POST = withPermission(
         status: 'draft',
         uncategorizedMaterials: categoryCheck.uncategorized,
       },
-      categoryCheck.message ? `销售订单创建成功。${categoryCheck.message}` : '销售订单创建成功'
+      categoryCheck.message ? `销售订单创建成功。${categoryCheck.message}` : ts('k_ehi1sy')
     );
   },
   { logTitle: '创建销售订单', logType: 'business' }
@@ -199,30 +203,32 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, user: UserInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action } = body;
 
     if (!id) {
-      return errorResponse('订单ID不能为空', 400, 400);
+      return errorResponse(ts('k_jibosn'), 400, 400);
     }
 
     if (body.currency !== undefined) {
-      return errorResponse('币种创建后不可修改', 400, 400);
+      return errorResponse(tc('currencyImmutableWarning'), 400, 400);
     }
     if (body.exchange_rate !== undefined) {
-      return errorResponse('汇率创建后不可修改', 400, 400);
+      return errorResponse(ts('k_zgrm21'), 400, 400);
     }
 
     const order = await queryOne('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [id]);
 
     if (!order) {
-      return errorResponse('订单不存在', 404, 404);
+      return errorResponse(ts('k_2v2qxr'), 404, 404);
     }
 
     switch (action) {
       case 'submit':
         if (order.status !== 1) {
-          return errorResponse('只有草稿状态的订单可以提交', 400, 400);
+          return errorResponse(ts('k_10t3a8m'), 400, 400);
         }
 
         await transaction(async (conn) => {
@@ -239,11 +245,11 @@ export const PUT = withPermission(
 
         secureLog('info', 'Sales order submitted', { orderId: id, orderNo: order.order_no });
 
-        return successResponse({ status: 2 }, '订单已提交');
+        return successResponse({ status: 2 }, ts('k_1isjr5e'));
 
       case 'approve':
         if (order.status !== 2) {
-          return errorResponse('只有已提交的订单可以审核', 400, 400);
+          return errorResponse(ts('k_1tfnqbu'), 400, 400);
         }
 
         const lines = await query(
@@ -281,19 +287,19 @@ export const PUT = withPermission(
           lineCount: lines.length,
         });
 
-        return successResponse({ status: 3 }, '订单已审核，生产工单生成中');
+        return successResponse({ status: 3 }, ts('k_j1hdld'));
 
       case 'reject':
         if (order.status !== 2) {
-          return errorResponse('只有已提交的订单可以驳回', 400, 400);
+          return errorResponse(ts('k_bekxqy'), 400, 400);
         }
 
         await execute('UPDATE sal_order SET status = 1, update_time = NOW() WHERE id = ?', [id]);
 
-        return successResponse({ status: 1 }, '订单已驳回');
+        return successResponse({ status: 1 }, ts('k_uptysj'));
 
       default:
-        return errorResponse('未知操作', 400, 400);
+        return errorResponse(ts('k_ztn3ax'), 400, 400);
     }
   },
   { logTitle: '更新销售订单状态', logType: 'business' }

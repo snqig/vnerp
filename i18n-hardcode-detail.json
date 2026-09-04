@@ -1,0 +1,1442 @@
+{
+  "generatedAt": "2026-08-31T03:59:53.266Z",
+  "totalEntries": 4384,
+  "totalFiles": 417,
+  "totalModules": 26,
+  "duplicatedOccurrences": 1516,
+  "byModule": [
+    [
+      "other",
+      1739
+    ],
+    [
+      "sample",
+      600
+    ],
+    [
+      "dcprint",
+      455
+    ],
+    [
+      "warehouse",
+      323
+    ],
+    [
+      "settings",
+      302
+    ],
+    [
+      "purchase",
+      171
+    ],
+    [
+      "quality",
+      155
+    ],
+    [
+      "equipment",
+      148
+    ],
+    [
+      "modules",
+      124
+    ],
+    [
+      "dashboard",
+      105
+    ],
+    [
+      "hr",
+      86
+    ],
+    [
+      "orders",
+      56
+    ],
+    [
+      "business",
+      40
+    ],
+    [
+      "production",
+      29
+    ],
+    [
+      "advanced",
+      18
+    ],
+    [
+      "sales",
+      9
+    ],
+    [
+      "base-data",
+      7
+    ],
+    [
+      "finance",
+      6
+    ],
+    [
+      "not-found.tsx",
+      3
+    ],
+    [
+      "srm",
+      2
+    ],
+    [
+      "analysis",
+      1
+    ],
+    [
+      "layout.tsx",
+      1
+    ],
+    [
+      "monitoring",
+      1
+    ],
+    [
+      "outsource",
+      1
+    ],
+    [
+      "prepress",
+      1
+    ],
+    [
+      "qrcode",
+      1
+    ]
+  ],
+  "topFiles": [
+    [
+      "src/app/api/settings/system/route.ts",
+      201
+    ],
+    [
+      "src/app/[locale]/settings/config/page.tsx",
+      142
+    ],
+    [
+      "src/app/[locale]/modules/page.tsx",
+      124
+    ],
+    [
+      "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+      121
+    ],
+    [
+      "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+      104
+    ],
+    [
+      "src/app/[locale]/sample/standard-card/print/page.tsx",
+      90
+    ],
+    [
+      "src/app/[locale]/quality/process/page.tsx",
+      87
+    ],
+    [
+      "src/app/[locale]/sample/standard-card/input/page.tsx",
+      85
+    ],
+    [
+      "src/app/api/system/config/route.ts",
+      82
+    ],
+    [
+      "src/app/[locale]/warehouse/split-order/page.tsx",
+      73
+    ],
+    [
+      "src/app/[locale]/dashboard/flow/page.tsx",
+      67
+    ],
+    [
+      "src/app/[locale]/warehouse/outbound/page.tsx",
+      67
+    ],
+    [
+      "src/app/[locale]/dcprint/ink-opening/page.tsx",
+      66
+    ],
+    [
+      "src/app/[locale]/dcprint/tool/page.tsx",
+      65
+    ],
+    [
+      "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+      64
+    ],
+    [
+      "src/app/[locale]/dcprint/screen-plate/page.tsx",
+      58
+    ],
+    [
+      "src/app/[locale]/sample/orders/[id]/edit/page.tsx",
+      54
+    ],
+    [
+      "src/app/[locale]/equipment/maintenance/page.tsx",
+      50
+    ],
+    [
+      "src/app/[locale]/dcprint/ink-formula/page.tsx",
+      49
+    ],
+    [
+      "src/app/[locale]/settings/seed-data/page.tsx",
+      49
+    ],
+    [
+      "src/app/[locale]/dcprint/tool-manage/page.tsx",
+      42
+    ],
+    [
+      "src/app/[locale]/hr/employee/page.tsx",
+      42
+    ],
+    [
+      "src/app/[locale]/business/contract-review/page.tsx",
+      40
+    ],
+    [
+      "src/app/[locale]/quality/spc/page.tsx",
+      38
+    ],
+    [
+      "src/app/[locale]/dcprint/trace/page.tsx",
+      36
+    ],
+    [
+      "src/app/api/system/user/fix-names/route.ts",
+      36
+    ],
+    [
+      "src/lib/error-handler.ts",
+      36
+    ],
+    [
+      "src/app/[locale]/purchase/request/new/page.tsx",
+      35
+    ],
+    [
+      "src/app/[locale]/dashboard/ceo/page.tsx",
+      34
+    ],
+    [
+      "src/app/[locale]/purchase/request/form/page.tsx",
+      34
+    ]
+  ],
+  "duplicatedTexts": [
+    {
+      "text": "取消",
+      "occurrences": 39,
+      "files": [
+        "src/app/[locale]/business/contract-review/page.tsx",
+        "src/app/[locale]/dcprint/die/page.tsx",
+        "src/app/[locale]/dcprint/ink-mixed/page.tsx",
+        "src/app/[locale]/dcprint/ink-opening/page.tsx",
+        "src/app/[locale]/dcprint/ink-usage/page.tsx",
+        "src/app/[locale]/dcprint/screen-plate/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/equipment/calibration/page.tsx",
+        "src/app/[locale]/equipment/maintenance/page.tsx",
+        "src/app/[locale]/equipment/page.tsx",
+        "src/app/[locale]/equipment/repair/page.tsx",
+        "src/app/[locale]/equipment/scrap/page.tsx",
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/[locale]/sample/orders/[id]/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/[locale]/sample/standard-card/template/page.tsx",
+        "src/app/[locale]/settings/organization/page.tsx",
+        "src/app/[locale]/settings/user/page.tsx",
+        "src/app/[locale]/settings/warehouse-category/warehouse-category-manager.tsx",
+        "src/app/[locale]/srm/evaluation/page.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/OutboundDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/ProductionReturnDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/PurchaseReturnDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/TransferOutDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/WorkshopPickDialog.tsx",
+        "src/app/[locale]/warehouse/outbound/page.tsx",
+        "src/app/[locale]/warehouse/production-inbound/page.tsx",
+        "src/app/[locale]/warehouse/setup/page.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx",
+        "src/components/hr/OrganizationTree.tsx",
+        "src/components/ui/advanced-search.tsx"
+      ]
+    },
+    {
+      "text": "ID不能为空",
+      "occurrences": 36,
+      "files": [
+        "src/app/api/business/contract-review/route.ts",
+        "src/app/api/crm/analysis/route.ts",
+        "src/app/api/crm/follow/route.ts",
+        "src/app/api/engineering/sop/route.ts",
+        "src/app/api/equipment/maintenance/route.ts",
+        "src/app/api/equipment/plan/route.ts",
+        "src/app/api/equipment/route.ts",
+        "src/app/api/plm/eco/route.ts",
+        "src/app/api/plm/lifecycle/route.ts",
+        "src/app/api/production/schedule/route.ts",
+        "src/app/api/qrcode/route.ts",
+        "src/app/api/quality/complaint/route.ts",
+        "src/app/api/quality/lab-test/route.ts",
+        "src/app/api/quality/sgs/[id]/route.ts",
+        "src/app/api/quality/sgs/route.ts",
+        "src/app/api/quality/supplier-audit/route.ts",
+        "src/app/api/srm/evaluation/[id]/route.ts",
+        "src/app/api/srm/evaluation/route.ts",
+        "src/app/api/system/dict/route.ts"
+      ]
+    },
+    {
+      "text": "操作失败",
+      "occurrences": 19,
+      "files": [
+        "src/app/[locale]/dcprint/ink-formula/page.tsx",
+        "src/app/[locale]/dcprint/process-card/page.tsx",
+        "src/app/[locale]/dcprint/tool-manage/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/api/material-lifecycle/route.ts",
+        "src/app/api/standard-card/action/route.ts"
+      ]
+    },
+    {
+      "text": "错误",
+      "occurrences": 18,
+      "files": [
+        "src/app/[locale]/dcprint/ink-formula/page.tsx",
+        "src/app/[locale]/orders/bom/page.tsx",
+        "src/app/[locale]/purchase/orders/page.tsx"
+      ]
+    },
+    {
+      "text": "共",
+      "occurrences": 17,
+      "files": [
+        "src/app/[locale]/business/contract-review/page.tsx",
+        "src/app/[locale]/dcprint/die/page.tsx",
+        "src/app/[locale]/dcprint/ink-mixed/page.tsx",
+        "src/app/[locale]/dcprint/ink-usage/page.tsx",
+        "src/app/[locale]/dcprint/screen-plate/page.tsx",
+        "src/app/[locale]/equipment/calibration/page.tsx",
+        "src/app/[locale]/equipment/maintenance/page.tsx",
+        "src/app/[locale]/equipment/repair/page.tsx",
+        "src/app/[locale]/equipment/scrap/page.tsx",
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/[locale]/settings/user/page.tsx",
+        "src/app/[locale]/warehouse/cost/page.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/OutboundItemsEditor.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/TransferOutDialog.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx",
+        "src/components/ui/material-picker.tsx"
+      ]
+    },
+    {
+      "text": "物料名称",
+      "occurrences": 16,
+      "files": [
+        "src/app/[locale]/dcprint/ink-opening/page.tsx",
+        "src/app/[locale]/dcprint/trace/page.tsx",
+        "src/app/[locale]/purchase/orders/page.tsx",
+        "src/app/[locale]/purchase/request/[id]/page.tsx",
+        "src/app/[locale]/purchase/request/new/page.tsx",
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/[locale]/warehouse/cost/page.tsx",
+        "src/app/[locale]/warehouse/outbound/page.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx",
+        "src/app/api/warehouse/monthly-report/route.ts",
+        "src/components/qr-code/QRCodeSearch.tsx",
+        "src/components/ui/material-picker.tsx"
+      ]
+    },
+    {
+      "text": "没有需要更新的字段",
+      "occurrences": 16,
+      "files": [
+        "src/app/api/business/contract-review/route.ts",
+        "src/app/api/material-labels/route.ts",
+        "src/app/api/organization/crud/route.ts",
+        "src/app/api/qrcode/route.ts",
+        "src/app/api/quality/complaint/route.ts",
+        "src/app/api/quality/lab-test/route.ts",
+        "src/app/api/quality/supplier-audit/route.ts",
+        "src/app/api/screen-plates/route.ts",
+        "src/app/api/system/announcement/route.ts",
+        "src/app/api/system/dict/route.ts",
+        "src/app/api/system/profile/route.ts",
+        "src/app/api/system/scheduler/route.ts",
+        "src/app/api/trace/label/[id]/route.ts",
+        "src/app/api/warehouse/alert-push/route.ts",
+        "src/app/api/warehouse/batch/route.ts"
+      ]
+    },
+    {
+      "text": "失败",
+      "occurrences": 15,
+      "files": [
+        "src/app/[locale]/base-data/material-category/page.tsx",
+        "src/app/[locale]/business/contract-review/page.tsx",
+        "src/app/[locale]/dcprint/screen-plate/page.tsx",
+        "src/app/[locale]/settings/scheduler/page.tsx",
+        "src/domain/production/value-objects/WorkOrderStateMachine.ts"
+      ]
+    },
+    {
+      "text": "上一页",
+      "occurrences": 15,
+      "files": [
+        "src/app/[locale]/business/contract-review/page.tsx",
+        "src/app/[locale]/dcprint/die/page.tsx",
+        "src/app/[locale]/dcprint/ink-mixed/page.tsx",
+        "src/app/[locale]/dcprint/ink-usage/page.tsx",
+        "src/app/[locale]/dcprint/screen-plate/page.tsx",
+        "src/app/[locale]/equipment/calibration/page.tsx",
+        "src/app/[locale]/equipment/maintenance/page.tsx",
+        "src/app/[locale]/equipment/repair/page.tsx",
+        "src/app/[locale]/equipment/scrap/page.tsx",
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/[locale]/sample/standard-card/template/page.tsx",
+        "src/app/[locale]/settings/user/page.tsx",
+        "src/app/[locale]/warehouse/cost/page.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx"
+      ]
+    },
+    {
+      "text": "下一页",
+      "occurrences": 15,
+      "files": [
+        "src/app/[locale]/business/contract-review/page.tsx",
+        "src/app/[locale]/dcprint/die/page.tsx",
+        "src/app/[locale]/dcprint/ink-mixed/page.tsx",
+        "src/app/[locale]/dcprint/ink-usage/page.tsx",
+        "src/app/[locale]/dcprint/screen-plate/page.tsx",
+        "src/app/[locale]/equipment/calibration/page.tsx",
+        "src/app/[locale]/equipment/maintenance/page.tsx",
+        "src/app/[locale]/equipment/repair/page.tsx",
+        "src/app/[locale]/equipment/scrap/page.tsx",
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/[locale]/sample/standard-card/template/page.tsx",
+        "src/app/[locale]/settings/user/page.tsx",
+        "src/app/[locale]/warehouse/cost/page.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx"
+      ]
+    },
+    {
+      "text": "条",
+      "occurrences": 14,
+      "files": [
+        "src/app/[locale]/business/contract-review/page.tsx",
+        "src/app/[locale]/dcprint/die/page.tsx",
+        "src/app/[locale]/dcprint/ink-usage/page.tsx",
+        "src/app/[locale]/dcprint/screen-plate/page.tsx",
+        "src/app/[locale]/equipment/calibration/page.tsx",
+        "src/app/[locale]/equipment/maintenance/page.tsx",
+        "src/app/[locale]/equipment/repair/page.tsx",
+        "src/app/[locale]/equipment/scrap/page.tsx",
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/[locale]/settings/seed-data/page.tsx",
+        "src/app/[locale]/settings/user/page.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx"
+      ]
+    },
+    {
+      "text": "备注",
+      "occurrences": 13,
+      "files": [
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/[locale]/sample/standard-card/template/page.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/OutboundDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/ProductionReturnDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/TransferOutDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/WorkshopPickDialog.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx",
+        "src/components/hr/OrganizationTree.tsx"
+      ]
+    },
+    {
+      "text": "单据编码规则",
+      "occurrences": 13,
+      "files": [
+        "src/app/api/settings/change-approval/route.ts",
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "text": "暂无记录",
+      "occurrences": 12,
+      "files": [
+        "src/app/[locale]/dcprint/die/page.tsx",
+        "src/app/[locale]/dcprint/ink-usage/page.tsx",
+        "src/app/[locale]/dcprint/screen-plate/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/equipment/calibration/page.tsx",
+        "src/app/[locale]/equipment/repair/page.tsx",
+        "src/app/[locale]/equipment/scrap/page.tsx",
+        "src/app/[locale]/purchase/request/form/page.tsx",
+        "src/app/[locale]/settings/user/page.tsx",
+        "src/app/[locale]/warehouse/production-inbound/page.tsx"
+      ]
+    },
+    {
+      "text": "草稿",
+      "occurrences": 12,
+      "files": [
+        "src/app/[locale]/dcprint/ink-formula/page.tsx",
+        "src/app/[locale]/dcprint/process-card/page.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx",
+        "src/app/api/standard-cards/approve/route.ts",
+        "src/domain/dcprint/aggregates/InkFormulaVersion.ts",
+        "src/domain/finance/value-objects/VoucherStatus.ts",
+        "src/domain/purchase/value-objects/PurchaseReconciliationStatus.ts",
+        "src/domain/sales/value-objects/ReconciliationStatus.ts",
+        "src/domain/shipment/value-objects/ShipmentStateMachine.ts",
+        "src/domain/warehouse/value-objects/StocktakingStatus.ts",
+        "src/domain/warehouse/value-objects/TransferStatus.ts"
+      ]
+    },
+    {
+      "text": "状态",
+      "occurrences": 12,
+      "files": [
+        "src/app/[locale]/dcprint/ink-formula/page.tsx",
+        "src/app/[locale]/dcprint/process-card/page.tsx",
+        "src/app/[locale]/dcprint/tool-manage/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/settings/organization/department-table.tsx",
+        "src/app/[locale]/settings/warehouse-category/warehouse-category-manager.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx",
+        "src/app/api/settings/system/route.ts",
+        "src/components/qr-code/QRCodeSearch.tsx"
+      ]
+    },
+    {
+      "text": "物料编码",
+      "occurrences": 12,
+      "files": [
+        "src/app/[locale]/dcprint/ink-opening/page.tsx",
+        "src/app/[locale]/purchase/orders/page.tsx",
+        "src/app/[locale]/purchase/request/[id]/page.tsx",
+        "src/app/[locale]/purchase/request/new/page.tsx",
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/[locale]/warehouse/cost/page.tsx",
+        "src/app/[locale]/warehouse/outbound/page.tsx",
+        "src/app/api/warehouse/monthly-report/route.ts",
+        "src/components/ui/material-picker.tsx"
+      ]
+    },
+    {
+      "text": "加载中...",
+      "occurrences": 12,
+      "files": [
+        "src/app/[locale]/purchase/request/[id]/page.tsx",
+        "src/app/[locale]/purchase/request/form/page.tsx",
+        "src/app/[locale]/sample/orders/[id]/edit/page.tsx",
+        "src/app/[locale]/sample/orders/[id]/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx",
+        "src/app/[locale]/settings/config/page.tsx",
+        "src/app/[locale]/warehouse/setup/page.tsx",
+        "src/components/layout/DynamicMenu.tsx",
+        "src/components/ui/material-picker.tsx"
+      ]
+    },
+    {
+      "text": "仓库管理规则",
+      "occurrences": 12,
+      "files": [
+        "src/app/api/settings/change-approval/route.ts",
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "text": "原材料",
+      "occurrences": 11,
+      "files": [
+        "src/app/[locale]/purchase/request/new/page.tsx",
+        "src/app/[locale]/warehouse/outbound/page.tsx",
+        "src/app/api/base-data/material-category/route.ts",
+        "src/app/api/settings/category-linkage/route.ts"
+      ]
+    },
+    {
+      "text": "无效的操作类型",
+      "occurrences": 11,
+      "files": [
+        "src/app/api/finance/expense/route.ts",
+        "src/app/api/linkage/validate/route.ts",
+        "src/app/api/sample/orders/linkage/route.ts",
+        "src/app/api/settings/system/route.ts",
+        "src/app/api/system/dict/route.ts",
+        "src/app/api/warehouse/alert-push/route.ts",
+        "src/app/api/warehouse/freeze/route.ts",
+        "src/app/api/warehouse/stocktaking/diff-process/route.ts",
+        "src/app/api/warehouse/transfer/route.ts"
+      ]
+    },
+    {
+      "text": "网版",
+      "occurrences": 10,
+      "files": [
+        "src/app/[locale]/dcprint/tool-manage/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/api/base-data/material-category/route.ts",
+        "src/app/api/inventory/materials/route.ts",
+        "src/app/api/qrcode/trace/route.ts"
+      ]
+    },
+    {
+      "text": "设备编码",
+      "occurrences": 10,
+      "files": [
+        "src/app/[locale]/equipment/calibration/page.tsx",
+        "src/app/[locale]/equipment/maintenance/page.tsx",
+        "src/app/[locale]/equipment/page.tsx",
+        "src/app/[locale]/equipment/repair/page.tsx",
+        "src/app/[locale]/equipment/scrap/page.tsx"
+      ]
+    },
+    {
+      "text": "设备名称",
+      "occurrences": 10,
+      "files": [
+        "src/app/[locale]/equipment/calibration/page.tsx",
+        "src/app/[locale]/equipment/maintenance/page.tsx",
+        "src/app/[locale]/equipment/page.tsx",
+        "src/app/[locale]/equipment/repair/page.tsx",
+        "src/app/[locale]/equipment/scrap/page.tsx"
+      ]
+    },
+    {
+      "text": "件",
+      "occurrences": 10,
+      "files": [
+        "src/app/[locale]/orders/bom/create/page.tsx",
+        "src/app/[locale]/orders/bom/edit/[id]/page.tsx",
+        "src/app/[locale]/orders/products/page.tsx",
+        "src/app/[locale]/purchase/request/form/page.tsx",
+        "src/app/[locale]/warehouse/inbound-simple/page.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/OutboundItemsEditor.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/TransferOutDialog.tsx",
+        "src/application/handlers/PurchaseInboundReversalHandler.ts",
+        "src/application/handlers/PurchaseInboundSyncHandler.ts"
+      ]
+    },
+    {
+      "text": "已取消",
+      "occurrences": 10,
+      "files": [
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/[locale]/sample/management/page.tsx",
+        "src/app/[locale]/sample/orders/[id]/page.tsx",
+        "src/domain/production/value-objects/WorkOrderStateMachine.ts",
+        "src/domain/purchase/value-objects/PurchaseReturnStatus.ts",
+        "src/domain/sales/value-objects/DeliveryStatus.ts",
+        "src/domain/sales/value-objects/ReturnOrderStatus.ts",
+        "src/domain/shipment/value-objects/ShipmentStateMachine.ts",
+        "src/domain/warehouse/value-objects/StocktakingStatus.ts",
+        "src/domain/warehouse/value-objects/TransferStatus.ts"
+      ]
+    },
+    {
+      "text": "缺少必要参数",
+      "occurrences": 10,
+      "files": [
+        "src/app/api/finance/payables/[id]/payment/route.ts",
+        "src/app/api/finance/receivables/[id]/receipt/route.ts",
+        "src/app/api/ink-usages/route.ts",
+        "src/app/api/linkage/validate/route.ts",
+        "src/app/api/material-labels/route.ts",
+        "src/app/api/material-lifecycle/route.ts",
+        "src/app/api/screen-plates/history/route.ts"
+      ]
+    },
+    {
+      "text": "系统基础配置",
+      "occurrences": 10,
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "text": "删除失败",
+      "occurrences": 9,
+      "files": [
+        "src/app/[locale]/dcprint/ink-opening/page.tsx",
+        "src/app/[locale]/dcprint/process-card/page.tsx",
+        "src/app/[locale]/finance/page.tsx",
+        "src/app/[locale]/purchase/orders/page.tsx",
+        "src/app/[locale]/sample/orders/[id]/page.tsx",
+        "src/app/[locale]/sample/standard-card/template/page.tsx"
+      ]
+    },
+    {
+      "text": "操作",
+      "occurrences": 9,
+      "files": [
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/[locale]/sample/standard-card/template/page.tsx",
+        "src/app/[locale]/settings/organization/department-table.tsx",
+        "src/app/[locale]/settings/warehouse-category/warehouse-category-manager.tsx",
+        "src/app/[locale]/warehouse/inbound/page.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx",
+        "src/components/qr-code/QRCodeSearch.tsx"
+      ]
+    },
+    {
+      "text": "已完成",
+      "occurrences": 9,
+      "files": [
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/production/orders/page.tsx",
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/[locale]/sample/management/page.tsx",
+        "src/app/[locale]/sample/orders/[id]/page.tsx",
+        "src/domain/production/value-objects/WorkOrderStateMachine.ts",
+        "src/domain/purchase/value-objects/PurchaseReturnStatus.ts",
+        "src/domain/sales/value-objects/ReturnOrderStatus.ts"
+      ]
+    },
+    {
+      "text": "模切",
+      "occurrences": 9,
+      "files": [
+        "src/app/[locale]/hr/attendance/page.tsx",
+        "src/app/[locale]/production/orders/page.tsx",
+        "src/app/[locale]/production/report/page.tsx",
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx",
+        "src/app/api/init/department/route.ts"
+      ]
+    },
+    {
+      "text": "其他",
+      "occurrences": 9,
+      "files": [
+        "src/app/[locale]/hr/attendance/page.tsx",
+        "src/app/[locale]/purchase/request/new/page.tsx",
+        "src/app/[locale]/quality/sgs/page.tsx",
+        "src/app/[locale]/settings/config/page.tsx",
+        "src/app/api/init/department/route.ts",
+        "src/app/api/warehouse/monthly-report/route.ts"
+      ]
+    },
+    {
+      "text": "使用 mock 数据",
+      "occurrences": 9,
+      "files": [
+        "src/app/[locale]/hr/employee/page.tsx",
+        "src/app/[locale]/purchase/orders/page.tsx",
+        "src/app/[locale]/quality/final/page.tsx",
+        "src/app/[locale]/quality/process/page.tsx",
+        "src/app/[locale]/sales/delivery/page.tsx"
+      ]
+    },
+    {
+      "text": "个",
+      "occurrences": 8,
+      "files": [
+        "src/app/[locale]/analysis/db-relations/page.tsx",
+        "src/app/[locale]/orders/bom/create/page.tsx",
+        "src/app/[locale]/orders/bom/edit/[id]/page.tsx",
+        "src/app/[locale]/orders/sales/page.tsx",
+        "src/app/[locale]/purchase/request/form/page.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/AddDialog.tsx"
+      ]
+    },
+    {
+      "text": "刀模",
+      "occurrences": 8,
+      "files": [
+        "src/app/[locale]/dcprint/tool-manage/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/api/inventory/materials/route.ts"
+      ]
+    },
+    {
+      "text": "类型",
+      "occurrences": 8,
+      "files": [
+        "src/app/[locale]/dcprint/tool-manage/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx",
+        "src/components/qr-code/QRCodeSearch.tsx"
+      ]
+    },
+    {
+      "text": "规格",
+      "occurrences": 8,
+      "files": [
+        "src/app/[locale]/dcprint/tool-manage/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/[locale]/warehouse/outbound/page.tsx",
+        "src/app/api/warehouse/monthly-report/route.ts",
+        "src/components/ui/material-picker.tsx"
+      ]
+    },
+    {
+      "text": "单价",
+      "occurrences": 8,
+      "files": [
+        "src/app/[locale]/purchase/orders/page.tsx",
+        "src/app/[locale]/purchase/request/[id]/page.tsx",
+        "src/app/[locale]/purchase/request/new/page.tsx",
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/[locale]/warehouse/cost/page.tsx"
+      ]
+    },
+    {
+      "text": "基本信息",
+      "occurrences": 8,
+      "files": [
+        "src/app/[locale]/purchase/request/[id]/page.tsx",
+        "src/app/[locale]/purchase/request/new/page.tsx",
+        "src/app/[locale]/sample/orders/[id]/edit/page.tsx",
+        "src/app/[locale]/sample/orders/[id]/page.tsx",
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/settings/profile/page.tsx",
+        "src/components/qr-code/QRCodeViewer.tsx"
+      ]
+    },
+    {
+      "text": "模切-检验-包装",
+      "occurrences": 8,
+      "files": [
+        "src/app/[locale]/quality/process/page.tsx"
+      ]
+    },
+    {
+      "text": "种类",
+      "occurrences": 8,
+      "files": [
+        "src/app/[locale]/sample/orders/[id]/edit/page.tsx",
+        "src/app/[locale]/sample/orders/[id]/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx"
+      ]
+    },
+    {
+      "text": "单位",
+      "occurrences": 8,
+      "files": [
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/OutboundItemsEditor.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/TransferOutDialog.tsx",
+        "src/app/[locale]/warehouse/outbound/page.tsx",
+        "src/app/api/warehouse/monthly-report/route.ts",
+        "src/components/ui/material-picker.tsx"
+      ]
+    },
+    {
+      "text": "没有要更新的字段",
+      "occurrences": 8,
+      "files": [
+        "src/app/api/dcprint/labels/route.ts",
+        "src/app/api/dcprint/process-cards/route.ts",
+        "src/app/api/orders/bom/materials/route.ts",
+        "src/app/api/products/categories/route.ts",
+        "src/app/api/products/route.ts",
+        "src/app/api/purchase/suppliers/route.ts",
+        "src/app/api/sample/inventory/route.ts"
+      ]
+    },
+    {
+      "text": "删除成功",
+      "occurrences": 7,
+      "files": [
+        "src/app/[locale]/base-data/material-category/page.tsx",
+        "src/app/[locale]/business/contract-review/page.tsx",
+        "src/app/[locale]/dcprint/ink-opening/page.tsx",
+        "src/app/[locale]/dcprint/process-card/page.tsx",
+        "src/app/[locale]/dcprint/screen-plate/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/components/hr/OrganizationTree.tsx"
+      ]
+    },
+    {
+      "text": "成功",
+      "occurrences": 7,
+      "files": [
+        "src/app/[locale]/dcprint/ink-formula/page.tsx",
+        "src/app/[locale]/purchase/orders/page.tsx",
+        "src/app/[locale]/settings/scheduler/page.tsx"
+      ]
+    },
+    {
+      "text": "操作人",
+      "occurrences": 7,
+      "files": [
+        "src/app/[locale]/dcprint/ink-usage/page.tsx",
+        "src/app/[locale]/dcprint/screen-plate/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/warehouse/production-inbound/page.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx"
+      ]
+    },
+    {
+      "text": "油墨",
+      "occurrences": 7,
+      "files": [
+        "src/app/[locale]/dcprint/ink-usage/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/api/base-data/material-category/route.ts",
+        "src/app/api/inventory/materials/route.ts",
+        "src/app/api/qrcode/trace/route.ts",
+        "src/app/api/settings/category-linkage/route.ts"
+      ]
+    },
+    {
+      "text": "辅料",
+      "occurrences": 7,
+      "files": [
+        "src/app/[locale]/dcprint/trace/page.tsx",
+        "src/app/[locale]/purchase/request/new/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/api/base-data/material-category/route.ts",
+        "src/app/api/settings/category-linkage/route.ts"
+      ]
+    },
+    {
+      "text": "张",
+      "occurrences": 7,
+      "files": [
+        "src/app/[locale]/orders/products/page.tsx",
+        "src/app/[locale]/orders/sales/page.tsx",
+        "src/app/[locale]/production/orders/page.tsx",
+        "src/app/[locale]/purchase/request/form/page.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/AddDialog.tsx"
+      ]
+    },
+    {
+      "text": "已审核",
+      "occurrences": 7,
+      "files": [
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/[locale]/sample/management/page.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx",
+        "src/domain/finance/value-objects/VoucherStatus.ts",
+        "src/domain/purchase/value-objects/PurchaseReturnStatus.ts",
+        "src/domain/sales/value-objects/ReturnOrderStatus.ts"
+      ]
+    },
+    {
+      "text": "分类",
+      "occurrences": 7,
+      "files": [
+        "src/app/[locale]/quality/spc/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/[locale]/sample/standard-card/template/page.tsx",
+        "src/app/api/settings/system/route.ts",
+        "src/app/api/warehouse/monthly-report/route.ts"
+      ]
+    },
+    {
+      "text": "批次",
+      "occurrences": 7,
+      "files": [
+        "src/app/[locale]/warehouse/inbound/components/dialogs/OutboundItemsEditor.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/TransferOutDialog.tsx",
+        "src/app/[locale]/warehouse/outbound/page.tsx",
+        "src/components/qr-code/QRCodeSearch.tsx",
+        "src/lib/fifo-allocation.ts"
+      ]
+    },
+    {
+      "text": "缺少id",
+      "occurrences": 7,
+      "files": [
+        "src/app/api/base-data/material-category/route.ts",
+        "src/app/api/dcprint/formula/color/route.ts",
+        "src/app/api/dcprint/ink-formula/route.ts",
+        "src/app/api/outsource/issue/route.ts",
+        "src/app/api/outsource/order/route.ts",
+        "src/app/api/outsource/receive/route.ts",
+        "src/app/api/outsource/settlement/route.ts"
+      ]
+    },
+    {
+      "text": "原材料保质期",
+      "occurrences": 7,
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "text": "暂无数据",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/business/contract-review/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/dcprint/trace/page.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx",
+        "src/components/WarehouseCharts.tsx",
+        "src/components/hr/charts/LaborCostChart.tsx"
+      ]
+    },
+    {
+      "text": "销售订单",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/dashboard/flow/page.tsx",
+        "src/app/[locale]/modules/page.tsx",
+        "src/app/[locale]/orders/sales/page.tsx",
+        "src/app/[locale]/settings/seed-data/page.tsx",
+        "src/app/[locale]/warehouse/sales-outbound/page.tsx",
+        "src/lib/demo-data.ts"
+      ]
+    },
+    {
+      "text": "已报废",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/dcprint/die/page.tsx",
+        "src/app/[locale]/dcprint/ink-opening/page.tsx",
+        "src/app/[locale]/dcprint/screen-plate/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx"
+      ]
+    },
+    {
+      "text": "已作废",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/dcprint/ink-formula/page.tsx",
+        "src/app/[locale]/warehouse/split-order/page.tsx",
+        "src/domain/dcprint/aggregates/InkFormulaVersion.ts",
+        "src/domain/finance/value-objects/VoucherStatus.ts"
+      ]
+    },
+    {
+      "text": "总成本",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/dcprint/process-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/[locale]/sample/standard-card/template/page.tsx"
+      ]
+    },
+    {
+      "text": "印刷",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/dcprint/screen-plate/page.tsx",
+        "src/app/[locale]/production/orders/page.tsx",
+        "src/app/[locale]/production/report/page.tsx",
+        "src/app/[locale]/sample/orders/[id]/edit/page.tsx"
+      ]
+    },
+    {
+      "text": "存放位置",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/dcprint/screen-plate/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx"
+      ]
+    },
+    {
+      "text": "保存",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/equipment/maintenance/page.tsx",
+        "src/app/[locale]/equipment/page.tsx",
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/settings/organization/page.tsx",
+        "src/app/[locale]/settings/warehouse-category/warehouse-category-manager.tsx"
+      ]
+    },
+    {
+      "text": "张三",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/hr/performance/page.tsx",
+        "src/app/[locale]/hr/salary/bank-report/page.tsx",
+        "src/app/[locale]/hr/salary/payslips/page.tsx",
+        "src/app/[locale]/hr/salary/piece-work/page.tsx",
+        "src/app/[locale]/quality/process/page.tsx"
+      ]
+    },
+    {
+      "text": "已实现",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/modules/page.tsx"
+      ]
+    },
+    {
+      "text": "卷",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/orders/products/page.tsx",
+        "src/app/[locale]/purchase/request/form/page.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/AddDialog.tsx",
+        "src/app/[locale]/warehouse/outbound/page.tsx"
+      ]
+    },
+    {
+      "text": "包装",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/production/orders/page.tsx",
+        "src/app/[locale]/production/report/page.tsx",
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx"
+      ]
+    },
+    {
+      "text": "保存失败",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/purchase/request/form/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/template/page.tsx",
+        "src/hooks/useSampleProcessForm.ts"
+      ]
+    },
+    {
+      "text": "切料-磨切-印刷-烘干",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/quality/process/page.tsx"
+      ]
+    },
+    {
+      "text": "胶印",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/quality/process/page.tsx",
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx"
+      ]
+    },
+    {
+      "text": "卷料丝印",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/sample/orders/[id]/edit/page.tsx",
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx"
+      ]
+    },
+    {
+      "text": "轮转印",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/sample/orders/[id]/edit/page.tsx",
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx"
+      ]
+    },
+    {
+      "text": "冲压",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/sample/orders/[id]/edit/page.tsx",
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx"
+      ]
+    },
+    {
+      "text": "PCS/袋",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx"
+      ]
+    },
+    {
+      "text": "PCS/箱",
+      "occurrences": 6,
+      "files": [
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx"
+      ]
+    },
+    {
+      "text": "状态流转前",
+      "occurrences": 6,
+      "files": [
+        "src/application/services/SampleOrderApplicationService.ts"
+      ]
+    },
+    {
+      "text": "状态流转后",
+      "occurrences": 6,
+      "files": [
+        "src/application/services/SampleOrderApplicationService.ts"
+      ]
+    },
+    {
+      "text": "全部状态",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/business/contract-review/page.tsx",
+        "src/app/[locale]/dcprint/ink-opening/page.tsx",
+        "src/app/[locale]/dcprint/tool-manage/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/purchase/return/page.tsx"
+      ]
+    },
+    {
+      "text": "客户：",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/business/contract-review/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx",
+        "src/components/qr-code/QRCodeViewer.tsx"
+      ]
+    },
+    {
+      "text": "生产部",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/business/contract-review/page.tsx",
+        "src/app/[locale]/hr/attendance/page.tsx",
+        "src/app/[locale]/hr/salary/payslips/page.tsx",
+        "src/app/api/init/department/route.ts",
+        "src/app/api/system/user/fix-names/route.ts"
+      ]
+    },
+    {
+      "text": "预警",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/dashboard/ceo/page.tsx",
+        "src/app/[locale]/dcprint/tool-manage/page.tsx",
+        "src/app/[locale]/dcprint/tool/page.tsx"
+      ]
+    },
+    {
+      "text": "过期时间",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/dcprint/ink-mixed/page.tsx",
+        "src/app/[locale]/dcprint/ink-opening/page.tsx",
+        "src/app/[locale]/settings/announcement/page.tsx"
+      ]
+    },
+    {
+      "text": "已确认",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/dcprint/process-card/page.tsx",
+        "src/app/[locale]/sample/management/page.tsx",
+        "src/domain/production/value-objects/WorkOrderStateMachine.ts",
+        "src/domain/purchase/value-objects/PurchaseReconciliationStatus.ts",
+        "src/domain/sales/value-objects/ReconciliationStatus.ts"
+      ]
+    },
+    {
+      "text": "工单号",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/dcprint/tool/page.tsx",
+        "src/app/[locale]/dcprint/trace/page.tsx",
+        "src/app/[locale]/warehouse/production-inbound/page.tsx"
+      ]
+    },
+    {
+      "text": "公司名称",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/layout.tsx",
+        "src/app/[locale]/settings/config/page.tsx",
+        "src/app/api/settings/system/route.ts",
+        "src/app/api/system/config/route.ts"
+      ]
+    },
+    {
+      "text": "采购管理",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/modules/page.tsx",
+        "src/app/[locale]/settings/config/page.tsx",
+        "src/lib/audit-middleware.ts",
+        "src/lib/demo-data.ts"
+      ]
+    },
+    {
+      "text": "手机",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/modules/page.tsx",
+        "src/app/[locale]/settings/user/page.tsx"
+      ]
+    },
+    {
+      "text": "保存草稿",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/purchase/request/form/page.tsx",
+        "src/app/[locale]/purchase/request/new/page.tsx",
+        "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
+        "src/app/[locale]/sample/standard-card/input/page.tsx"
+      ]
+    },
+    {
+      "text": "待审核",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/[locale]/sample/management/page.tsx",
+        "src/app/api/standard-cards/approve/route.ts",
+        "src/domain/purchase/value-objects/PurchaseReturnStatus.ts",
+        "src/domain/sales/value-objects/ReturnOrderStatus.ts"
+      ]
+    },
+    {
+      "text": "审核",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/purchase/return/page.tsx",
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/api/standard-cards/approve/route.ts",
+        "src/lib/audit-middleware.ts"
+      ]
+    },
+    {
+      "text": "跳距",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx"
+      ]
+    },
+    {
+      "text": "否",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx",
+        "src/app/[locale]/warehouse/setup/page.tsx",
+        "src/lib/data-diff.ts"
+      ]
+    },
+    {
+      "text": "是",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx",
+        "src/app/[locale]/warehouse/setup/page.tsx",
+        "src/lib/data-diff.ts"
+      ]
+    },
+    {
+      "text": "腐蚀刀模",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
+        "src/app/[locale]/sample/standard-card/input-card/page.tsx",
+        "src/app/[locale]/sample/standard-card/print/page.tsx"
+      ]
+    },
+    {
+      "text": "停用",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/settings/organization/department-table.tsx",
+        "src/app/[locale]/settings/organization/page.tsx",
+        "src/app/[locale]/settings/warehouse-category/warehouse-category-manager.tsx"
+      ]
+    },
+    {
+      "text": "请至少填写一项有效数量",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/warehouse/inbound/components/dialogs/OutboundDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/ProductionReturnDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/PurchaseReturnDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/TransferOutDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/WorkshopPickDialog.tsx"
+      ]
+    },
+    {
+      "text": "操作失败，请稍后重试",
+      "occurrences": 5,
+      "files": [
+        "src/app/[locale]/warehouse/inbound/components/dialogs/OutboundDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/ProductionReturnDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/PurchaseReturnDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/TransferOutDialog.tsx",
+        "src/app/[locale]/warehouse/inbound/components/dialogs/WorkshopPickDialog.tsx"
+      ]
+    },
+    {
+      "text": "未知操作",
+      "occurrences": 5,
+      "files": [
+        "src/app/api/advanced/cost-analysis/route.ts",
+        "src/app/api/orders/sales/route.ts",
+        "src/app/api/production/mrp/route.ts",
+        "src/app/api/purchase/orders/route.ts",
+        "src/app/api/warehouse/inbound/route.ts"
+      ]
+    },
+    {
+      "text": "产品名称不能为空",
+      "occurrences": 5,
+      "files": [
+        "src/app/api/business/contract-review/route.ts",
+        "src/app/api/engineering/sop/route.ts",
+        "src/app/api/production/schedule/route.ts",
+        "src/app/api/quality/complaint/route.ts",
+        "src/app/api/quality/lab-test/route.ts"
+      ]
+    },
+    {
+      "text": "广东",
+      "occurrences": 5,
+      "files": [
+        "src/app/api/init/warehouse/route.ts"
+      ]
+    }
+  ]
+}

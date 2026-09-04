@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { execute, queryOne } from '@/lib/db';
 import {
@@ -16,11 +19,12 @@ interface ButtonPermission {
 
 // GET - 获取角色的按钮权限
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const roleId = searchParams.get('roleId');
 
   if (!roleId) {
-    return commonErrors.badRequest('角色ID不能为空');
+    return commonErrors.badRequest(ts('k_2gmrs2'));
   }
 
   const roleIdNum = parseInt(roleId);
@@ -32,7 +36,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   if (!existingRole) {
-    return commonErrors.notFound('角色不存在');
+    return commonErrors.notFound(ts('k_lrx46w'));
   }
 
   const permissions: ButtonPermission[] = existingRole.permissions
@@ -45,6 +49,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // POST - 保存角色的按钮权限
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { role_id, permissions } = body;
 
@@ -64,12 +69,12 @@ export const POST = withPermission(
     );
 
     if (!existingRole) {
-      return commonErrors.notFound('角色不存在');
+      return commonErrors.notFound(ts('k_lrx46w'));
     }
 
     // 验证权限格式
     if (permissions && !Array.isArray(permissions)) {
-      return errorResponse('权限格式不正确，应为数组', 400, 400);
+      return errorResponse(ts('k_18wrj2r'), 400, 400);
     }
 
     // 更新角色权限
@@ -79,10 +84,10 @@ export const POST = withPermission(
     ]);
 
     if (result.affectedRows === 0) {
-      return commonErrors.notFound('角色不存在');
+      return commonErrors.notFound(ts('k_lrx46w'));
     }
 
-    return successResponse(null, '按钮权限保存成功');
+    return successResponse(null, ts('k_drgmjh'));
   },
   { logTitle: '保存按钮权限' }
 );

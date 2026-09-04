@@ -114,7 +114,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
   const ts = useTranslations('System');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [userInfo, setUserInfo] = useState({ username: '管理员', email: 'admin@dachang.com' });
+  const [userInfo, setUserInfo] = useState({ username: ts('k_1yxtyq'), email: 'admin@dachang.com' });
   const [activeTopMenu, setActiveTopMenu] = useState<string | null>(null);
 
   const menus = propMenus || authMenus || [];
@@ -207,7 +207,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
       if (storedUser) {
         const user = JSON.parse(storedUser);
         setUserInfo({
-          username: user.username || user.real_name || '管理员',
+          username: user.username || user.real_name || ts('k_1yxtyq'),
           email: user.email || 'admin@dachang.com',
         });
       } else {
@@ -249,7 +249,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
         {navigationMode !== 'sidebar' && (
           <div className="flex items-center gap-2 mr-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/loginlogo.png" alt="达昌" className="w-7 h-7 rounded-lg object-contain" />
+            <img src="/loginlogo.png" alt={ts('k_1jq3bkn')} className="w-7 h-7 rounded-lg object-contain" />
             <span
               suppressHydrationWarning
               className="font-bold text-sm text-foreground hidden md:inline"

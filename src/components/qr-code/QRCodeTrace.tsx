@@ -76,6 +76,7 @@ export function QRCodeTrace({
   onDialogChange,
   initialQRCode: propQRCode,
 }: QRCodeTraceProps) {
+  const ts = useTranslations('Common');
   const { toast } = useToast();
   const locale = useLocale();
   const t = useTranslations('QRCode');
@@ -170,7 +171,7 @@ export function QRCodeTrace({
     return (
       <div className="space-y-0">
         {traceData.timeline.map((event, index) => {
-          const IconComponent = eventIcons[event.event] || eventIcons['默认'];
+          const IconComponent = eventIcons[event.event] || eventIcons[ts('k_1ybnnw9')];
           const colorClass = eventColors[event.event] || 'bg-gray-500';
 
           return (

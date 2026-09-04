@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useMemo, useEffect } from 'react';
 import {
@@ -58,6 +59,7 @@ export function OutboundDialog({
   operatorName,
   onSuccess,
 }: Props) {
+  const ts = useTranslations('Warehouse');
   const fromWarehouseId = sourceRecords[0]?.warehouse_id;
   const wh = warehouses.find((w) => w.id === fromWarehouseId);
   const fromWarehouseName = wh?.warehouse_name || `仓库#${fromWarehouseId || '-'}`;
@@ -67,8 +69,8 @@ export function OutboundDialog({
     ? CATEGORY_TO_OUTBOUND_TYPE[fromCategoryId] || 'other'
     : 'raw_material';
   const outboundTypeLabel = fromCategoryId
-    ? CATEGORY_TO_OUTBOUND_LABEL[fromCategoryId] || '其他出库'
-    : '原料出库';
+    ? CATEGORY_TO_OUTBOUND_LABEL[fromCategoryId] || ts('k_le3tde')
+    : ts('k_i8a8h6');
 
   // 可选目标仓库（排除来源仓，用于调拨）
   const targetWarehouses = warehouses.filter((w) => w.id !== fromWarehouseId);
@@ -96,12 +98,12 @@ export function OutboundDialog({
 
   const handleConfirm = async () => {
     if (!fromWarehouseId) {
-      toast.error('无法确定出库仓库');
+      toast.error(ts('k_1li0kgb'));
       return;
     }
     const valid = items.filter((it) => it.material_id && Number(it.quantity) > 0);
     if (valid.length === 0) {
-      toast.error('请至少填写一项有效数量');
+      toast.error(ts('k_482f8l'));
       return;
     }
     setSubmitting(true);
@@ -131,7 +133,7 @@ export function OutboundDialog({
         });
         const createResult = await createRes.json();
         if (!createResult.success) {
-          toast.error(createResult.message || '创建调拨单失败');
+          toast.error(createResult.message || ts('k_tl5ox0'));
           setSubmitting(false);
           return;
         }
@@ -174,7 +176,7 @@ export function OutboundDialog({
         }
 
         const toWh = warehouses.find((w) => w.id === toWarehouseId);
-        toast.success(`调拨完成：${fromWarehouseName} → ${toWh?.warehouse_name || '目标仓'}，库存已同步`);
+        toast.success(`调拨完成：${fromWarehouseName} → ${toWh?.warehouse_name || ts('k_1cdu8hv')}，库存已同步`);
         onOpenChange(false);
         onSuccess();
       } else {
@@ -203,7 +205,7 @@ export function OutboundDialog({
         });
         const result = await res.json();
         if (!result.success) {
-          toast.error(result.message || '创建出库单失败');
+          toast.error(result.message || ts('k_1ata65c'));
           setSubmitting(false);
           return;
         }
@@ -229,7 +231,7 @@ export function OutboundDialog({
         onSuccess();
       }
     } catch {
-      toast.error('操作失败，请稍后重试');
+      toast.error(ts('k_1yojo3u'));
     } finally {
       setSubmitting(false);
     }
@@ -242,39 +244,39 @@ export function OutboundDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl" resizable>
         <DialogHeader>
-          <DialogTitle>{toWarehouseId ? '调拨出库（先进先出）' : `${outboundTypeLabel}（先进先出）`}</DialogTitle>
+          <DialogTitle>{toWarehouseId ? ts('k_ziydyv') : `${outboundTypeLabel}（先进先出）`}</DialogTitle>
           <DialogDescription>
             {toWarehouseId
-              ? '从入库单发起调拨，系统按先进先出从来源仓扣减并增加到目标仓。'
-              : '从入库单发起出库，系统按先进先出自动扣减库存。'}
+              ? ts('k_153mxl')
+              : ts('k_h5inpc')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2 max-h-[62vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label>出库仓库</Label>
+              <Label>{ts('k_1skdlyg')}</Label>
               <div className="flex h-9 items-center rounded-md border border-muted bg-muted/50 px-3 text-sm">
                 {fromWarehouseName}
               </div>
             </div>
             <div className="space-y-1">
-              <Label>出库类型</Label>
+              <Label>{ts('k_1tel4bs')}</Label>
               <div className="flex h-9 items-center rounded-md border border-muted bg-muted/50 px-3 text-sm">
-                {toWarehouseId ? '调拨出库' : outboundTypeLabel}
+                {toWarehouseId ? ts('k_1j10cql') : outboundTypeLabel}
               </div>
             </div>
           </div>
 
           {/* 目标仓库：选了表示调拨，不选为普通出库 */}
           <div className="space-y-1">
-            <Label>目标仓库（可选，选择后为调拨）</Label>
+            <Label>{ts('k_n80g8s')}</Label>
             <select
               value={toWarehouseId}
               onChange={(e) => setToWarehouseId(e.target.value ? Number(e.target.value) : '')}
               className={inputCls}
             >
-              <option value="">不调拨（仅出库扣减库存）</option>
+              <option value="">{ts('k_14m3xr9')}</option>
               {targetWarehouses.map((w) => (
                 <option key={w.id} value={w.id}>
                   {w.warehouse_name}
@@ -287,11 +289,11 @@ export function OutboundDialog({
           <OutboundItemsEditor items={items} onQtyChange={updateQty} />
 
           <div className="space-y-1">
-            <Label>备注</Label>
+            <Label>{ts('k_b5m1l6')}</Label>
             <input
               value={remark}
               onChange={(e) => setRemark(e.target.value)}
-              placeholder="可选"
+              placeholder={ts('k_zflkxh')}
               className={inputCls}
             />
           </div>
@@ -299,10 +301,9 @@ export function OutboundDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            取消
-          </Button>
+            {ts('k_1589w37')}</Button>
           <Button onClick={handleConfirm} disabled={submitting}>
-            {submitting ? '处理中...' : toWarehouseId ? '创建并确认调拨' : '创建并确认出库'}
+            {submitting ? ts('k_1j4vco4') : toWarehouseId ? ts('k_1mh14gz') : ts('k_vsucqv')}
           </Button>
         </DialogFooter>
       </DialogContent>

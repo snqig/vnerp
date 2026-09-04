@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -11,13 +14,14 @@ export const POST = withPermission(
     userInfo: DbRow,
     { params }: { params: Promise<{ id: string }> }
   ) => {
+  const ts = await getTranslations('Common');
     const { id } = await params;
 
     try {
       await activateVersion(Number(id), userInfo.userId);
-      return successResponse(null, '版本已生效，旧版本已自动归档');
+      return successResponse(null, ts('k_1q2k0oi'));
     } catch (e) {
-      return errorResponse((e as Error).message || '生效失败', 400, 400);
+      return errorResponse((e as Error).message || ts('k_tlo06s'), 400, 400);
     }
   },
   { logTitle: '油墨配方版本生效', logType: 'business' }

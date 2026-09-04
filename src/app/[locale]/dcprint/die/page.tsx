@@ -63,6 +63,7 @@ const statusMap: Record<
 };
 
 export default function DieManagementPage() {
+  const ts = useTranslations('Dcprint');
   // 翻译钩子
   const tc = useTranslations('Common');
 
@@ -160,8 +161,7 @@ export default function DieManagementPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增刀具
-            </Button>
+              {ts('k_1heh86i')}</Button>
           </div>
         </div>
         <Card>
@@ -169,13 +169,13 @@ export default function DieManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">刀具编码</TableHead>
-                  <TableHead className="text-xs">刀具名称</TableHead>
+                  <TableHead className="text-xs">{ts('k_1kzim0h')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_1jwfah9')}</TableHead>
                   <TableHead className="text-xs">{tc('type')}</TableHead>
-                  <TableHead className="text-xs">尺寸规格</TableHead>
+                  <TableHead className="text-xs">{ts('k_ym4hcn')}</TableHead>
                   <TableHead className="text-xs">{tc('product')}</TableHead>
                   <TableHead className="text-xs">{tc('dcMaxUseCountHead')}</TableHead>
-                  <TableHead className="text-xs">已用</TableHead>
+                  <TableHead className="text-xs">{ts('k_y7lj0n')}</TableHead>
                   <TableHead className="text-xs">{tc('dcRemainingCountHead')}</TableHead>
                   <TableHead className="text-xs">{tc('status')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
@@ -235,8 +235,7 @@ export default function DieManagementPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center text-gray-400 py-8">
-                      暂无记录
-                    </TableCell>
+                      {ts('k_11itye0')}</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -244,7 +243,7 @@ export default function DieManagementPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共{total}条</span>
+          <span className="text-sm text-gray-500">{ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -252,33 +251,31 @@ export default function DieManagementPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
-            </Button>
+              {ts('k_mtyn6e')}</Button>
             <Button
               size="sm"
               variant="outline"
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
-            </Button>
+              {ts('k_1yw313l')}</Button>
           </div>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.id ? '编辑刀具' : '新增刀具'}</DialogTitle>
+              <DialogTitle>{editItem.id ? ts('k_agyftp') : ts('k_1heh86i')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>刀具编码</Label>
+                <Label>{ts('k_1kzim0h')}</Label>
                 <Input
                   value={editItem.die_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, die_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>刀具名称</Label>
+                <Label>{ts('k_1jwfah9')}</Label>
                 <Input
                   value={editItem.die_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, die_name: e.target.value })}
@@ -294,29 +291,29 @@ export default function DieManagementPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">模切刀</SelectItem>
-                    <SelectItem value="2">分切刀</SelectItem>
-                    <SelectItem value="3">压痕刀</SelectItem>
-                    <SelectItem value="4">冲孔刀</SelectItem>
+                    <SelectItem value="1">{ts('k_m6mv6r')}</SelectItem>
+                    <SelectItem value="2">{ts('k_p6ggtq')}</SelectItem>
+                    <SelectItem value="3">{ts('k_193ex13')}</SelectItem>
+                    <SelectItem value="4">{ts('k_92pje1')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>尺寸规格</Label>
+                <Label>{ts('k_ym4hcn')}</Label>
                 <Input
                   value={editItem.size_spec || ''}
                   onChange={(e) => setEditItem({ ...editItem, size_spec: e.target.value })}
                 />
               </div>
               <div>
-                <Label>产品名称</Label>
+                <Label>{ts('k_11roe0')}</Label>
                 <Input
                   value={editItem.product_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, product_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>最大使用次数</Label>
+                <Label>{ts('k_fc0ina')}</Label>
                 <Input
                   type="number"
                   value={editItem.max_use_count ?? ''}
@@ -328,8 +325,7 @@ export default function DieManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
-              </Button>
+                {ts('k_1589w37')}</Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>

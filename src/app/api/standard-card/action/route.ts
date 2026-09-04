@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
@@ -6,6 +9,7 @@ import { StandardCardApplicationService } from '@/application/services/StandardC
 const service = new StandardCardApplicationService();
 
 async function postHandler(request: NextRequest, user: UserInfo) {
+  const ts = await getTranslations('Common');
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
@@ -13,7 +17,7 @@ async function postHandler(request: NextRequest, user: UserInfo) {
     const { id, reason } = body;
 
     if (!id) {
-      return NextResponse.json({ code: 400, message: '缺少标准卡ID' }, { status: 400 });
+      return NextResponse.json({ code: 400, message: ts('k_1ql7lmh') }, { status: 400 });
     }
 
     let result;
@@ -22,7 +26,7 @@ async function postHandler(request: NextRequest, user: UserInfo) {
         result = await service.submit(id, user.userId);
         return NextResponse.json({
           code: 200,
-          message: '提交审核成功',
+          message: ts('k_h0jked'),
           data: result.toProps(),
         });
 
@@ -30,7 +34,7 @@ async function postHandler(request: NextRequest, user: UserInfo) {
         result = await service.approve(id, user.userId);
         return NextResponse.json({
           code: 200,
-          message: '审核通过',
+          message: ts('k_1wqkzrj'),
           data: result.toProps(),
         });
 
@@ -38,18 +42,18 @@ async function postHandler(request: NextRequest, user: UserInfo) {
         result = await service.confirm(id, user.userId);
         return NextResponse.json({
           code: 200,
-          message: '确认完成',
+          message: ts('k_1r5yo7f'),
           data: result.toProps(),
         });
 
       case 'obsolete':
         if (!reason) {
-          return NextResponse.json({ code: 400, message: '作废时必须填写原因' }, { status: 400 });
+          return NextResponse.json({ code: 400, message: ts('k_1udzix1') }, { status: 400 });
         }
         result = await service.obsolete(id, reason, user.userId);
         return NextResponse.json({
           code: 200,
-          message: '作废成功',
+          message: ts('k_pmrfm9'),
           data: result.toProps(),
         });
 
@@ -57,18 +61,18 @@ async function postHandler(request: NextRequest, user: UserInfo) {
         result = await service.createNewVersion(id, user.userId);
         return NextResponse.json({
           code: 200,
-          message: '创建新版本成功',
+          message: ts('k_14ecuwh'),
           data: result.toProps(),
         });
 
       default:
-        return NextResponse.json({ code: 400, message: '无效的操作' }, { status: 400 });
+        return NextResponse.json({ code: 400, message: ts('k_1ijm3m') }, { status: 400 });
     }
   } catch (error) {
     return NextResponse.json(
       {
         code: 400,
-        message: (error as Error).message || '操作失败',
+        message: (error as Error).message || ts('k_ydow7a'),
       },
       { status: 400 }
     );

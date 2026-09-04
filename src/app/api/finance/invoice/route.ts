@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import {
   successResponse,
@@ -67,6 +70,7 @@ export const GET = withPermission(
 // 创建发票
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, [
       'invoice_type',
@@ -81,7 +85,7 @@ export const POST = withPermission(
     }
 
     if (!Array.isArray(body.items) || body.items.length === 0) {
-      return errorResponse('发票明细不能为空', 400, 400);
+      return errorResponse(ts('k_1yy4hyq'), 400, 400);
     }
 
     // 生成发票号
@@ -154,7 +158,7 @@ export const POST = withPermission(
             item.material_name || '',
             item.material_spec || '',
             item.quantity,
-            item.unit || '件',
+            item.unit || ts('k_w0gthl'),
             item.unit_price || 0,
             amount,
             item.tax_rate || 13,
@@ -165,7 +169,7 @@ export const POST = withPermission(
       }
 
       await conn.commit();
-      return successResponse({ id: invoiceId, invoice_no: invoiceNo }, '发票创建成功');
+      return successResponse({ id: invoiceId, invoice_no: invoiceNo }, ts('k_1uuplig'));
     } catch (error) {
       await conn.rollback();
       throw error;
@@ -179,47 +183,48 @@ export const POST = withPermission(
 // 更新发票状态（审核/核销/作废）
 export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action } = body;
 
     if (!id || !action) {
-      return errorResponse('参数不完整', 400, 400);
+      return errorResponse(ts('k_8dtv5q'), 400, 400);
     }
 
     const invoices = await query('SELECT * FROM finance_invoice WHERE id = ?', [id]);
     if (invoices.length === 0) {
-      return errorResponse('发票不存在', 404, 404);
+      return errorResponse(ts('k_1rur8q3'), 404, 404);
     }
 
     const invoice = invoices[0];
 
     if (action === 'approve') {
       if (invoice.status !== 'pending') {
-        return errorResponse('只有待审核状态才能审核', 400, 400);
+        return errorResponse(ts('k_phmx2o'), 400, 400);
       }
       await execute(
         'UPDATE finance_invoice SET status = ?, audit_by = ?, audit_time = NOW() WHERE id = ?',
         ['approved', userInfo.userId, id]
       );
-      return successResponse(null, '发票审核通过');
+      return successResponse(null, ts('k_1mt7z06'));
     }
 
     if (action === 'cancel') {
       if (invoice.status === 'cancelled') {
-        return errorResponse('发票已作废', 400, 400);
+        return errorResponse(ts('k_ks1w3r'), 400, 400);
       }
       await execute('UPDATE finance_invoice SET status = ? WHERE id = ?', ['cancelled', id]);
-      return successResponse(null, '发票已作废');
+      return successResponse(null, ts('k_ks1w3r'));
     }
 
     if (action === 'write_off') {
       // 核销：关联应收/应付单
       if (invoice.status !== 'approved') {
-        return errorResponse('只有已审核状态才能核销', 400, 400);
+        return errorResponse(ts('k_1q13io8'), 400, 400);
       }
       const { payableId, receivableId, writeOffAmount } = body;
       if (!writeOffAmount || writeOffAmount <= 0) {
-        return errorResponse('核销金额必须大于0', 400, 400);
+        return errorResponse(ts('k_4is2uy'), 400, 400);
       }
 
       await execute(
@@ -239,10 +244,10 @@ export const PUT = withPermission(
       );
 
       await execute('UPDATE finance_invoice SET status = ? WHERE id = ?', ['written_off', id]);
-      return successResponse(null, '发票核销成功');
+      return successResponse(null, ts('k_1k57w9'));
     }
 
-    return errorResponse('不支持的操作', 400, 400);
+    return errorResponse(ts('k_12cy0bd'), 400, 400);
   },
   { errorMessage: '操作失败' }
 );

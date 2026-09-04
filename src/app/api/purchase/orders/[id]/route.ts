@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { UserInfo } from '@/lib/api-auth';
@@ -23,11 +26,12 @@ export const GET = withPermission(
     _userInfo: UserInfo,
     { params }: { params: Promise<{ id: string }> }
   ) => {
+  const ts = await getTranslations('Common');
     const { id } = await params;
 
     // 校验 id 为数字，非法与不存在统一返回 404
     if (!/^\d+$/.test(id)) {
-      return commonErrors.notFound('采购单不存在');
+      return commonErrors.notFound(ts('k_1m3z88r'));
     }
 
     const service = getPurchaseService();
@@ -105,6 +109,6 @@ export const GET = withPermission(
       })),
     };
 
-    return successResponse(serializedOrder, '查询成功');
+    return successResponse(serializedOrder, ts('k_levzqf'));
   }
 );

@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { DeliveryStatus, DeliveryStatusValue } from '../value-objects/DeliveryStatus';
 import { DeliveryLine, DeliveryLineProps } from '../entities/DeliveryLine';
@@ -68,17 +70,18 @@ export class Delivery {
   ) {}
 
   static create(props: DeliveryProps): Delivery {
+  const ts = t;
     if (!props.orderId || props.orderId <= 0) {
-      throw new DomainError('销售订单ID不能为空');
+      throw new DomainError(ts('k_ptru8h'));
     }
     if (!props.customerId || props.customerId <= 0) {
-      throw new DomainError('客户ID不能为空');
+      throw new DomainError(ts('k_ct4431'));
     }
     if (!props.warehouseId || props.warehouseId <= 0) {
-      throw new DomainError('仓库ID不能为空');
+      throw new DomainError(ts('k_1t9r8nc'));
     }
     if (!props.lines || props.lines.length === 0) {
-      throw new DomainError('发货明细不能为空');
+      throw new DomainError(ts('k_1327lgr'));
     }
 
     const lines = props.lines.map((line, index) =>
@@ -217,11 +220,12 @@ export class Delivery {
     trackingNo?: string,
     inventoryCheck?: (materialId: number, warehouseId: number, qty: number) => boolean
   ): void {
+  const ts = t;
     if (!this._status.canShip()) {
       throw new DomainError(`当前状态"${this._status.label}"不允许发货`);
     }
     if (!shipBy || shipBy <= 0) {
-      throw new DomainError('发货人不能为空');
+      throw new DomainError(ts('k_1snkde3'));
     }
 
     for (const line of this._lines) {

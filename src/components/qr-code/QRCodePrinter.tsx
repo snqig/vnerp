@@ -123,6 +123,7 @@ export function QRCodePrinter({
   size = 'sm',
   icon = 'both',
 }: QRCodePrinterProps) {
+  const ts = useTranslations('Common');
   const { toast } = useToast();
   const t = useTranslations('QRCode');
   const tc = useTranslations('Common');
@@ -160,7 +161,7 @@ export function QRCodePrinter({
         copies,
         data: printData,
       };
-      logger.info(ctx, '调用打印接口', { payload });
+      logger.info(ctx, ts('k_1yfvubt'), { payload });
       const res = await fetch('/api/qrcode/print', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -174,11 +175,11 @@ export function QRCodePrinter({
         onPrintSuccess?.(result.data);
         setShowDialog(false);
       } else {
-        logger.warn(ctx, '打印接口返回失败', { message: result.message });
+        logger.warn(ctx, ts('k_1p2wimq'), { message: result.message });
         toast({ title: t('printFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (error) {
-      logger.error(ctx, '打印异常', {
+      logger.error(ctx, ts('k_1tccjkc'), {
         error: error instanceof Error ? error.message : String(error),
       });
       toast({
@@ -310,7 +311,7 @@ export function QRCodePrinter({
                     logger.branch(ctx, 'select_template', `type=${v}`, true, { template });
                     setSelectedLabel(template);
                   } else {
-                    logger.warn(ctx, '未找到匹配模板', { type: v });
+                    logger.warn(ctx, ts('k_17en5e5'), { type: v });
                   }
                 }}
               >

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
 import {
@@ -85,12 +88,14 @@ export const POST = withPermission(
     const maintenanceType = body.maintenance_type;
 
     return await transaction(async (conn) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
       const [dieRows] = await conn.execute(
         'SELECT id, template_code, template_name, cumulative_impressions, max_impressions, warning_threshold, maintenance_interval, maintenance_count, last_maintenance_impressions, die_status FROM prd_die_template WHERE id = ? AND deleted = 0',
         [dieId]
       );
       const die = dieRows?.[0];
-      if (!die) return errorResponse('刀模/网版不存在', 404, 404);
+      if (!die) return errorResponse(ts('k_ksfsg9'), 404, 404);
 
       const maintenanceNo = `MT${Date.now()}`;
       const impressionsBefore = die.cumulative_impressions;
@@ -166,7 +171,7 @@ export const POST = withPermission(
         impressions_after: impressionsAfter,
         new_die_status: newDieStatus,
       };
-      return successResponse(FieldMapper.addCamelCase(maintResult), '保养记录创建成功');
+      return successResponse(FieldMapper.addCamelCase(maintResult), tc('createRecordSuccess'));
     });
   },
   { errorMessage: '创建保养记录失败' }
@@ -174,14 +179,15 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
-    if (!body.id) return commonErrors.badRequest('保养ID不能为空');
+    if (!body.id) return commonErrors.badRequest(ts('k_1wvc4xq'));
 
     const existing = await queryOne(
       'SELECT id, die_id, maintenance_type, status FROM prd_die_maintenance WHERE id = ? AND deleted = 0',
       [body.id]
     );
-    if (!existing) return commonErrors.notFound('保养记录不存在');
+    if (!existing) return commonErrors.notFound(ts('k_1p0fvwd'));
 
     return await transaction(async (conn) => {
       if (body.status === 3 && existing.status !== 3) {
@@ -190,7 +196,7 @@ export const PUT = withPermission(
           [existing.die_id]
         );
         const die = dieRows?.[0];
-        if (!die) return errorResponse('刀模/网版不存在', 404, 404);
+        if (!die) return errorResponse(ts('k_ksfsg9'), 404, 404);
 
         const impressionsAfter =
           body.impressions_after !== undefined
@@ -272,7 +278,7 @@ export const PUT = withPermission(
         }
       }
 
-      return successResponse(null, '保养记录更新成功');
+      return successResponse(null, ts('k_1kl7iun'));
     });
   },
   { errorMessage: '更新保养记录失败' }
@@ -280,12 +286,13 @@ export const PUT = withPermission(
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return commonErrors.badRequest('保养ID不能为空');
+    if (!id) return commonErrors.badRequest(ts('k_1wvc4xq'));
 
     await execute('UPDATE prd_die_maintenance SET deleted = 1 WHERE id = ?', [parseInt(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除保养记录', logType: 'business' }
 );

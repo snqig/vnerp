@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -44,6 +47,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       outsource_order_id,
@@ -57,8 +61,8 @@ export const POST = withPermission(
       remark,
     } = body;
 
-    if (!outsource_order_id) return errorResponse('委外订单不能为空', 400, 400);
-    if (!warehouse_id) return errorResponse('入库仓库不能为空', 400, 400);
+    if (!outsource_order_id) return errorResponse(ts('k_1n84mps'), 400, 400);
+    if (!warehouse_id) return errorResponse(ts('k_1wa8aih'), 400, 400);
 
     const now = new Date();
     const receiveNo =
@@ -85,17 +89,18 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId, receive_no: receiveNo }, '委外收货单创建成功');
+    return successResponse({ id: result.insertId, receive_no: receiveNo }, ts('k_1nu25af'));
   },
   { logTitle: '创建委外收货单', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action, status, qc_status, qualified_qty, defective_qty, remark } = body;
 
-    if (!id) return errorResponse('收货单ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_1yvbhui'), 400, 400);
 
     if (action === 'post') {
       const result = await transaction(async (conn) => {
@@ -103,10 +108,10 @@ export const PUT = withPermission(
           'SELECT id, receive_no, outsource_order_id, outsource_order_no, warehouse_id, status, qc_status, receive_qty, qualified_qty FROM outsource_receive WHERE id = ? AND deleted = 0 FOR UPDATE',
           [id]
         );
-        if (receiveRows.length === 0) throw new Error('收货单不存在');
+        if (receiveRows.length === 0) throw new Error(ts('k_1qhi45c'));
         const receive = receiveRows[0];
-        if (receive.status >= 3) throw new Error('收货单已完成或已取消，不能重复过账');
-        if (receive.qc_status === 3) throw new Error('质检不合格，不能入库');
+        if (receive.status >= 3) throw new Error(ts('k_dcu88c'));
+        if (receive.qc_status === 3) throw new Error(ts('k_kq1av2'));
 
         const orderRows = await query(
           'SELECT product_id, product_code, product_name FROM outsource_order WHERE id = ? AND deleted = 0',
@@ -140,8 +145,7 @@ export const PUT = withPermission(
         // 3) 财务级流水（保留原 raw INSERT 含 account_dr/cr，财务列治理归 T-INV-6）
         const transNo = 'TRX' + Date.now() + String(id).slice(-4);
         await conn.execute(
-          `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, source_id, material_id, material_code, batch_no, warehouse_id, quantity, unit_price, total_amount, account_dr, account_cr, create_time)
-         VALUES (?, 'in', 'outsource_receive', ?, ?, ?, ?, ?, ?, 0, 0, '委外成品库存', '委外加工成本', NOW())`,
+          ts('k_1guz0ae'),
           [
             transNo,
             id,
@@ -173,20 +177,20 @@ export const PUT = withPermission(
 
         return { id, status: 3 };
       });
-      return successResponse(result, '入库过账成功');
+      return successResponse(result, ts('k_b0jot5'));
     }
 
     if (action === 'qc_pass') {
       await execute('UPDATE outsource_receive SET qc_status = 2 WHERE id = ? AND deleted = 0', [
         id,
       ]);
-      return successResponse(null, '质检合格');
+      return successResponse(null, ts('k_1qhewbl'));
     }
     if (action === 'qc_fail') {
       await execute('UPDATE outsource_receive SET qc_status = 3 WHERE id = ? AND deleted = 0', [
         id,
       ]);
-      return successResponse(null, '质检不合格');
+      return successResponse(null, ts('k_gy3n9w'));
     }
 
     const fields: string[] = [];
@@ -219,18 +223,19 @@ export const PUT = withPermission(
       );
     }
 
-    return successResponse(null, '收货单更新成功');
+    return successResponse(null, ts('k_19cy3gk'));
   },
   { logTitle: '更新委外收货单', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('缺少id', 400, 400);
+    if (!id) return errorResponse(ts('k_js4lo9'), 400, 400);
     await execute('UPDATE outsource_receive SET deleted = 1 WHERE id = ?', [Number(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除委外收货单', logType: 'business' }
 );

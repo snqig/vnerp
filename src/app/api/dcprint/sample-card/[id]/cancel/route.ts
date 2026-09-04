@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -12,10 +15,11 @@ export const POST = withPermission(
     userInfo: DbRow,
     { params }: { params: Promise<{ id: string }> }
   ) => {
+  const ts = await getTranslations('Common');
     const { id } = await params;
     try {
       await service.cancelCard(Number(id), userInfo.userId);
-      return successResponse({ id }, '工艺卡已作废');
+      return successResponse({ id }, ts('k_regfno'));
     } catch (e) {
       return errorResponse((e as Error).message, 400, 400);
     }

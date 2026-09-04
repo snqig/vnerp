@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 import mysql from 'mysql2/promise';
 import { IDeliveryRepository } from '@/domain/sales/repositories/IDeliveryRepository';
 import { Delivery, DeliveryProps } from '@/domain/sales/aggregates/Delivery';
@@ -245,7 +248,9 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
   }
 
   private mapToAggregate(row: SalDeliveryRow, lines: SalDeliveryDetailRow[]): Delivery {
-    const lineProps: DeliveryLineProps[] = lines.map((l) => ({
+    const lineProps: DeliveryLineProps[] = lines.map((l) => {
+  const ts = t;
+  return  ({
       id: l.id,
       deliveryId: l.delivery_id,
       lineNo: l.line_no,
@@ -254,7 +259,7 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
       materialCode: l.material_code || '',
       materialName: l.material_name || '',
       materialSpec: l.material_spec || '',
-      unit: l.unit || '件',
+      unit: l.unit || ts('k_w0gthl'),
       quantity: Number(l.quantity),
       unitPrice: Number(l.unit_price || 0),
       amount: Number(l.amount || 0),
@@ -262,7 +267,8 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
       baseAmount: Number(l.base_amount) || 0,
       batchNo: l.batch_no || '',
       remark: l.remark || '',
-    }));
+    });
+});
 
     const props: DeliveryProps = {
       id: row.id,

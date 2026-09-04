@@ -107,6 +107,7 @@ const actionMap: Record<string, string> = {
 };
 
 export default function ScreenPlatePage() {
+  const ts = useTranslations('Dcprint');
   // 翻译钩子
   const tc = useTranslations('Common');
 
@@ -160,32 +161,32 @@ export default function ScreenPlatePage() {
       const res = await authFetch('/api/screen-plates', {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...editItem, operatorName: '系统' }),
+        body: JSON.stringify({ ...editItem, operatorName: ts('k_p0ysv3') }),
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: editItem.id ? '更新成功' : '创建成功' });
+        toast({ title: editItem.id ? ts('k_1795bzg') : ts('k_kiombh') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: ts('k_12db3qz'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: ts('k_12db3qz'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(ts('k_sur0cu'))) return;
     try {
       const res = await authFetch('/api/screen-plates?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: ts('k_1hlqs') });
         fetchData();
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: ts('k_12db3qz'), variant: 'destructive' });
     }
   };
 
@@ -197,7 +198,7 @@ export default function ScreenPlatePage() {
 
   const handleAddLifeRecord = async () => {
     if (!currentPlateId || !lifeAction) {
-      toast({ title: '请选择操作类型', variant: 'destructive' });
+      toast({ title: ts('k_12n9j6j'), variant: 'destructive' });
       return;
     }
     try {
@@ -210,12 +211,12 @@ export default function ScreenPlatePage() {
           tensionValue: lifeTension ? parseFloat(lifeTension) : undefined,
           lifeIncrement: lifeIncrement ? parseInt(lifeIncrement) : 0,
           remark: lifeRemark,
-          operatorName: '系统',
+          operatorName: ts('k_p0ysv3'),
         }),
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '记录成功' });
+        toast({ title: ts('k_v4boan') });
         setLifeAction('');
         setLifeRemark('');
         setLifeTension('');
@@ -223,10 +224,10 @@ export default function ScreenPlatePage() {
         fetchHistory(currentPlateId);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: ts('k_12db3qz'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: ts('k_12db3qz'), variant: 'destructive' });
     }
   };
 
@@ -234,7 +235,7 @@ export default function ScreenPlatePage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">网版管理</h1>
+          <h1 className="text-2xl font-bold">{ts('k_19k7iab')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
@@ -268,8 +269,7 @@ export default function ScreenPlatePage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增网版
-            </Button>
+              {ts('k_10st6hm')}</Button>
           </div>
         </div>
 
@@ -278,10 +278,10 @@ export default function ScreenPlatePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">网版编码</TableHead>
-                  <TableHead className="text-xs">网版名称</TableHead>
+                  <TableHead className="text-xs">{ts('k_3nrpbh')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_v34npl')}</TableHead>
                   <TableHead className="text-xs">{tc('type')}</TableHead>
-                  <TableHead className="text-xs">目数</TableHead>
+                  <TableHead className="text-xs">{ts('k_1if2z7')}</TableHead>
                   <TableHead className="text-xs">{tc('size')}</TableHead>
                   <TableHead className="text-xs">{tc('customer')}</TableHead>
                   <TableHead className="text-xs">{tc('dcLifeCountHead')}</TableHead>
@@ -340,7 +340,7 @@ export default function ScreenPlatePage() {
                             variant="ghost"
                             className="h-6 w-6 p-0"
                             onClick={() => handleViewHistory(item.id)}
-                            title="生命周期"
+                            title={ts('k_1152zok')}
                           >
                             <History className="h-3 w-3" />
                           </Button>
@@ -361,8 +361,7 @@ export default function ScreenPlatePage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={11} className="text-center text-gray-400 py-8">
-                      暂无记录
-                    </TableCell>
+                      {ts('k_11itye0')}</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -371,7 +370,7 @@ export default function ScreenPlatePage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共{total}条</span>
+          <span className="text-sm text-gray-500">{ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -379,34 +378,32 @@ export default function ScreenPlatePage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
-            </Button>
+              {ts('k_mtyn6e')}</Button>
             <Button
               size="sm"
               variant="outline"
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
-            </Button>
+              {ts('k_1yw313l')}</Button>
           </div>
         </div>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.id ? '编辑网版' : '新增网版'}</DialogTitle>
+              <DialogTitle>{editItem.id ? ts('k_15q3pvt') : ts('k_10st6hm')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>网版编码</Label>
+                <Label>{ts('k_3nrpbh')}</Label>
                 <Input
                   value={editItem.plate_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, plate_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>网版名称</Label>
+                <Label>{ts('k_v34npl')}</Label>
                 <Input
                   value={editItem.plate_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, plate_name: e.target.value })}
@@ -422,22 +419,22 @@ export default function ScreenPlatePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">丝网版</SelectItem>
-                    <SelectItem value="2">胶印版</SelectItem>
-                    <SelectItem value="3">柔版</SelectItem>
-                    <SelectItem value="4">凹版</SelectItem>
+                    <SelectItem value="1">{ts('k_1c6y1m1')}</SelectItem>
+                    <SelectItem value="2">{ts('k_7v0hhl')}</SelectItem>
+                    <SelectItem value="3">{ts('k_1sw05t')}</SelectItem>
+                    <SelectItem value="4">{ts('k_1wm2i5w')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>目数</Label>
+                <Label>{ts('k_1if2z7')}</Label>
                 <Input
                   value={editItem.mesh_count || ''}
                   onChange={(e) => setEditItem({ ...editItem, mesh_count: e.target.value })}
                 />
               </div>
               <div>
-                <Label>丝网材质</Label>
+                <Label>{ts('k_i5tiuz')}</Label>
                 <Input
                   value={editItem.mesh_material || ''}
                   onChange={(e) => setEditItem({ ...editItem, mesh_material: e.target.value })}
@@ -451,14 +448,14 @@ export default function ScreenPlatePage() {
                 />
               </div>
               <div>
-                <Label>框类型</Label>
+                <Label>{ts('k_2tiy6v')}</Label>
                 <Input
                   value={editItem.frame_type || ''}
                   onChange={(e) => setEditItem({ ...editItem, frame_type: e.target.value })}
                 />
               </div>
               <div>
-                <Label>张力值(N/cm)</Label>
+                <Label>{ts('k_t5tv8u')}</Label>
                 <Input
                   type="number"
                   value={editItem.tension_value ?? ''}
@@ -468,7 +465,7 @@ export default function ScreenPlatePage() {
                 />
               </div>
               <div>
-                <Label>最大使用次数</Label>
+                <Label>{ts('k_fc0ina')}</Label>
                 <Input
                   type="number"
                   value={editItem.max_use_count ?? ''}
@@ -496,7 +493,7 @@ export default function ScreenPlatePage() {
                 </Select>
               </div>
               <div className="col-span-2">
-                <Label>存放位置</Label>
+                <Label>{ts('k_d69pno')}</Label>
                 <Input
                   value={editItem.storage_location || ''}
                   onChange={(e) => setEditItem({ ...editItem, storage_location: e.target.value })}
@@ -512,8 +509,7 @@ export default function ScreenPlatePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
-              </Button>
+                {ts('k_1589w37')}</Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
@@ -522,22 +518,22 @@ export default function ScreenPlatePage() {
         <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
           <DialogContent className="max-w-4xl" resizable>
             <DialogHeader>
-              <DialogTitle>网版生命周期记录</DialogTitle>
+              <DialogTitle>{ts('k_9cvhm')}</DialogTitle>
             </DialogHeader>
             <Tabs defaultValue="list">
               <TabsList>
-                <TabsTrigger value="list">历史记录</TabsTrigger>
+                <TabsTrigger value="list">{ts('k_1h1xpua')}</TabsTrigger>
                 <TabsTrigger value="add">{tc('dcAddRecordTab')}</TabsTrigger>
               </TabsList>
               <TabsContent value="list">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">操作类型</TableHead>
+                      <TableHead className="text-xs">{tc('operType')}</TableHead>
                       <TableHead className="text-xs">{tc('dcTensionHead2')}</TableHead>
                       <TableHead className="text-xs">{tc('dcLifeIncHead')}</TableHead>
                       <TableHead className="text-xs">{tc('remark')}</TableHead>
-                      <TableHead className="text-xs">操作人</TableHead>
+                      <TableHead className="text-xs">{ts('k_15sp2wy')}</TableHead>
                       <TableHead className="text-xs">{tc('time')}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -561,8 +557,7 @@ export default function ScreenPlatePage() {
                     {historyList.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center text-gray-400 py-8">
-                          暂无记录
-                        </TableCell>
+                          {ts('k_11itye0')}</TableCell>
                       </TableRow>
                     )}
                   </TableBody>
@@ -571,7 +566,7 @@ export default function ScreenPlatePage() {
               <TabsContent value="add">
                 <div className="space-y-4">
                   <div>
-                    <Label>操作类型</Label>
+                    <Label>{tc('operType')}</Label>
                     <Select value={lifeAction} onValueChange={setLifeAction}>
                       <SelectTrigger>
                         <SelectValue placeholder={tc('pleaseSelect')} />
@@ -607,8 +602,7 @@ export default function ScreenPlatePage() {
                   </div>
                   <Button onClick={handleAddLifeRecord}>
                     <Activity className="h-3 w-3 mr-1" />
-                    提交记录
-                  </Button>
+                    {ts('k_1xr08qa')}</Button>
                 </div>
               </TabsContent>
             </Tabs>

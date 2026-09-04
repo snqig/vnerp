@@ -165,6 +165,7 @@ async function fetchJson(response: Response): Promise<Loose> {
 }
 
 export default function SalesOrderDetailPage() {
+  const ts = useTranslations('Sales');
   const t = useTranslations('Sales');
   const tc = useTranslations('Common');
   const locale = useLocale();
@@ -223,7 +224,7 @@ export default function SalesOrderDetailPage() {
         setDeliveryRecords(list);
       }
     } catch (error) {
-      logger.warn({ module: 'Sales', action: 'fetchDeliveryRecords' }, '获取发货记录失败', {
+      logger.warn({ module: 'Sales', action: 'fetchDeliveryRecords' }, ts('k_1r1kx4p'), {
         error: (error as Error).message,
       });
     } finally {
@@ -244,7 +245,7 @@ export default function SalesOrderDetailPage() {
         setReturnRecords(list);
       }
     } catch (error) {
-      logger.warn({ module: 'Sales', action: 'fetchReturnRecords' }, '获取退货记录失败', {
+      logger.warn({ module: 'Sales', action: 'fetchReturnRecords' }, ts('k_1r7e28o'), {
         error: (error as Error).message,
       });
     } finally {
@@ -265,7 +266,7 @@ export default function SalesOrderDetailPage() {
         setReceivableRecords(list);
       }
     } catch (error) {
-      logger.warn({ module: 'Sales', action: 'fetchReceivableRecords' }, '获取应收记录失败', {
+      logger.warn({ module: 'Sales', action: 'fetchReceivableRecords' }, ts('k_16is1lv'), {
         error: (error as Error).message,
       });
     } finally {

@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '../../shared/DomainTypes';
 
 export interface TemplateItemProps {
@@ -130,8 +132,9 @@ export class SampleProcessTemplate {
   clearDomainEvents() {}
 
   static create(props: SampleProcessTemplateProps): SampleProcessTemplate {
+  const ts = t;
     if (!props.templateName || !props.templateName.trim()) {
-      throw new DomainError('模板名称不能为空');
+      throw new DomainError(ts('k_10gd1pi'));
     }
     return new SampleProcessTemplate(props);
   }

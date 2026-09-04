@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 /**
  * @module 工艺卡标准卡服务
  * @description 管理工艺卡的创建、版本升级、审批与模板操作。支持从模板/已有卡片复制参数创建新工艺卡，
@@ -248,6 +250,7 @@ export async function createCardWithVersion(
   copyFromId?: number,
   operatorName: string = 'system'
 ): Promise<{ card_id: number; version: string }> {
+  const ts = await getTranslations('Common');
   let techParams: TechParams = {};
 
   if (templateId) {
@@ -323,7 +326,7 @@ export async function createCardWithVersion(
     `INSERT INTO prd_process_card_audit (
       card_id, version, action, operator, change_description, tech_params, create_time
     ) VALUES (?, ?, 'create', ?, ?, ?, NOW())`,
-    [cardId, version, operatorName, '创建工艺卡', techParamsJson]
+    [cardId, version, operatorName, ts('k_61adga'), techParamsJson]
   );
 
   return { card_id: cardId, version };

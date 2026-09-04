@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
 import {
@@ -12,6 +15,7 @@ import { isInkUnopenedShelfLife, getInkOpenedShelfLife } from '@/lib/global-conf
 import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const keyword = searchParams.get('keyword') || '';
@@ -24,7 +28,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const record = await queryOne('SELECT * FROM ink_opening_record WHERE id = ? AND deleted = 0', [
       parseInt(id),
     ]);
-    if (!record) return commonErrors.notFound('油墨开罐记录不存在');
+    if (!record) return commonErrors.notFound(ts('k_gtejfm'));
     return successResponse(record);
   }
 
@@ -85,6 +89,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, ['material_id', 'open_time', 'expire_hours']);
     if (!validation.valid) {
@@ -253,32 +258,34 @@ export const POST = withPermission(
       return { id: insertId, record_no: recordNo, expire_time: finalExpireTime, qr_code: qrCode };
     });
 
-    return successResponse(result, '油墨开罐记录创建成功');
+    return successResponse(result, ts('k_1iho8wf'));
   },
   { logTitle: '油墨开罐', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const body = await request.json();
-    if (!body.id) return commonErrors.badRequest('记录ID不能为空');
+    if (!body.id) return commonErrors.badRequest(ts('k_18kulrp'));
 
     const existing = await queryOne(
       'SELECT id, status FROM ink_opening_record WHERE id = ? AND deleted = 0',
       [body.id]
     );
-    if (!existing) return commonErrors.notFound('油墨开罐记录不存在');
+    if (!existing) return commonErrors.notFound(ts('k_gtejfm'));
 
     if (body.status !== undefined) {
       const allowedStatus = [1, 2, 3];
       if (!allowedStatus.includes(body.status)) {
-        return errorResponse('无效的状态值', 400, 400);
+        return errorResponse(ts('k_1j1q2oy'), 400, 400);
       }
       await execute('UPDATE ink_opening_record SET status = ? WHERE id = ?', [
         body.status,
         body.id,
       ]);
-      return successResponse(null, '状态更新成功');
+      return successResponse(null, tc('statusUpdateSuccess'));
     }
 
     const fields: string[] = [];
@@ -295,25 +302,26 @@ export const PUT = withPermission(
       await execute(`UPDATE ink_opening_record SET ${fields.join(', ')} WHERE id = ?`, values);
     }
 
-    return successResponse(null, '油墨开罐记录更新成功');
+    return successResponse(null, ts('k_1akpxb2'));
   },
   { logTitle: '更新油墨开罐记录', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return commonErrors.badRequest('记录ID不能为空');
+    if (!id) return commonErrors.badRequest(ts('k_18kulrp'));
 
     const existing = await queryOne(
       'SELECT id, status FROM ink_opening_record WHERE id = ? AND deleted = 0',
       [parseInt(id)]
     );
-    if (!existing) return commonErrors.notFound('油墨开罐记录不存在');
+    if (!existing) return commonErrors.notFound(ts('k_gtejfm'));
 
     await execute('UPDATE ink_opening_record SET deleted = 1 WHERE id = ?', [parseInt(id)]);
-    return successResponse(null, '油墨开罐记录删除成功');
+    return successResponse(null, ts('k_1gkcunq'));
   },
   { logTitle: '删除油墨开罐记录', logType: 'business' }
 );

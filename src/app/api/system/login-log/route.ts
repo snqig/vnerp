@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import type { DbRow } from '@/types/db';
@@ -56,8 +59,9 @@ export const GET = withPermission(
 
 export const DELETE = withPermission(
   async (_request: NextRequest, _userInfo) => {
+  const tc = await getTranslations('Common');
     await query('TRUNCATE TABLE sys_login_log');
-    return successResponse(null, '清空成功');
+    return successResponse(null, tc('clearSuccess'));
   },
   { logTitle: '清空登录日志', logType: 'system' }
 );

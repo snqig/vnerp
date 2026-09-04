@@ -41,6 +41,7 @@ interface CostItem {
 }
 
 export default function CostPage() {
+  const ts = useTranslations('Warehouse');
   const tc = useTranslations('Common');
   const t = useTranslations('Warehouse');
   const { toast } = useToast();
@@ -82,7 +83,7 @@ export default function CostPage() {
   };
 
   const recalculate = async (materialId: number) => {
-    if (!confirm('确定重新计算该物料的成本？')) return;
+    if (!confirm(ts('k_1lb2310'))) return;
     try {
       const res = await authFetch('/api/warehouse/cost', {
         method: 'POST',
@@ -109,16 +110,13 @@ export default function CostPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Calculator className="w-6 h-6" />
-              成本核算管理
-            </h1>
+              {ts('k_13bdco3')}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              移动加权平均法成本核算，支持成本重算和成本分析
-            </p>
+              {ts('k_1gbfxkf')}</p>
           </div>
           <Button size="sm" variant="outline" onClick={fetchData}>
             <RefreshCw className="h-3 w-3 mr-1" />
-            刷新
-          </Button>
+            {ts('k_12qo56a')}</Button>
         </div>
 
         {/* 汇总卡片 */}
@@ -157,7 +155,7 @@ export default function CostPage() {
                 <Calculator className="w-5 h-5 text-orange-600" />
                 <div>
                   <div className="text-sm text-muted-foreground">{tc('costMethod')}</div>
-                  <div className="text-2xl font-bold">移动加权平均</div>
+                  <div className="text-2xl font-bold">{ts('k_1ln1c5')}</div>
                 </div>
               </div>
             </CardContent>
@@ -169,8 +167,8 @@ export default function CostPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>物料编码</TableHead>
-                  <TableHead>物料名称</TableHead>
+                  <TableHead>{tc('materialCode')}</TableHead>
+                  <TableHead>{tc('materialName')}</TableHead>
                   <TableHead>{tc('specification')}</TableHead>
                   <TableHead>{tc('unit')}</TableHead>
                   <TableHead>{tc('totalQuantity')}</TableHead>
@@ -190,8 +188,7 @@ export default function CostPage() {
                 ) : list.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                      暂无成本数据
-                    </TableCell>
+                      {ts('k_1mp0dut')}</TableCell>
                   </TableRow>
                 ) : (
                   list.map((item) => (
@@ -229,8 +226,7 @@ export default function CostPage() {
                             onClick={() => viewDetail(item.material_id)}
                           >
                             <Eye className="h-3 w-3 mr-1" />
-                            详情
-                          </Button>
+                            {ts('k_xc5h04')}</Button>
                           <Button
                             size="sm"
                             variant="ghost"
@@ -238,8 +234,7 @@ export default function CostPage() {
                             onClick={() => recalculate(item.material_id)}
                           >
                             <Calculator className="h-3 w-3 mr-1" />
-                            重算
-                          </Button>
+                            {ts('k_4mkdr1')}</Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -252,7 +247,7 @@ export default function CostPage() {
 
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
-            共{total}
+            {ts('k_1vsm2qk')}{total}
             {tc('costRecordUnit')}
           </span>
           <div className="flex gap-2">
@@ -262,16 +257,14 @@ export default function CostPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
-            </Button>
+              {tc('prevPage')}</Button>
             <Button
               size="sm"
               variant="outline"
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
-            </Button>
+              {tc('nextPage')}</Button>
           </div>
         </div>
       </div>
@@ -287,13 +280,13 @@ export default function CostPage() {
             <div className="space-y-4">
               {/* 各仓库成本 */}
               <div>
-                <h4 className="font-medium mb-2">各仓库成本</h4>
+                <h4 className="font-medium mb-2">{ts('k_163aghh')}</h4>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-xs">{tc('warehouse')}</TableHead>
                       <TableHead className="text-xs">{tc('quantity')}</TableHead>
-                      <TableHead className="text-xs">成本价</TableHead>
+                      <TableHead className="text-xs">{ts('k_9smtey')}</TableHead>
                       <TableHead className="text-xs">{tc('costAmount')}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -327,7 +320,7 @@ export default function CostPage() {
                       <TableHead className="text-xs">{tc('time')}</TableHead>
                       <TableHead className="text-xs">{tc('type')}</TableHead>
                       <TableHead className="text-xs">{tc('quantity')}</TableHead>
-                      <TableHead className="text-xs">单价</TableHead>
+                      <TableHead className="text-xs">{ts('k_isc1c5')}</TableHead>
                       <TableHead className="text-xs">{tc('amount')}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -353,8 +346,7 @@ export default function CostPage() {
                           colSpan={5}
                           className="text-center text-muted-foreground text-sm py-4"
                         >
-                          暂无入库记录
-                        </TableCell>
+                          {ts('k_1gfnr28')}</TableCell>
                       </TableRow>
                     )}
                   </TableBody>

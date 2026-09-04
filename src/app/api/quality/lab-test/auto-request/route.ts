@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -5,11 +8,12 @@ import { withPermission } from '@/lib/api-permissions';
 import { AQLService } from '@/lib/aql-service';
 
 export const POST = withPermission(async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
   const { materialId, materialName, batchNo, lotSize, inspectionType, inspectionId } =
     await request.json();
 
   if (!materialId || !batchNo || !lotSize) {
-    return errorResponse('缺少必填参数: materialId, batchNo, lotSize', 400, 400);
+    return errorResponse(ts('k_15heiyv'), 400, 400);
   }
 
   // 1. Query AQL sampling plan

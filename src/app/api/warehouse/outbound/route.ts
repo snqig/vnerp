@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, transaction, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -129,6 +132,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // 创建出库单
 export const POST = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     // 验证必填字段（operatorId/operatorName 由 JWT 兜底，不强制前端传）
@@ -162,23 +166,23 @@ export const POST = withPermission(
 
     // 系统设置 category.require_on_business：出库单要求物料已归类
     const materialIds = (items as DbRow[]).map((item: DbRow) => item.materialId).filter(Boolean);
-    secureLog('info', '[warehouse/outbound] 开始物料分类校验', {
+    secureLog('info', ts('k_8974re'), {
       itemCount: items.length,
       materialIds,
     });
     const categoryCheck = await checkMaterialsCategorized(materialIds);
-    secureLog('info', '[warehouse/outbound] 物料分类校验完成', {
+    secureLog('info', ts('k_hdfv93'), {
       blocked: categoryCheck.blocked,
       uncategorizedCount: categoryCheck.uncategorized.length,
     });
     if (categoryCheck.blocked) {
-      secureLog('warn', '[warehouse/outbound] 物料分类校验阻断提交', {
+      secureLog('warn', ts('k_lez5q3'), {
         message: categoryCheck.message,
       });
       return errorResponse(categoryCheck.message!, 400, 400);
     }
     if (categoryCheck.message) {
-      secureLog('warn', '[warehouse/outbound] 物料分类校验警告', {
+      secureLog('warn', ts('k_1j1jjov'), {
         message: categoryCheck.message,
       });
     }
@@ -231,7 +235,7 @@ export const POST = withPermission(
             item.materialName,
             item.specification || '',
             item.qty,
-            item.unit || '个',
+            item.unit || ts('k_d5a1x9'),
             item.unitPrice || 0,
             (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0),
             item.batchNo || '',
@@ -252,8 +256,8 @@ export const POST = withPermission(
         return { id: orderId, orderNo };
       });
     } catch (e) {
-      console.error('[warehouse/outbound] 创建出库单失败:', e);
-      secureLog('error', '[warehouse/outbound] 创建出库单失败', {
+      console.error(ts('k_yb1ru8'), e);
+      secureLog('error', ts('k_19ddru2'), {
         error: (e as Error).message,
         stack: (e as Error).stack,
         orderNo,
@@ -264,7 +268,7 @@ export const POST = withPermission(
     }
 
     await logOperation({
-      title: '创建出库单',
+      title: ts('k_1pab59y'),
       oper_type: 'warehouse',
       oper_method: 'POST',
       oper_url: '/api/warehouse/outbound',
@@ -280,7 +284,7 @@ export const POST = withPermission(
 
     return successResponse(
       { ...result, uncategorizedMaterials: categoryCheck.uncategorized },
-      categoryCheck.message ? `出库单创建成功。${categoryCheck.message}` : '出库单创建成功'
+      categoryCheck.message ? `出库单创建成功。${categoryCheck.message}` : ts('k_s43mit')
     );
   },
   { errorMessage: '创建出库单失败' }
@@ -289,11 +293,12 @@ export const POST = withPermission(
 // 更新出库单
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...updateData } = body;
 
     if (!id) {
-      return commonErrors.badRequest('出库单ID不能为空');
+      return commonErrors.badRequest(ts('k_1ddnsve'));
     }
 
     // 检查出库单状态
@@ -303,7 +308,7 @@ export const PUT = withPermission(
     );
 
     if (!order) {
-      return commonErrors.notFound('出库单不存在');
+      return commonErrors.notFound(ts('k_14l2xo0'));
     }
 
     // 使用状态机检查是否允许编辑
@@ -336,7 +341,7 @@ export const PUT = withPermission(
       ]
     );
 
-    return successResponse(null, '出库单更新成功');
+    return successResponse(null, ts('k_teiud0'));
   },
   { logTitle: '更新出库单', logType: 'business' }
 );
@@ -344,11 +349,12 @@ export const PUT = withPermission(
 // 删除出库单（软删除）
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('出库单ID不能为空');
+      return commonErrors.badRequest(ts('k_1ddnsve'));
     }
 
     // 检查出库单状态
@@ -358,7 +364,7 @@ export const DELETE = withPermission(
     );
 
     if (!order) {
-      return commonErrors.notFound('出库单不存在');
+      return commonErrors.notFound(ts('k_14l2xo0'));
     }
 
     // 使用状态机检查是否允许删除
@@ -380,7 +386,7 @@ export const DELETE = withPermission(
     });
 
     await logOperation({
-      title: '删除出库单',
+      title: ts('k_15c5aah'),
       oper_type: 'warehouse',
       oper_method: 'DELETE',
       oper_url: '/api/warehouse/outbound',
@@ -389,7 +395,7 @@ export const DELETE = withPermission(
       status: 1,
     });
 
-    return successResponse(null, '出库单删除成功');
+    return successResponse(null, ts('k_mjxb6k'));
   },
   { errorMessage: '删除出库单失败' }
 );

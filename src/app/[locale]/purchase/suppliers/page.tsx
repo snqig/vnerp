@@ -98,6 +98,7 @@ const emptyForm = {
 };
 
 export default function SuppliersPage() {
+  const ts = useTranslations('Purchase');
   // 翻译钩子
   const t = useTranslations('Purchase');
   const tc = useTranslations('Common');
@@ -251,8 +252,8 @@ export default function SuppliersPage() {
       contact_email: item.contact_email || '',
       address: item.address || '',
       credit_level: item.credit_level || 'B',
-      settlement_method: item.settlement_method || '月结',
-      payment_terms: item.payment_terms || '30天',
+      settlement_method: item.settlement_method || ts('k_1n1l7qk'),
+      payment_terms: item.payment_terms || ts('k_q1kx3h'),
       status: item.status ?? 1,
       remark: item.remark || '',
       default_currency: item.default_currency || '',
@@ -805,18 +806,18 @@ export default function SuppliersPage() {
               <div className="space-y-2">
                 <Label>{t('settlementMethod')}</Label>
                 <Select
-                  value={form.settlement_method || '月结'}
+                  value={form.settlement_method || ts('k_1n1l7qk')}
                   onValueChange={(v) => setForm({ ...form, settlement_method: v })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="月结">{t('settlementMonthly')}</SelectItem>
-                    <SelectItem value="现结">{t('settlementSpot')}</SelectItem>
-                    <SelectItem value="预付">{t('settlementPrepaid')}</SelectItem>
-                    <SelectItem value="货到付款">{t('settlementCOD')}</SelectItem>
-                    <SelectItem value="分期付款">{t('settlementInstallment')}</SelectItem>
+                    <SelectItem value={ts('k_1n1l7qk')}>{t('settlementMonthly')}</SelectItem>
+                    <SelectItem value={ts('k_1ixpodw')}>{t('settlementSpot')}</SelectItem>
+                    <SelectItem value={ts('k_favaa9')}>{t('settlementPrepaid')}</SelectItem>
+                    <SelectItem value={ts('k_16x2l80')}>{t('settlementCOD')}</SelectItem>
+                    <SelectItem value={ts('k_19g1z5s')}>{t('settlementInstallment')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -831,19 +832,19 @@ export default function SuppliersPage() {
               <div className="space-y-2">
                 <Label>{t('paymentTerms')}</Label>
                 <Select
-                  value={form.payment_terms || '30天'}
+                  value={form.payment_terms || ts('k_q1kx3h')}
                   onValueChange={(v) => setForm({ ...form, payment_terms: v })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="货到付款">{t('settlementCOD')}</SelectItem>
-                    <SelectItem value="15天">{t('payment15Days')}</SelectItem>
-                    <SelectItem value="30天">{t('payment30Days')}</SelectItem>
-                    <SelectItem value="60天">{t('payment60Days')}</SelectItem>
-                    <SelectItem value="90天">{t('payment90Days')}</SelectItem>
-                    <SelectItem value="120天">{t('payment120Days')}</SelectItem>
+                    <SelectItem value={ts('k_16x2l80')}>{t('settlementCOD')}</SelectItem>
+                    <SelectItem value={ts('k_1p8l72e')}>{t('payment15Days')}</SelectItem>
+                    <SelectItem value={ts('k_q1kx3h')}>{t('payment30Days')}</SelectItem>
+                    <SelectItem value={ts('k_13s2nva')}>{t('payment60Days')}</SelectItem>
+                    <SelectItem value={ts('k_1j86z5r')}>{t('payment90Days')}</SelectItem>
+                    <SelectItem value={ts('k_1siq1dx')}>{t('payment120Days')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

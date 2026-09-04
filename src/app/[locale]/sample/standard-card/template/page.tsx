@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -55,6 +56,8 @@ const emptyForm: TemplateFormData = {
 };
 
 export default function SampleTemplateListPage() {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('StandardCard');
   const router = useRouter();
   const { toast } = useToast();
   const [list, setList] = useState<Template[]>([]);
@@ -117,13 +120,13 @@ export default function SampleTemplateListPage() {
         setDialogOpen(true);
       }
     } catch {
-      toast({ title: '加载模板失败', variant: 'destructive' });
+      toast({ title: ts('k_10p0umw'), variant: 'destructive' });
     }
   };
 
   const handleSave = async () => {
     if (!formData.template_name.trim()) {
-      toast({ title: '模板名称不能为空', variant: 'destructive' });
+      toast({ title: ts('k_10gd1pi'), variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -145,34 +148,34 @@ export default function SampleTemplateListPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: editingId ? '模板已更新' : '模板已创建' });
+        toast({ title: editingId ? ts('k_1nodtxp') : ts('k_1t4tvng') });
         setDialogOpen(false);
         fetchList();
       } else {
-        toast({ title: '保存失败', description: result.message, variant: 'destructive' });
+        toast({ title: ts('k_1q9u8le'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '保存失败', variant: 'destructive' });
+      toast({ title: ts('k_1q9u8le'), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确认删除此模板？删除后不可恢复。')) return;
+    if (!confirm(ts('k_10cgsv5'))) return;
     try {
       const res = await authFetch(`/api/dcprint/sample-card/template/${id}`, {
         method: 'DELETE',
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '已删除' });
+        toast({ title: ts('k_1gyqcpd') });
         fetchList();
       } else {
-        toast({ title: '删除失败', description: result.message, variant: 'destructive' });
+        toast({ title: ts('k_1ijrr73'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: ts('k_1ijrr73'), variant: 'destructive' });
     }
   };
 
@@ -187,13 +190,11 @@ export default function SampleTemplateListPage() {
           </Button>
           <h1 className="text-xl font-bold flex items-center gap-2">
             <Library className="h-5 w-5" />
-            标准工艺模板库
-          </h1>
+            {ts('k_1u0fhic')}</h1>
         </div>
         <Button onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1" />
-          新建模板
-        </Button>
+          {ts('k_ytmxn3')}</Button>
       </div>
 
       <Card className="mb-4">
@@ -202,7 +203,7 @@ export default function SampleTemplateListPage() {
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
             <Input
               className="pl-8"
-              placeholder="搜索模板编号、名称、标签..."
+              placeholder={ts('k_p2wuj2')}
               value={keyword}
               onChange={(e) => {
                 setKeyword(e.target.value);
@@ -212,7 +213,7 @@ export default function SampleTemplateListPage() {
           </div>
           <Input
             className="w-40"
-            placeholder="分类"
+            placeholder={ts('k_1kbcp7q')}
             value={category}
             onChange={(e) => {
               setCategory(e.target.value);
@@ -220,8 +221,7 @@ export default function SampleTemplateListPage() {
             }}
           />
           <Button variant="outline" onClick={fetchList} disabled={loading}>
-            刷新
-          </Button>
+            {ts('k_12qo56a')}</Button>
         </CardContent>
       </Card>
 
@@ -229,21 +229,20 @@ export default function SampleTemplateListPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>模板编号</TableHead>
-              <TableHead>模板名称</TableHead>
-              <TableHead>分类</TableHead>
-              <TableHead className="text-right">总成本</TableHead>
-              <TableHead className="text-center">使用次数</TableHead>
-              <TableHead>创建时间</TableHead>
-              <TableHead className="text-center">操作</TableHead>
+              <TableHead>{ts('k_1vzh69a')}</TableHead>
+              <TableHead>{ts('k_qrxllg')}</TableHead>
+              <TableHead>{ts('k_1kbcp7q')}</TableHead>
+              <TableHead className="text-right">{ts('k_1ugaydy')}</TableHead>
+              <TableHead className="text-center">{ts('k_t5e2ez')}</TableHead>
+              <TableHead>{tc('createdAt')}</TableHead>
+              <TableHead className="text-center">{ts('k_501w24')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {list.length === 0 && !loading && (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-gray-400 py-8">
-                  暂无模板，点击「新建模板」或从已确认工艺卡「存为模板」
-                </TableCell>
+                  {ts('k_1e5xkpv')}</TableCell>
               </TableRow>
             )}
             {list.map((t) => (
@@ -267,7 +266,7 @@ export default function SampleTemplateListPage() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      title="编辑"
+                      title={ts('k_qreyeg')}
                       onClick={() => handleOpenEdit(t.id)}
                     >
                       <Edit className="h-3.5 w-3.5" />
@@ -275,7 +274,7 @@ export default function SampleTemplateListPage() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      title="删除"
+                      title={ts('k_1t2vi4h')}
                       onClick={() => handleDelete(t.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5 text-red-500" />
@@ -296,72 +295,68 @@ export default function SampleTemplateListPage() {
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
           >
-            上一页
-          </Button>
+            {ts('k_mtyn6e')}</Button>
           <span className="text-sm text-gray-600">
-            第 {page} / {totalPages} 页，共 {total} 项
-          </span>
+            {ts('k_biig97')}{page} / {totalPages} {ts('k_1ymbj0f')}{total} {ts('k_1xoauwk')}</span>
           <Button
             variant="outline"
             size="sm"
             disabled={page >= totalPages}
             onClick={() => setPage((p) => p + 1)}
           >
-            下一页
-          </Button>
+            {ts('k_1yw313l')}</Button>
         </div>
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingId ? '编辑模板' : '新建模板'}</DialogTitle>
+            <DialogTitle>{editingId ? ts('k_dqtebg') : ts('k_ytmxn3')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label htmlFor="template_name">模板名称 *</Label>
+              <Label htmlFor="template_name">{ts('k_1jj60ua')}</Label>
               <Input
                 id="template_name"
                 value={formData.template_name}
                 onChange={(e) => setFormData({ ...formData, template_name: e.target.value })}
-                placeholder="如：标签类标准工艺模板"
+                placeholder={ts('k_1e5fthn')}
               />
             </div>
             <div>
-              <Label htmlFor="category">分类</Label>
+              <Label htmlFor="category">{ts('k_1kbcp7q')}</Label>
               <Input
                 id="category"
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                placeholder="如：标签 / 软包装 / 纸盒"
+                placeholder={ts('k_l8mszz')}
               />
             </div>
             <div>
-              <Label htmlFor="tags">标签（逗号分隔）</Label>
+              <Label htmlFor="tags">{ts('k_14yx0jz')}</Label>
               <Input
                 id="tags"
                 value={formData.tags}
                 onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                placeholder="如：哑银纸,卷装,四色"
+                placeholder={ts('k_m3l3y7')}
               />
             </div>
             <div>
-              <Label htmlFor="remark">备注</Label>
+              <Label htmlFor="remark">{ts('k_b5m1l6')}</Label>
               <Textarea
                 id="remark"
                 value={formData.remark}
                 onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-                placeholder="模板说明..."
+                placeholder={ts('k_ssp8k7')}
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>
-              取消
-            </Button>
+              {ts('k_1589w37')}</Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? '保存中...' : '保存'}
+              {saving ? ts('k_rr6ulf') : ts('k_1c3mapc')}
             </Button>
           </DialogFooter>
         </DialogContent>

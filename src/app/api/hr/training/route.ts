@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -36,6 +39,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 });
 
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const {
     training_name,
@@ -85,24 +89,26 @@ export const POST = withPermission(async (request: NextRequest) => {
       );
     }
   }
-  return successResponse({ id: result.insertId, training_no: trainingNo }, '培训记录创建成功');
+  return successResponse({ id: result.insertId, training_no: trainingNo }, ts('k_df10d4'));
 });
 
 export const PUT = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id, status, remark } = body;
   if (status !== undefined)
     await execute('UPDATE hr_training SET status = ? WHERE id = ? AND deleted = 0', [status, id]);
   if (remark !== undefined)
     await execute('UPDATE hr_training SET remark = ? WHERE id = ? AND deleted = 0', [remark, id]);
-  return successResponse(null, '更新成功');
+  return successResponse(null, ts('k_1795bzg'));
 });
 
 export const DELETE = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
-  if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
+  if (!id) return NextResponse.json({ success: false, message: ts('k_js4lo9') }, { status: 400 });
   await execute('DELETE FROM hr_training_participant WHERE training_id = ?', [Number(id)]);
   await execute('UPDATE hr_training SET deleted = 1 WHERE id = ?', [Number(id)]);
-  return successResponse(null, '删除成功');
+  return successResponse(null, ts('k_1hlqs'));
 });

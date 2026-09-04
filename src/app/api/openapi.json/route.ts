@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
@@ -10,7 +13,8 @@ import path from 'path';
  * 可通过 pnpm docs:api 重新生成
  */
 export async function GET() {
-  const specPath = path.join(process.cwd(), 'docs', '10-接口文档', 'openapi.json');
+  const ts = await getTranslations('Common');
+  const specPath = path.join(process.cwd(), 'docs', ts('k_kckzdx'), 'openapi.json');
 
   try {
     const spec = fs.readFileSync(specPath, 'utf8');

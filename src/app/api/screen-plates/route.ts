@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -5,6 +8,7 @@ import type { NextRequest } from 'next/server';
 import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const plateCode = searchParams.get('plateCode');
@@ -21,7 +25,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     `,
       [id]
     );
-    return successResponse((rows as DbRow[])[0], '网版详情');
+    return successResponse((rows as DbRow[])[0], ts('k_1ws33o1'));
   }
 
   if (plateCode) {
@@ -36,7 +40,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     `,
       [plateCode]
     );
-    return successResponse((rows as DbRow[])[0], '网版详情');
+    return successResponse((rows as DbRow[])[0], ts('k_1ws33o1'));
   }
 
   const page = parseInt(searchParams.get('page') || '1');
@@ -84,12 +88,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       page,
       pageSize,
     },
-    '网版列表'
+    ts('k_2t19x7')
   );
 });
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       plateCode,
@@ -108,7 +113,7 @@ export const POST = withPermission(
     } = body;
 
     if (!plateCode || !plateName) {
-      return errorResponse('缺少必要参数：plateCode, plateName', 400);
+      return errorResponse(ts('k_txpvs6'), 400);
     }
 
     const result = await execute(
@@ -139,25 +144,23 @@ export const POST = withPermission(
     const plateId = (result as DbRow).insertId;
 
     await execute(
-      `
-    INSERT INTO screen_plate_history (screen_plate_id, action, operator_name, remark)
-    VALUES (?, 'Created', ?, '网版创建')
-  `,
-      [plateId, body.operatorName || '系统']
+      ts('k_1gekhst'),
+      [plateId, body.operatorName || ts('k_p0ysv3')]
     );
 
-    return successResponse({ id: plateId, plateCode }, '网版创建成功');
+    return successResponse({ id: plateId, plateCode }, ts('k_1gbc408'));
   },
   { logTitle: '创建网版', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id } = body;
 
     if (!id) {
-      return errorResponse('缺少网版ID', 400);
+      return errorResponse(ts('k_tf0fjk'), 400);
     }
 
     const updateFields: string[] = [];
@@ -188,7 +191,7 @@ export const PUT = withPermission(
     }
 
     if (updateFields.length === 0) {
-      return errorResponse('没有需要更新的字段', 400);
+      return errorResponse(ts('k_1kyikfw'), 400);
     }
 
     updateFields.push('update_time = NOW()');
@@ -196,18 +199,19 @@ export const PUT = withPermission(
 
     await execute(`UPDATE prd_screen_plate SET ${updateFields.join(', ')} WHERE id = ?`, params);
 
-    return successResponse(null, '网版更新成功');
+    return successResponse(null, ts('k_1uehmf9'));
   },
   { logTitle: '更新网版', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('缺少网版ID', 400);
+      return errorResponse(ts('k_tf0fjk'), 400);
     }
 
     await execute('UPDATE prd_screen_plate SET deleted = 1, update_time = NOW() WHERE id = ?', [
@@ -215,14 +219,11 @@ export const DELETE = withPermission(
     ]);
 
     await execute(
-      `
-    INSERT INTO screen_plate_history (screen_plate_id, action, operator_name, remark)
-    VALUES (?, 'Scrapped', ?, '网版删除')
-  `,
-      [id, '系统']
+      ts('k_fbyvk4'),
+      [id, ts('k_p0ysv3')]
     );
 
-    return successResponse(null, '网版删除成功');
+    return successResponse(null, ts('k_19t690t'));
   },
   { logTitle: '删除网版', logType: 'business' }
 );

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { withPermission } from '@/lib/api-permissions';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -8,21 +11,22 @@ import { hrPieceWorkDetail } from '@/lib/db/schema';
 const db = getDrizzleDb();
 
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const employeeId = searchParams.get('employeeId');
   const month = searchParams.get('month');
   const processCode = searchParams.get('processCode');
 
   if (!employeeId || !month) {
-    return errorResponse('缺少员工ID或月份', 400, 400);
+    return errorResponse(ts('k_o23ml3'), 400, 400);
   }
 
   const empId = parseInt(employeeId);
   if (isNaN(empId) || empId < 1) {
-    return errorResponse('员工ID格式不正确', 400, 400);
+    return errorResponse(ts('k_1drgngw'), 400, 400);
   }
   if (!/^\d{4}-\d{2}$/.test(month)) {
-    return errorResponse('月份格式错误 (YYYY-MM)', 400, 400);
+    return errorResponse(ts('k_1i9m41z'), 400, 400);
   }
 
   const [year, mon] = month.split('-');

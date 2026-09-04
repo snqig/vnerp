@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -32,6 +35,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       work_order_id,
@@ -69,13 +73,14 @@ export const POST = withPermission(
         remark || null,
       ]
     );
-    return successResponse({ id: result.insertId, label_no: labelNo }, '成品标签创建成功');
+    return successResponse({ id: result.insertId, label_no: labelNo }, ts('k_17nu3m7'));
   },
   { logTitle: '创建成品标签', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, qc_result, remark } = body;
     if (qc_result !== undefined)
@@ -88,18 +93,19 @@ export const PUT = withPermission(
         remark,
         id,
       ]);
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新成品标签', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
+    if (!id) return NextResponse.json({ success: false, message: ts('k_js4lo9') }, { status: 400 });
     await execute('UPDATE prd_product_label SET deleted = 1 WHERE id = ?', [Number(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除成品标签', logType: 'business' }
 );

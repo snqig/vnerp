@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError as _DomainError } from '@/domain/shared/DomainTypes';
 import { FieldMapper, assertField } from './FieldMapping';
 
@@ -35,8 +37,9 @@ export class InkSpecification {
   readonly remark: string;
 
   constructor(props: InkSpecificationProps) {
-    assertField(props.inkCode, '油墨编码');
-    assertField(props.inkName, '油墨名称');
+  const ts = t;
+    assertField(props.inkCode, ts('k_1nkbox1'));
+    assertField(props.inkName, ts('k_pegwq9'));
 
     this.inkCode = props.inkCode;
     this.inkName = props.inkName;

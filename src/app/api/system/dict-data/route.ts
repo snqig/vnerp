@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -37,23 +40,25 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { dict_type_id, dict_label, dict_value, sort_order, status, remark } = body;
 
     if (!dict_type_id)
-      return NextResponse.json({ success: false, message: '字典类型ID不能为空' }, { status: 400 });
+      return NextResponse.json({ success: false, message: ts('k_nnw45b') }, { status: 400 });
 
     const result = await execute(
       `INSERT INTO sys_dict_data (dict_type_id, dict_label, dict_value, sort_order, status, remark) VALUES (?, ?, ?, ?, ?, ?)`,
       [dict_type_id, dict_label, dict_value, sort_order || 0, status ?? 1, remark || null]
     );
 
-    return successResponse({ id: result.insertId }, '创建成功');
+    return successResponse({ id: result.insertId }, ts('k_kiombh'));
   },
   { logTitle: '创建字典数据', logType: 'system' }
 );
 
 export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id, dict_type_id, dict_label, dict_value, sort_order, status, remark } = body;
 
@@ -62,17 +67,18 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
     [dict_type_id, dict_label, dict_value, sort_order || 0, status ?? 1, remark || null, id]
   );
 
-  return successResponse(null, '更新成功');
+  return successResponse(null, ts('k_1795bzg'));
 });
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
+    if (!id) return NextResponse.json({ success: false, message: ts('k_js4lo9') }, { status: 400 });
 
     await execute(`UPDATE sys_dict_data SET deleted = 1 WHERE id = ?`, [Number(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除字典数据', logType: 'system' }
 );

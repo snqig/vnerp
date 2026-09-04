@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
 import {
@@ -23,6 +26,7 @@ const deliveryService = new DeliveryApplicationService(
 );
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const orderId = searchParams.get('order_id');
@@ -40,7 +44,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
        WHERE d.id = ? AND d.deleted = 0`,
       [parseInt(id)]
     );
-    if (!delivery) return commonErrors.notFound('发货单不存在');
+    if (!delivery) return commonErrors.notFound(ts('k_12d7h0r'));
 
     const items = await query<unknown>(
       `SELECT * FROM sal_delivery_detail WHERE delivery_id = ? AND deleted = 0 ORDER BY line_no`,
@@ -98,6 +102,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, [
       'order_id',
@@ -202,18 +207,19 @@ export const POST = withPermission(
       return { id: deliveryId, delivery_no: deliveryNo, status: 1 };
     });
 
-    return successResponse(result, '发货单创建成功');
+    return successResponse(result, ts('k_i8q0x4'));
   },
   { logTitle: '创建发货单', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id } = body;
 
     if (!id) {
-      return commonErrors.badRequest('缺少发货单ID');
+      return commonErrors.badRequest(ts('k_j7tw4q'));
     }
 
     if (body.status !== undefined) {
@@ -226,16 +232,16 @@ export const PUT = withPermission(
             logisticsCompany: body.logistics_company,
             trackingNo: body.tracking_no,
           });
-          return successResponse(null, '发货成功');
+          return successResponse(null, ts('k_6gbqqc'));
         }
         if (newStatus === 3) {
           await deliveryService.signDelivery(id, userInfo.userId);
           await execute('UPDATE sal_delivery SET sign_status = 1 WHERE id = ?', [id]);
-          return successResponse(null, '签收成功');
+          return successResponse(null, ts('k_1f46jds'));
         }
         if (newStatus === 9) {
           await deliveryService.cancelDelivery(id, body.reason);
-          return successResponse(null, '取消成功');
+          return successResponse(null, ts('k_10fjrzm'));
         }
         return errorResponse(`不支持的目标状态: ${newStatus}`, 400, 400);
       } catch (error) {
@@ -269,23 +275,24 @@ export const PUT = withPermission(
       await execute(`UPDATE sal_delivery SET ${fields.join(', ')} WHERE id = ?`, values);
     }
 
-    return successResponse(null, '发货单更新成功');
+    return successResponse(null, ts('k_13l13s5'));
   },
   { logTitle: '更新发货单', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('缺少发货单ID');
+      return commonErrors.badRequest(ts('k_j7tw4q'));
     }
 
     try {
       await deliveryService.deleteDelivery(parseInt(id));
-      return successResponse(null, '发货单删除成功');
+      return successResponse(null, ts('k_1vqj51p'));
     } catch (error) {
       if (error instanceof DomainError || error instanceof NotFoundError) {
         return errorResponse(error.message, 400, 400);

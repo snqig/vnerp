@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { IReceivableRepository } from '@/domain/finance/repositories/IReceivableRepository';
 import { IPayableRepository } from '@/domain/finance/repositories/IPayableRepository';
 import { IVoucherRepository } from '@/domain/finance/repositories/IVoucherRepository';
@@ -303,9 +305,10 @@ export class FinanceApplicationService {
   // ==================== 应收款 ====================
 
   async getReceivableById(id: number): Promise<Receivable> {
+  const ts = await getTranslations('Common');
     const receivable = await this.receivableRepo.findById(id);
     if (!receivable) {
-      throw new NotFoundError('应收款不存在');
+      throw new NotFoundError(ts('k_e4icgq'));
     }
     return receivable;
   }
@@ -401,9 +404,10 @@ export class FinanceApplicationService {
   }
 
   async deleteReceivable(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const receivable = await this.getReceivableById(id);
     if (receivable.status.value !== 4) {
-      throw new DomainError('仅已坏账状态的应收款可删除');
+      throw new DomainError(ts('k_1rn6kt7'));
     }
     await this.receivableRepo.softDelete(id);
   }
@@ -411,9 +415,10 @@ export class FinanceApplicationService {
   // ==================== 应付款 ====================
 
   async getPayableById(id: number): Promise<Payable> {
+  const ts = await getTranslations('Common');
     const payable = await this.payableRepo.findById(id);
     if (!payable) {
-      throw new NotFoundError('应付款不存在');
+      throw new NotFoundError(ts('k_rd7xds'));
     }
     return payable;
   }
@@ -494,9 +499,10 @@ export class FinanceApplicationService {
   }
 
   async deletePayable(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const payable = await this.getPayableById(id);
     if (payable.status.value !== 3) {
-      throw new DomainError('仅已结清状态的应付款可删除');
+      throw new DomainError(ts('k_1hhq4i2'));
     }
     await this.payableRepo.softDelete(id);
   }
@@ -504,9 +510,10 @@ export class FinanceApplicationService {
   // ==================== 凭证 ====================
 
   async getVoucherById(id: number): Promise<Voucher> {
+  const ts = await getTranslations('Common');
     const voucher = await this.voucherRepo.findById(id);
     if (!voucher) {
-      throw new NotFoundError('凭证不存在');
+      throw new NotFoundError(ts('k_1smhraq'));
     }
     return voucher;
   }
@@ -559,9 +566,10 @@ export class FinanceApplicationService {
   }
 
   async deleteVoucher(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const voucher = await this.getVoucherById(id);
     if (!voucher.canDelete()) {
-      throw new DomainError('仅草稿状态的凭证可删除');
+      throw new DomainError(ts('k_dy0oty'));
     }
     await this.voucherRepo.softDelete(id);
   }

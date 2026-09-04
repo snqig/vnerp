@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -14,6 +17,7 @@ import {
 } from '@/lib/seeds/full-seed-steps';
 
 export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const result = await transaction(async (conn) => {
     const stats: Record<string, number> = {};
 
@@ -99,5 +103,5 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     return stats;
   });
 
-  return successResponse(result, '丝网印刷行业种子数据初始化成功');
+  return successResponse(result, ts('k_hrfame'));
 });

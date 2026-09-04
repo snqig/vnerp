@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -54,10 +57,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body: ChangeRequest = await request.json();
 
     if (!body.module || !body.config_key || !body.new_value) {
-      return errorResponse('模块、配置键和新值不能为空', 400);
+      return errorResponse(ts('k_t2883z'), 400);
     }
 
     const needsApproval = APPROVAL_REQUIRED_MODULES.includes(body.module);
@@ -76,7 +80,7 @@ export const POST = withPermission(
             body.change_type || 'update',
             body.reason || '',
             body.applicant_id || 0,
-            body.applicant_name || '未知',
+            body.applicant_name || ts('k_1lpnuh4'),
           ]
         );
       } catch {
@@ -113,30 +117,31 @@ export const POST = withPermission(
             body.change_type || 'update',
             body.reason || '',
             body.applicant_id || 0,
-            body.applicant_name || '未知',
+            body.applicant_name || ts('k_1lpnuh4'),
           ]
         );
       }
 
-      return successResponse({ needsApproval: true }, '变更已提交，等待审批');
+      return successResponse({ needsApproval: true }, ts('k_pu7br7'));
     }
 
-    return successResponse({ needsApproval: false }, '变更无需审批，可直接生效');
+    return successResponse({ needsApproval: false }, ts('k_cy9qye'));
   },
   { logTitle: '创建变更请求' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action, approver_id, approver_name } = body;
 
     if (!id || !action) {
-      return errorResponse('变更请求ID和操作类型不能为空', 400);
+      return errorResponse(ts('k_1cws6ei'), 400);
     }
 
     if (!['approve', 'reject'].includes(action)) {
-      return errorResponse('操作类型无效，仅支持approve/reject', 400);
+      return errorResponse(ts('k_1mirw18'), 400);
     }
 
     const rows = (await query(
@@ -145,7 +150,7 @@ export const PUT = withPermission(
     )) as DbRow[];
 
     if (rows.length === 0) {
-      return errorResponse('变更请求不存在或已处理', 404);
+      return errorResponse(ts('k_py70p'), 404);
     }
 
     const changeRequest = rows[0];
@@ -155,7 +160,7 @@ export const PUT = withPermission(
       `UPDATE sys_config_change_request
      SET status = ?, approver_id = ?, approver_name = ?, approve_time = NOW()
      WHERE id = ?`,
-      [newStatus, approver_id || 0, approver_name || '未知', id]
+      [newStatus, approver_id || 0, approver_name || ts('k_1lpnuh4'), id]
     );
 
     if (action === 'approve') {
@@ -173,7 +178,7 @@ export const PUT = withPermission(
 
     return successResponse(
       { id, status: newStatus },
-      action === 'approve' ? '变更已审批通过并生效' : '变更已驳回'
+      action === 'approve' ? ts('k_a0vj4x') : ts('k_1cdacvs')
     );
   },
   { logTitle: '审批变更请求' }

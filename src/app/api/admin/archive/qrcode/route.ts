@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -7,6 +10,7 @@ import { withPermission } from '@/lib/api-permissions';
 
 export const POST = withPermission(
   async (_request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const ARCHIVE_TABLE = 'qrcode_record_archive';
     const SOURCE_TABLE = 'qrcode_record';
     const MONTHS = parseInt(process.env.QR_ARCHIVE_MONTHS || '6', 10);
@@ -23,7 +27,7 @@ export const POST = withPermission(
 
       const total = parseInt(countResult[0]?.total || '0', 10);
       if (total === 0) {
-        return successResponse({ archived: 0, message: '无需归档' });
+        return successResponse({ archived: 0, message: ts('k_1mj6j62') });
       }
 
       let archived = 0;

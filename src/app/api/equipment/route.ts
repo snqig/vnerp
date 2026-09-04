@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -14,6 +17,7 @@ import { withPermission } from '@/lib/api-permissions';
  */
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
 
   // 单个设备详情
@@ -28,7 +32,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       [Number(id)]
     );
     if (!rows || rows.length === 0) {
-      return errorResponse('设备不存在', 404, 404);
+      return errorResponse(ts('k_19l0z6t'), 404, 404);
     }
     return successResponse(rows[0]);
   }
@@ -82,6 +86,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       equipment_code,
@@ -99,7 +104,7 @@ export const POST = withPermission(
     } = body;
 
     if (!equipment_code || !equipment_name) {
-      return errorResponse('设备编号和名称不能为空', 400, 400);
+      return errorResponse(ts('k_1nrusyc'), 400, 400);
     }
 
     // 检查编号唯一性
@@ -108,7 +113,7 @@ export const POST = withPermission(
       [equipment_code]
     );
     if (existing && existing.length > 0) {
-      return errorResponse('设备编号已存在', 409, 409);
+      return errorResponse(ts('k_100sg41'), 409, 409);
     }
 
     const result = await execute(
@@ -134,17 +139,18 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId, equipment_code }, '设备创建成功');
+    return successResponse({ id: result.insertId, equipment_code }, ts('k_p97dky'));
   },
   { logTitle: '创建设备', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...fields } = body;
 
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     const allowedFields = [
       'equipment_name',
@@ -176,7 +182,7 @@ export const PUT = withPermission(
     }
 
     if (updateFields.length === 0) {
-      return errorResponse('没有可更新的字段', 400, 400);
+      return errorResponse(ts('k_15vo87k'), 400, 400);
     }
 
     updateFields.push('update_by = ?');
@@ -188,23 +194,24 @@ export const PUT = withPermission(
       updateValues
     );
 
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新设备', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     await execute('UPDATE eq_equipment SET deleted = 1, update_by = ? WHERE id = ?', [
       userInfo?.userId || null,
       Number(id),
     ]);
 
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除设备', logType: 'business' }
 );

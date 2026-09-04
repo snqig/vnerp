@@ -33,6 +33,7 @@ import {
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { formatDate } from '@/lib/date-utils';
 
 interface Item {
   id: number;
@@ -62,10 +63,6 @@ const statusMap: Record<
   3: { label: 'cancelled', variant: 'destructive' },
 };
 
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '-';
-  return dateStr.slice(0, 10);
-};
 
 export default function TrainingPage() {
   // 翻译钩子

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -37,9 +40,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       eco_type,
+      eco_title,
       product_id,
       product_code,
       product_name,
@@ -52,7 +57,7 @@ export const POST = withPermission(
       remark,
     } = body;
 
-    if (!eco_type) return errorResponse('变更类型不能为空', 400, 400);
+    if (!eco_type) return errorResponse(ts('k_1998m55'), 400, 400);
 
     const now = new Date();
     const ecoNo =
@@ -63,10 +68,11 @@ export const POST = withPermission(
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
     const result = await execute(
-      `INSERT INTO plm_eco (eco_no, eco_type, product_id, product_code, product_name, old_version, new_version, change_reason, change_content, impact_analysis, applicant, apply_time, remark)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
+      `INSERT INTO plm_eco (eco_no, eco_title, eco_type, product_id, product_code, product_name, old_version, new_version, change_reason, change_content, impact_analysis, applicant, apply_time, remark)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
       [
         ecoNo,
+        eco_title || '未命名变更',
         eco_type,
         product_id || null,
         product_code || null,
@@ -81,16 +87,17 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId, eco_no: ecoNo }, '工程变更单创建成功');
+    return successResponse({ id: result.insertId, eco_no: ecoNo }, ts('k_teaqmk'));
   },
   { logTitle: '创建工程变更单', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...fields } = body;
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     const updateFields: string[] = [];
     const updateValues: SqlValue[] = [];
@@ -118,18 +125,19 @@ export const PUT = withPermission(
         id,
       ]);
     }
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新工程变更单', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
     await execute('UPDATE plm_eco SET deleted = 1 WHERE id = ?', [id]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除工程变更单', logType: 'business' }
 );

@@ -121,6 +121,7 @@ const PAYABLE_STATUS: Record<number, { label: string; color: string }> = {
 const PAYMENT_METHODS = PAYMENT_METHOD_LABEL;
 
 export default function FinancePage() {
+  const ts = useTranslations('Common');
   // 翻译钩子
   const tc = useTranslations('Common');
   const t = useTranslations('Finance');
@@ -332,7 +333,7 @@ export default function FinancePage() {
         setReceivableForm({ customer_id: '', amount: '', source_no: '', due_date: '', remark: '' });
         fetchReceivables();
       } else {
-        toast.error(data.message || '创建失败');
+        toast.error(data.message || ts('k_1jxltyq'));
       }
     } catch (_e) {
       toast.error(tc('createReceivableFailed'));
@@ -363,7 +364,7 @@ export default function FinancePage() {
         setPayableForm({ supplier_id: '', amount: '', source_no: '', due_date: '', remark: '' });
         fetchPayables();
       } else {
-        toast.error(data.message || '创建失败');
+        toast.error(data.message || ts('k_1jxltyq'));
       }
     } catch (_e) {
       toast.error(tc('createPayableFailed'));
@@ -401,7 +402,7 @@ export default function FinancePage() {
         fetchReceipts();
         fetchReceivables();
       } else {
-        toast.error(data.message || '创建失败');
+        toast.error(data.message || ts('k_1jxltyq'));
       }
     } catch (_e) {
       toast.error(tc('createReceiptFailed'));
@@ -439,7 +440,7 @@ export default function FinancePage() {
         fetchPayments();
         fetchPayables();
       } else {
-        toast.error(data.message || '创建失败');
+        toast.error(data.message || ts('k_1jxltyq'));
       }
     } catch (_e) {
       toast.error(tc('createPaymentFailed'));
@@ -458,7 +459,7 @@ export default function FinancePage() {
         toast.error(data.message || tc('deleteFailed'));
       }
     } catch (_e) {
-      toast.error('删除失败');
+      toast.error(ts('k_1ijrr73'));
     }
   };
 
@@ -474,7 +475,7 @@ export default function FinancePage() {
         toast.error(data.message || tc('deleteFailed'));
       }
     } catch (_e) {
-      toast.error('删除失败');
+      toast.error(ts('k_1ijrr73'));
     }
   };
 
@@ -861,8 +862,7 @@ export default function FinancePage() {
                     {payments.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          暂无付款记录
-                        </TableCell>
+                          {tc('noPaymentRecords')}</TableCell>
                       </TableRow>
                     ) : (
                       payments.map((p) => (

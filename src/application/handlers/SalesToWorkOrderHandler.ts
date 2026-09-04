@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { SalesOrderApprovedEvent } from '@/domain/sales/events/SalesOrderEvents';
 import { WorkOrderCreatedEvent } from '@/domain/production/events/WorkOrderEvents';
@@ -97,6 +100,7 @@ export class SalesToWorkOrderHandler implements EventHandler<SalesOrderApprovedE
     const materialRequirements = await this.getMaterialRequirements(materialId, requiredQty);
 
     const workOrderId = await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
       const [result] = await conn.execute(
         `INSERT INTO prd_work_order (
           work_order_no, work_order_date, sales_order_id, material_id,
@@ -110,7 +114,7 @@ export class SalesToWorkOrderHandler implements EventHandler<SalesOrderApprovedE
           orderId,
           materialId,
           requiredQty,
-          '件',
+          ts('k_w0gthl'),
           today,
           endDate,
           `由销售订单 ${orderNo} 生成`,
@@ -164,13 +168,16 @@ export class SalesToWorkOrderHandler implements EventHandler<SalesOrderApprovedE
       return [];
     }
 
-    return bomRows.map((row) => ({
+    return bomRows.map((row) => {
+  const ts = t;
+  return  ({
       materialId: row.material_id,
       materialCode: row.material_code,
       materialName: row.material_name,
       requiredQty: row.quantity * plannedQty,
-      unit: row.unit || '件',
-    }));
+      unit: row.unit || ts('k_w0gthl'),
+    });
+});
   }
 
   private calculateEndDate(plannedQty: number): string {

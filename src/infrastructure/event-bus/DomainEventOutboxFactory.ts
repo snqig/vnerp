@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 import { MemoryDomainEventOutbox } from './MemoryDomainEventOutbox';
 import { MysqlDomainEventOutboxRepository } from '@/infrastructure/repositories/MysqlDomainEventOutboxRepository';
 import type { IDomainEventOutboxRepository } from './types/IDomainEventOutboxRepository';
@@ -22,11 +25,12 @@ export type EventBusType = 'memory' | 'db';
  * 未配置或配置为 'memory' 时直接抛错。
  */
 export function getEventBusType(): EventBusType {
+  const ts = t;
   const raw = (process.env.EVENT_BUS_TYPE || '').toLowerCase().trim();
   if (process.env.NODE_ENV === 'production') {
     if (raw !== 'db') {
       throw new Error(
-        '生产环境必须配置 EVENT_BUS_TYPE=db，memory 模式不支持多实例部署'
+        ts('k_1su927e')
       );
     }
     return 'db';

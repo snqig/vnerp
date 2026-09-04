@@ -1,5 +1,6 @@
+
 import type { Metadata } from 'next';
-import { getMessages } from 'next-intl/server';
+import { getMessages, getTranslations } from 'next-intl/server';
 import { cookies } from 'next/headers';
 import { IntlProvider } from '@/components/IntlProvider';
 import { notFound } from 'next/navigation';
@@ -25,6 +26,7 @@ async function getMessagesByLocale(locale: string) {
 }
 
 async function getCompanyName(locale: string): Promise<string> {
+  const tc = await getTranslations({ locale, namespace: 'Common' });
   const now = Date.now();
   if (cachedCompanyName && now - cacheTimestamp < CACHE_TTL) {
     return cachedCompanyName;
@@ -42,7 +44,7 @@ async function getCompanyName(locale: string): Promise<string> {
     if (cachedCompanyName) return cachedCompanyName;
   }
   const messages = await getMessagesByLocale(locale);
-  return messages?.Common?.companyName || '公司名称';
+  return messages?.Common?.companyName || tc('companyName');
 }
 
 /**
@@ -87,10 +89,11 @@ export async function generateMetadata({
     ? (rawLocale as Locale)
     : 'zh-CN';
 
+  const ts = await getTranslations({ locale, namespace: 'Common' });
   const messages = await getMessagesByLocale(locale);
 
   const title = messages?.Common?.appTitle || 'VNERP';
-  const description = messages?.Common?.appDescription || 'VNERP ERP系统';
+  const description = messages?.Common?.appDescription || ts('k_1iivgid');
 
   return {
     title,

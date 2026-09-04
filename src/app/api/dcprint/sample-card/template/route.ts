@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -21,12 +24,13 @@ export const GET = withPermission(async (request: NextRequest) => {
 // 创建模板
 export const POST = withPermission(
   async (request: NextRequest, userInfo: DbRow) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     if (!body.template_name?.trim()) {
-      return errorResponse('模板名称不能为空', 400, 400);
+      return errorResponse(ts('k_10gd1pi'), 400, 400);
     }
     const id = await service.createTemplate(body, userInfo.userId);
-    return successResponse({ id }, '模板创建成功');
+    return successResponse({ id }, ts('k_1oezvzt'));
   },
   { logTitle: '创建标准工艺模板' }
 );

@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import {
   InboundOrderUnapprovedEvent,
@@ -126,7 +129,9 @@ function mapToProps(order: PurchaseOrderRow, lines: PurchaseOrderLineRow[]): Pur
     createBy: order.create_by ?? undefined,
     auditBy: order.audit_by ?? undefined,
     auditTime: order.audit_time ?? undefined,
-    lines: (lines || []).map((line) => ({
+    lines: (lines || []).map((line) => {
+  const ts = t;
+  return  ({
       id: line.id,
       orderId: line.po_id,
       lineNo: line.line_no,
@@ -134,7 +139,7 @@ function mapToProps(order: PurchaseOrderRow, lines: PurchaseOrderLineRow[]): Pur
       materialCode: line.material_code || '',
       materialName: line.material_name || '',
       materialSpec: line.material_spec || '',
-      unit: line.unit || '件',
+      unit: line.unit || ts('k_w0gthl'),
       orderQty: Number(line.order_qty),
       receivedQty: Number(line.received_qty) || 0,
       returnedQty: Number(line.returned_qty) || 0,
@@ -149,7 +154,8 @@ function mapToProps(order: PurchaseOrderRow, lines: PurchaseOrderLineRow[]): Pur
       baseLineTotal: Number(line.base_line_total) || 0,
       requireDate: line.require_date ?? undefined,
       remark: line.remark ?? undefined,
-    })),
+    });
+}),
     createTime: order.create_time ?? undefined,
     updateTime: order.update_time ?? undefined,
   };
@@ -161,6 +167,7 @@ function buildLineReceives(
   purchaseOrder: PurchaseOrder,
   ctx: Record<string, unknown>
 ): Array<{ lineNo: number; quantity: number }> {
+  const ts = t;
   const result: Array<{ lineNo: number; quantity: number }> = [];
   for (const item of items) {
     let line: PurchaseOrderLine | undefined;
@@ -178,7 +185,7 @@ function buildLineReceives(
         materialId: item.materialId,
         quantity: item.quantity,
       });
-      logger.warn(ctx, '回补明细未匹配到采购行，跳过', {
+      logger.warn(ctx, ts('k_1l769du'), {
         materialId: item.materialId,
         quantity: item.quantity,
       });
@@ -191,12 +198,13 @@ function buildLineReceives(
 
 export class PurchaseInboundReversalHandler implements EventHandler<InboundReversalEvent> {
   async handle(event: InboundReversalEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { inboundId, inboundNo, poId, items } = event.payload;
     const ctx = { module: 'purchase-inbound', action: 'reverse', inboundId, poId };
     let phase = 'init';
 
     if (!poId) {
-      logger.info(ctx, '跳过：无采购订单关联', { inboundNo });
+      logger.info(ctx, ts('k_1azg923'), { inboundNo });
       return;
     }
 
@@ -213,7 +221,7 @@ export class PurchaseInboundReversalHandler implements EventHandler<InboundRever
             poId,
             inboundNo,
           });
-          logger.info(ctx, '跳过：采购订单不存在或状态不可回补 [phase=lock_po]', {
+          logger.info(ctx, ts('k_bw52h2'), {
             poId,
             inboundNo,
           });
@@ -231,14 +239,14 @@ export class PurchaseInboundReversalHandler implements EventHandler<InboundRever
             poId,
             inboundNo,
           });
-          logger.warn(ctx, '采购订单行不存在，跳过 [phase=lock_po_lines]', { poId, inboundNo });
+          logger.warn(ctx, ts('k_1tbpmfc'), { poId, inboundNo });
           return;
         }
 
         const order = orderRows[0] as unknown as PurchaseOrderRow;
         const lines = lineRows as unknown as PurchaseOrderLineRow[];
         const purchaseOrder = PurchaseOrder.reconstitute(mapToProps(order, lines));
-        logger.info(ctx, '采购订单聚合根重建完成', {
+        logger.info(ctx, ts('k_1h86l8i'), {
           poId,
           lineCount: lines.length,
           status: purchaseOrder.status.value,
@@ -265,7 +273,7 @@ export class PurchaseInboundReversalHandler implements EventHandler<InboundRever
         phase = 'reverse_receive';
         const lineReceives = buildLineReceives(reversalItems, purchaseOrder, ctx);
         if (lineReceives.length === 0) {
-          logger.warn(ctx, '无匹配的入库明细，跳过回补', { poId, inboundNo });
+          logger.warn(ctx, ts('k_u5ku6a'), { poId, inboundNo });
           return;
         }
 
@@ -285,7 +293,7 @@ export class PurchaseInboundReversalHandler implements EventHandler<InboundRever
           'UPDATE pur_purchase_order SET status = ?, received_quantity = ?, update_time = NOW() WHERE id = ?',
           [purchaseOrder.status.toDbCode(), purchaseOrder.totalReceivedQty, poId]
         );
-        logger.info(ctx, '采购订单回补完成', {
+        logger.info(ctx, ts('k_1xzbopx'), {
           poId,
           inboundNo,
           newStatus: purchaseOrder.status.value,

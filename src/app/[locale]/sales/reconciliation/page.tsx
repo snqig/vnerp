@@ -402,7 +402,7 @@ export default function ReconciliationPage() {
                   {list.map((r) => (
                     <TableRow key={r.id}>
                       <TableCell>
-                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectAll')} />
+                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectRow', { id: r.id })} />
                       </TableCell>
                       <TableCell className="font-medium">{r.reconciliation_no}</TableCell>
                       <TableCell>{r.customer_name || '-'}</TableCell>

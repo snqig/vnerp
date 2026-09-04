@@ -92,7 +92,7 @@ function DonutChart({
         strokeDashoffset={offset}
         strokeLinecap="round"
         transform="rotate(-90 60 60)"
-        className="transition-all duration-1000 ease-out"
+        className="transition-[stroke-dashoffset] duration-1000 ease-out"
       />
       <text x="60" y="55" textAnchor="middle" fill="white" fontSize="20" fontWeight="bold">
         {percentage.toFixed(1)}%
@@ -217,7 +217,7 @@ function HorizontalBarChart({ data }: { data: { defect_type: string; count: numb
           </span>
           <div className="flex-1 bg-white/10 rounded-full h-5 relative overflow-hidden">
             <div
-              className="h-full rounded-full transition-all duration-500"
+              className="h-full rounded-full transition-[width] duration-500"
               style={{
                 width: `${(d.count / maxCount) * 100}%`,
                 background: `linear-gradient(90deg, #06b6d4, #3b82f6)`,
@@ -234,6 +234,7 @@ function HorizontalBarChart({ data }: { data: { defect_type: string; count: numb
 }
 
 export default function QualityDashboard() {
+  const ts = useTranslations('Dashboard');
   // 翻译钩子
   const t = useTranslations('Dashboard');
   const tc = useTranslations('Common');
@@ -364,8 +365,7 @@ export default function QualityDashboard() {
                 {companyName}
               </h1>
               <p className="text-[10px]" style={{ color: 'rgba(192,208,224,0.4)' }}>
-                质量监控中心
-              </p>
+                {ts('k_1j3qayw')}</p>
             </div>
           </div>
 
@@ -415,8 +415,7 @@ export default function QualityDashboard() {
                 style={{ background: '#22c55e', boxShadow: '0 0 6px #22c55e' }}
               />
               <span className="text-xs" style={{ color: '#22c55e' }}>
-                实时
-              </span>
+                {ts('k_da4gt1')}</span>
             </div>
             <button
               onClick={toggleFullscreen}
@@ -715,7 +714,7 @@ export default function QualityDashboard() {
                               <div className="flex items-center gap-2">
                                 <div className="bg-white/10 rounded-full h-2 w-24 relative overflow-hidden">
                                   <div
-                                    className="h-full rounded-full transition-all"
+                                    className="h-full rounded-full transition-[width]"
                                     style={{
                                       width: `${rate}%`,
                                       background:

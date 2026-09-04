@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -92,6 +95,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     // confirm / apply-schedule：确认并落库排产建议（写入 plan_start_date / plan_end_date）
@@ -102,7 +106,7 @@ export const POST = withPermission(
       };
 
       if (!Array.isArray(scheduling_results) || scheduling_results.length === 0) {
-        return errorResponse('排产结果不能为空', 400, 400);
+        return errorResponse(ts('k_1j2m5s3'), 400, 400);
       }
 
       const updated = await transaction(async (connection) => {
@@ -140,7 +144,7 @@ export const POST = withPermission(
       remark,
     } = body;
 
-    if (!product_name) return errorResponse('产品名称不能为空', 400, 400);
+    if (!product_name) return errorResponse(ts('k_1bhfx0a'), 400, 400);
 
     if (planned_start && planned_end && workshop) {
       const conflicts = await query(
@@ -205,16 +209,17 @@ export const POST = withPermission(
       ]);
     }
 
-    return successResponse({ id: scheduleId, schedule_no: scheduleNo }, '排产计划创建成功');
+    return successResponse({ id: scheduleId, schedule_no: scheduleNo }, ts('k_1pz160t'));
   },
   { logTitle: '创建排产计划', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...fields } = body;
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     const updateFields: string[] = [];
     const updateValues: SqlValue[] = [];
@@ -243,16 +248,17 @@ export const PUT = withPermission(
         [...updateValues, id]
       );
     }
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新排产计划', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     // 查询排产记录，判断是否需要回退工单状态
     const schedule = await query(
@@ -271,7 +277,7 @@ export const DELETE = withPermission(
     }
 
     await execute('UPDATE prd_schedule SET deleted = 1 WHERE id = ?', [id]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除排产计划', logType: 'business' }
 );

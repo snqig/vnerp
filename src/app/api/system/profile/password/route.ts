@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -12,22 +15,24 @@ import bcrypt from 'bcryptjs';
 
 export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { oldPassword, newPassword } = body;
 
     if (!oldPassword || !newPassword) {
-      return errorResponse('请填写完整密码信息', 400, 400);
+      return errorResponse(tc('passwordInfoRequired'), 400, 400);
     }
 
     if (newPassword.length < 6) {
-      return errorResponse('新密码长度不能少于6位', 400, 400);
+      return errorResponse(ts('k_nincqz'), 400, 400);
     }
 
     // 检查密码复杂度
     const hasLetter = /[a-zA-Z]/.test(newPassword);
     const hasNumber = /[0-9]/.test(newPassword);
     if (!hasLetter || !hasNumber) {
-      return errorResponse('密码必须包含字母和数字', 400, 400);
+      return errorResponse(ts('k_1t6sj69'), 400, 400);
     }
 
     const users = await query<{ password: string }>(
@@ -36,12 +41,12 @@ export const PUT = withPermission(
     );
 
     if (users.length === 0) {
-      return errorResponse('用户不存在', 404, 404);
+      return errorResponse(ts('k_17nv4bz'), 404, 404);
     }
 
     const isValid = await bcrypt.compare(oldPassword, users[0].password);
     if (!isValid) {
-      return errorResponse('当前密码不正确', 400, 400);
+      return errorResponse(ts('k_1tgtlh2'), 400, 400);
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -55,7 +60,7 @@ export const PUT = withPermission(
     const beforeTs = userInfo.iat ? userInfo.iat + 1 : Date.now();
     await revokeAllUserTokens(userInfo.userId, beforeTs);
 
-    return successResponse(null, '密码修改成功，其他设备的登录状态已失效');
+    return successResponse(null, ts('k_cez6zj'));
   },
   { errorMessage: '操作失败' }
 );

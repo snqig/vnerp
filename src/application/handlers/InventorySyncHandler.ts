@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { InboundOrderApprovedEvent } from '@/domain/warehouse/events/InboundOrderEvents';
 import { transaction } from '@/lib/db';
@@ -27,6 +29,7 @@ export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEv
     const sortedItems = [...items].sort((a, b) => a.materialId - b.materialId);
 
     await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
       for (const item of sortedItems) {
         // 汇总表 inv_inventory：用 UPSERT 原子处理「新建 / 已存在累加 / 软删行复活」三种情况，
         // 彻底消除 `Duplicate entry for key uk_material_warehouse` 竞态——
@@ -48,7 +51,7 @@ export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEv
             warehouseId,
             item.quantity,
             item.quantity,
-            '件',
+            ts('k_w0gthl'),
           ]
         );
         const [invRow] = await conn.execute<RowDataPacket[]>(

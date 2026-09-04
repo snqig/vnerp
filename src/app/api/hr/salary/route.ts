@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { CommonValidations } from '@/lib/validation';
@@ -7,6 +10,7 @@ import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
 export const GET = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month') || format(new Date(), 'yyyy-MM');
     const deptId = searchParams.get('deptId');
@@ -15,7 +19,7 @@ export const GET = withPermission(
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
     if (month && !/^\d{4}-\d{2}$/.test(month)) {
-      return errorResponse('月份格式不正确，应为 yyyy-MM', 400, 400);
+      return errorResponse(ts('k_1mjk0tu'), 400, 400);
     }
 
     let sql = `
@@ -54,7 +58,7 @@ export const GET = withPermission(
     if (deptId) {
       const deptIdNum = parseInt(deptId);
       if (isNaN(deptIdNum) || deptIdNum < 1) {
-        return errorResponse('部门ID格式不正确', 400, 400);
+        return errorResponse(ts('k_1l4pjax'), 400, 400);
       }
       sql += ` AND e.dept_id = ?`;
       countSql += ` AND e.dept_id = ?`;
@@ -64,7 +68,7 @@ export const GET = withPermission(
 
     if (keyword) {
       if (keyword.length > 100) {
-        return errorResponse('搜索关键词过长', 400, 400);
+        return errorResponse(ts('k_v2dfyb'), 400, 400);
       }
       sql += ` AND (e.name LIKE ? OR e.employee_no LIKE ?)`;
       countSql += ` AND (e.name LIKE ? OR e.employee_no LIKE ?)`;
@@ -91,6 +95,7 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     const validation = CommonValidations.salary(body);
@@ -118,19 +123,19 @@ export const POST = withPermission(
     ]);
 
     if (!employee) {
-      return errorResponse('员工不存在或已停用', 400, 400);
+      return errorResponse(ts('k_rddrsx'), 400, 400);
     }
 
     const salaryFields = [
-      { name: '基本工资', value: basicSalary },
-      { name: '岗位津贴', value: positionAllowance },
-      { name: '绩效奖金', value: performanceBonus },
-      { name: '加班费', value: overtimePay },
-      { name: '其他奖金', value: otherBonus },
-      { name: '社保', value: socialSecurity },
-      { name: '公积金', value: housingFund },
-      { name: '个人所得税', value: personalTax },
-      { name: '其他扣款', value: otherDeduction },
+      { name: ts('k_60tcky'), value: basicSalary },
+      { name: ts('k_iwdle0'), value: positionAllowance },
+      { name: ts('k_n10a79'), value: performanceBonus },
+      { name: ts('k_13fz3y5'), value: overtimePay },
+      { name: ts('k_v83vjk'), value: otherBonus },
+      { name: ts('k_18jq304'), value: socialSecurity },
+      { name: ts('k_1dvkc93'), value: housingFund },
+      { name: ts('k_12li84i'), value: personalTax },
+      { name: ts('k_mbuxmk'), value: otherDeduction },
     ];
 
     for (const field of salaryFields) {
@@ -144,7 +149,7 @@ export const POST = withPermission(
     }
 
     if (remark && remark.length > 500) {
-      return errorResponse('备注长度不能超过500个字符', 400, 400);
+      return errorResponse(ts('k_147a26n'), 400, 400);
     }
 
     const totalIncome =
@@ -221,34 +226,35 @@ export const POST = withPermission(
       );
     }
 
-    return successResponse(null, '薪资保存成功');
+    return successResponse(null, ts('k_9oa8xb'));
   },
   { errorMessage: '保存薪资失败' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('缺少记录ID', 400, 400);
+      return errorResponse(ts('k_1sdbmxi'), 400, 400);
     }
 
     const idNum = parseInt(id);
     if (isNaN(idNum) || idNum < 1) {
-      return errorResponse('记录ID格式不正确', 400, 400);
+      return errorResponse(ts('k_1fofyfs'), 400, 400);
     }
 
     const [existing] = await query(`SELECT id FROM sys_salary WHERE id = ?`, [idNum]);
 
     if (!existing) {
-      return errorResponse('薪资记录不存在', 404, 404);
+      return errorResponse(ts('k_96beij'), 404, 404);
     }
 
     await query(`DELETE FROM sys_salary WHERE id = ?`, [idNum]);
 
-    return successResponse(null, '薪资记录删除成功');
+    return successResponse(null, ts('k_1rlgct9'));
   },
   { errorMessage: '删除薪资失败' }
 );

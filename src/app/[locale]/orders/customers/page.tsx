@@ -106,6 +106,7 @@ const STATUS_LABEL_KEYS: Record<number, string> = {
 };
 
 export default function CustomersPage() {
+  const ts = useTranslations('Orders');
   const t = useTranslations('Orders');
   const tc = useTranslations('Common');
   const router = useRouter();
@@ -546,8 +547,8 @@ export default function CustomersPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{t('customerList')}</CardTitle>
             <GlobalExportToolbar
-              filename="客户列表"
-              title="客户列表"
+              filename={ts('k_xszhep')}
+              title={ts('k_xszhep')}
               columns={[
                 { key: 'customerCode', label: t('customerCode'), width: 15 },
                 { key: 'customerName', label: t('customerName'), width: 25 },

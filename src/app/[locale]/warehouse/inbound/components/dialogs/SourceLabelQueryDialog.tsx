@@ -29,6 +29,7 @@ export function SourceLabelQueryDialog({
   onOpenChange,
   onLabelFound,
 }: SourceLabelQueryDialogProps) {
+  const ts = useTranslations('Warehouse');
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
 
@@ -40,7 +41,7 @@ export function SourceLabelQueryDialog({
   const handleQuery = async () => {
     const code = labelCode.trim();
     if (!code) {
-      setError('请输入或扫描标签编号');
+      setError(ts('k_1thcck8'));
       return;
     }
 
@@ -57,10 +58,10 @@ export function SourceLabelQueryDialog({
       if (result.success) {
         setFoundLabel(result.data);
       } else {
-        setError(result.message || '查询失败');
+        setError(result.message || ts('k_qoguk0'));
       }
     } catch {
-      setError('网络错误，请重试');
+      setError(ts('k_1s5k6s7'));
     } finally {
       setLoading(false);
     }
@@ -106,7 +107,7 @@ export function SourceLabelQueryDialog({
             {t('materialCutting')}
           </DialogTitle>
           <DialogDescription>
-            {'请输入或扫描母材标签编号，系统将自动校验是否可分切'}
+            {ts('k_o26duz')}
           </DialogDescription>
         </DialogHeader>
 
@@ -115,7 +116,7 @@ export function SourceLabelQueryDialog({
             <Label>{t('sourceLabelNo')}</Label>
             <div className="flex gap-2">
               <Input
-                placeholder="输入标签编号或扫码"
+                placeholder={ts('k_17y70mj')}
                 value={labelCode}
                 onChange={(e) => setLabelCode(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -151,7 +152,7 @@ export function SourceLabelQueryDialog({
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
-                <span className="text-sm font-medium text-green-700">{'校验通过'}</span>
+                <span className="text-sm font-medium text-green-700">{ts('k_whm46j')}</span>
               </div>
               <div className="rounded-lg border border-green-200 bg-green-50 p-4 space-y-2">
                 <div className="flex items-center gap-2 mb-2">
@@ -191,7 +192,7 @@ export function SourceLabelQueryDialog({
               </div>
               <Badge className="bg-green-100 text-green-700 border-0">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
-                {'可分切'}
+                {ts('k_l0rftp')}
               </Badge>
             </div>
           )}
@@ -207,7 +208,7 @@ export function SourceLabelQueryDialog({
             className="bg-blue-600 hover:bg-blue-700 gap-2"
           >
             <Scissors className="h-4 w-4" />
-            {'下一步分切'}
+            {ts('k_knh9d2')}
           </Button>
         </DialogFooter>
       </DialogContent>

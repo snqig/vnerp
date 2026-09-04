@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface StandardCardToolingProps {
   id?: number;
   standardCardId?: number;
@@ -35,8 +37,9 @@ export class StandardCardTooling {
   }
 
   private validate(props: StandardCardToolingProps): void {
+  const ts = t;
     if (!props.dieMoldId && !props.screenPlateId) {
-      throw new Error('刀模和网版至少需要选择一个');
+      throw new Error(ts('k_qp63xc'));
     }
   }
 

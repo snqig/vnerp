@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -8,6 +9,8 @@ import { AlertCircle, AlertTriangle, Info } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 
 export default function AdvancedDashboardPage() {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Common');
   const [data, setData] = useState<{
     currentMonth: Record<string, number>;
     trend: Array<{ month: string; value: number }>;
@@ -29,7 +32,7 @@ export default function AdvancedDashboardPage() {
   };
 
   return (
-    <MainLayout title="决策支持中心">
+    <MainLayout title={ts('k_1eu2kis')}>
       <div className="space-y-6">
         {data.alerts.map((alert, idx) => {
           const Icon = alertIcons[alert.level];
@@ -37,7 +40,7 @@ export default function AdvancedDashboardPage() {
             <Alert key={idx} variant={alertVariants[alert.level]}>
               <Icon className="h-4 w-4" />
               <AlertTitle>
-                {alert.level === 'critical' ? '紧急' : alert.level === 'warning' ? '预警' : '提示'}
+                {alert.level === 'critical' ? ts('k_9tbknt') : alert.level === 'warning' ? ts('k_1qswpkf') : tc('info')}
               </AlertTitle>
               <AlertDescription>{alert.message}</AlertDescription>
             </Alert>
@@ -47,20 +50,19 @@ export default function AdvancedDashboardPage() {
         <div className="grid grid-cols-4 gap-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">月销售收入</CardTitle>
+              <CardTitle className="text-sm">{ts('k_15s1ru8')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 ¥{Number(data.currentMonth.revenue || 0).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                {data.currentMonth.orders || 0} 个订单
-              </p>
+                {data.currentMonth.orders || 0} {ts('k_x7ufuw')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">订单完成率</CardTitle>
+              <CardTitle className="text-sm">{ts('k_6eyhu9')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div
@@ -72,7 +74,7 @@ export default function AdvancedDashboardPage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">库存周转率</CardTitle>
+              <CardTitle className="text-sm">{ts('k_1ceibzb')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div
@@ -84,7 +86,7 @@ export default function AdvancedDashboardPage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">库存价值</CardTitle>
+              <CardTitle className="text-sm">{ts('k_ykl1c5')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -96,7 +98,7 @@ export default function AdvancedDashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>6 个月收入趋势</CardTitle>
+            <CardTitle>{ts('k_1itqere')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -105,7 +107,7 @@ export default function AdvancedDashboardPage() {
                   <span className="w-20 text-sm">{item.month}</span>
                   <div className="flex-1 h-6 bg-secondary rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-primary rounded-full transition-all"
+                      className="h-full bg-primary rounded-full transition-[width]"
                       style={{
                         width: `${Math.min(100, (Number(item.value) / Math.max(...data.trend.map((t) => Number(t.value)))) * 100)}%`,
                       }}
@@ -122,10 +124,10 @@ export default function AdvancedDashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>智能建议</CardTitle>
+            <CardTitle>{ts('k_1okkkz4')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            {data.alerts.length === 0 && <p>当前无预警，运行状态良好</p>}
+            {data.alerts.length === 0 && <p>{ts('k_grizbe')}</p>}
             {data.alerts.map((alert, idx) => (
               <div key={idx} className="flex items-start gap-2">
                 <span className="mt-1">•</span>

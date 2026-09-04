@@ -15,6 +15,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
 
 export default function PieceRatePage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
   const [rates, setRates] = useState<any[]>([]);
@@ -28,7 +29,7 @@ export default function PieceRatePage() {
       const json = await res.json();
       if (json.code === 200) setRates(json.data.list || []);
     } catch {
-      toast.error(t('fetchFailed') || '获取工序单价列表失败');
+      toast.error(t('fetchFailed') || ts('k_pyqt59'));
     }
     setLoading(false);
   };
@@ -41,41 +42,41 @@ export default function PieceRatePage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Tag className="h-6 w-6 text-blue-500" />
-            <h1 className="text-2xl font-bold">{t('pieceRate') || '工序单价管理'}</h1>
+            <h1 className="text-2xl font-bold">{t('pieceRate') || ts('k_1al09iu')}</h1>
           </div>
-          <Button><Plus className="h-4 w-4 mr-2" />{tc('add') || '新增单价'}</Button>
+          <Button><Plus className="h-4 w-4 mr-2" />{tc('add') || ts('k_ebh5gv')}</Button>
         </div>
 
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">
               <Input
-                placeholder={tc('search') || '搜索工序名称...'}
+                placeholder={tc('search') || ts('k_1s2zo9c')}
                 value={keyword}
                 onChange={e => setKeyword(e.target.value)}
                 className="max-w-sm"
               />
-              <Button variant="outline" onClick={fetchRates}><Search className="h-4 w-4 mr-2" />{tc('search') || '搜索'}</Button>
+              <Button variant="outline" onClick={fetchRates}><Search className="h-4 w-4 mr-2" />{tc('search') || ts('k_367f3v')}</Button>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('processCode') || '工序编号'}</TableHead>
-                  <TableHead>{t('processName') || '工序名称'}</TableHead>
-                  <TableHead>{t('productType') || '产品类型'}</TableHead>
-                  <TableHead>{t('unitPrice') || '单价'}</TableHead>
-                  <TableHead>{t('effectiveDate') || '生效日期'}</TableHead>
-                  <TableHead>{t('status') || '状态'}</TableHead>
-                  <TableHead className="w-24">{tc('actions') || '操作'}</TableHead>
+                  <TableHead>{t('processCode') || ts('k_1dy4roy')}</TableHead>
+                  <TableHead>{t('processName') || ts('k_2jnrc0')}</TableHead>
+                  <TableHead>{t('productType') || ts('k_tuwsjn')}</TableHead>
+                  <TableHead>{t('unitPrice') || ts('k_isc1c5')}</TableHead>
+                  <TableHead>{t('effectiveDate') || ts('k_1613r7i')}</TableHead>
+                  <TableHead>{t('status') || ts('k_1ccx4t4')}</TableHead>
+                  <TableHead className="w-24">{tc('actions') || ts('k_501w24')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{tc('loading') || '加载中...'}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{tc('loading') || ts('k_ldc0z9')}</TableCell></TableRow>
                 ) : rates.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{tc('noData') || '暂无数据'}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{tc('noData') || ts('k_6tzr61')}</TableCell></TableRow>
                 ) : rates.map(r => (
                   <TableRow key={r.id}>
                     <TableCell className="font-mono">{r.processCode}</TableCell>
@@ -83,7 +84,7 @@ export default function PieceRatePage() {
                     <TableCell>{r.productType || '-'}</TableCell>
                     <TableCell className="font-mono">{Number(r.unitPrice).toFixed(4)}</TableCell>
                     <TableCell>{r.effectiveDate}</TableCell>
-                    <TableCell><Badge variant={r.status === 1 ? 'default' : 'secondary'}>{r.status === 1 ? (t('active') || '启用') : (t('inactive') || '停用')}</Badge></TableCell>
+                    <TableCell><Badge variant={r.status === 1 ? 'default' : 'secondary'}>{r.status === 1 ? (t('active') || ts('k_5pm2ma')) : (t('inactive') || ts('k_6q9o5l'))}</Badge></TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>

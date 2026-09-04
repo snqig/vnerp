@@ -53,6 +53,7 @@ interface Announcement {
 }
 
 export default function AnnouncementPage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('System');
   const tc = useTranslations('Common');
   const { toast } = useToast();
@@ -118,7 +119,7 @@ export default function AnnouncementPage() {
         });
         fetchData();
       } else {
-        toast({ title: result.message || '创建失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_1jxltyq'), variant: 'destructive' });
       }
     } catch {
       toast({ title: tc('createFailed'), variant: 'destructive' });
@@ -166,13 +167,13 @@ export default function AnnouncementPage() {
   };
 
   const typeMap: Record<string, { label: string; color: string }> = {
-    info: { label: '通知', color: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' },
+    info: { label: tc('notice'), color: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' },
     warning: {
-      label: '警告',
+      label: tc('warning'),
       color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300',
     },
     important: {
-      label: '重要',
+      label: ts('k_7dclsr'),
       color: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300',
     },
   };
@@ -205,12 +206,12 @@ export default function AnnouncementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40%]">{tc('title') || '标题'}</TableHead>
+                  <TableHead className="w-[40%]">{tc('title') || ts('k_4okt0a')}</TableHead>
                   <TableHead>{tc('type')}</TableHead>
                   <TableHead>{tc('status')}</TableHead>
                   <TableHead>{tc('annTop')}</TableHead>
                   <TableHead>{tc('annReadCount')}</TableHead>
-                  <TableHead>发布时间</TableHead>
+                  <TableHead>{ts('k_vfc9wv')}</TableHead>
                   <TableHead className="text-right">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -244,13 +245,12 @@ export default function AnnouncementPage() {
                       <TableCell>
                         {item.status === 'published' ? (
                           <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300">
-                            已发布
-                          </Badge>
+                            {ts('k_rapme5')}</Badge>
                         ) : (
                           <Badge variant="secondary">{tc('draft')}</Badge>
                         )}
                       </TableCell>
-                      <TableCell>{item.is_top ? '是' : '-'}</TableCell>
+                      <TableCell>{item.is_top ? ts('k_btshni') : '-'}</TableCell>
                       <TableCell className="text-sm">{item.read_count}</TableCell>
                       <TableCell className="text-xs">{item.publish_time || '-'}</TableCell>
                       <TableCell className="text-right">
@@ -262,8 +262,7 @@ export default function AnnouncementPage() {
                             onClick={() => viewDetail(item)}
                           >
                             <Eye className="h-3 w-3 mr-1" />
-                            查看
-                          </Button>
+                            {ts('k_10fbkvl')}</Button>
                           {item.status === 'draft' && (
                             <Button
                               size="sm"
@@ -272,8 +271,7 @@ export default function AnnouncementPage() {
                               onClick={() => handlePublish(item.id)}
                             >
                               <Send className="h-3 w-3 mr-1" />
-                              发布
-                            </Button>
+                              {ts('k_jdxqel')}</Button>
                           )}
                           <Button
                             size="sm"
@@ -304,7 +302,7 @@ export default function AnnouncementPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              {tc('prevPage') || '上一页'}
+              {tc('prevPage') || ts('k_mtyn6e')}
             </Button>
             <Button
               size="sm"
@@ -312,7 +310,7 @@ export default function AnnouncementPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              {tc('nextPage') || '下一页'}
+              {tc('nextPage') || ts('k_1yw313l')}
             </Button>
           </div>
         </div>
@@ -353,8 +351,8 @@ export default function AnnouncementPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="info">{tc('notice')}</SelectItem>
-                    <SelectItem value="warning">警告</SelectItem>
-                    <SelectItem value="important">重要</SelectItem>
+                    <SelectItem value="warning">{tc('warning')}</SelectItem>
+                    <SelectItem value="important">{ts('k_7dclsr')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -369,7 +367,7 @@ export default function AnnouncementPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label>过期时间</Label>
+                <Label>{ts('k_1oc35yx')}</Label>
                 <Input
                   type="datetime-local"
                   value={form.expire_time}

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, queryOne, execute } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -7,11 +10,12 @@ import type { DbRow } from '@/types/db';
 // POST - 扫描二维码查询信息
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { qrContent, scanType, operatorId, operatorName } = body;
 
     if (!qrContent) {
-      return errorResponse('二维码内容不能为空', 400, 400);
+      return errorResponse(ts('k_15lo7aw'), 400, 400);
     }
 
     let qrData: unknown;
@@ -26,7 +30,7 @@ export const POST = withPermission(
     const type = qrData.TYPE;
 
     if (!labelNo) {
-      return errorResponse('二维码格式不正确', 400, 400);
+      return errorResponse(ts('k_ctawwt'), 400, 400);
     }
 
     // 记录扫码日志
@@ -60,9 +64,9 @@ export const POST = withPermission(
         operatorId,
         operatorName,
         'failed',
-        '未找到对应记录'
+        ts('k_1e5az2t')
       );
-      return errorResponse('未找到对应记录', 404, 404);
+      return errorResponse(ts('k_1e5az2t'), 404, 404);
     }
 
     await logScan(scanType, qrContent, labelNo, operatorId, operatorName, 'success');
@@ -72,7 +76,7 @@ export const POST = withPermission(
         type,
         data: result,
       },
-      '扫码查询成功'
+      ts('k_1hrq8j')
     );
   },
   { logTitle: '扫码查询', logType: 'business' }

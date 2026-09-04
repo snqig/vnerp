@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -9,10 +12,11 @@ const service = new QRCodeApplicationService(repo);
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { qrType, batchNo, quantity, count, materialId, materialCode, materialName, unit, warehouseId, warehouseName, refId, refNo } = body;
     if (!quantity || !count) {
-      return errorResponse('缺少必填字段: quantity, count', 400, 400);
+      return errorResponse(ts('k_ryttp2'), 400, 400);
     }
     const result = await service.generateBatchQr({
       qrType,
@@ -28,7 +32,7 @@ export const POST = withPermission(
       refId: refId ?? null,
       refNo: refNo ?? null,
     });
-    return successResponse(result, '二维码生成成功');
+    return successResponse(result, ts('k_1ju7g2q'));
   },
   { logTitle: '批量生成二维码' }
 );

@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { IEquipmentRepository } from '@/domain/equipment/repositories/IEquipmentRepository';
 import { Equipment, EquipmentStatus, EquipmentType } from '@/domain/equipment/aggregates/Equipment';
 
@@ -46,15 +48,17 @@ export class EquipmentApplicationService {
   }
 
   async changeStatus(equipmentId: number, newStatus: EquipmentStatus): Promise<void> {
+  const ts = await getTranslations('Common');
     const equipment = await this.equipmentRepo.getById(equipmentId);
-    if (!equipment) throw new Error('设备不存在');
+    if (!equipment) throw new Error(ts('k_19l0z6t'));
     equipment.changeStatus(newStatus);
     await this.equipmentRepo.update(equipment);
   }
 
   async startMaintenance(equipmentId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const equipment = await this.equipmentRepo.getById(equipmentId);
-    if (!equipment) throw new Error('设备不存在');
+    if (!equipment) throw new Error(ts('k_19l0z6t'));
     equipment.startMaintenance();
     await this.equipmentRepo.update(equipment);
   }
@@ -64,15 +68,17 @@ export class EquipmentApplicationService {
     maintenanceDate: string,
     nextMaintenanceDate?: string
   ): Promise<void> {
+  const ts = await getTranslations('Common');
     const equipment = await this.equipmentRepo.getById(equipmentId);
-    if (!equipment) throw new Error('设备不存在');
+    if (!equipment) throw new Error(ts('k_19l0z6t'));
     equipment.completeMaintenance(maintenanceDate, nextMaintenanceDate);
     await this.equipmentRepo.update(equipment);
   }
 
   async scrap(equipmentId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const equipment = await this.equipmentRepo.getById(equipmentId);
-    if (!equipment) throw new Error('设备不存在');
+    if (!equipment) throw new Error(ts('k_19l0z6t'));
     equipment.scrap();
     await this.equipmentRepo.update(equipment);
   }

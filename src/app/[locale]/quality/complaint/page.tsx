@@ -101,6 +101,7 @@ const severityMap: Record<
 };
 
 export default function Complaint8DPage() {
+  const ts = useTranslations('Quality');
   // 翻译钩子
   const t = useTranslations('Quality');
   const tc = useTranslations('Common');
@@ -268,8 +269,8 @@ export default function Complaint8DPage() {
                 {t('newComplaint')}
               </Button>
               <GlobalExportToolbar
-                filename="客诉8D报告"
-                title="客诉8D报告"
+                filename={ts('k_w0z83j')}
+                title={ts('k_w0z83j')}
                 columns={[
                   { key: 'complaint_no', label: t('complaintNo'), width: 18 },
                   { key: 'customer_name', label: tc('customerName'), width: 20 },

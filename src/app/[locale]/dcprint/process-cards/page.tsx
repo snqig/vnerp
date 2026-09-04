@@ -72,6 +72,7 @@ interface MaterialLabel {
 
 export default function ProcessCardsPage() {
   // 翻译钩子
+  const ts = useTranslations('Dcprint');
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
 
@@ -98,7 +99,7 @@ export default function ProcessCardsPage() {
   const fetchCards = async () => {
     try {
       if (USE_MOCK) {
-        logger.info({ module: 'Dcprint', action: 'fetchProcessCards' }, '使用 mock 流程卡数据');
+        logger.info({ module: 'Dcprint', action: 'fetchProcessCards' }, ts('k_1pat73x'));
         setCards(mockProcessCards);
         return;
       }
@@ -107,12 +108,12 @@ export default function ProcessCardsPage() {
       const result = await response.json();
       if (result.success) {
         setCards(result.data.list || []);
-        logger.info({ module: 'Dcprint', action: 'fetchProcessCards' }, '流程卡数据获取成功', {
+        logger.info({ module: 'Dcprint', action: 'fetchProcessCards' }, ts('k_1gyp0u'), {
           count: (result.data.list || []).length,
         });
       }
     } catch (error) {
-      logger.error({ module: 'Dcprint', action: 'fetchProcessCards' }, '获取流程卡数据失败', {
+      logger.error({ module: 'Dcprint', action: 'fetchProcessCards' }, ts('k_jdkff7'), {
         error: (error as Error).message,
       });
     }

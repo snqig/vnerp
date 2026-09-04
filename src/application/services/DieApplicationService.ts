@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { IDieRepository } from '@/domain/prepress/repositories/IDieRepository';
 import { Die, DieStatusValue } from '@/domain/prepress/aggregates/Die';
 import { DieSpecificationProps } from '@/domain/prepress/value-objects/DieSpecification';
@@ -99,8 +101,9 @@ export class DieApplicationService {
       remark: string;
     }>
   ): Promise<void> {
+  const ts = await getTranslations('Common');
     const die = await this.dieRepo.getById(equipmentId);
-    if (!die) throw new DomainError('刀模/网版不存在');
+    if (!die) throw new DomainError(ts('k_ksfsg9'));
 
     if (props.maxUsage !== undefined || props.currentUsage !== undefined) {
       const maxUsage = props.maxUsage ?? die.specification.maxUsage;
@@ -159,8 +162,9 @@ export class DieApplicationService {
       remark?: string;
     }
   ): Promise<Die> {
+  const ts = await getTranslations('Common');
     const die = await this.dieRepo.getById(dieId);
-    if (!die) throw new DomainError('刀模/网版不存在');
+    if (!die) throw new DomainError(ts('k_ksfsg9'));
     die.recordUsage(impressions, context?.operatorId, context?.operatorName);
     await this.dieRepo.update(die);
     return die;
@@ -173,16 +177,18 @@ export class DieApplicationService {
     technicianName?: string,
     impressionsAfter?: number
   ): Promise<Die> {
+  const ts = await getTranslations('Common');
     const die = await this.dieRepo.getById(dieId);
-    if (!die) throw new DomainError('刀模/网版不存在');
+    if (!die) throw new DomainError(ts('k_ksfsg9'));
     die.recordMaintenance(maintenanceType, cost, technicianName, impressionsAfter);
     await this.dieRepo.update(die);
     return die;
   }
 
   async scrap(dieId: number, reason: string): Promise<void> {
+  const ts = await getTranslations('Common');
     const die = await this.dieRepo.getById(dieId);
-    if (!die) throw new DomainError('刀模/网版不存在');
+    if (!die) throw new DomainError(ts('k_ksfsg9'));
     die.scrap(reason);
     await this.dieRepo.update(die);
   }

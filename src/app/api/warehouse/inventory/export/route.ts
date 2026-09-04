@@ -34,7 +34,7 @@ export const GET = withPermission(
       params.push(Number(warehouseId));
     }
     if (movementType) {
-      where += ' AND sm.movement_type = ?';
+      where += ' AND sm.trans_type = ?';
       params.push(movementType);
     }
     if (startDate) {
@@ -47,15 +47,15 @@ export const GET = withPermission(
     }
 
     const rows = await query(
-      `SELECT sm.id, sm.movement_type, sm.quantity, sm.unit_price,
+      `SELECT sm.id, sm.trans_type, sm.quantity, sm.unit_price,
               sm.source_type, sm.source_no, sm.remark, sm.create_time,
               m.material_code, m.material_name, m.unit,
               w.warehouse_name,
               u.real_name as operator_name
-       FROM stock_movement sm
-       LEFT JOIN materials m ON sm.material_id = m.id
-       LEFT JOIN warehouses w ON sm.warehouse_id = w.id
-       LEFT JOIN sys_user u ON sm.operator_id = u.id
+       FROM inv_inventory_transaction sm
+       LEFT JOIN inv_material m ON sm.material_id = m.id
+       LEFT JOIN inv_warehouse w ON sm.warehouse_id = w.id
+       LEFT JOIN sys_user u ON sm.create_by = u.id
        ${where}
        ORDER BY sm.create_time DESC
        LIMIT 10000`,
@@ -102,7 +102,7 @@ export const GET = withPermission(
         r.material_code || '',
         r.material_name || '',
         r.warehouse_name || '',
-        typeMap[r.movement_type] || r.movement_type,
+        typeMap[r.trans_type] || r.trans_type,
         r.quantity,
         r.unit || '',
         r.unit_price || 0,

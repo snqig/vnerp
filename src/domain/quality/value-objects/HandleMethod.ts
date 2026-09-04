@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '../../shared/DomainTypes';
 
 export type HandleMethodValue = 'rework' | 'scrap' | 'concession' | 'return';
@@ -51,11 +53,12 @@ export class HandleMethod {
   }
 
   label(): string {
+  const ts = t;
     const labels: Record<HandleMethodValue, string> = {
-      rework: '返工',
-      scrap: '报废',
-      concession: '让步接收',
-      return: '退货',
+      rework: ts('k_r5apxu'),
+      scrap: ts('k_19qx965'),
+      concession: ts('k_m3wj5o'),
+      return: ts('k_1il6wq0'),
     };
     return labels[this.value];
   }

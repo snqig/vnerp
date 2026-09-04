@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { escapeId } from 'mysql2';
 import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
@@ -104,6 +107,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // POST - 创建流程卡
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     // 验证必填字段
@@ -141,11 +145,11 @@ export const POST = withPermission(
     );
 
     if (!mainLabel) {
-      return errorResponse('主材标签不存在', 404, 404);
+      return errorResponse(ts('k_7d6bnq'), 404, 404);
     }
 
     if (mainLabel.is_main_material !== 1) {
-      return errorResponse('该标签不是母材标签，不能作为主材使用', 400, 400);
+      return errorResponse(ts('k_s61og7'), 400, 400);
     }
 
     // 生成流程卡卡号
@@ -210,7 +214,7 @@ export const POST = withPermission(
       };
     });
 
-    return successResponse(result, '流程卡创建成功');
+    return successResponse(result, ts('k_1j9xr2w'));
   },
   { logTitle: '创建流程卡', logType: 'business' }
 );
@@ -218,10 +222,11 @@ export const POST = withPermission(
 // PUT - 更新流程卡（添加辅料、配料完成、锁住/解锁）
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     if (!body.id && !body.cardNo) {
-      return errorResponse('缺少流程卡ID或卡号', 400, 400);
+      return errorResponse(ts('k_lfjcyg'), 400, 400);
     }
 
     const { id, cardNo, action, ...updateData } = body;
@@ -243,6 +248,7 @@ export const PUT = withPermission(
 
 // 添加辅料到流程卡
 async function addMaterialToCard(cardIdentifier: string | number, data: DbRow) {
+  const ts = await getTranslations('Common');
   const { labelId, labelNo, createUserId: _createUserId, createUserName: _createUserName } = data;
 
   // 获取流程卡信息
@@ -252,11 +258,11 @@ async function addMaterialToCard(cardIdentifier: string | number, data: DbRow) {
   );
 
   if (!card) {
-    return errorResponse('流程卡不存在', 404, 404);
+    return errorResponse(ts('k_qc7rob'), 404, 404);
   }
 
   if (card.lock_status === 'locked') {
-    return errorResponse('流程卡已锁住，不能添加辅料', 400, 400);
+    return errorResponse(ts('k_f4uhwx'), 400, 400);
   }
 
   // 获取标签信息
@@ -267,7 +273,7 @@ async function addMaterialToCard(cardIdentifier: string | number, data: DbRow) {
   );
 
   if (!label) {
-    return errorResponse('物料标签不存在', 404, 404);
+    return errorResponse(ts('k_vg72ml'), 404, 404);
   }
 
   // 添加辅料关联
@@ -293,31 +299,34 @@ async function addMaterialToCard(cardIdentifier: string | number, data: DbRow) {
   // 更新标签为已使用
   await execute(`UPDATE inv_material_label SET is_used = 1 WHERE id = ?`, [labelId]);
 
-  return successResponse(null, '操作成功');
+  return successResponse(null, ts('k_d209xt'));
 }
 
 // 更新配料状态
 async function updateBurdeningStatus(cardIdentifier: string | number, status: string) {
+  const ts = await getTranslations('Common');
   await execute(
     `UPDATE prd_process_card SET burdening_status = ? WHERE ${typeof cardIdentifier === 'number' ? 'id' : 'card_no'} = ?`,
     [status, cardIdentifier]
   );
 
-  return successResponse(null, '配料状态更新成功');
+  return successResponse(null, ts('k_zso0wv'));
 }
 
 // 更新锁住状态
 async function updateLockStatus(cardIdentifier: string | number, status: string) {
+  const ts = await getTranslations('Common');
   await execute(
     `UPDATE prd_process_card SET lock_status = ? WHERE ${typeof cardIdentifier === 'number' ? 'id' : 'card_no'} = ?`,
     [status, cardIdentifier]
   );
 
-  return successResponse(null, status === 'locked' ? '流程卡已锁住' : '流程卡已解锁');
+  return successResponse(null, status === 'locked' ? ts('k_pehjje') : ts('k_lwaisu'));
 }
 
 // 更新流程卡基本信息
 async function updateCardInfo(cardIdentifier: string | number, data: DbRow) {
+  const ts = await getTranslations('Common');
   const updateFields: string[] = [];
   const params: SqlValue[] = [];
 
@@ -338,7 +347,7 @@ async function updateCardInfo(cardIdentifier: string | number, data: DbRow) {
   });
 
   if (updateFields.length === 0) {
-    return errorResponse('没有要更新的字段', 400, 400);
+    return errorResponse(ts('k_ovfx8a'), 400, 400);
   }
 
   params.push(cardIdentifier);
@@ -348,22 +357,23 @@ async function updateCardInfo(cardIdentifier: string | number, data: DbRow) {
     params
   );
 
-  return successResponse(null, '流程卡更新成功');
+  return successResponse(null, ts('k_235p91'));
 }
 
 // DELETE - 删除流程卡
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('缺少流程卡ID', 400, 400);
+      return errorResponse(ts('k_zozr22'), 400, 400);
     }
 
     await execute('UPDATE prd_process_card SET deleted = 1 WHERE id = ?', [id]);
 
-    return successResponse(null, '流程卡删除成功');
+    return successResponse(null, ts('k_9deum5'));
   },
   { logTitle: '删除流程卡', logType: 'business' }
 );

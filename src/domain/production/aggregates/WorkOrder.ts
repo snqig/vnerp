@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { WorkOrderStatusVO, WorkOrderStatus } from '../value-objects/WorkOrderStatus';
 import { MaterialRequirement, MaterialRequirementProps } from '../entities/MaterialRequirement';
@@ -32,6 +34,7 @@ export interface WorkOrderProps {
   remark?: string;
   createBy?: number;
   materialRequirements: MaterialRequirementProps[];
+  qcPassed?: boolean;
   createTime?: string;
   updateTime?: string;
 }
@@ -56,6 +59,7 @@ export class WorkOrder {
     public readonly plannedEndDate: string | undefined,
     private _actualStartDate: string | undefined,
     private _actualEndDate: string | undefined,
+    private _qcPassed: boolean,
     public readonly remark: string,
     public readonly createBy: number | undefined,
     private _materialRequirements: MaterialRequirement[],
@@ -64,8 +68,9 @@ export class WorkOrder {
   ) {}
 
   static create(props: WorkOrderProps): WorkOrder {
-    if (!props.productId || props.productId <= 0) throw new DomainError('产品不能为空');
-    if (!props.plannedQty || props.plannedQty <= 0) throw new DomainError('计划数量必须大于0');
+  const ts = t;
+    if (!props.productId || props.productId <= 0) throw new DomainError(ts('k_19341vj'));
+    if (!props.plannedQty || props.plannedQty <= 0) throw new DomainError(ts('k_kl0t4a'));
 
     const materialReqs = (props.materialRequirements || []).map((mr) =>
       MaterialRequirement.create(mr)
@@ -196,12 +201,13 @@ export class WorkOrder {
   issueMaterials(
     issues: Array<{ materialId: number; quantity: number; batchNo: string; warehouseId: number }>
   ): void {
+  const ts = t;
     if (
       this._status.value !== 'approved' &&
       this._status.value !== 'picking' &&
       this._status.value !== 'in_progress'
     ) {
-      throw new DomainError('只有已审核、领料中或生产中的工单才能领料');
+      throw new DomainError(ts('k_1o13je6'));
     }
 
     const issuedItems: Array<{
@@ -239,6 +245,9 @@ export class WorkOrder {
   complete(completedQty: number, warehouseId: number): void {
     if (!this._status.canComplete())
       throw new DomainError(`当前状态"${this._status.label()}"不允许完工`);
+    if (!this._qcPassed) {
+      throw new DomainError('成品未通过质检，禁止完工入库');
+    }
     this._completedQty += completedQty;
     if (this._completedQty > this._plannedQty) {
       throw new DomainError(

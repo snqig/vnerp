@@ -45,23 +45,24 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   render() {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Common');
     if (this.state.hasError) {
       return (
         <MainLayout>
           <div className="container mx-auto py-6">
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <AlertCircle className="h-16 w-16 mb-4 text-red-500" />
-              <p className="text-lg font-medium text-red-500">页面加载失败</p>
+              <p className="text-lg font-medium text-red-500">{ts('k_dte5kz')}</p>
               <p className="text-sm mt-2 text-muted-foreground">
-                {this.state.error?.message || '发生未知错误'}
+                {this.state.error?.message || ts('k_1gs61y0')}
               </p>
               <Button
                 variant="outline"
                 className="mt-4"
                 onClick={() => this.setState({ hasError: false })}
               >
-                重试
-              </Button>
+                {tc('retry')}</Button>
             </div>
           </div>
         </MainLayout>
@@ -89,6 +90,7 @@ interface LaborCostData {
 }
 
 export default function LaborCostReportPage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
   const [data, setData] = useState<LaborCostData | null>(null);
@@ -123,11 +125,11 @@ export default function LaborCostReportPage() {
   };
 
   const typeLabels: Record<string, string> = {
-    base: t('baseSalary') || '基本工资',
-    piece: t('pieceWage') || '计件工资',
-    overtime: t('overtimePay') || '加班费',
-    performance: t('performanceBonus') || '绩效奖金',
-    insurance: t('socialInsurance') || '社保/公积金',
+    base: t('baseSalary') || ts('k_60tcky'),
+    piece: t('pieceWage') || ts('k_j33wr3'),
+    overtime: t('overtimePay') || ts('k_13fz3y5'),
+    performance: t('performanceBonus') || ts('k_n10a79'),
+    insurance: t('socialInsurance') || ts('k_b1jgzf'),
   };
 
   if (loading) {
@@ -150,10 +152,10 @@ export default function LaborCostReportPage() {
         <div className="container mx-auto py-6">
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <AlertCircle className="h-16 w-16 mb-4 text-red-500" />
-            <p className="text-lg font-medium text-red-500">{tc('error') || '操作失败'}</p>
+            <p className="text-lg font-medium text-red-500">{tc('error') || ts('k_ydow7a')}</p>
             <p className="text-sm mt-2 text-muted-foreground">{error}</p>
             <Button variant="outline" className="mt-4" onClick={fetchData}>
-              {tc('retry') || '重试'}
+              {tc('retry') || tc('retry')}
             </Button>
           </div>
         </div>
@@ -167,8 +169,8 @@ export default function LaborCostReportPage() {
         <div className="container mx-auto py-6">
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <DollarSign className="h-16 w-16 mb-4 opacity-50" />
-            <p className="text-lg">{tc('noData') || '暂无数据'}</p>
-            <p className="text-sm mt-2">{tc('pleaseSelectMonth') || '请选择月份或进行薪资核算'}</p>
+            <p className="text-lg">{tc('noData') || ts('k_6tzr61')}</p>
+            <p className="text-sm mt-2">{tc('pleaseSelectMonth') || tc('pleaseSelectMonth')}</p>
           </div>
         </div>
       </MainLayout>
@@ -180,7 +182,7 @@ export default function LaborCostReportPage() {
       <MainLayout>
         <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">{t('laborCost') || '人力成本分析'}</h1>
+          <h1 className="text-3xl font-bold">{t('laborCost') || ts('k_1007xaw')}</h1>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={() => changeMonth(-1)}>
               <ChevronLeft className="h-4 w-4" />
@@ -195,7 +197,7 @@ export default function LaborCostReportPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('totalCost') || '总成本'}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('totalCost') || ts('k_1ugaydy')}</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -206,7 +208,7 @@ export default function LaborCostReportPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('avgCostPerHead') || '人均成本'}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('avgCostPerHead') || ts('k_k2suhe')}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -217,7 +219,7 @@ export default function LaborCostReportPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('headcount') || '人数'}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('headcount') || ts('k_1qpwf8n')}</CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -226,7 +228,7 @@ export default function LaborCostReportPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('trend') || '成本趋势'}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('trend') || ts('k_1hxjytn')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -240,15 +242,15 @@ export default function LaborCostReportPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">{t('departmentCostDistribution') || '部门成本分布'}</CardTitle>
+              <CardTitle className="text-lg">{t('departmentCostDistribution') || ts('k_z7fag2')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('departmentName') || '部门'}</TableHead>
-                    <TableHead className="text-right">{t('totalCost') || '成本'}</TableHead>
-                    <TableHead className="text-right">{t('percentage') || '占比'}</TableHead>
+                    <TableHead>{t('departmentName') || tc('department')}</TableHead>
+                    <TableHead className="text-right">{t('totalCost') || ts('k_xhbzdl')}</TableHead>
+                    <TableHead className="text-right">{t('percentage') || ts('k_wu2yr5')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -266,15 +268,15 @@ export default function LaborCostReportPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">{t('costTypeBreakdown') || '成本类型构成'}</CardTitle>
+              <CardTitle className="text-lg">{t('costTypeBreakdown') || ts('k_197fr6j')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('type') || '类型'}</TableHead>
-                    <TableHead className="text-right">{t('amount') || '金额'}</TableHead>
-                    <TableHead className="text-right">{t('percentage') || '占比'}</TableHead>
+                    <TableHead>{t('type') || ts('k_anh4cj')}</TableHead>
+                    <TableHead className="text-right">{t('amount') || ts('k_1jl9r8z')}</TableHead>
+                    <TableHead className="text-right">{t('percentage') || ts('k_wu2yr5')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -293,7 +295,7 @@ export default function LaborCostReportPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">{t('monthlyTrend') || '月度成本趋势'}</CardTitle>
+            <CardTitle className="text-lg">{t('monthlyTrend') || ts('k_fphe7t')}</CardTitle>
           </CardHeader>
           <CardContent>
             <LaborCostChart data={data?.monthlyTrend || []} />

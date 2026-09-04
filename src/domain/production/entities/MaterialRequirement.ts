@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '../../shared/DomainTypes';
 
 export interface MaterialRequirementProps {
@@ -28,15 +30,16 @@ export class MaterialRequirement {
   ) {}
 
   static create(props: MaterialRequirementProps): MaterialRequirement {
-    if (!props.materialId || props.materialId <= 0) throw new DomainError('物料ID不能为空');
-    if (!props.requiredQty || props.requiredQty <= 0) throw new DomainError('需求数量必须大于0');
+  const ts = t;
+    if (!props.materialId || props.materialId <= 0) throw new DomainError(ts('k_1f11b1g'));
+    if (!props.requiredQty || props.requiredQty <= 0) throw new DomainError(ts('k_7ufuml'));
     return new MaterialRequirement(
       props.id,
       props.materialId,
       props.materialCode || '',
       props.materialName || '',
       props.specification || '',
-      props.unit || '件',
+      props.unit || ts('k_w0gthl'),
       props.requiredQty,
       0,
       0,
@@ -45,13 +48,14 @@ export class MaterialRequirement {
   }
 
   static reconstitute(props: MaterialRequirementProps): MaterialRequirement {
+  const ts = t;
     return new MaterialRequirement(
       props.id,
       props.materialId,
       props.materialCode || '',
       props.materialName || '',
       props.specification || '',
-      props.unit || '件',
+      props.unit || ts('k_w0gthl'),
       props.requiredQty,
       props.issuedQty || 0,
       props.returnedQty || 0,
@@ -77,7 +81,8 @@ export class MaterialRequirement {
   }
 
   issue(quantity: number): void {
-    if (quantity <= 0) throw new DomainError('领料数量必须大于0');
+  const ts = t;
+    if (quantity <= 0) throw new DomainError(ts('k_jkr0w4'));
     const newIssuedQty = this._issuedQty + quantity;
     if (newIssuedQty > this._requiredQty) {
       throw new DomainError(
@@ -88,7 +93,8 @@ export class MaterialRequirement {
   }
 
   returnMaterial(quantity: number): void {
-    if (quantity <= 0) throw new DomainError('退料数量必须大于0');
+  const ts = t;
+    if (quantity <= 0) throw new DomainError(ts('k_9v8iea'));
     if (quantity > this._issuedQty - this._returnedQty) {
       throw new DomainError(
         `退料超限: 已领${this._issuedQty}, 已退${this._returnedQty}, 本次${quantity}`

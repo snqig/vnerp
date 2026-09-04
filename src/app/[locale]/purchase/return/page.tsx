@@ -93,6 +93,7 @@ const statusMap: Record<number, { label: string; color: string }> = {
 };
 
 export default function PurchaseReturnPage() {
+  const ts = useTranslations('Purchase');
   const tc = useTranslations('Common');
   const t = useTranslations('Purchase');
   const { toast } = useToast();
@@ -206,11 +207,11 @@ export default function PurchaseReturnPage() {
   const handleSubmit = async () => {
     const validItems = items.filter((item) => item.return_qty > 0);
     if (validItems.length === 0) {
-      toast({ title: '请至少填写一项退货数量', variant: 'destructive' });
+      toast({ title: ts('k_bjyva1'), variant: 'destructive' });
       return;
     }
     if (!form.supplier_id) {
-      toast({ title: '请选择采购订单', variant: 'destructive' });
+      toast({ title: ts('k_qday6t'), variant: 'destructive' });
       return;
     }
 
@@ -224,20 +225,20 @@ export default function PurchaseReturnPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '采购退货单创建成功' });
+        toast({ title: ts('k_1dt30m7') });
         setDialogOpen(false);
         setItems([]);
         fetchList();
       } else {
-        toast({ title: result.message || '创建失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_1jxltyq'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '创建失败', variant: 'destructive' });
+      toast({ title: ts('k_1jxltyq'), variant: 'destructive' });
     }
   };
 
   const handleAction = async (id: number, action: string) => {
-    const actionLabel = action === 'approve' ? '审核' : action === 'complete' ? '完成退货' : '取消';
+    const actionLabel = action === 'approve' ? ts('k_1ws11do') : action === 'complete' ? ts('k_17483b0') : ts('k_1589w37');
     if (!confirm(`确定${actionLabel}？`)) return;
 
     try {
@@ -250,10 +251,10 @@ export default function PurchaseReturnPage() {
         toast({ title: result.message || `${actionLabel}成功` });
         fetchList();
       } else {
-        toast({ title: result.message || '操作失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_ydow7a'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: ts('k_ydow7a'), variant: 'destructive' });
     }
   };
 
@@ -300,13 +301,12 @@ export default function PurchaseReturnPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Undo2 className="w-6 h-6" />
-              采购退货管理
-            </h1>
+              {ts('k_jg7lgj')}</h1>
             <p className="text-sm text-muted-foreground mt-1">{tc('returnManagementDesc')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Input
-              placeholder="搜索单号/备注"
+              placeholder={ts('k_l89uv3')}
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               className="w-40 h-8 text-sm"
@@ -314,10 +314,10 @@ export default function PurchaseReturnPage() {
             />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-28 h-8 text-sm">
-                <SelectValue placeholder="全部状态" />
+                <SelectValue placeholder={ts('k_igzce8')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部状态</SelectItem>
+                <SelectItem value="all">{ts('k_igzce8')}</SelectItem>
                 <SelectItem value="1">{tc('pending')}</SelectItem>
                 <SelectItem value="2">{tc('approved')}</SelectItem>
                 <SelectItem value="3">{tc('completed')}</SelectItem>
@@ -329,8 +329,7 @@ export default function PurchaseReturnPage() {
             </Button>
             <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={openCreateDialog}>
               <Plus className="h-3 w-3 mr-1" />
-              新建退货
-            </Button>
+              {ts('k_zh4u1a')}</Button>
           </div>
         </div>
 
@@ -339,10 +338,10 @@ export default function PurchaseReturnPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>退货单号</TableHead>
+                  <TableHead>{ts('k_nxkls')}</TableHead>
                   <TableHead>{tc('relatedOrder')}</TableHead>
                   <TableHead>{tc('supplier')}</TableHead>
-                  <TableHead>退货日期</TableHead>
+                  <TableHead>{ts('k_k38lmg')}</TableHead>
                   <TableHead>{tc('amount')}</TableHead>
                   <TableHead>{tc('currency')}</TableHead>
                   <TableHead>{tc('status')}</TableHead>
@@ -359,8 +358,7 @@ export default function PurchaseReturnPage() {
                 ) : list.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                      暂无退货记录
-                    </TableCell>
+                      {ts('k_s6w4nh')}</TableCell>
                   </TableRow>
                 ) : (
                   list.map((order) => (
@@ -393,8 +391,7 @@ export default function PurchaseReturnPage() {
                             onClick={() => viewDetail(order)}
                           >
                             <Eye className="h-3 w-3 mr-1" />
-                            详情
-                          </Button>
+                            {ts('k_xc5h04')}</Button>
                           {order.status === 1 && (
                             <>
                               <Button
@@ -404,8 +401,7 @@ export default function PurchaseReturnPage() {
                                 onClick={() => handleAction(order.id, 'approve')}
                               >
                                 <CheckCircle className="h-3 w-3 mr-1" />
-                                审核
-                              </Button>
+                                {ts('k_1ws11do')}</Button>
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -413,8 +409,7 @@ export default function PurchaseReturnPage() {
                                 onClick={() => handleAction(order.id, 'cancel')}
                               >
                                 <XCircle className="h-3 w-3 mr-1" />
-                                取消
-                              </Button>
+                                {tc('cancel')}</Button>
                             </>
                           )}
                           {order.status === 2 && (
@@ -425,8 +420,7 @@ export default function PurchaseReturnPage() {
                               onClick={() => handleAction(order.id, 'complete')}
                             >
                               <CheckCircle className="h-3 w-3 mr-1" />
-                              完成退货
-                            </Button>
+                              {ts('k_17483b0')}</Button>
                           )}
                         </div>
                       </TableCell>
@@ -439,7 +433,7 @@ export default function PurchaseReturnPage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">共{total}条</span>
+          <span className="text-sm text-muted-foreground">{ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -447,16 +441,14 @@ export default function PurchaseReturnPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
-            </Button>
+              {tc('prevPage')}</Button>
             <Button
               size="sm"
               variant="outline"
               disabled={page * 10 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
-            </Button>
+              {tc('nextPage')}</Button>
           </div>
         </div>
       </div>
@@ -475,7 +467,7 @@ export default function PurchaseReturnPage() {
                 <Label>{tc('purchaseOrder')}</Label>
                 <Select onValueChange={handleSelectOrder}>
                   <SelectTrigger>
-                    <SelectValue placeholder="选择采购订单" />
+                    <SelectValue placeholder={ts('k_173dwny')} />
                   </SelectTrigger>
                   <SelectContent>
                     {purchaseOrders.map((order: Loose) => (
@@ -495,7 +487,7 @@ export default function PurchaseReturnPage() {
                 <Input value={form.currency || 'CNY'} readOnly className="bg-muted" />
               </div>
               <div className="space-y-2">
-                <Label>退货日期</Label>
+                <Label>{ts('k_k38lmg')}</Label>
                 <Input
                   type="date"
                   value={form.return_date}
@@ -509,7 +501,7 @@ export default function PurchaseReturnPage() {
               <Textarea
                 value={form.remark}
                 onChange={(e) => setForm({ ...form, remark: e.target.value })}
-                placeholder="退货原因说明"
+                placeholder={ts('k_6qc671')}
                 rows={2}
               />
             </div>
@@ -517,17 +509,17 @@ export default function PurchaseReturnPage() {
             {/* 退货明细 */}
             <div className="border rounded-lg">
               <div className="p-3 border-b bg-muted/50">
-                <span className="font-medium text-sm">退货明细</span>
+                <span className="font-medium text-sm">{ts('k_1lrcwvw')}</span>
               </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-xs">物料编码</TableHead>
-                    <TableHead className="text-xs">物料名称</TableHead>
+                    <TableHead className="text-xs">{tc('materialCode')}</TableHead>
+                    <TableHead className="text-xs">{tc('materialName')}</TableHead>
                     <TableHead className="text-xs">{tc('specification')}</TableHead>
                     <TableHead className="text-xs">{tc('unit')}</TableHead>
-                    <TableHead className="text-xs">单价</TableHead>
-                    <TableHead className="text-xs">退货数量</TableHead>
+                    <TableHead className="text-xs">{ts('k_isc1c5')}</TableHead>
+                    <TableHead className="text-xs">{ts('k_1ez71s5')}</TableHead>
                     <TableHead className="text-xs">{tc('amount')}</TableHead>
                     <TableHead className="text-xs">{tc('actions')}</TableHead>
                   </TableRow>
@@ -568,8 +560,7 @@ export default function PurchaseReturnPage() {
                         colSpan={8}
                         className="text-center text-muted-foreground py-4 text-sm"
                       >
-                        请先选择采购订单
-                      </TableCell>
+                        {ts('k_11lpeht')}</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -610,8 +601,7 @@ export default function PurchaseReturnPage() {
               {detailOrder?.return_no}
             </DialogTitle>
             <DialogDescription>
-              状态：
-              {detailOrder ? statusMap[detailOrder.status]?.label : ''}
+              {ts('k_1pwh7dy')}{detailOrder ? statusMap[detailOrder.status]?.label : ''}
               {tc('supplierLabelSuffix')}
               {detailOrder?.supplier_name}
             </DialogDescription>

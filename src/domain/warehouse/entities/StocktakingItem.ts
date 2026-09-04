@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface StocktakingItemProps {
   id?: number;
   takingId?: number;
@@ -40,6 +42,7 @@ export class StocktakingItem {
   private _status: number;
 
   private constructor(props: StocktakingItemProps) {
+  const ts = t;
     this.id = props.id;
     this.takingId = props.takingId;
     this.materialId = props.materialId;
@@ -51,7 +54,7 @@ export class StocktakingItem {
     this.bookQty = props.bookQty || 0;
     this._actualQty = props.actualQty ?? 0;
     this._diffQty = props.diffQty ?? 0;
-    this.unit = props.unit || '件';
+    this.unit = props.unit || ts('k_w0gthl');
     this.unitPrice = props.unitPrice || 0;
     this._diffAmount = props.diffAmount ?? 0;
     this.scanTime = props.scanTime;
@@ -61,8 +64,9 @@ export class StocktakingItem {
   }
 
   static create(props: StocktakingItemProps): StocktakingItem {
+  const ts = t;
     if (!props.materialId) {
-      throw new Error('物料ID不能为空');
+      throw new Error(ts('k_1f11b1g'));
     }
     return new StocktakingItem(props);
   }
@@ -88,8 +92,9 @@ export class StocktakingItem {
   }
 
   recordActualQty(qty: number, operator?: string): void {
+  const ts = t;
     if (qty < 0) {
-      throw new Error('实盘数量不能为负数');
+      throw new Error(ts('k_fxaucx'));
     }
     this._actualQty = qty;
     this._diffQty = Math.round((qty - this.bookQty) * 10000) / 10000;

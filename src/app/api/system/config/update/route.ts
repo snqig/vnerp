@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -5,11 +8,12 @@ import { withPermission } from '@/lib/api-permissions';
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { config_key, config_value, config_name, description } = body;
 
     if (!config_key) {
-      return errorResponse('缺少 config_key', 400, 400);
+      return errorResponse(ts('k_1hr7fx2'), 400, 400);
     }
 
     let sql = 'UPDATE sys_config SET config_value = ?';
@@ -31,10 +35,10 @@ export const PUT = withPermission(
     const result = await execute(sql, params);
 
     if (result.affectedRows === 0) {
-      return errorResponse('配置项不存在', 404, 404);
+      return errorResponse(ts('k_h5iqpg'), 404, 404);
     }
 
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新系统配置', logType: 'system' }
 );

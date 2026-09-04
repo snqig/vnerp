@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -19,32 +22,33 @@ async function verifyToken(token: string) {
 // POST - 保存菜单排序
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     // 获取token
     const authHeader = request.headers.get('authorization');
     secureLog('debug', 'Menu sort auth', { hasAuth: !!authHeader });
     const token = authHeader?.replace('Bearer ', '');
 
     if (!token) {
-      return commonErrors.unauthorized('未登录');
+      return commonErrors.unauthorized(ts('k_1ydrtwl'));
     }
 
     const payload = await verifyToken(token);
     secureLog('debug', 'Menu sort token verified', { userId: payload?.userId });
     if (!payload) {
-      return commonErrors.unauthorized('登录已过期');
+      return commonErrors.unauthorized(ts('k_1wf23nn'));
     }
 
     const body = await request.json();
     const { orders } = body;
 
     if (!Array.isArray(orders)) {
-      return commonErrors.badRequest('参数错误，orders必须是数组');
+      return commonErrors.badRequest(ts('k_ihka3h'));
     }
 
     // 验证每个排序项
     for (const item of orders) {
       if (!item.id || typeof item.sort_order !== 'number') {
-        return errorResponse('排序项格式不正确，需要id和sort_order字段', 400, 400);
+        return errorResponse(ts('k_vgb5nb'), 400, 400);
       }
     }
 
@@ -65,7 +69,7 @@ export const POST = withPermission(
       }
     });
 
-    return successResponse(null, '菜单排序已保存');
+    return successResponse(null, ts('k_1hpae80'));
   },
   { logTitle: '保存菜单排序' }
 );

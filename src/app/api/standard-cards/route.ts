@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { execute, query, queryOne, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -151,6 +154,7 @@ const LIST_FIELDS = `
 
 // GET - 获取标准卡列表或单个标准卡
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const status = searchParams.get('status');
@@ -166,7 +170,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
 
     if (!card) {
-      return commonErrors.notFound('标准卡不存在');
+      return commonErrors.notFound(ts('k_10y4j6y'));
     }
 
     // 解析sequences字段为JSON对象（如果是字符串）
@@ -214,6 +218,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // POST - 创建标准卡
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     // 生成标准卡编号
@@ -226,7 +231,7 @@ export const POST = withPermission(
     );
 
     if (existing) {
-      return errorResponse('标准卡编号已存在', 409, 409);
+      return errorResponse(ts('k_17xy43y'), 409, 409);
     }
 
     // 处理sequences字段
@@ -336,7 +341,7 @@ export const POST = withPermission(
       values as import('@/lib/db').SqlValue[]
     );
 
-    return successResponse({ id: result.insertId, card_no: cardNo }, '标准卡创建成功');
+    return successResponse({ id: result.insertId, card_no: cardNo }, ts('k_1oqtf0n'));
   },
   { errorMessage: '创建标准卡失败' }
 );
@@ -344,11 +349,12 @@ export const POST = withPermission(
 // PUT - 更新标准卡
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id } = body;
 
     if (!id) {
-      return commonErrors.badRequest('缺少标准卡ID');
+      return commonErrors.badRequest(ts('k_1ql7lmh'));
     }
 
     // 检查标准卡是否存在
@@ -358,7 +364,7 @@ export const PUT = withPermission(
     );
 
     if (!existingCard) {
-      return commonErrors.notFound('标准卡不存在');
+      return commonErrors.notFound(ts('k_10y4j6y'));
     }
 
     // 检查标准卡编号唯一性（排除当前记录自身）
@@ -369,7 +375,7 @@ export const PUT = withPermission(
         [cardNoToCheck, id]
       );
       if (duplicate) {
-        return errorResponse('标准卡编号已存在', 409, 409);
+        return errorResponse(ts('k_17xy43y'), 409, 409);
       }
     }
 
@@ -538,7 +544,7 @@ export const PUT = withPermission(
 
     // 构建SQL
     if (Object.keys(updateData).length === 0) {
-      return commonErrors.badRequest('没有要更新的字段');
+      return commonErrors.badRequest(ts('k_ovfx8a'));
     }
 
     const updateFields = Object.keys(updateData);
@@ -553,7 +559,7 @@ export const PUT = withPermission(
       values as import('@/lib/db').SqlValue[]
     );
 
-    return successResponse(null, '标准卡更新成功');
+    return successResponse(null, ts('k_40e9li'));
   },
   { logTitle: '更新标准卡', logType: 'business' }
 );
@@ -561,11 +567,12 @@ export const PUT = withPermission(
 // DELETE - 删除标准卡（软删除，支持批量）
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('缺少标准卡ID');
+      return commonErrors.badRequest(ts('k_1ql7lmh'));
     }
 
     // 支持批量删除：id=1,2,3
@@ -575,7 +582,7 @@ export const DELETE = withPermission(
       .filter((n) => !isNaN(n) && n > 0);
 
     if (ids.length === 0) {
-      return commonErrors.badRequest('缺少有效的标准卡ID');
+      return commonErrors.badRequest(ts('k_cfz5yo'));
     }
 
     if (ids.length === 1) {
@@ -586,10 +593,10 @@ export const DELETE = withPermission(
         [cardId]
       );
       if (!existingCard) {
-        return commonErrors.notFound('标准卡不存在');
+        return commonErrors.notFound(ts('k_10y4j6y'));
       }
       await execute('UPDATE prd_standard_card SET deleted = 1 WHERE id = ?', [cardId]);
-      return successResponse(null, '标准卡删除成功');
+      return successResponse(null, ts('k_10uwvn2'));
     }
 
     // 批量删除
@@ -599,7 +606,7 @@ export const DELETE = withPermission(
       ids as unknown as import('@/lib/db').SqlValue[]
     );
     if (!existingRows || existingRows.length === 0) {
-      return commonErrors.notFound('未找到可删除的标准卡');
+      return commonErrors.notFound(ts('k_1y12ti4'));
     }
     await execute(
       `UPDATE prd_standard_card SET deleted = 1 WHERE id IN (${placeholders})`,

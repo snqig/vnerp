@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import {
   ISampleOrderRepository,
   SampleOrderFilters,
@@ -232,11 +234,12 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
     const prefix = `SP${y}${m}${d}`;
 
     return transaction(async (conn) => {
+  const ts = await getTranslations('Common');
       const [lockResult] = await conn.query('SELECT GET_LOCK(?, 10) AS acquired', [
         'sample_order_seq',
       ]);
       if ((lockResult as RowDataPacket[])[0]?.acquired !== 1) {
-        throw new Error('获取打样单序号锁超时');
+        throw new Error(ts('k_ox77n1'));
       }
       try {
         const [rows] = await conn.query(

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -13,9 +16,10 @@ export const GET = withPermission(
     _userInfo: DbRow,
     { params }: { params: Promise<{ id: string }> }
   ) => {
+  const ts = await getTranslations('Common');
     const { id } = await params;
     const card = await service.getCardDetail(Number(id));
-    if (!card) return errorResponse('工艺卡不存在', 404, 404);
+    if (!card) return errorResponse(ts('k_1ctslgw'), 404, 404);
     return successResponse(card);
   },
   { logTitle: '打样工艺卡详情' }
@@ -27,6 +31,7 @@ export const PUT = withPermission(
     userInfo: DbRow,
     { params }: { params: Promise<{ id: string }> }
   ) => {
+  const ts = await getTranslations('Common');
     const { id } = await params;
     const body = await request.json();
     const parsed = sampleProcessCardSchema.partial().safeParse(body);
@@ -39,7 +44,7 @@ export const PUT = withPermission(
     }
     try {
       await service.updateCard(Number(id), parsed.data, userInfo.userId);
-      return successResponse({ id }, '工艺卡更新成功');
+      return successResponse({ id }, ts('k_euybuc'));
     } catch (e) {
       return errorResponse((e as Error).message, 400, 400);
     }
@@ -53,10 +58,11 @@ export const DELETE = withPermission(
     _userInfo: DbRow,
     { params }: { params: Promise<{ id: string }> }
   ) => {
+  const ts = await getTranslations('Common');
     const { id } = await params;
     try {
       await service.deleteCard(Number(id));
-      return successResponse({ id }, '工艺卡已删除');
+      return successResponse({ id }, ts('k_1gc9uk9'));
     } catch (e) {
       return errorResponse((e as Error).message, 400, 400);
     }

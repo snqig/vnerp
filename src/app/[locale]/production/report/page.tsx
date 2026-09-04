@@ -139,6 +139,7 @@ interface WorkReportForm {
 }
 
 export default function ProductionReportPage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
   const locale = useLocale();
@@ -407,7 +408,7 @@ export default function ProductionReportPage() {
                   ].map((step, i) => (
                     <div
                       key={step.key}
-                      className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
+                      className={`flex items-center gap-3 p-4 rounded-lg border-2 transition ${
                         step.value
                           ? 'bg-green-50/50 border-green-300 dark:bg-green-950/20 dark:border-green-800'
                           : i === 0 ||
@@ -607,7 +608,7 @@ export default function ProductionReportPage() {
                             className="h-4 w-4 cursor-pointer accent-blue-600"
                             checked={isSelected(String(r.id))}
                             onChange={() => toggle(String(r.id))}
-                            aria-label={tc('selectAll')}
+                            aria-label={tc('selectRow', { id: r.id })}
                           />
                         </TableCell>
                         <TableCell className="font-mono text-sm">{r.report_no}</TableCell>
@@ -743,7 +744,7 @@ export default function ProductionReportPage() {
                 <Label className="text-muted-foreground">{t('quickSelect')}</Label>
                 <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                   {scanStep === 'employee' &&
-                    ['张三', '李四', '王五', '赵六'].map((name) => (
+                    [ts('k_9zg2wy'), ts('k_153eri6'), ts('k_1i8i0ai'), ts('k_pddxj')].map((name) => (
                       <Button
                         key={name}
                         variant="outline"
@@ -840,12 +841,12 @@ export default function ProductionReportPage() {
                       <SelectValue placeholder={t('selectProcess')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="印刷">{t('processPrinting')}</SelectItem>
-                      <SelectItem value="覆膜">{t('processLaminating')}</SelectItem>
-                      <SelectItem value="模切">{t('processDieCut')}</SelectItem>
-                      <SelectItem value="分切">{t('processSlitting')}</SelectItem>
-                      <SelectItem value="检验">{t('processInspection')}</SelectItem>
-                      <SelectItem value="包装">{t('processPackaging')}</SelectItem>
+                      <SelectItem value={ts('k_5e3288')}>{t('processPrinting')}</SelectItem>
+                      <SelectItem value={ts('k_1p0kpz3')}>{t('processLaminating')}</SelectItem>
+                      <SelectItem value={ts('k_12b93ht')}>{t('processDieCut')}</SelectItem>
+                      <SelectItem value={ts('k_jnipy2')}>{t('processSlitting')}</SelectItem>
+                      <SelectItem value={ts('k_1p9tju1')}>{t('processInspection')}</SelectItem>
+                      <SelectItem value={ts('k_55mvdr')}>{t('processPackaging')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

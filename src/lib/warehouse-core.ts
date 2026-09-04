@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 /**
  * 仓库管理核心原则实现
  * 1. 先进先出 (FIFO) 原则
@@ -67,6 +69,7 @@ export async function planFIFOBatches(
   quantity: number,
   warehouseId?: number
 ): Promise<FIFOAllocationResult> {
+  const ts = await getTranslations('Common');
   try {
     // 检查是否启用FIFO
     const fifoEnabled = getConfig('fifo_enabled');
@@ -98,7 +101,7 @@ export async function planFIFOBatches(
 
     return allocateFromBatches(batches, quantity);
   } catch (error) {
-    secureLog('error', 'FIFO批次分配失败', {
+    secureLog('error', ts('k_105hp6'), {
       error: (error as Error).message,
       materialId,
       quantity,
@@ -165,13 +168,14 @@ export async function checkWholeMaterial(qrCode: string): Promise<{
   materialId?: number;
   message: string;
 }> {
+  const ts = await getTranslations('Common');
   const rows: Loose = await query(
     `SELECT * FROM inv_inventory_batch WHERE qr_code = ? AND deleted = 0`,
     [qrCode]
   );
 
   if (rows.length === 0) {
-    return { isWhole: false, message: '二维码不存在' };
+    return { isWhole: false, message: ts('k_1o9pxv') };
   }
 
   const batch = rows[0];
@@ -181,14 +185,14 @@ export async function checkWholeMaterial(qrCode: string): Promise<{
     return {
       isWhole: true,
       materialId: batch.material_id,
-      message: '整料禁止直接领用，请先拆分小料',
+      message: ts('k_tf9c6r'),
     };
   }
 
   return {
     isWhole: false,
     materialId: batch.material_id,
-    message: '可以领用',
+    message: ts('k_1bof2k7'),
   };
 }
 
@@ -201,6 +205,7 @@ export async function splitMaterial(
   splitQuantity?: number,
   operatorId?: number
 ): Promise<MaterialSplitResult> {
+  const ts = await getTranslations('Common');
   try {
     const result = await transaction(async (conn) => {
       // 1. 查询整料信息
@@ -211,7 +216,7 @@ export async function splitMaterial(
       );
 
       if (batchRows.length === 0) {
-        throw new Error('整料不存在或已拆分');
+        throw new Error(ts('k_9yx90t'));
       }
 
       const wholeMaterial = batchRows[0];
@@ -226,7 +231,7 @@ export async function splitMaterial(
       );
 
       if (materialRows.length === 0) {
-        throw new Error('物料不存在');
+        throw new Error(ts('k_130k5ym'));
       }
 
       const material = materialRows[0];
@@ -239,7 +244,7 @@ export async function splitMaterial(
       }
 
       if (standardSplitQty <= 0) {
-        throw new Error('拆分标准未配置');
+        throw new Error(ts('k_cn91wt'));
       }
 
       // 4. 计算拆分数量
@@ -247,7 +252,7 @@ export async function splitMaterial(
       const remainderQty = totalQty - splitCount * standardSplitQty;
 
       if (splitCount === 0) {
-        throw new Error('数量不足，无法按标准拆分');
+        throw new Error(ts('k_1ct0exv'));
       }
 
       // 5. 生成拆分编号
@@ -321,9 +326,9 @@ export async function splitMaterial(
         operationQty: totalQty,
         beforeQty: totalQty,
         afterQty: 0,
-        businessType: '小料拆分',
+        businessType: ts('k_1v4sl1p'),
         businessNo: splitNo,
-        remark: `整料${parentQRCode}拆分为${splitCount}个小料${remainderQty > 0 ? `+1个余料` : ''}`,
+        remark: `整料${parentQRCode}拆分为${splitCount}个小料${remainderQty > 0 ? ts('k_151hvub') : ''}`,
         operatorId,
       });
 
@@ -357,7 +362,7 @@ export async function splitMaterial(
       };
     });
 
-    secureLog('info', '小料拆分成功', {
+    secureLog('info', ts('k_14wyboo'), {
       parentQRCode,
       splitNo: result.splitNo,
       smallMaterialQR: result.smallMaterialQR,
@@ -374,7 +379,7 @@ export async function splitMaterial(
       message: `拆分成功：生成小料${result.splitQuantity}${result.remainderQuantity > 0 ? `，余料${result.remainderQuantity}` : ''}`,
     };
   } catch (error) {
-    secureLog('error', '小料拆分失败', { error: (error as Error).message, parentQRCode });
+    secureLog('error', ts('k_ev4wzn'), { error: (error as Error).message, parentQRCode });
     return {
       success: false,
       splitNo: '',
@@ -427,21 +432,22 @@ export async function enforceFIFO(
   needsApproval: boolean;
   message: string;
 }> {
+  const ts = await getTranslations('Common');
   const fifoEnabled = getConfig('fifo_enabled');
   if (!fifoEnabled) {
-    return { isValid: true, needsApproval: false, message: 'FIFO未启用' };
+    return { isValid: true, needsApproval: false, message: ts('k_hegsc0') };
   }
 
   // 获取推荐批次（只读规划，不扣减）
   const allocation = await planFIFOBatches(materialId, 1);
   if (!allocation.success || allocation.allocations.length === 0) {
-    return { isValid: false, needsApproval: false, message: '无可用批次' };
+    return { isValid: false, needsApproval: false, message: ts('k_1c1hckm') };
   }
 
   const recommendedBatchNo = allocation.allocations[0].batchNo;
 
   if (batchNo === recommendedBatchNo) {
-    return { isValid: true, recommendedBatchNo, needsApproval: false, message: 'FIFO校验通过' };
+    return { isValid: true, recommendedBatchNo, needsApproval: false, message: ts('k_1vmtyz9') };
   }
 
   // 非FIFO批次，需要审批

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, commonErrors } from '@/lib/api-response';
 import { UserInfo } from '@/lib/api-auth';
@@ -30,11 +33,12 @@ export const GET = withPermission(
     _userInfo: UserInfo,
     { params }: { params: Promise<{ id: string }> }
   ) => {
+  const ts = await getTranslations('Common');
     const { id } = await params;
 
     // 校验 poId 为数字，非法返回 400；查不到记录返回空数组（200），不返回 404
     if (!/^\d+$/.test(id)) {
-      return commonErrors.badRequest('采购单ID不合法');
+      return commonErrors.badRequest(ts('k_br58jn'));
     }
 
     const records = await query<InboundRecordRow>(
@@ -55,6 +59,6 @@ export const GET = withPermission(
       total_amount: record.total_amount,
     }));
 
-    return successResponse(serializedData, '查询成功');
+    return successResponse(serializedData, ts('k_levzqf'));
   }
 );

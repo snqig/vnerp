@@ -51,6 +51,7 @@ interface Item {
 }
 
 export default function StockAdjustPage() {
+  const ts = useTranslations('Warehouse');
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
@@ -144,7 +145,7 @@ export default function StockAdjustPage() {
         // 乐观锁冲突：状态已被其他操作变更
         toast({
           title: tc('failed'),
-          description: result.message || '并发冲突，请刷新后重试',
+          description: result.message || ts('k_1hw00sx'),
           variant: 'destructive',
         });
         fetchData();
@@ -187,8 +188,8 @@ export default function StockAdjustPage() {
               </Button>
             </div>
             <GlobalExportToolbar
-              filename="库存调整"
-              title="库存调整"
+              filename={ts('k_leccqh')}
+              title={ts('k_leccqh')}
               columns={[
                 { key: 'adjust_no', label: t('adjustNo'), width: 18 },
                 {

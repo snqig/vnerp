@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { queryOne, transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -11,13 +14,15 @@ import {
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo, { params }: { params: Promise<{ id: string }> }) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const resolvedParams = await params;
     const transferId = parseInt(resolvedParams.id);
     const body = await request.json();
     const { items } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return errorResponse('缺少入库明细数据', 400, 400);
+      return errorResponse(ts('k_layup2'), 400, 400);
     }
 
     const transfer = await queryOne(
@@ -26,16 +31,16 @@ export const POST = withPermission(
     );
 
     if (!transfer) {
-      return commonErrors.notFound('调拨单不存在');
+      return commonErrors.notFound(ts('k_118ryb8'));
     }
 
     if (transfer.status !== 2) {
       const statusMap: Record<number, string> = {
-        0: '草稿',
-        1: '待审批',
-        2: '已出库',
-        3: '已入库',
-        4: '已取消',
+        0: ts('k_oc54qp'),
+        1: ts('k_rkj3lq'),
+        2: tc('issued'),
+        3: ts('k_qug67t'),
+        4: ts('k_1d8x36r'),
       };
       return errorResponse(
         `当前状态为"${statusMap[transfer.status]}"，不能执行入库操作（需要先完成出库）`,
@@ -53,10 +58,10 @@ export const POST = withPermission(
         const quantity = Number(item.quantity);
 
         if (!materialId) {
-          throw new Error('每项必须提供物料ID');
+          throw new Error(ts('k_ktgi83'));
         }
         if (!quantity || quantity <= 0) {
-          throw new Error('入库数量必须大于0');
+          throw new Error(ts('k_eg3g3'));
         }
 
         const [matRows] = await conn.execute(
@@ -73,7 +78,7 @@ export const POST = withPermission(
           [transfer.to_warehouse_id]
         );
         const whName = (whRows as DbRow[])[0]?.warehouse_name || '';
-        const unit = mat.unit || '件';
+        const unit = mat.unit || ts('k_w0gthl');
         const unitPrice = Number(mat.cost_price || mat.purchase_price || 0);
 
         // 调入仓批次：以调拨单号+物料编码标识，已存在则累加，否则新建
@@ -126,7 +131,7 @@ export const POST = withPermission(
           unitPrice,
           totalAmount: quantity * unitPrice,
           referenceNo: transfer.transfer_no,
-          remark: '调拨入库',
+          remark: ts('k_v61o2u'),
         });
 
         // 库存流水日志（R5：统一 canonical 形态，弃用旧 change_type 形态）
@@ -137,7 +142,7 @@ export const POST = withPermission(
           operationQty: quantity,
           businessType: 'transfer_in',
           businessNo: transfer.transfer_no,
-          remark: '调拨入库',
+          remark: ts('k_v61o2u'),
         });
 
         // 汇总由批次派生，杜绝双写漂移
@@ -182,7 +187,7 @@ export const POST = withPermission(
         in_time: new Date().toISOString(),
         in_quantity: totalInQty,
       },
-      newStatus === 3 ? '调拨入库完成' : '部分入库成功'
+      newStatus === 3 ? ts('k_1785nre') : ts('k_nob042')
     );
   }
 );

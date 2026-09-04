@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { getConfig } from '@/lib/global-config';
@@ -6,6 +9,7 @@ import { logger } from '@/lib/logger';
 import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
     const aging30Days = Number(getConfig('aging_30_days') || 30);
@@ -151,6 +155,6 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       },
     });
   } catch {
-    return NextResponse.json({ success: false, message: '获取财务看板数据失败' }, { status: 500 });
+    return NextResponse.json({ success: false, message: ts('k_1u7gvl3') }, { status: 500 });
   }
 });

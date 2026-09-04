@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import QRCode from 'qrcode';
@@ -84,12 +87,13 @@ export function parseQrCodePayload(data: string): QrCodePayload | null {
 
 // API接口 - 生成带复杂数据的二维码
 export const POST = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     const body = await request.json();
     const { payload, width, margin } = body;
 
     if (!payload) {
-      return errorResponse('请提供二维码数据', 400);
+      return errorResponse(ts('k_f9am90'), 400);
     }
 
     const base64Data = await generateQrCodeWithPayload(payload, { width, margin });
@@ -99,10 +103,10 @@ export const POST = withPermission(async (request: NextRequest, _userInfo) => {
         base64: base64Data,
         payload: payload,
       },
-      '二维码生成成功'
+      ts('k_1ju7g2q')
     );
   } catch (error) {
-    return errorResponse('二维码生成失败: ' + (error as Error).message, 500);
+    return errorResponse(ts('k_cljp1n') + (error as Error).message, 500);
   }
 });
 

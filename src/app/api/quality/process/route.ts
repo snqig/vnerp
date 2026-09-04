@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse, paginatedResponse, errorResponse } from '@/lib/api-response';
@@ -115,6 +118,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // 创建品质检验记录
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       cardId,
@@ -130,7 +134,7 @@ export const POST = withPermission(
 
     // 参数验证
     if (!cardId || !inspectResult) {
-      return errorResponse('缺少必填参数: cardId, inspectResult', 400);
+      return errorResponse(ts('k_2quwv4'), 400);
     }
 
     // 验证检验结果值是否合法
@@ -198,7 +202,7 @@ export const POST = withPermission(
       );
     }
 
-    return successResponse({ inspectNo }, '品质检验记录创建成功');
+    return successResponse({ inspectNo }, ts('k_cokej7'));
   },
   { logTitle: '创建品质检验记录', logType: 'business' }
 );
@@ -206,12 +210,13 @@ export const POST = withPermission(
 // 更新品质检验结果
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, inspectResult, qualifiedQty, defectQty, inspector, remark } = body;
 
     // 参数验证
     if (!id || !inspectResult) {
-      return errorResponse('缺少必填参数: id, inspectResult', 400);
+      return errorResponse(ts('k_elsdj6'), 400);
     }
 
     // 验证检验结果值是否合法
@@ -227,7 +232,7 @@ export const PUT = withPermission(
     );
 
     if (!currentRecord) {
-      return errorResponse('检验记录不存在', 404);
+      return errorResponse(ts('k_1emlkd9'), 404);
     }
 
     // 状态机验证
@@ -278,7 +283,7 @@ export const PUT = withPermission(
       );
     }
 
-    return successResponse(null, '品质检验结果更新成功');
+    return successResponse(null, ts('k_655vru'));
   },
   { logTitle: '更新品质检验记录', logType: 'business' }
 );

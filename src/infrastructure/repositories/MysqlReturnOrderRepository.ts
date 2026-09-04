@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 import mysql from 'mysql2/promise';
 import { IReturnOrderRepository } from '@/domain/sales/repositories/IReturnOrderRepository';
 import { ReturnOrder, ReturnOrderProps } from '@/domain/sales/aggregates/ReturnOrder';
@@ -251,7 +254,9 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
   }
 
   private mapToAggregate(row: SalReturnRow, lines: SalReturnDetailRow[]): ReturnOrder {
-    const lineProps: ReturnOrderLineProps[] = lines.map((l) => ({
+    const lineProps: ReturnOrderLineProps[] = lines.map((l) => {
+  const ts = t;
+  return  ({
       id: l.id,
       returnId: l.return_id,
       lineNo: l.line_no,
@@ -261,7 +266,7 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
       materialCode: l.material_code || '',
       materialName: l.material_name || '',
       materialSpec: l.material_spec || '',
-      unit: l.unit || '件',
+      unit: l.unit || ts('k_w0gthl'),
       quantity: Number(l.quantity),
       unitPrice: Number(l.unit_price || 0),
       amount: Number(l.amount || 0),
@@ -269,7 +274,8 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
       baseAmount: Number(l.base_amount) || 0,
       batchNo: l.batch_no || '',
       remark: l.remark || '',
-    }));
+    });
+});
 
     const props: ReturnOrderProps = {
       id: row.id,

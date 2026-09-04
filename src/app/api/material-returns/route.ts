@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -14,6 +17,7 @@ function generateReturnNo(): string {
 }
 
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -54,30 +58,31 @@ export const GET = withPermission(async (request: NextRequest) => {
     {
       list: rows.map((row: DbRow) => ({
         ...row,
-        status_name: STATUS_MAP[row.status] || '未知',
+        status_name: STATUS_MAP[row.status] || ts('k_1lpnuh4'),
       })),
       total,
       page,
       pageSize,
     },
-    '获取退料单列表成功'
+    ts('k_1vmmcew')
   );
 });
 
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { workOrderId, warehouseId, items, applicantId, applicantName, remark } = body;
 
   if (!workOrderId) {
-    return errorResponse('缺少工单ID', 400, 400);
+    return errorResponse(ts('k_729j1r'), 400, 400);
   }
 
   if (!warehouseId) {
-    return errorResponse('缺少仓库ID', 400, 400);
+    return errorResponse(ts('k_1hxcz4f'), 400, 400);
   }
 
   if (!items || !Array.isArray(items) || items.length === 0) {
-    return errorResponse('缺少退料明细', 400, 400);
+    return errorResponse(ts('k_uon2ov'), 400, 400);
   }
 
   const workOrder = await queryOne(
@@ -86,7 +91,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   );
 
   if (!workOrder) {
-    return errorResponse('工单不存在', 400, 400);
+    return errorResponse(ts('k_lmufdi'), 400, 400);
   }
 
   const returnNo = generateReturnNo();
@@ -142,16 +147,17 @@ export const POST = withPermission(async (request: NextRequest) => {
       return_no: returnNo,
       status: 1,
     },
-    '退料单创建成功'
+    ts('k_7t942l')
   );
 });
 
 export const PUT = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id, action, operatorId: _operatorId, operatorName: _operatorName } = body;
 
   if (!id) {
-    return errorResponse('缺少退料单ID', 400, 400);
+    return errorResponse(ts('k_1rhtchv'), 400, 400);
   }
 
   const returnOrder = await queryOne(
@@ -160,12 +166,12 @@ export const PUT = withPermission(async (request: NextRequest) => {
   );
 
   if (!returnOrder) {
-    return errorResponse('退料单不存在', 400, 400);
+    return errorResponse(ts('k_1dhfct4'), 400, 400);
   }
 
   if (action === 'confirm') {
     if (returnOrder.status !== 1) {
-      return errorResponse('只有待确认的退料单才能确认入库', 400, 400);
+      return errorResponse(ts('k_1gifmhb'), 400, 400);
     }
 
     const returnItems = await query(`SELECT * FROM prd_material_return_item WHERE return_id = ?`, [
@@ -185,20 +191,20 @@ export const PUT = withPermission(async (request: NextRequest) => {
       Number(id),
     ]);
 
-    return successResponse(null, '退料入库确认成功');
+    return successResponse(null, ts('k_1r2dtm5'));
   }
 
   if (action === 'cancel') {
     if (returnOrder.status !== 1) {
-      return errorResponse('只有待确认的退料单才能取消', 400, 400);
+      return errorResponse(ts('k_rtev3f'), 400, 400);
     }
 
     await execute(`UPDATE prd_material_return SET status = 3, update_time = NOW() WHERE id = ?`, [
       Number(id),
     ]);
 
-    return successResponse(null, '退料单已取消');
+    return successResponse(null, ts('k_naelfn'));
   }
 
-  return errorResponse('未知的操作类型', 400, 400);
+  return errorResponse(ts('k_6u6nbn'), 400, 400);
 });

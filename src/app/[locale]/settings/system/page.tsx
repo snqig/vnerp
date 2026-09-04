@@ -74,6 +74,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 /* eslint-enable i18n/no-chinese-hardcode */
 
 export default function SystemConfigPage() {
+  const ts = useTranslations('Common');
   // 翻译钩子
   const tc = useTranslations('Common');
 
@@ -82,7 +83,7 @@ export default function SystemConfigPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [modifiedConfigs, setModifiedConfigs] = useState<Record<string, string>>({});
-  const [activeCategory, setActiveCategory] = useState('单据编码规则');
+  const [activeCategory, setActiveCategory] = useState(ts('k_6k0dvs'));
   const [remark, setRemark] = useState('');
 
   useEffect(() => {
@@ -96,7 +97,7 @@ export default function SystemConfigPage() {
       const result = await res.json();
       if (result.success) {
         setData(result.data);
-        setActiveCategory(result.data.categories[0] || '单据编码规则');
+        setActiveCategory(result.data.categories[0] || ts('k_6k0dvs'));
       }
     } catch {
       toast({ title: tc('configLoadFailed'), variant: 'destructive' });
@@ -136,7 +137,7 @@ export default function SystemConfigPage() {
       const result = await res.json();
 
       if (result.success) {
-        toast({ title: result.message || '保存成功' });
+        toast({ title: result.message || ts('k_16krn1') });
         setModifiedConfigs({});
         setRemark('');
         fetchConfig();
@@ -223,17 +224,15 @@ export default function SystemConfigPage() {
           <div>
             <h1 className="text-2xl font-bold">{tc('systemConfigTitle')}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              系统核心参数配置中心，修改需审批后生效
-            </p>
+              {ts('k_au2h7z')}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={fetchConfig}>
               <RefreshCw className="w-4 h-4 mr-1" />
-              刷新
-            </Button>
+              {ts('k_12qo56a')}</Button>
             <Button onClick={handleSave} disabled={!hasChanges || saving}>
               <Save className="w-4 h-4 mr-1" />
-              {saving ? '保存中...' : '保存修改'}
+              {saving ? ts('k_rr6ulf') : ts('k_dwc9o9')}
             </Button>
           </div>
         </div>
@@ -254,7 +253,7 @@ export default function SystemConfigPage() {
                     <Input
                       value={remark}
                       onChange={(e) => setRemark(e.target.value)}
-                      placeholder="请输入修改原因..."
+                      placeholder={ts('k_zvxpiy')}
                       className="mt-1"
                     />
                   </div>
@@ -282,8 +281,7 @@ export default function SystemConfigPage() {
                     {CATEGORY_ICONS[category]}
                     {category}
                     <Badge variant="secondary" className="ml-auto">
-                      {data.grouped[category]?.length || 0}项
-                    </Badge>
+                      {data.grouped[category]?.length || 0}{ts('k_1xoauwk')}</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -305,16 +303,14 @@ export default function SystemConfigPage() {
                                 variant="outline"
                                 className="text-xs text-red-600 border-red-200"
                               >
-                                必填
-                              </Badge>
+                                {ts('k_166c1v5')}</Badge>
                             )}
                             {item.approval_required && (
                               <Badge
                                 variant="outline"
                                 className="text-xs text-orange-600 border-orange-200"
                               >
-                                需审批
-                              </Badge>
+                                {ts('k_36td5l')}</Badge>
                             )}
                           </div>
                           {item.description && (
@@ -325,8 +321,7 @@ export default function SystemConfigPage() {
                           {renderConfigInput(item)}
                           {modifiedConfigs[item.config_key] !== undefined && (
                             <Badge variant="default" className="bg-blue-600">
-                              已修改
-                            </Badge>
+                              {ts('k_1dc2fd4')}</Badge>
                           )}
                         </div>
                       </div>

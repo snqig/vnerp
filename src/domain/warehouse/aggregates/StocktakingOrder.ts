@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { StocktakingStatus, StocktakingStatusEnum } from '../value-objects/StocktakingStatus';
 import { StocktakingItem, StocktakingItemProps } from '../entities/StocktakingItem';
@@ -61,11 +63,12 @@ export class StocktakingOrder {
   ) {}
 
   static create(props: StocktakingOrderProps): StocktakingOrder {
+  const ts = t;
     if (!props.warehouseId) {
-      throw new DomainError('仓库ID不能为空');
+      throw new DomainError(ts('k_1t9r8nc'));
     }
     if (!props.items || props.items.length === 0) {
-      throw new DomainError('盘点项不能为空');
+      throw new DomainError(ts('k_1rq5mr'));
     }
 
     const items = props.items.map((item) => StocktakingItem.create(item));
@@ -241,12 +244,13 @@ export class StocktakingOrder {
   }
 
   processDiff(itemId: number): void {
+  const ts = t;
     const item = this._items.find((i) => i.id === itemId);
     if (!item) {
       throw new DomainError(`盘点项不存在: ${itemId}`);
     }
     if (!item.hasDiff()) {
-      throw new DomainError('该盘点项无差异，无需处理');
+      throw new DomainError(ts('k_4q67y4'));
     }
     item.markDiffProcessed();
   }

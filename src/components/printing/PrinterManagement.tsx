@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -69,6 +70,8 @@ export interface PrintQueueItem {
 }
 
 export const PrinterManagement: React.FC = () => {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Common');
   const [printers, setPrinters] = useState<PrinterConfig[]>(DEFAULT_PRINTERS);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [queue, _setQueue] = useState<PrintQueueItem[]>([]);
@@ -109,49 +112,47 @@ export const PrinterManagement: React.FC = () => {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Printer className="h-5 w-5" />
-              打印机配置
-            </CardTitle>
-            <CardDescription>管理和配置打印设备</CardDescription>
+              {ts('k_1ddnw67')}</CardTitle>
+            <CardDescription>{ts('k_1mdxx05')}</CardDescription>
           </div>
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                添加打印机
-              </Button>
+                {ts('k_1veq3q5')}</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>添加打印机</DialogTitle>
+                <DialogTitle>{ts('k_1veq3q5')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>打印机名称</Label>
-                  <Input placeholder="例如：车间1号打印机" />
+                  <Label>{ts('k_1q5o3up')}</Label>
+                  <Input placeholder={ts('k_63alxv')} />
                 </div>
                 <div className="space-y-2">
-                  <Label>打印机类型</Label>
+                  <Label>{ts('k_1snl5xu')}</Label>
                   <Select defaultValue="thermal">
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="thermal">热敏打印机</SelectItem>
-                      <SelectItem value="laser">激光打印机</SelectItem>
-                      <SelectItem value="inkjet">喷墨打印机</SelectItem>
+                      <SelectItem value="thermal">{ts('k_5vde1g')}</SelectItem>
+                      <SelectItem value="laser">{ts('k_p06qax')}</SelectItem>
+                      <SelectItem value="inkjet">{ts('k_yv6l4x')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>型号（可选）</Label>
+                  <Label>{ts('k_65wr1o')}</Label>
                   <Input placeholder="Zebra ZD420" />
                 </div>
                 <div className="space-y-2">
-                  <Label>IP地址（可选）</Label>
+                  <Label>{ts('k_orposb')}</Label>
                   <Input placeholder="192.168.1.100" />
                 </div>
                 <div className="space-y-2">
-                  <Label>默认纸张尺寸</Label>
+                  <Label>{ts('k_wcz9ib')}</Label>
                   <Select defaultValue="60x40">
                     <SelectTrigger>
                       <SelectValue />
@@ -164,7 +165,7 @@ export const PrinterManagement: React.FC = () => {
                   </Select>
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label>设为默认打印机</Label>
+                  <Label>{ts('k_w7ky3w')}</Label>
                   <Switch />
                 </div>
               </div>
@@ -182,24 +183,22 @@ export const PrinterManagement: React.FC = () => {
                       <span className="font-medium">{printer.name}</span>
                       {printer.isDefault && (
                         <Badge variant="outline" className="text-xs">
-                          默认
-                        </Badge>
+                          {ts('k_1ybnnw9')}</Badge>
                       )}
                       <Badge
                         variant={printer.isActive ? 'default' : 'secondary'}
                         className="text-xs"
                       >
-                        {printer.isActive ? '启用' : '禁用'}
+                        {printer.isActive ? ts('k_5pm2ma') : ts('k_1dcdrxo')}
                       </Badge>
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {printer.type === 'thermal'
-                        ? '热敏'
+                        ? ts('k_jovhud')
                         : printer.type === 'laser'
-                          ? '激光'
-                          : '喷墨'}
-                      打印机
-                      {printer.model && ` · ${printer.model}`}
+                          ? ts('k_6v7ig2')
+                          : ts('k_14f0nlm')}
+                      {ts('k_100ox1g')}{printer.model && ` · ${printer.model}`}
                     </div>
                   </div>
                 </div>
@@ -210,8 +209,7 @@ export const PrinterManagement: React.FC = () => {
                       size="sm"
                       onClick={() => setDefaultPrinter(printer.id)}
                     >
-                      设为默认
-                    </Button>
+                      {ts('k_froa3x')}</Button>
                   )}
                   <Button
                     variant="ghost"
@@ -234,13 +232,12 @@ export const PrinterManagement: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            打印队列
-          </CardTitle>
-          <CardDescription>查看和管理打印任务</CardDescription>
+            {ts('k_jt7244')}</CardTitle>
+          <CardDescription>{ts('k_1qdv6ov')}</CardDescription>
         </CardHeader>
         <CardContent>
           {queue.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">暂无打印任务</div>
+            <div className="text-center py-8 text-muted-foreground">{ts('k_ig1z2k')}</div>
           ) : (
             <div className="border rounded-lg divide-y">
               {queue.map((item) => (
@@ -251,7 +248,7 @@ export const PrinterManagement: React.FC = () => {
                       <div className="font-medium text-sm">{item.labelType}</div>
                       <div className="text-xs text-muted-foreground">
                         {item.copies}
-                        {'创建时间'}
+                        {tc('createdAt')}
                         {new Date(item.createdAt).toLocaleString()}
                       </div>
                     </div>
@@ -269,17 +266,16 @@ export const PrinterManagement: React.FC = () => {
                       }
                     >
                       {item.status === 'pending'
-                        ? '等待中'
+                        ? ts('k_1w8gdh6')
                         : item.status === 'printing'
-                          ? '打印中'
+                          ? ts('k_14828kh')
                           : item.status === 'success'
-                            ? '成功'
-                            : '失败'}
+                            ? ts('k_1rraohc')
+                            : ts('k_12db3qz')}
                     </Badge>
                     {(item.status === 'pending' || item.status === 'failed') && (
                       <Button variant="ghost" size="sm">
-                        重试
-                      </Button>
+                        {tc('retry')}</Button>
                     )}
                   </div>
                 </div>

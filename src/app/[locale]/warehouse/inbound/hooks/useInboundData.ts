@@ -15,6 +15,7 @@ import type {
 
 export function useInboundData() {
   const t = useTranslations('Warehouse');
+  const ts = useTranslations('Warehouse');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -38,7 +39,7 @@ export function useInboundData() {
       params.append('pageSize', '1000');
 
       const response = await authFetch(`/api/warehouse/inbound?${params.toString()}`);
-      logger.info(ctx, 'API响应', { status: response.status, ok: response.ok });
+      logger.info(ctx, ts('k_1arfebi'), { status: response.status, ok: response.ok });
       const result = await response.json();
 
       if (result.success) {
@@ -51,13 +52,13 @@ export function useInboundData() {
           hasList: !!result.data?.list,
           isDataArray: Array.isArray(result.data),
         });
-        logger.info(ctx, '入库单列表获取成功', { count: records.length });
+        logger.info(ctx, ts('k_gwnk33'), { count: records.length });
         setInboundRecords(records);
       } else {
-        logger.warn(ctx, 'API返回失败', { message: result.message, code: result.code });
+        logger.warn(ctx, ts('k_11ohwaz'), { message: result.message, code: result.code });
       }
     } catch (error) {
-      logger.error(ctx, '获取入库单列表失败', { error: (error as Error).message, stack: (error as Error).stack });
+      logger.error(ctx, ts('k_qfg52'), { error: (error as Error).message, stack: (error as Error).stack });
     }
   }, [searchQuery, statusFilter]);
 
@@ -84,13 +85,13 @@ export function useInboundData() {
           warehouse_code: w.warehouse_code ?? w.code,
           warehouse_name: w.warehouse_name ?? w.name,
         }));
-        logger.info(ctx, '仓库列表获取成功', { count: list.length });
+        logger.info(ctx, ts('k_zloowg'), { count: list.length });
         setWarehouses(list);
       } else {
-        logger.warn(ctx, '仓库列表API返回失败', { message: result.message });
+        logger.warn(ctx, ts('k_19qa3rw'), { message: result.message });
       }
     } catch (error) {
-      logger.error(ctx, '获取仓库列表失败', { error: (error as Error).message });
+      logger.error(ctx, ts('k_olsy6v'), { error: (error as Error).message });
     }
   }, []);
 
@@ -101,13 +102,13 @@ export function useInboundData() {
       const result = await response.json();
       if (result.success) {
         const list = result.data || [];
-        logger.info(ctx, '仓库分类获取成功', { count: list.length });
+        logger.info(ctx, ts('k_1qin9a8'), { count: list.length });
         setWarehouseCategories(list);
       } else {
-        logger.warn(ctx, '仓库分类API返回失败', { message: result.message });
+        logger.warn(ctx, ts('k_oq4t0s'), { message: result.message });
       }
     } catch (error) {
-      logger.error(ctx, '获取仓库分类失败', { error: (error as Error).message });
+      logger.error(ctx, tc('categoryFetchFailed'), { error: (error as Error).message });
     }
   }, []);
 
@@ -118,13 +119,13 @@ export function useInboundData() {
       const result = await response.json();
       if (result.success) {
         const supplierList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
-        logger.info(ctx, '供应商列表获取成功', { count: supplierList.length });
+        logger.info(ctx, ts('k_1ppv1hb'), { count: supplierList.length });
         setSuppliers(supplierList);
       } else {
-        logger.warn(ctx, '供应商列表API返回失败', { message: result.message });
+        logger.warn(ctx, ts('k_15ry1c9'), { message: result.message });
       }
     } catch (error) {
-      logger.error(ctx, '获取供应商列表失败', { error: (error as Error).message });
+      logger.error(ctx, ts('k_j12ivi'), { error: (error as Error).message });
     }
   }, []);
 
@@ -135,19 +136,19 @@ export function useInboundData() {
       const result = await response.json();
       if (result.success) {
         const list = result.data?.list || [];
-        logger.info(ctx, '标签列表获取成功', { count: list.length });
+        logger.info(ctx, ts('k_jzvqb'), { count: list.length });
         setLabelList(list);
       } else {
-        logger.warn(ctx, '标签列表API返回失败', { message: result.message });
+        logger.warn(ctx, ts('k_maapbp'), { message: result.message });
       }
     } catch (error) {
-      logger.error(ctx, '获取标签列表失败', { error: (error as Error).message });
+      logger.error(ctx, ts('k_1p0z1yg'), { error: (error as Error).message });
     }
   }, []);
 
   useEffect(() => {
     const ctx = { module: 'Warehouse', action: 'mountInit' };
-    logger.info(ctx, '组件挂载，开始并行拉取初始数据');
+    logger.info(ctx, ts('k_15hxua8'));
     fetchInboundRecords();
     fetchWarehouses();
     fetchWarehouseCategories();

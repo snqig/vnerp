@@ -36,6 +36,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, GitBranch, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { formatDate } from '@/lib/date-utils';
 
 interface LifecycleRecord {
   id?: number;
@@ -307,7 +308,7 @@ export default function ProductLifecyclePage() {
                 {records.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell>
-                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectAll')} />
+                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectRow', { id: String(r.id) })} />
                     </TableCell>
                     <TableCell className="font-mono text-xs">{r.product_code || '-'}</TableCell>
                     <TableCell>{r.product_name}</TableCell>
@@ -325,7 +326,7 @@ export default function ProductLifecyclePage() {
                     <TableCell>{changeTypeMap[r.change_type] || '-'}</TableCell>
                     <TableCell>{r.effective_date || '-'}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {r.create_time?.slice(0, 10)}
+                      {formatDate(r.create_time)}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">

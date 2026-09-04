@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -133,11 +136,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // POST - 执行追溯查询
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { cardNo, traceType = 'forward', operatorId, operatorName } = body;
 
     if (!cardNo) {
-      return errorResponse('流程卡号不能为空', 400, 400);
+      return errorResponse(ts('k_1f7h6zv'), 400, 400);
     }
 
     // 查询流程卡信息
@@ -160,7 +164,7 @@ export const POST = withPermission(
     );
 
     if (!card) {
-      return errorResponse('流程卡不存在', 404, 404);
+      return errorResponse(ts('k_qc7rob'), 404, 404);
     }
 
     // 查询流程卡关联的所有物料
@@ -204,7 +208,7 @@ export const POST = withPermission(
         traceType,
         operatorId,
         operatorName,
-        `追溯查询: ${traceType === 'forward' ? '正向追溯' : '反向追溯'}`,
+        `追溯查询: ${traceType === 'forward' ? ts('k_1yh2yft') : ts('k_19f7liv')}`,
       ]
     );
 
@@ -259,7 +263,7 @@ export const POST = withPermission(
         mainMaterials: materials?.filter((m) => m.materialType === 'main') || [],
         auxiliaryMaterials: materials?.filter((m) => m.materialType === 'auxiliary') || [],
       },
-      '追溯查询成功'
+      ts('k_3oe1k7')
     );
   },
   { logTitle: '追溯查询', logType: 'business' }
@@ -267,11 +271,12 @@ export const POST = withPermission(
 
 // GET /detail - 获取追溯详情
 export const detail = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const traceNo = searchParams.get('traceNo');
 
   if (!traceNo) {
-    return errorResponse('追溯单号不能为空', 400, 400);
+    return errorResponse(ts('k_6xqqgv'), 400, 400);
   }
 
   const trace = await queryOne<unknown>(
@@ -295,7 +300,7 @@ export const detail = withPermission(async (request: NextRequest, _userInfo) => 
   );
 
   if (!trace) {
-    return errorResponse('追溯记录不存在', 404, 404);
+    return errorResponse(ts('k_9mxy2p'), 404, 404);
   }
 
   // 查询追溯明细

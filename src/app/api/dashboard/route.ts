@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
@@ -5,6 +8,7 @@ import { logger } from '@/lib/logger';
 import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     let todayOrders = 0,
       pendingOrders = 0,
@@ -100,7 +104,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
           type: 'quality',
           message: `${inkAlert}罐油墨即将过期`,
           severity: 'high',
-          time: '刚刚',
+          time: ts('k_w601md'),
         });
 
       const dieRows = await query(`
@@ -113,7 +117,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
           type: 'production',
           message: `${dieAlert}个刀模/网版使用率超80%`,
           severity: 'medium',
-          time: '刚刚',
+          time: ts('k_w601md'),
         });
 
       if (inventoryAlert > 0)
@@ -121,7 +125,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
           type: 'inventory',
           message: `${inventoryAlert}种物料库存不足`,
           severity: 'high',
-          time: '刚刚',
+          time: ts('k_w601md'),
         });
     } catch (e) {
       logger.error({ module: 'dashboard', action: 'overview' }, 'Dashboard query failed', {
@@ -172,6 +176,6 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       },
     });
   } catch {
-    return NextResponse.json({ success: false, message: '获取仪表盘数据失败' }, { status: 500 });
+    return NextResponse.json({ success: false, message: ts('k_1er696e') }, { status: 500 });
   }
 });

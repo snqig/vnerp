@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { OrderStatus } from '../value-objects/OrderStatus';
 import { Money } from '../../shared/value-objects/Money';
@@ -77,11 +79,12 @@ export class OutboundOrder {
   ) {}
 
   static create(props: OutboundOrderProps): OutboundOrder {
+  const ts = t;
     if (!props.warehouseId) {
-      throw new DomainError('仓库ID不能为空');
+      throw new DomainError(ts('k_1t9r8nc'));
     }
     if (!props.items || props.items.length === 0) {
-      throw new DomainError('出库项不能为空');
+      throw new DomainError(ts('k_12rwg0z'));
     }
 
     const items = props.items.map((item) => OutboundItem.create(item));
@@ -249,8 +252,9 @@ export class OutboundOrder {
   }
 
   approve(warehouseName: string, auditorId?: number, auditorName?: string): void {
+  const ts = t;
     if (this._items.length === 0) {
-      throw new DomainError('出库单不能为空');
+      throw new DomainError(ts('k_16vvjnb'));
     }
 
     this._status = this._status.transitionTo('completed');

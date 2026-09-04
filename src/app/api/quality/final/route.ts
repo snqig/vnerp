@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse, paginatedResponse } from '@/lib/api-response';
@@ -97,6 +100,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // 创建终检记录
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       cardId,
@@ -141,7 +145,7 @@ export const POST = withPermission(
       );
     }
 
-    return successResponse({ finalNo }, '终检记录创建成功');
+    return successResponse({ finalNo }, ts('k_p2v11i'));
   },
   { logTitle: '创建终检记录', logType: 'business' }
 );
@@ -149,6 +153,7 @@ export const POST = withPermission(
 // 更新终检结果
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, finalResult, qualifiedQty, defectQty, inspector, remark } = body;
 
@@ -168,7 +173,7 @@ export const PUT = withPermission(
       );
     }
 
-    return successResponse(null, '终检结果更新成功');
+    return successResponse(null, ts('k_1555nov'));
   },
   { logTitle: '更新终检记录', logType: 'business' }
 );

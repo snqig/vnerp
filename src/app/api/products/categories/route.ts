@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -55,6 +58,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
 // 创建产品分类
 export const POST = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       categoryCode,
@@ -66,7 +70,7 @@ export const POST = withPermission(
     } = body;
 
     if (!categoryCode || !categoryName) {
-      return errorResponse('分类编码和名称不能为空', 400, 400);
+      return errorResponse(ts('k_1ygxuki'), 400, 400);
     }
 
     // 检查分类编码是否已存在
@@ -76,7 +80,7 @@ export const POST = withPermission(
     );
 
     if ((existingCategories as DbRow[]).length > 0) {
-      return errorResponse('分类编码已存在', 400, 400);
+      return errorResponse(ts('k_l7bdt7'), 400, 400);
     }
 
     const result = await query(
@@ -88,7 +92,7 @@ export const POST = withPermission(
 
     const insertId = (result as DbRow).insertId;
 
-    return successResponse({ id: insertId, categoryCode }, '产品分类创建成功');
+    return successResponse({ id: insertId, categoryCode }, ts('k_13059ni'));
   },
   { logTitle: '创建产品分类' }
 );
@@ -96,11 +100,12 @@ export const POST = withPermission(
 // 更新产品分类
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, categoryName, sortOrder, description, status } = body;
 
     if (!id) {
-      return errorResponse('分类ID不能为空', 400, 400);
+      return errorResponse(ts('k_1b9ixjx'), 400, 400);
     }
 
     const updateFields: string[] = [];
@@ -127,7 +132,7 @@ export const PUT = withPermission(
     }
 
     if (updateFields.length === 0) {
-      return errorResponse('没有要更新的字段', 400, 400);
+      return errorResponse(ts('k_ovfx8a'), 400, 400);
     }
 
     updateParams.push(id);
@@ -136,7 +141,7 @@ export const PUT = withPermission(
       updateParams
     );
 
-    return successResponse({ id }, '产品分类更新成功');
+    return successResponse({ id }, ts('k_75s1ff'));
   },
   { logTitle: '更新产品分类' }
 );
@@ -144,11 +149,12 @@ export const PUT = withPermission(
 // 删除产品分类
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('分类ID不能为空', 400, 400);
+      return errorResponse(ts('k_1b9ixjx'), 400, 400);
     }
 
     // 检查是否有子分类
@@ -158,7 +164,7 @@ export const DELETE = withPermission(
     );
 
     if ((childCategories as DbRow[]).length > 0) {
-      return errorResponse('该分类下有子分类，不能删除', 400, 400);
+      return errorResponse(ts('k_h5kwx8'), 400, 400);
     }
 
     // 检查是否有关联产品
@@ -168,7 +174,7 @@ export const DELETE = withPermission(
     );
 
     if ((products as DbRow[]).length > 0) {
-      return errorResponse('该分类下有关联产品，不能删除', 400, 400);
+      return errorResponse(ts('k_ig22m6'), 400, 400);
     }
 
     // 软删除
@@ -176,7 +182,7 @@ export const DELETE = withPermission(
       id,
     ]);
 
-    return successResponse(null, '产品分类删除成功');
+    return successResponse(null, ts('k_kie3bf'));
   },
   { logTitle: '删除产品分类' }
 );

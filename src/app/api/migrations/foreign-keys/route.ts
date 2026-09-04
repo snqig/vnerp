@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { query, execute } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import type { NextRequest } from 'next/server';
@@ -73,6 +76,7 @@ async function addColumnSafe(table: string, column: string, definition: string):
 }
 
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const step = searchParams.get('step') || 'all';
   const results: string[] = [];
@@ -83,7 +87,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   // 【1】BOM 体系外键
   // ============================================================
   if (step === 'all' || step === '1') {
-    results.push('===== 【1】BOM 体系外键 =====');
+    results.push(ts('k_fqu10t'));
 
     if (await tableExists('bom_line')) {
       results.push(
@@ -135,7 +139,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   // 【2】油墨外键
   // ============================================================
   if (step === 'all' || step === '2') {
-    results.push('===== 【2】油墨外键 =====');
+    results.push(ts('k_7hg613'));
 
     if (await tableExists('base_ink')) {
       if (await columnExists('base_ink', 'supplier_id')) {
@@ -153,7 +157,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   // 【3】网版外键
   // ============================================================
   if (step === 'all' || step === '3') {
-    results.push('===== 【3】网版外键 =====');
+    results.push(ts('k_1k841ii'));
 
     if (await tableExists('prd_screen_plate')) {
       if (await columnExists('prd_screen_plate', 'customer_id')) {
@@ -187,7 +191,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   // 【4】库存标签外键
   // ============================================================
   if (step === 'all' || step === '4') {
-    results.push('===== 【4】库存标签外键 =====');
+    results.push(ts('k_f6q4we'));
 
     if (await tableExists('inv_material_label')) {
       if (await columnExists('inv_material_label', 'parent_label_id')) {
@@ -240,7 +244,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   // 【5】用户与部门外键
   // ============================================================
   if (step === 'all' || step === '5') {
-    results.push('===== 【5】用户与部门外键 =====');
+    results.push(ts('k_xr0guw'));
 
     if (await tableExists('sys_user')) {
       if (await columnExists('sys_user', 'department_id')) {
@@ -258,7 +262,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   // 【6】索引补充
   // ============================================================
   if (step === 'all' || step === '6') {
-    results.push('===== 【6】索引补充 =====');
+    results.push(ts('k_1dzpcsh'));
 
     results.push(await addIndexSafe('bom_line', 'idx_bom_line_material_id', 'material_id'));
     results.push(await addIndexSafe('base_ink', 'idx_base_ink_supplier_id', 'supplier_id'));
@@ -295,111 +299,111 @@ export const GET = withPermission(async (request: NextRequest) => {
   // 【7】网版表字段优化
   // ============================================================
   if (step === 'all' || step === '7') {
-    results.push('===== 【7】网版表字段优化 =====');
+    results.push(ts('k_w7vnq2'));
 
     if (await tableExists('prd_screen_plate')) {
       results.push(
         await addColumnSafe(
           'prd_screen_plate',
           'plate_code',
-          "VARCHAR(50) NULL UNIQUE COMMENT '网版编号'"
+          ts('k_1jj5r8d')
         )
       );
       results.push(
-        await addColumnSafe('prd_screen_plate', 'mesh_count', "INT NULL COMMENT '网目数'")
+        await addColumnSafe('prd_screen_plate', 'mesh_count', ts('k_f1um5'))
       );
       results.push(
         await addColumnSafe(
           'prd_screen_plate',
           'mesh_material',
-          "VARCHAR(30) NULL COMMENT '丝网材质'"
+          ts('k_1lz36g0')
         )
       );
       results.push(
-        await addColumnSafe('prd_screen_plate', 'size', "VARCHAR(50) NULL COMMENT '网版尺寸'")
+        await addColumnSafe('prd_screen_plate', 'size', ts('k_13zvnnh'))
       );
       results.push(
         await addColumnSafe(
           'prd_screen_plate',
           'tension_value',
-          "DECIMAL(6,2) NULL COMMENT '张力值(N/cm)'"
+          ts('k_1oyzu2m')
         )
       );
       results.push(
         await addColumnSafe(
           'prd_screen_plate',
           'tension_date',
-          "DATETIME NULL COMMENT '最后测张力时间'"
+          ts('k_1ghneus')
         )
       );
       results.push(
         await addColumnSafe(
           'prd_screen_plate',
           'status',
-          "VARCHAR(20) NULL DEFAULT 'New' COMMENT '状态'"
+          ts('k_5tdzuj')
         )
       );
       results.push(
         await addColumnSafe(
           'prd_screen_plate',
           'life_count',
-          "INT UNSIGNED NULL DEFAULT 0 COMMENT '已印刷次数'"
+          ts('k_1vx78u0')
         )
       );
       results.push(
         await addColumnSafe(
           'prd_screen_plate',
           'max_life_count',
-          "INT UNSIGNED NULL DEFAULT 800 COMMENT '最大寿命'"
+          ts('k_4yhwvr')
         )
       );
       results.push(
         await addColumnSafe(
           'prd_screen_plate',
           'reclaim_count',
-          "INT UNSIGNED NULL DEFAULT 0 COMMENT '已再生次数'"
+          ts('k_1ezy90v')
         )
       );
       results.push(
-        await addColumnSafe('prd_screen_plate', 'exposure_date', "DATETIME NULL COMMENT '曝光日期'")
+        await addColumnSafe('prd_screen_plate', 'exposure_date', ts('k_qjyp4w'))
       );
       results.push(
         await addColumnSafe(
           'prd_screen_plate',
           'last_used_date',
-          "DATETIME NULL COMMENT '最后使用日期'"
+          ts('k_ckqbzd')
         )
       );
       results.push(
         await addColumnSafe(
           'prd_screen_plate',
           'last_clean_date',
-          "DATETIME NULL COMMENT '最后清洗日期'"
+          ts('k_11vikss')
         )
       );
       results.push(
         await addColumnSafe(
           'prd_screen_plate',
           'last_reclaim_date',
-          "DATETIME NULL COMMENT '最后再生日期'"
+          ts('k_135qs4c')
         )
       );
       results.push(
         await addColumnSafe(
           'prd_screen_plate',
           'scrap_reason',
-          "VARCHAR(200) NULL COMMENT '报废原因'"
+          ts('k_1omvrdo')
         )
       );
       results.push(
         await addColumnSafe(
           'prd_screen_plate',
           'storage_location',
-          "VARCHAR(100) NULL COMMENT '存放位置'"
+          ts('k_1lp2285')
         )
       );
       results.push(
-        await addColumnSafe('prd_screen_plate', 'frame_type', "VARCHAR(30) NULL COMMENT '框类型'")
+        await addColumnSafe('prd_screen_plate', 'frame_type', ts('k_izwmzo'))
       );
     }
   }
@@ -408,25 +412,10 @@ export const GET = withPermission(async (request: NextRequest) => {
   // 【8】网版生命周期历史表
   // ============================================================
   if (step === 'all' || step === '8') {
-    results.push('===== 【8】网版生命周期历史表 =====');
+    results.push(ts('k_1jfh8p6'));
 
     if (!(await tableExists('screen_plate_history'))) {
-      await execute(`
-        CREATE TABLE screen_plate_history (
-          id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-          screen_plate_id BIGINT UNSIGNED NOT NULL,
-          action VARCHAR(50) NOT NULL COMMENT 'Created/Exposed/Printed/Cleaned/Reclaimed/Scrapped/TensionAdjusted',
-          tension_value DECIMAL(6,2) NULL,
-          life_increment INT DEFAULT 0,
-          remark TEXT NULL,
-          operator_id BIGINT UNSIGNED NULL,
-          operator_name VARCHAR(50) NULL,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (screen_plate_id) REFERENCES prd_screen_plate(id) ON DELETE CASCADE,
-          INDEX idx_screen_plate_action (screen_plate_id, action),
-          INDEX idx_created_at (created_at)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='网版生命周期历史记录表'
-      `);
+      await execute(ts('k_10lvcx'));
       results.push('Created screen_plate_history');
     } else {
       results.push('Already exists: screen_plate_history');
@@ -437,34 +426,10 @@ export const GET = withPermission(async (request: NextRequest) => {
   // 【9】油墨耗用表
   // ============================================================
   if (step === 'all' || step === '9') {
-    results.push('===== 【9】油墨耗用表 =====');
+    results.push(ts('k_62q0b3'));
 
     if (!(await tableExists('ink_usage'))) {
-      await execute(`
-        CREATE TABLE ink_usage (
-          id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-          work_order_id BIGINT UNSIGNED NULL COMMENT '工单ID',
-          screen_plate_id BIGINT UNSIGNED NULL COMMENT '网版ID',
-          ink_id BIGINT UNSIGNED NOT NULL COMMENT '油墨ID',
-          ink_code VARCHAR(50) NULL COMMENT '油墨编码',
-          ink_name VARCHAR(100) NULL COMMENT '油墨名称',
-          usage_qty DECIMAL(18,4) NOT NULL COMMENT '耗用数量',
-          unit VARCHAR(20) NULL COMMENT '单位',
-          usage_date DATETIME NOT NULL COMMENT '耗用日期',
-          operator_id BIGINT UNSIGNED NULL COMMENT '操作人ID',
-          operator_name VARCHAR(50) NULL COMMENT '操作人姓名',
-          remark TEXT NULL COMMENT '备注',
-          create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-          update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          deleted TINYINT DEFAULT 0,
-          FOREIGN KEY (ink_id) REFERENCES base_ink(id) ON DELETE RESTRICT,
-          FOREIGN KEY (screen_plate_id) REFERENCES prd_screen_plate(id) ON DELETE SET NULL,
-          INDEX idx_work_order_id (work_order_id),
-          INDEX idx_screen_plate_id (screen_plate_id),
-          INDEX idx_ink_id (ink_id),
-          INDEX idx_usage_date (usage_date)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='油墨耗用记录表'
-      `);
+      await execute(ts('k_v9uxuo'));
       results.push('Created ink_usage');
     } else {
       results.push('Already exists: ink_usage');
@@ -473,5 +438,5 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   await execute('SET FOREIGN_KEY_CHECKS = 1');
 
-  return successResponse(results, '外键补充完成');
+  return successResponse(results, ts('k_wtl10b'));
 });

@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useEffect, useState } from 'react';
 import {
@@ -27,9 +28,10 @@ interface UserSelectProps {
 export function UserSelect({
   value,
   onChange,
-  placeholder = '选择用户',
+  placeholder = ts('k_o3jh8u'),
   className,
 }: UserSelectProps) {
+  const ts = useTranslations('Common');
   const [users, setUsers] = useState<UserItem[]>([]);
 
   useEffect(() => {

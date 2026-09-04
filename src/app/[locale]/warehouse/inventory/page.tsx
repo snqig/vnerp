@@ -44,6 +44,7 @@ import { useToast } from '@/hooks/use-toast';
 import { authFetch } from '@/lib/auth-fetch';
 
 export default function InventoryPage() {
+  const ts = useTranslations('Warehouse');
   // 添加翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
@@ -87,8 +88,8 @@ export default function InventoryPage() {
         { label: tc('expired'), value: 'expired' },
       ],
     },
-    { key: 'expiry_date_start', label: t('expiryDate') + '(起)', type: 'date' },
-    { key: 'expiry_date_end', label: t('expiryDate') + '(止)', type: 'date' },
+    { key: 'expiry_date_start', label: t('expiryDate') + ts('k_116a71n'), type: 'date' },
+    { key: 'expiry_date_end', label: t('expiryDate') + ts('k_1knarg2'), type: 'date' },
   ];
 
   // 批量操作配置

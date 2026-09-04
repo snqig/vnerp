@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '@/domain/shared/DomainTypes';
 import { DieSpecification, DieSpecificationProps } from '../value-objects/DieSpecification';
 import {
@@ -141,11 +143,12 @@ export class Die {
   }
 
   recordUsage(impressions: number, operatorId?: number, operatorName?: string): void {
+  const ts = t;
     if (this.status === 'scrap') {
-      throw new DomainError('已报废刀模不能使用');
+      throw new DomainError(ts('k_a9v48f'));
     }
     if (this.status === 're_rule_needed') {
-      throw new DomainError('需重做刀模请先保养后再使用');
+      throw new DomainError(ts('k_y2790m'));
     }
     const newCumulative = this.specification.cumulativeImpressions + impressions;
     const updatedSpec = new DieSpecification({
@@ -213,8 +216,9 @@ export class Die {
   }
 
   scrap(reason: string): void {
+  const ts = t;
     if (this.status === 'scrap') {
-      throw new DomainError('刀模已报废');
+      throw new DomainError(ts('k_18ra71k'));
     }
     this.status = 'scrap';
     this.statusCode = 4;

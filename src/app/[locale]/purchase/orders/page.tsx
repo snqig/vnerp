@@ -140,6 +140,7 @@ const formatDate = (dateStr: string | null | undefined) => {
 };
 
 export default function PurchaseOrdersPage() {
+  const ts = useTranslations('Purchase');
   // 翻译钩子
   const t = useTranslations('Purchase');
   const tc = useTranslations('Common');
@@ -206,12 +207,12 @@ export default function PurchaseOrdersPage() {
     currency: '',
   });
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
-    { id: 1, material_code: '', material_name: '', quantity: 1, unit: '件', unit_price: 0 },
+    { id: 1, material_code: '', material_name: '', quantity: 1, unit: ts('k_w0gthl'), unit_price: 0 },
   ]);
 
   const fetchOrders = useCallback(
     async (searchKeyword?: string) => {
-      logger.info({ module: 'Purchase', action: 'fetchOrders' }, '开始获取采购单列表', {
+      logger.info({ module: 'Purchase', action: 'fetchOrders' }, ts('k_v0c763'), {
         page,
         pageSize,
         statusFilter,
@@ -221,7 +222,7 @@ export default function PurchaseOrdersPage() {
         setLoading(true);
 
         if (USE_MOCK) {
-          logger.info({ module: 'Purchase', action: 'fetchOrders' }, '使用 mock 数据');
+          logger.info({ module: 'Purchase', action: 'fetchOrders' }, ts('k_1b38xbu'));
           const filtered = searchKeyword
             ? mockPurchaseOrders.filter(
                 (o) => o.po_no?.includes(searchKeyword) || o.supplier_name?.includes(searchKeyword)
@@ -249,16 +250,16 @@ export default function PurchaseOrdersPage() {
           setOrders(ordersList);
           setTotal(data.pagination?.total || 0);
           setSelectedOrders([]);
-          logger.info({ module: 'Purchase', action: 'fetchOrders' }, '采购单列表获取成功', {
+          logger.info({ module: 'Purchase', action: 'fetchOrders' }, ts('k_1fywe87'), {
             count: ordersList.length,
           });
         } else {
-          logger.warn({ module: 'Purchase', action: 'fetchOrders' }, 'API返回失败', {
+          logger.warn({ module: 'Purchase', action: 'fetchOrders' }, ts('k_11ohwaz'), {
             message: data.message,
           });
         }
       } catch (error) {
-        logger.error({ module: 'Purchase', action: 'fetchOrders' }, '获取采购单列表失败', {
+        logger.error({ module: 'Purchase', action: 'fetchOrders' }, ts('k_thrhgq'), {
           error: (error as Error).message,
         });
       } finally {
@@ -269,10 +270,10 @@ export default function PurchaseOrdersPage() {
   );
 
   const fetchSuppliers = useCallback(async () => {
-    logger.info({ module: 'Purchase', action: 'fetchSuppliers' }, '开始获取供应商列表');
+    logger.info({ module: 'Purchase', action: 'fetchSuppliers' }, ts('k_4hpxzn'));
     try {
       if (USE_MOCK) {
-        logger.info({ module: 'Purchase', action: 'fetchSuppliers' }, '使用 mock 数据');
+        logger.info({ module: 'Purchase', action: 'fetchSuppliers' }, ts('k_1b38xbu'));
         setSuppliers(mockSuppliers);
         return;
       }
@@ -280,12 +281,12 @@ export default function PurchaseOrdersPage() {
       const data = await ApiClient.get('/api/purchase/suppliers');
       if (data.success) {
         setSuppliers(data.data?.list || data.data || []);
-        logger.info({ module: 'Purchase', action: 'fetchSuppliers' }, '供应商列表获取成功', {
+        logger.info({ module: 'Purchase', action: 'fetchSuppliers' }, ts('k_1ppv1hb'), {
           count: (data.data?.list || []).length,
         });
       }
     } catch (error) {
-      logger.error({ module: 'Purchase', action: 'fetchSuppliers' }, '获取供应商列表失败', {
+      logger.error({ module: 'Purchase', action: 'fetchSuppliers' }, ts('k_j12ivi'), {
         error: (error as Error).message,
       });
     }
@@ -323,13 +324,13 @@ export default function PurchaseOrdersPage() {
 
   const handleCreateOrder = async () => {
     if (!newOrder.supplier_id) {
-      toast({ title: '错误', description: '请选择供应商', variant: 'destructive' });
+      toast({ title: ts('k_v9pftt'), description: ts('k_116pur3'), variant: 'destructive' });
       return;
     }
 
     const validItems = orderItems.filter((item) => item.material_code && item.quantity > 0);
     if (validItems.length === 0) {
-      toast({ title: '错误', description: '请添加至少一项采购物料', variant: 'destructive' });
+      toast({ title: ts('k_v9pftt'), description: ts('k_1ato6eo'), variant: 'destructive' });
       return;
     }
 
@@ -353,18 +354,18 @@ export default function PurchaseOrdersPage() {
         })),
       });
       if (data.success) {
-        toast({ title: '成功', description: '采购单创建成功' });
+        toast({ title: ts('k_1rraohc'), description: ts('k_qqp9rs') });
         setIsCreateOpen(false);
         setNewOrder({ supplier_id: '', delivery_date: '', remark: '', currency: '' });
         setOrderItems([
-          { id: 1, material_code: '', material_name: '', quantity: 1, unit: '件', unit_price: 0 },
+          { id: 1, material_code: '', material_name: '', quantity: 1, unit: ts('k_w0gthl'), unit_price: 0 },
         ]);
         fetchOrders();
       } else {
-        toast({ title: '错误', description: data.message || '创建失败', variant: 'destructive' });
+        toast({ title: ts('k_v9pftt'), description: data.message || ts('k_1jxltyq'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '错误', description: '创建采购单失败', variant: 'destructive' });
+      toast({ title: ts('k_v9pftt'), description: ts('k_1io10lx'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -411,13 +412,13 @@ export default function PurchaseOrdersPage() {
       }
 
       if (successCount > 0) {
-        toast({ title: '成功', description: `成功删除 ${successCount} 个采购单` });
+        toast({ title: ts('k_1rraohc'), description: `成功删除 ${successCount} 个采购单` });
         fetchOrders();
       } else {
-        toast({ title: '错误', description: '删除失败', variant: 'destructive' });
+        toast({ title: ts('k_v9pftt'), description: ts('k_1ijrr73'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '错误', description: '删除失败', variant: 'destructive' });
+      toast({ title: ts('k_v9pftt'), description: ts('k_1ijrr73'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -487,7 +488,7 @@ export default function PurchaseOrdersPage() {
       a.download = `采购订单_${new Date().toISOString().slice(0, 10)}.xls`;
       a.click();
       URL.revokeObjectURL(url);
-      toast({ title: '导出成功', description: '已导出为 Excel 文件' });
+      toast({ title: ts('k_1hkfymq'), description: ts('k_y6mc99') });
     } else if (format === 'pdf') {
       const printWindow = window.open('', '_blank');
       if (!printWindow) return;
@@ -517,7 +518,7 @@ export default function PurchaseOrdersPage() {
 <script>window.onload=function(){window.print()}</script>
 </body></html>`);
       printWindow.document.close();
-      toast({ title: '导出成功', description: '已导出为 PDF（打印保存）' });
+      toast({ title: ts('k_1hkfymq'), description: ts('k_1fd5yss') });
     } else if (format === 'word') {
       const headers = Object.keys(data[0] || {});
       const thCells = headers
@@ -551,7 +552,7 @@ export default function PurchaseOrdersPage() {
       a.download = `采购订单_${new Date().toISOString().slice(0, 10)}.doc`;
       a.click();
       URL.revokeObjectURL(url);
-      toast({ title: '导出成功', description: '已导出为 Word 文件' });
+      toast({ title: ts('k_1hkfymq'), description: ts('k_kcr5su') });
     }
   };
 
@@ -659,7 +660,7 @@ export default function PurchaseOrdersPage() {
           </tr>`
                 )
                 .join('')
-            : '<tr><td colspan="9" style="color:#999;text-align:center;padding:8px;">暂无明细数据</td></tr>';
+            : ts('k_epq0m0');
 
         return `
         <div class="order-block">
@@ -725,7 +726,7 @@ export default function PurchaseOrdersPage() {
         material_code: '',
         material_name: '',
         quantity: 1,
-        unit: '件',
+        unit: ts('k_w0gthl'),
         unit_price: 0,
       },
     ]);
@@ -801,8 +802,8 @@ export default function PurchaseOrdersPage() {
                   </Button>
                 )}
                 <GlobalExportToolbar
-                  filename="采购订单"
-                  title="采购订单列表"
+                  filename={ts('k_1sy8pjo')}
+                  title={ts('k_1w93sn7')}
                   landscape
                   columns={[
                     { key: 'po_no', label: t('poNo'), width: 18 },
@@ -1346,7 +1347,7 @@ export default function PurchaseOrdersPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">采购单号</Label>
+                    <Label className="text-muted-foreground">{ts('k_rng21t')}</Label>
                     <p className="font-mono">{selectedOrder.po_no}</p>
                   </div>
                   <div>
@@ -1400,11 +1401,11 @@ export default function PurchaseOrdersPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>物料编码</TableHead>
-                          <TableHead>物料名称</TableHead>
+                          <TableHead>{tc('materialCode')}</TableHead>
+                          <TableHead>{tc('materialName')}</TableHead>
                           <TableHead>{tc('quantity')}</TableHead>
                           <TableHead>{tc('unit')}</TableHead>
-                          <TableHead>单价</TableHead>
+                          <TableHead>{ts('k_isc1c5')}</TableHead>
                           <TableHead>{tc('amount')}</TableHead>
                         </TableRow>
                       </TableHeader>

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -7,11 +10,12 @@ import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const batchNo = searchParams.get('batchNo');
 
     if (!batchNo) {
-      return errorResponse('batchNo 不能为空', 400, 400);
+      return errorResponse(ts('k_syy0ma'), 400, 400);
     }
 
     const batchRows = await query<unknown>(

@@ -146,13 +146,14 @@ const outboundTypeOptions = [
 
 // 列表接口返回的是「单据 + 明细数组」，表格按扁平字段渲染，这里做一次字段映射
 function mapOutboundRow(o: DbRow): OutboundRecord {
+  const ts = useTranslations('Warehouse');
   const firstItem = Array.isArray((o as DbRow).items) ? (o as DbRow).items[0] : undefined;
   const typeLabel: Record<string, string> = {
-    production: '生产出库',
-    sales: '销售出库',
-    return: '退货出库',
-    transfer: '转仓出库',
-    other: '其他出库',
+    production: ts('k_g4v5tc'),
+    sales: ts('k_270k8'),
+    return: ts('k_1913pi7'),
+    transfer: ts('k_x2noxr'),
+    other: ts('k_le3tde'),
   };
   return {
     id: String(o.id),
@@ -317,6 +318,7 @@ const statusConfig: Record<
 };
 
 export default function OutboundManagementPage() {
+  const ts = useTranslations('Warehouse');
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
@@ -326,14 +328,14 @@ export default function OutboundManagementPage() {
     () => [
       { value: 'M', label: t('unitM') },
       { value: 'KG', label: t('unitKG') },
-      { value: '卷', label: t('unitRoll') },
-      { value: '支', label: t('unitPiece') },
-      { value: '张', label: t('unitSheet') },
-      { value: '桶', label: t('unitBarrel') },
-      { value: '箱', label: t('unitBox') },
+      { value: ts('k_1v8rak6'), label: t('unitRoll') },
+      { value: ts('k_btluu6'), label: t('unitPiece') },
+      { value: ts('k_accfpb'), label: t('unitSheet') },
+      { value: ts('k_1vl54uh'), label: t('unitBarrel') },
+      { value: ts('k_1e2x02k'), label: t('unitBox') },
       { value: 'PCS', label: t('unitPCS') },
-      { value: '套', label: t('unitSet') },
-      { value: '件', label: t('unitItem') },
+      { value: ts('k_1mchwba'), label: t('unitSet') },
+      { value: ts('k_w0gthl'), label: t('unitItem') },
     ],
     [t]
   );
@@ -399,7 +401,7 @@ export default function OutboundManagementPage() {
 
   // 获取出库单列表
   const fetchOutboundRecords = useCallback(async () => {
-    logger.info({ module: 'Warehouse', action: 'fetchOutboundRecords' }, '开始获取出库单列表');
+    logger.info({ module: 'Warehouse', action: 'fetchOutboundRecords' }, ts('k_ithmxu'));
     try {
       const params = new URLSearchParams();
       if (searchQuery) params.append('keyword', searchQuery);
@@ -413,12 +415,12 @@ export default function OutboundManagementPage() {
         const raw = result.data?.list || result.data || [];
         const mapped = raw.map((o: Loose) => mapOutboundRow(o));
         setOutboundRecords(mapped);
-        logger.info({ module: 'Warehouse', action: 'fetchOutboundRecords' }, '出库单列表获取成功', {
+        logger.info({ module: 'Warehouse', action: 'fetchOutboundRecords' }, ts('k_1ui4vre'), {
           count: mapped.length,
         });
       }
     } catch (error) {
-      logger.error({ module: 'Warehouse', action: 'fetchOutboundRecords' }, '获取出库单列表失败', {
+      logger.error({ module: 'Warehouse', action: 'fetchOutboundRecords' }, ts('k_1shz4nj'), {
         error: (error as Error).message,
       });
     }
@@ -481,7 +483,7 @@ export default function OutboundManagementPage() {
         );
         const result = await res.json();
         if (!result.success) {
-          setInvLookup({ error: result.message || '查询库存失败' });
+          setInvLookup({ error: result.message || ts('k_vcrbxn') });
           return;
         }
         const d = result.data || {};
@@ -503,7 +505,7 @@ export default function OutboundManagementPage() {
           }));
         }
       } catch {
-        setInvLookup({ error: '查询库存失败' });
+        setInvLookup({ error: ts('k_vcrbxn') });
       } finally {
         setInvLoading(false);
       }
@@ -540,13 +542,13 @@ export default function OutboundManagementPage() {
       warehouse: record.warehouseId ? String(record.warehouseId) : '',
       remark: record.remark || '',
       outboundType:
-        record.type === '生产出库'
+        record.type === ts('k_g4v5tc')
           ? 'production'
-          : record.type === '销售出库'
+          : record.type === ts('k_270k8')
             ? 'sales'
-            : record.type === '退货出库'
+            : record.type === ts('k_1913pi7')
               ? 'return'
-              : record.type === '转仓出库'
+              : record.type === ts('k_x2noxr')
                 ? 'transfer'
                 : 'other',
       isRawMaterial: record.isRawMaterial || false,
@@ -585,7 +587,7 @@ export default function OutboundManagementPage() {
           },
         ],
         operatorId: 0,
-        operatorName: '当前用户',
+        operatorName: ts('k_1aanl48'),
       };
 
       const response = await authFetch('/api/warehouse/outbound', {
@@ -638,7 +640,7 @@ export default function OutboundManagementPage() {
           },
         ],
         operatorId: 0,
-        operatorName: '当前用户',
+        operatorName: ts('k_1aanl48'),
       };
 
       const response = await authFetch('/api/warehouse/outbound', {
@@ -674,7 +676,7 @@ export default function OutboundManagementPage() {
           /* 非 JSON，作为原始标签号处理 */
         }
         if (!qr) {
-          toast.error('二维码内容为空');
+          toast.error(ts('k_pf21j6'));
           return;
         }
 
@@ -684,7 +686,7 @@ export default function OutboundManagementPage() {
         });
         const result = await res.json();
         if (!result.success) {
-          toast.error(result.message || '扫码解析失败');
+          toast.error(result.message || ts('k_187rh1w'));
           return;
         }
         const d = (result.data && result.data.data) || {};
@@ -707,7 +709,7 @@ export default function OutboundManagementPage() {
             : formData.warehouse || (warehouses[0]?.id ? String(warehouses[0].id) : '');
         setScanWarehouse(wh);
       } catch {
-        toast.error('扫码解析失败');
+        toast.error(ts('k_187rh1w'));
       } finally {
         setScanLoading(false);
       }
@@ -723,7 +725,7 @@ export default function OutboundManagementPage() {
     if (!scanMaterial) return;
     const qty = parseFloat(scanQty);
     if (!scanQty || Number.isNaN(qty) || qty <= 0) {
-      toast.error('请输入有效的出库数量');
+      toast.error(ts('k_15mgojz'));
       return;
     }
     if (scanAvailable != null && qty > scanAvailable) {
@@ -789,7 +791,7 @@ export default function OutboundManagementPage() {
           id: currentRecord.id,
           status: newStatus,
           auditStatus: newStatus,
-          auditorName: '当前用户',
+          auditorName: ts('k_1aanl48'),
           auditTime: new Date().toISOString(),
         }),
       });
@@ -853,8 +855,8 @@ export default function OutboundManagementPage() {
         body: JSON.stringify({
           id: currentRecord.id || currentRecord.orderId,
           operatorId: 1,
-          operatorName: '当前用户',
-          remark: 'FIFO先进先出出库',
+          operatorName: ts('k_1aanl48'),
+          remark: ts('k_1vshp9f'),
         }),
       });
       const result = await response.json();
@@ -958,8 +960,7 @@ export default function OutboundManagementPage() {
             className="gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
           >
             <ScanLine className="w-4 h-4" />
-            扫码出库
-          </Button>
+            {ts('k_1vlzpeu')}</Button>
         </motion.div>
 
         {/* 查询筛选栏 */}
@@ -1304,8 +1305,7 @@ export default function OutboundManagementPage() {
             {invLoading && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                查询库存中…
-              </div>
+                {ts('k_n0wbre')}</div>
             )}
             {!invLoading && invLookup?.error && (
               <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
@@ -1315,9 +1315,9 @@ export default function OutboundManagementPage() {
             {!invLoading && invLookup && !invLookup.error && (
               <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">库存信息</span>
+                  <span className="text-muted-foreground">{ts('k_1kki8nq')}</span>
                   <span className="font-medium text-green-700">
-                    可用合计：{invLookup.totalAvailable}
+                    {ts('k_1e31cad')}{invLookup.totalAvailable}
                     {invLookup.batches?.[0]?.unit ? ` ${invLookup.batches[0].unit}` : ''}
                   </span>
                 </div>
@@ -1330,9 +1330,9 @@ export default function OutboundManagementPage() {
                     <table className="w-full text-[11px]">
                       <thead className="text-muted-foreground">
                         <tr>
-                          <th className="px-2 py-1 text-left font-normal">批次</th>
-                          <th className="px-2 py-1 text-right font-normal">可用量</th>
-                          <th className="px-2 py-1 text-right font-normal">入库日期</th>
+                          <th className="px-2 py-1 text-left font-normal">{tc('batch')}</th>
+                          <th className="px-2 py-1 text-right font-normal">{ts('k_1jbjkjb')}</th>
+                          <th className="px-2 py-1 text-right font-normal">{ts('k_wv7sht')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1347,7 +1347,7 @@ export default function OutboundManagementPage() {
                     </table>
                   </div>
                 ) : (
-                  <div className="text-muted-foreground">该仓库下无可用库存</div>
+                  <div className="text-muted-foreground">{ts('k_1wyrhzt')}</div>
                 )}
               </div>
             )}
@@ -1472,10 +1472,9 @@ export default function OutboundManagementPage() {
       <Dialog open={isScanDialogOpen} onOpenChange={setIsScanDialogOpen}>
         <DialogContent className="sm:max-w-[560px]" resizable>
           <DialogHeader>
-            <DialogTitle>扫码出库选择</DialogTitle>
+            <DialogTitle>{ts('k_hz9458')}</DialogTitle>
             <DialogDescription>
-              扫描物料/批次二维码，自动解析物料并带出可用库存，确认后填入出库单。
-            </DialogDescription>
+              {ts('k_7y2x08')}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -1484,48 +1483,49 @@ export default function OutboundManagementPage() {
                 scanMode="outbound"
                 onScan={handleScanOutbound}
                 disabled={scanLoading}
-                placeholder="扫描或输入二维码内容..."
+                autoFocus
+                placeholder={ts('k_13fyew2')}
               />
             ) : (
               <div className="space-y-4">
                 <div className="rounded-lg border p-3 space-y-2 bg-muted/40">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">物料名称</span>
+                    <span className="text-sm text-muted-foreground">{tc('materialName')}</span>
                     <span className="font-medium">{scanMaterial.materialName || '-'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">物料编码</span>
+                    <span className="text-sm text-muted-foreground">{tc('materialCode')}</span>
                     <span>{scanMaterial.materialCode || '-'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">规格</span>
+                    <span className="text-sm text-muted-foreground">{ts('k_1h40xod')}</span>
                     <span>{scanMaterial.specification || '-'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">批次</span>
+                    <span className="text-sm text-muted-foreground">{tc('batch')}</span>
                     <span>{scanMaterial.batchNo || '-'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">单位</span>
+                    <span className="text-sm text-muted-foreground">{ts('k_1xadx6v')}</span>
                     <span>{scanMaterial.unit || '-'}</span>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>出库仓库</Label>
+                  <Label>{ts('k_1skdlyg')}</Label>
                   <WarehouseSelect
                     value={scanWarehouse}
                     onChange={handleScanWarehouseChange}
-                    placeholder="选择仓库"
+                    placeholder={ts('k_11qrtkd')}
                     showCategory={false}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>标签可用量</Label>
+                  <Label>{ts('k_t27giw')}</Label>
                   <div className="text-sm">
                     {scanAvailable == null ? (
-                      <span className="text-muted-foreground">（无库存信息）</span>
+                      <span className="text-muted-foreground">{ts('k_dvvwkd')}</span>
                     ) : (
                       <span className="font-medium text-green-700">
                         {scanAvailable} {scanMaterial.unit || ''}
@@ -1535,13 +1535,13 @@ export default function OutboundManagementPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>出库数量 *</Label>
+                  <Label>{ts('k_mjioll')}</Label>
                   <Input
                     type="number"
                     min={0}
                     value={scanQty}
                     onChange={(e) => setScanQty(e.target.value)}
-                    placeholder="请输入出库数量"
+                    placeholder={ts('k_17dq27c')}
                   />
                 </div>
               </div>
@@ -1559,16 +1559,13 @@ export default function OutboundManagementPage() {
                     setScanAvailable(null);
                   }}
                 >
-                  重新扫描
-                </Button>
+                  {ts('k_x723pu')}</Button>
                 <Button onClick={handleConfirmScanAdd} className="bg-primary hover:bg-primary/90">
-                  选择并填入出库单
-                </Button>
+                  {ts('k_1getqpn')}</Button>
               </>
             ) : (
               <Button variant="outline" onClick={() => setIsScanDialogOpen(false)}>
-                取消
-              </Button>
+                {tc('cancel')}</Button>
             )}
           </DialogFooter>
         </DialogContent>
@@ -1604,8 +1601,7 @@ export default function OutboundManagementPage() {
             {invLoading && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                查询库存中…
-              </div>
+                {ts('k_n0wbre')}</div>
             )}
             {!invLoading && invLookup?.error && (
               <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
@@ -1615,9 +1611,9 @@ export default function OutboundManagementPage() {
             {!invLoading && invLookup && !invLookup.error && (
               <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">库存信息</span>
+                  <span className="text-muted-foreground">{ts('k_1kki8nq')}</span>
                   <span className="font-medium text-green-700">
-                    可用合计：{invLookup.totalAvailable}
+                    {ts('k_1e31cad')}{invLookup.totalAvailable}
                     {invLookup.batches?.[0]?.unit ? ` ${invLookup.batches[0].unit}` : ''}
                   </span>
                 </div>
@@ -1630,9 +1626,9 @@ export default function OutboundManagementPage() {
                     <table className="w-full text-[11px]">
                       <thead className="text-muted-foreground">
                         <tr>
-                          <th className="px-2 py-1 text-left font-normal">批次</th>
-                          <th className="px-2 py-1 text-right font-normal">可用量</th>
-                          <th className="px-2 py-1 text-right font-normal">入库日期</th>
+                          <th className="px-2 py-1 text-left font-normal">{tc('batch')}</th>
+                          <th className="px-2 py-1 text-right font-normal">{ts('k_1jbjkjb')}</th>
+                          <th className="px-2 py-1 text-right font-normal">{ts('k_wv7sht')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1647,7 +1643,7 @@ export default function OutboundManagementPage() {
                     </table>
                   </div>
                 ) : (
-                  <div className="text-muted-foreground">该仓库下无可用库存</div>
+                  <div className="text-muted-foreground">{ts('k_1wyrhzt')}</div>
                 )}
               </div>
             )}

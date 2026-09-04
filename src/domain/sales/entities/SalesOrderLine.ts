@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '../../shared/DomainTypes';
 import { roundAmount, multiplyDecimal } from '@/lib/decimal-utils';
 
@@ -65,11 +67,12 @@ export class SalesOrderLine {
   }
 
   static create(props: SalesOrderLineProps): SalesOrderLine {
+  const ts = t;
     if (!props.materialId || props.materialId <= 0) {
-      throw new DomainError('销售明细物料ID不能为空');
+      throw new DomainError(ts('k_xtbyhu'));
     }
     if (!props.orderQty || props.orderQty <= 0) {
-      throw new DomainError('销售数量必须大于0');
+      throw new DomainError(ts('k_1nymss1'));
     }
     const amount = roundAmount(multiplyDecimal(props.orderQty || 0, props.unitPrice || 0));
     const taxRate = props.taxRate ?? 0;
@@ -87,7 +90,7 @@ export class SalesOrderLine {
       props.materialCode || '',
       props.materialName || '',
       props.specification || '',
-      props.unit || '件',
+      props.unit || ts('k_w0gthl'),
       props.orderQty,
       props.shippedQty || 0,
       props.unitPrice || 0,
@@ -104,6 +107,7 @@ export class SalesOrderLine {
   }
 
   static reconstitute(props: SalesOrderLineProps): SalesOrderLine {
+  const ts = t;
     const amount = props.amount || 0;
     const taxRate = props.taxRate || 0;
     const taxAmount = props.taxAmount || 0;
@@ -120,7 +124,7 @@ export class SalesOrderLine {
       props.materialCode || '',
       props.materialName || '',
       props.specification || '',
-      props.unit || '件',
+      props.unit || ts('k_w0gthl'),
       props.orderQty,
       props.shippedQty || 0,
       props.unitPrice || 0,
@@ -178,7 +182,8 @@ export class SalesOrderLine {
   }
 
   ship(quantity: number): void {
-    if (quantity <= 0) throw new DomainError('出库数量必须大于0');
+  const ts = t;
+    if (quantity <= 0) throw new DomainError(ts('k_1rxflii'));
     const newShippedQty = this._shippedQty + quantity;
     if (newShippedQty > this._orderQty) {
       throw new DomainError(

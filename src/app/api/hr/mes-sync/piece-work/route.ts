@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { withPermission } from '@/lib/api-permissions';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -5,15 +8,16 @@ import { syncPieceWorkFromMes } from '@/lib/hr/piece-work-sync';
 import { query } from '@/lib/db';
 
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { records } = body;
 
   if (!Array.isArray(records) || records.length === 0) {
-    return errorResponse('缺少计件记录数据', 400, 400);
+    return errorResponse(ts('k_10079ri'), 400, 400);
   }
 
   if (records.length > 1000) {
-    return errorResponse('单次同步记录数不能超过1000', 400, 400);
+    return errorResponse(ts('k_lrwexm'), 400, 400);
   }
 
   const result = await syncPieceWorkFromMes(records);

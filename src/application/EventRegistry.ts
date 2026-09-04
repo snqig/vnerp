@@ -330,18 +330,24 @@ export class EventRegistry {
     eventBus.subscribe('SampleOrderConfirmed', new AuditLogHandler());
     eventBus.subscribe('SampleOrderCancelled', new AuditLogHandler());
 
-    // Saga 补偿事件（LIFO 回滚 — 事件被触发但实际回滚逻辑需按业务逐步实现）
+    // Saga 补偿事件由 EventBus 层在编排事件失败时自动发布 `saga.compensate.{originEventType}`
+    // （见下方注册）。旧的 LIFO step 事件（saga.compensate.update_workorder 等 10 个）
+    // 已由 F-003 最终方案（EventBus.publishWithSaga）取代，CrossModuleSagaHandler 已删除，
+    // 故此处不再订阅这些 step 事件。
     const sagaCompHandler = new SagaCompensationHandler();
-    eventBus.subscribe('saga.compensate.update_workorder', sagaCompHandler);
-    eventBus.subscribe('saga.compensate.inventory_inbound', sagaCompHandler);
-    eventBus.subscribe('saga.compensate.finance_cost', sagaCompHandler);
-    eventBus.subscribe('saga.compensate.hr_salary', sagaCompHandler);
-    eventBus.subscribe('saga.compensate.update_pick_order', sagaCompHandler);
-    eventBus.subscribe('saga.compensate.inventory_deduct', sagaCompHandler);
-    eventBus.subscribe('saga.compensate.finance_impact', sagaCompHandler);
-    eventBus.subscribe('saga.compensate.validate_report', sagaCompHandler);
-    eventBus.subscribe('saga.compensate.update_workorder_progress', sagaCompHandler);
-    eventBus.subscribe('saga.compensate.hr_piece_record', sagaCompHandler);
+
+    // EventBus 自动补偿路径：Saga 编排事件（workorder.completed / prod.pick.approved /
+    // prod.return.approved）的某个 handler 失败时，EventBus 会发布
+    // `saga.compensate.{originEventType}`，由 SagaCompensationHandler 撤销已提交的兄弟副作用。
+    // 注意：这些事件本身是 SAGA_ORCHESTRATED，publish 会串行执行并逐个记录；
+    // 补偿事件本身不在编排名单内，故不会递归触发补偿。
+    eventBus.subscribe('saga.compensate.workorder.completed', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.prod.pick.approved', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.prod.return.approved', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.inbound.approved', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.sales.shipped', sagaCompHandler);
+    eventBus.subscribe('saga.compensate.delivery.shipped', sagaCompHandler);
+
     eventBus.subscribe('saga.failed', sagaCompHandler);
     eventBus.subscribe('saga.completed', sagaCompHandler);
     eventBus.subscribe('saga.compensated', sagaCompHandler);

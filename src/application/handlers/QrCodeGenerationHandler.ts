@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { InboundOrderApprovedEvent } from '@/domain/warehouse/events/InboundOrderEvents';
 import { transaction } from '@/lib/db';
@@ -21,6 +23,7 @@ export class QrCodeGenerationHandler implements EventHandler<InboundOrderApprove
     const { inboundId, inboundNo, items, warehouseId, warehouseName, supplierName } = event.payload;
 
     await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
       // 逐行生成（保持与 items 顺序一致，行序号纳入推导以区分同物料同批次多行）
       for (let index = 0; index < items.length; index++) {
         const item = items[index];
@@ -53,7 +56,7 @@ export class QrCodeGenerationHandler implements EventHandler<InboundOrderApprove
               item.materialName || '',
               '', // specification
               item.quantity || 0,
-              '件', // unit
+              ts('k_w0gthl'), // unit
               warehouseId || null,
               warehouseName,
               supplierName || '',

@@ -61,6 +61,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
+import { formatDate } from '@/lib/date-utils';
 
 const departmentOptions = [
   { value: 'all', label: 'allDepartments' },
@@ -92,6 +93,7 @@ interface AttendanceRecord {
 }
 
 export default function AttendancePage() {
+  const ts = useTranslations('Common');
   // 翻译钩子
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
@@ -200,7 +202,7 @@ export default function AttendancePage() {
           rawList.map((r: Loose, idx: number) => {
             let dateStr = r.attendanceDate || r.attendance_date || r.date || '';
             if (dateStr && dateStr.includes('T')) {
-              dateStr = dateStr.slice(0, 10);
+              dateStr = formatDate(dateStr);
             }
             return {
               id: r.id || idx + 1,
@@ -1127,8 +1129,7 @@ export default function AttendancePage() {
             <DialogTitle>{t('deleteAttendance')}</DialogTitle>
             <DialogDescription>
               {tc('confirmDeleteAttendanceDesc')}
-              {currentRecord?.employeeName}在{currentRecord?.date} 的考勤记录吗？此操作不可撤销。
-            </DialogDescription>
+              {currentRecord?.employeeName}{ts('k_ckqy3b')}{currentRecord?.date} {ts('k_1xc8nj8')}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>

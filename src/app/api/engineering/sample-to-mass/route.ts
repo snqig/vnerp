@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -99,6 +102,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       sample_order_id,
@@ -125,7 +129,7 @@ export const POST = withPermission(
     } = body;
 
     if (!sample_order_no) {
-      return errorResponse('缺少必填字段: sample_order_no', 400, 400);
+      return errorResponse(ts('k_tyvxc7'), 400, 400);
     }
 
     const result = await transaction(async (conn) => {
@@ -135,7 +139,7 @@ export const POST = withPermission(
       );
 
       if (existing.length > 0 && existing[0].status >= 3) {
-        throw new Error('该打样订单已转量产');
+        throw new Error(ts('k_g4banz'));
       }
 
       // 转移单号：缺失时自动生成，保证唯一（STM-YYYYMMDD-NNN）
@@ -216,18 +220,19 @@ export const POST = withPermission(
       return { id: insertResult.insertId, created: true, transfer_no: transferNo };
     });
 
-    return successResponse(result, '样品转量产记录创建成功');
+    return successResponse(result, ts('k_1xkhus2'));
   },
   { logTitle: '样品转量产', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action, bom_id, workorder_id, workorder_no, approved_by, remark } = body;
 
     if (!id) {
-      return errorResponse('转量产记录ID不能为空', 400, 400);
+      return errorResponse(ts('k_2jkzf5'), 400, 400);
     }
 
     if (action === 'convert') {
@@ -238,16 +243,16 @@ export const PUT = withPermission(
         );
 
         if (recordRows.length === 0) {
-          throw new Error('转量产记录不存在');
+          throw new Error(ts('k_1fi4arp'));
         }
 
         const record = recordRows[0];
         if (record.status >= 3) {
-          throw new Error('该记录已转量产');
+          throw new Error(ts('k_1svgifr'));
         }
 
         if (!record.standard_card_id && !record.process_card_id) {
-          throw new Error('请先关联标准卡和流程卡');
+          throw new Error(ts('k_1mpktak'));
         }
 
         const conversionDate = new Date().toISOString().slice(0, 10);
@@ -282,12 +287,12 @@ export const PUT = withPermission(
         return { id, status: 3, conversion_date: conversionDate };
       });
 
-      return successResponse(result, '转量产成功');
+      return successResponse(result, ts('k_1tljy4k'));
     }
 
     if (action === 'cancel') {
       await execute('UPDATE eng_sample_to_mass SET status = 4 WHERE id = ?', [id]);
-      return successResponse(null, '已取消转量产');
+      return successResponse(null, ts('k_s3z06b'));
     }
 
     // 通用字段更新（编辑保存 / 确认流转共用）
@@ -308,7 +313,7 @@ export const PUT = withPermission(
     }
 
     if (Object.keys(patch).length === 0) {
-      return errorResponse('没有可更新的字段', 400, 400);
+      return errorResponse(ts('k_15vo87k'), 400, 400);
     }
 
     const setClause = Object.keys(patch)
@@ -321,22 +326,23 @@ export const PUT = withPermission(
       values
     );
 
-    return successResponse({ id, updated: Object.keys(patch) }, '更新成功');
+    return successResponse({ id, updated: Object.keys(patch) }, ts('k_1795bzg'));
   },
   { logTitle: '更新转量产', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) {
-      return errorResponse('记录ID不能为空', 400, 400);
+      return errorResponse(ts('k_18kulrp'), 400, 400);
     }
     await execute('UPDATE eng_sample_to_mass SET deleted = 1, update_time = NOW() WHERE id = ?', [
       id,
     ]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除转量产', logType: 'business' }
 );

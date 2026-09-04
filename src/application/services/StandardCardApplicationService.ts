@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { StandardCard } from '@/domain/standard-card/aggregates/StandardCard';
 import { StandardCardType } from '@/domain/standard-card/value-objects/StandardCardType';
 import { StandardCardStatus } from '@/domain/standard-card/value-objects/StandardCardStatus';
@@ -245,16 +247,17 @@ export class StandardCardApplicationService {
   }
 
   async update(dto: UpdateStandardCardDTO): Promise<StandardCard> {
+  const ts = await getTranslations('Common');
     const { MysqlStandardCardRepository } =
       await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
 
     const card = await repo.findById(dto.id);
     if (!card) {
-      throw new Error('标准卡不存在');
+      throw new Error(ts('k_10y4j6y'));
     }
     if (card.isLocked) {
-      throw new Error('已确认的标准卡不能修改');
+      throw new Error(ts('k_16x17l0'));
     }
 
     const updatedCard = new StandardCard({
@@ -308,13 +311,14 @@ export class StandardCardApplicationService {
   }
 
   async submit(id: number, userId: number): Promise<StandardCard> {
+  const ts = await getTranslations('Common');
     const { PrintStandardCardRepository } =
       await import('@/infrastructure/repositories/PrintStandardCardRepository');
     const repo = new PrintStandardCardRepository();
 
     const card = await repo.findById(id);
     if (!card) {
-      throw new Error('标准卡不存在');
+      throw new Error(ts('k_10y4j6y'));
     }
 
     card.submit(userId);
@@ -333,13 +337,14 @@ export class StandardCardApplicationService {
   }
 
   async approve(id: number, userId: number): Promise<StandardCard> {
+  const ts = await getTranslations('Common');
     const { PrintStandardCardRepository } =
       await import('@/infrastructure/repositories/PrintStandardCardRepository');
     const repo = new PrintStandardCardRepository();
 
     const card = await repo.findById(id);
     if (!card) {
-      throw new Error('标准卡不存在');
+      throw new Error(ts('k_10y4j6y'));
     }
 
     card.approve(userId);
@@ -359,13 +364,14 @@ export class StandardCardApplicationService {
   }
 
   async confirm(id: number, userId: number): Promise<StandardCard> {
+  const ts = await getTranslations('Common');
     const { PrintStandardCardRepository } =
       await import('@/infrastructure/repositories/PrintStandardCardRepository');
     const repo = new PrintStandardCardRepository();
 
     const card = await repo.findById(id);
     if (!card) {
-      throw new Error('标准卡不存在');
+      throw new Error(ts('k_10y4j6y'));
     }
 
     // 版本变更日志写入 DDD 子表；该表在 live print 主链路中未必存在，失败仅记录不阻断流转
@@ -377,11 +383,11 @@ export class StandardCardApplicationService {
         standard_card_id: id,
         version: card.version,
         change_type: 'update',
-        change_content: '总经理审批通过',
+        change_content: ts('k_8w9zi6'),
         changed_by: userId,
       } as any);
     } catch (e) {
-      console.error('[StandardCard] 写入版本变更日志失败（已忽略）:', e);
+      console.error(ts('k_1focctz'), e);
     }
 
     card.confirm(userId);
@@ -400,13 +406,14 @@ export class StandardCardApplicationService {
   }
 
   async obsolete(id: number, reason: string, userId: number): Promise<StandardCard> {
+  const ts = await getTranslations('Common');
     const { PrintStandardCardRepository } =
       await import('@/infrastructure/repositories/PrintStandardCardRepository');
     const repo = new PrintStandardCardRepository();
 
     const card = await repo.findById(id);
     if (!card) {
-      throw new Error('标准卡不存在');
+      throw new Error(ts('k_10y4j6y'));
     }
 
     card.obsolete(userId, reason);
@@ -426,13 +433,14 @@ export class StandardCardApplicationService {
   }
 
   async createNewVersion(id: number, userId: number): Promise<StandardCard> {
+  const ts = await getTranslations('Common');
     const { PrintStandardCardRepository } =
       await import('@/infrastructure/repositories/PrintStandardCardRepository');
     const repo = new PrintStandardCardRepository();
 
     const card = await repo.findById(id);
     if (!card) {
-      throw new Error('标准卡不存在');
+      throw new Error(ts('k_10y4j6y'));
     }
 
     const newCard = card.createNewVersion(StandardCard.generateVersion(card.version), userId);
@@ -462,7 +470,7 @@ export class StandardCardApplicationService {
         );
       }
     } catch (e) {
-      console.error('[StandardCard] 克隆颜色明细失败（已忽略）:', e);
+      console.error(ts('k_1alssve'), e);
     }
 
     return newCard;
@@ -508,16 +516,17 @@ export class StandardCardApplicationService {
   }
 
   async delete(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const { MysqlStandardCardRepository } =
       await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
 
     const card = await repo.findById(id);
     if (!card) {
-      throw new Error('标准卡不存在');
+      throw new Error(ts('k_10y4j6y'));
     }
     if (card.status !== StandardCardStatus.DRAFT) {
-      throw new Error('只有草稿状态的标准卡才能删除');
+      throw new Error(ts('k_1bhfcif'));
     }
 
     const {
@@ -763,6 +772,7 @@ export class StandardCardApplicationService {
   }
 
   private async saveVersionLogs(card: StandardCard): Promise<void> {
+  const ts = await getTranslations('Common');
     // 版本变更日志写入 DDD 子表；该表在 live print 主链路中未必存在，失败仅记录不阻断流转
     try {
       const { VersionChangeLogRepository } =
@@ -779,7 +789,7 @@ export class StandardCardApplicationService {
         } as any);
       }
     } catch (e) {
-      console.error('[StandardCard] 写入版本变更日志失败（已忽略）:', e);
+      console.error(ts('k_1focctz'), e);
     }
   }
 }

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -19,13 +22,14 @@ class ShipError extends Error {
 // POST /api/sales/delivery/[id]/ship - 扫码发货（符合设计文档 5.2 节）
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     // withPermission不转发context.params，从URL路径提取动态路由参数
     const shipmentId = parseInt(new URL(request.url).pathname.split('/')[4]);
     const body = await request.json();
     const { items, logistics_company, tracking_no } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return errorResponse('缺少发货明细数据', 400, 400);
+      return errorResponse(ts('k_ydqtum'), 400, 400);
     }
 
     try {
@@ -40,18 +44,18 @@ export const POST = withPermission(
         const shipment = shipmentRows[0] as DbRow | undefined;
 
         if (!shipment) {
-          throw new ShipError(404, '发货单不存在');
+          throw new ShipError(404, ts('k_12d7h0r'));
         }
 
         // 验证发货单状态（只有待发货状态才能执行发货操作）
         if (shipment.status !== 3) {
           const statusMap: Record<number, string> = {
-            1: '草稿',
-            2: '待审批',
-            3: '待发货',
-            4: '部分发货',
-            5: '已发货',
-            6: '已取消',
+            1: ts('k_oc54qp'),
+            2: ts('k_rkj3lq'),
+            3: ts('k_18crht8'),
+            4: ts('k_1yb9kf7'),
+            5: ts('k_ypt6sx'),
+            6: ts('k_1d8x36r'),
           };
           throw new ShipError(
             400,
@@ -165,7 +169,7 @@ export const POST = withPermission(
         };
       });
 
-      return successResponse(result, '扫码发货成功');
+      return successResponse(result, ts('k_1o0yt80'));
     } catch (error) {
       // 将业务错误转换为对应 HTTP 响应（其他错误交由 withPermission 全局处理）
       if (error instanceof ShipError) {

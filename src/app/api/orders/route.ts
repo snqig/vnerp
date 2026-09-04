@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, queryOne, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -8,6 +11,7 @@ import type { DbRow } from '@/types/db';
 // GET - 获取订单列表/详情
 export const GET = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     const status = searchParams.get('status');
@@ -21,7 +25,7 @@ export const GET = withPermission(
       );
 
       if (!orders || (orders as DbRow[]).length === 0) {
-        return commonErrors.notFound('订单不存在');
+        return commonErrors.notFound(ts('k_2v2qxr'));
       }
 
       const order = (orders as DbRow[])[0];
@@ -135,6 +139,7 @@ export const GET = withPermission(
 // POST - 创建订单
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     const { customer_id, customer_name, delivery_date, order_date, items, remark } = body;
@@ -153,22 +158,22 @@ export const POST = withPermission(
     }
 
     if (!finalCustomerName) {
-      return errorResponse('客户信息不能为空', 400, 400);
+      return errorResponse(ts('k_4bpl2g'), 400, 400);
     }
 
     if (!Array.isArray(items) || items.length === 0) {
-      return errorResponse('订单项不能为空', 400, 400);
+      return errorResponse(ts('k_12n97pp'), 400, 400);
     }
 
     for (const item of items) {
       if (!item.material_name || !item.quantity || !item.unit_price) {
-        return errorResponse('订单项缺少必填字段(物料名称、数量、单价)', 400, 400);
+        return errorResponse(ts('k_11ti01b'), 400, 400);
       }
       if (item.quantity <= 0) {
-        return errorResponse('订单数量必须大于0', 400, 400);
+        return errorResponse(ts('k_1ewtigk'), 400, 400);
       }
       if (item.unit_price < 0) {
-        return errorResponse('单价不能为负数', 400, 400);
+        return errorResponse(ts('k_1p0b05s'), 400, 400);
       }
     }
 
@@ -204,7 +209,7 @@ export const POST = withPermission(
       );
     }
 
-    return successResponse({ id: orderId, order_no: orderNo }, '订单创建成功');
+    return successResponse({ id: orderId, order_no: orderNo }, ts('k_odcdl0'));
   },
   { errorMessage: '创建订单失败' }
 );
@@ -212,23 +217,24 @@ export const POST = withPermission(
 // PUT - 更新订单
 export const PUT = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, status, ...updateData } = body;
 
     if (!id) {
-      return errorResponse('订单ID不能为空', 400, 400);
+      return errorResponse(ts('k_jibosn'), 400, 400);
     }
 
     const orders = await query('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [id]);
 
     if (!orders || (orders as DbRow[]).length === 0) {
-      return commonErrors.notFound('订单不存在');
+      return commonErrors.notFound(ts('k_2v2qxr'));
     }
 
     const order = (orders as DbRow[])[0];
 
     if (order.status === 'completed' || order.status === 'cancelled') {
-      return errorResponse('已完成的订单不能修改', 400, 400);
+      return errorResponse(ts('k_two405'), 400, 400);
     }
 
     const updateFields: string[] = [];
@@ -257,7 +263,7 @@ export const PUT = withPermission(
       );
     }
 
-    return successResponse({ id, status, ...updateData }, '订单更新成功');
+    return successResponse({ id, status, ...updateData }, ts('k_usync9'));
   },
   { errorMessage: '更新订单失败' }
 );
@@ -265,29 +271,30 @@ export const PUT = withPermission(
 // DELETE - 删除订单
 export const DELETE = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('订单ID不能为空', 400, 400);
+      return errorResponse(ts('k_jibosn'), 400, 400);
     }
 
     // 查询订单
     const orders = await query('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [id]);
 
     if (!orders || (orders as DbRow[]).length === 0) {
-      return commonErrors.notFound('订单不存在');
+      return commonErrors.notFound(ts('k_2v2qxr'));
     }
 
     const order = (orders as DbRow[])[0];
 
     if (order.status === 'completed') {
-      return errorResponse('已完成的订单不能删除', 400, 400);
+      return errorResponse(ts('k_jzbcvs'), 400, 400);
     }
 
     await query('UPDATE sal_order SET deleted = 1, update_time = NOW() WHERE id = ?', [order.id]);
 
-    return successResponse(null, '订单删除成功');
+    return successResponse(null, ts('k_11hx0td'));
   },
   { errorMessage: '删除订单失败' }
 );

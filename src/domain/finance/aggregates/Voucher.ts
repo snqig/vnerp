@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { Money } from '../../shared/value-objects/Money';
 import { VoucherStatus, VoucherStatusEnum } from '../value-objects/VoucherStatus';
@@ -60,11 +62,12 @@ export class Voucher {
   ) {}
 
   static create(props: VoucherProps): Voucher {
+  const ts = t;
     if (!props.periodCode) {
-      throw new DomainError('会计期间不能为空');
+      throw new DomainError(ts('k_12bi6zl'));
     }
     if (!props.lines || props.lines.length === 0) {
-      throw new DomainError('凭证明细不能为空');
+      throw new DomainError(ts('k_15pdu5'));
     }
 
     const lines = props.lines.map((line) => VoucherLine.create(line));

@@ -283,7 +283,7 @@ export default function OutsourceOrderPage() {
                   return (
                     <TableRow key={item.id}>
                       <TableCell>
-                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(item.id))} onChange={() => toggle(String(item.id))} aria-label={tc('selectAll')} />
+                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(item.id))} onChange={() => toggle(String(item.id))} aria-label={tc('selectRow', { id: item.id })} />
                       </TableCell>
                       <TableCell className="text-xs font-mono">{item.order_no}</TableCell>
                       <TableCell className="text-xs">{item.supplier_name || '-'}</TableCell>

@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { query, execute, transaction } from '@/lib/db';
 import type { SqlValue } from '@/lib/db';
 import type { DbExecutor } from './DbExecutor';
@@ -173,25 +175,9 @@ export class MysqlQRCodeRepository implements IQRCodeRepository {
   }
 
   async queryTraceTimeline(qrCode: string): Promise<TraceTimelineItem[]> {
+  const ts = await getTranslations('Common');
     const rows = await this.db.query<Row>(
-      `SELECT
-        qr.create_time AS time,
-        qr.qr_type AS eventType,
-        CASE qr.qr_type
-          WHEN 'material' THEN '入库登记'
-          WHEN 'split' THEN '分切拆码'
-          WHEN 'product' THEN '完工入库'
-          WHEN 'shipment' THEN '出库登记'
-          ELSE '其他'
-        END AS eventName,
-        COALESCE(qr.ref_no, '') AS docNo,
-        CAST(qr.quantity AS CHAR) AS quantity,
-        COALESCE(qr.batch_no, '') AS batchNo,
-        COALESCE(qr.material_name, '') AS materialName
-      FROM qrcode_record qr
-      WHERE (qr.qr_code = ? OR qr.parent_qr_code = ?)
-      AND qr.deleted = 0
-      ORDER BY qr.create_time ASC`,
+      ts('k_1nda7ra'),
       [qrCode, qrCode]
     );
     return rows.map((r) => ({

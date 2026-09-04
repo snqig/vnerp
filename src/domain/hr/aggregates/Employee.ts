@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent } from '@/domain/shared/DomainEvent';
 
 export enum EmployeeStatus {
@@ -65,23 +67,26 @@ export class Employee {
   }
 
   confirm(_confirmedBy: number): void {
+  const ts = t;
     if (this.status !== EmployeeStatus.PROBATION && this.status !== EmployeeStatus.ONBOARDING) {
-      throw new Error('只有试用期员工可转正');
+      throw new Error(ts('k_1qdzber'));
     }
     this.status = EmployeeStatus.CONFIRMED;
   }
 
   transfer(newDeptId: number, newPositionId: number): void {
+  const ts = t;
     if (this.status === EmployeeStatus.RESIGNED) {
-      throw new Error('已离职员工无法调岗');
+      throw new Error(ts('k_6wdvy4'));
     }
     this.deptId = newDeptId;
     this.positionId = newPositionId;
   }
 
   resign(resignDate: Date, reason: string): void {
+  const ts = t;
     if (this.status === EmployeeStatus.RESIGNED) {
-      throw new Error('员工已离职');
+      throw new Error(ts('k_1yvy6jv'));
     }
     this.status = EmployeeStatus.RESIGNED;
     this.resignDate = resignDate;

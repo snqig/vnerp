@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { getConfig } from '@/lib/global-config';
@@ -6,6 +9,7 @@ import { logger } from '@/lib/logger';
 import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
@@ -300,7 +304,8 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
         SELECT COUNT(*) as total FROM inv_warehouse WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) {
-        inventory.warehouseUtilization = Math.min(100, Number(rows[0].total || 0) * 5);
+        // 仓库数（无容量数据，无法计算真实利用率，故返回仓库数量而非虚构百分比）
+        inventory.warehouseUtilization = Number(rows[0].total || 0);
       }
     } catch (e) {
       logger.error({ module: 'dashboard', action: 'ceo' }, 'Dashboard query failed', {
@@ -419,39 +424,42 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       nightShift: { plan: 0, actual: 0, rate: 0 },
     };
     try {
-      const dayRows = await query(
-        `SELECT COALESCE(SUM(plan_qty), 0) as plan, COALESCE(SUM(plan_qty), 0) as actual FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE() AND HOUR(create_time) BETWEEN 8 AND 15`
-      );
-      const midRows = await query(
-        `SELECT COALESCE(SUM(plan_qty), 0) as plan, COALESCE(SUM(plan_qty), 0) as actual FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE() AND HOUR(create_time) BETWEEN 16 AND 23`
-      );
-      const nightRows = await query(
-        `SELECT COALESCE(SUM(plan_qty), 0) as plan, COALESCE(SUM(plan_qty), 0) as actual FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE() AND (HOUR(create_time) < 8 OR HOUR(create_time) > 23)`
-      );
-      if (Array.isArray(dayRows) && dayRows.length > 0) {
-        shiftData.dayShift.plan = Number(dayRows[0].plan || 0);
-        shiftData.dayShift.actual = Number(dayRows[0].actual || 0);
-        shiftData.dayShift.rate =
-          shiftData.dayShift.plan > 0
-            ? Math.round((shiftData.dayShift.actual / shiftData.dayShift.plan) * 100)
-            : 0;
-      }
-      if (Array.isArray(midRows) && midRows.length > 0) {
-        shiftData.middleShift.plan = Number(midRows[0].plan || 0);
-        shiftData.middleShift.actual = Number(midRows[0].actual || 0);
-        shiftData.middleShift.rate =
-          shiftData.middleShift.plan > 0
-            ? Math.round((shiftData.middleShift.actual / shiftData.middleShift.plan) * 100)
-            : 0;
-      }
-      if (Array.isArray(nightRows) && nightRows.length > 0) {
-        shiftData.nightShift.plan = Number(nightRows[0].plan || 0);
-        shiftData.nightShift.actual = Number(nightRows[0].actual || 0);
-        shiftData.nightShift.rate =
-          shiftData.nightShift.plan > 0
-            ? Math.round((shiftData.nightShift.actual / shiftData.nightShift.plan) * 100)
-            : 0;
-      }
+      // 计划量来自 prd_process_card（按创建时间分班次）
+      const planRows = await query(`
+        SELECT
+          COALESCE(SUM(CASE WHEN HOUR(create_time) BETWEEN 8 AND 15 THEN plan_qty ELSE 0 END), 0) as day_plan,
+          COALESCE(SUM(CASE WHEN HOUR(create_time) BETWEEN 16 AND 23 THEN plan_qty ELSE 0 END), 0) as mid_plan,
+          COALESCE(SUM(CASE WHEN (HOUR(create_time) < 8 OR HOUR(create_time) > 23) THEN plan_qty ELSE 0 END), 0) as night_plan
+        FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE()
+      `);
+      // 实际完成量来自 prd_work_report.completed_qty（按报工开始时间分班次）
+      const actualRows = await query(`
+        SELECT
+          COALESCE(SUM(CASE WHEN HOUR(start_time) BETWEEN 8 AND 15 THEN completed_qty ELSE 0 END), 0) as day_actual,
+          COALESCE(SUM(CASE WHEN HOUR(start_time) BETWEEN 16 AND 23 THEN completed_qty ELSE 0 END), 0) as mid_actual,
+          COALESCE(SUM(CASE WHEN (HOUR(start_time) < 8 OR HOUR(start_time) > 23) THEN completed_qty ELSE 0 END), 0) as night_actual
+        FROM prd_work_report WHERE deleted = 0 AND DATE(start_time) = CURDATE()
+      `);
+      const p = Array.isArray(planRows) && planRows.length > 0 ? planRows[0] : {};
+      const a = Array.isArray(actualRows) && actualRows.length > 0 ? actualRows[0] : {};
+      shiftData.dayShift.plan = Number(p.day_plan || 0);
+      shiftData.dayShift.actual = Number(a.day_actual || 0);
+      shiftData.dayShift.rate =
+        shiftData.dayShift.plan > 0
+          ? Math.round((shiftData.dayShift.actual / shiftData.dayShift.plan) * 100)
+          : 0;
+      shiftData.middleShift.plan = Number(p.mid_plan || 0);
+      shiftData.middleShift.actual = Number(a.mid_actual || 0);
+      shiftData.middleShift.rate =
+        shiftData.middleShift.plan > 0
+          ? Math.round((shiftData.middleShift.actual / shiftData.middleShift.plan) * 100)
+          : 0;
+      shiftData.nightShift.plan = Number(p.night_plan || 0);
+      shiftData.nightShift.actual = Number(a.night_actual || 0);
+      shiftData.nightShift.rate =
+        shiftData.nightShift.plan > 0
+          ? Math.round((shiftData.nightShift.actual / shiftData.nightShift.plan) * 100)
+          : 0;
     } catch (e) {
       logger.error({ module: 'dashboard', action: 'ceo' }, 'Dashboard query failed', {
         error: e instanceof Error ? e.message : String(e),
@@ -497,6 +505,6 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       },
     });
   } catch {
-    return NextResponse.json({ success: false, message: '获取CEO看板数据失败' }, { status: 500 });
+    return NextResponse.json({ success: false, message: ts('k_g0xfcb') }, { status: 500 });
   }
 });

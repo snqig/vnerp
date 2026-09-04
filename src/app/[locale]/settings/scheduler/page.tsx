@@ -52,6 +52,7 @@ interface TaskItem {
 }
 
 export default function SchedulerPage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('System');
   const tc = useTranslations('Common');
   const { toast } = useToast();
@@ -115,7 +116,7 @@ export default function SchedulerPage() {
         });
         fetchData();
       } else {
-        toast({ title: result.message || '创建失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_1jxltyq'), variant: 'destructive' });
       }
     } catch {
       toast({ title: tc('createFailed'), variant: 'destructive' });
@@ -130,10 +131,10 @@ export default function SchedulerPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: result.message || '操作成功' });
+        toast({ title: result.message || ts('k_d209xt') });
         fetchData();
       } else {
-        toast({ title: result.message || '操作失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_ydow7a'), variant: 'destructive' });
       }
     } catch {
       toast({ title: tc('error'), variant: 'destructive' });
@@ -152,9 +153,9 @@ export default function SchedulerPage() {
   };
 
   const taskTypeMap: Record<string, string> = {
-    inventory_alert: '库存预警',
-    data_cleanup: '数据清理',
-    report_generation: '报表生成',
+    inventory_alert: ts('k_lebozs'),
+    data_cleanup: ts('k_1p0yz3g'),
+    report_generation: ts('k_12h7in'),
   };
 
   return (
@@ -296,7 +297,7 @@ export default function SchedulerPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              {tc('prevPage') || '上一页'}
+              {tc('prevPage') || ts('k_mtyn6e')}
             </Button>
             <Button
               size="sm"
@@ -304,7 +305,7 @@ export default function SchedulerPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              {tc('nextPage') || '下一页'}
+              {tc('nextPage') || ts('k_1yw313l')}
             </Button>
           </div>
         </div>
@@ -399,16 +400,13 @@ export default function SchedulerPage() {
                     <TableCell>
                       {log.status === 'success' ? (
                         <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300 text-xs">
-                          成功
-                        </Badge>
+                          {ts('k_1rraohc')}</Badge>
                       ) : log.status === 'failed' ? (
                         <Badge variant="destructive" className="text-xs">
-                          失败
-                        </Badge>
+                          {ts('k_12db3qz')}</Badge>
                       ) : (
                         <Badge variant="secondary" className="text-xs">
-                          运行中
-                        </Badge>
+                          {ts('k_1bywqik')}</Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-xs max-w-[300px] truncate">

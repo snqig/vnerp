@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { TransferStatus, TransferStatusEnum } from '../value-objects/TransferStatus';
 import { Money } from '../../shared/value-objects/Money';
@@ -67,14 +69,15 @@ export class TransferOrder {
   ) {}
 
   static create(props: TransferOrderProps): TransferOrder {
+  const ts = t;
     if (!props.fromWarehouseId || !props.toWarehouseId) {
-      throw new DomainError('源仓库和目标仓库不能为空');
+      throw new DomainError(ts('k_15ddmkw'));
     }
     if (props.fromWarehouseId === props.toWarehouseId) {
-      throw new DomainError('源仓库和目标仓库不能相同');
+      throw new DomainError(ts('k_zvtc8o'));
     }
     if (!props.items || props.items.length === 0) {
-      throw new DomainError('调拨项不能为空');
+      throw new DomainError(ts('k_1f7am8f'));
     }
 
     const items = props.items.map((item) => TransferItem.create(item));

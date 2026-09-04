@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -21,20 +24,21 @@ export const GET = withPermission(async (request: NextRequest) => {
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     if (!body.color_code || !body.color_name) {
-      return errorResponse('色号编码和名称不能为空', 400, 400);
+      return errorResponse(ts('k_x3hboi'), 400, 400);
     }
 
     try {
       const id = await createColor(body, userInfo.userId);
-      return successResponse({ id }, '色号创建成功');
+      return successResponse({ id }, ts('k_d7c0fy'));
     } catch (e) {
       if ((e as Error & { code?: string }).code === 'ER_DUP_ENTRY') {
-        return errorResponse('色号编码已存在', 409, 409);
+        return errorResponse(ts('k_1pqrr0r'), 409, 409);
       }
-      return errorResponse((e as Error).message || '创建失败', 500, 500);
+      return errorResponse((e as Error).message || ts('k_1jxltyq'), 500, 500);
     }
   },
   { logTitle: '创建油墨色号', logType: 'business' }
@@ -42,18 +46,19 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...data } = body;
 
     if (!id) {
-      return errorResponse('缺少色号ID', 400, 400);
+      return errorResponse(ts('k_uu44wi'), 400, 400);
     }
 
     try {
       await updateColor(Number(id), data, userInfo.userId);
-      return successResponse(null, '色号更新成功');
+      return successResponse(null, ts('k_1pj1r4r'));
     } catch (e) {
-      return errorResponse((e as Error).message || '更新失败', 500, 500);
+      return errorResponse((e as Error).message || ts('k_10lkv9z'), 500, 500);
     }
   },
   { logTitle: '更新油墨色号', logType: 'business' }
@@ -61,15 +66,16 @@ export const PUT = withPermission(
 
 export const DELETE = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('缺少id', 400, 400);
+    if (!id) return errorResponse(ts('k_js4lo9'), 400, 400);
 
     try {
       await deleteColor(Number(id));
-      return successResponse(null, '色号删除成功');
+      return successResponse(null, ts('k_zji6gb'));
     } catch (e) {
-      return errorResponse((e as Error).message || '删除失败', 500, 500);
+      return errorResponse((e as Error).message || ts('k_1ijrr73'), 500, 500);
     }
   },
   { logTitle: '删除油墨色号', logType: 'business' }

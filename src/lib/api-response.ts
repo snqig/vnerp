@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { execute } from '@/lib/db';
 import { isUniqueViolation, mapUniqueErrorToMessage } from './db/errors';
+import { API_MESSAGE_TO_CODE } from './api-error-i18n';
 
 export function sanitizeInput(input: string): string {
   return input
@@ -29,6 +30,7 @@ export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data: T | null;
+  errorCode?: string;
 }
 
 export interface PaginatedResponse<T = unknown> extends ApiResponse<{
@@ -82,11 +84,16 @@ export function errorResponse(
   code = 500,
   statusCode: number = code
 ): NextResponse<ApiResponse<null>> {
+  const escaped = sanitizeInput(message);
+  // P1-2 中枢：按中文消息查映射得 errorCode（AE####），供前端译员翻译；
+  // 命中返回码，未命中（如开发环境原始异常文案）返回 undefined，前端回退 message。
+  const errorCode = API_MESSAGE_TO_CODE[message] ?? API_MESSAGE_TO_CODE[escaped] ?? undefined;
   return NextResponse.json(
     {
       code,
       success: false,
-      message: sanitizeInput(message),
+      message: escaped,
+      errorCode,
       data: null,
     },
     { status: statusCode }

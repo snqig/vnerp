@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -23,22 +26,23 @@ function getInboundService(): InboundApplicationService {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     if (!body.po_id || typeof body.po_id !== 'number') {
-      return errorResponse('采购单ID不能为空', 422, 422);
+      return errorResponse(ts('k_22hbhn'), 422, 422);
     }
     if (!body.warehouse_id || typeof body.warehouse_id !== 'number') {
-      return errorResponse('仓库ID不能为空', 422, 422);
+      return errorResponse(ts('k_1t9r8nc'), 422, 422);
     }
     if (!Array.isArray(body.items) || body.items.length === 0) {
-      return errorResponse('入库明细不能为空', 422, 422);
+      return errorResponse(ts('k_1oa14sj'), 422, 422);
     }
 
     for (const item of body.items) {
       if (!item.line_no || !item.material_id || !item.material_name || !item.batch_no) {
         return errorResponse(
-          '入库明细缺少必填字段(line_no/material_id/material_name/batch_no)',
+          ts('k_1t3migk'),
           422,
           422
         );
@@ -63,7 +67,7 @@ export const POST = withPermission(
           materialCode: item.material_code || '',
           materialName: item.material_name,
           materialSpec: item.material_spec,
-          unit: item.unit || '件',
+          unit: item.unit || ts('k_w0gthl'),
           batchNo: item.batch_no,
           quantity: item.quantity,
           unitPrice: item.unit_price,
@@ -79,7 +83,7 @@ export const POST = withPermission(
           source_type: 'purchase_order',
           source_order_id: body.po_id,
         },
-        '从采购单创建入库单成功'
+        ts('k_1eqq25p')
       );
     } catch (error) {
       if (error instanceof NotFoundError) {

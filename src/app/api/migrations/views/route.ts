@@ -1,9 +1,13 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { execute } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
 export const GET = withPermission(async (_request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const results: string[] = [];
 
   const views = [
@@ -188,5 +192,5 @@ export const GET = withPermission(async (_request: NextRequest) => {
     }
   }
 
-  return successResponse(results, '数据库视图创建完成');
+  return successResponse(results, ts('k_1kjr9wx'));
 });

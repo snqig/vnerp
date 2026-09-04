@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 /**
  * 工装状态枚举与状态机
  */
@@ -25,14 +27,15 @@ export function canToolTransition(from: ToolStatus, to: ToolStatus): boolean {
 }
 
 export function getToolStatusLabel(status: ToolStatus): string {
+  const ts = t;
   const labels: Record<ToolStatus, string> = {
-    [ToolStatus.STANDBY]: '待用',
-    [ToolStatus.ACTIVE]: '在用',
-    [ToolStatus.MAINTENANCE]: '维修中',
-    [ToolStatus.WARNING]: '预警',
-    [ToolStatus.SCRAPPED]: '已报废',
+    [ToolStatus.STANDBY]: ts('k_1nblm48'),
+    [ToolStatus.ACTIVE]: ts('k_16d9hd9'),
+    [ToolStatus.MAINTENANCE]: ts('k_1jvastq'),
+    [ToolStatus.WARNING]: ts('k_1qswpkf'),
+    [ToolStatus.SCRAPPED]: ts('k_oy744d'),
   };
-  return labels[status] ?? '未知';
+  return labels[status] ?? ts('k_1lpnuh4');
 }
 
 export function getToolStatusColor(status: ToolStatus): string {

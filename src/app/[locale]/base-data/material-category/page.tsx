@@ -54,6 +54,7 @@ interface CategoryRules {
 }
 
 export default function MaterialCategoryPage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('MaterialCategory');
   const tc = useTranslations('Common');
 
@@ -102,7 +103,7 @@ export default function MaterialCategoryPage() {
   /** 按系统设置的编码规则做即时校验；返回提示文案，null 表示通过 */
   const validateCode = (code: string, isEdit: boolean): string | null => {
     const value = (code || '').trim();
-    if (!value) return '分类编码不能为空';
+    if (!value) return ts('k_dmqzk5');
     if (!rules?.code_pattern) return null;
     let re: RegExp;
     try {
@@ -126,7 +127,7 @@ export default function MaterialCategoryPage() {
     // 新增按系统设置强制拦截；编辑仅提示，避免锁死存量不合规数据
     if (codeMsg && (!isEdit || rules?.enforce_on_update)) {
       setCodeError(codeMsg);
-      toast({ title: '编码校验未通过', description: codeMsg, variant: 'destructive' });
+      toast({ title: ts('k_1bz34mu'), description: codeMsg, variant: 'destructive' });
       return;
     }
     setCodeError('');
@@ -143,29 +144,29 @@ export default function MaterialCategoryPage() {
         // 后端可能带回"编码不合规"之类的非阻断提示，不能吞掉
         const warnings: string[] = result.data?.warnings || [];
         toast({
-          title: editItem.id ? '更新成功' : '创建成功',
+          title: editItem.id ? ts('k_1795bzg') : ts('k_kiombh'),
           description: warnings.length > 0 ? warnings.join('；') : undefined,
         });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: ts('k_12db3qz'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: ts('k_12db3qz'), variant: 'destructive' });
     }
   };
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(ts('k_sur0cu'))) return;
     try {
       const res = await fetch('/api/base-data/material-category?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: ts('k_1hlqs') });
         fetchData();
       }
     } catch {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: ts('k_12db3qz'), variant: 'destructive' });
     }
   };
 
@@ -309,7 +310,7 @@ export default function MaterialCategoryPage() {
                   <p className="mt-1 text-xs text-red-600">{codeError}</p>
                 ) : rules?.code_pattern_desc ? (
                   <p className="mt-1 text-xs text-muted-foreground">
-                    系统设置的编码规则：{rules.code_pattern_desc}
+                    {ts('k_1cfdw8z')}{rules.code_pattern_desc}
                   </p>
                 ) : null}
               </div>

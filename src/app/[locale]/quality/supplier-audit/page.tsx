@@ -85,6 +85,7 @@ const _statusMap: Record<
 };
 
 export default function SupplierAuditPage() {
+  const ts = useTranslations('Quality');
   // 翻译钩子
   const t = useTranslations('Quality');
   const tc = useTranslations('Common');
@@ -217,8 +218,8 @@ export default function SupplierAuditPage() {
                 {t('newAudit')}
               </Button>
               <GlobalExportToolbar
-                filename="供应商审核报告"
-                title="供应商审核报告"
+                filename={ts('k_6eeeji')}
+                title={ts('k_6eeeji')}
                 columns={[
                   { key: 'audit_no', label: t('auditNo'), width: 18 },
                   { key: 'supplier_name', label: tc('supplier'), width: 20 },

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 /**
  * 审计日志API路由
  * 功能：提供操作日志、登录日志、库存流水、财务流水的查询接口
@@ -19,6 +22,7 @@ import {
 // ============================================================
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
 
   const moduleName = searchParams.get('module') || undefined;
@@ -43,7 +47,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         page,
         pageSize,
       });
-      return successResponse(result, '操作日志查询成功');
+      return successResponse(result, ts('k_16t9utu'));
     }
 
     case 'login': {
@@ -55,7 +59,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         page,
         pageSize,
       });
-      return successResponse(result, '登录日志查询成功');
+      return successResponse(result, ts('k_urgu67'));
     }
 
     case 'stock': {
@@ -76,7 +80,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         page,
         pageSize,
       });
-      return successResponse(result, '库存流水查询成功');
+      return successResponse(result, ts('k_vvh005'));
     }
 
     case 'finance': {
@@ -95,10 +99,10 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         page,
         pageSize,
       });
-      return successResponse(result, '财务流水查询成功');
+      return successResponse(result, ts('k_1uo49ij'));
     }
 
     default:
-      return errorResponse('不支持的日志类型', 400, 400);
+      return errorResponse(ts('k_vip79a'), 400, 400);
   }
 });

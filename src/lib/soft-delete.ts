@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 /**
  * VNERP 软删除与单据作废工具
  * 功能：实现单据不可物理删除，只能作废的企业级审计要求
@@ -146,6 +148,7 @@ export const CANCELLABLE_DOCUMENTS: Record<
  * 作废单据（企业标准：不可物理删除）
  */
 export async function cancelDocument(options: SoftDeleteOptions): Promise<CancelResult> {
+  const ts = await getTranslations('Common');
   const {
     tableName,
     recordId,
@@ -167,14 +170,14 @@ export async function cancelDocument(options: SoftDeleteOptions): Promise<Cancel
     ]);
 
     if (rows.length === 0) {
-      return { success: false, message: '单据不存在' };
+      return { success: false, message: ts('k_1uhsxot') };
     }
 
     const originalData = rows[0];
 
     // 2. 检查是否已作废
     if (originalData.status === 'cancelled' || originalData.deleted === 1) {
-      return { success: false, message: '单据已作废，不可重复作废' };
+      return { success: false, message: ts('k_e3p01w') };
     }
 
     // 3. 检查业务约束（如已审核、已出库等）
@@ -237,7 +240,7 @@ export async function cancelDocument(options: SoftDeleteOptions): Promise<Cancel
       snapshotData: createSnapshot(originalData),
     });
 
-    return { success: true, message: '单据作废成功' };
+    return { success: true, message: ts('k_1gja7wu') };
   } catch (error) {
     return { success: false, message: `作废失败: ${(error as Error).message}` };
   }
@@ -252,6 +255,7 @@ export async function restoreDocument(
   restoredBy?: string,
   _restoredById?: number
 ): Promise<CancelResult> {
+  const ts = await getTranslations('Common');
   try {
     assertValidIdentifier(tableName);
 
@@ -264,7 +268,7 @@ export async function restoreDocument(
     );
 
     if (cancelRows.length === 0) {
-      return { success: false, message: '未找到作废记录或已恢复' };
+      return { success: false, message: ts('k_s273uc') };
     }
 
     const cancelRecord = cancelRows[0];
@@ -295,13 +299,13 @@ export async function restoreDocument(
     // 3. 记录审计日志
     await logOperation({
       module: cancelRecord.document_type,
-      type: '恢复',
+      type: ts('k_13bnw3c'),
       title: cancelRecord.record_no,
       content: `恢复已作废单据: ${cancelRecord.record_no}`,
       status: 1,
     });
 
-    return { success: true, message: '单据恢复成功' };
+    return { success: true, message: ts('k_1e15bty') };
   } catch (error) {
     return { success: false, message: `恢复失败: ${(error as Error).message}` };
   }
@@ -320,6 +324,8 @@ export async function physicalDelete(
     recordNo?: string;
   }
 ): Promise<CancelResult> {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
   try {
     assertValidIdentifier(tableName);
 
@@ -329,7 +335,7 @@ export async function physicalDelete(
     ]);
 
     if (rows.length === 0) {
-      return { success: false, message: '记录不存在' };
+      return { success: false, message: ts('k_16jz4ox') };
     }
 
     const record = rows[0];
@@ -346,10 +352,10 @@ export async function physicalDelete(
 
     // 3. 记录删除前的快照
     await logOperation({
-      module: options?.module || '系统管理',
-      type: '删除',
+      module: options?.module || ts('k_1hdwiac'),
+      type: ts('k_1t2vi4h'),
       title: options?.recordNo || String(recordId),
-      content: `物理删除 ${options?.documentType || '记录'}: ${options?.recordNo || recordId}`,
+      content: `物理删除 ${options?.documentType || tc('record')}: ${options?.recordNo || recordId}`,
       beforeData: createSnapshot(record),
       status: 1,
     });
@@ -357,7 +363,7 @@ export async function physicalDelete(
     // 4. 执行物理删除
     await execute(`DELETE FROM ${escapeId(tableName)} WHERE id = ?`, [recordId]);
 
-    return { success: true, message: '删除成功' };
+    return { success: true, message: ts('k_1hlqs') };
   } catch (error) {
     return { success: false, message: `删除失败: ${(error as Error).message}` };
   }
@@ -377,6 +383,7 @@ async function checkBusinessCondition(
   recordId: number,
   condition: string
 ): Promise<CheckResult> {
+  const ts = await getTranslations('Common');
   switch (condition) {
     case 'not_received': {
       // 检查采购单是否已收货
@@ -386,7 +393,7 @@ async function checkBusinessCondition(
         [recordId]
       );
       if (rows[0]?.count > 0) {
-        return { passed: false, message: '采购单已存在入库记录，不可作废' };
+        return { passed: false, message: ts('k_1940ezq') };
       }
       return { passed: true, message: '' };
     }
@@ -399,7 +406,7 @@ async function checkBusinessCondition(
         [recordId]
       );
       if (rows[0]?.count > 0) {
-        return { passed: false, message: '销售单已存在出库记录，不可作废' };
+        return { passed: false, message: ts('k_1wiahkd') };
       }
       return { passed: true, message: '' };
     }
@@ -410,7 +417,7 @@ async function checkBusinessCondition(
         recordId,
       ]);
       if (rows[0]?.status === 'producing' || rows[0]?.status === 'completed') {
-        return { passed: false, message: '工单已开始生产，不可作废' };
+        return { passed: false, message: ts('k_cm50k5') };
       }
       return { passed: true, message: '' };
     }
@@ -426,7 +433,7 @@ async function checkBusinessCondition(
         recordId,
       ]);
       if (rows[0]?.status === 'completed') {
-        return { passed: false, message: '调拨单已完成，不可作废' };
+        return { passed: false, message: ts('k_1xyupaq') };
       }
       return { passed: true, message: '' };
     }
@@ -438,7 +445,7 @@ async function checkBusinessCondition(
         [recordId]
       );
       if (rows[0]?.paid_amount > 0) {
-        return { passed: false, message: '已付款记录不可作废' };
+        return { passed: false, message: ts('k_1q0wdp1') };
       }
       return { passed: true, message: '' };
     }
@@ -447,7 +454,7 @@ async function checkBusinessCondition(
       // 检查凭证是否已过账
       const rows: Loose = await query(`SELECT status FROM fin_voucher WHERE id = ?`, [recordId]);
       if (rows[0]?.status === 'posted') {
-        return { passed: false, message: '凭证已过账，不可作废' };
+        return { passed: false, message: ts('k_1hbm8jz') };
       }
       return { passed: true, message: '' };
     }
@@ -471,9 +478,10 @@ export async function quickCancel(
   cancelledBy?: string,
   cancelledById?: number
 ): Promise<CancelResult> {
+  const ts = await getTranslations('Common');
   const config = CANCELLABLE_DOCUMENTS[docType];
   if (!config) {
-    return { success: false, message: '不支持的单据类型' };
+    return { success: false, message: ts('k_1u3tx35') };
   }
 
   // 查询单据编号
@@ -483,7 +491,7 @@ export async function quickCancel(
   );
 
   if (rows.length === 0) {
-    return { success: false, message: '单据不存在' };
+    return { success: false, message: ts('k_1uhsxot') };
   }
 
   return cancelDocument({

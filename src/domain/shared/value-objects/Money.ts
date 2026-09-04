@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '../../shared/DomainTypes';
 
 export class Money {
@@ -6,8 +8,9 @@ export class Money {
     public readonly currency: string = 'CNY',
     allowNegative = false
   ) {
+  const ts = t;
     if (amount < 0 && !allowNegative) {
-      throw new DomainError('金额不能为负数');
+      throw new DomainError(ts('k_1pws64y'));
     }
   }
 
@@ -28,19 +31,21 @@ export class Money {
   }
 
   add(other: Money): Money {
+  const ts = t;
     if (this.currency !== other.currency) {
-      throw new DomainError('币种不一致，无法相加');
+      throw new DomainError(ts('k_158zvet'));
     }
     return new Money(Math.round((this.amount + other.amount) * 100) / 100, this.currency);
   }
 
   subtract(other: Money): Money {
+  const ts = t;
     if (this.currency !== other.currency) {
-      throw new DomainError('币种不一致，无法相减');
+      throw new DomainError(ts('k_wn9zaw'));
     }
     const result = Math.round((this.amount - other.amount) * 100) / 100;
     if (result < 0) {
-      throw new DomainError('金额相减结果不能为负数');
+      throw new DomainError(ts('k_fiavfk'));
     }
     return new Money(result, this.currency);
   }

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
@@ -44,6 +47,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
 // POST - 创建菜单
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body: Menu = await request.json();
 
     // 验证必填字段
@@ -59,7 +63,7 @@ export const POST = withPermission(
     ]);
 
     if (existing) {
-      return errorResponse('菜单编码已存在', 409, 409);
+      return errorResponse(ts('k_1v1rjb3'), 409, 409);
     }
 
     const result = await execute(
@@ -81,7 +85,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId }, '菜单创建成功');
+    return successResponse({ id: result.insertId }, ts('k_1dusbu'));
   },
   { logTitle: '创建菜单' }
 );
@@ -89,11 +93,12 @@ export const POST = withPermission(
 // PUT - 更新菜单
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body: Menu = await request.json();
     const { id } = body;
 
     if (!id) {
-      return commonErrors.badRequest('菜单ID不能为空');
+      return commonErrors.badRequest(ts('k_3kou61'));
     }
 
     // 验证必填字段
@@ -109,7 +114,7 @@ export const PUT = withPermission(
     ]);
 
     if (!existingMenu) {
-      return commonErrors.notFound('菜单不存在');
+      return commonErrors.notFound(ts('k_xnrrz1'));
     }
 
     // 检查编码是否已被其他菜单使用
@@ -119,7 +124,7 @@ export const PUT = withPermission(
     );
 
     if (codeExists) {
-      return errorResponse('菜单编码已存在', 409, 409);
+      return errorResponse(ts('k_1v1rjb3'), 409, 409);
     }
 
     const result = await execute(
@@ -145,10 +150,10 @@ export const PUT = withPermission(
     );
 
     if (result.affectedRows === 0) {
-      return commonErrors.notFound('菜单不存在');
+      return commonErrors.notFound(ts('k_xnrrz1'));
     }
 
-    return successResponse(null, '菜单更新成功');
+    return successResponse(null, ts('k_1t26jbj'));
   },
   { logTitle: '更新菜单' }
 );
@@ -156,11 +161,12 @@ export const PUT = withPermission(
 // DELETE - 删除菜单
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('菜单ID不能为空');
+      return commonErrors.badRequest(ts('k_3kou61'));
     }
 
     const menuId = parseInt(id);
@@ -171,7 +177,7 @@ export const DELETE = withPermission(
     ]);
 
     if (!existingMenu) {
-      return commonErrors.notFound('菜单不存在');
+      return commonErrors.notFound(ts('k_xnrrz1'));
     }
 
     // 检查是否有子菜单
@@ -181,7 +187,7 @@ export const DELETE = withPermission(
     );
 
     if (hasChildren && hasChildren.count > 0) {
-      return errorResponse('请先删除子菜单', 409, 409);
+      return errorResponse(ts('k_cc5bmd'), 409, 409);
     }
 
     // 使用事务删除菜单和关联的角色权限
@@ -193,7 +199,7 @@ export const DELETE = withPermission(
       await connection.execute('DELETE FROM sys_menu WHERE id = ?', [menuId]);
     });
 
-    return successResponse(null, '菜单删除成功');
+    return successResponse(null, ts('k_b21w3j'));
   },
   { logTitle: '删除菜单' }
 );

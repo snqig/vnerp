@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { OutboundOrderApprovedEvent } from '@/domain/warehouse/events/OutboundOrderEvents';
 import { transaction } from '@/lib/db';
@@ -6,12 +8,13 @@ import type { DbResult } from '@/types/db';
 
 export class OutboundReceivableHandler implements EventHandler<OutboundOrderApprovedEvent> {
   async handle(event: OutboundOrderApprovedEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { outboundNo, customerId, customerName, totalAmount } = event.payload;
     const ctx = { module: 'outbound-receivable', action: 'create', outboundNo };
     let phase = 'init';
 
     if (totalAmount <= 0 || !customerId) {
-      logger.info(ctx, '跳过：金额为0或无客户', { outboundNo, totalAmount, customerId });
+      logger.info(ctx, ts('k_1wqetgy'), { outboundNo, totalAmount, customerId });
       return;
     }
 
@@ -25,7 +28,7 @@ export class OutboundReceivableHandler implements EventHandler<OutboundOrderAppr
         )) as DbResult;
         if (existing && existing.length > 0) {
           secureLog('info', 'Receivable already exists for outbound order, skip', { outboundNo });
-          logger.info(ctx, `跳过：应收账款已存在`, { outboundNo, existingId: existing[0].id });
+          logger.info(ctx, ts('k_1easwul'), { outboundNo, existingId: existing[0].id });
           return;
         }
 
@@ -46,7 +49,7 @@ export class OutboundReceivableHandler implements EventHandler<OutboundOrderAppr
           ]
         );
         created = true;
-        logger.info(ctx, `应收账款创建完成`, {
+        logger.info(ctx, ts('k_iyloe6'), {
           receivableNo,
           customerId,
           customerName,

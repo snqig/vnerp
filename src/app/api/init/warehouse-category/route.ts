@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, queryOne, transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -16,15 +19,12 @@ interface WarehouseCategoryLink {
 // POST - 初始化仓库分类关联
 export const POST = withPermission(
   async (_request: NextRequest) => {
+  const ts = await getTranslations('Common');
     // 使用事务处理字段添加和数据更新
     await transaction(async (connection) => {
       // 直接添加 category_id 字段（如果不存在会报错，但我们可以忽略）
       try {
-        await connection.execute(`
-        ALTER TABLE inv_warehouse
-        ADD COLUMN category_id INT UNSIGNED DEFAULT NULL COMMENT '仓库分类ID' AFTER id,
-        ADD KEY idx_category_id (category_id)
-      `);
+        await connection.execute(ts('k_vadusm'));
       } catch {
         // 字段可能已存在，忽略错误
       }
@@ -65,7 +65,7 @@ export const POST = withPermission(
         data: warehouses,
         stats,
       },
-      '仓库分类关联初始化成功'
+      ts('k_v554lq')
     );
   },
   { errorMessage: '初始化仓库分类关联失败' }

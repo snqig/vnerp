@@ -46,6 +46,7 @@ interface Payable {
 
 export default function PayablesPage() {
   // 翻译钩子
+  const ts = useTranslations('Common');
   const tc = useTranslations('Common');
 
   const [payables, setPayables] = useState<Payable[]>([]);
@@ -82,9 +83,9 @@ export default function PayablesPage() {
 
   const getStatusBadge = (status: number) => {
     const map: Record<number, { label: string; variant: Loose }> = {
-      1: { label: '未付款', variant: 'secondary' },
-      2: { label: '部分付款', variant: 'warning' },
-      3: { label: '已结清', variant: 'success' },
+      1: { label: ts('k_1i13brn'), variant: 'secondary' },
+      2: { label: ts('k_o8ogod'), variant: 'warning' },
+      3: { label: ts('k_1wu2z9'), variant: 'success' },
     };
     const s = map[status] || { label: tc('unknown'), variant: 'default' };
     return <Badge variant={s.variant}>{s.label}</Badge>;

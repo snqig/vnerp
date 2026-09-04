@@ -47,6 +47,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 };
 
 export default function MesSyncPage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
 
@@ -89,13 +90,13 @@ export default function MesSyncPage() {
       const res = await authFetch('/api/hr/mes-sync/sync', { method: 'POST' });
       const json = await res.json();
       if (json.code === 200) {
-        toast.success(t('syncSuccess') || '同步成功');
+        toast.success(t('syncSuccess') || ts('k_1mjveub'));
         fetchSyncData();
       } else {
-        toast.error(json.message || t('syncFailed') || '同步失败');
+        toast.error(json.message || t('syncFailed') || ts('k_eqg7m4'));
       }
     } catch {
-      toast.error(t('syncFailed') || '同步失败');
+      toast.error(t('syncFailed') || ts('k_eqg7m4'));
     } finally {
       setSyncing(false);
     }

@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { PurchaseOrderReceivedEvent } from '@/domain/purchase/events/PurchaseOrderEvents';
 import { transaction } from '@/lib/db';
@@ -8,24 +10,15 @@ export class PurchaseReceivedHandler implements EventHandler<PurchaseOrderReceiv
     const { orderId, orderNo, receivedItems, totalReceivedAmount } = event.payload;
 
     await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
       for (const item of receivedItems) {
-        const [existingInv] = await conn.execute(
-          'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
-          [item.materialId, item.warehouseId]
+        // R4 修复：uk_material_warehouse 唯一键不含 deleted，软删行仍占位。
+        // 原「SELECT deleted=0 后 INSERT」遇软删行会撞 Duplicate entry 导致整事务回滚，
+        // 改为原子 UPSERT，同时覆盖 新建 / 累加 / 软删行复活 三种场景。
+        await conn.execute(
+          ts('k_1g9yxif'),
+          [item.materialId, item.materialCode, item.materialName, item.warehouseId, item.quantity]
         );
-
-        if (existingInv.length > 0) {
-          await conn.execute(
-            'UPDATE inv_inventory SET quantity = quantity + ?, update_time = NOW() WHERE id = ?',
-            [item.quantity, existingInv[0].id]
-          );
-        } else {
-          await conn.execute(
-            `INSERT INTO inv_inventory (material_id, material_code, material_name, warehouse_id, quantity, unit, create_time)
-             VALUES (?, ?, ?, ?, ?, '件', NOW())`,
-            [item.materialId, item.materialCode, item.materialName, item.warehouseId, item.quantity]
-          );
-        }
 
         const [existingBatch] = await conn.execute(
           'SELECT id, available_qty, quantity FROM inv_inventory_batch WHERE batch_no = ? AND material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',

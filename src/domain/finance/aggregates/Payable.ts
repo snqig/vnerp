@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { Money } from '../../shared/value-objects/Money';
 import { PayableStatus, PayableStatusEnum } from '../value-objects/PayableStatus';
@@ -53,11 +55,12 @@ export class Payable {
   ) {}
 
   static create(props: PayableProps): Payable {
+  const ts = t;
     if (!props.supplierId) {
-      throw new DomainError('供应商ID不能为空');
+      throw new DomainError(ts('k_h5paib'));
     }
     if (!props.amount || props.amount <= 0) {
-      throw new DomainError('应付金额必须大于0');
+      throw new DomainError(ts('k_1t8la0u'));
     }
 
     const amount = Money.create(props.amount);
@@ -153,11 +156,12 @@ export class Payable {
   }
 
   recordPayment(paymentAmount: number, paymentNo?: string): void {
+  const ts = t;
     if (this._status.isTerminal()) {
-      throw new DomainError('应付款已结清，不能再记录付款');
+      throw new DomainError(ts('k_1gmajeh'));
     }
     if (paymentAmount <= 0) {
-      throw new DomainError('付款金额必须大于0');
+      throw new DomainError(ts('k_3ty25s'));
     }
 
     const payment = Money.create(paymentAmount);

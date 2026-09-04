@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -153,11 +156,12 @@ async function updateBizOrderStatus(orderId: number, triggerBy: string) {
  */
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { sourceOrderLineId, poQty, materialId } = body;
 
     if (!sourceOrderLineId || !poQty) {
-      return errorResponse('缺少必要参数', 400, 400);
+      return errorResponse(ts('k_fifqlw'), 400, 400);
     }
 
     return await transaction(async (connection) => {
@@ -176,20 +180,20 @@ export const POST = withPermission(
 
       const orderLine = (orderLineRows as DbRow[])[0];
       if (!orderLine) {
-        throw new Error('来源业务订单行不存在');
+        throw new Error(ts('k_1xv1u4r'));
       }
 
       // 2. 检查业务订单状态
       if (orderLine.status < BIZ_ORDER_STATUS.CONFIRMED) {
-        throw new Error('业务订单未确认，不允许创建采购订单');
+        throw new Error(ts('k_1tqn3ep'));
       }
 
       if (orderLine.status >= BIZ_ORDER_STATUS.CLOSED) {
-        throw new Error('业务订单已关闭');
+        throw new Error(ts('k_7bl0bx'));
       }
 
       if (orderLine.closed_flag) {
-        throw new Error('业务订单行已关闭');
+        throw new Error(ts('k_5zdnwv'));
       }
 
       // 3. 计算剩余可采购数量
@@ -216,7 +220,7 @@ export const POST = withPermission(
               ordered_qty: orderLine.ordered_qty,
               tolerance,
             },
-            '校验通过（有警告）'
+            ts('k_115t4v7')
           );
         }
       }
@@ -230,7 +234,7 @@ export const POST = withPermission(
           ordered_qty: orderLine.ordered_qty,
           tolerance,
         },
-        '校验通过'
+        ts('k_whm46j')
       );
     });
   },
@@ -243,11 +247,12 @@ export const POST = withPermission(
  */
 export const PUT = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { poId, action } = body;
 
     if (!poId || !action) {
-      return errorResponse('缺少必要参数', 400, 400);
+      return errorResponse(ts('k_fifqlw'), 400, 400);
     }
 
     return await transaction(async (connection) => {
@@ -285,7 +290,7 @@ export const PUT = withPermission(
 
         return successResponse(
           { updated_orders: Array.from(updatedOrders), status_results: statusResults },
-          'PO审批通过，业务订单已更新'
+          ts('k_86y0dn')
         );
       }
 
@@ -335,7 +340,7 @@ export const PUT = withPermission(
 
         return successResponse(
           { updated_orders: Array.from(updatedOrders), status_results: statusResults },
-          '入库过账成功，业务订单已更新'
+          ts('k_1oriqc3')
         );
       }
 
@@ -356,7 +361,7 @@ export const PUT = withPermission(
 
         const orderLine = (orderLineRows as DbRow[])[0];
         if (!orderLine) {
-          throw new Error('业务订单行不存在');
+          throw new Error(ts('k_1x2hkf6'));
         }
 
         // 严格按单采购的物料，检查专用库存
@@ -407,11 +412,11 @@ export const PUT = withPermission(
 
         return successResponse(
           { order_line_id: orderLineId, consumed_qty: qty, status_result: result },
-          '消耗记录成功'
+          ts('k_5tsoqu')
         );
       }
 
-      return errorResponse('无效的操作类型', 400, 400);
+      return errorResponse(ts('k_4ty90w'), 400, 400);
     });
   },
   { errorMessage: '勾稽处理失败' }
@@ -423,11 +428,12 @@ export const PUT = withPermission(
  */
 export const GET = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const orderId = searchParams.get('orderId');
 
     if (!orderId) {
-      return errorResponse('业务订单ID不能为空', 400, 400);
+      return errorResponse(ts('k_6a6pwi'), 400, 400);
     }
 
     // 查询业务订单信息
@@ -441,7 +447,7 @@ export const GET = withPermission(
     );
 
     if ((order as DbRow[]).length === 0) {
-      return errorResponse('业务订单不存在', 404, 404);
+      return errorResponse(ts('k_ui30u0'), 404, 404);
     }
 
     const orderData = (order as DbRow[])[0];

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, queryOne, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
@@ -92,6 +95,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, ['die_id', 'impressions']);
     if (!validation.valid) {
@@ -102,7 +106,7 @@ export const POST = withPermission(
     const impressionsToAdd = parseInt(body.impressions);
 
     if (impressionsToAdd <= 0) {
-      return errorResponse('使用次数必须大于0', 400, 400);
+      return errorResponse(ts('k_12lsvea'), 400, 400);
     }
 
     return await transaction(async (conn) => {
@@ -111,11 +115,11 @@ export const POST = withPermission(
         [dieId]
       );
       const die = dieRows?.[0];
-      if (!die) return errorResponse('刀模/网版不存在', 404, 404);
+      if (!die) return errorResponse(ts('k_ksfsg9'), 404, 404);
       if (die.die_status === 'scrap')
-        return errorResponse('已报废的刀模/网版不能继续使用', 400, 400);
+        return errorResponse(ts('k_1am4wah'), 400, 400);
       if (die.die_status === 're_rule_needed')
-        return errorResponse('需重做的刀模/网版请先保养后再使用', 400, 400);
+        return errorResponse(ts('k_jx3bno'), 400, 400);
 
       if (die.max_impressions > 0 && die.cumulative_impressions >= die.max_impressions) {
         return errorResponse(
@@ -198,7 +202,7 @@ export const POST = withPermission(
         usage_pct:
           die.max_impressions > 0 ? Math.round((newCumulative / die.max_impressions) * 100) : 0,
       };
-      return successResponse(FieldMapper.addCamelCase(result), '刀模使用记录已更新');
+      return successResponse(FieldMapper.addCamelCase(result), ts('k_1tf6pvk'));
     });
   },
   { logTitle: '记录刀模使用', logType: 'business' }

@@ -20,6 +20,7 @@ interface InboundRecord {
 export default function SimpleInboundPage() {
   // 翻译钩子
   const t = useTranslations('Warehouse');
+  const ts = useTranslations('Warehouse');
   const tc = useTranslations('Common');
 
   const [records, setRecords] = useState<InboundRecord[]>([]);
@@ -94,8 +95,7 @@ export default function SimpleInboundPage() {
                         <div>
                           <p className="font-medium">{record.order_no}</p>
                           <p className="text-sm text-gray-500">
-                            {record.supplier_name} | {record.total_quantity}件
-                          </p>
+                            {record.supplier_name} | {record.total_quantity}{ts('k_w0gthl')}</p>
                           <p className="text-sm text-gray-400">{record.inbound_date}</p>
                         </div>
                         <Badge className={statusColors[record.status] || 'bg-gray-100'}>

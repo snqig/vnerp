@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 import { IInboundOrderRepository } from '@/domain/warehouse/repositories/IInboundOrderRepository';
 import { InboundOrder, InboundOrderProps } from '@/domain/warehouse/aggregates/InboundOrder';
 import { IPurchaseOrderRepository } from '@/domain/purchase/repositories/IPurchaseOrderRepository';
@@ -43,9 +46,10 @@ export class InboundApplicationService {
   ) {}
 
   async getOrderById(id: number): Promise<InboundOrder> {
+  const ts = await getTranslations('Common');
     const order = await this.orderRepo.findById(id);
     if (!order) {
-      throw new NotFoundError('入库单不存在');
+      throw new NotFoundError(ts('k_5pww03'));
     }
     return order;
   }
@@ -109,6 +113,7 @@ export class InboundApplicationService {
   private assertNoDuplicateInboundLines(
     items: Array<{ materialId?: number | null; batchNo?: string | null }>
   ): void {
+  const ts = t;
     const counts = new Map<string, number>();
     for (const item of items ?? []) {
       const key = `${item.materialId ?? ''}__${item.batchNo ?? ''}`;
@@ -118,7 +123,7 @@ export class InboundApplicationService {
       if (count > 1) {
         const [materialId, batchNo] = key.split('__');
         throw AppError.conflict(
-          `入库明细存在重复行：物料#${materialId || '空'} 批次「${batchNo || '空'}」出现了 ${count} 次，请合并后重试`
+          `入库明细存在重复行：物料#${materialId || ts('k_1yw5ep9')} 批次「${batchNo || ts('k_1yw5ep9')}」出现了 ${count} 次，请合并后重试`
         );
       }
     }
@@ -148,10 +153,11 @@ export class InboundApplicationService {
       }>;
     }
   ): Promise<{ id: number; orderNo: string }> {
+  const ts = await getTranslations('Common');
     const order = await this.getOrderById(id);
     const status = order.status.value;
     if (status !== 'draft' && status !== 'pending') {
-      throw new DomainError('只有草稿或待审核的入库单可以修改内容');
+      throw new DomainError(ts('k_u3fnes'));
     }
 
     const items = input.items;
@@ -181,7 +187,7 @@ export class InboundApplicationService {
       materialSpec: it.materialSpec ?? null,
       batchNo: it.batchNo ?? null,
       quantity: it.quantity,
-      unit: it.unit || '件',
+      unit: it.unit || ts('k_w0gthl'),
       unitPrice: it.unitPrice || 0,
       totalPrice: Math.round(it.quantity * (it.unitPrice || 0) * 100) / 100,
     }));
@@ -206,13 +212,14 @@ export class InboundApplicationService {
   async createInboundFromPO(
     params: CreateInboundFromPOParams
   ): Promise<{ id: number; orderNo: string }> {
+  const ts = await getTranslations('Common');
     if (!this.purchaseRepo) {
-      throw new DomainError('采购单仓储未注入，无法从采购单创建入库单');
+      throw new DomainError(ts('k_1j4dx46'));
     }
 
     const purchaseOrder = await this.purchaseRepo.findById(params.poId);
     if (!purchaseOrder) {
-      throw new NotFoundError('采购单不存在');
+      throw new NotFoundError(ts('k_1m3z88r'));
     }
 
     const status = purchaseOrder.status.value;
@@ -334,19 +341,19 @@ export class InboundApplicationService {
     order.approve(warehouseName);
 
     await transaction(async (conn) => {
-      const whereStatus = previousStatus === 'completed' ? 'approved' : previousStatus;
+      // 同上：领域 'completed' 可能对应库里的 'approved' 或 'completed'，不能只猜 'approved'。
+      const statusPredicate =
+        previousStatus === 'completed' ? "status IN ('approved','completed')" : 'status = ?';
+      const predicateParams = previousStatus === 'completed' ? [] : [previousStatus];
       const [result] = (await conn.execute(
-        "UPDATE inv_inbound_order SET status = 'approved', update_time = NOW() WHERE id = ? AND status = ?",
-        [id, whereStatus]
+        `UPDATE inv_inbound_order SET status = 'approved', update_time = NOW() WHERE id = ? AND ${statusPredicate}`,
+        [id, ...predicateParams]
       )) as [ResultSetHeader, any];
       if (result.affectedRows === 0) {
         throw new VersionConflictError();
       }
 
-      await conn.execute(
-        "UPDATE inv_inbound_order SET qc_status = 'pass', update_time = NOW() WHERE id = ?",
-        [id]
-      );
+      await this.orderRepo.updateInspectionAndFinance(id, order.inspectionStatus, order.financePosted, conn);
 
       const events = order.getDomainEvents();
       await getDomainEventOutbox().saveEvents(conn, 'InboundOrder', id, events);
@@ -364,10 +371,17 @@ export class InboundApplicationService {
     order.submit();
 
     await transaction(async (conn) => {
-      const whereStatus = previousStatus === 'completed' ? 'approved' : previousStatus;
+      // 领域侧 OrderStatus.from() 把 DB 的 'approved' 与 'completed' 都折叠成 'completed'，
+      // 因此到这里已读不回库里的原始字面值。
+      // 原实现一律猜测为 'approved'，但真实库实测为 63 条 'completed' + 0 条 'approved'，
+      // 必然匹配不到 → affectedRows=0 → 误抛 VersionConflictError(409)。
+      // 两种字面值代表同一个领域状态，同时接受并不会削弱乐观锁语义。
+      const statusPredicate =
+        previousStatus === 'completed' ? "status IN ('approved','completed')" : 'status = ?';
+      const predicateParams = previousStatus === 'completed' ? [] : [previousStatus];
       const [result] = (await conn.execute(
-        "UPDATE inv_inbound_order SET status = 'pending', update_time = NOW() WHERE id = ? AND status = ?",
-        [id, whereStatus]
+        `UPDATE inv_inbound_order SET status = 'pending', update_time = NOW() WHERE id = ? AND ${statusPredicate}`,
+        [id, ...predicateParams]
       )) as [ResultSetHeader, any];
       if (result.affectedRows === 0) {
         throw new VersionConflictError();
@@ -408,10 +422,11 @@ export class InboundApplicationService {
   }
 
   async deleteOrder(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const order = await this.getOrderById(id);
 
     if (!order.canDelete()) {
-      throw new DomainError('当前状态的入库单不能删除');
+      throw new DomainError(ts('k_83i36l'));
     }
 
     await this.orderRepo.softDelete(id);
@@ -424,14 +439,25 @@ export class InboundApplicationService {
     order.unapprove();
 
     await transaction(async (conn) => {
-      const whereStatus = previousStatus === 'completed' ? 'approved' : previousStatus;
+      // 领域侧 OrderStatus.from() 把 DB 的 'approved' 与 'completed' 都折叠成 'completed'，
+      // 因此到这里已读不回库里的原始字面值。
+      // 原实现一律猜测为 'approved'，但真实库实测为 63 条 'completed' + 0 条 'approved'，
+      // 必然匹配不到 → affectedRows=0 → 误抛 VersionConflictError(409)。
+      // 两种字面值代表同一个领域状态，同时接受并不会削弱乐观锁语义。
+      const statusPredicate =
+        previousStatus === 'completed' ? "status IN ('approved','completed')" : 'status = ?';
+      const predicateParams = previousStatus === 'completed' ? [] : [previousStatus];
       const [result] = (await conn.execute(
-        "UPDATE inv_inbound_order SET status = 'pending', update_time = NOW() WHERE id = ? AND status = ?",
-        [id, whereStatus]
+        `UPDATE inv_inbound_order SET status = 'pending', update_time = NOW() WHERE id = ? AND ${statusPredicate}`,
+        [id, ...predicateParams]
       )) as [ResultSetHeader, any];
       if (result.affectedRows === 0) {
         throw new VersionConflictError();
       }
+
+      // 反审核需同步重置质检/记账标记（领域 unapprove() 已把 inspectionStatus 置 0、financePosted 置 false），
+      // 必须在本事务连接上执行，否则会因行锁冲突触发 Lock wait timeout。
+      await this.orderRepo.updateInspectionAndFinance(id, order.inspectionStatus, order.financePosted, conn);
 
       const events = order.getDomainEvents();
       await getDomainEventOutbox().saveEvents(conn, 'InboundOrder', id, events);

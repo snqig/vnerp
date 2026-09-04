@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -42,6 +45,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       product_id,
@@ -60,7 +64,7 @@ export const POST = withPermission(
       remark,
     } = body;
 
-    if (!product_name) return errorResponse('产品名称不能为空', 400, 400);
+    if (!product_name) return errorResponse(ts('k_1bhfx0a'), 400, 400);
 
     const now = new Date();
     const testNo =
@@ -92,13 +96,14 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId, test_no: testNo }, '实验室测试记录创建成功');
+    return successResponse({ id: result.insertId, test_no: testNo }, ts('k_17bxkkq'));
   },
   { logTitle: '创建实验室测试记录', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       id,
@@ -119,7 +124,7 @@ export const PUT = withPermission(
       remark,
     } = body;
 
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     const fields: string[] = [];
     const values: SqlValue[] = [];
@@ -185,23 +190,24 @@ export const PUT = withPermission(
       values.push(remark);
     }
 
-    if (fields.length === 0) return errorResponse('没有需要更新的字段', 400, 400);
+    if (fields.length === 0) return errorResponse(ts('k_1kyikfw'), 400, 400);
 
     values.push(id);
     await execute('UPDATE qms_lab_test SET ' + fields.join(', ') + ' WHERE id = ?', values);
-    return successResponse(null, '实验室测试记录更新成功');
+    return successResponse(null, ts('k_12roq8f'));
   },
   { logTitle: '更新实验室测试记录', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     await execute('UPDATE qms_lab_test SET deleted = 1 WHERE id = ?', [id]);
-    return successResponse(null, '实验室测试记录删除成功');
+    return successResponse(null, ts('k_103jvi7'));
   },
   { logTitle: '删除实验室测试记录', logType: 'business' }
 );

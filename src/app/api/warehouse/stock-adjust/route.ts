@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -37,6 +40,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 });
 
 export const POST = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { warehouse_id, adjust_date, adjust_type, operator_name, remark, items } = body;
   const now = new Date();
@@ -74,10 +78,11 @@ export const POST = withPermission(async (request: NextRequest, _userInfo) => {
       );
     }
   }
-  return successResponse({ id: result.insertId, adjust_no: adjustNo }, '调整单创建成功');
+  return successResponse({ id: result.insertId, adjust_no: adjustNo }, ts('k_10ywx0d'));
 });
 
 export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id, status, remark, expectedStatus } = body;
 
@@ -85,10 +90,10 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
   // 防止多人同时审批同一调整单导致重复扣减库存
   if (status !== undefined) {
     if (expectedStatus === undefined) {
-      return errorResponse('缺少 expectedStatus 参数（当前状态）', 400, 400);
+      return errorResponse(ts('k_n3n518'), 400, 400);
     }
 
-    secureLog('debug', 'stock-adjust 状态变更（乐观锁）', {
+    secureLog('debug', ts('k_86f1fk'), {
       operation: 'updateStockAdjustStatus',
       id,
       targetStatus: status,
@@ -100,7 +105,7 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
       [status, id, expectedStatus]
     );
 
-    secureLog('debug', 'stock-adjust UPDATE 结果', {
+    secureLog('debug', ts('k_1nxvb77'), {
       operation: 'updateStockAdjustStatus',
       id,
       affectedRows: result.affectedRows,
@@ -109,13 +114,13 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
     });
 
     if (result.affectedRows === 0) {
-      secureLog('warn', '乐观锁并发冲突', {
+      secureLog('warn', ts('k_awftru'), {
         operation: 'updateStockAdjustStatus',
         id,
         expectedStatus,
         targetStatus: status,
       });
-      return errorResponse('并发冲突: 调整单状态已被其他操作变更，请刷新后重试', 409, 409);
+      return errorResponse(ts('k_a8ypem'), 409, 409);
     }
   }
 
@@ -124,13 +129,14 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
       remark,
       id,
     ]);
-  return successResponse(null, '更新成功');
+  return successResponse(null, ts('k_1795bzg'));
 });
 
 export const DELETE = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
-  if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
+  if (!id) return NextResponse.json({ success: false, message: ts('k_js4lo9') }, { status: 400 });
   await execute('UPDATE inv_stock_adjust SET deleted = 1 WHERE id = ?', [Number(id)]);
-  return successResponse(null, '删除成功');
+  return successResponse(null, ts('k_1hlqs'));
 });

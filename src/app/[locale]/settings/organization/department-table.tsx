@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState } from 'react';
 import {
@@ -73,10 +74,11 @@ function buildDepartmentTree(departments: Department[]): Department[] {
 
 // 状态标签
 function getStatusBadge(status: number) {
+  const ts = useTranslations('Common');
   return status === 1 ? (
-    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">启用</Badge>
+    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{ts('k_5pm2ma')}</Badge>
   ) : (
-    <Badge className="bg-muted text-muted-foreground hover:bg-muted">停用</Badge>
+    <Badge className="bg-muted text-muted-foreground hover:bg-muted">{ts('k_6q9o5l')}</Badge>
   );
 }
 
@@ -98,6 +100,7 @@ function DepartmentRow({
   onDelete: (id: number) => void;
   onAdd: (parentId?: number) => void;
 }) {
+  const ts = useTranslations('Common');
   const hasChildren = dept.children && dept.children.length > 0;
   const isExpanded = expandedRows.has(dept.id);
 
@@ -128,7 +131,7 @@ function DepartmentRow({
         <TableCell>
           <div style={{ paddingLeft: `${level * 24}px` }}>
             <span className={level === 0 ? 'font-semibold' : ''}>{dept.dept_name}</span>
-            {level === 0 && <span className="ml-2 text-xs text-gray-400">(一级部门)</span>}
+            {level === 0 && <span className="ml-2 text-xs text-gray-400">{ts('k_dz0m8d')}</span>}
           </div>
         </TableCell>
         <TableCell>{dept.leader_name || '-'}</TableCell>
@@ -136,13 +139,13 @@ function DepartmentRow({
         <TableCell>{getStatusBadge(dept.status)}</TableCell>
         <TableCell className="text-right">
           <div className="flex items-center justify-end gap-1">
-            <Button variant="ghost" size="sm" onClick={() => onAdd(dept.id)} title="添加子部门">
+            <Button variant="ghost" size="sm" onClick={() => onAdd(dept.id)} title={ts('k_rvte1m')}>
               <Plus className="w-4 h-4 text-blue-500" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => onEdit(dept)} title="编辑">
+            <Button variant="ghost" size="sm" onClick={() => onEdit(dept)} title={ts('k_qreyeg')}>
               <Edit className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => onDelete(dept.id)} title="删除">
+            <Button variant="ghost" size="sm" onClick={() => onDelete(dept.id)} title={ts('k_1t2vi4h')}>
               <Trash2 className="w-4 h-4 text-red-500" />
             </Button>
           </div>
@@ -166,6 +169,7 @@ function DepartmentRow({
 }
 
 export function DepartmentTable({ departments, onEdit, onDelete, onAdd }: DepartmentTableProps) {
+  const ts = useTranslations('Common');
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
   // 默认展开所有一级部门
@@ -205,30 +209,27 @@ export function DepartmentTable({ departments, onEdit, onDelete, onAdd }: Depart
     <div className="space-y-4">
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={expandAll}>
-          展开全部
-        </Button>
+          {ts('k_uyffgg')}</Button>
         <Button variant="outline" size="sm" onClick={collapseAll}>
-          收起全部
-        </Button>
+          {ts('k_1n0p4e2')}</Button>
       </div>
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50">
-              <TableHead className="w-[180px]">部门编码</TableHead>
-              <TableHead>部门名称</TableHead>
-              <TableHead className="w-[120px]">负责人</TableHead>
-              <TableHead className="w-[80px]">排序</TableHead>
-              <TableHead className="w-[80px]">状态</TableHead>
-              <TableHead className="text-right w-[180px]">操作</TableHead>
+              <TableHead className="w-[180px]">{ts('k_1flqf8g')}</TableHead>
+              <TableHead>{ts('k_1dwuqb4')}</TableHead>
+              <TableHead className="w-[120px]">{ts('k_17eokaf')}</TableHead>
+              <TableHead className="w-[80px]">{ts('k_dqvmz2')}</TableHead>
+              <TableHead className="w-[80px]">{ts('k_1ccx4t4')}</TableHead>
+              <TableHead className="text-right w-[180px]">{ts('k_501w24')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {treeData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                  暂无部门数据
-                </TableCell>
+                  {ts('k_9sue4h')}</TableCell>
               </TableRow>
             ) : (
               treeData.map((dept) => (

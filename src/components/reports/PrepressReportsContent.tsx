@@ -34,6 +34,7 @@ import { useTranslations } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import type { ExportColumn } from '@/lib/global-export-service';
 import type { DbRow } from '@/types/db';
+import { formatDate } from '@/lib/date-utils';
 import {
   BarChart,
   Bar,
@@ -56,6 +57,7 @@ const PERIODS = ['7', '30', '90'] as const;
 type Period = (typeof PERIODS)[number];
 
 export default function PrepressReportsContent() {
+  const ts = useTranslations('Common');
   const t = useTranslations('PrepressReports');
   const [period, setPeriod] = useState<Period>('30');
   const [loading, setLoading] = useState(true);
@@ -169,7 +171,7 @@ export default function PrepressReportsContent() {
     { key: 'category', label: t('type'), width: 15 },
     { key: 'metric', label: t('name'), width: 20 },
     { key: 'value', label: t('count'), width: 15 },
-    { key: 'unit', label: '单位', width: 10 },
+    { key: 'unit', label: ts('k_1xadx6v'), width: 10 },
   ];
 
   const getExportData = () => {
@@ -334,7 +336,7 @@ export default function PrepressReportsContent() {
                           outerRadius={80}
                           label
                         >
-                          {['可用', '使用中', '预警', '报废'].map((_, i) => (
+                          {[ts('k_18ety4i'), ts('k_kr2h4d'), ts('k_1qswpkf'), ts('k_19qx965')].map((_, i) => (
                             <Cell key={i} fill={PIE_COLORS[i]} />
                           ))}
                         </Pie>
@@ -769,9 +771,9 @@ export default function PrepressReportsContent() {
                             <TableRow key={i}>
                               <TableCell className="font-mono">{d.record_no}</TableCell>
                               <TableCell>{d.material_name}</TableCell>
-                              <TableCell>{d.open_time?.slice(0, 10)}</TableCell>
+                              <TableCell>{formatDate(d.open_time)}</TableCell>
                               <TableCell className="text-red-500">
-                                {d.expire_time?.slice(0, 10)}
+                                {formatDate(d.expire_time)}
                               </TableCell>
                               <TableCell className="text-right">{d.remaining_qty}</TableCell>
                             </TableRow>
@@ -834,9 +836,9 @@ export default function PrepressReportsContent() {
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Bar dataKey="原值" fill="#3b82f6" />
-                        <Bar dataKey="累计摊销" fill="#f59e0b" />
-                        <Bar dataKey="净值" fill="#22c55e" />
+                        <Bar dataKey={ts('k_12o2s46')} fill="#3b82f6" />
+                        <Bar dataKey={ts('k_1p8qinz')} fill="#f59e0b" />
+                        <Bar dataKey={ts('k_2dlv89')} fill="#22c55e" />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -867,7 +869,7 @@ export default function PrepressReportsContent() {
                             <TableCell>{d.mesh_count}</TableCell>
                             <TableCell className="text-right">{d.tension_value}</TableCell>
                             <TableCell className="text-right">{d.reclaim_count}</TableCell>
-                            <TableCell>{d.last_reclaim_date?.slice(0, 10) || '-'}</TableCell>
+                            <TableCell>{formatDate(d.last_reclaim_date) || '-'}</TableCell>
                           </TableRow>
                         )
                       )}

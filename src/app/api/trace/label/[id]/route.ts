@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, type SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -5,9 +8,10 @@ import { withPermission } from '@/lib/api-permissions';
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const id = request.nextUrl.pathname.match(/\/api\/trace\/label\/(\d+)/)?.[1];
     if (!id) {
-      return errorResponse('缺少模板ID', 400, 400);
+      return errorResponse(ts('k_1hdm9cd'), 400, 400);
     }
     const body = await request.json();
     const { name, scenario, htmlTemplate, widthMm, heightMm, qrSizeMm, status } = body;
@@ -42,26 +46,27 @@ export const PUT = withPermission(
       params.push(status);
     }
     if (sets.length === 0) {
-      return errorResponse('没有需要更新的字段', 400, 400);
+      return errorResponse(ts('k_1kyikfw'), 400, 400);
     }
     sets.push('update_time = NOW()');
     params.push(Number(id));
     await execute(`UPDATE label_template SET ${sets.join(', ')} WHERE id = ?`, params);
-    return successResponse(null, '标签模板更新成功');
+    return successResponse(null, ts('k_boerid'));
   },
   { logTitle: '更新标签模板' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const id = request.nextUrl.pathname.match(/\/api\/trace\/label\/(\d+)/)?.[1];
     if (!id) {
-      return errorResponse('缺少模板ID', 400, 400);
+      return errorResponse(ts('k_1hdm9cd'), 400, 400);
     }
     await execute('UPDATE label_template SET status = 0, update_time = NOW() WHERE id = ?', [
       Number(id),
     ]);
-    return successResponse(null, '标签模板已停用');
+    return successResponse(null, ts('k_1vt2jz2'));
   },
   { logTitle: '停用标签模板' }
 );

@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { PurBizStatus, PoStatus } from '@/lib/enum-status';
@@ -11,6 +13,7 @@ export interface ConvertResult {
 
 export async function convertRequestToPurchaseOrder(requestId: number): Promise<ConvertResult> {
   return await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
     const [requestRows]: Loose = await conn.execute(
       `SELECT id, request_no, request_dept_id, requester_id, supplier_id, supplier_name, expected_date, status
        FROM pur_request WHERE id = ? AND deleted = 0`,
@@ -18,7 +21,7 @@ export async function convertRequestToPurchaseOrder(requestId: number): Promise<
     );
 
     if (!requestRows || requestRows.length === 0) {
-      throw new Error('请购单不存在');
+      throw new Error(ts('k_1w5aox7'));
     }
 
     const request = requestRows[0];
@@ -34,7 +37,7 @@ export async function convertRequestToPurchaseOrder(requestId: number): Promise<
     );
 
     if (!items || items.length === 0) {
-      throw new Error('请购单无物料明细');
+      throw new Error(ts('k_aufypa'));
     }
 
     const itemsWithoutMaterialId = items.filter((i: Loose) => !i.material_id);

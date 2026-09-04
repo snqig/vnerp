@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, type SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -294,21 +297,9 @@ const DEFAULT_CONFIGS: {
 ];
 
 async function ensureConfigTable(): Promise<boolean> {
+  const ts = await getTranslations('Common');
   try {
-    await execute(`CREATE TABLE IF NOT EXISTS sys_config (
-      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-      config_name VARCHAR(100) NOT NULL COMMENT '参数名称',
-      config_key VARCHAR(100) NOT NULL COMMENT '参数键名',
-      config_value VARCHAR(500) NOT NULL COMMENT '参数键值',
-      config_type TINYINT DEFAULT 1 COMMENT '参数类型: 1-文本, 2-开关',
-      description VARCHAR(500) COMMENT '描述',
-      remark VARCHAR(500) COMMENT '备注',
-      create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-      update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      deleted TINYINT DEFAULT 0,
-      PRIMARY KEY (id),
-      UNIQUE KEY uk_config_key (config_key)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统参数配置表'`);
+    await execute(ts('k_1ewoe7r'));
     return true;
   } catch {
     return false;
@@ -375,6 +366,7 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { config_name, config_key, config_value, config_type, description } = body;
 
@@ -384,13 +376,14 @@ export const POST = withPermission(
     );
 
     clearSystemConfigCache();
-    return successResponse({ id: result.insertId }, '创建成功');
+    return successResponse({ id: result.insertId }, ts('k_kiombh'));
   },
   { logTitle: '创建系统配置', logType: 'system' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, config_name, config_key, config_value, config_type, description } = body;
 
@@ -400,20 +393,21 @@ export const PUT = withPermission(
     );
 
     clearSystemConfigCache();
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新系统配置', logType: 'system' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
+    if (!id) return NextResponse.json({ success: false, message: ts('k_js4lo9') }, { status: 400 });
 
     await execute(`DELETE FROM sys_config WHERE id = ?`, [Number(id)]);
     clearSystemConfigCache();
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除系统配置', logType: 'system' }
 );

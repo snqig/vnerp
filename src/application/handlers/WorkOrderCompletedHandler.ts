@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { WorkOrderCompletedEvent } from '@/domain/production/events/WorkOrderEvents';
 import { transaction } from '@/lib/db';
@@ -15,6 +17,7 @@ const costService = new InventoryCostService();
  */
 export class WorkOrderCompletedHandler implements EventHandler<WorkOrderCompletedEvent> {
   async handle(event: WorkOrderCompletedEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { workOrderId, workOrderNo, productId, productName, completedQty, warehouseId } =
       event.payload;
 
@@ -33,7 +36,7 @@ export class WorkOrderCompletedHandler implements EventHandler<WorkOrderComplete
       ) as any;
 
       let materialCode = '';
-      let unit = '件';
+      let unit = ts('k_w0gthl');
 
       const [matRows] = await conn.execute(
         `SELECT material_code, unit FROM inv_material WHERE id = ?`,
@@ -41,26 +44,33 @@ export class WorkOrderCompletedHandler implements EventHandler<WorkOrderComplete
       ) as any;
       if (matRows.length > 0) {
         materialCode = matRows[0].material_code || '';
-        unit = matRows[0].unit || '件';
+        unit = matRows[0].unit || ts('k_w0gthl');
       }
 
+      // R4 修复：uk_material_warehouse 唯一键不含 deleted，软删行仍占位。
+      // 原「SELECT deleted=0 后 INSERT」遇软删行会撞 Duplicate entry 导致整事务回滚，
+      // 改为原子 UPSERT（覆盖 新建 / 累加 / 软删行复活），并用 id = LAST_INSERT_ID(id)
+      // 保证 UPSERT 命中更新分支时也能取到正确的行 id。
       if (invRows.length > 0) {
-        const inv = invRows[0];
-        await conn.execute(
-          `UPDATE inv_inventory
-           SET quantity = quantity + ?, available_qty = available_qty + ?, update_time = NOW()
-           WHERE id = ?`,
-          [completedQty, completedQty, inv.id]
-        );
-        unit = inv.unit || unit;
-      } else {
-        const [newInv] = await conn.execute(
-          `INSERT INTO inv_inventory
-             (material_id, material_code, material_name, warehouse_id, quantity, available_qty, unit, create_time)
-           VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-          [productId, materialCode, productName, warehouseId, completedQty, completedQty, unit]
-        );
-        const newInvId = (newInv as unknown as { insertId: number }).insertId;
+        unit = invRows[0].unit || unit;
+      }
+      await conn.execute(
+        `INSERT INTO inv_inventory
+           (material_id, material_code, material_name, warehouse_id, quantity, available_qty, unit, deleted, create_time, update_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())
+         ON DUPLICATE KEY UPDATE
+           id = LAST_INSERT_ID(id),
+           quantity = quantity + VALUES(quantity),
+           available_qty = available_qty + VALUES(available_qty),
+           material_code = VALUES(material_code),
+           material_name = VALUES(material_name),
+           deleted = 0,
+           update_time = NOW()`,
+        [productId, materialCode, productName, warehouseId, completedQty, completedQty, unit]
+      );
+      const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() AS inv_id');
+      const newInvId = (idRow as unknown as Array<{ inv_id: number }>)[0]?.inv_id;
+      if (newInvId) {
         await costService.onInbound(conn, newInvId, completedQty, 0);
       }
 
@@ -91,7 +101,7 @@ export class WorkOrderCompletedHandler implements EventHandler<WorkOrderComplete
       });
     });
 
-    secureLog('info', '工单完工入库完成', {
+    secureLog('info', ts('k_104mbe4'), {
       workOrderNo,
       workOrderId,
       productId,

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { getDrizzleDb } from '@/lib/db';
 import { eq, and } from 'drizzle-orm';
@@ -8,12 +11,13 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 const db = getDrizzleDb();
 
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const employeeId = parseInt(searchParams.get('employeeId') || '');
   const month = searchParams.get('month');
 
   if (!employeeId || !month) {
-    return errorResponse('缺少员工ID或月份', 400);
+    return errorResponse(ts('k_o23ml3'), 400);
   }
 
   const rows = await db.select({
@@ -45,7 +49,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     .limit(1);
 
   if (rows.length === 0) {
-    return errorResponse('未找到该月薪资数据', 404);
+    return errorResponse(ts('k_10y6nlm'), 404);
   }
 
   const r = rows[0];

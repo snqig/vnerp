@@ -63,6 +63,7 @@ type MaintenanceRecord = Record<string, any>;
 type UsageLog = Record<string, any>;
 
 export default function DieTemplatePage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('Common');
   const tc = useTranslations('Common');
   const td = useTranslations('DieTemplate');
@@ -905,8 +906,8 @@ export default function DieTemplatePage() {
                   {td('refresh')}
                 </Button>
                 <GlobalExportToolbar
-                  filename="刀模模板列表"
-                  title="刀模模板列表"
+                  filename={ts('k_1f1dne5')}
+                  title={ts('k_1f1dne5')}
                   columns={[
                     { key: 'template_code', label: td('code'), width: 15 },
                     { key: 'template_name', label: tc('name'), width: 20 },

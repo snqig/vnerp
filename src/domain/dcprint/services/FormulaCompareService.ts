@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 /**
  * 配方版本对比领域服务 — 纯函数实现版本差异计算
  * 依据: docs/油墨配方版本管理完整落地方案.md 第六节
@@ -61,8 +63,9 @@ export class FormulaCompareService {
    * 规则：仅同色号版本可对比，以 materialCode 为匹配键
    */
   compare(left: InkFormulaVersion, right: InkFormulaVersion): FormulaCompareResult {
+  const ts = t;
     if (left.colorId !== right.colorId) {
-      throw new DomainError('只能对比同色号的版本');
+      throw new DomainError(ts('k_ww3imc'));
     }
 
     const leftMap = new Map<string, FormulaItemVO>();

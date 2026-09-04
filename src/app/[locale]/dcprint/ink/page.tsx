@@ -61,6 +61,7 @@ type SortField = 'ink_code' | 'ink_name' | 'ink_type' | 'stock_qty' | 'safety_st
 type SortDir = 'asc' | 'desc';
 
 export default function InkManagementPage() {
+  const ts = useTranslations('Dcprint');
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -309,8 +310,8 @@ export default function InkManagementPage() {
               </Button>
               <div className="ml-auto">
                 <GlobalExportToolbar
-                  filename="油墨管理"
-                  title="油墨管理"
+                  filename={ts('k_ttcrbf')}
+                  title={ts('k_ttcrbf')}
                   columns={[
                     { key: 'ink_code', label: t('inkCode'), width: 15 },
                     { key: 'ink_name', label: t('inkName'), width: 20 },

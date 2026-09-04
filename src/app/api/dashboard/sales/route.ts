@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { getConfig } from '@/lib/global-config';
@@ -5,6 +8,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { logger } from '@/lib/logger';
 
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
@@ -81,8 +85,12 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     let topProducts: SqlValue[] = [];
     try {
       const rows = await query(`
-        SELECT product_name, SUM(quantity) as total_qty, COALESCE(SUM(amount), 0) as total_amount
-        FROM sal_order_item WHERE deleted = 0 GROUP BY product_name ORDER BY total_amount DESC LIMIT 5
+        SELECT i.material_name AS product_name, SUM(i.quantity) as total_qty, COALESCE(SUM(i.total_price), 0) as total_amount
+        FROM sal_order_item i
+        INNER JOIN sal_order o ON i.order_id = o.id AND o.deleted = 0
+        WHERE i.deleted = 0
+        GROUP BY i.material_id, i.material_name
+        ORDER BY total_amount DESC LIMIT 5
       `);
       topProducts = Array.isArray(rows) ? rows : [];
     } catch (e) {
@@ -123,6 +131,6 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       data: { overview, orderTrend, topCustomers, topProducts, recentOrders, statusDistribution },
     });
   } catch {
-    return NextResponse.json({ success: false, message: '获取销售看板数据失败' }, { status: 500 });
+    return NextResponse.json({ success: false, message: ts('k_9cv3ts') }, { status: 500 });
   }
 });

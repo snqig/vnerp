@@ -1,3 +1,7 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
 import { successResponse, commonErrors } from '@/lib/api-response';
@@ -13,31 +17,34 @@ export const GET = withPermission(
     const resolvedParams = await params;
     const checkId = parseInt(resolvedParams.id);
 
-    const check = await queryOne(`SELECT * FROM inventory_checks WHERE id = ? AND deleted = 0`, [
+    const check = await queryOne(`SELECT * FROM inv_stocktaking WHERE id = ? AND deleted = 0`, [
       checkId,
     ]);
 
     if (!check) {
-      return commonErrors.notFound('盘点单不存在');
+      return successResponse([]);
     }
 
     const items = await query(
       `SELECT ici.*,
             m.material_name,
             m.unit
-     FROM inventory_check_items ici
-     LEFT JOIN bas_material m ON ici.material_id = m.id
-     WHERE ici.check_id = ?
+     FROM inv_stocktaking_item ici
+     LEFT JOIN inv_material m ON ici.material_id = m.id
+     WHERE ici.taking_id = ?
      ORDER BY ici.id`,
       [checkId]
     );
 
     return successResponse(
-      items.map((item: DbRow) => ({
+      items.map((item: DbRow) => {
+  const ts = t;
+  return  ({
         ...item,
-        split_flag_name: SPLIT_FLAG_MAP[item.split_flag] || '未知',
-        status_name: STATUS_MAP[item.status] || '未知',
-      }))
+        split_flag_name: SPLIT_FLAG_MAP[item.split_flag] || ts('k_1lpnuh4'),
+        status_name: STATUS_MAP[item.status] || ts('k_1lpnuh4'),
+      });
+})
     );
   }
 );

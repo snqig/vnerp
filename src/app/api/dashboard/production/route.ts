@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
@@ -5,6 +8,7 @@ import { logger } from '@/lib/logger';
 import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     let orderStats: unknown = { total_orders: 0, active_orders: 0, completed_today: 0 };
     try {
@@ -55,7 +59,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let qualityRate = 96.8;
+    let qualityRate = 0;
     try {
       const rows = await query(`
         SELECT
@@ -189,13 +193,13 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
           scrapped: Number(dieStats?.scrapped || 0),
         },
         personnel: {
-          onDuty: 42,
-          onLeave: 6,
-          attendance: 87.5,
+          onDuty: 0,
+          onLeave: 0,
+          attendance: 0,
         },
       },
     });
   } catch {
-    return NextResponse.json({ success: false, message: '获取生产看板数据失败' }, { status: 500 });
+    return NextResponse.json({ success: false, message: ts('k_58su24') }, { status: 500 });
   }
 });

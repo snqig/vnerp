@@ -14,13 +14,15 @@ interface SalaryStructureChartProps {
 }
 
 function renderCenterLabel(t: (key: string) => string, total: number) {
+  const ts = useTranslations('Common');
   function CenterLabel({ viewBox }: { viewBox?: { cx: number; cy: number } }) {
+  
     if (!viewBox) return null;
     const { cx, cy } = viewBox;
     return (
       <g>
         <text x={cx} y={cy - 8} textAnchor="middle" className="fill-muted-foreground text-xs">
-          {t('total') || '总金额'}
+          {t('total') || ts('k_byap0k')}
         </text>
         <text x={cx} y={cy + 16} textAnchor="middle" className="fill-foreground text-lg font-bold">
           ¥{total.toLocaleString()}
@@ -32,20 +34,21 @@ function renderCenterLabel(t: (key: string) => string, total: number) {
 }
 
 export function SalaryStructureChart({ data }: SalaryStructureChartProps) {
+  const ts = useTranslations('Common');
   const t = useTranslations('Hr');
 
   const labelMap: Record<string, string> = {
-    baseSalary: t('baseSalary') || '基本工资',
-    pieceSalary: t('pieceSalary') || '计件工资',
-    overtimeSalary: t('overtimeSalary') || '加班工资',
-    performanceSalary: t('performanceSalary') || '绩效奖金',
-    allowances: t('allowances') || '津贴补贴',
+    baseSalary: t('baseSalary') || ts('k_60tcky'),
+    pieceSalary: t('pieceSalary') || ts('k_j33wr3'),
+    overtimeSalary: t('overtimeSalary') || ts('k_6aiarb'),
+    performanceSalary: t('performanceSalary') || ts('k_n10a79'),
+    allowances: t('allowances') || ts('k_1hcqc71'),
   };
 
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-[400px] text-muted-foreground">
-        {t('noData') || '暂无数据'}
+        {t('noData') || ts('k_6tzr61')}
       </div>
     );
   }

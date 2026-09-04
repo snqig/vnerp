@@ -1,3 +1,5 @@
+
+import { getTranslations } from 'next-intl/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { SignJWT } from 'jose';
@@ -72,12 +74,13 @@ function getClientIP(request: NextRequest): string {
 }
 
 export async function POST(request: NextRequest) {
+  const ts = await getTranslations({ namespace: 'Common' });
   const traceId = generateTraceId();
   const ctx = { module: 'auth', action: 'login', traceId };
 
   try {
     const clientIP = getClientIP(request);
-    logger.stepStart(ctx, '用户登录', { clientIP });
+    logger.stepStart(ctx, ts('k_1gu9dq4'), { clientIP });
 
     const rateResult = await checkRateLimit(clientIP, {
       windowMs: Number(process.env.LOGIN_RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
@@ -86,7 +89,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!rateResult.allowed) {
-      logger.branch(ctx, '限流检查', '请求频率超限', true, {
+      logger.branch(ctx, ts('k_oeldc1'), ts('k_1ji3jd9'), true, {
         retryAfterMs: rateResult.retryAfterMs,
       });
       return NextResponse.json(
@@ -109,11 +112,11 @@ export async function POST(request: NextRequest) {
     const { username, password } = body;
 
     if (!username || !password) {
-      logger.branch(ctx, '参数校验', '用户名密码非空', false);
+      logger.branch(ctx, ts('k_199cfle'), ts('k_1wfavyu'), false);
       return NextResponse.json(
         {
           success: false,
-          message: '用户名和密码不能为空',
+          message: ts('k_ezkh6m'),
         },
         { status: 400 }
       );
@@ -137,12 +140,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (users.length === 0) {
-      logger.branch(ctx, '用户查找', '用户存在', false, { username });
-      await logLogin(username, request, false, '用户名或密码错误');
+      logger.branch(ctx, ts('k_1hdz4z7'), ts('k_exbl6o'), false, { username });
+      await logLogin(username, request, false, ts('k_1lix38y'));
       return NextResponse.json(
         {
           success: false,
-          message: '用户名或密码错误',
+          message: ts('k_1lix38y'),
         },
         { status: 401 }
       );
@@ -151,12 +154,12 @@ export async function POST(request: NextRequest) {
     const user = users[0];
 
     if (user.status === 0) {
-      logger.branch(ctx, '账号状态', '账号启用', false, { userId: user.id });
-      await logLogin(username, request, false, '账号已被禁用');
+      logger.branch(ctx, ts('k_7tczm7'), ts('k_1219ymt'), false, { userId: user.id });
+      await logLogin(username, request, false, ts('k_wm48v4'));
       return NextResponse.json(
         {
           success: false,
-          message: '账号已被禁用，请联系管理员',
+          message: ts('k_v9be21'),
         },
         { status: 403 }
       );
@@ -187,20 +190,20 @@ export async function POST(request: NextRequest) {
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true' || process.env.DEMO_MODE === 'true') {
       // SECURITY: 生产环境（含 Vercel 部署）一律禁止 demo 模式跳过密码验证。
       if (process.env.NODE_ENV === 'production') {
-        logger.branch(ctx, '演示模式', '生产环境禁止演示模式', true);
+        logger.branch(ctx, ts('k_ekbdtf'), ts('k_zk2nbg'), true);
         return NextResponse.json(
           { code: 403, msg: 'Demo mode is not allowed in production' },
           { status: 403 }
         );
       }
-      logger.branch(ctx, '演示模式', '非生产环境-跳过密码验证', false);
+      logger.branch(ctx, ts('k_ekbdtf'), ts('k_et6bp0'), false);
     } else {
       const isPasswordValid = await verifyPassword(password, user.password);
       if (!isPasswordValid) {
-        logger.branch(ctx, '密码验证', '密码正确', false, { userId: user.id });
+        logger.branch(ctx, ts('k_wgpp5j'), ts('k_16j6anh'), false, { userId: user.id });
         const failCount = (user.login_fail_count || 0) + 1;
         if (failCount >= MAX_LOGIN_ATTEMPTS) {
-          logger.branch(ctx, '锁定判断', '失败次数>=最大尝试', true, {
+          logger.branch(ctx, ts('k_1vf21zh'), ts('k_1ekv774'), true, {
             failCount,
             MAX_LOGIN_ATTEMPTS,
           });
@@ -241,7 +244,7 @@ export async function POST(request: NextRequest) {
 
     // 检查异地登录
     let _isAbnormalLogin = false;
-    logger.branch(ctx, '密码验证', '密码正确', true, { userId: user.id });
+    logger.branch(ctx, ts('k_wgpp5j'), ts('k_16j6anh'), true, { userId: user.id });
     try {
       const lastLogin = await query<{ last_login_ip: string }>(
         'SELECT last_login_ip FROM sys_user WHERE id = ? AND last_login_ip IS NOT NULL',
@@ -252,11 +255,10 @@ export async function POST(request: NextRequest) {
         const currentIP = getClientIP(request);
         if (lastIP !== currentIP && currentIP !== '127.0.0.1') {
           _isAbnormalLogin = true;
-          logger.branch(ctx, '异地登录', 'IP地址变化', true, { lastIP, currentIP });
+          logger.branch(ctx, ts('k_13wi72j'), ts('k_8auxi6'), true, { lastIP, currentIP });
           // 记录异地登录告警
           await execute(
-            `INSERT INTO sys_notification (type, title, content, user_id, is_read, create_time)
-             VALUES ('security', '异地登录提醒', ?, ?, 0, NOW())`,
+            ts('k_3hp2m1'),
             [
               `您的账号 ${username} 在新IP地址 ${currentIP} 登录，上次登录IP为 ${lastIP}。如非本人操作，请立即修改密码。`,
               user.id,
@@ -292,7 +294,7 @@ export async function POST(request: NextRequest) {
           departmentName = deptResult[0].dept_name;
         }
       } catch (error) {
-        console.error('[auth.login] 查询部门名称失败:', error);
+        console.error(ts('k_1r17wi0'), error);
       }
     }
 
@@ -376,7 +378,7 @@ export async function POST(request: NextRequest) {
       // 忽略
     }
 
-    await logLogin(username, request, true, '登录成功');
+    await logLogin(username, request, true, ts('k_1snukxk'));
 
     // 生成 refresh token
     const refreshToken = crypto.randomUUID();
@@ -385,7 +387,7 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json({
       success: true,
-      message: '登录成功',
+      message: ts('k_1snukxk'),
       data: {
         token,
         refreshToken,
@@ -425,7 +427,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: '登录失败，请稍后重试',
+        message: ts('k_17cia4n'),
       },
       { status: 500 }
     );
@@ -433,6 +435,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function logLogin(username: string, request: NextRequest, success: boolean, message: string) {
+  const ts = await getTranslations({ namespace: 'Common' });
   try {
     const ip = getClientIP(request);
     const userAgent = request.headers.get('user-agent') || '';
@@ -442,7 +445,7 @@ async function logLogin(username: string, request: NextRequest, success: boolean
       [username, ip, userAgent, success ? 1 : 0, success ? '' : message]
     );
   } catch (error) {
-    console.error('[auth.login] 登录日志写入失败:', error);
+    console.error(ts('k_1ybewqg'), error);
   }
 }
 

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -43,6 +46,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       supplier_id,
@@ -65,7 +69,7 @@ export const POST = withPermission(
       items,
     } = body;
 
-    if (!supplier_id) return errorResponse('供应商ID不能为空', 400, 400);
+    if (!supplier_id) return errorResponse(ts('k_h5paib'), 400, 400);
 
     const now = new Date();
     const evalNo =
@@ -122,16 +126,17 @@ export const POST = withPermission(
       }
     }
 
-    return successResponse({ id: evalId, eval_no: evalNo }, '供应商评估创建成功');
+    return successResponse({ id: evalId, eval_no: evalNo }, ts('k_1lqjd1g'));
   },
   { logTitle: '创建供应商评估', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...fields } = body;
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     const updateFields: string[] = [];
     const updateValues: SqlValue[] = [];
@@ -185,18 +190,19 @@ export const PUT = withPermission(
       }
     }
 
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新供应商评估', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
     await execute('UPDATE srm_supplier_eval SET deleted = 1 WHERE id = ?', [id]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除供应商评估', logType: 'business' }
 );

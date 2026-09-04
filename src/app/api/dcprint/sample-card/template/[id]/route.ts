@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -9,9 +12,10 @@ const service = new SampleProcessTemplateService();
 // 获取模板详情
 export const GET = withPermission(
   async (_request: NextRequest, _userInfo, { params }: { params: Promise<{ id: string }> }) => {
+  const ts = await getTranslations('Common');
     const { id } = await params;
     const template = await service.getTemplateDetail(Number(id));
-    if (!template) return commonErrors.notFound('模板不存在');
+    if (!template) return commonErrors.notFound(ts('k_14s8tgc'));
     return successResponse(template);
   }
 );
@@ -23,10 +27,11 @@ export const PUT = withPermission(
     userInfo: DbRow,
     { params }: { params: Promise<{ id: string }> }
   ) => {
+  const ts = await getTranslations('Common');
     const { id } = await params;
     const body = await request.json();
     await service.updateTemplate(Number(id), body, userInfo.userId);
-    return successResponse(null, '模板更新成功');
+    return successResponse(null, ts('k_6ftgtc'));
   },
   { logTitle: '更新标准工艺模板' }
 );
@@ -34,9 +39,10 @@ export const PUT = withPermission(
 // 删除模板（软删除）
 export const DELETE = withPermission(
   async (_request: NextRequest, _userInfo, { params }: { params: Promise<{ id: string }> }) => {
+  const ts = await getTranslations('Common');
     const { id } = await params;
     await service.deleteTemplate(Number(id));
-    return successResponse(null, '模板已删除');
+    return successResponse(null, ts('k_w5y305'));
   },
   { logTitle: '删除标准工艺模板' }
 );

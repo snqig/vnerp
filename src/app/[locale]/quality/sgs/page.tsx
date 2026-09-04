@@ -227,6 +227,7 @@ function getDefaultItems(certType: string): CertItem[] {
 }
 
 export default function SGSManagementPage() {
+  const ts = useTranslations('Quality');
   // 翻译钩子
   const t = useTranslations('Quality');
   const tc = useTranslations('Common');
@@ -413,7 +414,7 @@ export default function SGSManagementPage() {
                   <SelectItem value="REACH">REACH</SelectItem>
                   <SelectItem value="FDA">FDA</SelectItem>
                   <SelectItem value="EN71-3">EN71-3</SelectItem>
-                  <SelectItem value="其他">{tc('other')}</SelectItem>
+                  <SelectItem value={ts('k_dcd4ul')}>{tc('other')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select
@@ -452,8 +453,8 @@ export default function SGSManagementPage() {
               {t('addCert')}
             </Button>
             <GlobalExportToolbar
-              filename="SGS证书报告"
-              title="SGS证书报告"
+              filename={ts('k_l4lyhc')}
+              title={ts('k_l4lyhc')}
               columns={[
                 { key: 'cert_no', label: t('certNo'), width: 18 },
                 { key: 'material_name', label: tc('materialName'), width: 20 },
@@ -724,7 +725,7 @@ export default function SGSManagementPage() {
                     <SelectItem value="REACH">REACH</SelectItem>
                     <SelectItem value="FDA">FDA</SelectItem>
                     <SelectItem value="EN71-3">EN71-3</SelectItem>
-                    <SelectItem value="其他">{tc('other')}</SelectItem>
+                    <SelectItem value={ts('k_dcd4ul')}>{tc('other')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

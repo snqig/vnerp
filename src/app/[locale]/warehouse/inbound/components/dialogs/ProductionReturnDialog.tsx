@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useMemo, useEffect } from 'react';
 import {
@@ -42,6 +43,7 @@ export function ProductionReturnDialog({
   operatorName,
   onSuccess,
 }: Props) {
+  const ts = useTranslations('Warehouse');
   const fromWarehouseId = sourceRecords[0]?.warehouse_id;
   const wh = warehouses.find((w) => w.id === fromWarehouseId);
   const fromWarehouseName = wh?.warehouse_name || `仓库#${fromWarehouseId || '-'}`;
@@ -75,12 +77,12 @@ export function ProductionReturnDialog({
 
   const handleConfirm = async () => {
     if (!fromWarehouseId) {
-      toast.error('无法确定退料仓库');
+      toast.error(ts('k_euog53'));
       return;
     }
     const valid = items.filter((it) => it.material_id && Number(it.quantity) > 0);
     if (valid.length === 0) {
-      toast.error('请至少填写一项有效数量');
+      toast.error(ts('k_482f8l'));
       return;
     }
     setSubmitting(true);
@@ -108,7 +110,7 @@ export function ProductionReturnDialog({
       });
       const result = await res.json();
       if (!result.success) {
-        toast.error(result.message || '创建生产退料单失败');
+        toast.error(result.message || ts('k_72an32'));
         setSubmitting(false);
         return;
       }
@@ -125,11 +127,11 @@ export function ProductionReturnDialog({
           return;
         }
       }
-      toast.success('生产退料单已确认，库存已回冲（车间→仓库）');
+      toast.success(ts('k_177v9xb'));
       onOpenChange(false);
       onSuccess();
     } catch {
-      toast.error('操作失败，请稍后重试');
+      toast.error(ts('k_1yojo3u'));
     } finally {
       setSubmitting(false);
     }
@@ -142,28 +144,27 @@ export function ProductionReturnDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl" resizable>
         <DialogHeader>
-          <DialogTitle>生产退料（车间 → 仓库）</DialogTitle>
+          <DialogTitle>{ts('k_1gsuhdd')}</DialogTitle>
           <DialogDescription>
-            把车间用剩的物料退回仓库，确认后库存回冲增加。可关联工单（可选）。
-          </DialogDescription>
+            {ts('k_6lpxcc')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2 max-h-[62vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label>退料仓库</Label>
+              <Label>{ts('k_7kduo')}</Label>
               <div className="flex h-9 items-center rounded-md border border-muted bg-muted/50 px-3 text-sm">
                 {fromWarehouseName}
               </div>
             </div>
             <div className="space-y-1">
-              <Label>关联工单（可选）</Label>
+              <Label>{ts('k_kt9uaf')}</Label>
               <select
                 value={selectedWO}
                 onChange={(e) => setSelectedWO(e.target.value)}
                 className={inputCls}
               >
-                <option value="">不关联工单</option>
+                <option value="">{ts('k_ogu1y9')}</option>
                 {workOrders.map((w) => (
                   <option key={w.work_order_no} value={w.work_order_no}>
                     {w.work_order_no} - {w.product_name}
@@ -176,11 +177,11 @@ export function ProductionReturnDialog({
           <OutboundItemsEditor items={items} onQtyChange={updateQty} />
 
           <div className="space-y-1">
-            <Label>备注</Label>
+            <Label>{ts('k_b5m1l6')}</Label>
             <input
               value={remark}
               onChange={(e) => setRemark(e.target.value)}
-              placeholder="可选"
+              placeholder={ts('k_zflkxh')}
               className={inputCls}
             />
           </div>
@@ -188,10 +189,9 @@ export function ProductionReturnDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            取消
-          </Button>
+            {ts('k_1589w37')}</Button>
           <Button onClick={handleConfirm} disabled={submitting}>
-            {submitting ? '处理中...' : '创建并确认退料'}
+            {submitting ? ts('k_1j4vco4') : ts('k_hpihkr')}
           </Button>
         </DialogFooter>
       </DialogContent>

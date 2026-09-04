@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -43,6 +46,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       outsource_order_id,
@@ -56,8 +60,8 @@ export const POST = withPermission(
       remark,
     } = body;
 
-    if (!outsource_order_id) return errorResponse('委外订单不能为空', 400, 400);
-    if (!supplier_id) return errorResponse('供应商不能为空', 400, 400);
+    if (!outsource_order_id) return errorResponse(ts('k_1n84mps'), 400, 400);
+    if (!supplier_id) return errorResponse(ts('k_4o0inq'), 400, 400);
 
     const now = new Date();
     const settlementNo =
@@ -92,7 +96,7 @@ export const POST = withPermission(
 
     return successResponse(
       { id: result.insertId, settlement_no: settlementNo },
-      '委外结算单创建成功'
+      ts('k_154wwcg')
     );
   },
   { logTitle: '创建委外结算单', logType: 'business' }
@@ -100,10 +104,11 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action, status, payment_status, payment_date, deduct_amount, remark } = body;
 
-    if (!id) return errorResponse('结算单ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_1yx8xrp'), 400, 400);
 
     if (action === 'confirm') {
       const result = await transaction(async (conn) => {
@@ -111,7 +116,7 @@ export const PUT = withPermission(
           'SELECT id, outsource_order_id, actual_amount FROM outsource_settlement WHERE id = ? AND deleted = 0 FOR UPDATE',
           [id]
         );
-        if (settlementRows.length === 0) throw new Error('结算单不存在');
+        if (settlementRows.length === 0) throw new Error(ts('k_o9kt6p'));
 
         const settlement = settlementRows[0];
 
@@ -127,7 +132,7 @@ export const PUT = withPermission(
 
         return { id, status: 3 };
       });
-      return successResponse(result, '结算确认成功');
+      return successResponse(result, ts('k_1ylzfi8'));
     }
 
     if (action === 'payment') {
@@ -135,7 +140,7 @@ export const PUT = withPermission(
         'UPDATE outsource_settlement SET payment_status = 3, payment_date = COALESCE(?, CURDATE()), update_time = NOW() WHERE id = ? AND deleted = 0',
         [payment_date || null, id]
       );
-      return successResponse(null, '付款确认成功');
+      return successResponse(null, ts('k_9d6axw'));
     }
 
     const fields: string[] = [];
@@ -176,18 +181,19 @@ export const PUT = withPermission(
       );
     }
 
-    return successResponse(null, '结算单更新成功');
+    return successResponse(null, ts('k_1eosoc3'));
   },
   { logTitle: '更新委外结算单', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('缺少id', 400, 400);
+    if (!id) return errorResponse(ts('k_js4lo9'), 400, 400);
     await execute('UPDATE outsource_settlement SET deleted = 1 WHERE id = ?', [Number(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除委外结算单', logType: 'business' }
 );

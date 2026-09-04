@@ -64,6 +64,7 @@ interface OutsourceIssueItem {
 }
 
 export default function OutsourceIssuePage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('Outsource');
   const tc = useTranslations('Common');
 
@@ -249,8 +250,8 @@ export default function OutsourceIssuePage() {
               </Button>
             </div>
             <GlobalExportToolbar
-              filename="外协发料"
-              title="外协发料"
+              filename={ts('k_1tmbfs0')}
+              title={ts('k_1tmbfs0')}
               columns={[
                 { key: 'issue_no', label: t('issueNo'), width: 18 },
                 {

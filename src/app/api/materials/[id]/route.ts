@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -15,16 +18,17 @@ import { AppError } from '@/lib/error-handling';
  */
 export const PATCH = withPermission(
   async (request: NextRequest, _user: unknown, context?: { params?: { id?: string } }) => {
+  const ts = await getTranslations('Common');
     const idParam = context?.params?.id ?? new URL(request.url).pathname.split('/').pop();
     const id = Number(idParam);
     if (!Number.isInteger(id) || id <= 0) {
-      return errorResponse('物料ID非法', 400, 400);
+      return errorResponse(ts('k_cj39yj'), 400, 400);
     }
 
     const body = await request.json().catch(() => ({}));
     const raw = body?.isSplittable;
     if (raw !== 0 && raw !== 1 && raw !== '0' && raw !== '1') {
-      return errorResponse('isSplittable 只能为 0 或 1', 400, 400);
+      return errorResponse(ts('k_1w7emyp'), 400, 400);
     }
     const flag = raw === 1 || raw === '1' ? 1 : 0;
 
@@ -37,6 +41,6 @@ export const PATCH = withPermission(
       throw AppError.notFound(`物料不存在或已删除（ID=${id}）`);
     }
 
-    return successResponse({ id, isSplittable: flag }, '已更新物料可分切标记');
+    return successResponse({ id, isSplittable: flag }, ts('k_14fdvqk'));
   }
 );

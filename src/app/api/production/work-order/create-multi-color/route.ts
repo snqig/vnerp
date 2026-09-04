@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -6,11 +9,12 @@ import { createMultiColorWorkOrder } from '@/lib/multi-color-printing';
 // 从工艺卡创建多色套印工单
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { standardCardId, salesOrderId, planQty, printArea, substrateType } = body;
 
     if (!standardCardId || !salesOrderId || !planQty) {
-      return errorResponse('缺少必要参数: standardCardId, salesOrderId, planQty', 400, 400);
+      return errorResponse(ts('k_v6iy9a'), 400, 400);
     }
 
     const result = await createMultiColorWorkOrder(

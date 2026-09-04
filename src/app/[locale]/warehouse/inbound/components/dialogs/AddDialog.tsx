@@ -63,6 +63,7 @@ export function AddDialog({
   expandedPoId,
   onSuccess,
 }: AddDialogProps) {
+  const ts = useTranslations('Warehouse');
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
 
@@ -114,7 +115,7 @@ export function AddDialog({
                 material_code: formData.materialCode,
                 material_name: formData.materialName,
                 material_spec: formData.specification,
-                unit: formData.unit || '卷',
+                unit: formData.unit || ts('k_1v8rak6'),
                 batch_no: formData.batchNo,
                 quantity,
                 unit_price: unitPrice,
@@ -149,7 +150,7 @@ export function AddDialog({
               material_spec: formData.specification,
               batch_no: formData.batchNo,
               quantity,
-              unit: formData.unit || '卷',
+              unit: formData.unit || ts('k_1v8rak6'),
               unit_price: unitPrice,
             },
           ],
@@ -259,10 +260,10 @@ export function AddDialog({
                   <SelectValue placeholder={t('selectUnit')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="卷">{t('unitRoll')}</SelectItem>
-                  <SelectItem value="张">{t('unitSheet')}</SelectItem>
-                  <SelectItem value="个">{t('unitPiece')}</SelectItem>
-                  <SelectItem value="箱">{t('unitBox')}</SelectItem>
+                  <SelectItem value={ts('k_1v8rak6')}>{t('unitRoll')}</SelectItem>
+                  <SelectItem value={ts('k_accfpb')}>{t('unitSheet')}</SelectItem>
+                  <SelectItem value={ts('k_d5a1x9')}>{t('unitPiece')}</SelectItem>
+                  <SelectItem value={ts('k_1e2x02k')}>{t('unitBox')}</SelectItem>
                   <SelectItem value="kg">{t('unitKg')}</SelectItem>
                   <SelectItem value="㎡">{t('unitSqm')}</SelectItem>
                 </SelectContent>
@@ -361,7 +362,7 @@ export function AddDialog({
                               </span>
                               {hasLines && (
                                 <span className="text-xs text-blue-500">
-                                  {isExpanded ? '收起明细' : `展开 ${po.lines.length} 行明细`}
+                                  {isExpanded ? ts('k_c3apla') : `展开 ${po.lines.length} 行明细`}
                                 </span>
                               )}
                             </div>
@@ -381,7 +382,7 @@ export function AddDialog({
                                       fullyReceived ? 'opacity-50 pointer-events-none' : ''
                                     }`}
                                     onMouseDown={() => !fullyReceived && handlePoLineSelect(po, line)}
-                                    title={fullyReceived ? '该行已全部收货' : '点击选择此行入库'}
+                                    title={fullyReceived ? ts('k_12r0uxt') : ts('k_n5h1r')}
                                   >
                                     <div className="flex items-center gap-2 min-w-0">
                                       <Package className="h-3 w-3 text-blue-500 flex-shrink-0" />
@@ -393,16 +394,16 @@ export function AddDialog({
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-3 text-xs flex-shrink-0">
-                                      <span className="text-gray-500">行{line.line_no || idx + 1}</span>
+                                      <span className="text-gray-500">{tc('analysisRowsSuffix')}{line.line_no || idx + 1}</span>
                                       <span className="text-gray-500">
-                                        订{orderQty}
+                                        {ts('k_1a4a885')}{orderQty}
                                         {line.unit || ''}
                                       </span>
                                       <span className="text-gray-500">
-                                        已收{receivedQty}
+                                        {ts('k_r0v8nt')}{receivedQty}
                                       </span>
                                       <span className={fullyReceived ? 'text-red-500' : 'text-green-600 font-medium'}>
-                                        余{remaining}
+                                        {ts('k_1p58vpw')}{remaining}
                                         {line.unit || ''}
                                       </span>
                                     </div>

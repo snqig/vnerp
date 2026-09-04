@@ -281,7 +281,7 @@ export default function SOPManagementPage() {
                 {list.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>
-                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(item.id))} onChange={() => toggle(String(item.id))} aria-label={tc('selectAll')} />
+                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(item.id))} onChange={() => toggle(String(item.id))} aria-label={tc('selectRow', { id: String(item.id) })} />
                     </TableCell>
                     <TableCell className="font-mono text-sm">{item.sop_no}</TableCell>
                     <TableCell>{item.sop_name}</TableCell>

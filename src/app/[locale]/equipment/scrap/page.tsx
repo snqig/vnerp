@@ -42,6 +42,7 @@ interface Item {
   status: number;
 }
 export default function EquipmentScrapPage() {
+  const ts = useTranslations('Equipment');
   // 翻译钩子
   const tc = useTranslations('Common');
 
@@ -51,7 +52,7 @@ export default function EquipmentScrapPage() {
   > = {
     1: { label: tc('pending'), variant: 'outline' },
     2: { label: tc('approved'), variant: 'default' },
-    3: { label: '已报废', variant: 'destructive' },
+    3: { label: ts('k_oy744d'), variant: 'destructive' },
   };
 
   const { toast } = useToast();
@@ -160,7 +161,7 @@ export default function EquipmentScrapPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">设备报废</h1>
+          <h1 className="text-2xl font-bold">{ts('k_1dfoqke')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
@@ -181,8 +182,7 @@ export default function EquipmentScrapPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增报废
-            </Button>
+              {tc('scrapTitle')}</Button>
           </div>
         </div>
         <Card>
@@ -201,13 +201,13 @@ export default function EquipmentScrapPage() {
                       aria-label={tc('selectAll')}
                     />
                   </TableHead>
-                  <TableHead className="text-xs">报废单号</TableHead>
-                  <TableHead className="text-xs">设备编码</TableHead>
-                  <TableHead className="text-xs">设备名称</TableHead>
-                  <TableHead className="text-xs">报废日期</TableHead>
-                  <TableHead className="text-xs">报废原因</TableHead>
-                  <TableHead className="text-xs">原值</TableHead>
-                  <TableHead className="text-xs">净值</TableHead>
+                  <TableHead className="text-xs">{ts('k_1ggqij1')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_17s4qyf')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_eb1q6f')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_1oc5iv9')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_1h3xyle')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_12o2s46')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_2dlv89')}</TableHead>
                   <TableHead className="text-xs">{tc('approver')}</TableHead>
                   <TableHead className="text-xs">{tc('status')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
@@ -224,7 +224,7 @@ export default function EquipmentScrapPage() {
                           className="h-4 w-4 cursor-pointer accent-blue-600"
                           checked={isSelected(String(item.id))}
                           onChange={() => toggle(String(item.id))}
-                          aria-label={tc('selectAll')}
+                          aria-label={tc('selectRow', { id: item.id })}
                         />
                       </TableCell>
                       <TableCell className="text-xs font-mono">{item.scrap_no}</TableCell>
@@ -255,8 +255,7 @@ export default function EquipmentScrapPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 2)}
                             >
-                              审批
-                            </Button>
+                              {ts('k_1fb3cb3')}</Button>
                           )}
                           {item.status === 2 && (
                             <Button
@@ -265,8 +264,7 @@ export default function EquipmentScrapPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 3)}
                             >
-                              确认报废
-                            </Button>
+                              {ts('k_1hma1hv')}</Button>
                           )}
                           <Button
                             size="sm"
@@ -295,8 +293,7 @@ export default function EquipmentScrapPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center text-gray-400 py-8">
-                      暂无记录
-                    </TableCell>
+                      {tc('noRecords')}</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -304,7 +301,7 @@ export default function EquipmentScrapPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共{total}条</span>
+          <span className="text-sm text-gray-500">{ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -312,16 +309,14 @@ export default function EquipmentScrapPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
-            </Button>
+              {tc('prevPage')}</Button>
             <Button
               size="sm"
               variant="outline"
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
-            </Button>
+              {tc('nextPage')}</Button>
           </div>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
@@ -331,21 +326,21 @@ export default function EquipmentScrapPage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>设备编码</Label>
+                <Label>{ts('k_17s4qyf')}</Label>
                 <Input
                   value={editItem.equipment_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, equipment_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>设备名称</Label>
+                <Label>{ts('k_eb1q6f')}</Label>
                 <Input
                   value={editItem.equipment_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, equipment_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>报废日期</Label>
+                <Label>{ts('k_1oc5iv9')}</Label>
                 <Input
                   type="date"
                   value={editItem.scrap_date || ''}
@@ -360,7 +355,7 @@ export default function EquipmentScrapPage() {
                 />
               </div>
               <div>
-                <Label>原值</Label>
+                <Label>{ts('k_12o2s46')}</Label>
                 <Input
                   type="number"
                   value={editItem.original_value || ''}
@@ -370,7 +365,7 @@ export default function EquipmentScrapPage() {
                 />
               </div>
               <div>
-                <Label>净值</Label>
+                <Label>{ts('k_2dlv89')}</Label>
                 <Input
                   type="number"
                   value={editItem.net_value || ''}
@@ -378,7 +373,7 @@ export default function EquipmentScrapPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>报废原因</Label>
+                <Label>{ts('k_1h3xyle')}</Label>
                 <Input
                   value={editItem.scrap_reason || ''}
                   onChange={(e) => setEditItem({ ...editItem, scrap_reason: e.target.value })}
@@ -387,8 +382,7 @@ export default function EquipmentScrapPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
-              </Button>
+                {tc('cancel')}</Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>

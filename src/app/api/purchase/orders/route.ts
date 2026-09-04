@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import {
   successResponse,
@@ -109,6 +112,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     const validation = validateRequestBody(body, ['supplier_id', 'lines']);
@@ -118,28 +122,28 @@ export const POST = withPermission(
     }
 
     if (!Array.isArray(body.lines) || body.lines.length === 0) {
-      return errorResponse('采购明细不能为空', 400, 400);
+      return errorResponse(ts('k_193r78b'), 400, 400);
     }
 
     // 系统设置 category.require_on_business：采购单要求物料已归类
     const materialIds = (body.lines as DbRow[]).map((line) => line.material_id).filter(Boolean);
-    secureLog('info', '[purchase/orders] 开始物料分类校验', {
+    secureLog('info', ts('k_t9esp7'), {
       itemCount: body.lines.length,
       materialIds,
     });
     const categoryCheck = await checkMaterialsCategorized(materialIds);
-    secureLog('info', '[purchase/orders] 物料分类校验完成', {
+    secureLog('info', ts('k_1q9ze1i'), {
       blocked: categoryCheck.blocked,
       uncategorizedCount: categoryCheck.uncategorized.length,
     });
     if (categoryCheck.blocked) {
-      secureLog('warn', '[purchase/orders] 物料分类校验阻断提交', {
+      secureLog('warn', ts('k_r5m0xa'), {
         message: categoryCheck.message,
       });
       return errorResponse(categoryCheck.message!, 400, 400);
     }
     if (categoryCheck.message) {
-      secureLog('warn', '[purchase/orders] 物料分类校验警告', {
+      secureLog('warn', ts('k_1j8kkoq'), {
         message: categoryCheck.message,
       });
     }
@@ -170,7 +174,7 @@ export const POST = withPermission(
           materialCode: line.material_code || '',
           materialName: line.material_name || '',
           materialSpec: line.material_spec || '',
-          unit: line.unit || '件',
+          unit: line.unit || ts('k_w0gthl'),
           orderQty: line.order_qty,
           receivedQty: 0,
           returnedQty: 0,
@@ -186,7 +190,7 @@ export const POST = withPermission(
 
       return successResponse(
         { ...result, uncategorizedMaterials: categoryCheck.uncategorized },
-        categoryCheck.message ? `采购单创建成功。${categoryCheck.message}` : '采购单创建成功'
+        categoryCheck.message ? `采购单创建成功。${categoryCheck.message}` : ts('k_qqp9rs')
       );
     } catch (error) {
       if (error instanceof DomainError) {
@@ -200,18 +204,20 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action } = body;
 
     if (!id) {
-      return errorResponse('采购单ID不能为空', 400, 400);
+      return errorResponse(ts('k_22hbhn'), 400, 400);
     }
 
     if (body.currency !== undefined) {
-      return errorResponse('币种创建后不可修改', 400, 400);
+      return errorResponse(tc('currencyImmutableWarning'), 400, 400);
     }
     if (body.exchange_rate !== undefined) {
-      return errorResponse('汇率创建后不可修改', 400, 400);
+      return errorResponse(ts('k_zgrm21'), 400, 400);
     }
 
     const service = getPurchaseService();
@@ -219,28 +225,28 @@ export const PUT = withPermission(
     try {
       if (action === 'submit') {
         const result = await service.submitOrder(id);
-        return successResponse(result, '采购单提交成功');
+        return successResponse(result, ts('k_1gyycb1'));
       }
 
       if (action === 'approve') {
         const result = await service.approveOrder(id, userInfo.userId);
-        return successResponse(result, '采购单审核成功');
+        return successResponse(result, ts('k_1qte13s'));
       }
 
       if (action === 'close') {
         const result = await service.closeOrder(id);
-        return successResponse(result, '采购单关闭成功');
+        return successResponse(result, ts('k_s71y9p'));
       }
 
       if (action === 'receive') {
         return errorResponse(
-          '收货功能已迁移至入库模块，请使用 POST /api/warehouse/inbound/from-po',
+          ts('k_wo9jp1'),
           410,
           410
         );
       }
 
-      return errorResponse('未知操作', 400, 400);
+      return errorResponse(ts('k_ztn3ax'), 400, 400);
     } catch (error) {
       if (error instanceof NotFoundError) {
         return commonErrors.notFound(error.message);
@@ -259,18 +265,19 @@ export const PUT = withPermission(
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('采购单ID不能为空', 400, 400);
+      return errorResponse(ts('k_22hbhn'), 400, 400);
     }
 
     const service = getPurchaseService();
 
     try {
       await service.deleteOrder(parseInt(id));
-      return successResponse(null, '采购单删除成功');
+      return successResponse(null, ts('k_1nxdv31'));
     } catch (error) {
       if (error instanceof NotFoundError) {
         return commonErrors.notFound(error.message);

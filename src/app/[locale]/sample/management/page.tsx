@@ -128,6 +128,7 @@ const emptyForm = {
 };
 
 export default function SampleManagementPage() {
+  const ts = useTranslations('Common');
   // 翻译钩子
   const t = useTranslations('SampleManagement');
   const tc = useTranslations('Common');
@@ -368,8 +369,8 @@ export default function SampleManagementPage() {
               </div>
               <div className="flex gap-2 items-center">
                 <GlobalExportToolbar
-                  filename="样品列表"
-                  title="样品列表"
+                  filename={ts('k_f7lgei')}
+                  title={ts('k_f7lgei')}
                   columns={[
                     { key: 'order_no', label: t('sampleNo'), width: 18 },
                     { key: 'product_name', label: t('productName'), width: 25 },

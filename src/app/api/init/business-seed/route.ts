@@ -1,9 +1,13 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
 export const POST = withPermission(async (_request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const result = await transaction(async (conn) => {
     const stats: Record<string, number> = {};
 
@@ -52,33 +56,33 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const warehouses = [
       {
         warehouse_code: 'WH001',
-        warehouse_name: '原材料仓',
+        warehouse_name: ts('k_tkxvoe'),
         warehouse_type: 1,
-        address: '厂区A栋1楼',
+        address: ts('k_11n8puw'),
       },
       {
         warehouse_code: 'WH002',
-        warehouse_name: '半成品仓',
+        warehouse_name: ts('k_llwvwj'),
         warehouse_type: 2,
-        address: '厂区A栋2楼',
+        address: ts('k_127hdqr'),
       },
       {
         warehouse_code: 'WH003',
-        warehouse_name: '成品仓',
+        warehouse_name: ts('k_93mh3v'),
         warehouse_type: 3,
-        address: '厂区B栋1楼',
+        address: ts('k_4qppgv'),
       },
       {
         warehouse_code: 'WH004',
-        warehouse_name: '辅料仓',
+        warehouse_name: ts('k_6jdwbc'),
         warehouse_type: 4,
-        address: '厂区B栋2楼',
+        address: ts('k_479sg4'),
       },
       {
         warehouse_code: 'WH005',
-        warehouse_name: '油墨仓',
+        warehouse_name: ts('k_359r5x'),
         warehouse_type: 5,
-        address: '厂区C栋1楼',
+        address: ts('k_ys8vu6'),
       },
     ];
     for (const wh of warehouses) {
@@ -93,51 +97,51 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const suppliers = [
       {
         supplier_code: 'SUP001',
-        supplier_name: '东莞PET薄膜厂',
-        short_name: '东莞PET',
-        contact_name: '陈总',
+        supplier_name: ts('k_p7kvw2'),
+        short_name: ts('k_k0b4gk'),
+        contact_name: ts('k_cajrc4'),
         contact_phone: '0769-12345678',
-        address: '广东省东莞市',
+        address: ts('k_56izg7'),
       },
       {
         supplier_code: 'SUP002',
-        supplier_name: '深圳油墨公司',
-        short_name: '深圳油墨',
-        contact_name: '刘总',
+        supplier_name: ts('k_1dmfh48'),
+        short_name: ts('k_1sdt4do'),
+        contact_name: ts('k_57shg4'),
         contact_phone: '0755-87654321',
-        address: '广东省深圳市',
+        address: ts('k_1k1npbx'),
       },
       {
         supplier_code: 'SUP003',
-        supplier_name: '广州不干胶厂',
-        short_name: '广州不干胶',
-        contact_name: '王总',
+        supplier_name: ts('k_1dhcm6z'),
+        short_name: ts('k_19r7na3'),
+        contact_name: ts('k_nxfiar'),
         contact_phone: '020-11112222',
-        address: '广东省广州市',
+        address: ts('k_hznk92'),
       },
       {
         supplier_code: 'SUP004',
-        supplier_name: '佛山PVC厂',
-        short_name: '佛山PVC',
-        contact_name: '李总',
+        supplier_name: ts('k_sscisi'),
+        short_name: ts('k_1wpho2c'),
+        contact_name: ts('k_w4ia8u'),
         contact_phone: '0757-33334444',
-        address: '广东省佛山市',
+        address: ts('k_17z988p'),
       },
       {
         supplier_code: 'SUP005',
-        supplier_name: '深圳特种油墨',
-        short_name: '特种油墨',
-        contact_name: '赵总',
+        supplier_name: ts('k_bmai82'),
+        short_name: ts('k_1e1rrey'),
+        contact_name: ts('k_1d0fmb5'),
         contact_phone: '0755-55556666',
-        address: '广东省深圳市',
+        address: ts('k_1k1npbx'),
       },
       {
         supplier_code: 'SUP006',
-        supplier_name: '广州保护膜厂',
-        short_name: '广州保护膜',
-        contact_name: '孙总',
+        supplier_name: ts('k_125crav'),
+        short_name: ts('k_67lccv'),
+        contact_name: ts('k_ydadml'),
         contact_phone: '020-77778888',
-        address: '广东省广州市',
+        address: ts('k_hznk92'),
       },
     ];
     for (const sup of suppliers) {
@@ -157,39 +161,39 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     const customers = [
       {
-        customer_name: '美的集团',
+        customer_name: ts('k_gx8egb'),
         customer_code: 'C001',
-        contact_name: '张经理',
+        contact_name: ts('k_100yj6q'),
         contact_phone: '13800138001',
-        address: '广东省佛山市顺德区',
+        address: ts('k_1b09ez4'),
       },
       {
-        customer_name: '格力电器',
+        customer_name: ts('k_1xr1xyd'),
         customer_code: 'C002',
-        contact_name: '李经理',
+        contact_name: ts('k_yi1f90'),
         contact_phone: '13800138002',
-        address: '广东省珠海市香洲区',
+        address: ts('k_qjzddp'),
       },
       {
-        customer_name: '海尔集团',
+        customer_name: ts('k_14c5x1i'),
         customer_code: 'C003',
-        contact_name: '王经理',
+        contact_name: ts('k_l4triz'),
         contact_phone: '13800138003',
-        address: '山东省青岛市崂山区',
+        address: ts('k_1etmiz3'),
       },
       {
-        customer_name: 'TCL集团',
+        customer_name: ts('k_16xfpyk'),
         customer_code: 'C004',
-        contact_name: '赵经理',
+        contact_name: ts('k_1dfmma9'),
         contact_phone: '13800138004',
-        address: '广东省惠州市惠城区',
+        address: ts('k_76512l'),
       },
       {
-        customer_name: '奥克斯集团',
+        customer_name: ts('k_17waajm'),
         customer_code: 'C005',
-        contact_name: '刘经理',
+        contact_name: ts('k_3725lm'),
         contact_phone: '13800138005',
-        address: '浙江省宁波市鄞州区',
+        address: ts('k_1e1kor7'),
       },
     ];
 
@@ -217,16 +221,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
     }
 
     const salesOrders = [
-      { customer: '美的集团', order_no: 'SO20250101001', amount: 50000, status: 4 },
-      { customer: '格力电器', order_no: 'SO20250101002', amount: 30000, status: 3 },
-      { customer: '海尔集团', order_no: 'SO20250101003', amount: 45000, status: 2 },
-      { customer: 'TCL集团', order_no: 'SO20250101004', amount: 28000, status: 1 },
-      { customer: '奥克斯集团', order_no: 'SO20250101005', amount: 35000, status: 4 },
-      { customer: '美的集团', order_no: 'SO20250102001', amount: 42000, status: 3 },
-      { customer: '格力电器', order_no: 'SO20250102002', amount: 38000, status: 2 },
-      { customer: '海尔集团', order_no: 'SO20250102003', amount: 52000, status: 1 },
-      { customer: 'TCL集团', order_no: 'SO20250102004', amount: 31000, status: 4 },
-      { customer: '奥克斯集团', order_no: 'SO20250102005', amount: 29000, status: 3 },
+      { customer: ts('k_gx8egb'), order_no: 'SO20250101001', amount: 50000, status: 4 },
+      { customer: ts('k_1xr1xyd'), order_no: 'SO20250101002', amount: 30000, status: 3 },
+      { customer: ts('k_14c5x1i'), order_no: 'SO20250101003', amount: 45000, status: 2 },
+      { customer: ts('k_16xfpyk'), order_no: 'SO20250101004', amount: 28000, status: 1 },
+      { customer: ts('k_17waajm'), order_no: 'SO20250101005', amount: 35000, status: 4 },
+      { customer: ts('k_gx8egb'), order_no: 'SO20250102001', amount: 42000, status: 3 },
+      { customer: ts('k_1xr1xyd'), order_no: 'SO20250102002', amount: 38000, status: 2 },
+      { customer: ts('k_14c5x1i'), order_no: 'SO20250102003', amount: 52000, status: 1 },
+      { customer: ts('k_16xfpyk'), order_no: 'SO20250102004', amount: 31000, status: 4 },
+      { customer: ts('k_17waajm'), order_no: 'SO20250102005', amount: 29000, status: 3 },
     ];
 
     for (const order of salesOrders) {
@@ -244,8 +248,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       if (!orderId) continue;
 
       await safeInsert(
-        `INSERT INTO sal_order_item (order_id, material_name, quantity, unit_price, total_price, unit, create_time)
-         VALUES (?, 'PET薄膜', 1000, 50, 50000, '张', NOW())`,
+        ts('k_1yvgu6j'),
         [orderId]
       );
     }
@@ -260,7 +263,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const receivables = [
       {
         order_no: 'SO20250101001',
-        customer: '美的集团',
+        customer: ts('k_gx8egb'),
         amount: 50000,
         received: 50000,
         status: 'completed',
@@ -268,7 +271,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       },
       {
         order_no: 'SO20250101002',
-        customer: '格力电器',
+        customer: ts('k_1xr1xyd'),
         amount: 30000,
         received: 15000,
         status: 'partial',
@@ -276,7 +279,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       },
       {
         order_no: 'SO20250101003',
-        customer: '海尔集团',
+        customer: ts('k_14c5x1i'),
         amount: 45000,
         received: 0,
         status: 'pending',
@@ -284,7 +287,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       },
       {
         order_no: 'SO20250101004',
-        customer: 'TCL集团',
+        customer: ts('k_16xfpyk'),
         amount: 28000,
         received: 0,
         status: 'pending',
@@ -292,7 +295,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       },
       {
         order_no: 'SO20250101005',
-        customer: '奥克斯集团',
+        customer: ts('k_17waajm'),
         amount: 35000,
         received: 35000,
         status: 'completed',
@@ -300,7 +303,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       },
       {
         order_no: 'SO20250102001',
-        customer: '美的集团',
+        customer: ts('k_gx8egb'),
         amount: 42000,
         received: 20000,
         status: 'partial',
@@ -308,7 +311,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       },
       {
         order_no: 'SO20250102002',
-        customer: '格力电器',
+        customer: ts('k_1xr1xyd'),
         amount: 38000,
         received: 0,
         status: 'pending',
@@ -316,7 +319,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       },
       {
         order_no: 'SO20250102003',
-        customer: '海尔集团',
+        customer: ts('k_14c5x1i'),
         amount: 52000,
         received: 10000,
         status: 'partial',
@@ -324,7 +327,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       },
       {
         order_no: 'SO20250102004',
-        customer: 'TCL集团',
+        customer: ts('k_16xfpyk'),
         amount: 31000,
         received: 31000,
         status: 'completed',
@@ -332,7 +335,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       },
       {
         order_no: 'SO20250102005',
-        customer: '奥克斯集团',
+        customer: ts('k_17waajm'),
         amount: 29000,
         received: 0,
         status: 'pending',
@@ -367,17 +370,17 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const workOrders = [
       {
         work_order_no: 'WO20250101001',
-        product_name: '美的空调面板标签',
+        product_name: ts('k_1j0rg22'),
         quantity: 5000,
         status: 4,
       },
-      { work_order_no: 'WO20250101002', product_name: '格力洗衣机面板', quantity: 3000, status: 3 },
-      { work_order_no: 'WO20250101003', product_name: '海尔冰箱标签', quantity: 4500, status: 2 },
-      { work_order_no: 'WO20250101004', product_name: 'TCL电视标签', quantity: 2800, status: 1 },
-      { work_order_no: 'WO20250101005', product_name: '奥克斯空调标签', quantity: 3500, status: 4 },
-      { work_order_no: 'WO20250102001', product_name: '美的微波炉标签', quantity: 4200, status: 3 },
-      { work_order_no: 'WO20250102002', product_name: '格力空调标签', quantity: 3800, status: 2 },
-      { work_order_no: 'WO20250102003', product_name: '海尔洗衣机标签', quantity: 5200, status: 1 },
+      { work_order_no: 'WO20250101002', product_name: ts('k_g0xpw3'), quantity: 3000, status: 3 },
+      { work_order_no: 'WO20250101003', product_name: ts('k_neqfoc'), quantity: 4500, status: 2 },
+      { work_order_no: 'WO20250101004', product_name: ts('k_s148jm'), quantity: 2800, status: 1 },
+      { work_order_no: 'WO20250101005', product_name: ts('k_1acikks'), quantity: 3500, status: 4 },
+      { work_order_no: 'WO20250102001', product_name: ts('k_14gamlb'), quantity: 4200, status: 3 },
+      { work_order_no: 'WO20250102002', product_name: ts('k_1n6fwqy'), quantity: 3800, status: 2 },
+      { work_order_no: 'WO20250102003', product_name: ts('k_1htbr5b'), quantity: 5200, status: 1 },
     ];
 
     for (const wo of workOrders) {
@@ -392,76 +395,76 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const standardCards = [
       {
         card_no: 'SC20250101001',
-        customer_name: '美的集团',
+        customer_name: ts('k_gx8egb'),
         customer_code: 'C001',
-        product_name: '空调面板标签',
-        process_flow1: '开料-印刷-覆膜-模切',
-        process_flow2: '检验-包装',
-        print_type: '丝网印刷',
+        product_name: ts('k_1o50n6w'),
+        process_flow1: ts('k_vikx64'),
+        process_flow2: ts('k_rxvvu2'),
+        print_type: ts('k_1ktcmcy'),
         finished_size: '100x150mm',
         tolerance: '±0.5mm',
-        quality_manager: '周杰',
-        packing_type: '纸箱包装',
+        quality_manager: ts('k_1gmpisl'),
+        packing_type: ts('k_ezkby8'),
         slice_per_box: '500',
         slice_per_bundle: '50',
       },
       {
         card_no: 'SC20250101002',
-        customer_name: '格力电器',
+        customer_name: ts('k_1xr1xyd'),
         customer_code: 'C002',
-        product_name: '洗衣机面板',
-        process_flow1: '开料-印刷-UV固化',
-        process_flow2: '检验-包装',
-        print_type: 'UV印刷',
+        product_name: ts('k_h2sp88'),
+        process_flow1: ts('k_10kemh4'),
+        process_flow2: ts('k_rxvvu2'),
+        print_type: ts('k_yepr6r'),
         finished_size: '300x400mm',
         tolerance: '±0.3mm',
-        quality_manager: '周杰',
-        packing_type: '纸箱包装',
+        quality_manager: ts('k_1gmpisl'),
+        packing_type: ts('k_ezkby8'),
         slice_per_box: '100',
         slice_per_bundle: '20',
       },
       {
         card_no: 'SC20250101003',
-        customer_name: '海尔集团',
+        customer_name: ts('k_14c5x1i'),
         customer_code: 'C003',
-        product_name: '冰箱标签',
-        process_flow1: '开料-印刷-烫金',
-        process_flow2: '检验-包装',
-        print_type: '丝网印刷',
+        product_name: ts('k_r31ofv'),
+        process_flow1: ts('k_1c8r30v'),
+        process_flow2: ts('k_rxvvu2'),
+        print_type: ts('k_1ktcmcy'),
         finished_size: '80x120mm',
         tolerance: '±0.5mm',
-        quality_manager: '周杰',
-        packing_type: '纸箱包装',
+        quality_manager: ts('k_1gmpisl'),
+        packing_type: ts('k_ezkby8'),
         slice_per_box: '800',
         slice_per_bundle: '80',
       },
       {
         card_no: 'SC20250101004',
-        customer_name: 'TCL集团',
+        customer_name: ts('k_16xfpyk'),
         customer_code: 'C004',
-        product_name: '电视标签',
-        process_flow1: '开料-印刷-覆膜',
-        process_flow2: '检验-包装',
-        print_type: '数码印刷',
+        product_name: ts('k_3inqvn'),
+        process_flow1: ts('k_1moybml'),
+        process_flow2: ts('k_rxvvu2'),
+        print_type: ts('k_1et3ckb'),
         finished_size: '120x180mm',
         tolerance: '±0.5mm',
-        quality_manager: '周杰',
-        packing_type: '纸箱包装',
+        quality_manager: ts('k_1gmpisl'),
+        packing_type: ts('k_ezkby8'),
         slice_per_box: '600',
         slice_per_bundle: '60',
       },
       {
         card_no: 'SC20250101005',
-        customer_name: '奥克斯集团',
+        customer_name: ts('k_17waajm'),
         customer_code: 'C005',
-        product_name: '空调标签',
-        process_flow1: '开料-印刷',
-        process_flow2: '检验-包装',
-        print_type: '丝网印刷',
+        product_name: ts('k_1c0y8gb'),
+        process_flow1: ts('k_awcr80'),
+        process_flow2: ts('k_rxvvu2'),
+        print_type: ts('k_1ktcmcy'),
         finished_size: '90x130mm',
         tolerance: '±0.5mm',
-        quality_manager: '周杰',
-        packing_type: '纸箱包装',
+        quality_manager: ts('k_1gmpisl'),
+        packing_type: ts('k_ezkby8'),
         slice_per_box: '700',
         slice_per_bundle: '70',
       },
@@ -495,105 +498,105 @@ export const POST = withPermission(async (_request: NextRequest) => {
         card_no: 'PC20250101001',
         work_order_no: 'WO20250101001',
         product_code: '1',
-        product_name: '美的空调面板标签',
-        material_spec: 'PET白色',
+        product_name: ts('k_1j0rg22'),
+        material_spec: ts('k_1n5cz3l'),
         plan_qty: 5000,
         main_label_no: 'LB20250101001',
         burdening_status: 3,
         lock_status: 0,
         qr_code: 'DCERP:PC:PC20250101001',
-        create_user_name: '刘洋',
+        create_user_name: ts('k_9nfhqc'),
       },
       {
         card_no: 'PC20250101002',
         work_order_no: 'WO20250101002',
         product_code: '2',
-        product_name: '格力洗衣机面板',
-        material_spec: 'PET透明',
+        product_name: ts('k_g0xpw3'),
+        material_spec: ts('k_bgsx13'),
         plan_qty: 3000,
         main_label_no: 'LB20250101002',
         burdening_status: 2,
         lock_status: 0,
         qr_code: 'DCERP:PC:PC20250101002',
-        create_user_name: '刘洋',
+        create_user_name: ts('k_9nfhqc'),
       },
       {
         card_no: 'PC20250101003',
         work_order_no: 'WO20250101003',
         product_code: '3',
-        product_name: '海尔冰箱标签',
-        material_spec: 'PVC白色',
+        product_name: ts('k_neqfoc'),
+        material_spec: ts('k_77v52f'),
         plan_qty: 4500,
         main_label_no: 'LB20250101003',
         burdening_status: 2,
         lock_status: 0,
         qr_code: 'DCERP:PC:PC20250101003',
-        create_user_name: '刘洋',
+        create_user_name: ts('k_9nfhqc'),
       },
       {
         card_no: 'PC20250101004',
         work_order_no: 'WO20250101004',
         product_code: '4',
-        product_name: 'TCL电视标签',
-        material_spec: 'PET银色',
+        product_name: ts('k_s148jm'),
+        material_spec: ts('k_a6akfy'),
         plan_qty: 2800,
         main_label_no: 'LB20250101004',
         burdening_status: 1,
         lock_status: 0,
         qr_code: 'DCERP:PC:PC20250101004',
-        create_user_name: '刘洋',
+        create_user_name: ts('k_9nfhqc'),
       },
       {
         card_no: 'PC20250101005',
         work_order_no: 'WO20250101005',
         product_code: '5',
-        product_name: '奥克斯空调标签',
-        material_spec: 'PET蓝色',
+        product_name: ts('k_1acikks'),
+        material_spec: ts('k_1yngxn5'),
         plan_qty: 3500,
         main_label_no: 'LB20250101005',
         burdening_status: 3,
         lock_status: 0,
         qr_code: 'DCERP:PC:PC20250101005',
-        create_user_name: '刘洋',
+        create_user_name: ts('k_9nfhqc'),
       },
       {
         card_no: 'PC20250102001',
         work_order_no: 'WO20250102001',
         product_code: '1',
-        product_name: '美的微波炉标签',
-        material_spec: 'PET白色',
+        product_name: ts('k_14gamlb'),
+        material_spec: ts('k_1n5cz3l'),
         plan_qty: 4200,
         main_label_no: 'LB20250102001',
         burdening_status: 2,
         lock_status: 0,
         qr_code: 'DCERP:PC:PC20250102001',
-        create_user_name: '刘洋',
+        create_user_name: ts('k_9nfhqc'),
       },
       {
         card_no: 'PC20250102002',
         work_order_no: 'WO20250102002',
         product_code: '2',
-        product_name: '格力空调标签',
-        material_spec: 'PET透明',
+        product_name: ts('k_1n6fwqy'),
+        material_spec: ts('k_bgsx13'),
         plan_qty: 3800,
         main_label_no: 'LB20250102002',
         burdening_status: 2,
         lock_status: 0,
         qr_code: 'DCERP:PC:PC20250102002',
-        create_user_name: '刘洋',
+        create_user_name: ts('k_9nfhqc'),
       },
       {
         card_no: 'PC20250102003',
         work_order_no: 'WO20250102003',
         product_code: '3',
-        product_name: '海尔洗衣机标签',
-        material_spec: 'PVC白色',
+        product_name: ts('k_1htbr5b'),
+        material_spec: ts('k_77v52f'),
         plan_qty: 5200,
         main_label_no: 'LB20250102003',
         burdening_status: 1,
         lock_status: 0,
         qr_code: 'DCERP:PC:PC20250102003',
-        create_user_name: '刘洋',
+        create_user_name: ts('k_9nfhqc'),
       },
     ];
 
@@ -621,19 +624,19 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const finalInspections = [
       {
         work_order_no: 'WO20250101001',
-        product_name: '美的空调面板标签',
+        product_name: ts('k_1j0rg22'),
         qualified_qty: 5000,
         defect_qty: 0,
-        inspector: '周杰',
-        remark: '检验合格',
+        inspector: ts('k_1gmpisl'),
+        remark: ts('k_1jjht99'),
       },
       {
         work_order_no: 'WO20250101005',
-        product_name: '奥克斯空调标签',
+        product_name: ts('k_1acikks'),
         qualified_qty: 3500,
         defect_qty: 0,
-        inspector: '周杰',
-        remark: '检验合格',
+        inspector: ts('k_1gmpisl'),
+        remark: ts('k_1jjht99'),
       },
     ];
 
@@ -660,64 +663,64 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const inboundOrders = [
       {
         order_no: 'IN20250101001',
-        supplier: '东莞PET薄膜厂',
-        material: 'PET薄膜',
+        supplier: ts('k_p7kvw2'),
+        material: ts('k_1nvc7li'),
         quantity: 500,
         status: 'completed',
         warehouse_id: 1,
       },
       {
         order_no: 'IN20250101002',
-        supplier: '深圳油墨公司',
-        material: 'UV油墨',
+        supplier: ts('k_1dmfh48'),
+        material: ts('k_445c63'),
         quantity: 200,
         status: 'pending',
         warehouse_id: 1,
       },
       {
         order_no: 'IN20250101003',
-        supplier: '广州不干胶厂',
-        material: '不干胶',
+        supplier: ts('k_1dhcm6z'),
+        material: ts('k_kd0omw'),
         quantity: 1000,
         status: 'pending',
         warehouse_id: 1,
       },
       {
         order_no: 'IN20250101004',
-        supplier: '佛山PVC厂',
-        material: 'PVC薄膜',
+        supplier: ts('k_sscisi'),
+        material: ts('k_qa51ew'),
         quantity: 300,
         status: 'completed',
         warehouse_id: 1,
       },
       {
         order_no: 'IN20250101005',
-        supplier: '东莞PET薄膜厂',
-        material: 'PET薄膜',
+        supplier: ts('k_p7kvw2'),
+        material: ts('k_1nvc7li'),
         quantity: 400,
         status: 'pending',
         warehouse_id: 1,
       },
       {
         order_no: 'IN20250102001',
-        supplier: '深圳特种油墨',
-        material: '导电银浆',
+        supplier: ts('k_bmai82'),
+        material: ts('k_sonvqu'),
         quantity: 50,
         status: 'completed',
         warehouse_id: 1,
       },
       {
         order_no: 'IN20250102002',
-        supplier: '广州保护膜厂',
-        material: '保护膜',
+        supplier: ts('k_125crav'),
+        material: ts('k_1hv9vm0'),
         quantity: 800,
         status: 'pending',
         warehouse_id: 1,
       },
       {
         order_no: 'IN20250102003',
-        supplier: '东莞PET薄膜厂',
-        material: 'PET薄膜',
+        supplier: ts('k_p7kvw2'),
+        material: ts('k_1nvc7li'),
         quantity: 600,
         status: 'pending',
         warehouse_id: 1,
@@ -745,8 +748,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       if (!orderId) continue;
 
       await safeInsert(
-        `INSERT INTO inv_inbound_item (order_id, material_id, material_name, quantity, unit, unit_price, total_price, create_time)
-         VALUES (?, 1, ?, ?, '卷', 10, ?, NOW())`,
+        ts('k_9l58zs'),
         [orderId, order.material, order.quantity, order.quantity * 10]
       );
     }
@@ -756,70 +758,70 @@ export const POST = withPermission(async (_request: NextRequest) => {
       {
         label_no: 'LB20250101001',
         material_code: 'MAT001',
-        material_name: 'PET薄膜',
+        material_name: ts('k_1nvc7li'),
         quantity: 500,
         status: 1,
       },
       {
         label_no: 'LB20250101002',
         material_code: 'MAT002',
-        material_name: 'UV油墨',
+        material_name: ts('k_445c63'),
         quantity: 200,
         status: 1,
       },
       {
         label_no: 'LB20250101003',
         material_code: 'MAT003',
-        material_name: '不干胶',
+        material_name: ts('k_kd0omw'),
         quantity: 1000,
         status: 1,
       },
       {
         label_no: 'LB20250101004',
         material_code: 'MAT004',
-        material_name: 'PVC薄膜',
+        material_name: ts('k_qa51ew'),
         quantity: 300,
         status: 1,
       },
       {
         label_no: 'LB20250101005',
         material_code: 'MAT001',
-        material_name: 'PET薄膜',
+        material_name: ts('k_1nvc7li'),
         quantity: 400,
         status: 1,
       },
       {
         label_no: 'LB20250102001',
         material_code: 'MAT005',
-        material_name: '导电银浆',
+        material_name: ts('k_sonvqu'),
         quantity: 50,
         status: 1,
       },
       {
         label_no: 'LB20250102002',
         material_code: 'MAT006',
-        material_name: '保护膜',
+        material_name: ts('k_1hv9vm0'),
         quantity: 800,
         status: 1,
       },
       {
         label_no: 'LB20250102003',
         material_code: 'MAT001',
-        material_name: 'PET薄膜',
+        material_name: ts('k_1nvc7li'),
         quantity: 600,
         status: 2,
       },
       {
         label_no: 'LB20250102004',
         material_code: 'MAT002',
-        material_name: 'UV油墨',
+        material_name: ts('k_445c63'),
         quantity: 150,
         status: 3,
       },
       {
         label_no: 'LB20250102005',
         material_code: 'MAT003',
-        material_name: '不干胶',
+        material_name: ts('k_kd0omw'),
         quantity: 900,
         status: 1,
       },
@@ -835,12 +837,12 @@ export const POST = withPermission(async (_request: NextRequest) => {
     stats.inv_material_label = labels.length;
 
     const inventories = [
-      { material_name: 'PET薄膜', material_code: 'MAT001', quantity: 1500, min_quantity: 500 },
-      { material_name: 'UV油墨', material_code: 'MAT002', quantity: 350, min_quantity: 100 },
-      { material_name: '不干胶', material_code: 'MAT003', quantity: 1900, min_quantity: 800 },
-      { material_name: 'PVC薄膜', material_code: 'MAT004', quantity: 300, min_quantity: 200 },
-      { material_name: '导电银浆', material_code: 'MAT005', quantity: 50, min_quantity: 30 },
-      { material_name: '保护膜', material_code: 'MAT006', quantity: 800, min_quantity: 500 },
+      { material_name: ts('k_1nvc7li'), material_code: 'MAT001', quantity: 1500, min_quantity: 500 },
+      { material_name: ts('k_445c63'), material_code: 'MAT002', quantity: 350, min_quantity: 100 },
+      { material_name: ts('k_kd0omw'), material_code: 'MAT003', quantity: 1900, min_quantity: 800 },
+      { material_name: ts('k_qa51ew'), material_code: 'MAT004', quantity: 300, min_quantity: 200 },
+      { material_name: ts('k_sonvqu'), material_code: 'MAT005', quantity: 50, min_quantity: 30 },
+      { material_name: ts('k_1hv9vm0'), material_code: 'MAT006', quantity: 800, min_quantity: 500 },
     ];
 
     const matMap: Record<string, number> = {};
@@ -856,8 +858,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     for (const inv of inventories) {
       const materialId = matMap[inv.material_code] || 1;
       await safeInsert(
-        `INSERT IGNORE INTO inv_inventory (material_id, material_name, quantity, available_qty, safety_stock, warehouse_id, unit, create_time, update_time, deleted) 
-         VALUES (?, ?, ?, ?, ?, 1, '卷', NOW(), NOW(), 0)`,
+        ts('k_dtpbge'),
         [materialId, inv.material_name, inv.quantity, inv.quantity, inv.min_quantity]
       );
     }
@@ -868,61 +869,61 @@ export const POST = withPermission(async (_request: NextRequest) => {
         inspection_no: 'QC20250101001',
         inspection_type: 1,
         inspection_result: 1,
-        inspector: '周杰',
+        inspector: ts('k_1gmpisl'),
       },
       {
         inspection_no: 'QC20250101002',
         inspection_type: 2,
         inspection_result: 1,
-        inspector: '周杰',
+        inspector: ts('k_1gmpisl'),
       },
       {
         inspection_no: 'QC20250101003',
         inspection_type: 3,
         inspection_result: 2,
-        inspector: '周杰',
+        inspector: ts('k_1gmpisl'),
       },
       {
         inspection_no: 'QC20250101004',
         inspection_type: 1,
         inspection_result: 1,
-        inspector: '周杰',
+        inspector: ts('k_1gmpisl'),
       },
       {
         inspection_no: 'QC20250101005',
         inspection_type: 2,
         inspection_result: 1,
-        inspector: '周杰',
+        inspector: ts('k_1gmpisl'),
       },
       {
         inspection_no: 'QC20250102001',
         inspection_type: 3,
         inspection_result: 1,
-        inspector: '周杰',
+        inspector: ts('k_1gmpisl'),
       },
       {
         inspection_no: 'QC20250102002',
         inspection_type: 1,
         inspection_result: 1,
-        inspector: '周杰',
+        inspector: ts('k_1gmpisl'),
       },
       {
         inspection_no: 'QC20250102003',
         inspection_type: 2,
         inspection_result: 2,
-        inspector: '周杰',
+        inspector: ts('k_1gmpisl'),
       },
       {
         inspection_no: 'QC20250102004',
         inspection_type: 3,
         inspection_result: 1,
-        inspector: '周杰',
+        inspector: ts('k_1gmpisl'),
       },
       {
         inspection_no: 'QC20250102005',
         inspection_type: 1,
         inspection_result: 1,
-        inspector: '周杰',
+        inspector: ts('k_1gmpisl'),
       },
     ];
 
@@ -943,24 +944,24 @@ export const POST = withPermission(async (_request: NextRequest) => {
     // ===== BOM 种子数据 =====
     const boms = [
       {
-        bom_name: '空调面板标签-BOM',
+        bom_name: ts('k_p2bmgf'),
         product_id: 1,
         total_cost: 0.85,
-        remark: '美的空调面板标签物料清单',
+        remark: ts('k_11z56ke'),
       },
       {
-        bom_name: '洗衣机面板-BOM',
+        bom_name: ts('k_suxglb'),
         product_id: 2,
         total_cost: 1.2,
-        remark: '格力洗衣机面板物料清单',
+        remark: ts('k_1ckrg0v'),
       },
-      { bom_name: '冰箱标签-BOM', product_id: 3, total_cost: 0.65, remark: '海尔冰箱标签物料清单' },
-      { bom_name: '电视标签-BOM', product_id: 4, total_cost: 0.95, remark: 'TCL电视标签物料清单' },
+      { bom_name: ts('k_1umdu34'), product_id: 3, total_cost: 0.65, remark: ts('k_v3dnao') },
+      { bom_name: ts('k_1yvrt5k'), product_id: 4, total_cost: 0.95, remark: ts('k_1lk51sm') },
       {
-        bom_name: '空调标签-BOM',
+        bom_name: ts('k_17m5rts'),
         product_id: 5,
         total_cost: 0.75,
-        remark: '奥克斯空调标签物料清单',
+        remark: ts('k_kvf3pc'),
       },
     ];
     const [matRows2] = await conn.execute(
@@ -981,7 +982,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       for (let i = 0; i < Math.min(3, matList.length); i++) {
         const mat = matList[i];
         await safeInsert(
-          `INSERT INTO prd_bom_detail (bom_id, material_id, material_name, quantity, unit, loss_rate, unit_cost, total_cost, item_type, create_time) VALUES (?, ?, ?, ?, '卷', 0.05, 10, 100, 1, NOW())`,
+          ts('k_1hfeni2'),
           [bomId, mat.id, mat.material_name, 100 + i * 50]
         );
       }
@@ -991,5 +992,5 @@ export const POST = withPermission(async (_request: NextRequest) => {
     return stats;
   });
 
-  return successResponse(result, '业务数据种子初始化成功');
+  return successResponse(result, ts('k_hgxj2u'));
 });

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -46,6 +49,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       qr_type,
@@ -73,7 +77,7 @@ export const POST = withPermission(
       remark,
     } = body;
 
-    if (!qr_type) return errorResponse('二维码类型不能为空', 400, 400);
+    if (!qr_type) return errorResponse(ts('k_be2iz0'), 400, 400);
 
     const qrCode =
       qr_type.toUpperCase().substring(0, 2) + '-' + randomUUID().replace(/-/g, '').substring(0, 16);
@@ -124,21 +128,22 @@ export const POST = withPermission(
       return insertResult;
     });
 
-    return successResponse({ id: (result as DbRow).insertId, qr_code: qrCode }, '二维码生成成功');
+    return successResponse({ id: (result as DbRow).insertId, qr_code: qrCode }, ts('k_1ju7g2q'));
   },
   { logTitle: '生成二维码' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action, status, remark } = body;
 
-    if (!id && action !== 'batch-consumed') return errorResponse('ID不能为空', 400, 400);
+    if (!id && action !== 'batch-consumed') return errorResponse(ts('k_32pxya'), 400, 400);
 
     if (action === 'batch-consumed') {
       const { batch_no } = body;
-      if (!batch_no) return errorResponse('批次号不能为空', 400, 400);
+      if (!batch_no) return errorResponse(ts('k_9avmne'), 400, 400);
 
       await transaction(async (conn) => {
         const [batchResult] = await conn.execute(
@@ -155,7 +160,7 @@ export const PUT = withPermission(
         );
       });
 
-      return successResponse(null, '批次已消耗，关联二维码状态已更新');
+      return successResponse(null, ts('k_yf3411'));
     }
 
     if (action === 'print') {
@@ -163,7 +168,7 @@ export const PUT = withPermission(
         'UPDATE qrcode_record SET print_count = print_count + 1, last_print_time = NOW() WHERE id = ? AND deleted = 0',
         [id]
       );
-      return successResponse(null, '打印记录已更新');
+      return successResponse(null, ts('k_1cab1bt'));
     }
 
     if (action === 'scan') {
@@ -179,7 +184,7 @@ export const PUT = withPermission(
       const record = await queryOne('SELECT * FROM qrcode_record WHERE id = ? AND deleted = 0', [
         id,
       ]);
-      if (!record) return errorResponse('二维码记录不存在', 404, 404);
+      if (!record) return errorResponse(ts('k_pq54w2'), 404, 404);
 
       await transaction(async (conn) => {
         await conn.execute(
@@ -206,7 +211,7 @@ export const PUT = withPermission(
         );
       });
 
-      return successResponse(null, '扫描记录已保存');
+      return successResponse(null, ts('k_1to0s1f'));
     }
 
     if (action === 'invalidate') {
@@ -215,7 +220,7 @@ export const PUT = withPermission(
           id,
         ]);
       });
-      return successResponse(null, '二维码已失效');
+      return successResponse(null, ts('k_azmkdv'));
     }
 
     if (action === 'void') {
@@ -224,7 +229,7 @@ export const PUT = withPermission(
           id,
         ]);
       });
-      return successResponse(null, '二维码已作废');
+      return successResponse(null, ts('k_9tft5r'));
     }
 
     const fields: string[] = [];
@@ -237,7 +242,7 @@ export const PUT = withPermission(
       fields.push('remark = ?');
       values.push(remark);
     }
-    if (fields.length === 0) return errorResponse('没有需要更新的字段', 400, 400);
+    if (fields.length === 0) return errorResponse(ts('k_1kyikfw'), 400, 400);
     values.push(id);
     await transaction(async (conn) => {
       await conn.execute(
@@ -245,7 +250,7 @@ export const PUT = withPermission(
         values
       );
     });
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新二维码' }
 );

@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import { recomputeInventorySummary } from '@/lib/inventory-ledger';
@@ -36,6 +38,7 @@ export class FinishOrderInventoryHandler {
     });
 
     await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
       // 获取工单的产品信息
       const [woRows] = await conn.execute<RowDataPacket[]>(
         'SELECT product_id, product_code, product_name FROM prod_work_order WHERE id = ? AND deleted = 0',
@@ -59,9 +62,7 @@ export class FinishOrderInventoryHandler {
       // - affectedRows === 1 → first time, continue with inventory update
       // 财务列(account_dr/cr)随流水保留，治理归 T-INV-6。
       const [txnResult] = await conn.execute<ResultSetHeader>(
-        `INSERT IGNORE INTO inv_inventory_transaction
-         (trans_no, trans_type, source_type, source_id, material_id, material_code, batch_no, warehouse_id, quantity, account_dr, account_cr, create_time)
-         VALUES (?, 'in', 'prod_finish', ?, ?, ?, ?, ?, ?, '成品库存', '生产成本', NOW())`,
+        ts('k_hfrqd2'),
         [transNo, finishOrderId, productId, productCode, batchNo, warehouseId, qualifiedQty]
       );
 

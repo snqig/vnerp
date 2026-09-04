@@ -1,3 +1,5 @@
+
+import { useTranslations } from 'next-intl';
 /**
  * 系统配置测试数据工厂
  */
@@ -13,9 +15,10 @@ export interface ConfigFixture {
 }
 
 export function createConfig(overrides: Partial<ConfigFixture> = {}): ConfigFixture {
+  const ts = useTranslations('Common');
   return {
     id: 1,
-    config_name: '测试配置',
+    config_name: ts('k_xrpsh6'),
     config_key: 'test_config',
     config_value: 'test_value',
     config_type: 1,
@@ -26,29 +29,34 @@ export function createConfig(overrides: Partial<ConfigFixture> = {}): ConfigFixt
 }
 
 export function createCompanyNameConfig(): ConfigFixture {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Common');
   return createConfig({
     id: 1,
-    config_name: '公司名称',
+    config_name: tc('companyName'),
     config_key: 'company_name',
-    config_value: '测试公司名称',
-    description: '系统显示的公司全称',
+    config_value: ts('k_1vp2qgc'),
+    description: ts('k_9zp85d'),
   });
 }
 
 export function createCompanyShortNameConfig(): ConfigFixture {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Common');
   return createConfig({
     id: 2,
-    config_name: '公司简称',
+    config_name: tc('companyShortName'),
     config_key: 'company_short_name',
-    config_value: '达昌科技',
-    description: '系统显示的公司简称',
+    config_value: ts('k_17moz1y'),
+    description: ts('k_1bzzmt5'),
   });
 }
 
 export function createSystemVersionConfig(): ConfigFixture {
+  const ts = useTranslations('Common');
   return createConfig({
     id: 3,
-    config_name: '系统版本',
+    config_name: ts('k_tesjdn'),
     config_key: 'system_version',
     config_value: '1.0.0',
     config_type: 2,

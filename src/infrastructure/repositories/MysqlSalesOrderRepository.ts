@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 import mysql from 'mysql2/promise';
 import { ISalesOrderRepository } from '@/domain/sales/repositories/ISalesOrderRepository';
 import { SalesOrder, SalesOrderProps } from '@/domain/sales/aggregates/SalesOrder';
@@ -254,7 +257,9 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
       createBy: order.create_by ?? undefined,
       auditBy: order.audit_by ?? undefined,
       auditTime: order.audit_time ?? undefined,
-      lines: (details || []).map((d, index) => ({
+      lines: (details || []).map((d, index) => {
+  const ts = t;
+  return  ({
         id: d.id,
         orderId: d.order_id,
         lineNo: index + 1,
@@ -262,7 +267,7 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
         materialCode: d.material_code || '',
         materialName: d.material_name || '',
         specification: d.specification || '',
-        unit: d.unit || '件',
+        unit: d.unit || ts('k_w0gthl'),
         orderQty: Number(d.quantity),
         shippedQty: Number(d.shipped_qty) || 0,
         unitPrice: Number(d.unit_price) || 0,
@@ -272,7 +277,8 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
         baseTaxAmount: Number(d.base_tax_amount) || 0,
         baseLineTotal: Number(d.base_line_total) || 0,
         remark: d.remark ?? undefined,
-      })),
+      });
+}),
       createTime: order.create_time ?? undefined,
       updateTime: order.update_time ?? undefined,
     };

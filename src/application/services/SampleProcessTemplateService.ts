@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 /**
  * 标准工艺模板 — 应用服务
  *
@@ -52,7 +54,7 @@ async function generateTemplateNo(): Promise<string> {
   const today = new Date();
   const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
   const prefix = `SPT${ymd}`;
-  const [rows] = await query(
+  const rows = await query(
     `SELECT template_no FROM dcprint_sample_process_template WHERE template_no LIKE ? ORDER BY id DESC LIMIT 1`,
     [`${prefix}%`]
   );
@@ -88,13 +90,13 @@ export class SampleProcessTemplateService {
     const where = conditions.join(' AND ');
     const offset = (params.page - 1) * params.pageSize;
 
-    const [countRows] = await query(
+    const countRows = await query(
       `SELECT COUNT(*) AS total FROM dcprint_sample_process_template WHERE ${where}`,
       values
     );
     const total = countRows[0]?.total || 0;
 
-    const [rows] = await query(
+    const rows = await query(
       `SELECT * FROM dcprint_sample_process_template WHERE ${where} ORDER BY usage_count DESC, id DESC LIMIT ? OFFSET ?`,
       [...values, params.pageSize, offset]
     );
@@ -104,18 +106,18 @@ export class SampleProcessTemplateService {
 
   /** 详情（含明细） */
   async getTemplateDetail(id: number): Promise<SampleProcessTemplate | null> {
-    const [templates] = await query(
+    const templates = await query(
       `SELECT * FROM dcprint_sample_process_template WHERE id = ? AND deleted = 0 LIMIT 1`,
       [id]
     );
     if (templates.length === 0) return null;
     const template = templates[0];
 
-    const [items] = await query(
+    const items = await query(
       `SELECT * FROM dcprint_sample_process_template_item WHERE template_id = ? ORDER BY sort, id`,
       [id]
     );
-    const [steps] = await query(
+    const steps = await query(
       `SELECT * FROM dcprint_sample_process_template_step WHERE template_id = ? ORDER BY sort, id`,
       [id]
     );
@@ -174,12 +176,12 @@ export class SampleProcessTemplateService {
     category: string | null,
     userId: number
   ): Promise<number> {
-    const cardRes = await query(
+  const ts = await getTranslations('Common');
+    const cards = (await query(
       `SELECT * FROM dcprint_sample_process_card WHERE id = ? AND deleted = 0 LIMIT 1`,
       [cardId]
-    );
-    const [cards] = cardRes as unknown as [RowDataPacket[]];
-    if (!cards || cards.length === 0) throw new Error('工艺卡不存在');
+    )) as unknown as RowDataPacket[];
+    if (!cards || cards.length === 0) throw new Error(ts('k_1ctslgw'));
     const card = cards[0] as SampleProcessCard;
 
     const [items] = await query(

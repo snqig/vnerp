@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import {
   successResponse,
@@ -85,15 +88,16 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
-    const validation = validateRequestBody(body, ['customer_id', 'items']);
+    const validation = validateRequestBody(body, ['customer_id', 'order_id', 'warehouse_id', 'items']);
 
     if (!validation.valid) {
       return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
     }
 
     if (!Array.isArray(body.items) || body.items.length === 0) {
-      return errorResponse('退货明细不能为空', 400, 400);
+      return errorResponse(ts('k_13rzlse'), 400, 400);
     }
 
     const returnNo = body.return_no || (await generateDocumentNo('return_order'));
@@ -107,6 +111,7 @@ export const POST = withPermission(
         warehouse_id,
         delivery_id,
         delivery_no,
+        return_type,
         return_date,
         reason,
         remark,
@@ -114,29 +119,33 @@ export const POST = withPermission(
       } = body;
 
       let totalAmount = 0;
+      let totalQty = 0;
       for (const item of items) {
         const qty = parseFloat(item.return_qty || item.quantity) || 0;
         const price = parseFloat(item.unit_price) || 0;
         totalAmount += qty * price;
+        totalQty += qty;
       }
 
       await conn.execute(
         `INSERT INTO sal_return
         (return_no, status, order_id, order_no, customer_id, customer_name, warehouse_id,
-         delivery_id, delivery_no, reason, return_date, total_amount, remark,
+         delivery_id, delivery_no, return_type, reason, return_date, total_qty, total_amount, remark,
          create_by, create_time)
-        VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           returnNo,
-          order_id || null,
+          order_id,
           order_no || null,
           customer_id,
           customer_name || null,
-          warehouse_id || 1,
+          warehouse_id,
           delivery_id || null,
           delivery_no || null,
+          return_type || 1,
           reason || body.remark || '',
           return_date || new Date().toISOString().slice(0, 10),
+          Math.round(totalQty * 100) / 100,
           Math.round(totalAmount * 100) / 100,
           remark || null,
           userInfo.userId,
@@ -166,7 +175,7 @@ export const POST = withPermission(
             item.material_code || '',
             item.material_name || '',
             item.material_spec || '',
-            item.unit || '件',
+            item.unit || ts('k_w0gthl'),
             qty,
             price,
             amount,
@@ -179,37 +188,38 @@ export const POST = withPermission(
       return { id: returnId, return_no: returnNo, status: 1 };
     });
 
-    return successResponse(result, '销售退货单创建成功');
+    return successResponse(result, ts('k_1w7at6t'));
   },
   { logTitle: '创建销售退货单', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action } = body;
 
     if (!id || !action) {
-      return errorResponse('参数不完整', 400, 400);
+      return errorResponse(ts('k_8dtv5q'), 400, 400);
     }
 
     try {
       if (action === 'approve') {
         await returnService.approveReturn(id, userInfo.userId);
-        return successResponse(null, '退货单审核成功');
+        return successResponse(null, ts('k_1iw2eq7'));
       }
 
       if (action === 'complete') {
         const result = await returnService.completeReturn(id, userInfo.userId);
-        return successResponse(result, '退货完成，已创建入库单和红字应收单');
+        return successResponse(result, ts('k_1bneceq'));
       }
 
       if (action === 'cancel') {
         await returnService.cancelReturn(id, body.reason);
-        return successResponse(null, '退货单已取消');
+        return successResponse(null, ts('k_18n6itl'));
       }
 
-      return errorResponse('不支持的操作类型', 400, 400);
+      return errorResponse(ts('k_j9tktz'), 400, 400);
     } catch (error) {
       if (error instanceof DomainError || error instanceof NotFoundError) {
         return errorResponse(error.message, 400, 400);
@@ -222,16 +232,17 @@ export const PUT = withPermission(
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('退货单ID不能为空');
+      return commonErrors.badRequest(ts('k_2a7i9w'));
     }
 
     try {
       await returnService.deleteReturn(parseInt(id));
-      return successResponse(null, '退货单删除成功');
+      return successResponse(null, ts('k_16ei45u'));
     } catch (error) {
       if (error instanceof DomainError || error instanceof NotFoundError) {
         return errorResponse(error.message, 400, 400);

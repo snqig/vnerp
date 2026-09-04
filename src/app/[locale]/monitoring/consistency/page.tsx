@@ -115,6 +115,7 @@ function getTypeIcon(type: string) {
 }
 
 export default function ConsistencyMonitorPage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('Monitoring');
   const tc = useTranslations('Common');
 
@@ -159,7 +160,7 @@ export default function ConsistencyMonitorPage() {
         });
       }
     } catch (err) {
-      console.error('[monitoring/consistency] 一致性监控数据加载失败:', err);
+      console.error(ts('k_vkgu8y'), err);
     } finally {
       if (fetchId === fetchIdRef.current) {
         setLoading(false);

@@ -76,6 +76,7 @@ interface EvalRecord {
 }
 
 export default function SupplierEvalPage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('Srm');
   const tc = useTranslations('Common');
 
@@ -532,8 +533,8 @@ export default function SupplierEvalPage() {
               {t('print')}
             </Button>
             <GlobalExportToolbar
-              filename="供应商评价"
-              title="供应商评价管理"
+              filename={ts('k_1i7e49h')}
+              title={ts('k_1nkpy9a')}
               columns={[
                 { key: 'eval_no', label: t('evalNo'), width: 18 },
                 { key: 'supplier_name', label: tc('supplier'), width: 20 },
@@ -1015,8 +1016,7 @@ export default function SupplierEvalPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                取消
-              </Button>
+                {tc('cancel')}</Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>

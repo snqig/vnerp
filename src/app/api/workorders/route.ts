@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, transaction, SqlValue } from '@/lib/db';
 import { successResponse, commonErrors, logOperation } from '@/lib/api-response';
@@ -24,6 +27,7 @@ const SALE_ORDER_STATUS = {
 
 export const GET = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     const status = searchParams.get('status');
@@ -40,7 +44,7 @@ export const GET = withPermission(
         [id]
       );
       if (!workOrders || (workOrders as DbRow[]).length === 0) {
-        return commonErrors.notFound('工单不存在');
+        return commonErrors.notFound(ts('k_lmufdi'));
       }
 
       const workOrder = (workOrders as DbRow[])[0];
@@ -111,12 +115,13 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { order_no, customer_name, items, bom_id, priority, plan_start_date, plan_end_date } =
       body;
 
     if (!order_no || !items || !Array.isArray(items) || items.length === 0) {
-      return commonErrors.badRequest('缺少必要参数');
+      return commonErrors.badRequest(ts('k_fifqlw'));
     }
 
     const result = await transaction(async (connection) => {
@@ -127,11 +132,11 @@ export const POST = withPermission(
 
       const saleOrder = (orderRows as DbRow[])[0];
       if (!saleOrder) {
-        throw new Error('销售订单不存在');
+        throw new Error(ts('k_1gccwsl'));
       }
 
       if (String(saleOrder.status) === '5' || saleOrder.status === SALE_ORDER_STATUS.CANCELLED) {
-        throw new Error('销售订单已取消，不能创建工单');
+        throw new Error(ts('k_10kxtv3'));
       }
 
       const [existingWO] = await connection.execute(
@@ -140,7 +145,7 @@ export const POST = withPermission(
       );
 
       if ((existingWO as DbRow[])[0].cnt > 0) {
-        throw new Error('该销售订单已存在未取消的工单');
+        throw new Error(ts('k_qvbzap'));
       }
 
       const workOrderNo = await generateDocumentNo('work_order');
@@ -246,7 +251,7 @@ export const POST = withPermission(
     });
 
     await logOperation({
-      title: '创建工单',
+      title: ts('k_h40psu'),
       oper_type: 'production',
       oper_method: 'POST',
       oper_url: '/api/workorders',
@@ -262,6 +267,7 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       id,
@@ -277,7 +283,7 @@ export const PUT = withPermission(
 
     const woKey = id || work_order_no;
     if (!woKey) {
-      return commonErrors.badRequest('工单ID不能为空');
+      return commonErrors.badRequest(ts('k_1g5ryzg'));
     }
 
     const result = await transaction(async (connection) => {
@@ -288,7 +294,7 @@ export const PUT = withPermission(
 
       const workOrder = (woRows as DbRow[])[0];
       if (!workOrder) {
-        throw new Error('工单不存在');
+        throw new Error(ts('k_lmufdi'));
       }
 
       const updateFields: string[] = [];
@@ -296,10 +302,10 @@ export const PUT = withPermission(
 
       if (status) {
         if (workOrder.status === WORK_ORDER_STATUS.COMPLETED) {
-          throw new Error('工单已完成，不能修改状态');
+          throw new Error(ts('k_1uq0hv7'));
         }
         if (workOrder.status === WORK_ORDER_STATUS.CANCELLED) {
-          throw new Error('工单已取消，不能修改状态');
+          throw new Error(ts('k_86rshh'));
         }
         updateFields.push('status = ?');
         updateParams.push(status);
@@ -382,7 +388,7 @@ export const PUT = withPermission(
     });
 
     await logOperation({
-      title: '更新工单',
+      title: ts('k_1tscug3'),
       oper_type: 'production',
       oper_method: 'PUT',
       oper_url: '/api/workorders',
@@ -395,18 +401,19 @@ export const PUT = withPermission(
       status: 1,
     });
 
-    return successResponse(result, '工单更新成功');
+    return successResponse(result, ts('k_1y154ki'));
   },
   { errorMessage: '更新工单失败' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id') || searchParams.get('work_order_no');
 
     if (!id) {
-      return commonErrors.badRequest('工单ID不能为空');
+      return commonErrors.badRequest(ts('k_1g5ryzg'));
     }
 
     const deletedWorkOrderNo = await transaction(async (connection) => {
@@ -417,7 +424,7 @@ export const DELETE = withPermission(
 
       const workOrder = (woRows as DbRow[])[0];
       if (!workOrder) {
-        throw new Error('工单不存在');
+        throw new Error(ts('k_lmufdi'));
       }
 
       // 允许删除生产中的工单（生产中的数据通过软删除保留，可恢复）；
@@ -428,7 +435,7 @@ export const DELETE = withPermission(
       );
       const consumed = Number((consumeRows as DbRow[])[0]?.consumed || 0);
       if (consumed > 0) {
-        throw new Error('工单已发生物料领用或完工入库，不能删除');
+        throw new Error(ts('k_n2ghhe'));
       }
 
       await connection.execute(
@@ -455,7 +462,7 @@ export const DELETE = withPermission(
     });
 
     await logOperation({
-      title: '删除工单',
+      title: ts('k_d14x4r'),
       oper_type: 'production',
       oper_method: 'DELETE',
       oper_url: '/api/workorders',
@@ -464,7 +471,7 @@ export const DELETE = withPermission(
       status: 1,
     });
 
-    return successResponse(null, '工单删除成功');
+    return successResponse(null, ts('k_1wqhjoq'));
   },
   { errorMessage: '删除工单失败' }
 );

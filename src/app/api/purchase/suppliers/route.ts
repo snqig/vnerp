@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -72,6 +75,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     const validation = validateRequestBody(body, ['supplier_code', 'supplier_name']);
@@ -102,7 +106,7 @@ export const POST = withPermission(
     );
 
     if ((existing as DbRow[]).length > 0) {
-      return errorResponse('供应商编码已存在', 400, 400);
+      return errorResponse(ts('k_1ihk38d'), 400, 400);
     }
 
     const result = await query(
@@ -127,24 +131,25 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: (result as DbRow).insertId, supplier_code }, '供应商创建成功');
+    return successResponse({ id: (result as DbRow).insertId, supplier_code }, ts('k_1rd5ydc'));
   },
   { logTitle: '创建供应商', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...updateData } = body;
 
     if (!id) {
-      return errorResponse('供应商ID不能为空', 400, 400);
+      return errorResponse(ts('k_h5paib'), 400, 400);
     }
 
     const existing = await query('SELECT id FROM pur_supplier WHERE id = ? AND deleted = 0', [id]);
 
     if ((existing as DbRow[]).length === 0) {
-      return commonErrors.notFound('供应商不存在');
+      return commonErrors.notFound(ts('k_6107oz'));
     }
 
     const fieldMapping: { [key: string]: string } = {
@@ -176,7 +181,7 @@ export const PUT = withPermission(
     }
 
     if (updateFields.length === 0) {
-      return errorResponse('没有要更新的字段', 400, 400);
+      return errorResponse(ts('k_ovfx8a'), 400, 400);
     }
 
     updateParams.push(id);
@@ -185,29 +190,30 @@ export const PUT = withPermission(
       updateParams
     );
 
-    return successResponse({ id }, '供应商更新成功');
+    return successResponse({ id }, ts('k_885ggt'));
   },
   { logTitle: '更新供应商', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('供应商ID不能为空', 400, 400);
+      return errorResponse(ts('k_h5paib'), 400, 400);
     }
 
     const existing = await query('SELECT id FROM pur_supplier WHERE id = ? AND deleted = 0', [id]);
 
     if ((existing as DbRow[]).length === 0) {
-      return commonErrors.notFound('供应商不存在');
+      return commonErrors.notFound(ts('k_6107oz'));
     }
 
     await query('UPDATE pur_supplier SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
-    return successResponse(null, '供应商删除成功');
+    return successResponse(null, ts('k_1h5syit'));
   },
   { logTitle: '删除供应商', logType: 'business' }
 );

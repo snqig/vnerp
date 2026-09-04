@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -47,6 +50,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       outsource_order_id,
@@ -58,8 +62,8 @@ export const POST = withPermission(
       items,
     } = body;
 
-    if (!outsource_order_id) return errorResponse('委外订单不能为空', 400, 400);
-    if (!warehouse_id) return errorResponse('仓库不能为空', 400, 400);
+    if (!outsource_order_id) return errorResponse(ts('k_1n84mps'), 400, 400);
+    if (!warehouse_id) return errorResponse(ts('k_m7olyd'), 400, 400);
 
     const now = new Date();
     const issueNo =
@@ -100,17 +104,18 @@ export const POST = withPermission(
       }
     }
 
-    return successResponse({ id: result.insertId, issue_no: issueNo }, '委外发料单创建成功');
+    return successResponse({ id: result.insertId, issue_no: issueNo }, ts('k_jleeu8'));
   },
   { logTitle: '创建委外发料单', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action, status, remark } = body;
 
-    if (!id) return errorResponse('发料单ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_1ok2wth'), 400, 400);
 
     if (action === 'post') {
       const result = await transaction(async (conn) => {
@@ -118,9 +123,9 @@ export const PUT = withPermission(
           'SELECT id, issue_no, outsource_order_id, outsource_order_no, warehouse_id, status FROM outsource_issue WHERE id = ? AND deleted = 0 FOR UPDATE',
           [id]
         );
-        if (issueRows.length === 0) throw new Error('发料单不存在');
+        if (issueRows.length === 0) throw new Error(ts('k_14x793l'));
         const issue = issueRows[0];
-        if (issue.status >= 3) throw new Error('发料单已完成或已取消，不能重复过账');
+        if (issue.status >= 3) throw new Error(ts('k_kic6xf'));
 
         const [itemRows] = await conn.execute(
           'SELECT * FROM outsource_issue_item WHERE issue_id = ?',
@@ -170,8 +175,7 @@ export const PUT = withPermission(
           )) as any;
           const matCode = matRows.length > 0 ? matRows[0].material_code : '';
           await conn.execute(
-            `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, source_id, material_id, material_code, batch_no, warehouse_id, quantity, unit_price, total_amount, account_dr, account_cr, create_time)
-           VALUES (?, 'out', 'outsource_issue', ?, ?, ?, ?, ?, ?, 0, 0, '委外加工', '原材料库存', NOW())`,
+            ts('k_jku422'),
             [
               transNo,
               id,
@@ -200,12 +204,12 @@ export const PUT = withPermission(
 
         return { id, status: 3 };
       });
-      return successResponse(result, '发料过账成功');
+      return successResponse(result, ts('k_evsx2b'));
     }
 
     if (action === 'cancel') {
       await execute('UPDATE outsource_issue SET status = 9 WHERE id = ? AND deleted = 0', [id]);
-      return successResponse(null, '发料单已取消');
+      return successResponse(null, ts('k_d3cuyi'));
     }
 
     const fields: string[] = [];
@@ -226,18 +230,19 @@ export const PUT = withPermission(
       );
     }
 
-    return successResponse(null, '发料单更新成功');
+    return successResponse(null, ts('k_cb8xoj'));
   },
   { logTitle: '更新委外发料单', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('缺少id', 400, 400);
+    if (!id) return errorResponse(ts('k_js4lo9'), 400, 400);
     await execute('UPDATE outsource_issue SET deleted = 1 WHERE id = ?', [Number(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除委外发料单', logType: 'business' }
 );

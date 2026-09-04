@@ -1,9 +1,13 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
 import { logger } from '@/lib/logger';
 
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     const overview: unknown = {
       totalItems: 0,
@@ -18,7 +22,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       const rows = await query(`
         SELECT COUNT(*) as total,
           SUM(CASE WHEN safety_stock > 0 AND quantity <= safety_stock THEN 1 ELSE 0 END) as low_stock,
-          COALESCE(SUM(quantity * COALESCE(unit_cost, cost_price, price, 0)), 0) as total_value
+          COALESCE(SUM(quantity * COALESCE(unit_cost, cost_price, 0)), 0) as total_value
         FROM inv_inventory WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) {
@@ -53,7 +57,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     try {
       const rows = await query(`
         SELECT m.material_type, COUNT(DISTINCT m.id) as count,
-          COALESCE(SUM(i.quantity * COALESCE(i.unit_cost, m.cost_price, m.price, 0)), 0) as value
+          COALESCE(SUM(i.quantity * COALESCE(i.unit_cost, i.cost_price, m.cost_price, 0)), 0) as value
         FROM inv_material m
         LEFT JOIN inv_inventory i ON m.id = i.material_id AND i.deleted = 0
         WHERE m.deleted = 0 AND m.status = 1 GROUP BY m.material_type ORDER BY count DESC
@@ -86,7 +90,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     try {
       const rows = await query(`
         SELECT t.trans_type as transaction_type, t.material_code,
-          m.material_name, t.quantity, t.unit, t.create_time, t.remark
+          m.material_name, t.quantity, m.unit, t.create_time, t.remark
         FROM inv_inventory_transaction t
         LEFT JOIN inv_material m ON t.material_id = m.id
         ORDER BY t.create_time DESC LIMIT 10
@@ -125,6 +129,6 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       },
     });
   } catch {
-    return NextResponse.json({ success: false, message: '获取仓库看板数据失败' }, { status: 500 });
+    return NextResponse.json({ success: false, message: ts('k_1r6jzng') }, { status: 500 });
   }
 });

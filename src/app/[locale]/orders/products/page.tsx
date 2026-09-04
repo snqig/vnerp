@@ -131,6 +131,7 @@ const productStatusColors: Record<string, string> = {
 };
 
 export default function ProductsPage() {
+  const ts = useTranslations('Orders');
   const t = useTranslations('Orders');
   const tc = useTranslations('Common');
 
@@ -241,7 +242,13 @@ export default function ProductsPage() {
       const response = await authFetch('/api/products/categories');
       const result = await response.json();
       if (result.success || result.code === 200) {
-        setCategories(result.data || []);
+        const payload = result.data;
+        const list = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.list)
+            ? payload.list
+            : [];
+        setCategories(list);
       }
     } catch {}
   }, []);
@@ -765,10 +772,10 @@ export default function ProductsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="㎡">㎡</SelectItem>
-                      <SelectItem value="张">{t('unitSheet')}</SelectItem>
+                      <SelectItem value={ts('k_accfpb')}>{t('unitSheet')}</SelectItem>
                       <SelectItem value="kg">kg</SelectItem>
-                      <SelectItem value="卷">{t('unitRoll')}</SelectItem>
-                      <SelectItem value="件">{t('unitPiece')}</SelectItem>
+                      <SelectItem value={ts('k_1v8rak6')}>{t('unitRoll')}</SelectItem>
+                      <SelectItem value={ts('k_w0gthl')}>{t('unitPiece')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -896,10 +903,10 @@ export default function ProductsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="㎡">㎡</SelectItem>
-                      <SelectItem value="张">{t('unitSheet')}</SelectItem>
+                      <SelectItem value={ts('k_accfpb')}>{t('unitSheet')}</SelectItem>
                       <SelectItem value="kg">kg</SelectItem>
-                      <SelectItem value="卷">{t('unitRoll')}</SelectItem>
-                      <SelectItem value="件">{t('unitPiece')}</SelectItem>
+                      <SelectItem value={ts('k_1v8rak6')}>{t('unitRoll')}</SelectItem>
+                      <SelectItem value={ts('k_w0gthl')}>{t('unitPiece')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

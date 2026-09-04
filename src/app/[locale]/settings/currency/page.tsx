@@ -40,6 +40,7 @@ interface Currency {
 }
 
 export default function CurrencyPage() {
+  const ts = useTranslations('Common');
   const tc = useTranslations('Common');
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [loading, setLoading] = useState(false);
@@ -59,7 +60,7 @@ export default function CurrencyPage() {
         toast.error(result.message || tc('fetchFailed'));
       }
     } catch (error) {
-      logger.error({ module: 'Currency', action: 'fetchCurrencies' }, '获取币种列表失败', {
+      logger.error({ module: 'Currency', action: 'fetchCurrencies' }, ts('k_1qu0vwj'), {
         error: (error as Error).message,
       });
       toast.error(tc('fetchFailed'));
@@ -228,7 +229,7 @@ export default function CurrencyPage() {
                 <Input
                   value={form.name || ''}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="人民币 / 美元 / 越南盾"
+                  placeholder={ts('k_1vdfdvj')}
                 />
               </div>
               <div>

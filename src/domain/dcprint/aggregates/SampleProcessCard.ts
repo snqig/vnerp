@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError, DomainEvent } from '../../shared/DomainTypes';
 import { ProcessCardConfirmedEvent } from '../events/ProcessCardEvents';
 
@@ -181,7 +183,8 @@ export class SampleProcessCard {
   }
 
   get statusLabel(): string {
-    const labels: Record<CardStatus, string> = { 1: '草稿', 2: '打样中', 3: '已确认', 4: '已作废' };
+  const ts = t;
+    const labels: Record<CardStatus, string> = { 1: ts('k_oc54qp'), 2: ts('k_1lta3ye'), 3: ts('k_nmir1b'), 4: ts('k_1o0kows') };
     return labels[this._props.status];
   }
 
@@ -209,14 +212,15 @@ export class SampleProcessCard {
   }
 
   static create(props: SampleProcessCardProps): SampleProcessCard {
+  const ts = t;
     if (!props.sampleName || !props.sampleName.trim()) {
-      throw new DomainError('打样名称不能为空');
+      throw new DomainError(ts('k_agl09o'));
     }
     if (!props.items || props.items.length === 0) {
-      throw new DomainError('至少需要一条物料明细');
+      throw new DomainError(ts('k_mbtygj'));
     }
     if (!props.steps || props.steps.length === 0) {
-      throw new DomainError('至少需要一条工序明细');
+      throw new DomainError(ts('k_3g5l2h'));
     }
     return new SampleProcessCard({ ...props, status: props.status || 1 });
   }
@@ -226,12 +230,14 @@ export class SampleProcessCard {
   }
 
   submit(): void {
-    if (!this.canSubmit) throw new DomainError(`当前状态不允许提交`);
+  const ts = t;
+    if (!this.canSubmit) throw new DomainError(ts('k_116a4i2'));
     this._props.status = 2;
   }
 
   confirm(confirmBy: number): void {
-    if (!this.canConfirm) throw new DomainError(`当前状态不允许确认`);
+  const ts = t;
+    if (!this.canConfirm) throw new DomainError(ts('k_mjcinw'));
     this._props.status = 3;
     this._props.confirmBy = confirmBy;
     this._props.confirmTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
@@ -259,7 +265,8 @@ export class SampleProcessCard {
   }
 
   cancel(): void {
-    if (!this.canCancel) throw new DomainError(`当前状态不允许作废`);
+  const ts = t;
+    if (!this.canCancel) throw new DomainError(ts('k_1atqguz'));
     this._props.status = 4;
   }
 

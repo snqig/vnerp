@@ -68,13 +68,14 @@ export function GlobalExportToolbar({
   buttonText,
   size = 'sm',
 }: GlobalExportToolbarProps) {
+  const ts = useTranslations('Common');
   const t = useTranslations('Common');
   const [exporting, setExporting] = useState(false);
 
   const handleExport = useCallback(
     async (format: 'excel' | 'pdf' | 'word' | 'csv' | 'print') => {
       if (data.length === 0) {
-        toast.warning(t('noDataToExport') || '暂无可导出的数据');
+        toast.warning(t('noDataToExport') || ts('k_safk40'));
         return;
       }
 
@@ -84,7 +85,7 @@ export function GlobalExportToolbar({
         pdf: 'PDF',
         word: 'Word',
         csv: 'CSV',
-        print: '打印',
+        print: ts('k_fx6uxi'),
       };
 
       try {
@@ -98,11 +99,11 @@ export function GlobalExportToolbar({
           landscape,
           footer,
         });
-        toast.success(`${formatLabels[format]} ${t('exportSuccess') || '导出成功'}`);
+        toast.success(`${formatLabels[format]} ${t('exportSuccess') || ts('k_1hkfymq')}`);
       } catch (error) {
         console.error('Export error:', error);
         toast.error(
-          `${formatLabels[format]} ${t('exportFailed') || '导出失败'}: ${(error as Error).message}`
+          `${formatLabels[format]} ${t('exportFailed') || ts('k_19nphi1')}: ${(error as Error).message}`
         );
       } finally {
         setExporting(false);
@@ -124,7 +125,7 @@ export function GlobalExportToolbar({
     pdf: 'PDF (.pdf)',
     word: 'Word (.docx)',
     csv: 'CSV (.csv)',
-    print: t('print') || '打印',
+    print: t('print') || ts('k_fx6uxi'),
   };
 
   return (
@@ -134,7 +135,7 @@ export function GlobalExportToolbar({
       {onImport && (
         <Button variant="outline" size={size} onClick={onImport}>
           <Upload className="mr-2 h-4 w-4" />
-          {t('import') || '导入'}
+          {t('import') || ts('k_1m1mu7u')}
         </Button>
       )}
 
@@ -150,7 +151,7 @@ export function GlobalExportToolbar({
             ) : (
               <Download className="mr-2 h-4 w-4" />
             )}
-            {buttonText || t('export') || '导出'}
+            {buttonText || t('export') || ts('k_ehd8b7')}
             <ChevronDown className="ml-1 h-3 w-3 opacity-60" />
           </Button>
         </DropdownMenuTrigger>
@@ -171,7 +172,7 @@ export function GlobalExportToolbar({
 
       {data.length > 0 && (
         <span className="text-xs text-muted-foreground">
-          {data.length} {t('records') || '条'}
+          {data.length} {t('records') || ts('k_1rfm5gs')}
         </span>
       )}
     </div>

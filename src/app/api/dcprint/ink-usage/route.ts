@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -51,6 +54,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       usage_type,
@@ -73,7 +77,7 @@ export const POST = withPermission(
     } = body;
 
     if (!usage_type || !weight || Number(weight) <= 0) {
-      return errorResponse('缺少必填字段: usage_type, weight', 400, 400);
+      return errorResponse(ts('k_1yensea'), 400, 400);
     }
 
     const validTypes = ['requisition', 'machine_load', 'consumption', 'return', 'scrap'];
@@ -102,7 +106,7 @@ export const POST = withPermission(
       }
 
       if (!actualBatchNo) {
-        throw new Error('无法确定油墨批次号，请提供batch_no或qr_code');
+        throw new Error(ts('k_1d3hftj'));
       }
 
       const [batchRows] = await conn.execute(
@@ -222,18 +226,19 @@ export const POST = withPermission(
       return { id: insertResult.insertId, usage_no: usageNo, batch_no: actualBatchNo };
     });
 
-    return successResponse(result, '油墨使用记录创建成功');
+    return successResponse(result, ts('k_1lwcyl4'));
   },
   { logTitle: '油墨使用记录', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, status, remark } = body;
 
     if (!id) {
-      return errorResponse('记录ID不能为空', 400, 400);
+      return errorResponse(ts('k_18kulrp'), 400, 400);
     }
 
     if (status !== undefined)
@@ -241,7 +246,7 @@ export const PUT = withPermission(
     if (remark !== undefined)
       await execute('UPDATE ink_usage SET remark = ? WHERE id = ?', [remark, id]);
 
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新油墨使用记录', logType: 'business' }
 );

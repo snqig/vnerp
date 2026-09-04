@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { withPermission } from '@/lib/api-permissions';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -18,14 +21,15 @@ const calcRepo = new SalaryCalculationRepository();
  */
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { employeeId, month, options } = body;
 
     if (!employeeId || !month) {
-      return errorResponse('缺少员工ID或计算月份', 400, 400);
+      return errorResponse(ts('k_sfzzuj'), 400, 400);
     }
     if (!/^\d{4}-\d{2}$/.test(month)) {
-      return errorResponse('月份格式错误 (YYYY-MM)', 400, 400);
+      return errorResponse(ts('k_1i9m41z'), 400, 400);
     }
 
     const result = await calculateMonthlySalary(employeeId, month, options || {});
@@ -41,11 +45,12 @@ export const POST = withPermission(
  */
 export const PUT = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { employeeIds, month, options } = body;
 
     if (!month) {
-      return errorResponse('缺少计算月份', 400, 400);
+      return errorResponse(ts('k_vo7urr'), 400, 400);
     }
 
     let targetIds = employeeIds;
@@ -59,7 +64,7 @@ export const PUT = withPermission(
     }
 
     if (!targetIds.length) {
-      return errorResponse('未找到任何员工', 400, 400);
+      return errorResponse(ts('k_1vz7t34'), 400, 400);
     }
 
     const results = await batchCalculateSalary(targetIds, month, options || {});
@@ -78,17 +83,18 @@ export const PUT = withPermission(
  */
 export const GET = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const employeeId = parseInt(searchParams.get('employeeId') || '');
     const month = searchParams.get('month');
 
     if (!employeeId || !month) {
-      return errorResponse('缺少员工ID或月份', 400, 400);
+      return errorResponse(ts('k_o23ml3'), 400, 400);
     }
 
     const calc = await calcRepo.findByEmployeeMonth(employeeId, month);
     if (!calc) {
-      return errorResponse('未找到计算结果', 404, 404);
+      return errorResponse(ts('k_icigqk'), 404, 404);
     }
 
     return successResponse(calc);

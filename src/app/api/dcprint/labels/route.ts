@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { escapeId } from 'mysql2';
 import { query, execute, queryOne, SqlValue } from '@/lib/db';
@@ -157,6 +160,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // POST - 创建物料标签
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     // 验证必填字段
@@ -236,9 +240,9 @@ export const POST = withPermission(
       {
         id: result.insertId,
         labelNo,
-        message: '物料标签创建成功',
+        message: ts('k_ovluoq'),
       },
-      '物料标签创建成功'
+      ts('k_ovluoq')
     );
   },
   { logTitle: '创建物料标签', logType: 'business' }
@@ -247,10 +251,11 @@ export const POST = withPermission(
 // PUT - 更新物料标签
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     if (!body.id) {
-      return errorResponse('缺少标签ID', 400, 400);
+      return errorResponse(ts('k_1c3e7u8'), 400, 400);
     }
 
     const updateFields: string[] = [];
@@ -289,7 +294,7 @@ export const PUT = withPermission(
     });
 
     if (updateFields.length === 0) {
-      return errorResponse('没有要更新的字段', 400, 400);
+      return errorResponse(ts('k_ovfx8a'), 400, 400);
     }
 
     params.push(body.id);
@@ -299,7 +304,7 @@ export const PUT = withPermission(
       params
     );
 
-    return successResponse(null, '物料标签更新成功');
+    return successResponse(null, ts('k_2g20lb'));
   },
   { logTitle: '更新物料标签', logType: 'business' }
 );
@@ -307,16 +312,17 @@ export const PUT = withPermission(
 // DELETE - 删除物料标签（软删除）
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('缺少标签ID', 400, 400);
+      return errorResponse(ts('k_1c3e7u8'), 400, 400);
     }
 
     await execute('UPDATE inv_material_label SET deleted = 1 WHERE id = ?', [id]);
 
-    return successResponse(null, '物料标签删除成功');
+    return successResponse(null, ts('k_gbmupb'));
   },
   { logTitle: '删除物料标签', logType: 'business' }
 );

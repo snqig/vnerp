@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -75,6 +78,8 @@ export const GET = withPermission(
 // 创建字典类型或数据
 export const POST = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { action } = body;
 
@@ -89,7 +94,7 @@ export const POST = withPermission(
         [body.dict_type]
       );
       if (existing.length > 0) {
-        return errorResponse('字典类型编码已存在', 400, 400);
+        return errorResponse(ts('k_17ewpcx'), 400, 400);
       }
 
       const result = await execute(
@@ -97,7 +102,7 @@ export const POST = withPermission(
         [body.dict_name, body.dict_type, body.status ?? 1, body.remark || null]
       );
 
-      return successResponse({ id: result.insertId }, '字典类型创建成功');
+      return successResponse({ id: result.insertId }, tc('dictTypeCreated'));
     }
 
     if (action === 'create_data') {
@@ -112,7 +117,7 @@ export const POST = withPermission(
         [body.dict_type]
       );
       if (typeRows.length === 0) {
-        return errorResponse('字典类型不存在', 400, 400);
+        return errorResponse(ts('k_1ykmt2f'), 400, 400);
       }
       const dictTypeId = typeRows[0].id;
 
@@ -128,10 +133,10 @@ export const POST = withPermission(
         ]
       );
 
-      return successResponse({ id: result.insertId }, '字典数据创建成功');
+      return successResponse({ id: result.insertId }, tc('dictDataCreated'));
     }
 
-    return errorResponse('无效的操作类型', 400, 400);
+    return errorResponse(ts('k_4ty90w'), 400, 400);
   },
   { errorMessage: '操作失败' }
 );
@@ -139,11 +144,12 @@ export const POST = withPermission(
 // 更新字典
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { action } = body;
 
     if (action === 'update_type') {
-      if (!body.id) return errorResponse('ID不能为空', 400, 400);
+      if (!body.id) return errorResponse(ts('k_32pxya'), 400, 400);
       const updates: string[] = [];
       const params: SqlValue[] = [];
       if (body.dict_name !== undefined) {
@@ -164,18 +170,18 @@ export const PUT = withPermission(
         updates.push('description = ?');
         params.push(body.remark);
       }
-      if (updates.length === 0) return errorResponse('没有需要更新的字段', 400, 400);
+      if (updates.length === 0) return errorResponse(ts('k_1kyikfw'), 400, 400);
       updates.push('update_time = NOW()');
       params.push(body.id);
       await execute(
         `UPDATE sys_dict_type SET ${updates.join(', ')} WHERE id = ? AND deleted = 0`,
         params
       );
-      return successResponse(null, '字典类型更新成功');
+      return successResponse(null, ts('k_a9nj4x'));
     }
 
     if (action === 'update_data') {
-      if (!body.id) return errorResponse('ID不能为空', 400, 400);
+      if (!body.id) return errorResponse(ts('k_32pxya'), 400, 400);
       const updates: string[] = [];
       const params: SqlValue[] = [];
       if (body.dict_label !== undefined) {
@@ -198,17 +204,17 @@ export const PUT = withPermission(
         updates.push('remark = ?');
         params.push(body.remark);
       }
-      if (updates.length === 0) return errorResponse('没有需要更新的字段', 400, 400);
+      if (updates.length === 0) return errorResponse(ts('k_1kyikfw'), 400, 400);
       updates.push('update_time = NOW()');
       params.push(body.id);
       await execute(
         `UPDATE sys_dict_data SET ${updates.join(', ')} WHERE id = ? AND deleted = 0`,
         params
       );
-      return successResponse(null, '字典数据更新成功');
+      return successResponse(null, ts('k_twun15'));
     }
 
-    return errorResponse('无效的操作类型', 400, 400);
+    return errorResponse(ts('k_4ty90w'), 400, 400);
   },
   { errorMessage: '操作失败' }
 );
@@ -216,11 +222,13 @@ export const PUT = withPermission(
 // 删除字典（软删除）
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
     const id = searchParams.get('id');
 
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     if (action === 'delete_type') {
       // 先软删除该类型下的所有数据项，再软删除类型本身
@@ -231,17 +239,17 @@ export const DELETE = withPermission(
       await execute('UPDATE sys_dict_type SET deleted = 1, update_time = NOW() WHERE id = ?', [
         Number(id),
       ]);
-      return successResponse(null, '字典类型及数据已删除');
+      return successResponse(null, ts('k_h2h08m'));
     }
 
     if (action === 'delete_data') {
       await execute('UPDATE sys_dict_data SET deleted = 1, update_time = NOW() WHERE id = ?', [
         Number(id),
       ]);
-      return successResponse(null, '字典数据已删除');
+      return successResponse(null, tc('dictDataDeleted'));
     }
 
-    return errorResponse('无效的操作类型', 400, 400);
+    return errorResponse(ts('k_4ty90w'), 400, 400);
   },
   { errorMessage: '操作失败' }
 );

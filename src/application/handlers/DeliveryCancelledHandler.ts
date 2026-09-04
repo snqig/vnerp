@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { DeliveryCancelledEvent } from '@/domain/sales/events/DeliveryEvents';
 import { transaction } from '@/lib/db';
@@ -19,6 +21,7 @@ export class DeliveryCancelledHandler implements EventHandler<DeliveryCancelledE
 
     try {
       await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
         phase = 'load_delivery_details';
         const [detailRows] = await conn.execute<RowDataPacket[]>(
           'SELECT id, order_detail_id, quantity, material_id FROM sal_delivery_detail WHERE delivery_id = ? AND deleted = 0',
@@ -26,12 +29,12 @@ export class DeliveryCancelledHandler implements EventHandler<DeliveryCancelledE
         );
 
         if (!detailRows || detailRows.length === 0) {
-          logger.warn(ctx, '发货单明细不存在，跳过回滚', { deliveryId, deliveryNo });
+          logger.warn(ctx, ts('k_f1rfkf'), { deliveryId, deliveryNo });
           return;
         }
 
         const details = detailRows as unknown as DeliveryDetailRow[];
-        logger.info(ctx, '发货单明细加载完成', {
+        logger.info(ctx, ts('k_p16vcz'), {
           deliveryId,
           detailCount: details.length,
         });
@@ -43,7 +46,7 @@ export class DeliveryCancelledHandler implements EventHandler<DeliveryCancelledE
               'UPDATE sal_order_detail SET delivered_qty = GREATEST(0, delivered_qty - ?) WHERE id = ?',
               [detail.quantity, detail.order_detail_id]
             );
-            logger.info(ctx, '回滚订单明细已发货数量', {
+            logger.info(ctx, ts('k_ianwlb'), {
               orderDetailId: detail.order_detail_id,
               rollbackQty: detail.quantity,
             });
@@ -73,13 +76,13 @@ export class DeliveryCancelledHandler implements EventHandler<DeliveryCancelledE
                   'UPDATE sal_order SET status = 2, update_time = NOW() WHERE id = ?',
                   [orderId]
                 );
-                logger.info(ctx, '订单状态恢复为已审核', { orderId });
+                logger.info(ctx, ts('k_1yqlcg9'), { orderId });
               } else {
                 await conn.execute(
                   'UPDATE sal_order SET status = 3, update_time = NOW() WHERE id = ?',
                   [orderId]
                 );
-                logger.info(ctx, '订单状态恢复为部分发货', { orderId });
+                logger.info(ctx, ts('k_v4wq30'), { orderId });
               }
             }
           }
@@ -99,7 +102,7 @@ export class DeliveryCancelledHandler implements EventHandler<DeliveryCancelledE
                WHERE source_no = ? AND source_type = 1 AND deleted = 0`,
               [deliveryNo]
             );
-            logger.info(ctx, '应收单联动软删完成 (T403)', {
+            logger.info(ctx, ts('k_15ky36j'), {
               deliveryNo,
               count: receivableRows.length,
               receivableNos: receivableRows.map((r) => r.receivable_no),

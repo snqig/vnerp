@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface TransferItemProps {
   id?: number;
   transferId?: number;
@@ -37,6 +39,7 @@ export class TransferItem {
   public readonly remark: string;
 
   private constructor(props: TransferItemProps) {
+  const ts = t;
     this.id = props.id;
     this.transferId = props.transferId;
     this.materialId = props.materialId;
@@ -50,17 +53,18 @@ export class TransferItem {
     this.quantity = props.quantity;
     this._outQuantity = props.outQuantity || 0;
     this._inQuantity = props.inQuantity || 0;
-    this.unit = props.unit || '件';
+    this.unit = props.unit || ts('k_w0gthl');
     this.unitPrice = props.unitPrice || 0;
     this.remark = props.remark || '';
   }
 
   static create(props: TransferItemProps): TransferItem {
+  const ts = t;
     if (!props.materialId) {
-      throw new Error('物料ID不能为空');
+      throw new Error(ts('k_1f11b1g'));
     }
     if (!props.quantity || props.quantity <= 0) {
-      throw new Error('调拨数量必须大于0');
+      throw new Error(ts('k_xy6e7a'));
     }
     return new TransferItem(props);
   }
@@ -82,15 +86,17 @@ export class TransferItem {
   }
 
   recordOutQuantity(qty: number): void {
+  const ts = t;
     if (qty < 0 || qty > this.quantity) {
-      throw new Error('出库数量不能为负数或超过申请数量');
+      throw new Error(ts('k_1a8vcqv'));
     }
     this._outQuantity = qty;
   }
 
   recordInQuantity(qty: number): void {
+  const ts = t;
     if (qty < 0 || qty > this._outQuantity) {
-      throw new Error('入库数量不能为负数或超过出库数量');
+      throw new Error(ts('k_wprgxl'));
     }
     this._inQuantity = qty;
   }

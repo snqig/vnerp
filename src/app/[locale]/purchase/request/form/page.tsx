@@ -96,6 +96,7 @@ interface SavedRecord {
 }
 
 export default function PurchaseRequestFormPage() {
+  const ts = useTranslations('Purchase');
   // 翻译钩子
   const tc = useTranslations('Common');
 
@@ -114,12 +115,12 @@ export default function PurchaseRequestFormPage() {
 
   const STATUS_MAP: Record<number, { label: string; color: string }> = {
     0: { label: tc('draft'), color: '#6b7280' },
-    1: { label: '已提交', color: '#2563eb' },
-    2: { label: '审校中', color: '#d97706' },
-    3: { label: '审校通过', color: '#7c3aed' },
-    4: { label: '已批准', color: '#059669' },
+    1: { label: ts('k_168pm1t'), color: '#2563eb' },
+    2: { label: ts('k_ldzf8u'), color: '#d97706' },
+    3: { label: ts('k_1csxrn4'), color: '#7c3aed' },
+    4: { label: ts('k_10hmnl2'), color: '#059669' },
     5: { label: tc('convertedToPurchase'), color: '#0891b2' },
-    6: { label: '已驳回', color: '#dc2626' },
+    6: { label: ts('k_pg1cf8'), color: '#dc2626' },
     9: { label: tc('closed'), color: '#9ca3af' },
   };
 
@@ -281,7 +282,7 @@ export default function PurchaseRequestFormPage() {
 
   const removeRow = (index: number) => {
     if (purchaseItems.length === 1) {
-      toast({ title: '至少保留一行物料明细', variant: 'destructive' });
+      toast({ title: ts('k_1tji0th'), variant: 'destructive' });
       return;
     }
     setPurchaseItems((prev) => prev.filter((_, i) => i !== index));
@@ -309,15 +310,15 @@ export default function PurchaseRequestFormPage() {
       (item) => item.productName || item.spec || item.quantity
     );
     if (filledItems.length === 0) {
-      toast({ title: '请至少填写一行物料明细', variant: 'destructive' });
+      toast({ title: ts('k_1l41vik'), variant: 'destructive' });
       return;
     }
     if (!form.applicant) {
-      toast({ title: '请选择申请人', variant: 'destructive' });
+      toast({ title: ts('k_1ft8070'), variant: 'destructive' });
       return;
     }
     if (!form.department) {
-      toast({ title: '请选择部门', variant: 'destructive' });
+      toast({ title: ts('k_b0j70s'), variant: 'destructive' });
       return;
     }
 
@@ -333,7 +334,7 @@ export default function PurchaseRequestFormPage() {
     try {
       const body = {
         request_date: requestDate,
-        request_type: '请购单',
+        request_type: ts('k_1eywrb0'),
         request_dept_id: form.department_id,
         request_dept: form.department,
         requester_id: form.applicant_id,
@@ -384,7 +385,7 @@ export default function PurchaseRequestFormPage() {
           | undefined;
         if (uncategorized && uncategorized.length > 0) {
           toast({
-            title: '部分物料未设置分类',
+            title: ts('k_o74lpy'),
             description: `${uncategorized
               .slice(0, 3)
               .map((m) => `${m.material_code}(${m.material_name})`)
@@ -399,10 +400,10 @@ export default function PurchaseRequestFormPage() {
           setEditingId(result.data.id);
         }
       } else {
-        toast({ title: result.message || '保存失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_1q9u8le'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '保存失败', variant: 'destructive' });
+      toast({ title: ts('k_1q9u8le'), variant: 'destructive' });
     }
   };
 
@@ -549,26 +550,21 @@ export default function PurchaseRequestFormPage() {
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleOpenList}>
               <List className="h-4 w-4 mr-1" />
-              历史记录
-            </Button>
+              {ts('k_1h1xpua')}</Button>
             <Button variant="outline" size="sm" onClick={resetForm}>
-              新建
-            </Button>
+              {ts('k_1f9r5fz')}</Button>
             <Button variant="outline" size="sm" onClick={handlePrint}>
               <Printer className="h-4 w-4 mr-1" />
-              打印(A5横向)
-            </Button>
+              {ts('k_qjy5a8')}</Button>
             {canEdit && (
               <Button variant="outline" size="sm" onClick={() => handleSave(0)}>
                 <Save className="h-4 w-4 mr-1" />
-                保存草稿
-              </Button>
+                {ts('k_gtqgss')}</Button>
             )}
             {canSubmit && (
               <Button size="sm" onClick={() => handleSave(1)}>
                 <Send className="h-4 w-4 mr-1" />
-                提交审校
-              </Button>
+                {ts('k_owgoqr')}</Button>
             )}
           </div>
         </div>
@@ -634,8 +630,7 @@ export default function PurchaseRequestFormPage() {
                 padding: '6px 28px',
               }}
             >
-              请购单
-            </span>
+              {ts('k_1eywrb0')}</span>
           </div>
 
           <div
@@ -649,7 +644,7 @@ export default function PurchaseRequestFormPage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontWeight: 500 }}>
-              <label style={{ fontWeight: 700, color: '#0f3b5c' }}>部门：</label>
+              <label style={{ fontWeight: 700, color: '#0f3b5c' }}>{tc('deptLabel')}</label>
               <Select
                 value={form.department_id ? String(form.department_id) : ''}
                 onValueChange={(v) => {
@@ -671,7 +666,7 @@ export default function PurchaseRequestFormPage() {
                     width: '200px',
                   }}
                 >
-                  <SelectValue placeholder="选择部门" />
+                  <SelectValue placeholder={ts('k_18m3h1b')} />
                 </SelectTrigger>
                 <SelectContent>
                   {departments.map((dept) => (
@@ -723,13 +718,13 @@ export default function PurchaseRequestFormPage() {
               <thead>
                 <tr>
                   {[
-                    '序号',
-                    '物料编码',
-                    '品名',
-                    '规格',
-                    '单位',
+                    ts('k_fax2nf'),
+                    ts('k_zsv6bq'),
+                    ts('k_1kddh77'),
+                    ts('k_1h40xod'),
+                    ts('k_1xadx6v'),
                     tc('quantity'),
-                    '单价',
+                    ts('k_isc1c5'),
                     tc('amount'),
                     tc('remark'),
                     tc('operation'),
@@ -814,8 +809,7 @@ export default function PurchaseRequestFormPage() {
                           }}
                         >
                           <Search style={{ width: '14px', height: '14px' }} />
-                          选择物料
-                        </button>
+                          {ts('k_1s1m8ux')}</button>
                       )}
                       {item.material_code && canEdit && (
                         <button
@@ -829,8 +823,7 @@ export default function PurchaseRequestFormPage() {
                             padding: '2px 4px',
                           }}
                         >
-                          更换
-                        </button>
+                          {ts('k_8fhaab')}</button>
                       )}
                     </td>
                     {(
@@ -998,7 +991,7 @@ export default function PurchaseRequestFormPage() {
                           borderRadius: '30px',
                           opacity: canEdit ? 1 : 0.4,
                         }}
-                        title="删除此行"
+                        title={ts('k_19j0g21')}
                       >
                         ✕
                       </button>
@@ -1036,11 +1029,9 @@ export default function PurchaseRequestFormPage() {
                 boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
               }}
             >
-              + 添加物料行
-            </button>
+              {ts('k_1cyxzll')}</button>
             <div style={{ fontSize: '13px', color: '#6b7280' }}>
-              合计金额：
-              <span style={{ color: '#059669', fontWeight: 700, fontSize: '16px' }}>
+              {ts('k_71hi4y')}<span style={{ color: '#059669', fontWeight: 700, fontSize: '16px' }}>
                 ¥
                 {purchaseItems
                   .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0)
@@ -1072,12 +1063,11 @@ export default function PurchaseRequestFormPage() {
                 fontWeight: 600,
               }}
             >
-              表单编号：DC-A-03A
-            </div>
+              {ts('k_1gvbd8v')}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '22px', alignItems: 'center' }}>
               {[
-                { label: '申请人', key: 'applicant' as const, idKey: 'applicant_id' as const },
-                { label: '审校', key: 'reviewer' as const, idKey: 'reviewer_id' as const },
+                { label: ts('k_3fdyof'), key: 'applicant' as const, idKey: 'applicant_id' as const },
+                { label: ts('k_1uu3tiv'), key: 'reviewer' as const, idKey: 'reviewer_id' as const },
                 { label: tc('approve'), key: 'approver' as const, idKey: 'approver_id' as const },
               ].map((item) => (
                 <div
@@ -1131,20 +1121,18 @@ export default function PurchaseRequestFormPage() {
             <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
               {loadingRecords ? (
                 <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
-                  加载中...
-                </div>
+                  {tc('loading')}</div>
               ) : savedRecords.length === 0 ? (
                 <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
-                  暂无记录
-                </div>
+                  {tc('noRecords')}</div>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
                     <tr>
                       {[
-                        '单号',
-                        '部门',
-                        '申请人',
+                        ts('k_iu45vp'),
+                        tc('department'),
+                        ts('k_3fdyof'),
                         tc('date'),
                         tc('status'),
                         tc('amount'),
@@ -1215,8 +1203,7 @@ export default function PurchaseRequestFormPage() {
                               fontWeight: 600,
                             }}
                           >
-                            编辑
-                          </button>
+                            {ts('k_qreyeg')}</button>
                         </td>
                       </tr>
                     ))}

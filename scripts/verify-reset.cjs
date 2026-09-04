@@ -1,0 +1,22 @@
+const mysql = require('mysql2/promise');
+const db = mysql.createPool({host:'127.0.0.1',port:3306,user:'root',password:'Snqig521223',database:'vnerpdacahng'});
+(async () => {
+  const [orders] = await db.query(`SELECT id, order_no, customer_id, delivery_date, currency, status FROM sal_order ORDER BY id LIMIT 10`);
+  console.log('=== 销售订单 ===');
+  orders.forEach(o => console.log(`  ${o.id} ${o.order_no} 客户=${o.customer_id} 交货=${o.delivery_date} 币种=${o.currency} 状态=${o.status}`));
+  const [customers] = await db.query(`SELECT id, customer_name FROM crm_customer ORDER BY id LIMIT 10`);
+  console.log('\n=== 客户 ===');
+  customers.forEach(c => console.log(`  ${c.id} ${c.customer_name}`));
+  const [products] = await db.query(`SELECT id, product_name FROM mdm_product ORDER BY id LIMIT 10`);
+  console.log('\n=== 产品 ===');
+  products.forEach(p => console.log(`  ${p.id} ${p.product_name}`));
+  const [boms] = await db.query(`SELECT COUNT(*) as cnt FROM prd_bom`);
+  console.log(`\n=== BOM: ${boms[0].cnt} 条 ===`);
+  const [samples] = await db.query(`SELECT COUNT(*) as cnt FROM sal_sample_order`);
+  console.log(`=== 打样订单: ${samples[0].cnt} 条 ===`);
+  const [recon] = await db.query(`SELECT COUNT(*) as cnt FROM sal_reconciliation`);
+  console.log(`=== 对账单: ${recon[0].cnt} 条（保留）===`);
+  const [returns] = await db.query(`SELECT COUNT(*) as cnt FROM sal_return`);
+  console.log(`=== 退货单: ${returns[0].cnt} 条（保留）===`);
+  await db.end();
+})();

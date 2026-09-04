@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import {
   IUnqualifiedRepository,
   Pagination,
@@ -54,9 +56,10 @@ export class UnqualifiedApplicationService {
   constructor(private readonly repo: IUnqualifiedRepository) {}
 
   async getRecordById(id: number): Promise<UnqualifiedProduct> {
+  const ts = await getTranslations('Common');
     const record = await this.repo.findById(id);
     if (!record) {
-      throw new NotFoundError('不合格品记录不存在');
+      throw new NotFoundError(ts('k_vczk9z'));
     }
     return record;
   }

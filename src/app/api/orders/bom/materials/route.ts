@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -42,10 +45,10 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   const result = await queryPaginated(
     `SELECT 
-       id, material_code, material_name, material_spec, material_type,
-       category_id, category_name, unit, unit_cost, safety_stock,
+       id, material_code, material_name, specification AS material_spec, material_type,
+       category_id, '' AS category_name, unit, unit_cost, safety_stock,
        default_supplier_name, is_active
-     FROM bom_material
+     FROM std_material
      ${whereClause}
      ORDER BY create_time DESC`,
     params,
@@ -62,6 +65,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
  */
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     const validation = validateRequestBody(body, ['materialCode', 'materialName']);
@@ -77,7 +81,7 @@ export const POST = withPermission(
       materialType = 'RAW',
       categoryId,
       categoryName,
-      unit = '件',
+      unit = ts('k_w0gthl'),
       unitCost = 0,
       safetyStock = 0,
       defaultSupplierId,
@@ -88,26 +92,25 @@ export const POST = withPermission(
 
     // 检查物料编码是否已存在
     const existing = await query(
-      'SELECT id FROM bom_material WHERE material_code = ? AND deleted = 0',
+      'SELECT id FROM std_material WHERE material_code = ? AND deleted = 0',
       [materialCode]
     );
 
     if ((existing as DbRow[]).length > 0) {
-      return errorResponse('物料编码已存在', 400, 400);
+      return errorResponse(ts('k_1ep8nak'), 400, 400);
     }
 
     const result = await query(
-      `INSERT INTO bom_material 
-     (material_code, material_name, material_spec, material_type, category_id, category_name,
-      unit, unit_cost, safety_stock, default_supplier_id, default_supplier_name, shelf_life_days, remark, create_time)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      `INSERT INTO std_material
+     (material_code, material_name, specification, material_type, category_id,
+      unit, unit_cost, safety_stock, default_supplier_id, default_supplier_name, shelf_life, remark, create_time)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
       [
         materialCode,
         materialName,
         materialSpec || '',
         materialType,
         categoryId || null,
-        categoryName || '',
         unit,
         unitCost,
         safetyStock,
@@ -118,7 +121,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: (result as DbRow).insertId, materialCode }, '物料创建成功');
+    return successResponse({ id: (result as DbRow).insertId, materialCode }, ts('k_18twvmr'));
   },
   { logTitle: '创建BOM物料', logType: 'business' }
 );
@@ -129,17 +132,18 @@ export const POST = withPermission(
  */
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...updateData } = body;
 
     if (!id) {
-      return errorResponse('物料ID不能为空', 400, 400);
+      return errorResponse(ts('k_1f11b1g'), 400, 400);
     }
 
-    const material = await query('SELECT id FROM bom_material WHERE id = ? AND deleted = 0', [id]);
+    const material = await query('SELECT id FROM std_material WHERE id = ? AND deleted = 0', [id]);
 
     if ((material as DbRow[]).length === 0) {
-      return errorResponse('物料不存在', 404, 404);
+      return errorResponse(ts('k_130k5ym'), 404, 404);
     }
 
     const updateFields: string[] = [];
@@ -150,7 +154,7 @@ export const PUT = withPermission(
       updateValues.push(updateData.materialName);
     }
     if (updateData.materialSpec !== undefined) {
-      updateFields.push('material_spec = ?');
+      updateFields.push('specification = ?');
       updateValues.push(updateData.materialSpec);
     }
     if (updateData.unit !== undefined) {
@@ -175,16 +179,16 @@ export const PUT = withPermission(
     }
 
     if (updateFields.length === 0) {
-      return errorResponse('没有要更新的字段', 400, 400);
+      return errorResponse(ts('k_ovfx8a'), 400, 400);
     }
 
     updateValues.push(id);
     await query(
-      `UPDATE bom_material SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
+      `UPDATE std_material SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
       updateValues
     );
 
-    return successResponse({ id }, '物料更新成功');
+    return successResponse({ id }, ts('k_gmp32i'));
   },
   { logTitle: '更新BOM物料', logType: 'business' }
 );
@@ -195,23 +199,24 @@ export const PUT = withPermission(
  */
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('物料ID不能为空', 400, 400);
+      return errorResponse(ts('k_1f11b1g'), 400, 400);
     }
 
     // 检查是否被BOM引用
     const usedInBom = await query('SELECT 1 FROM bom_line WHERE material_id = ? LIMIT 1', [id]);
 
     if ((usedInBom as DbRow[]).length > 0) {
-      return errorResponse('该物料已被BOM引用，不能删除', 400, 400);
+      return errorResponse(ts('k_4vm83m'), 400, 400);
     }
 
-    await query('UPDATE bom_material SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
+    await query('UPDATE std_material SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
-    return successResponse(null, '物料删除成功');
+    return successResponse(null, ts('k_1fjvpde'));
   },
   { logTitle: '删除BOM物料', logType: 'business' }
 );

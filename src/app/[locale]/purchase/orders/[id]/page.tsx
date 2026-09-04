@@ -152,6 +152,7 @@ const RETURN_STATUS_KEY: Record<number, string> = {
 };
 
 export default function PurchaseOrderDetailPage() {
+  const ts = useTranslations('Purchase');
   const t = useTranslations('Purchase');
   const tc = useTranslations('Common');
   const params = useParams();
@@ -218,7 +219,7 @@ export default function PurchaseOrderDetailPage() {
         setInboundRecords(filtered);
       }
     } catch (error) {
-      logger.warn({ module: 'Purchase', action: 'fetchInboundRecords' }, '获取入库记录失败', {
+      logger.warn({ module: 'Purchase', action: 'fetchInboundRecords' }, ts('k_1uwt569'), {
         error: (error as Error).message,
       });
     } finally {
@@ -241,7 +242,7 @@ export default function PurchaseOrderDetailPage() {
         setReturnRecords(filtered);
       }
     } catch (error) {
-      logger.warn({ module: 'Purchase', action: 'fetchReturnRecords' }, '获取退货记录失败', {
+      logger.warn({ module: 'Purchase', action: 'fetchReturnRecords' }, ts('k_1r7e28o'), {
         error: (error as Error).message,
       });
     } finally {
@@ -263,7 +264,7 @@ export default function PurchaseOrderDetailPage() {
         setPayableRecords(list);
       }
     } catch (error) {
-      logger.warn({ module: 'Purchase', action: 'fetchPayableRecords' }, '获取应付记录失败', {
+      logger.warn({ module: 'Purchase', action: 'fetchPayableRecords' }, ts('k_8mqtx5'), {
         error: (error as Error).message,
       });
     } finally {

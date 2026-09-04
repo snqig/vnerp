@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,7 @@ export function BatchToolbar({
   actions,
   className = '',
 }: BatchToolbarProps) {
+  const ts = useTranslations('Common');
   const [loading, setLoading] = useState(false);
 
   const handleAction = useCallback(
@@ -65,13 +67,10 @@ export function BatchToolbar({
         }}
       />
       <span className="text-sm text-muted-foreground">
-        已选
-        <strong className="text-foreground">{selectedIds.length}</strong> / {totalItems}项
-      </span>
+        {ts('k_oodyfo')}<strong className="text-foreground">{selectedIds.length}</strong> / {totalItems}{ts('k_1xoauwk')}</span>
       <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onClearSelection}>
         <X className="h-3 w-3 mr-0.5" />
-        取消选择
-      </Button>
+        {ts('k_irbcyt')}</Button>
       <div className="flex-1" />
       <div className="flex items-center gap-1">
         {actions.slice(0, 3).map((action) => (

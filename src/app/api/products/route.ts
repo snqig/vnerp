@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -86,10 +89,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // 创建产品
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
-    // 验证必填字段
-    const validation = validateRequestBody(body, ['productCode', 'productName', 'categoryId']);
+    // 验证必填字段（与前端提交的下划线字段保持一致；category_id 可空，前端暂无控件）
+    const validation = validateRequestBody(body, ['product_code', 'product_name']);
 
     if (!validation.valid) {
       return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
@@ -120,7 +124,7 @@ export const POST = withPermission(
     );
 
     if ((existingProducts as DbRow[]).length > 0) {
-      return errorResponse('产品编码已存在', 400, 400);
+      return errorResponse(ts('k_h3p2fi'), 400, 400);
     }
 
     const result = await query(
@@ -134,7 +138,7 @@ export const POST = withPermission(
         product_name,
         short_name || '',
         specification || '',
-        unit || '件',
+        unit || ts('k_w0gthl'),
         category_id,
         category_name || '',
         customer_id || null,
@@ -151,7 +155,7 @@ export const POST = withPermission(
 
     const insertId = (result as DbRow).insertId;
 
-    return successResponse({ id: insertId, product_code }, '产品创建成功');
+    return successResponse({ id: insertId, product_code }, ts('k_128bvwd'));
   },
   { logTitle: '创建产品' }
 );
@@ -159,18 +163,19 @@ export const POST = withPermission(
 // 更新产品
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...updateData } = body;
 
     if (!id) {
-      return errorResponse('产品ID不能为空', 400, 400);
+      return errorResponse(ts('k_1ea3eg2'), 400, 400);
     }
 
     // 查询产品
     const products = await query('SELECT * FROM mdm_product WHERE id = ? AND deleted = 0', [id]);
 
     if (!products || (products as DbRow[]).length === 0) {
-      return commonErrors.notFound('产品不存在');
+      return commonErrors.notFound(ts('k_1odjgag'));
     }
 
     const updateFields: string[] = [];
@@ -203,7 +208,7 @@ export const PUT = withPermission(
     }
 
     if (updateFields.length === 0) {
-      return errorResponse('没有要更新的字段', 400, 400);
+      return errorResponse(ts('k_ovfx8a'), 400, 400);
     }
 
     updateParams.push(id);
@@ -212,7 +217,7 @@ export const PUT = withPermission(
       updateParams
     );
 
-    return successResponse({ id }, '产品更新成功');
+    return successResponse({ id }, ts('k_woxkj0'));
   },
   { logTitle: '更新产品' }
 );
@@ -220,24 +225,25 @@ export const PUT = withPermission(
 // 删除产品
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('产品ID不能为空', 400, 400);
+      return errorResponse(ts('k_1ea3eg2'), 400, 400);
     }
 
     // 查询产品
     const products = await query('SELECT * FROM mdm_product WHERE id = ? AND deleted = 0', [id]);
 
     if (!products || (products as DbRow[]).length === 0) {
-      return commonErrors.notFound('产品不存在');
+      return commonErrors.notFound(ts('k_1odjgag'));
     }
 
     // 软删除
     await query('UPDATE mdm_product SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
-    return successResponse(null, '产品删除成功');
+    return successResponse(null, ts('k_16w6tg4'));
   },
   { errorMessage: '删除产品失败' }
 );

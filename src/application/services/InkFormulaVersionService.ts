@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 /**
  * 油墨配方版本管理 — 应用服务
  *
@@ -320,10 +322,11 @@ export async function duplicateVersion(
   data: { version_name?: string; change_reason?: string; major_version?: boolean },
   operatorId: number
 ): Promise<number> {
+  const ts = await getTranslations('Common');
   // 通过仓储获取源版本（含明细）
   const source = await versionRepo.findByIdWithItems(sourceId);
   if (!source) {
-    throw new Error('源版本不存在');
+    throw new Error(ts('k_1uh8w02'));
   }
 
   // 使用聚合根工厂方法一键复用
@@ -351,10 +354,11 @@ export async function duplicateVersion(
 }
 
 export async function activateVersion(id: number, operatorId: number): Promise<void> {
+  const ts = await getTranslations('Common');
   // 通过仓储获取版本
   const agg = await versionRepo.findByIdWithItems(id);
   if (!agg) {
-    throw new Error('版本不存在');
+    throw new Error(ts('k_1t1q87o'));
   }
 
   // 聚合根执行业务规则
@@ -394,10 +398,11 @@ export async function activateVersion(id: number, operatorId: number): Promise<v
 }
 
 export async function cancelVersion(id: number, operatorId: number, reason: string): Promise<void> {
+  const ts = await getTranslations('Common');
   // 通过仓储获取版本
   const agg = await versionRepo.findById(id);
   if (!agg) {
-    throw new Error('版本不存在');
+    throw new Error(ts('k_1t1q87o'));
   }
 
   // 聚合根执行业务规则
@@ -438,10 +443,11 @@ export async function updateVersion(
   },
   operatorId: number
 ): Promise<void> {
+  const ts = await getTranslations('Common');
   // 通过仓储获取版本
   const agg = await versionRepo.findByIdWithItems(id);
   if (!agg) {
-    throw new Error('版本不存在');
+    throw new Error(ts('k_1t1q87o'));
   }
 
   // 聚合根执行业务规则（内部校验状态）
@@ -466,15 +472,16 @@ export async function updateVersion(
 }
 
 export async function deleteVersion(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
   // 通过仓储获取版本（检查状态）
   const agg = await versionRepo.findById(id);
   if (!agg) {
-    throw new Error('版本不存在');
+    throw new Error(ts('k_1t1q87o'));
   }
 
   // 聚合根业务规则校验
   if (!agg.canDelete) {
-    throw new Error('已生效版本不可删除，请先作废');
+    throw new Error(ts('k_110vaoo'));
   }
 
   await versionRepo.softDelete(id);
@@ -486,10 +493,11 @@ export async function updateVersionItems(
   items: FormulaItem[],
   operatorId: number
 ): Promise<void> {
+  const ts = await getTranslations('Common');
   // 通过仓储获取版本
   const agg = await versionRepo.findById(id);
   if (!agg) {
-    throw new Error('版本不存在');
+    throw new Error(ts('k_1t1q87o'));
   }
 
   // 聚合根执行业务规则
@@ -536,12 +544,13 @@ export async function updateVersionItems(
 // ===== 版本对比 =====
 
 export async function compareVersions(leftId: number, rightId: number): Promise<CompareResult> {
+  const ts = await getTranslations('Common');
   // 通过仓储获取两个版本
   const leftAgg = await versionRepo.findByIdWithItems(leftId);
   const rightAgg = await versionRepo.findByIdWithItems(rightId);
 
   if (!leftAgg || !rightAgg) {
-    throw new Error('版本不存在');
+    throw new Error(ts('k_1t1q87o'));
   }
 
   // 使用领域服务计算差异
@@ -671,15 +680,16 @@ export async function previewCost(items: FormulaItem[]): Promise<{
  * 手动重算草稿版本成本（更新预览值）
  */
 export async function recalculateCost(versionId: number): Promise<void> {
+  const ts = await getTranslations('Common');
   // 通过仓储获取版本
   const agg = await versionRepo.findByIdWithItems(versionId);
   if (!agg) {
-    throw new Error('版本不存在');
+    throw new Error(ts('k_1t1q87o'));
   }
 
   // 聚合根业务规则校验
   if (!agg.isDraft) {
-    throw new Error('只有草稿版本可以重算成本');
+    throw new Error(ts('k_1ssn040'));
   }
 
   await transaction(async (conn) => {

@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 /**
  * DrizzleInboundOrderRepository
  *
@@ -335,13 +337,14 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
     data: InboundOrderContentUpdate
   ): Promise<{ id: number; orderNo: string }> {
     return transaction(async (conn) => {
+  const ts = await getTranslations('Common');
       const [rows] = (await conn.query(
         'SELECT id, order_no, status FROM inv_inbound_order WHERE id = ? AND deleted = 0',
         [id]
       )) as DbResult;
 
       if (!rows || rows.length === 0) {
-        throw new NotFoundError('入库单不存在');
+        throw new NotFoundError(ts('k_5pww03'));
       }
 
       const orderNo = rows[0].order_no;
@@ -400,7 +403,8 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
   async updateInspectionAndFinance(
     id: number,
     inspectionStatus: number,
-    _financePosted: boolean
+    _financePosted: boolean,
+    _conn?: unknown
   ): Promise<void> {
     // 使用 Drizzle 更新 qc_status
     await getDrizzleDb()

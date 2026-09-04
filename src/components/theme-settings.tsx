@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useSnowAdminTheme, NavigationMode } from '@/hooks/useSnowAdminTheme';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -35,6 +36,7 @@ const navModes: { value: NavigationMode; label: string; icon: React.ReactNode; d
 ];
 
 export function ThemeSettings() {
+  const ts = useTranslations('Common');
   const {
     navigationMode,
     sidebarDark,
@@ -52,23 +54,22 @@ export function ThemeSettings() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Palette className="w-5 h-5 text-primary" />
-          <CardTitle className="text-base">主题设置</CardTitle>
+          <CardTitle className="text-base">{ts('k_hkn47m')}</CardTitle>
         </div>
-        <CardDescription>自定义导航模式、侧边栏样式及视觉辅助功能</CardDescription>
+        <CardDescription>{ts('k_8jfsmx')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-3">
           <Label className="text-sm font-medium flex items-center gap-2">
             <LayoutDashboard className="w-4 h-4" />
-            导航模式
-          </Label>
+            {ts('k_f589uz')}</Label>
           <div className="grid grid-cols-3 gap-3">
             {navModes.map((mode) => (
               <button
                 key={mode.value}
                 onClick={() => setNavigationMode(mode.value)}
                 className={cn(
-                  'flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all hover:shadow-md',
+                  'flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition hover:shadow-md',
                   navigationMode === mode.value
                     ? 'border-primary bg-primary/5 shadow-sm'
                     : 'border-border hover:border-primary/50'
@@ -100,14 +101,14 @@ export function ThemeSettings() {
         <Separator />
 
         <div className="space-y-4">
-          <Label className="text-sm font-medium">功能开关</Label>
+          <Label className="text-sm font-medium">{ts('k_11c3ld4')}</Label>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Moon className="w-4 h-4 text-muted-foreground" />
               <div>
-                <div className="text-sm">侧边栏深色</div>
-                <div className="text-xs text-muted-foreground">侧边栏使用深色背景</div>
+                <div className="text-sm">{ts('k_1obdid')}</div>
+                <div className="text-xs text-muted-foreground">{ts('k_cxyb1n')}</div>
               </div>
             </div>
             <Switch checked={sidebarDark} onCheckedChange={setSidebarDark} />
@@ -117,8 +118,8 @@ export function ThemeSettings() {
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-muted-foreground" />
               <div>
-                <div className="text-sm">色弱模式</div>
-                <div className="text-xs text-muted-foreground">为色弱用户优化视觉对比度</div>
+                <div className="text-sm">{ts('k_1w0q5k')}</div>
+                <div className="text-xs text-muted-foreground">{ts('k_4u7snr')}</div>
               </div>
             </div>
             <Switch checked={colorWeak} onCheckedChange={setColorWeak} />
@@ -128,8 +129,8 @@ export function ThemeSettings() {
             <div className="flex items-center gap-2">
               <Palette className="w-4 h-4 text-muted-foreground" />
               <div>
-                <div className="text-sm">灰色模式</div>
-                <div className="text-xs text-muted-foreground">全站灰度滤镜</div>
+                <div className="text-sm">{ts('k_ygb1zb')}</div>
+                <div className="text-xs text-muted-foreground">{ts('k_1g1ry3c')}</div>
               </div>
             </div>
             <Switch checked={grayMode} onCheckedChange={setGrayMode} />
@@ -141,8 +142,7 @@ export function ThemeSettings() {
         <div className="flex justify-end">
           <Button variant="outline" size="sm" onClick={resetTheme}>
             <RotateCcw className="w-3 h-3 mr-1" />
-            恢复默认
-          </Button>
+            {ts('k_6fve4s')}</Button>
         </div>
       </CardContent>
     </Card>

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, queryOne, transaction, SqlValue } from '@/lib/db';
 import {
@@ -136,6 +139,8 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { action, batchNo, quantity, warehouseId, materialId, sourceType, sourceNo } = body;
 
@@ -159,7 +164,7 @@ export const POST = withPermission(
         [materialId]
       );
       if (!material) {
-        return commonErrors.notFound('物料不存在');
+        return commonErrors.notFound(ts('k_130k5ym'));
       }
 
       const warehouse = await queryOne<unknown>(
@@ -167,7 +172,7 @@ export const POST = withPermission(
         [warehouseId]
       );
       if (!warehouse) {
-        return commonErrors.notFound('仓库不存在');
+        return commonErrors.notFound(ts('k_mq160q'));
       }
 
       const batchNoNew = generateBatchNo('B');
@@ -185,7 +190,7 @@ export const POST = withPermission(
             warehouse.warehouse_name,
             quantity,
             quantity,
-            material.unit || '个',
+            material.unit || ts('k_d5a1x9'),
             material.purchase_price || 0,
           ]
         );
@@ -204,7 +209,7 @@ export const POST = withPermission(
           unitPrice: material.purchase_price || 0,
           totalAmount: quantity * (material.purchase_price || 0),
           referenceNo: sourceNo || transNo,
-          remark: '入库操作',
+          remark: ts('k_1cxpfn4'),
           createBy: null,
         });
 
@@ -219,7 +224,7 @@ export const POST = withPermission(
           operationQty: quantity,
           beforeQty: 0,
           afterQty: quantity,
-          unit: material.unit || '个',
+          unit: material.unit || ts('k_d5a1x9'),
           businessType: sourceType || 'manual',
           businessNo: sourceNo || transNo,
         });
@@ -228,7 +233,7 @@ export const POST = withPermission(
       });
 
       await logOperation({
-        title: '库存入库',
+        title: ts('k_1yr73pi'),
         oper_type: 'inventory',
         oper_method: 'POST',
         oper_url: '/api/inventory',
@@ -239,7 +244,7 @@ export const POST = withPermission(
           warehouseId,
           materialId,
         }),
-        oper_result: '入库成功',
+        oper_result: tc('inboundSuccess'),
         status: 1,
       });
 
@@ -252,7 +257,7 @@ export const POST = withPermission(
           warehouseId,
           materialId,
         },
-        '入库成功'
+        tc('inboundSuccess')
       );
     } else if (action === 'outbound') {
       const outboundValidation = validateRequestBody(body, ['quantity']);
@@ -265,7 +270,7 @@ export const POST = withPermission(
       }
 
       if (quantity <= 0) {
-        return errorResponse('出库数量必须大于0', 400, 400);
+        return errorResponse(ts('k_1rxflii'), 400, 400);
       }
 
       const transNo = generateTransNo('OUT');
@@ -288,18 +293,18 @@ export const POST = withPermission(
             );
 
             if (!batchRows || batchRows.length === 0) {
-              throw new InventoryError('库存批次不存在', 'notFound');
+              throw new InventoryError(ts('k_pig72j'), 'notFound');
             }
 
             const batch = batchRows[0];
 
             if (parseFloat(batch.available_qty) < quantity) {
-              throw new InventoryError('可用库存不足', 'insufficient');
+              throw new InventoryError(ts('k_1qlv7ud'), 'insufficient');
             }
 
             const [fifoBatches] = await conn.query(
               `SELECT id, batch_no FROM inv_inventory_batch
-             WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 'normal'
+             WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 1
              ORDER BY
                CASE
                  WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 30 THEN 0
@@ -322,7 +327,7 @@ export const POST = withPermission(
             );
 
             if (updateResult.affectedRows === 0) {
-              throw new InventoryError('库存已被修改，请重试', 'conflict');
+              throw new InventoryError(ts('k_xmno7v'), 'conflict');
             }
 
             await appendInventoryTransaction(conn, {
@@ -337,8 +342,8 @@ export const POST = withPermission(
               totalAmount: quantity * parseFloat(batch.unit_price || 0),
               referenceNo: sourceNo || transNo,
               remark: isFifoRecommended
-                ? '指定批次出库(FIFO推荐)'
-                : '指定批次出库(非FIFO推荐-手动覆盖)',
+                ? ts('k_it9jso')
+                : ts('k_1e9uyn2'),
               createBy: null,
             });
 
@@ -382,7 +387,7 @@ export const POST = withPermission(
           });
 
           await logOperation({
-            title: '库存出库-指定批次',
+            title: ts('k_19mih1z'),
             oper_type: 'inventory',
             oper_method: 'POST',
             oper_url: '/api/inventory',
@@ -393,8 +398,8 @@ export const POST = withPermission(
               fifoRecommended: result.isFifoRecommended,
             }),
             oper_result: result.isFifoRecommended
-              ? '指定批次出库成功(FIFO推荐批次)'
-              : '指定批次出库成功(非FIFO推荐批次-手动覆盖)',
+              ? ts('k_u0acd7')
+              : ts('k_10gqwx1'),
             status: 1,
           });
 
@@ -406,10 +411,10 @@ export const POST = withPermission(
               fifoRecommended: result.isFifoRecommended,
               warning: result.isFifoRecommended
                 ? undefined
-                : '当前出库批次不是FIFO推荐批次，存在过期物料风险',
+                : ts('k_1h8lbmd'),
               operatedAt: new Date().toISOString(),
             },
-            '出库成功'
+            tc('outboundSuccess')
           );
         } else {
           const fifoValidation = validateRequestBody(body, ['materialId', 'warehouseId']);
@@ -426,7 +431,7 @@ export const POST = withPermission(
             [materialId]
           );
           if (!material) {
-            return commonErrors.notFound('物料不存在');
+            return commonErrors.notFound(ts('k_130k5ym'));
           }
 
           const warehouse = await queryOne<unknown>(
@@ -434,7 +439,7 @@ export const POST = withPermission(
             [warehouseId]
           );
           if (!warehouse) {
-            return commonErrors.notFound('仓库不存在');
+            return commonErrors.notFound(ts('k_mq160q'));
           }
 
           const result = await transaction(async (conn) => {
@@ -470,7 +475,7 @@ export const POST = withPermission(
                 operationQty: detail.deducted_qty,
                 beforeQty: detail.available_qty_before || 0,
                 afterQty: (detail.available_qty_before || 0) - detail.deducted_qty,
-                unit: material.unit || '个',
+                unit: material.unit || ts('k_d5a1x9'),
                 businessType: sourceType || 'fifo',
                 businessNo: sourceNo || transNo,
               });
@@ -489,7 +494,7 @@ export const POST = withPermission(
                 unitPrice: parseFloat(detail.unit_cost) || 0,
                 totalAmount: parseFloat(detail.line_cost) || 0,
                 referenceNo: sourceNo || transNo,
-                remark: 'FIFO出库',
+                remark: ts('k_mw6d3g'),
                 createBy: null,
               });
             }
@@ -501,7 +506,7 @@ export const POST = withPermission(
           });
 
           await logOperation({
-            title: '库存出库-FIFO',
+            title: ts('k_1qxrh9q'),
             oper_type: 'inventory',
             oper_method: 'POST',
             oper_url: '/api/inventory',
@@ -533,7 +538,7 @@ export const POST = withPermission(
               totalCost: result.totalCost,
               operatedAt: new Date().toISOString(),
             },
-            'FIFO出库成功'
+            ts('k_4e9jf5')
           );
         }
       } catch (error) {
@@ -559,7 +564,7 @@ export const POST = withPermission(
           );
 
           if (!batchRows || batchRows.length === 0) {
-            throw new InventoryError('库存批次不存在', 'notFound');
+            throw new InventoryError(ts('k_pig72j'), 'notFound');
           }
 
           const batch = batchRows[0];
@@ -570,7 +575,7 @@ export const POST = withPermission(
           );
 
           if (!warehouseRows || warehouseRows.length === 0) {
-            throw new InventoryError('目标仓库不存在', 'notFound');
+            throw new InventoryError(ts('k_1by98e7'), 'notFound');
           }
 
           const targetWarehouse = warehouseRows[0];
@@ -583,7 +588,7 @@ export const POST = withPermission(
           );
 
           if (updateResult.affectedRows === 0) {
-            throw new InventoryError('库存已被修改，请重试', 'conflict');
+            throw new InventoryError(ts('k_xmno7v'), 'conflict');
           }
 
           await appendInventoryTransaction(conn, {
@@ -597,7 +602,7 @@ export const POST = withPermission(
             unitPrice: parseFloat(batch.unit_price) || 0,
             totalAmount: parseFloat(batch.quantity) * parseFloat(batch.unit_price || 0),
             referenceNo: sourceNo || transNo,
-            remark: '调拨操作',
+            remark: ts('k_1b33syn'),
             createBy: null,
           });
 
@@ -629,22 +634,22 @@ export const POST = withPermission(
         });
 
         await logOperation({
-          title: '库存调拨',
+          title: ts('k_1sok5cd'),
           oper_type: 'inventory',
           oper_method: 'POST',
           oper_url: '/api/inventory',
           oper_param: JSON.stringify({ action: 'transfer', batchNo, quantity, warehouseId }),
-          oper_result: '调拨成功',
+          oper_result: ts('k_1xbs50f'),
           status: 1,
         });
 
-        return successResponse(result, '调拨成功');
+        return successResponse(result, ts('k_1xbs50f'));
       } catch (error) {
         return handleInventoryError(error);
       }
     }
 
-    return commonErrors.badRequest('未知操作类型');
+    return commonErrors.badRequest(ts('k_7atmxj'));
   },
   { errorMessage: '库存操作失败' }
 );

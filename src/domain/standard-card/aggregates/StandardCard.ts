@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { StandardCardStatus } from '../value-objects/StandardCardStatus';
 import { StandardCardType, getTypePrefix } from '../value-objects/StandardCardType';
 import { ColorStandardItem } from '../entities/ColorStandardItem';
@@ -139,14 +141,15 @@ export class StandardCard {
   }
 
   private validateCreation(props: StandardCardProps): void {
+  const ts = t;
     if (!props.code && !props.id) {
-      throw new DomainError('标准卡编号不能为空');
+      throw new DomainError(ts('k_18xr15m'));
     }
     if (!props.name || props.name.trim() === '') {
-      throw new DomainError('标准卡名称不能为空');
+      throw new DomainError(ts('k_rxrl6g'));
     }
     if (!props.type) {
-      throw new DomainError('标准卡类型不能为空');
+      throw new DomainError(ts('k_16buppv'));
     }
   }
 
@@ -224,25 +227,28 @@ export class StandardCard {
   }
 
   submit(userId: number): void {
+  const ts = t;
     if (this._status !== StandardCardStatus.DRAFT) {
-      throw new DomainError('只有草稿状态的标准卡才能提交审核');
+      throw new DomainError(ts('k_pk85tq'));
     }
     this._status = StandardCardStatus.AUDITING;
-    this.addVersionLog('create', '提交审核', userId);
+    this.addVersionLog('create', ts('k_mek9i0'), userId);
   }
 
   approve(userId: number): void {
+  const ts = t;
     if (this._status !== StandardCardStatus.AUDITING) {
-      throw new DomainError('只有待审核状态的标准卡才能批准');
+      throw new DomainError(ts('k_1o9cu7e'));
     }
     this._status = StandardCardStatus.APPROVED;
     this._auditUser = userId;
-    this.addVersionLog('update', '技术主管审核通过', userId);
+    this.addVersionLog('update', ts('k_7gg7yq'), userId);
   }
 
   reject(userId: number, reason: string): void {
+  const ts = t;
     if (this._status !== StandardCardStatus.AUDITING) {
-      throw new DomainError('只有待审核状态的标准卡才能驳回');
+      throw new DomainError(ts('k_1awn7qw'));
     }
     this._status = StandardCardStatus.DRAFT;
     this._auditUser = undefined;
@@ -250,8 +256,9 @@ export class StandardCard {
   }
 
   confirm(userId: number): void {
+  const ts = t;
     if (this._status !== StandardCardStatus.APPROVED) {
-      throw new DomainError('只有已批准状态的标准卡才能确认');
+      throw new DomainError(ts('k_rbxtzs'));
     }
     this._status = StandardCardStatus.CONFIRMED;
     this._isCurrent = true;
@@ -261,12 +268,13 @@ export class StandardCard {
       this._expiryDate = new Date(this._effectiveDate);
       this._expiryDate.setFullYear(this._expiryDate.getFullYear() + 1);
     }
-    this.addVersionLog('update', '客户确认', userId);
+    this.addVersionLog('update', ts('k_1priyqs'), userId);
   }
 
   obsolete(userId: number, reason: string): void {
+  const ts = t;
     if (![StandardCardStatus.APPROVED, StandardCardStatus.CONFIRMED].includes(this._status)) {
-      throw new DomainError('已批准或已确认状态的标准卡才能作废');
+      throw new DomainError(ts('k_1thmwzu'));
     }
     this._status = StandardCardStatus.OBSOLETE;
     this._isObsolete = true;
@@ -278,8 +286,9 @@ export class StandardCard {
   }
 
   createNewVersion(newVersion: string, userId: number): StandardCard {
+  const ts = t;
     if (!this._isLocked) {
-      throw new DomainError('只有已确认的标准卡才能创建新版本');
+      throw new DomainError(ts('k_13nk7bh'));
     }
     const newCard = new StandardCard({
       ...this.toProps(),
@@ -351,8 +360,9 @@ export class StandardCard {
   }
 
   addAttachment(attachment: StandardCardAttachment): void {
+  const ts = t;
     if (this._isLocked) {
-      throw new DomainError('已确认的标准卡不能添加附件');
+      throw new DomainError(ts('k_w92ogs'));
     }
     this._attachments.push(attachment);
   }

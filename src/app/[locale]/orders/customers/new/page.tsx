@@ -24,6 +24,7 @@ import { ArrowLeft, Save, Building2, Upload, FileText, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 export default function NewCustomerPage() {
+  const ts = useTranslations('Orders');
   const t = useTranslations('Orders');
   const tc = useTranslations('Common');
 
@@ -66,13 +67,13 @@ export default function NewCustomerPage() {
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
-      alert('文件大小不能超过 10MB');
+      alert(ts('k_w6l8bi'));
       return;
     }
 
     const ext = file.name.split('.').pop()?.toLowerCase();
     if (ext !== 'pdf') {
-      alert('只支持 PDF 格式文件');
+      alert(ts('k_pcc2g5'));
       return;
     }
 
@@ -88,10 +89,10 @@ export default function NewCustomerPage() {
       if (result.success) {
         setLicenseFile({ url: result.data.url, name: result.data.originalName });
       } else {
-        alert(result.message || '上传失败');
+        alert(result.message || ts('k_du2mcl'));
       }
     } catch {
-      alert('上传失败，请重试');
+      alert(ts('k_1cs35ka'));
     } finally {
       setUploading(false);
     }
@@ -379,7 +380,7 @@ export default function NewCustomerPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('businessLicensePdf') || '营业执照PDF'}</Label>
+                <Label>{t('businessLicensePdf') || ts('k_kxmhnu')}</Label>
                 {licenseFile ? (
                   <div className="flex items-center gap-2 rounded-md border border-input bg-muted/30 px-3 py-2">
                     <FileText className="h-4 w-4 text-red-500 shrink-0" />
@@ -405,7 +406,7 @@ export default function NewCustomerPage() {
                   >
                     <Upload className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">
-                      {uploading ? '上传中...' : '点击上传 PDF 文件'}
+                      {uploading ? tc('toolsUploading') : ts('k_mdn34y')}
                     </span>
                     <input
                       type="file"

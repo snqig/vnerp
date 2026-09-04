@@ -59,6 +59,7 @@ const eslintConfig = defineConfig([
           'i18n/',
           'locales/',
           'messages/',
+          'api-error-i18n.ts', // 生成的 API 错误码→消息映射（i18n 规范来源，等同 messages/）
         ],
 
         // 忽略注释中的中文

@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface OutboundItemProps {
   id?: number;
   orderId?: number;
@@ -31,6 +33,7 @@ export class OutboundItem {
   public readonly remark: string;
 
   private constructor(props: OutboundItemProps) {
+  const ts = t;
     this.id = props.id;
     this.orderId = props.orderId;
     this.materialId = props.materialId;
@@ -40,18 +43,19 @@ export class OutboundItem {
     this.batchNo = props.batchNo || '';
     this.batchId = props.batchId;
     this.quantity = props.quantity;
-    this.unit = props.unit || '件';
+    this.unit = props.unit || ts('k_w0gthl');
     this.unitPrice = props.unitPrice || 0;
     this.warehouseLocation = props.warehouseLocation || '';
     this.remark = props.remark || '';
   }
 
   static create(props: OutboundItemProps): OutboundItem {
+  const ts = t;
     if (!props.materialId) {
-      throw new Error('物料ID不能为空');
+      throw new Error(ts('k_1f11b1g'));
     }
     if (!props.quantity || props.quantity <= 0) {
-      throw new Error('出库数量必须大于0');
+      throw new Error(ts('k_1rxflii'));
     }
     return new OutboundItem(props);
   }

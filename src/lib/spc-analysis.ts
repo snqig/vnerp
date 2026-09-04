@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import type { DbConnection, DbRow } from '@/types/db';
 import type { SqlValue } from '@/lib/db';
 
@@ -306,6 +308,7 @@ export async function handleInspectionFailure(
   inspectionId: number,
   operatorName: string
 ): Promise<void> {
+  const ts = await getTranslations('Common');
   const [inspectionRows] = await conn.query(
     `SELECT id, inspection_no, inspection_type, source_type, source_id, source_no,
             material_id, batch_no, inspection_qty, unqualified_qty, inspection_result,
@@ -342,7 +345,7 @@ export async function handleInspectionFailure(
        VALUES (?, ?, 'quality_alert', ?, ?, 0, NOW())`,
       [
         `品质异常预警 - ${inspection.inspection_no}`,
-        `检验单 ${inspection.inspection_no} 不合格，批次 ${inspection.batch_no || '未知'}，不合格数量 ${inspection.unqualified_qty || 0}，操作人 ${operatorName}`,
+        `检验单 ${inspection.inspection_no} 不合格，批次 ${inspection.batch_no || ts('k_1lpnuh4')}，不合格数量 ${inspection.unqualified_qty || 0}，操作人 ${operatorName}`,
         inspection.source_id,
         inspection.source_no || '',
       ]
@@ -365,10 +368,10 @@ export async function handleInspectionFailure(
       null,
       inspection.unqualified_qty || 0,
       inspection.inspection_type === 1
-        ? '来料不合格'
+        ? ts('k_1wy0p5y')
         : inspection.inspection_type === 2
-          ? '过程不合格'
-          : '成品不合格',
+          ? ts('k_b4g52i')
+          : ts('k_7xofip'),
       inspection.remark || `检验单 ${inspection.inspection_no} 检验不合格，由 ${operatorName} 确认`,
       inspection.inspection_type === 1 ? 4 : inspection.inspection_type === 2 ? 1 : 2,
       inspection.source_type || 'inspection',

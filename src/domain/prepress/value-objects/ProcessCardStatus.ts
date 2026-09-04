@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '@/domain/shared/DomainTypes';
 
 export enum ProcessCardStatus {
@@ -35,15 +37,16 @@ export function assertProcessCardTransition(from: ProcessCardStatus, to: Process
 }
 
 export function getProcessCardStatusLabel(status: ProcessCardStatus): string {
+  const ts = t;
   const labels: Record<ProcessCardStatus, string> = {
-    [ProcessCardStatus.DRAFT]: '草稿',
-    [ProcessCardStatus.SUBMITTED]: '已提交',
-    [ProcessCardStatus.APPROVED]: '已审核',
-    [ProcessCardStatus.IN_PROGRESS]: '生产中',
-    [ProcessCardStatus.COMPLETED]: '已完成',
-    [ProcessCardStatus.CANCELLED]: '已作废',
+    [ProcessCardStatus.DRAFT]: ts('k_oc54qp'),
+    [ProcessCardStatus.SUBMITTED]: ts('k_168pm1t'),
+    [ProcessCardStatus.APPROVED]: ts('k_7j2xv0'),
+    [ProcessCardStatus.IN_PROGRESS]: ts('k_1rcb0fm'),
+    [ProcessCardStatus.COMPLETED]: ts('k_19j4h'),
+    [ProcessCardStatus.CANCELLED]: ts('k_1o0kows'),
   };
-  return labels[status] ?? '未知';
+  return labels[status] ?? ts('k_1lpnuh4');
 }
 
 export enum BurdeningStatus {

@@ -117,12 +117,15 @@ const capabilityColor = (value: number): string => {
 };
 
 const capabilityLabel = (value: number): string => {
-  if (value >= 1.33) return '优秀';
-  if (value >= 1.0) return '可接受';
-  return '需改善';
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Quality');
+  if (value >= 1.33) return tc('excellent');
+  if (value >= 1.0) return ts('k_1whyb9e');
+  return ts('k_tecew2');
 };
 
 export default function SPCPage() {
+  const ts = useTranslations('Quality');
   // 翻译钩子
   const tc = useTranslations('Common');
   const locale = useLocale();
@@ -262,22 +265,19 @@ export default function SPCPage() {
   };
 
   return (
-    <MainLayout title="SPC 统计过程控制">
+    <MainLayout title={ts('k_evgxn6')}>
       <div className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="xbar-r">
               <Activity className="h-4 w-4 mr-1" />
-              Xbar-R 控制图
-            </TabsTrigger>
+              {ts('k_13r6uqy')}</TabsTrigger>
             <TabsTrigger value="pareto">
               <BarChart3 className="h-4 w-4 mr-1" />
-              帕累托分析
-            </TabsTrigger>
+              {ts('k_14damjl')}</TabsTrigger>
             <TabsTrigger value="p-chart">
               <PieChart className="h-4 w-4 mr-1" />
-              P控制图
-            </TabsTrigger>
+              {tc('pChartTitle')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="xbar-r">
@@ -286,8 +286,7 @@ export default function SPCPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="h-5 w-5" />
-                    Xbar-R 控制图参数
-                  </CardTitle>
+                    {ts('k_wgsa54')}</CardTitle>
                   <CardDescription>{tc('spcXbarRDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -296,7 +295,7 @@ export default function SPCPage() {
                       <Label>{tc('material')}</Label>
                       <Select value={xbarMaterialId} onValueChange={setXbarMaterialId}>
                         <SelectTrigger>
-                          <SelectValue placeholder="选择物料" />
+                          <SelectValue placeholder={ts('k_1s1m8ux')} />
                         </SelectTrigger>
                         <SelectContent>
                           {materials.map((m: Material) => (
@@ -314,9 +313,9 @@ export default function SPCPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="incoming">来料检验</SelectItem>
-                          <SelectItem value="process">过程检验</SelectItem>
-                          <SelectItem value="finished">成品检验</SelectItem>
+                          <SelectItem value="incoming">{ts('k_109mrrr')}</SelectItem>
+                          <SelectItem value="process">{ts('k_1q7pfzv')}</SelectItem>
+                          <SelectItem value="finished">{ts('k_nwgik6')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -366,8 +365,7 @@ export default function SPCPage() {
                         ) : (
                           <Activity className="h-4 w-4 mr-2" />
                         )}
-                        生成图表
-                      </Button>
+                        {ts('k_o3qij0')}</Button>
                     </div>
                   </div>
                 </CardContent>
@@ -453,8 +451,7 @@ export default function SPCPage() {
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
                             <AlertTriangle className="h-5 w-5" />
-                            异常点警告
-                          </CardTitle>
+                            {ts('k_1nfdpy2')}</CardTitle>
                           <CardDescription>
                             {tc('oocWarningPrefix')}
                             {xbarResult.out_of_control_points.length}
@@ -470,7 +467,7 @@ export default function SPCPage() {
                                   className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                                 >
                                   {tc('subgroupLabel')}
-                                  {p.subgroup_id} {p.type === 'x_bar' ? 'X均值' : '极差'}=
+                                  {p.subgroup_id} {p.type === 'x_bar' ? ts('k_ndjg9g') : ts('k_1a3sds6')}=
                                   {p.value.toFixed(4)}
                                 </Badge>
                               )
@@ -527,7 +524,7 @@ export default function SPCPage() {
                               <Line
                                 type="monotone"
                                 dataKey="x_bar"
-                                name="X均值"
+                                name={ts('k_ndjg9g')}
                                 stroke="hsl(220, 70%, 50%)"
                                 strokeWidth={2}
                                 dot={(props: Record<string, unknown>) => {
@@ -616,7 +613,7 @@ export default function SPCPage() {
                               <Line
                                 type="monotone"
                                 dataKey="range"
-                                name="极差R"
+                                name={ts('k_bdjdvg')}
                                 stroke="hsl(142, 70%, 40%)"
                                 strokeWidth={2}
                                 dot={(props: Record<string, unknown>) => {
@@ -670,8 +667,8 @@ export default function SPCPage() {
                                 <TableHead>{tc('subgroupCol')}</TableHead>
                                 <TableHead>{tc('time')}</TableHead>
                                 <TableHead>{tc('valuesCol')}</TableHead>
-                                <TableHead className="text-right">X均值</TableHead>
-                                <TableHead className="text-right">极差R</TableHead>
+                                <TableHead className="text-right">{ts('k_ndjg9g')}</TableHead>
+                                <TableHead className="text-right">{ts('k_bdjdvg')}</TableHead>
                                 <TableHead>{tc('status')}</TableHead>
                               </TableRow>
                             </TableHeader>
@@ -708,21 +705,18 @@ export default function SPCPage() {
                                     <TableCell>
                                       {isOocXbar && (
                                         <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 mr-1">
-                                          X异常
-                                        </Badge>
+                                          {ts('k_kh2dxh')}</Badge>
                                       )}
                                       {isOocRange && (
                                         <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                                          R异常
-                                        </Badge>
+                                          {ts('k_1swqj87')}</Badge>
                                       )}
                                       {!isOocXbar && !isOocRange && (
                                         <Badge
                                           variant="outline"
                                           className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                         >
-                                          正常
-                                        </Badge>
+                                          {ts('k_tt5vxa')}</Badge>
                                       )}
                                     </TableCell>
                                   </TableRow>
@@ -745,8 +739,7 @@ export default function SPCPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5" />
-                    帕累托分析参数
-                  </CardTitle>
+                    {ts('k_q7wmq3')}</CardTitle>
                   <CardDescription>{tc('paretoDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -775,10 +768,10 @@ export default function SPCPage() {
                       <Label>{tc('materialFilterLabel')}</Label>
                       <Select value={paretoMaterialId} onValueChange={setParetoMaterialId}>
                         <SelectTrigger>
-                          <SelectValue placeholder="全部物料" />
+                          <SelectValue placeholder={ts('k_1rbspan')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">全部物料</SelectItem>
+                          <SelectItem value="all">{ts('k_1rbspan')}</SelectItem>
                           {materials.map((m: Material) => (
                             <SelectItem key={m.id} value={String(m.id)}>
                               {m.material_code} - {m.material_name}
@@ -798,8 +791,7 @@ export default function SPCPage() {
                         ) : (
                           <BarChart3 className="h-4 w-4 mr-2" />
                         )}
-                        分析
-                      </Button>
+                        {ts('k_1dcyb7v')}</Button>
                     </div>
                   </div>
                 </CardContent>
@@ -849,7 +841,7 @@ export default function SPCPage() {
                                 domain={[0, 100]}
                                 tick={{ fontSize: 11 }}
                                 label={{
-                                  value: '累计%',
+                                  value: ts('k_1plb87s'),
                                   angle: 90,
                                   position: 'insideRight',
                                   fontSize: 12,
@@ -862,7 +854,7 @@ export default function SPCPage() {
                                   borderRadius: '8px',
                                 }}
                                 formatter={(value: number, name: string) => {
-                                  if (name === '累计百分比') return [`${value.toFixed(1)}%`, name];
+                                  if (name === ts('k_1a0kfrf')) return [`${value.toFixed(1)}%`, name];
                                   return [value, name];
                                 }}
                               />
@@ -882,7 +874,7 @@ export default function SPCPage() {
                               <Bar
                                 yAxisId="left"
                                 dataKey="count"
-                                name="不良数量"
+                                name={ts('k_1kd1xu8')}
                                 fill="hsl(220, 70%, 55%)"
                                 radius={[4, 4, 0, 0]}
                               />
@@ -890,7 +882,7 @@ export default function SPCPage() {
                                 yAxisId="right"
                                 type="monotone"
                                 dataKey="cumulative_percentage"
-                                name="累计百分比"
+                                name={ts('k_1a0kfrf')}
                                 stroke="hsl(38, 90%, 50%)"
                                 strokeWidth={2}
                                 dot={{ r: 4, fill: 'hsl(38, 90%, 50%)' }}
@@ -910,11 +902,11 @@ export default function SPCPage() {
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>不良类型</TableHead>
+                                <TableHead>{ts('k_o5rqlv')}</TableHead>
                                 <TableHead className="text-right">{tc('quantity')}</TableHead>
                                 <TableHead className="text-right">{tc('percentageCol')}</TableHead>
                                 <TableHead className="text-right">{tc('cumulativeCol')}</TableHead>
-                                <TableHead>分类</TableHead>
+                                <TableHead>{ts('k_1kbcp7q')}</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -938,16 +930,13 @@ export default function SPCPage() {
                                   <TableCell>
                                     {item.cumulative_percentage <= 80 ? (
                                       <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                                        A类(关键)
-                                      </Badge>
+                                        {ts('k_1dpavgt')}</Badge>
                                     ) : item.cumulative_percentage <= 95 ? (
                                       <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                                        B类(重要)
-                                      </Badge>
+                                        {ts('k_j0vjmz')}</Badge>
                                     ) : (
                                       <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                        C类(一般)
-                                      </Badge>
+                                        {ts('k_1lr5nkk')}</Badge>
                                     )}
                                   </TableCell>
                                 </TableRow>
@@ -969,8 +958,7 @@ export default function SPCPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PieChart className="h-5 w-5" />
-                    P控制图参数
-                  </CardTitle>
+                    {ts('k_xgepku')}</CardTitle>
                   <CardDescription>{tc('pChartDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -999,10 +987,10 @@ export default function SPCPage() {
                       <Label>{tc('materialFilterLabel')}</Label>
                       <Select value={pChartMaterialId} onValueChange={setPChartMaterialId}>
                         <SelectTrigger>
-                          <SelectValue placeholder="全部物料" />
+                          <SelectValue placeholder={ts('k_1rbspan')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">全部物料</SelectItem>
+                          <SelectItem value="all">{ts('k_1rbspan')}</SelectItem>
                           {materials.map((m: Material) => (
                             <SelectItem key={m.id} value={String(m.id)}>
                               {m.material_code} - {m.material_name}
@@ -1022,8 +1010,7 @@ export default function SPCPage() {
                         ) : (
                           <PieChart className="h-4 w-4 mr-2" />
                         )}
-                        生成
-                      </Button>
+                        {ts('k_1xe92u2')}</Button>
                     </div>
                   </div>
                 </CardContent>
@@ -1042,8 +1029,7 @@ export default function SPCPage() {
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
                             <AlertTriangle className="h-5 w-5" />
-                            异常点警告
-                          </CardTitle>
+                            {ts('k_1nfdpy2')}</CardTitle>
                           <CardDescription>
                             {tc('oocWarningPrefix')}
                             {pChartResult.out_of_control_points.length}
@@ -1097,7 +1083,7 @@ export default function SPCPage() {
                               <YAxis
                                 tick={{ fontSize: 11 }}
                                 label={{
-                                  value: '不良率(%)',
+                                  value: ts('k_lwxo24'),
                                   angle: -90,
                                   position: 'insideLeft',
                                   fontSize: 12,
@@ -1109,7 +1095,7 @@ export default function SPCPage() {
                                   border: '1px solid hsl(var(--border))',
                                   borderRadius: '8px',
                                 }}
-                                formatter={(value: number) => [`${value.toFixed(2)}%`, '不良率']}
+                                formatter={(value: number) => [`${value.toFixed(2)}%`, ts('k_zgw0d2')]}
                               />
                               <ReferenceLine
                                 y={pChartResult.limits.ucl * 100}
@@ -1132,7 +1118,7 @@ export default function SPCPage() {
                               <Line
                                 type="monotone"
                                 dataKey="defective_rate"
-                                name="不良率(%)"
+                                name={ts('k_lwxo24')}
                                 stroke="hsl(220, 70%, 50%)"
                                 strokeWidth={2}
                                 dot={(props: Record<string, unknown>) => {
@@ -1183,10 +1169,10 @@ export default function SPCPage() {
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>时段</TableHead>
+                                <TableHead>{ts('k_1x0iz04')}</TableHead>
                                 <TableHead className="text-right">{tc('inspectedCol')}</TableHead>
                                 <TableHead className="text-right">{tc('defectiveCol')}</TableHead>
-                                <TableHead className="text-right">不良率</TableHead>
+                                <TableHead className="text-right">{ts('k_zgw0d2')}</TableHead>
                                 <TableHead>{tc('status')}</TableHead>
                               </TableRow>
                             </TableHeader>
@@ -1215,15 +1201,13 @@ export default function SPCPage() {
                                       {isOoc ? (
                                         <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
                                           <AlertTriangle className="h-3 w-3 mr-1" />
-                                          异常
-                                        </Badge>
+                                          {ts('k_1uz4mvb')}</Badge>
                                       ) : (
                                         <Badge
                                           variant="outline"
                                           className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                         >
-                                          正常
-                                        </Badge>
+                                          {ts('k_tt5vxa')}</Badge>
                                       )}
                                     </TableCell>
                                   </TableRow>

@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { query, execute } from '@/lib/db';
 
 export interface FixResult {
@@ -65,6 +67,7 @@ export async function fixAttendanceEmpId(): Promise<FixResult> {
 }
 
 export async function fixInventoryBatchConsistency(): Promise<FixResult> {
+  const ts = await getTranslations('Common');
   try {
     const [rows]: Loose = await query(`
       SELECT i.material_id, i.warehouse_id, i.quantity AS inv_qty,
@@ -80,7 +83,7 @@ export async function fixInventoryBatchConsistency(): Promise<FixResult> {
       return {
         fixName: 'fixInventoryBatchConsistency',
         affectedRows: 0,
-        detail: '库存与批次余额一致，无需修复',
+        detail: ts('k_xq1ua5'),
       };
     }
 
@@ -214,7 +217,7 @@ export async function scanGhostData(): Promise<FixResult[]> {
   try {
     const [expiredNormal]: Loose = await query(`
       SELECT COUNT(*) as cnt FROM inv_inventory_batch
-      WHERE expire_date IS NOT NULL AND expire_date < CURDATE() AND status = 'normal' AND deleted = 0
+      WHERE expire_date IS NOT NULL AND expire_date < CURDATE() AND alert_level = 'normal' AND deleted = 0
     `);
     results.push({
       fixName: 'scanGhost_expired_normal_batch',
@@ -235,7 +238,7 @@ export async function scanGhostData(): Promise<FixResult[]> {
 export async function fixExpiredBatches(): Promise<FixResult> {
   try {
     const [res]: Loose = await execute(
-      `UPDATE inv_inventory_batch SET status = 'expired', update_time = NOW() WHERE expire_date IS NOT NULL AND expire_date < CURDATE() AND status = 'normal' AND deleted = 0`
+      `UPDATE inv_inventory_batch SET alert_level = 'expired', status = 0, update_time = NOW() WHERE expire_date IS NOT NULL AND expire_date < CURDATE() AND alert_level = 'normal' AND deleted = 0`
     );
     return {
       fixName: 'fixExpiredBatches',

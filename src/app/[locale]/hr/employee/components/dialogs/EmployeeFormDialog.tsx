@@ -51,6 +51,7 @@ export function EmployeeFormDialog({
   onRemovePhoto,
   onSave,
 }: EmployeeFormDialogProps) {
+  const ts = useTranslations('Common');
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
 
@@ -316,13 +317,13 @@ export function EmployeeFormDialog({
                 <SelectValue placeholder={tc('selectEducation')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="初中">{tc('juniorHigh')}</SelectItem>
-                <SelectItem value="中专">{tc('technical')}</SelectItem>
-                <SelectItem value="高中">{tc('highSchool')}</SelectItem>
-                <SelectItem value="大专">{tc('associate')}</SelectItem>
-                <SelectItem value="本科">{tc('bachelor')}</SelectItem>
-                <SelectItem value="硕士">{tc('master')}</SelectItem>
-                <SelectItem value="博士">{tc('doctor')}</SelectItem>
+                <SelectItem value={tc('juniorHigh')}>{tc('juniorHigh')}</SelectItem>
+                <SelectItem value={ts('k_1gg5i9d')}>{tc('technical')}</SelectItem>
+                <SelectItem value={tc('highSchool')}>{tc('highSchool')}</SelectItem>
+                <SelectItem value={ts('k_1lespjj')}>{tc('associate')}</SelectItem>
+                <SelectItem value={tc('bachelor')}>{tc('bachelor')}</SelectItem>
+                <SelectItem value={tc('master')}>{tc('master')}</SelectItem>
+                <SelectItem value={tc('doctor')}>{tc('doctor')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

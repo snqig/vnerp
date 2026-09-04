@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 import { IWorkOrderRepository } from '@/domain/production/repositories/IWorkOrderRepository';
 import { WorkOrder, WorkOrderProps } from '@/domain/production/aggregates/WorkOrder';
 import { WorkOrderStatusVO } from '@/domain/production/value-objects/WorkOrderStatus';
@@ -210,18 +213,21 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
         : undefined,
       remark: order.remark || '',
       createBy: order.create_by ?? undefined,
-      materialRequirements: (materials || []).map((m: WorkOrderMaterialRow) => ({
+      materialRequirements: (materials || []).map((m: WorkOrderMaterialRow) => {
+  const ts = t;
+  return  ({
         id: m.id,
         materialId: m.material_id,
         materialCode: m.material_code || '',
         materialName: m.material_name || '',
         specification: m.specification || '',
-        unit: m.unit || '件',
+        unit: m.unit || ts('k_w0gthl'),
         requiredQty: m.required_qty,
         issuedQty: m.issued_qty || 0,
         returnedQty: m.returned_qty || 0,
         warehouseId: m.warehouse_id || 1,
-      })),
+      });
+}),
       createTime:
         typeof order.create_time === 'string' ? order.create_time : order.create_time.toISOString(),
       updateTime: order.update_time

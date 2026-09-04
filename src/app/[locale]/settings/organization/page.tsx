@@ -93,6 +93,7 @@ interface Role {
 }
 
 export default function OrganizationPage() {
+  const ts = useTranslations('Common');
   // 翻译钩子
   const tc = useTranslations('Common');
 
@@ -193,21 +194,21 @@ export default function OrganizationPage() {
   const loadMockCompany = () => {
     setCompany({
       id: 1,
-      full_name: '越南达昌丝网印刷有限公司',
-      short_name: '达昌印刷',
+      full_name: ts('k_1pyz0ii'),
+      short_name: ts('k_af493q'),
       code: 'DCYS2024001',
-      legal_person: '张伟',
-      reg_address: '越南河内市工业区123号',
+      legal_person: ts('k_3vr19c'),
+      reg_address: ts('k_prcoeu'),
       contact_phone: '0123456789',
       email: 'info@dachang.com',
       tax_no: 'VN123456789',
-      bank_name: '越南工商银行',
+      bank_name: ts('k_llnw9r'),
       bank_account: '123456789012345',
       website: 'www.dachang.com',
       fax: '0123456780',
       postcode: '100000',
       description:
-        '越南达昌丝网印刷有限公司是一家专业从事丝网印刷的现代化企业，提供高品质印刷服务。',
+        ts('k_1oqiy23'),
     });
   };
 
@@ -224,7 +225,7 @@ export default function OrganizationPage() {
       if (result.success) {
         toast.success(tc('companySaved'));
       } else {
-        toast.error(result.message || '保存失败');
+        toast.error(result.message || ts('k_1q9u8le'));
       }
     } catch {
       toast.error(tc('saveFailed'));
@@ -272,82 +273,82 @@ export default function OrganizationPage() {
       {
         id: 1,
         dept_code: 'DEPT001',
-        dept_name: '管理部',
+        dept_name: ts('k_1f4z30i'),
         parent_id: 0,
-        leader_name: '张伟',
+        leader_name: ts('k_3vr19c'),
         sort_order: 1,
         status: 1,
-        description: '公司高层管理部门',
+        description: ts('k_184t2v4'),
       },
       {
         id: 2,
         dept_code: 'DEPT002',
-        dept_name: '业务部',
+        dept_name: ts('k_axb29w'),
         parent_id: 0,
-        leader_name: '李娜',
+        leader_name: ts('k_o5eojb'),
         sort_order: 2,
         status: 1,
-        description: '负责业务拓展和客户关系',
+        description: ts('k_1r91wmb'),
       },
       {
         id: 3,
         dept_code: 'DEPT003',
-        dept_name: '工程技术部',
+        dept_name: ts('k_boxyuc'),
         parent_id: 0,
-        leader_name: '王强',
+        leader_name: ts('k_nqtivk'),
         sort_order: 3,
         status: 1,
-        description: '负责技术研发和工程设计',
+        description: ts('k_ajc5hm'),
       },
       {
         id: 4,
         dept_code: 'DEPT004',
-        dept_name: '生产部',
+        dept_name: ts('k_18glq49'),
         parent_id: 0,
-        leader_name: '刘洋',
+        leader_name: ts('k_9nfhqc'),
         sort_order: 4,
         status: 1,
-        description: '负责产品生产和制造',
+        description: ts('k_16r4b4h'),
       },
       {
         id: 5,
         dept_code: 'DEPT005',
-        dept_name: '仓库管理部',
+        dept_name: ts('k_qe62zc'),
         parent_id: 0,
-        leader_name: '赵磊',
+        leader_name: ts('k_qkv38u'),
         sort_order: 5,
         status: 1,
-        description: '负责仓库和物料管理',
+        description: ts('k_o2ntke'),
       },
       {
         id: 6,
         dept_code: 'DEPT006',
-        dept_name: '采购部',
+        dept_name: ts('k_1rgc4zf'),
         parent_id: 0,
-        leader_name: '孙丽',
+        leader_name: ts('k_wrfy17'),
         sort_order: 6,
         status: 1,
-        description: '负责原材料和设备采购',
+        description: ts('k_158jngu'),
       },
       {
         id: 7,
         dept_code: 'DEPT007',
-        dept_name: '品质部',
+        dept_name: ts('k_11g5fpo'),
         parent_id: 0,
-        leader_name: '周杰',
+        leader_name: ts('k_1gmpisl'),
         sort_order: 7,
         status: 1,
-        description: '负责质量检查和品质控制',
+        description: ts('k_ry9su3'),
       },
       {
         id: 8,
         dept_code: 'DEPT008',
-        dept_name: '财务行政部',
+        dept_name: ts('k_1jqantr'),
         parent_id: 0,
-        leader_name: '吴芳',
+        leader_name: ts('k_vy0n74'),
         sort_order: 8,
         status: 1,
-        description: '负责财务管理和行政事务',
+        description: ts('k_pgejje'),
       },
     ]);
   };
@@ -362,7 +363,7 @@ export default function OrganizationPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success(deptEditing ? '部门更新成功' : '部门创建成功');
+        toast.success(deptEditing ? ts('k_1iy4ubo') : ts('k_1cw6qfp'));
         setDeptDialogOpen(false);
         fetchDepartments();
       } else {
@@ -385,7 +386,7 @@ export default function OrganizationPage() {
         toast.success(tc('deptDeleted'));
         fetchDepartments();
       } else {
-        toast.error(result.message || '删除失败');
+        toast.error(result.message || ts('k_1ijrr73'));
       }
     } catch {
       toast.error(tc('deleteFailed'));
@@ -431,9 +432,9 @@ export default function OrganizationPage() {
       {
         id: 1,
         code: 'SUPER_ADMIN',
-        name: '超级管理员',
+        name: ts('k_1fcdmqa'),
         role_type: 1,
-        description: '拥有系统全部权限',
+        description: ts('k_orh26e'),
         permissions: [],
         data_scope: 1,
         sort_order: 1,
@@ -442,9 +443,9 @@ export default function OrganizationPage() {
       {
         id: 2,
         code: 'BUSINESS_MANAGER',
-        name: '业务经理',
+        name: ts('k_ojn305'),
         role_type: 2,
-        description: '负责业务部门管理权限',
+        description: ts('k_e47ne6'),
         permissions: [],
         data_scope: 2,
         sort_order: 2,
@@ -453,9 +454,9 @@ export default function OrganizationPage() {
       {
         id: 3,
         code: 'SALES',
-        name: '业务员',
+        name: ts('k_15vw6tw'),
         role_type: 2,
-        description: '负责销售业务操作',
+        description: ts('k_1n6j229'),
         permissions: [],
         data_scope: 3,
         sort_order: 3,
@@ -464,9 +465,9 @@ export default function OrganizationPage() {
       {
         id: 4,
         code: 'ENGINEER',
-        name: '工程师',
+        name: ts('k_1tyjla3'),
         role_type: 2,
-        description: '负责技术研发工作',
+        description: ts('k_1wzfx3g'),
         permissions: [],
         data_scope: 2,
         sort_order: 4,
@@ -475,9 +476,9 @@ export default function OrganizationPage() {
       {
         id: 5,
         code: 'PRODUCTION_MANAGER',
-        name: '生产主管',
+        name: ts('k_d1s7gj'),
         role_type: 2,
-        description: '负责生产部门管理',
+        description: ts('k_oksfke'),
         permissions: [],
         data_scope: 2,
         sort_order: 5,
@@ -486,9 +487,9 @@ export default function OrganizationPage() {
       {
         id: 6,
         code: 'WAREHOUSE_MANAGER',
-        name: '仓库主管',
+        name: ts('k_1bngyff'),
         role_type: 2,
-        description: '负责仓库管理工作',
+        description: ts('k_1wz7ten'),
         permissions: [],
         data_scope: 2,
         sort_order: 6,
@@ -497,9 +498,9 @@ export default function OrganizationPage() {
       {
         id: 7,
         code: 'WAREHOUSE_KEEPER',
-        name: '仓管员',
+        name: ts('k_hdkgmr'),
         role_type: 2,
-        description: '负责仓库日常操作',
+        description: ts('k_z6ponl'),
         permissions: [],
         data_scope: 2,
         sort_order: 7,
@@ -508,9 +509,9 @@ export default function OrganizationPage() {
       {
         id: 8,
         code: 'PURCHASER',
-        name: '采购员',
+        name: ts('k_epyr6z'),
         role_type: 2,
-        description: '负责采购业务',
+        description: ts('k_g8bbzm'),
         permissions: [],
         data_scope: 3,
         sort_order: 8,
@@ -519,9 +520,9 @@ export default function OrganizationPage() {
       {
         id: 9,
         code: 'QC_INSPECTOR',
-        name: '品质检验员',
+        name: ts('k_l5ij28'),
         role_type: 2,
-        description: '负责品质检验工作',
+        description: ts('k_dnt03f'),
         permissions: [],
         data_scope: 3,
         sort_order: 9,
@@ -530,9 +531,9 @@ export default function OrganizationPage() {
       {
         id: 10,
         code: 'ACCOUNTANT',
-        name: '财务',
+        name: ts('k_8s57ik'),
         role_type: 2,
-        description: '负责财务相关工作',
+        description: ts('k_7n2gfq'),
         permissions: [],
         data_scope: 2,
         sort_order: 10,
@@ -575,7 +576,7 @@ export default function OrganizationPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success(roleEditing ? '角色更新成功' : '角色创建成功');
+        toast.success(roleEditing ? tc('roleUpdateSuccess') : tc('roleCreateSuccess'));
         setRoleDialogOpen(false);
         setCodeError('');
         fetchRoles();
@@ -599,7 +600,7 @@ export default function OrganizationPage() {
         toast.success(tc('roleDeleted'));
         fetchRoles();
       } else {
-        toast.error(result.message || '删除失败');
+        toast.error(result.message || ts('k_1ijrr73'));
       }
     } catch {
       toast.error(tc('deleteFailed'));
@@ -623,9 +624,9 @@ export default function OrganizationPage() {
     };
     const labels = {
       1: tc('enabled'),
-      0: '停用',
-      2: '试用期',
-      3: '离职',
+      0: ts('k_6q9o5l'),
+      2: ts('k_1ng2vzp'),
+      3: ts('k_1v4n1r6'),
     };
     return (
       <Badge className={styles[status as keyof typeof styles] || styles[1]}>
@@ -637,9 +638,9 @@ export default function OrganizationPage() {
   // 角色类型标签
   const getRoleTypeBadge = (type: number) => {
     return type === 1 ? (
-      <Badge className="bg-blue-100 text-blue-800">系统角色</Badge>
+      <Badge className="bg-blue-100 text-blue-800">{ts('k_1vu5jmn')}</Badge>
     ) : (
-      <Badge className="bg-purple-100 text-purple-800">自定义</Badge>
+      <Badge className="bg-purple-100 text-purple-800">{tc('customRoleType')}</Badge>
     );
   };
 
@@ -651,7 +652,7 @@ export default function OrganizationPage() {
   ];
 
   return (
-    <MainLayout title="组织设置">
+    <MainLayout title={ts('k_1gn6di0')}>
       <div className="space-y-6">
         {/* 顶部标签菜单 */}
         <Card>
@@ -765,7 +766,7 @@ export default function OrganizationPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>传真</Label>
+                        <Label>{ts('k_etcppc')}</Label>
                         <Input
                           value={company.fax || ''}
                           onChange={(e) => setCompany({ ...company, fax: e.target.value })}
@@ -794,7 +795,7 @@ export default function OrganizationPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>开户银行</Label>
+                          <Label>{ts('k_1n7h4j6')}</Label>
                           <Input
                             value={company.bank_name || ''}
                             onChange={(e) => setCompany({ ...company, bank_name: e.target.value })}
@@ -802,7 +803,7 @@ export default function OrganizationPage() {
                           />
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                          <Label>银行账号</Label>
+                          <Label>{ts('k_h1aaqs')}</Label>
                           <Input
                             value={company.bank_account || ''}
                             onChange={(e) =>
@@ -831,7 +832,7 @@ export default function OrganizationPage() {
                         className="bg-blue-600 hover:bg-blue-700"
                       >
                         <Save className="w-4 h-4 mr-2" />
-                        {companySaving ? '保存中...' : '保存企业信息'}
+                        {companySaving ? ts('k_rr6ulf') : ts('k_wwe98z')}
                       </Button>
                     </div>
                   </div>
@@ -851,8 +852,7 @@ export default function OrganizationPage() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="w-5 h-5" />
-                    部门管理
-                  </CardTitle>
+                    {ts('k_1eaudl2')}</CardTitle>
                   <CardDescription>{tc('deptManagementDesc')}</CardDescription>
                 </div>
                 <Button
@@ -864,8 +864,7 @@ export default function OrganizationPage() {
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  新增一级部门
-                </Button>
+                  {ts('k_15tciwq')}</Button>
               </CardHeader>
               <CardContent>
                 {deptLoading ? (
@@ -899,8 +898,7 @@ export default function OrganizationPage() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="w-5 h-5" />
-                    角色权限
-                  </CardTitle>
+                    {ts('k_qea0w6')}</CardTitle>
                   <CardDescription>{tc('rolePermissionDesc')}</CardDescription>
                 </div>
                 <Button
@@ -920,8 +918,7 @@ export default function OrganizationPage() {
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  新增角色
-                </Button>
+                  {tc('addRole')}</Button>
               </CardHeader>
               <CardContent>
                 {roleLoading ? (
@@ -933,8 +930,8 @@ export default function OrganizationPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-[60px]">{tc('serialNo')}</TableHead>
-                        <TableHead>角色编码</TableHead>
-                        <TableHead>角色名称</TableHead>
+                        <TableHead>{ts('k_2vd8u0')}</TableHead>
+                        <TableHead>{ts('k_1v3mprs')}</TableHead>
                         <TableHead>{tc('type')}</TableHead>
                         <TableHead>{tc('description')}</TableHead>
                         <TableHead>{tc('sortOrder')}</TableHead>
@@ -986,28 +983,26 @@ export default function OrganizationPage() {
       <Dialog open={deptDialogOpen} onOpenChange={setDeptDialogOpen}>
         <DialogContent className="max-w-lg" resizable>
           <DialogHeader>
-            <DialogTitle>{deptEditing ? '编辑部门' : '新增部门'}</DialogTitle>
+            <DialogTitle>{deptEditing ? ts('k_q2a9rs') : ts('k_1as41yz')}</DialogTitle>
             <DialogDescription>
-              {deptEditing ? '修改部门信息' : '填写部门基本信息，支持多级部门结构'}
+              {deptEditing ? ts('k_v0w66k') : ts('k_fms0ed')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
-                  部门编码
-                  <span className="text-red-500">*</span>
+                  {ts('k_1flqf8g')}<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={deptForm.dept_code || ''}
                   onChange={(e) => setDeptForm({ ...deptForm, dept_code: e.target.value })}
-                  placeholder="如: DEPT001"
+                  placeholder={ts('k_imvm2z')}
                 />
               </div>
               <div className="space-y-2">
                 <Label>
-                  部门名称
-                  <span className="text-red-500">*</span>
+                  {ts('k_1dwuqb4')}<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={deptForm.dept_name || ''}
@@ -1043,18 +1038,18 @@ export default function OrganizationPage() {
                 <Input
                   value={deptForm.leader_name || ''}
                   onChange={(e) => setDeptForm({ ...deptForm, leader_name: e.target.value })}
-                  placeholder="请输入负责人姓名"
+                  placeholder={ts('k_1glfj1a')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>排序号</Label>
+                <Label>{ts('k_1wnrlkr')}</Label>
                 <Input
                   type="number"
                   value={deptForm.sort_order || 0}
                   onChange={(e) =>
                     setDeptForm({ ...deptForm, sort_order: parseInt(e.target.value) || 0 })
                   }
-                  placeholder="数字越小越靠前"
+                  placeholder={ts('k_1olh8rw')}
                 />
               </div>
             </div>
@@ -1069,12 +1064,12 @@ export default function OrganizationPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">{tc('enable')}</SelectItem>
-                  <SelectItem value="0">停用</SelectItem>
+                  <SelectItem value="0">{ts('k_6q9o5l')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>部门描述</Label>
+              <Label>{ts('k_aqgoaq')}</Label>
               <Textarea
                 value={deptForm.description || ''}
                 onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })}
@@ -1085,11 +1080,9 @@ export default function OrganizationPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeptDialogOpen(false)}>
-              取消
-            </Button>
+              {tc('cancel')}</Button>
             <Button onClick={saveDepartment} className="bg-blue-600 hover:bg-blue-700">
-              保存
-            </Button>
+              {ts('k_1c3mapc')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1098,16 +1091,15 @@ export default function OrganizationPage() {
       <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{roleEditing ? '编辑角色' : '新增角色'}</DialogTitle>
+            <DialogTitle>{roleEditing ? tc('editRole') : tc('addRole')}</DialogTitle>
             <DialogDescription>
-              {roleEditing ? '修改角色信息' : '填写角色基本信息'}
+              {roleEditing ? ts('k_1ll0djk') : ts('k_ouf7in')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>
-                角色编码
-                <span className="text-red-500">*</span>
+                {ts('k_2vd8u0')}<span className="text-red-500">*</span>
               </Label>
               <div className="flex gap-2">
                 <Input
@@ -1136,16 +1128,14 @@ export default function OrganizationPage() {
                       setCodeError('');
                     }}
                   >
-                    自动生成
-                  </Button>
+                    {ts('k_3q0eu8')}</Button>
                 )}
               </div>
               {codeError && <p className="text-sm text-red-500">{codeError}</p>}
             </div>
             <div className="space-y-2">
               <Label>
-                角色名称
-                <span className="text-red-500">*</span>
+                {ts('k_1v3mprs')}<span className="text-red-500">*</span>
               </Label>
               <Input
                 value={roleForm.name || ''}
@@ -1163,7 +1153,7 @@ export default function OrganizationPage() {
                   <SelectValue placeholder={tc('selectRoleType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">系统角色</SelectItem>
+                  <SelectItem value="1">{ts('k_1vu5jmn')}</SelectItem>
                   <SelectItem value="2">{tc('customRoleType')}</SelectItem>
                 </SelectContent>
               </Select>
@@ -1178,14 +1168,14 @@ export default function OrganizationPage() {
                   <SelectValue placeholder={tc('selectDataScope')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">全部数据</SelectItem>
-                  <SelectItem value="2">本部门数据</SelectItem>
+                  <SelectItem value="1">{ts('k_1qqskvf')}</SelectItem>
+                  <SelectItem value="2">{ts('k_1gyixz9')}</SelectItem>
                   <SelectItem value="3">{tc('selfDataScope')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>排序号</Label>
+              <Label>{ts('k_1wnrlkr')}</Label>
               <Input
                 type="number"
                 value={roleForm.sort_order || 0}
@@ -1206,7 +1196,7 @@ export default function OrganizationPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">{tc('enable')}</SelectItem>
-                  <SelectItem value="0">停用</SelectItem>
+                  <SelectItem value="0">{ts('k_6q9o5l')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1222,8 +1212,7 @@ export default function OrganizationPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRoleDialogOpen(false)} type="button">
-              取消
-            </Button>
+              {tc('cancel')}</Button>
             <Button
               onClick={(e) => {
                 e.preventDefault();
@@ -1233,8 +1222,7 @@ export default function OrganizationPage() {
               className="bg-blue-600 hover:bg-blue-700"
               type="button"
             >
-              保存
-            </Button>
+              {ts('k_1c3mapc')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

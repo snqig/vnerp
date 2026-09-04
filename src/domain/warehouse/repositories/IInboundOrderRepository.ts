@@ -1,4 +1,5 @@
 import { InboundOrder } from '@/domain/warehouse/aggregates/InboundOrder';
+import type { DbConnection } from '@/types/db';
 
 export interface Pagination {
   page: number;
@@ -58,7 +59,8 @@ export interface IInboundOrderRepository {
   updateInspectionAndFinance(
     id: number,
     inspectionStatus: number,
-    financePosted: boolean
+    financePosted: boolean,
+    conn?: DbConnection
   ): Promise<void>;
   softDelete(id: number): Promise<void>;
 }

@@ -31,7 +31,43 @@ export class FinanceVoucherHandler implements EventHandler<FinanceEvent> {
       remark = `生产工单 ${inboundNo} 完工`;
     }
 
-    if (totalAmount <= 0 || !inboundNo) return;
+    if (!inboundNo) return;
+
+    if (event.eventType === 'workorder.completed') {
+      const payload = (event as WorkOrderCompletedEvent).payload;
+      const [workOrderItems] = (await conn.execute(
+        'SELECT SUM(total_price) as total_cost FROM prod_work_order_item WHERE work_order_id = ?',
+        [payload.workOrderId]
+      )) as DbResult;
+      totalAmount = Number((workOrderItems[0] as any)?.total_cost || 0);
+    }
+
+    if (totalAmount <= 0) {
+      secureLog('info', 'Skip finance voucher for zero amount', {
+        inboundNo,
+        sourceType,
+        totalAmount,
+      });
+      return;
+    }
+
+    if (event.eventType === 'workorder.completed') {
+      const payload = (event as WorkOrderCompletedEvent).payload;
+      const [workOrderItems] = (await conn.execute(
+        'SELECT SUM(total_price) as total_cost FROM prod_work_order_item WHERE work_order_id = ?',
+        [payload.workOrderId]
+      )) as DbResult;
+      totalAmount = Number((workOrderItems[0] as any)?.total_cost || 0);
+    }
+
+    if (totalAmount <= 0) {
+      secureLog('info', 'Skip finance voucher for zero amount', {
+        inboundNo,
+        sourceType,
+        totalAmount,
+      });
+      return;
+    }
 
     let created = false;
     await transaction(async (conn) => {

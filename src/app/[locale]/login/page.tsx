@@ -133,7 +133,7 @@ const EyeBall = ({
   return (
     <div
       ref={eyeRef}
-      className="rounded-full flex items-center justify-center transition-all duration-150"
+      className="rounded-full flex items-center justify-center transition duration-150"
       style={{
         width: `${size}px`,
         height: isBlinking ? '2px' : `${size}px`,
@@ -158,6 +158,7 @@ const EyeBall = ({
 };
 
 export default function LoginPage() {
+  const ts = useTranslations('Common');
   const router = useRouter();
   const { login, isAuthenticated, isLoading } = useAuth();
   const { companyName } = useCompanyName();
@@ -365,7 +366,7 @@ export default function LoginPage() {
         }
         router.replace('/dashboard');
       } else {
-        toast.error(result.message || '修改失败');
+        toast.error(result.message || ts('k_a7qley'));
       }
     } catch {
       toast.error(t('changePassword') + ' - ' + tc('error'));
@@ -397,7 +398,7 @@ export default function LoginPage() {
           <div className="relative" style={{ width: '550px', height: '400px' }}>
             <div
               ref={purpleRef}
-              className="absolute bottom-0 transition-all duration-700 ease-in-out"
+              className="absolute bottom-0 transition duration-700 ease-in-out"
               style={{
                 left: '70px',
                 width: '180px',
@@ -416,7 +417,7 @@ export default function LoginPage() {
               }}
             >
               <div
-                className="absolute flex gap-8 transition-all duration-700 ease-in-out"
+                className="absolute flex gap-8 transition duration-700 ease-in-out"
                 style={{
                   left:
                     loginForm.password.length > 0 && showPassword
@@ -489,7 +490,7 @@ export default function LoginPage() {
 
             <div
               ref={blackRef}
-              className="absolute bottom-0 transition-all duration-700 ease-in-out"
+              className="absolute bottom-0 transition duration-700 ease-in-out"
               style={{
                 left: '240px',
                 width: '120px',
@@ -509,7 +510,7 @@ export default function LoginPage() {
               }}
             >
               <div
-                className="absolute flex gap-6 transition-all duration-700 ease-in-out"
+                className="absolute flex gap-6 transition duration-700 ease-in-out"
                 style={{
                   left:
                     loginForm.password.length > 0 && showPassword
@@ -574,7 +575,7 @@ export default function LoginPage() {
 
             <div
               ref={orangeRef}
-              className="absolute bottom-0 transition-all duration-700 ease-in-out"
+              className="absolute bottom-0 transition duration-700 ease-in-out"
               style={{
                 left: '0px',
                 width: '240px',
@@ -590,7 +591,7 @@ export default function LoginPage() {
               }}
             >
               <div
-                className="absolute flex gap-8 transition-all duration-200 ease-out"
+                className="absolute flex gap-8 transition duration-200 ease-out"
                 style={{
                   left:
                     loginForm.password.length > 0 && showPassword
@@ -621,7 +622,7 @@ export default function LoginPage() {
 
             <div
               ref={yellowRef}
-              className="absolute bottom-0 transition-all duration-700 ease-in-out"
+              className="absolute bottom-0 transition duration-700 ease-in-out"
               style={{
                 left: '310px',
                 width: '140px',
@@ -637,7 +638,7 @@ export default function LoginPage() {
               }}
             >
               <div
-                className="absolute flex gap-6 transition-all duration-200 ease-out"
+                className="absolute flex gap-6 transition duration-200 ease-out"
                 style={{
                   left:
                     loginForm.password.length > 0 && showPassword
@@ -665,7 +666,7 @@ export default function LoginPage() {
                 />
               </div>
               <div
-                className="absolute w-20 h-[4px] bg-[#2D2D2D] rounded-full transition-all duration-200 ease-out"
+                className="absolute w-20 h-[4px] bg-[#2D2D2D] rounded-full transition duration-200 ease-out"
                 style={{
                   left:
                     loginForm.password.length > 0 && showPassword

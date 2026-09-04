@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { escapeId } from 'mysql2';
 import { query } from '@/lib/db';
@@ -38,6 +41,7 @@ interface RuleViolation {
 const ALL_TYPES: CategoryType[] = ['material', 'warehouse'];
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const categoryType = searchParams.get('type') || 'all';
 
@@ -97,7 +101,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         table: meta.table,
         field: 'code_pattern',
         current_value: rules.codePattern,
-        expected_pattern: '合法正则表达式',
+        expected_pattern: ts('k_r5uw0d'),
         record_id: 0,
         record_name: '',
         severity: 'error',
@@ -163,12 +167,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
           violations.push({
             table: meta.table,
             field: 'parent_id',
-            current_value: '循环引用',
-            expected_pattern: '无循环引用',
+            current_value: ts('k_fvy3k3'),
+            expected_pattern: ts('k_z9yhol'),
             record_id: Number(row.id),
             record_name: row.name,
             severity: 'error',
-            message: `分类存在循环引用`,
+            message: ts('k_3uvmos'),
           });
         } else if (depth > rules.maxDepth) {
           violations.push({

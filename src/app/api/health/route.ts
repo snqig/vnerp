@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 
@@ -6,6 +9,7 @@ import { query } from '@/lib/db';
  * 无需认证，用于负载均衡器和监控探针
  */
 export async function GET(_request: NextRequest) {
+  const ts = await getTranslations('Common');
   const startTime = Date.now();
   const checks: Record<string, { status: string; latency?: number; message?: string }> = {};
 
@@ -20,7 +24,7 @@ export async function GET(_request: NextRequest) {
   } catch {
     checks.database = {
       status: 'unhealthy',
-      message: '数据库连接失败',
+      message: ts('k_144v4zn'),
     };
   }
 

@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '../../shared/DomainTypes';
 
 export type PurchaseStatus =
@@ -139,14 +141,15 @@ export class PurchaseOrderStatus {
   }
 
   label(): string {
+  const ts = t;
     const labels: Record<PurchaseStatus, string> = {
-      draft: '草稿',
-      submitted: '已提交',
-      approved: '已审核',
-      partially_received: '部分入库',
-      completed: '已完成',
-      closed: '已关闭',
-      voided: '已作废',
+      draft: ts('k_oc54qp'),
+      submitted: ts('k_168pm1t'),
+      approved: ts('k_7j2xv0'),
+      partially_received: ts('k_lrszo3'),
+      completed: ts('k_19j4h'),
+      closed: ts('k_q0bjhp'),
+      voided: ts('k_1o0kows'),
     };
     return labels[this.value];
   }

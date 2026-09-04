@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import {
   successResponse,
@@ -79,6 +82,7 @@ export const GET = withPermission(
 // 创建批次/序列号记录
 export const POST = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, [
       'material_id',
@@ -127,7 +131,7 @@ export const POST = withPermission(
         [newQty, newCostPrice, existing[0].id]
       );
 
-      return successResponse({ id: existing[0].id }, '批次数量已更新');
+      return successResponse({ id: existing[0].id }, ts('k_zrvck8'));
     }
 
     // 创建新批次
@@ -154,7 +158,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId }, '批次创建成功');
+    return successResponse({ id: result.insertId }, ts('k_16hykez'));
   },
   { errorMessage: '操作失败' }
 );
@@ -162,11 +166,12 @@ export const POST = withPermission(
 // 更新批次信息
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action } = body;
 
     if (!id) {
-      return errorResponse('批次ID不能为空', 400, 400);
+      return errorResponse(ts('k_zhm4u4'), 400, 400);
     }
 
     if (action === 'freeze') {
@@ -175,21 +180,21 @@ export const PUT = withPermission(
         'frozen',
         id,
       ]);
-      return successResponse(null, '批次已冻结');
+      return successResponse(null, ts('k_5j746d'));
     }
 
     if (action === 'unfreeze') {
       // 解冻批次
       const batch = await query('SELECT quantity FROM inv_inventory_batch WHERE id = ?', [id]);
       if (batch.length === 0) {
-        return errorResponse('批次不存在', 404, 404);
+        return errorResponse(ts('k_dlysae'), 404, 404);
       }
       await execute('UPDATE inv_inventory_batch SET available_qty = ?, status = ? WHERE id = ?', [
         batch[0].quantity,
         'active',
         id,
       ]);
-      return successResponse(null, '批次已解冻');
+      return successResponse(null, ts('k_c6u1kl'));
     }
 
     // 通用更新
@@ -211,7 +216,7 @@ export const PUT = withPermission(
     }
 
     if (updates.length === 0) {
-      return errorResponse('没有需要更新的字段', 400, 400);
+      return errorResponse(ts('k_1kyikfw'), 400, 400);
     }
 
     updates.push('update_time = NOW()');
@@ -219,7 +224,7 @@ export const PUT = withPermission(
 
     await execute(`UPDATE inv_inventory_batch SET ${updates.join(', ')} WHERE id = ?`, params);
 
-    return successResponse(null, '批次信息更新成功');
+    return successResponse(null, ts('k_1l97ahe'));
   },
   { errorMessage: '操作失败' }
 );

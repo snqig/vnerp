@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 /**
  * DrizzleSalesOrderRepository
  *
@@ -406,7 +409,9 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
       createBy: order.createBy ?? undefined,
       auditBy: undefined,
       auditTime: undefined,
-      lines: details.map((d, index) => ({
+      lines: details.map((d, index) => {
+  const ts = t;
+  return  ({
         id: d.id,
         orderId: d.orderId,
         lineNo: index + 1,
@@ -414,13 +419,14 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
         materialCode: '',
         materialName: d.materialName ?? '',
         specification: '',
-        unit: d.unit ?? '件',
+        unit: d.unit ?? ts('k_w0gthl'),
         orderQty: Number(d.quantity ?? 0),
         shippedQty: Number(d.deliveredQty ?? 0),
         unitPrice: Number(d.unitPrice ?? 0),
         amount: Number(d.amount ?? 0),
         remark: d.remark ?? undefined,
-      })),
+      });
+}),
       createTime: order.createTime ? String(order.createTime) : undefined,
       updateTime: order.updateTime ? String(order.updateTime) : undefined,
     };

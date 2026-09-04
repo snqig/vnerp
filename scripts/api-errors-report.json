@@ -1,0 +1,3911 @@
+{
+  "generatedAt": "2026-08-31T05:55:05.943Z",
+  "apiFileCount": 221,
+  "totalHard": 1230,
+  "totalErr": 614,
+  "totalCfg": 616,
+  "uniqueErrMsg": 408,
+  "perFile": [
+    {
+      "file": "src/app/api/settings/system/route.ts",
+      "total": 146,
+      "err": 14,
+      "cfg": 187
+    },
+    {
+      "file": "src/app/api/dcprint/process-cards/route.ts",
+      "total": 13,
+      "err": 12,
+      "cfg": 5
+    },
+    {
+      "file": "src/app/api/quality/unqualified/route.ts",
+      "total": 10,
+      "err": 12,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/standard-cards/approve/route.ts",
+      "total": 16,
+      "err": 11,
+      "cfg": 10
+    },
+    {
+      "file": "src/app/api/material-labels/route.ts",
+      "total": 10,
+      "err": 10,
+      "cfg": 4
+    },
+    {
+      "file": "src/app/api/system/dict/route.ts",
+      "total": 5,
+      "err": 10,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/auth/register/route.ts",
+      "total": 10,
+      "err": 9,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/orders/bom/expand/route.ts",
+      "total": 7,
+      "err": 9,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/orders/route.ts",
+      "total": 8,
+      "err": 9,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/freeze/route.ts",
+      "total": 8,
+      "err": 9,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/material-lifecycle/route.ts",
+      "total": 9,
+      "err": 8,
+      "cfg": 3
+    },
+    {
+      "file": "src/app/api/warehouse/inbound/cutting/route.ts",
+      "total": 9,
+      "err": 8,
+      "cfg": 6
+    },
+    {
+      "file": "src/app/api/auth/change-password/route.ts",
+      "total": 7,
+      "err": 7,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/equipment/maintenance/route.ts",
+      "total": 6,
+      "err": 7,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/hr/salary/route.ts",
+      "total": 8,
+      "err": 7,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/orders/bom/route.ts",
+      "total": 6,
+      "err": 7,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/organization/crud/route.ts",
+      "total": 4,
+      "err": 7,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/products/categories/route.ts",
+      "total": 6,
+      "err": 7,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/alert-push/route.ts",
+      "total": 16,
+      "err": 7,
+      "cfg": 9
+    },
+    {
+      "file": "src/app/api/equipment/plan/route.ts",
+      "total": 5,
+      "err": 6,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/equipment/route.ts",
+      "total": 5,
+      "err": 6,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/material-returns/route.ts",
+      "total": 9,
+      "err": 6,
+      "cfg": 3
+    },
+    {
+      "file": "src/app/api/orders/bom/materials/route.ts",
+      "total": 5,
+      "err": 6,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/orders/sales/route.ts",
+      "total": 9,
+      "err": 6,
+      "cfg": 3
+    },
+    {
+      "file": "src/app/api/system/config/route.ts",
+      "total": 80,
+      "err": 6,
+      "cfg": 76
+    },
+    {
+      "file": "src/app/api/warehouse/production-inbound/route.ts",
+      "total": 6,
+      "err": 6,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/base-data/material-category/route.ts",
+      "total": 16,
+      "err": 5,
+      "cfg": 12
+    },
+    {
+      "file": "src/app/api/business/contract-review/route.ts",
+      "total": 4,
+      "err": 5,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/ink-formula/route.ts",
+      "total": 5,
+      "err": 5,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/init/warehouse-category-seed/route.ts",
+      "total": 9,
+      "err": 5,
+      "cfg": 6
+    },
+    {
+      "file": "src/app/api/linkage/validate/route.ts",
+      "total": 4,
+      "err": 5,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/material-requisitions/route.ts",
+      "total": 8,
+      "err": 5,
+      "cfg": 3
+    },
+    {
+      "file": "src/app/api/production/material-issue/route.ts",
+      "total": 5,
+      "err": 5,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/purchase/orders/route.ts",
+      "total": 6,
+      "err": 5,
+      "cfg": 2
+    },
+    {
+      "file": "src/app/api/qrcode/route.ts",
+      "total": 5,
+      "err": 5,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/quality/complaint/route.ts",
+      "total": 4,
+      "err": 5,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/system/profile/route.ts",
+      "total": 5,
+      "err": 5,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/warehouse/sales-outbound/route.ts",
+      "total": 5,
+      "err": 5,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/transfer/route.ts",
+      "total": 14,
+      "err": 5,
+      "cfg": 9
+    },
+    {
+      "file": "src/app/api/auth/refresh/route.ts",
+      "total": 5,
+      "err": 4,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/dcprint/formula/color/route.ts",
+      "total": 4,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/ink-surplus/route.ts",
+      "total": 10,
+      "err": 4,
+      "cfg": 7
+    },
+    {
+      "file": "src/app/api/dcprint/trace/route.ts",
+      "total": 4,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/engineering/sample-to-mass/route.ts",
+      "total": 4,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/hr/attendance/route.ts",
+      "total": 4,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/hr/salary/calculate/route.ts",
+      "total": 6,
+      "err": 4,
+      "cfg": 2
+    },
+    {
+      "file": "src/app/api/organization/department/route.ts",
+      "total": 3,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/outsource/issue/route.ts",
+      "total": 4,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/outsource/receive/route.ts",
+      "total": 4,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/outsource/settlement/route.ts",
+      "total": 4,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/production/schedule/route.ts",
+      "total": 3,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/products/route.ts",
+      "total": 3,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/purchase/request/route.ts",
+      "total": 4,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/purchase/suppliers/route.ts",
+      "total": 3,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/quality/lab-test/route.ts",
+      "total": 3,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/quality/sgs/route.ts",
+      "total": 3,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/quality/supplier-audit/route.ts",
+      "total": 3,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/sample/orders/linkage/route.ts",
+      "total": 7,
+      "err": 4,
+      "cfg": 5
+    },
+    {
+      "file": "src/app/api/screen-plates/route.ts",
+      "total": 3,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/settings/change-approval/route.ts",
+      "total": 8,
+      "err": 4,
+      "cfg": 4
+    },
+    {
+      "file": "src/app/api/standard-card/action/route.ts",
+      "total": 9,
+      "err": 4,
+      "cfg": 5
+    },
+    {
+      "file": "src/app/api/system/exchange-rate/route.ts",
+      "total": 4,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/system/profile/password/route.ts",
+      "total": 5,
+      "err": 4,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/system/scheduler/route.ts",
+      "total": 10,
+      "err": 4,
+      "cfg": 6
+    },
+    {
+      "file": "src/app/api/system/workflow/route.ts",
+      "total": 4,
+      "err": 4,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/warehouse/inbound/from-po/route.ts",
+      "total": 4,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/workflow/process/route.ts",
+      "total": 4,
+      "err": 4,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/auth/login/route.ts",
+      "total": 2,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/crm/analysis/route.ts",
+      "total": 2,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/crm/follow/route.ts",
+      "total": 2,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/formula/version/route.ts",
+      "total": 4,
+      "err": 3,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/dcprint/labels/route.ts",
+      "total": 2,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/engineering/sop/route.ts",
+      "total": 2,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/finance/invoice/route.ts",
+      "total": 8,
+      "err": 3,
+      "cfg": 5
+    },
+    {
+      "file": "src/app/api/hr/quality-sync/defect-rate/route.ts",
+      "total": 3,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/hr/schedules/route.ts",
+      "total": 3,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/init/die-template-seed/route.ts",
+      "total": 3,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/init/menus/route.ts",
+      "total": 10,
+      "err": 3,
+      "cfg": 7
+    },
+    {
+      "file": "src/app/api/init/quality-final-seed/route.ts",
+      "total": 5,
+      "err": 3,
+      "cfg": 2
+    },
+    {
+      "file": "src/app/api/ink-usages/route.ts",
+      "total": 3,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/outsource/order/route.ts",
+      "total": 3,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/plm/eco/route.ts",
+      "total": 2,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/plm/lifecycle/route.ts",
+      "total": 2,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/prepress/die-usage/route.ts",
+      "total": 4,
+      "err": 3,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/qrcode/print/route.ts",
+      "total": 2,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/quality/process/route.ts",
+      "total": 3,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/sample/feedback/route.ts",
+      "total": 3,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/settings/category-linkage/route.ts",
+      "total": 15,
+      "err": 3,
+      "cfg": 12
+    },
+    {
+      "file": "src/app/api/srm/evaluation/route.ts",
+      "total": 2,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/system/announcement/route.ts",
+      "total": 2,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/system/currency/route.ts",
+      "total": 3,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/trace/label/[id]/route.ts",
+      "total": 2,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/batch-inventory/route.ts",
+      "total": 3,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/batch/route.ts",
+      "total": 3,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/inbound/route.ts",
+      "total": 3,
+      "err": 3,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/warehouse/outbound/fifo/route.ts",
+      "total": 3,
+      "err": 3,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/unit-conversion/route.ts",
+      "total": 4,
+      "err": 3,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/biz/contract-review/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/customers/route.ts",
+      "total": 1,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/ink-dispatch/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/ink-query/route.ts",
+      "total": 3,
+      "err": 2,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/dcprint/ink-usage/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/scan/route.ts",
+      "total": 3,
+      "err": 2,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/delivery/vehicles/route.ts",
+      "total": 1,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/finance/expense/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/hr/certificates/route.ts",
+      "total": 1,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/hr/finance-sync/salary-transfer/route.ts",
+      "total": 3,
+      "err": 2,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/hr/mes-sync/piece-work/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/hr/shifts/route.ts",
+      "total": 1,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/hr/skills/route.ts",
+      "total": 1,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/orders/bom/[id]/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/organization/employee/route.ts",
+      "total": 1,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/organization/menu/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/organization/role/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/organization/warehouse-category/route.ts",
+      "total": 1,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/prepress/die-maintenance/route.ts",
+      "total": 1,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/production/material-return/route.ts",
+      "total": 3,
+      "err": 2,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/quality/sgs/[id]/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/sales/delivery/partial/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/sales/delivery/re-ship/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/sample/inventory/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/sample/orders/route.ts",
+      "total": 8,
+      "err": 2,
+      "cfg": 8
+    },
+    {
+      "file": "src/app/api/sample/orders/status/route.ts",
+      "total": 4,
+      "err": 2,
+      "cfg": 2
+    },
+    {
+      "file": "src/app/api/screen-plates/history/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/srm/evaluation/[id]/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/standard-cards/check-deviation/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/standard-cards/route.ts",
+      "total": 1,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/system/config/update/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/system/data-scope/route.ts",
+      "total": 1,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/cost/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/ink-mixing/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/ink-opening/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/outbound/confirm/route.ts",
+      "total": 1,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/route.ts",
+      "total": 1,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/split-order/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/stock-adjust/route.ts",
+      "total": 2,
+      "err": 2,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/stocktaking/diff-process/route.ts",
+      "total": 4,
+      "err": 2,
+      "cfg": 2
+    },
+    {
+      "file": "src/app/api/advanced/forecasting/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/formula/version/[id]/items/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/formula/version/[id]/preview-cost/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/formula/version/[id]/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/formula/version/compare/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/ink-opening/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/sample-card/[id]/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/sample-card/[id]/save-as-template/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/dcprint/sample-card/template/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/document-number/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/finance/cost-variance/route.ts",
+      "total": 7,
+      "err": 1,
+      "cfg": 6
+    },
+    {
+      "file": "src/app/api/finance/costs/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/finance/payables/[id]/payment/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/finance/payment/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/finance/receipt/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/finance/receivables/[id]/receipt/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/finance/receivables/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/hr/finance-sync/insurance/route.ts",
+      "total": 2,
+      "err": 1,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/hr/salary/payslip/route.ts",
+      "total": 2,
+      "err": 1,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/init/ink-seed/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/init/inventory-tables/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/init/sample-seed/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/inventory/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/menu/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/menu/sort-order/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/prepress/die-template/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/production/process/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/production/trace/route.ts",
+      "total": 2,
+      "err": 1,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/production/work-order/create-multi-color/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/purchase/return/route.ts",
+      "total": 3,
+      "err": 1,
+      "cfg": 2
+    },
+    {
+      "file": "src/app/api/quality/lab-test/auto-request/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/role-permissions/buttons/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/salary/payslips/[employeeId]/route.ts",
+      "total": 2,
+      "err": 1,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/sales/delivery/[id]/ship/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/sales/return/route.ts",
+      "total": 3,
+      "err": 1,
+      "cfg": 2
+    },
+    {
+      "file": "src/app/api/standard-cards/by-material/[material_id]/route.ts",
+      "total": 2,
+      "err": 1,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/standard-cards/by-work-order/[work_order_id]/route.ts",
+      "total": 2,
+      "err": 1,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/standard-cards/scan/route.ts",
+      "total": 3,
+      "err": 1,
+      "cfg": 2
+    },
+    {
+      "file": "src/app/api/system/monitor/deadlock/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/trace/label/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/trace/qr/[content]/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/trace/qr/generate/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/trace/qr/scan/batch/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/trace/qr/scan/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/trace/qr/split/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/batch/trace/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/fifo-config/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/fifo-recommend/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/inbound/labels/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/inbound/scan/route.ts",
+      "total": 2,
+      "err": 1,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/warehouse/inventory/adjust/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/outbound/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/stocktaking/[id]/split-summary/route.ts",
+      "total": 2,
+      "err": 1,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/warehouse/transfer/[id]/inbound/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/warehouse/transfer/[id]/outbound/route.ts",
+      "total": 1,
+      "err": 1,
+      "cfg": 0
+    },
+    {
+      "file": "src/app/api/advanced/cost-analysis/route.ts",
+      "total": 1,
+      "err": 0,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/audit/logs/route.ts",
+      "total": 1,
+      "err": 0,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/audit/report/route.ts",
+      "total": 1,
+      "err": 0,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/engineering/standard-card/route.ts",
+      "total": 5,
+      "err": 0,
+      "cfg": 5
+    },
+    {
+      "file": "src/app/api/init/department/route.ts",
+      "total": 11,
+      "err": 0,
+      "cfg": 11
+    },
+    {
+      "file": "src/app/api/init/inbound-tables/route.ts",
+      "total": 1,
+      "err": 0,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/init/warehouse/route.ts",
+      "total": 17,
+      "err": 0,
+      "cfg": 25
+    },
+    {
+      "file": "src/app/api/inventory/materials/route.ts",
+      "total": 16,
+      "err": 0,
+      "cfg": 16
+    },
+    {
+      "file": "src/app/api/material-requisitions/[id]/issue/route.ts",
+      "total": 1,
+      "err": 0,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/materials/[id]/route.ts",
+      "total": 2,
+      "err": 0,
+      "cfg": 2
+    },
+    {
+      "file": "src/app/api/materials/route.ts",
+      "total": 1,
+      "err": 0,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/production/mrp/route.ts",
+      "total": 4,
+      "err": 0,
+      "cfg": 5
+    },
+    {
+      "file": "src/app/api/production/schedule/auto/route.ts",
+      "total": 1,
+      "err": 0,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/purchase/convert-po/route.ts",
+      "total": 1,
+      "err": 0,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/purchase/reconciliation/route.ts",
+      "total": 4,
+      "err": 0,
+      "cfg": 4
+    },
+    {
+      "file": "src/app/api/qrcode/payload/route.ts",
+      "total": 1,
+      "err": 0,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/qrcode/trace/route.ts",
+      "total": 24,
+      "err": 0,
+      "cfg": 24
+    },
+    {
+      "file": "src/app/api/quality/spc/route.ts",
+      "total": 2,
+      "err": 0,
+      "cfg": 2
+    },
+    {
+      "file": "src/app/api/sales/convert-wo/route.ts",
+      "total": 1,
+      "err": 0,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/sales/reconciliation/route.ts",
+      "total": 4,
+      "err": 0,
+      "cfg": 4
+    },
+    {
+      "file": "src/app/api/system/data-fix/route.ts",
+      "total": 2,
+      "err": 0,
+      "cfg": 2
+    },
+    {
+      "file": "src/app/api/system/monitor/route.ts",
+      "total": 3,
+      "err": 0,
+      "cfg": 6
+    },
+    {
+      "file": "src/app/api/system/oper-log/route.ts",
+      "total": 1,
+      "err": 0,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/system/user/fix-names/route.ts",
+      "total": 36,
+      "err": 0,
+      "cfg": 36
+    },
+    {
+      "file": "src/app/api/upload/sop/route.ts",
+      "total": 2,
+      "err": 0,
+      "cfg": 2
+    },
+    {
+      "file": "src/app/api/warehouse/inbound/audit/route.ts",
+      "total": 1,
+      "err": 0,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/warehouse/inbound/with-po/route.ts",
+      "total": 1,
+      "err": 0,
+      "cfg": 1
+    },
+    {
+      "file": "src/app/api/warehouse/monthly-report/route.ts",
+      "total": 15,
+      "err": 0,
+      "cfg": 15
+    },
+    {
+      "file": "src/app/api/warehouse/stocktaking/[id]/scan/route.ts",
+      "total": 4,
+      "err": 0,
+      "cfg": 4
+    }
+  ],
+  "uniqueErrMsgs": [
+    {
+      "msg": "ID不能为空",
+      "files": [
+        "src/app/api/business/contract-review/route.ts",
+        "src/app/api/crm/analysis/route.ts",
+        "src/app/api/crm/follow/route.ts",
+        "src/app/api/engineering/sop/route.ts",
+        "src/app/api/equipment/maintenance/route.ts",
+        "src/app/api/equipment/plan/route.ts",
+        "src/app/api/equipment/route.ts",
+        "src/app/api/plm/eco/route.ts",
+        "src/app/api/plm/lifecycle/route.ts",
+        "src/app/api/production/schedule/route.ts",
+        "src/app/api/qrcode/route.ts",
+        "src/app/api/quality/complaint/route.ts",
+        "src/app/api/quality/lab-test/route.ts",
+        "src/app/api/quality/sgs/[id]/route.ts",
+        "src/app/api/quality/sgs/route.ts",
+        "src/app/api/quality/supplier-audit/route.ts",
+        "src/app/api/srm/evaluation/[id]/route.ts",
+        "src/app/api/srm/evaluation/route.ts",
+        "src/app/api/system/dict/route.ts"
+      ]
+    },
+    {
+      "msg": "没有需要更新的字段",
+      "files": [
+        "src/app/api/business/contract-review/route.ts",
+        "src/app/api/material-labels/route.ts",
+        "src/app/api/organization/crud/route.ts",
+        "src/app/api/qrcode/route.ts",
+        "src/app/api/quality/complaint/route.ts",
+        "src/app/api/quality/lab-test/route.ts",
+        "src/app/api/quality/supplier-audit/route.ts",
+        "src/app/api/screen-plates/route.ts",
+        "src/app/api/system/announcement/route.ts",
+        "src/app/api/system/dict/route.ts",
+        "src/app/api/system/profile/route.ts",
+        "src/app/api/system/scheduler/route.ts",
+        "src/app/api/trace/label/[id]/route.ts",
+        "src/app/api/warehouse/alert-push/route.ts",
+        "src/app/api/warehouse/batch/route.ts"
+      ]
+    },
+    {
+      "msg": "无效的操作类型",
+      "files": [
+        "src/app/api/finance/expense/route.ts",
+        "src/app/api/linkage/validate/route.ts",
+        "src/app/api/sample/orders/linkage/route.ts",
+        "src/app/api/settings/system/route.ts",
+        "src/app/api/system/dict/route.ts",
+        "src/app/api/warehouse/alert-push/route.ts",
+        "src/app/api/warehouse/freeze/route.ts",
+        "src/app/api/warehouse/stocktaking/diff-process/route.ts",
+        "src/app/api/warehouse/transfer/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少id",
+      "files": [
+        "src/app/api/base-data/material-category/route.ts",
+        "src/app/api/dcprint/formula/color/route.ts",
+        "src/app/api/dcprint/ink-formula/route.ts",
+        "src/app/api/outsource/issue/route.ts",
+        "src/app/api/outsource/order/route.ts",
+        "src/app/api/outsource/receive/route.ts",
+        "src/app/api/outsource/settlement/route.ts"
+      ]
+    },
+    {
+      "msg": "没有要更新的字段",
+      "files": [
+        "src/app/api/dcprint/labels/route.ts",
+        "src/app/api/dcprint/process-cards/route.ts",
+        "src/app/api/orders/bom/materials/route.ts",
+        "src/app/api/products/categories/route.ts",
+        "src/app/api/products/route.ts",
+        "src/app/api/purchase/suppliers/route.ts",
+        "src/app/api/sample/inventory/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必要参数",
+      "files": [
+        "src/app/api/finance/payables/[id]/payment/route.ts",
+        "src/app/api/finance/receivables/[id]/receipt/route.ts",
+        "src/app/api/ink-usages/route.ts",
+        "src/app/api/linkage/validate/route.ts",
+        "src/app/api/material-labels/route.ts",
+        "src/app/api/material-lifecycle/route.ts",
+        "src/app/api/screen-plates/history/route.ts"
+      ]
+    },
+    {
+      "msg": "产品名称不能为空",
+      "files": [
+        "src/app/api/business/contract-review/route.ts",
+        "src/app/api/engineering/sop/route.ts",
+        "src/app/api/production/schedule/route.ts",
+        "src/app/api/quality/complaint/route.ts",
+        "src/app/api/quality/lab-test/route.ts"
+      ]
+    },
+    {
+      "msg": "没有可更新的字段",
+      "files": [
+        "src/app/api/engineering/sample-to-mass/route.ts",
+        "src/app/api/equipment/maintenance/route.ts",
+        "src/app/api/equipment/plan/route.ts",
+        "src/app/api/equipment/route.ts"
+      ]
+    },
+    {
+      "msg": "月份格式错误 (YYYY-MM)",
+      "files": [
+        "src/app/api/hr/finance-sync/insurance/route.ts",
+        "src/app/api/hr/finance-sync/salary-transfer/route.ts",
+        "src/app/api/hr/quality-sync/defect-rate/route.ts",
+        "src/app/api/hr/salary/calculate/route.ts"
+      ]
+    },
+    {
+      "msg": "仓库ID不能为空",
+      "files": [
+        "src/app/api/production/material-issue/route.ts",
+        "src/app/api/warehouse/inbound/from-po/route.ts",
+        "src/app/api/warehouse/production-inbound/route.ts",
+        "src/app/api/warehouse/sales-outbound/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少 items 参数",
+      "files": [
+        "src/app/api/dcprint/formula/version/[id]/items/route.ts",
+        "src/app/api/dcprint/formula/version/[id]/preview-cost/route.ts",
+        "src/app/api/dcprint/formula/version/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少工单ID",
+      "files": [
+        "src/app/api/dcprint/ink-formula/route.ts",
+        "src/app/api/material-requisitions/route.ts",
+        "src/app/api/material-returns/route.ts"
+      ]
+    },
+    {
+      "msg": "设备不存在",
+      "files": [
+        "src/app/api/equipment/maintenance/route.ts",
+        "src/app/api/equipment/plan/route.ts",
+        "src/app/api/equipment/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少员工ID或月份",
+      "files": [
+        "src/app/api/hr/quality-sync/defect-rate/route.ts",
+        "src/app/api/hr/salary/calculate/route.ts",
+        "src/app/api/hr/salary/payslip/route.ts"
+      ]
+    },
+    {
+      "msg": "物料ID不能为空",
+      "files": [
+        "src/app/api/orders/bom/materials/route.ts",
+        "src/app/api/warehouse/batch-inventory/route.ts",
+        "src/app/api/warehouse/cost/route.ts"
+      ]
+    },
+    {
+      "msg": "订单ID不能为空",
+      "files": [
+        "src/app/api/orders/route.ts",
+        "src/app/api/orders/sales/route.ts",
+        "src/app/api/outsource/order/route.ts"
+      ]
+    },
+    {
+      "msg": "委外订单不能为空",
+      "files": [
+        "src/app/api/outsource/issue/route.ts",
+        "src/app/api/outsource/receive/route.ts",
+        "src/app/api/outsource/settlement/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少二维码编码",
+      "files": [
+        "src/app/api/qrcode/print/route.ts",
+        "src/app/api/standard-cards/scan/route.ts",
+        "src/app/api/trace/qr/[content]/route.ts"
+      ]
+    },
+    {
+      "msg": "入库明细不能为空",
+      "files": [
+        "src/app/api/warehouse/batch-inventory/route.ts",
+        "src/app/api/warehouse/inbound/from-po/route.ts",
+        "src/app/api/warehouse/production-inbound/route.ts"
+      ]
+    },
+    {
+      "msg": "客户名称不能为空",
+      "files": [
+        "src/app/api/business/contract-review/route.ts",
+        "src/app/api/quality/complaint/route.ts"
+      ]
+    },
+    {
+      "msg": "客户ID不能为空",
+      "files": [
+        "src/app/api/crm/analysis/route.ts",
+        "src/app/api/crm/follow/route.ts"
+      ]
+    },
+    {
+      "msg": "版本不存在",
+      "files": [
+        "src/app/api/dcprint/formula/version/[id]/route.ts",
+        "src/app/api/dcprint/formula/version/route.ts"
+      ]
+    },
+    {
+      "msg": "二维码不存在",
+      "files": [
+        "src/app/api/dcprint/ink-query/route.ts",
+        "src/app/api/qrcode/print/route.ts"
+      ]
+    },
+    {
+      "msg": "批次不存在",
+      "files": [
+        "src/app/api/dcprint/ink-surplus/route.ts",
+        "src/app/api/warehouse/batch/route.ts"
+      ]
+    },
+    {
+      "msg": "记录ID不能为空",
+      "files": [
+        "src/app/api/dcprint/ink-usage/route.ts",
+        "src/app/api/engineering/sample-to-mass/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少标签ID",
+      "files": [
+        "src/app/api/dcprint/labels/route.ts",
+        "src/app/api/material-labels/route.ts"
+      ]
+    },
+    {
+      "msg": "流程卡不存在",
+      "files": [
+        "src/app/api/dcprint/process-cards/route.ts",
+        "src/app/api/dcprint/trace/route.ts"
+      ]
+    },
+    {
+      "msg": "模板名称不能为空",
+      "files": [
+        "src/app/api/dcprint/sample-card/[id]/save-as-template/route.ts",
+        "src/app/api/dcprint/sample-card/template/route.ts"
+      ]
+    },
+    {
+      "msg": "二维码内容不能为空",
+      "files": [
+        "src/app/api/dcprint/scan/route.ts",
+        "src/app/api/warehouse/inbound/scan/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少记录ID",
+      "files": [
+        "src/app/api/hr/salary/route.ts",
+        "src/app/api/ink-usages/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段",
+      "files": [
+        "src/app/api/hr/schedules/route.ts",
+        "src/app/api/organization/crud/route.ts"
+      ]
+    },
+    {
+      "msg": "无效的操作",
+      "files": [
+        "src/app/api/material-lifecycle/route.ts",
+        "src/app/api/standard-card/action/route.ts"
+      ]
+    },
+    {
+      "msg": "操作失败",
+      "files": [
+        "src/app/api/material-lifecycle/route.ts",
+        "src/app/api/standard-card/action/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少仓库ID",
+      "files": [
+        "src/app/api/material-requisitions/route.ts",
+        "src/app/api/material-returns/route.ts"
+      ]
+    },
+    {
+      "msg": "工单不存在",
+      "files": [
+        "src/app/api/material-requisitions/route.ts",
+        "src/app/api/material-returns/route.ts"
+      ]
+    },
+    {
+      "msg": "退料单不存在",
+      "files": [
+        "src/app/api/material-returns/route.ts",
+        "src/app/api/production/material-return/route.ts"
+      ]
+    },
+    {
+      "msg": "BOM不存在",
+      "files": [
+        "src/app/api/orders/bom/[id]/route.ts",
+        "src/app/api/orders/bom/route.ts"
+      ]
+    },
+    {
+      "msg": "币种创建后不可修改",
+      "files": [
+        "src/app/api/orders/sales/route.ts",
+        "src/app/api/purchase/orders/route.ts"
+      ]
+    },
+    {
+      "msg": "汇率创建后不可修改",
+      "files": [
+        "src/app/api/orders/sales/route.ts",
+        "src/app/api/purchase/orders/route.ts"
+      ]
+    },
+    {
+      "msg": "发料单ID不能为空",
+      "files": [
+        "src/app/api/outsource/issue/route.ts",
+        "src/app/api/production/material-issue/route.ts"
+      ]
+    },
+    {
+      "msg": "供应商不能为空",
+      "files": [
+        "src/app/api/outsource/order/route.ts",
+        "src/app/api/outsource/settlement/route.ts"
+      ]
+    },
+    {
+      "msg": "刀模/网版不存在",
+      "files": [
+        "src/app/api/prepress/die-maintenance/route.ts",
+        "src/app/api/prepress/die-usage/route.ts"
+      ]
+    },
+    {
+      "msg": "采购单ID不能为空",
+      "files": [
+        "src/app/api/purchase/orders/route.ts",
+        "src/app/api/warehouse/inbound/from-po/route.ts"
+      ]
+    },
+    {
+      "msg": "退货明细不能为空",
+      "files": [
+        "src/app/api/purchase/return/route.ts",
+        "src/app/api/sales/return/route.ts"
+      ]
+    },
+    {
+      "msg": "供应商ID不能为空",
+      "files": [
+        "src/app/api/purchase/suppliers/route.ts",
+        "src/app/api/srm/evaluation/route.ts"
+      ]
+    },
+    {
+      "msg": "打样订单ID不能为空",
+      "files": [
+        "src/app/api/sample/orders/linkage/route.ts",
+        "src/app/api/sample/orders/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少网版ID",
+      "files": [
+        "src/app/api/screen-plates/history/route.ts",
+        "src/app/api/screen-plates/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少标准卡ID",
+      "files": [
+        "src/app/api/standard-card/action/route.ts",
+        "src/app/api/standard-cards/check-deviation/route.ts"
+      ]
+    },
+    {
+      "msg": "新密码长度不能少于6位",
+      "files": [
+        "src/app/api/system/profile/password/route.ts",
+        "src/app/api/system/profile/route.ts"
+      ]
+    },
+    {
+      "msg": "用户不存在",
+      "files": [
+        "src/app/api/system/profile/password/route.ts",
+        "src/app/api/system/profile/route.ts"
+      ]
+    },
+    {
+      "msg": "当前密码不正确",
+      "files": [
+        "src/app/api/system/profile/password/route.ts",
+        "src/app/api/system/profile/route.ts"
+      ]
+    },
+    {
+      "msg": "出库明细不能为空",
+      "files": [
+        "src/app/api/warehouse/batch-inventory/route.ts",
+        "src/app/api/warehouse/sales-outbound/route.ts"
+      ]
+    },
+    {
+      "msg": "入库单ID不能为空",
+      "files": [
+        "src/app/api/warehouse/inbound/route.ts",
+        "src/app/api/warehouse/production-inbound/route.ts"
+      ]
+    },
+    {
+      "msg": "出库单ID不能为空",
+      "files": [
+        "src/app/api/warehouse/outbound/confirm/route.ts",
+        "src/app/api/warehouse/sales-outbound/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少ID参数",
+      "files": [
+        "src/app/api/warehouse/transfer/route.ts",
+        "src/app/api/warehouse/unit-conversion/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少 materialId",
+      "files": [
+        "src/app/api/advanced/forecasting/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: oldPassword, newPassword",
+      "files": [
+        "src/app/api/auth/change-password/route.ts"
+      ]
+    },
+    {
+      "msg": "targetUserId 必须为数字",
+      "files": [
+        "src/app/api/auth/change-password/route.ts"
+      ]
+    },
+    {
+      "msg": "新密码必须包含字母和数字",
+      "files": [
+        "src/app/api/auth/change-password/route.ts"
+      ]
+    },
+    {
+      "msg": "新密码必须包含大写字母",
+      "files": [
+        "src/app/api/auth/change-password/route.ts"
+      ]
+    },
+    {
+      "msg": "新密码必须包含特殊字符",
+      "files": [
+        "src/app/api/auth/change-password/route.ts"
+      ]
+    },
+    {
+      "msg": "原密码错误",
+      "files": [
+        "src/app/api/auth/change-password/route.ts"
+      ]
+    },
+    {
+      "msg": "新密码不能与旧密码相同",
+      "files": [
+        "src/app/api/auth/change-password/route.ts"
+      ]
+    },
+    {
+      "msg": "[auth.login] 查询部门名称失败:",
+      "files": [
+        "src/app/api/auth/login/route.ts"
+      ]
+    },
+    {
+      "msg": "[auth.login] 登录日志写入失败:",
+      "files": [
+        "src/app/api/auth/login/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少 refreshToken 或 userId",
+      "files": [
+        "src/app/api/auth/refresh/route.ts"
+      ]
+    },
+    {
+      "msg": "refresh token 无效或已过期",
+      "files": [
+        "src/app/api/auth/refresh/route.ts"
+      ]
+    },
+    {
+      "msg": "用户不存在或已禁用",
+      "files": [
+        "src/app/api/auth/refresh/route.ts"
+      ]
+    },
+    {
+      "msg": "Token 刷新失败",
+      "files": [
+        "src/app/api/auth/refresh/route.ts"
+      ]
+    },
+    {
+      "msg": "密码长度不能少于6位",
+      "files": [
+        "src/app/api/auth/register/route.ts"
+      ]
+    },
+    {
+      "msg": "邮箱格式不正确",
+      "files": [
+        "src/app/api/auth/register/route.ts"
+      ]
+    },
+    {
+      "msg": "用户名已存在",
+      "files": [
+        "src/app/api/auth/register/route.ts"
+      ]
+    },
+    {
+      "msg": "邮箱已被注册",
+      "files": [
+        "src/app/api/auth/register/route.ts"
+      ]
+    },
+    {
+      "msg": "手机号格式不正确",
+      "files": [
+        "src/app/api/auth/register/route.ts"
+      ]
+    },
+    {
+      "msg": "手机号已被注册",
+      "files": [
+        "src/app/api/auth/register/route.ts"
+      ]
+    },
+    {
+      "msg": "指定的部门不存在",
+      "files": [
+        "src/app/api/auth/register/route.ts"
+      ]
+    },
+    {
+      "msg": "指定的角色不存在",
+      "files": [
+        "src/app/api/auth/register/route.ts"
+      ]
+    },
+    {
+      "msg": "无权限注册为该角色，请联系管理员在用户管理中分配",
+      "files": [
+        "src/app/api/auth/register/route.ts"
+      ]
+    },
+    {
+      "msg": "物料分类名称不能为空",
+      "files": [
+        "src/app/api/base-data/material-category/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少分类ID",
+      "files": [
+        "src/app/api/base-data/material-category/route.ts"
+      ]
+    },
+    {
+      "msg": "物料分类不存在或已删除",
+      "files": [
+        "src/app/api/base-data/material-category/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: order_id, order_no",
+      "files": [
+        "src/app/api/biz/contract-review/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: id, department",
+      "files": [
+        "src/app/api/biz/contract-review/route.ts"
+      ]
+    },
+    {
+      "msg": "客户编码已存在",
+      "files": [
+        "src/app/api/customers/route.ts"
+      ]
+    },
+    {
+      "msg": "色号编码和名称不能为空",
+      "files": [
+        "src/app/api/dcprint/formula/color/route.ts"
+      ]
+    },
+    {
+      "msg": "色号编码已存在",
+      "files": [
+        "src/app/api/dcprint/formula/color/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少色号ID",
+      "files": [
+        "src/app/api/dcprint/formula/color/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少 leftId 或 rightId 参数",
+      "files": [
+        "src/app/api/dcprint/formula/version/compare/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: color_id, items",
+      "files": [
+        "src/app/api/dcprint/formula/version/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: workorder_no, items",
+      "files": [
+        "src/app/api/dcprint/ink-dispatch/route.ts"
+      ]
+    },
+    {
+      "msg": "配料记录ID不能为空",
+      "files": [
+        "src/app/api/dcprint/ink-dispatch/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: version_name, items",
+      "files": [
+        "src/app/api/dcprint/ink-formula/route.ts"
+      ]
+    },
+    {
+      "msg": "配方ID不能为空",
+      "files": [
+        "src/app/api/dcprint/ink-formula/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少工单信息",
+      "files": [
+        "src/app/api/dcprint/ink-formula/route.ts"
+      ]
+    },
+    {
+      "msg": "无效的状态值",
+      "files": [
+        "src/app/api/dcprint/ink-opening/route.ts"
+      ]
+    },
+    {
+      "msg": "无法确定批次号",
+      "files": [
+        "src/app/api/dcprint/ink-query/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少batchNo",
+      "files": [
+        "src/app/api/dcprint/ink-surplus/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: batch_no, return_weight",
+      "files": [
+        "src/app/api/dcprint/ink-surplus/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: usage_type, weight",
+      "files": [
+        "src/app/api/dcprint/ink-usage/route.ts"
+      ]
+    },
+    {
+      "msg": "主材标签不存在",
+      "files": [
+        "src/app/api/dcprint/process-cards/route.ts"
+      ]
+    },
+    {
+      "msg": "该标签不是母材标签，不能作为主材使用",
+      "files": [
+        "src/app/api/dcprint/process-cards/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少流程卡ID或卡号",
+      "files": [
+        "src/app/api/dcprint/process-cards/route.ts"
+      ]
+    },
+    {
+      "msg": "流程卡已锁住，不能添加辅料",
+      "files": [
+        "src/app/api/dcprint/process-cards/route.ts"
+      ]
+    },
+    {
+      "msg": "物料标签不存在",
+      "files": [
+        "src/app/api/dcprint/process-cards/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少流程卡ID",
+      "files": [
+        "src/app/api/dcprint/process-cards/route.ts"
+      ]
+    },
+    {
+      "msg": "工艺卡不存在",
+      "files": [
+        "src/app/api/dcprint/sample-card/[id]/route.ts"
+      ]
+    },
+    {
+      "msg": "二维码格式不正确",
+      "files": [
+        "src/app/api/dcprint/scan/route.ts"
+      ]
+    },
+    {
+      "msg": "流程卡号不能为空",
+      "files": [
+        "src/app/api/dcprint/trace/route.ts"
+      ]
+    },
+    {
+      "msg": "追溯单号不能为空",
+      "files": [
+        "src/app/api/dcprint/trace/route.ts"
+      ]
+    },
+    {
+      "msg": "追溯记录不存在",
+      "files": [
+        "src/app/api/dcprint/trace/route.ts"
+      ]
+    },
+    {
+      "msg": "车牌号已存在",
+      "files": [
+        "src/app/api/delivery/vehicles/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少docType参数",
+      "files": [
+        "src/app/api/document-number/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: sample_order_no",
+      "files": [
+        "src/app/api/engineering/sample-to-mass/route.ts"
+      ]
+    },
+    {
+      "msg": "转量产记录ID不能为空",
+      "files": [
+        "src/app/api/engineering/sample-to-mass/route.ts"
+      ]
+    },
+    {
+      "msg": "维保记录不存在",
+      "files": [
+        "src/app/api/equipment/maintenance/route.ts"
+      ]
+    },
+    {
+      "msg": "设备ID不能为空",
+      "files": [
+        "src/app/api/equipment/maintenance/route.ts"
+      ]
+    },
+    {
+      "msg": "维保日期不能为空（请填写开始时间或维保日期）",
+      "files": [
+        "src/app/api/equipment/maintenance/route.ts"
+      ]
+    },
+    {
+      "msg": "维保计划不存在",
+      "files": [
+        "src/app/api/equipment/plan/route.ts"
+      ]
+    },
+    {
+      "msg": "设备ID和计划名称不能为空",
+      "files": [
+        "src/app/api/equipment/plan/route.ts"
+      ]
+    },
+    {
+      "msg": "设备编号和名称不能为空",
+      "files": [
+        "src/app/api/equipment/route.ts"
+      ]
+    },
+    {
+      "msg": "设备编号已存在",
+      "files": [
+        "src/app/api/equipment/route.ts"
+      ]
+    },
+    {
+      "msg": "质量异常",
+      "files": [
+        "src/app/api/finance/cost-variance/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少workOrderId",
+      "files": [
+        "src/app/api/finance/costs/route.ts"
+      ]
+    },
+    {
+      "msg": "报销单ID不能为空",
+      "files": [
+        "src/app/api/finance/expense/route.ts"
+      ]
+    },
+    {
+      "msg": "发票明细不能为空",
+      "files": [
+        "src/app/api/finance/invoice/route.ts"
+      ]
+    },
+    {
+      "msg": "发票不存在",
+      "files": [
+        "src/app/api/finance/invoice/route.ts"
+      ]
+    },
+    {
+      "msg": "核销金额必须大于0",
+      "files": [
+        "src/app/api/finance/invoice/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: payable_id, amount, payment_date",
+      "files": [
+        "src/app/api/finance/payment/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: receivable_id, amount, receipt_date",
+      "files": [
+        "src/app/api/finance/receipt/route.ts"
+      ]
+    },
+    {
+      "msg": "应收单不存在",
+      "files": [
+        "src/app/api/finance/receivables/route.ts"
+      ]
+    },
+    {
+      "msg": "考勤日期格式不正确，应为 YYYY-MM-DD",
+      "files": [
+        "src/app/api/hr/attendance/route.ts"
+      ]
+    },
+    {
+      "msg": "上班时间格式不正确，应为 HH:mm",
+      "files": [
+        "src/app/api/hr/attendance/route.ts"
+      ]
+    },
+    {
+      "msg": "下班时间格式不正确，应为 HH:mm",
+      "files": [
+        "src/app/api/hr/attendance/route.ts"
+      ]
+    },
+    {
+      "msg": "考勤状态值不正确，应为 normal/late/absent/leave",
+      "files": [
+        "src/app/api/hr/attendance/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少证书ID",
+      "files": [
+        "src/app/api/hr/certificates/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少员工ID列表",
+      "files": [
+        "src/app/api/hr/finance-sync/salary-transfer/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少计件记录数据",
+      "files": [
+        "src/app/api/hr/mes-sync/piece-work/route.ts"
+      ]
+    },
+    {
+      "msg": "单次同步记录数不能超过1000",
+      "files": [
+        "src/app/api/hr/mes-sync/piece-work/route.ts"
+      ]
+    },
+    {
+      "msg": "员工ID格式不正确",
+      "files": [
+        "src/app/api/hr/quality-sync/defect-rate/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少员工ID或计算月份",
+      "files": [
+        "src/app/api/hr/salary/calculate/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少计算月份",
+      "files": [
+        "src/app/api/hr/salary/calculate/route.ts"
+      ]
+    },
+    {
+      "msg": "月份格式不正确，应为 yyyy-MM",
+      "files": [
+        "src/app/api/hr/salary/route.ts"
+      ]
+    },
+    {
+      "msg": "部门ID格式不正确",
+      "files": [
+        "src/app/api/hr/salary/route.ts"
+      ]
+    },
+    {
+      "msg": "员工不存在或已停用",
+      "files": [
+        "src/app/api/hr/salary/route.ts"
+      ]
+    },
+    {
+      "msg": "备注长度不能超过500个字符",
+      "files": [
+        "src/app/api/hr/salary/route.ts"
+      ]
+    },
+    {
+      "msg": "记录ID格式不正确",
+      "files": [
+        "src/app/api/hr/salary/route.ts"
+      ]
+    },
+    {
+      "msg": "薪资记录不存在",
+      "files": [
+        "src/app/api/hr/salary/route.ts"
+      ]
+    },
+    {
+      "msg": "排班创建失败",
+      "files": [
+        "src/app/api/hr/schedules/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少排班ID",
+      "files": [
+        "src/app/api/hr/schedules/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少班次ID",
+      "files": [
+        "src/app/api/hr/shifts/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少技能ID",
+      "files": [
+        "src/app/api/hr/skills/route.ts"
+      ]
+    },
+    {
+      "msg": "刀模/网版数量不正确: 期望20, 实际",
+      "files": [
+        "src/app/api/init/die-template-seed/route.ts"
+      ]
+    },
+    {
+      "msg": "保养记录数量不正确: 期望20, 实际",
+      "files": [
+        "src/app/api/init/die-template-seed/route.ts"
+      ]
+    },
+    {
+      "msg": "使用记录数量不正确: 期望20, 实际",
+      "files": [
+        "src/app/api/init/die-template-seed/route.ts"
+      ]
+    },
+    {
+      "msg": "油墨数量不正确: 期望20, 实际",
+      "files": [
+        "src/app/api/init/ink-seed/route.ts"
+      ]
+    },
+    {
+      "msg": "SQL文件不存在",
+      "files": [
+        "src/app/api/init/inventory-tables/route.ts"
+      ]
+    },
+    {
+      "msg": "[MENU_INIT] 步骤3完成: 重复菜单删除完毕",
+      "files": [
+        "src/app/api/init/menus/route.ts"
+      ]
+    },
+    {
+      "msg": "[MENU_INIT] 步骤4完成: 路径重复菜单删除完毕, 删除数:",
+      "files": [
+        "src/app/api/init/menus/route.ts"
+      ]
+    },
+    {
+      "msg": "[MENU_INIT] ==================== 菜单初始化失败 ====================",
+      "files": [
+        "src/app/api/init/menus/route.ts"
+      ]
+    },
+    {
+      "msg": "标准卡数量不正确: 期望20, 实际",
+      "files": [
+        "src/app/api/init/quality-final-seed/route.ts"
+      ]
+    },
+    {
+      "msg": "流程卡数量不正确: 期望20, 实际",
+      "files": [
+        "src/app/api/init/quality-final-seed/route.ts"
+      ]
+    },
+    {
+      "msg": "终检记录数量不正确: 期望20, 实际",
+      "files": [
+        "src/app/api/init/quality-final-seed/route.ts"
+      ]
+    },
+    {
+      "msg": "样品订单数量不正确: 期望20, 实际",
+      "files": [
+        "src/app/api/init/sample-seed/route.ts"
+      ]
+    },
+    {
+      "msg": "仓库分类数量不正确: 期望20, 实际",
+      "files": [
+        "src/app/api/init/warehouse-category-seed/route.ts"
+      ]
+    },
+    {
+      "msg": "仓库数量不正确: 期望20, 实际",
+      "files": [
+        "src/app/api/init/warehouse-category-seed/route.ts"
+      ]
+    },
+    {
+      "msg": "物料分类数量不正确: 期望20, 实际",
+      "files": [
+        "src/app/api/init/warehouse-category-seed/route.ts"
+      ]
+    },
+    {
+      "msg": "物料数量不正确: 期望20, 实际",
+      "files": [
+        "src/app/api/init/warehouse-category-seed/route.ts"
+      ]
+    },
+    {
+      "msg": "库存数量不正确: 期望20, 实际",
+      "files": [
+        "src/app/api/init/warehouse-category-seed/route.ts"
+      ]
+    },
+    {
+      "msg": "油墨不存在",
+      "files": [
+        "src/app/api/ink-usages/route.ts"
+      ]
+    },
+    {
+      "msg": "出库数量必须大于0",
+      "files": [
+        "src/app/api/inventory/route.ts"
+      ]
+    },
+    {
+      "msg": "业务订单ID不能为空",
+      "files": [
+        "src/app/api/linkage/validate/route.ts"
+      ]
+    },
+    {
+      "msg": "业务订单不存在",
+      "files": [
+        "src/app/api/linkage/validate/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必要参数：materialCode, materialName, quantity",
+      "files": [
+        "src/app/api/material-labels/route.ts"
+      ]
+    },
+    {
+      "msg": "父标签不存在",
+      "files": [
+        "src/app/api/material-labels/route.ts"
+      ]
+    },
+    {
+      "msg": "该标签已被分切",
+      "files": [
+        "src/app/api/material-labels/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少物料ID",
+      "files": [
+        "src/app/api/material-lifecycle/route.ts"
+      ]
+    },
+    {
+      "msg": "查询失败",
+      "files": [
+        "src/app/api/material-lifecycle/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少调整单ID",
+      "files": [
+        "src/app/api/material-lifecycle/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少领料单ID",
+      "files": [
+        "src/app/api/material-requisitions/route.ts"
+      ]
+    },
+    {
+      "msg": "领料单不存在",
+      "files": [
+        "src/app/api/material-requisitions/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少退料明细",
+      "files": [
+        "src/app/api/material-returns/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少退料单ID",
+      "files": [
+        "src/app/api/material-returns/route.ts"
+      ]
+    },
+    {
+      "msg": "获取菜单列表失败",
+      "files": [
+        "src/app/api/menu/route.ts"
+      ]
+    },
+    {
+      "msg": "排序项格式不正确，需要id和sort_order字段",
+      "files": [
+        "src/app/api/menu/sort-order/route.ts"
+      ]
+    },
+    {
+      "msg": "无效的BOM ID",
+      "files": [
+        "src/app/api/orders/bom/[id]/route.ts"
+      ]
+    },
+    {
+      "msg": "productId 必须是正整数",
+      "files": [
+        "src/app/api/orders/bom/expand/route.ts"
+      ]
+    },
+    {
+      "msg": "quantity 必须是正数",
+      "files": [
+        "src/app/api/orders/bom/expand/route.ts"
+      ]
+    },
+    {
+      "msg": "maxDepth 必须是1-20之间的整数",
+      "files": [
+        "src/app/api/orders/bom/expand/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填参数: productId, quantity",
+      "files": [
+        "src/app/api/orders/bom/expand/route.ts"
+      ]
+    },
+    {
+      "msg": "products 必须是非空数组",
+      "files": [
+        "src/app/api/orders/bom/expand/route.ts"
+      ]
+    },
+    {
+      "msg": "products 中的 productId 必须是正整数",
+      "files": [
+        "src/app/api/orders/bom/expand/route.ts"
+      ]
+    },
+    {
+      "msg": "products 中的 quantity 必须是正数",
+      "files": [
+        "src/app/api/orders/bom/expand/route.ts"
+      ]
+    },
+    {
+      "msg": "物料编码已存在",
+      "files": [
+        "src/app/api/orders/bom/materials/route.ts"
+      ]
+    },
+    {
+      "msg": "物料不存在",
+      "files": [
+        "src/app/api/orders/bom/materials/route.ts"
+      ]
+    },
+    {
+      "msg": "该物料已被BOM引用，不能删除",
+      "files": [
+        "src/app/api/orders/bom/materials/route.ts"
+      ]
+    },
+    {
+      "msg": "BOM明细不能为空",
+      "files": [
+        "src/app/api/orders/bom/route.ts"
+      ]
+    },
+    {
+      "msg": "产品编码和产品名称不能为空",
+      "files": [
+        "src/app/api/orders/bom/route.ts"
+      ]
+    },
+    {
+      "msg": "BOM明细中物料编码和名称不能为空",
+      "files": [
+        "src/app/api/orders/bom/route.ts"
+      ]
+    },
+    {
+      "msg": "BOM ID不能为空",
+      "files": [
+        "src/app/api/orders/bom/route.ts"
+      ]
+    },
+    {
+      "msg": "已发布的BOM不能删除，请停用它",
+      "files": [
+        "src/app/api/orders/bom/route.ts"
+      ]
+    },
+    {
+      "msg": "客户信息不能为空",
+      "files": [
+        "src/app/api/orders/route.ts"
+      ]
+    },
+    {
+      "msg": "订单项不能为空",
+      "files": [
+        "src/app/api/orders/route.ts"
+      ]
+    },
+    {
+      "msg": "订单项缺少必填字段(物料名称、数量、单价)",
+      "files": [
+        "src/app/api/orders/route.ts"
+      ]
+    },
+    {
+      "msg": "订单数量必须大于0",
+      "files": [
+        "src/app/api/orders/route.ts"
+      ]
+    },
+    {
+      "msg": "单价不能为负数",
+      "files": [
+        "src/app/api/orders/route.ts"
+      ]
+    },
+    {
+      "msg": "已完成的订单不能修改",
+      "files": [
+        "src/app/api/orders/route.ts"
+      ]
+    },
+    {
+      "msg": "已完成的订单不能删除",
+      "files": [
+        "src/app/api/orders/route.ts"
+      ]
+    },
+    {
+      "msg": "客户和订单明细不能为空",
+      "files": [
+        "src/app/api/orders/sales/route.ts"
+      ]
+    },
+    {
+      "msg": "订单不存在",
+      "files": [
+        "src/app/api/orders/sales/route.ts"
+      ]
+    },
+    {
+      "msg": "只有已提交的订单可以驳回",
+      "files": [
+        "src/app/api/orders/sales/route.ts"
+      ]
+    },
+    {
+      "msg": "无效的节点类型",
+      "files": [
+        "src/app/api/organization/crud/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少ID或类型",
+      "files": [
+        "src/app/api/organization/crud/route.ts"
+      ]
+    },
+    {
+      "msg": "部门编码已存在",
+      "files": [
+        "src/app/api/organization/department/route.ts"
+      ]
+    },
+    {
+      "msg": "该部门下有子部门，无法删除",
+      "files": [
+        "src/app/api/organization/department/route.ts"
+      ]
+    },
+    {
+      "msg": "该部门下有员工，无法删除",
+      "files": [
+        "src/app/api/organization/department/route.ts"
+      ]
+    },
+    {
+      "msg": "员工编号已存在",
+      "files": [
+        "src/app/api/organization/employee/route.ts"
+      ]
+    },
+    {
+      "msg": "菜单编码已存在",
+      "files": [
+        "src/app/api/organization/menu/route.ts"
+      ]
+    },
+    {
+      "msg": "角色编码已存在",
+      "files": [
+        "src/app/api/organization/role/route.ts"
+      ]
+    },
+    {
+      "msg": "该角色已分配给用户，无法删除",
+      "files": [
+        "src/app/api/organization/role/route.ts"
+      ]
+    },
+    {
+      "msg": "仓库分类名称不能为空",
+      "files": [
+        "src/app/api/organization/warehouse-category/route.ts"
+      ]
+    },
+    {
+      "msg": "仓库不能为空",
+      "files": [
+        "src/app/api/outsource/issue/route.ts"
+      ]
+    },
+    {
+      "msg": "入库仓库不能为空",
+      "files": [
+        "src/app/api/outsource/receive/route.ts"
+      ]
+    },
+    {
+      "msg": "收货单ID不能为空",
+      "files": [
+        "src/app/api/outsource/receive/route.ts"
+      ]
+    },
+    {
+      "msg": "结算单ID不能为空",
+      "files": [
+        "src/app/api/outsource/settlement/route.ts"
+      ]
+    },
+    {
+      "msg": "变更类型不能为空",
+      "files": [
+        "src/app/api/plm/eco/route.ts"
+      ]
+    },
+    {
+      "msg": "产品ID和生命周期阶段不能为空",
+      "files": [
+        "src/app/api/plm/lifecycle/route.ts"
+      ]
+    },
+    {
+      "msg": "刀模板/网版编号已存在",
+      "files": [
+        "src/app/api/prepress/die-template/route.ts"
+      ]
+    },
+    {
+      "msg": "使用次数必须大于0",
+      "files": [
+        "src/app/api/prepress/die-usage/route.ts"
+      ]
+    },
+    {
+      "msg": "已报废的刀模/网版不能继续使用",
+      "files": [
+        "src/app/api/prepress/die-usage/route.ts"
+      ]
+    },
+    {
+      "msg": "发料明细不能为空",
+      "files": [
+        "src/app/api/production/material-issue/route.ts"
+      ]
+    },
+    {
+      "msg": "发料单不存在",
+      "files": [
+        "src/app/api/production/material-issue/route.ts"
+      ]
+    },
+    {
+      "msg": "已完成的发料单不能删除",
+      "files": [
+        "src/app/api/production/material-issue/route.ts"
+      ]
+    },
+    {
+      "msg": "退料单状态不允许确认",
+      "files": [
+        "src/app/api/production/material-return/route.ts"
+      ]
+    },
+    {
+      "msg": "流程卡ID不能为空",
+      "files": [
+        "src/app/api/production/process/route.ts"
+      ]
+    },
+    {
+      "msg": "排产结果不能为空",
+      "files": [
+        "src/app/api/production/schedule/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: sn",
+      "files": [
+        "src/app/api/production/trace/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必要参数: standardCardId, salesOrderId, planQty",
+      "files": [
+        "src/app/api/production/work-order/create-multi-color/route.ts"
+      ]
+    },
+    {
+      "msg": "分类编码和名称不能为空",
+      "files": [
+        "src/app/api/products/categories/route.ts"
+      ]
+    },
+    {
+      "msg": "分类编码已存在",
+      "files": [
+        "src/app/api/products/categories/route.ts"
+      ]
+    },
+    {
+      "msg": "分类ID不能为空",
+      "files": [
+        "src/app/api/products/categories/route.ts"
+      ]
+    },
+    {
+      "msg": "该分类下有子分类，不能删除",
+      "files": [
+        "src/app/api/products/categories/route.ts"
+      ]
+    },
+    {
+      "msg": "该分类下有关联产品，不能删除",
+      "files": [
+        "src/app/api/products/categories/route.ts"
+      ]
+    },
+    {
+      "msg": "产品编码已存在",
+      "files": [
+        "src/app/api/products/route.ts"
+      ]
+    },
+    {
+      "msg": "产品ID不能为空",
+      "files": [
+        "src/app/api/products/route.ts"
+      ]
+    },
+    {
+      "msg": "采购明细不能为空",
+      "files": [
+        "src/app/api/purchase/orders/route.ts"
+      ]
+    },
+    {
+      "msg": "采购申请必须包含至少一条明细",
+      "files": [
+        "src/app/api/purchase/request/route.ts"
+      ]
+    },
+    {
+      "msg": "已批准的采购申请不能修改",
+      "files": [
+        "src/app/api/purchase/request/route.ts"
+      ]
+    },
+    {
+      "msg": "已批准的采购申请不能删除",
+      "files": [
+        "src/app/api/purchase/request/route.ts"
+      ]
+    },
+    {
+      "msg": "该请购单已被采购订单引用，无法删除",
+      "files": [
+        "src/app/api/purchase/request/route.ts"
+      ]
+    },
+    {
+      "msg": "供应商编码已存在",
+      "files": [
+        "src/app/api/purchase/suppliers/route.ts"
+      ]
+    },
+    {
+      "msg": "二维码类型不能为空",
+      "files": [
+        "src/app/api/qrcode/route.ts"
+      ]
+    },
+    {
+      "msg": "批次号不能为空",
+      "files": [
+        "src/app/api/qrcode/route.ts"
+      ]
+    },
+    {
+      "msg": "二维码记录不存在",
+      "files": [
+        "src/app/api/qrcode/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填参数: materialId, batchNo, lotSize",
+      "files": [
+        "src/app/api/quality/lab-test/auto-request/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填参数: cardId, inspectResult",
+      "files": [
+        "src/app/api/quality/process/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填参数: id, inspectResult",
+      "files": [
+        "src/app/api/quality/process/route.ts"
+      ]
+    },
+    {
+      "msg": "检验记录不存在",
+      "files": [
+        "src/app/api/quality/process/route.ts"
+      ]
+    },
+    {
+      "msg": "SGS认证记录不存在",
+      "files": [
+        "src/app/api/quality/sgs/[id]/route.ts"
+      ]
+    },
+    {
+      "msg": "SGS证书编号不能为空",
+      "files": [
+        "src/app/api/quality/sgs/route.ts"
+      ]
+    },
+    {
+      "msg": "证书编号已存在",
+      "files": [
+        "src/app/api/quality/sgs/route.ts"
+      ]
+    },
+    {
+      "msg": "供应商名称不能为空",
+      "files": [
+        "src/app/api/quality/supplier-audit/route.ts"
+      ]
+    },
+    {
+      "msg": "检验单ID不能为空",
+      "files": [
+        "src/app/api/quality/unqualified/route.ts"
+      ]
+    },
+    {
+      "msg": "不合格数量必须大于0",
+      "files": [
+        "src/app/api/quality/unqualified/route.ts"
+      ]
+    },
+    {
+      "msg": "处理方式无效（应为 rework/scrap/concession/return）",
+      "files": [
+        "src/app/api/quality/unqualified/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少 id",
+      "files": [
+        "src/app/api/quality/unqualified/route.ts"
+      ]
+    },
+    {
+      "msg": "责任部门不能为空",
+      "files": [
+        "src/app/api/quality/unqualified/route.ts"
+      ]
+    },
+    {
+      "msg": "责任人不能为空",
+      "files": [
+        "src/app/api/quality/unqualified/route.ts"
+      ]
+    },
+    {
+      "msg": "处理人不能为空",
+      "files": [
+        "src/app/api/quality/unqualified/route.ts"
+      ]
+    },
+    {
+      "msg": "处理结果必须为: 1-合格 或 2-不合格",
+      "files": [
+        "src/app/api/quality/unqualified/route.ts"
+      ]
+    },
+    {
+      "msg": "损失金额不能为负数",
+      "files": [
+        "src/app/api/quality/unqualified/route.ts"
+      ]
+    },
+    {
+      "msg": "action 必须为 start 或 complete",
+      "files": [
+        "src/app/api/quality/unqualified/route.ts"
+      ]
+    },
+    {
+      "msg": "权限格式不正确，应为数组",
+      "files": [
+        "src/app/api/role-permissions/buttons/route.ts"
+      ]
+    },
+    {
+      "msg": "员工ID无效",
+      "files": [
+        "src/app/api/salary/payslips/[employeeId]/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少发货明细数据",
+      "files": [
+        "src/app/api/sales/delivery/[id]/ship/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少销售订单ID",
+      "files": [
+        "src/app/api/sales/delivery/partial/route.ts"
+      ]
+    },
+    {
+      "msg": "发货数量必须大于0",
+      "files": [
+        "src/app/api/sales/delivery/partial/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少原发货单ID",
+      "files": [
+        "src/app/api/sales/delivery/re-ship/route.ts"
+      ]
+    },
+    {
+      "msg": "补发数量必须大于0",
+      "files": [
+        "src/app/api/sales/delivery/re-ship/route.ts"
+      ]
+    },
+    {
+      "msg": "打样单ID不能为空",
+      "files": [
+        "src/app/api/sample/feedback/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填参数",
+      "files": [
+        "src/app/api/sample/feedback/route.ts"
+      ]
+    },
+    {
+      "msg": "反馈ID不能为空",
+      "files": [
+        "src/app/api/sample/feedback/route.ts"
+      ]
+    },
+    {
+      "msg": "样品库存ID不能为空",
+      "files": [
+        "src/app/api/sample/inventory/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填参数: id, action",
+      "files": [
+        "src/app/api/sample/orders/status/route.ts"
+      ]
+    },
+    {
+      "msg": "状态变更失败",
+      "files": [
+        "src/app/api/sample/orders/status/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必要参数：plateCode, plateName",
+      "files": [
+        "src/app/api/screen-plates/route.ts"
+      ]
+    },
+    {
+      "msg": "物料分类ID和仓库分类ID不能为空",
+      "files": [
+        "src/app/api/settings/category-linkage/route.ts"
+      ]
+    },
+    {
+      "msg": "物料分类不存在",
+      "files": [
+        "src/app/api/settings/category-linkage/route.ts"
+      ]
+    },
+    {
+      "msg": "仓库分类不存在",
+      "files": [
+        "src/app/api/settings/category-linkage/route.ts"
+      ]
+    },
+    {
+      "msg": "模块、配置键和新值不能为空",
+      "files": [
+        "src/app/api/settings/change-approval/route.ts"
+      ]
+    },
+    {
+      "msg": "变更请求ID和操作类型不能为空",
+      "files": [
+        "src/app/api/settings/change-approval/route.ts"
+      ]
+    },
+    {
+      "msg": "操作类型无效，仅支持approve/reject",
+      "files": [
+        "src/app/api/settings/change-approval/route.ts"
+      ]
+    },
+    {
+      "msg": "变更请求不存在或已处理",
+      "files": [
+        "src/app/api/settings/change-approval/route.ts"
+      ]
+    },
+    {
+      "msg": "单据日期格式",
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "msg": "所有单据编号中的日期格式",
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "msg": "混合油墨过期时间",
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "msg": "是否允许没有订单直接发料（建议关闭）",
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "msg": "允许重复报工",
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "msg": "是否允许同一工序重复报工（建议关闭）",
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "msg": "成品入库前必须检验",
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "msg": "成品入库前是否必须经过FQC检验",
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "msg": "发货前必须OQC检验",
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "msg": "发货前是否必须经过OQC出货检验",
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "msg": "是否必填",
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少配置数据",
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少变更记录ID",
+      "files": [
+        "src/app/api/settings/system/route.ts"
+      ]
+    },
+    {
+      "msg": "评估记录不存在",
+      "files": [
+        "src/app/api/srm/evaluation/[id]/route.ts"
+      ]
+    },
+    {
+      "msg": "作废时必须填写原因",
+      "files": [
+        "src/app/api/standard-card/action/route.ts"
+      ]
+    },
+    {
+      "msg": "标准卡ID不能为空",
+      "files": [
+        "src/app/api/standard-cards/approve/route.ts"
+      ]
+    },
+    {
+      "msg": "审核类型无效",
+      "files": [
+        "src/app/api/standard-cards/approve/route.ts"
+      ]
+    },
+    {
+      "msg": "审核人信息不能为空",
+      "files": [
+        "src/app/api/standard-cards/approve/route.ts"
+      ]
+    },
+    {
+      "msg": "标准卡不存在",
+      "files": [
+        "src/app/api/standard-cards/approve/route.ts"
+      ]
+    },
+    {
+      "msg": "该环节未审核，无法撤销",
+      "files": [
+        "src/app/api/standard-cards/approve/route.ts"
+      ]
+    },
+    {
+      "msg": "驳回",
+      "files": [
+        "src/app/api/standard-cards/approve/route.ts"
+      ]
+    },
+    {
+      "msg": "无效的产品ID",
+      "files": [
+        "src/app/api/standard-cards/by-material/[material_id]/route.ts"
+      ]
+    },
+    {
+      "msg": "无效的工单ID",
+      "files": [
+        "src/app/api/standard-cards/by-work-order/[work_order_id]/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少实际参数数据",
+      "files": [
+        "src/app/api/standard-cards/check-deviation/route.ts"
+      ]
+    },
+    {
+      "msg": "标准卡编号已存在",
+      "files": [
+        "src/app/api/standard-cards/route.ts"
+      ]
+    },
+    {
+      "msg": "公告ID不能为空",
+      "files": [
+        "src/app/api/system/announcement/route.ts"
+      ]
+    },
+    {
+      "msg": "批次过期预警天数",
+      "files": [
+        "src/app/api/system/config/route.ts"
+      ]
+    },
+    {
+      "msg": "下单时是否校验客户可用信用额度",
+      "files": [
+        "src/app/api/system/config/route.ts"
+      ]
+    },
+    {
+      "msg": "登录失败锁定次数",
+      "files": [
+        "src/app/api/system/config/route.ts"
+      ]
+    },
+    {
+      "msg": "连续登录失败多少次后锁定账号",
+      "files": [
+        "src/app/api/system/config/route.ts"
+      ]
+    },
+    {
+      "msg": "会话超时",
+      "files": [
+        "src/app/api/system/config/route.ts"
+      ]
+    },
+    {
+      "msg": "用户会话超时时间（分钟）",
+      "files": [
+        "src/app/api/system/config/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少 config_key",
+      "files": [
+        "src/app/api/system/config/update/route.ts"
+      ]
+    },
+    {
+      "msg": "配置项不存在",
+      "files": [
+        "src/app/api/system/config/update/route.ts"
+      ]
+    },
+    {
+      "msg": "币种代码已存在",
+      "files": [
+        "src/app/api/system/currency/route.ts"
+      ]
+    },
+    {
+      "msg": "币种名称不能为空",
+      "files": [
+        "src/app/api/system/currency/route.ts"
+      ]
+    },
+    {
+      "msg": "该币种已被汇率记录或公司本位币引用，无法删除",
+      "files": [
+        "src/app/api/system/currency/route.ts"
+      ]
+    },
+    {
+      "msg": "角色ID不能为空",
+      "files": [
+        "src/app/api/system/data-scope/route.ts"
+      ]
+    },
+    {
+      "msg": "字典类型编码已存在",
+      "files": [
+        "src/app/api/system/dict/route.ts"
+      ]
+    },
+    {
+      "msg": "字典类型不存在",
+      "files": [
+        "src/app/api/system/dict/route.ts"
+      ]
+    },
+    {
+      "msg": "源币种和目标币种不能相同",
+      "files": [
+        "src/app/api/system/exchange-rate/route.ts"
+      ]
+    },
+    {
+      "msg": "汇率必须大于 0",
+      "files": [
+        "src/app/api/system/exchange-rate/route.ts"
+      ]
+    },
+    {
+      "msg": "源币种不存在",
+      "files": [
+        "src/app/api/system/exchange-rate/route.ts"
+      ]
+    },
+    {
+      "msg": "目标币种不存在",
+      "files": [
+        "src/app/api/system/exchange-rate/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少事务ID (trxId)",
+      "files": [
+        "src/app/api/system/monitor/deadlock/route.ts"
+      ]
+    },
+    {
+      "msg": "密码必须包含字母和数字",
+      "files": [
+        "src/app/api/system/profile/password/route.ts"
+      ]
+    },
+    {
+      "msg": "任务不存在",
+      "files": [
+        "src/app/api/system/scheduler/route.ts"
+      ]
+    },
+    {
+      "msg": "任务ID不能为空",
+      "files": [
+        "src/app/api/system/scheduler/route.ts"
+      ]
+    },
+    {
+      "msg": " 条过期日志",
+      "files": [
+        "src/app/api/system/scheduler/route.ts"
+      ]
+    },
+    {
+      "msg": "流程名称和模块类型不能为空",
+      "files": [
+        "src/app/api/system/workflow/route.ts"
+      ]
+    },
+    {
+      "msg": "流程ID不能为空",
+      "files": [
+        "src/app/api/system/workflow/route.ts"
+      ]
+    },
+    {
+      "msg": "该流程有正在进行的审批实例，无法删除",
+      "files": [
+        "src/app/api/system/workflow/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少模板ID",
+      "files": [
+        "src/app/api/trace/label/[id]/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: name, scenario, htmlTemplate",
+      "files": [
+        "src/app/api/trace/label/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: quantity, count",
+      "files": [
+        "src/app/api/trace/qr/generate/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少 scans 数组",
+      "files": [
+        "src/app/api/trace/qr/scan/batch/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: qrCode, operator",
+      "files": [
+        "src/app/api/trace/qr/scan/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: parentQrCode, splits",
+      "files": [
+        "src/app/api/trace/qr/split/route.ts"
+      ]
+    },
+    {
+      "msg": "无效的查询类型",
+      "files": [
+        "src/app/api/warehouse/alert-push/route.ts"
+      ]
+    },
+    {
+      "msg": "规则名称、预警类型和阈值不能为空",
+      "files": [
+        "src/app/api/warehouse/alert-push/route.ts"
+      ]
+    },
+    {
+      "msg": "通知ID列表不能为空",
+      "files": [
+        "src/app/api/warehouse/alert-push/route.ts"
+      ]
+    },
+    {
+      "msg": "规则ID不能为空",
+      "files": [
+        "src/app/api/warehouse/alert-push/route.ts"
+      ]
+    },
+    {
+      "msg": " 库存不足",
+      "files": [
+        "src/app/api/warehouse/alert-push/route.ts"
+      ]
+    },
+    {
+      "msg": "批次ID不能为空",
+      "files": [
+        "src/app/api/warehouse/batch/route.ts"
+      ]
+    },
+    {
+      "msg": "batchNo 不能为空",
+      "files": [
+        "src/app/api/warehouse/batch/trace/route.ts"
+      ]
+    },
+    {
+      "msg": "没有找到入库记录，无法计算成本",
+      "files": [
+        "src/app/api/warehouse/cost/route.ts"
+      ]
+    },
+    {
+      "msg": "无效的FIFO模式, 可选: off/hint/force",
+      "files": [
+        "src/app/api/warehouse/fifo-config/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填参数: materialId, warehouseId",
+      "files": [
+        "src/app/api/warehouse/fifo-recommend/route.ts"
+      ]
+    },
+    {
+      "msg": "物料ID、仓库ID和冻结数量不能为空",
+      "files": [
+        "src/app/api/warehouse/freeze/route.ts"
+      ]
+    },
+    {
+      "msg": "冻结数量必须大于0",
+      "files": [
+        "src/app/api/warehouse/freeze/route.ts"
+      ]
+    },
+    {
+      "msg": "库存记录不存在",
+      "files": [
+        "src/app/api/warehouse/freeze/route.ts"
+      ]
+    },
+    {
+      "msg": "冻结记录ID不能为空",
+      "files": [
+        "src/app/api/warehouse/freeze/route.ts"
+      ]
+    },
+    {
+      "msg": "冻结记录不存在或已解冻",
+      "files": [
+        "src/app/api/warehouse/freeze/route.ts"
+      ]
+    },
+    {
+      "msg": "解冻数量必须大于0",
+      "files": [
+        "src/app/api/warehouse/freeze/route.ts"
+      ]
+    },
+    {
+      "msg": "解冻数量不能超过冻结数量",
+      "files": [
+        "src/app/api/warehouse/freeze/route.ts"
+      ]
+    },
+    {
+      "msg": "码不存在",
+      "files": [
+        "src/app/api/warehouse/inbound/cutting/route.ts"
+      ]
+    },
+    {
+      "msg": "该标签库存量为零或负数，无法分切",
+      "files": [
+        "src/app/api/warehouse/inbound/cutting/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: cutWidthStr",
+      "files": [
+        "src/app/api/warehouse/inbound/cutting/route.ts"
+      ]
+    },
+    {
+      "msg": "分切宽幅格式不正确，请使用数字+数字的格式，如：300+400+300",
+      "files": [
+        "src/app/api/warehouse/inbound/cutting/route.ts"
+      ]
+    },
+    {
+      "msg": "库存不足，现有库存无法满足分切需求",
+      "files": [
+        "src/app/api/warehouse/inbound/cutting/route.ts"
+      ]
+    },
+    {
+      "msg": "[cutting] 事务失败:",
+      "files": [
+        "src/app/api/warehouse/inbound/cutting/route.ts"
+      ]
+    },
+    {
+      "msg": "入库明细缺少必填字段(line_no/material_id/material_name/batch_no)",
+      "files": [
+        "src/app/api/warehouse/inbound/from-po/route.ts"
+      ]
+    },
+    {
+      "msg": "已使用的标签不能删除",
+      "files": [
+        "src/app/api/warehouse/inbound/labels/route.ts"
+      ]
+    },
+    {
+      "msg": "入库单不存在或未被删除",
+      "files": [
+        "src/app/api/warehouse/inbound/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: total_qty, mixed_date, details",
+      "files": [
+        "src/app/api/warehouse/ink-mixing/route.ts"
+      ]
+    },
+    {
+      "msg": "混合批次ID不能为空",
+      "files": [
+        "src/app/api/warehouse/ink-mixing/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必填字段: material_id, open_time, expire_hours",
+      "files": [
+        "src/app/api/warehouse/ink-opening/route.ts"
+      ]
+    },
+    {
+      "msg": "开罐记录ID不能为空",
+      "files": [
+        "src/app/api/warehouse/ink-opening/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必要参数: materialId, warehouseId, quantity, businessNo",
+      "files": [
+        "src/app/api/warehouse/inventory/adjust/route.ts"
+      ]
+    },
+    {
+      "msg": "warehouseId 不能为空",
+      "files": [
+        "src/app/api/warehouse/outbound/fifo/route.ts"
+      ]
+    },
+    {
+      "msg": "warehouseId 和 items 不能为空",
+      "files": [
+        "src/app/api/warehouse/outbound/fifo/route.ts"
+      ]
+    },
+    {
+      "msg": "orderId 不能为空",
+      "files": [
+        "src/app/api/warehouse/outbound/fifo/route.ts"
+      ]
+    },
+    {
+      "msg": "[warehouse/outbound] 创建出库单失败:",
+      "files": [
+        "src/app/api/warehouse/outbound/route.ts"
+      ]
+    },
+    {
+      "msg": "质检结果不能为空",
+      "files": [
+        "src/app/api/warehouse/production-inbound/route.ts"
+      ]
+    },
+    {
+      "msg": "入库单不存在",
+      "files": [
+        "src/app/api/warehouse/production-inbound/route.ts"
+      ]
+    },
+    {
+      "msg": "已完成的入库单不能删除",
+      "files": [
+        "src/app/api/warehouse/production-inbound/route.ts"
+      ]
+    },
+    {
+      "msg": "仓库编码已存在",
+      "files": [
+        "src/app/api/warehouse/route.ts"
+      ]
+    },
+    {
+      "msg": "出库单不存在",
+      "files": [
+        "src/app/api/warehouse/sales-outbound/route.ts"
+      ]
+    },
+    {
+      "msg": "已完成的出库单不能删除",
+      "files": [
+        "src/app/api/warehouse/sales-outbound/route.ts"
+      ]
+    },
+    {
+      "msg": "母料批次和分切明细不能为空",
+      "files": [
+        "src/app/api/warehouse/split-order/route.ts"
+      ]
+    },
+    {
+      "msg": "splitId不能为空",
+      "files": [
+        "src/app/api/warehouse/split-order/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少 expectedStatus 参数（当前状态）",
+      "files": [
+        "src/app/api/warehouse/stock-adjust/route.ts"
+      ]
+    },
+    {
+      "msg": "并发冲突: 调整单状态已被其他操作变更，请刷新后重试",
+      "files": [
+        "src/app/api/warehouse/stock-adjust/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少父二维码参数",
+      "files": [
+        "src/app/api/warehouse/stocktaking/[id]/split-summary/route.ts"
+      ]
+    },
+    {
+      "msg": "请选择需要驳回的差异项",
+      "files": [
+        "src/app/api/warehouse/stocktaking/diff-process/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少入库明细数据",
+      "files": [
+        "src/app/api/warehouse/transfer/[id]/inbound/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少出库明细数据",
+      "files": [
+        "src/app/api/warehouse/transfer/[id]/outbound/route.ts"
+      ]
+    },
+    {
+      "msg": "调拨类型无效（1=库位调拨，2=仓库调拨）",
+      "files": [
+        "src/app/api/warehouse/transfer/route.ts"
+      ]
+    },
+    {
+      "msg": "库位调拨必须在同一仓库内进行",
+      "files": [
+        "src/app/api/warehouse/transfer/route.ts"
+      ]
+    },
+    {
+      "msg": "只有待审批的调拨单才能驳回",
+      "files": [
+        "src/app/api/warehouse/transfer/route.ts"
+      ]
+    },
+    {
+      "msg": "换算比例必须大于0",
+      "files": [
+        "src/app/api/warehouse/unit-conversion/route.ts"
+      ]
+    },
+    {
+      "msg": "物料ID、源单位、目标单位和数量不能为空",
+      "files": [
+        "src/app/api/warehouse/unit-conversion/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少必要的参数",
+      "files": [
+        "src/app/api/workflow/process/route.ts"
+      ]
+    },
+    {
+      "msg": "无效的审批动作",
+      "files": [
+        "src/app/api/workflow/process/route.ts"
+      ]
+    },
+    {
+      "msg": "缺少实例ID或来源信息",
+      "files": [
+        "src/app/api/workflow/process/route.ts"
+      ]
+    },
+    {
+      "msg": "审批实例不存在",
+      "files": [
+        "src/app/api/workflow/process/route.ts"
+      ]
+    }
+  ]
+}

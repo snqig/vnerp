@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -86,6 +89,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 }, { logTitle: '查询不合格品列表' });
 
 export const POST = withPermission(async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     const body = await request.json();
     const {
@@ -105,13 +109,13 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
     } = body;
 
     if (!inspection_id || inspection_id <= 0) {
-      return errorResponse('检验单ID不能为空', 400);
+      return errorResponse(ts('k_sldnwj'), 400);
     }
     if (quantity === undefined || quantity <= 0) {
-      return errorResponse('不合格数量必须大于0', 400);
+      return errorResponse(ts('k_1r79tz4'), 400);
     }
     if (handle_type !== undefined && !isHandleMethodValue(handle_type)) {
-      return errorResponse('处理方式无效（应为 rework/scrap/concession/return）', 400);
+      return errorResponse(ts('k_1g4hjfe'), 400);
     }
 
     const result = await service.createRecord({
@@ -137,7 +141,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
         unqualified_no: result.unqualifiedNo,
         handle_no: result.handleNo,
       },
-      '不合格品记录创建成功'
+      ts('k_16kx4xo')
     );
   } catch (e) {
     if (e instanceof DomainError) return domainErrorToResponse(e);
@@ -146,23 +150,24 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
 }, { logTitle: '创建不合格品记录', logType: 'business' });
 
 export const PUT = withPermission(async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     const body = await request.json();
     const { action, id } = body;
 
     if (!id) {
-      return errorResponse('缺少 id', 400);
+      return errorResponse(ts('k_1u4r88h'), 400);
     }
     if (action === 'start') {
       const { handle_type, responsible_dept, responsible_person } = body;
       if (!isHandleMethodValue(handle_type)) {
-        return errorResponse('处理方式无效（应为 rework/scrap/concession/return）', 400);
+        return errorResponse(ts('k_1g4hjfe'), 400);
       }
       if (!responsible_dept || !responsible_dept.trim()) {
-        return errorResponse('责任部门不能为空', 400);
+        return errorResponse(ts('k_1tuvq05'), 400);
       }
       if (!responsible_person || !responsible_person.trim()) {
-        return errorResponse('责任人不能为空', 400);
+        return errorResponse(ts('k_1joih2d'), 400);
       }
 
       const result = await service.startHandle({
@@ -173,19 +178,19 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
         updateBy: userInfo.userId,
       });
 
-      return successResponse(result, '已开始处理');
+      return successResponse(result, ts('k_gchcqi'));
     }
 
     if (action === 'complete') {
       const { handler, handle_result, cost_amount } = body;
       if (!handler || !handler.trim()) {
-        return errorResponse('处理人不能为空', 400);
+        return errorResponse(ts('k_z5ky01'), 400);
       }
       if (handle_result !== 1 && handle_result !== 2) {
-        return errorResponse('处理结果必须为: 1-合格 或 2-不合格', 400);
+        return errorResponse(ts('k_1qad9h0'), 400);
       }
       if (cost_amount === undefined || cost_amount < 0) {
-        return errorResponse('损失金额不能为负数', 400);
+        return errorResponse(ts('k_sxaiey'), 400);
       }
 
       const result = await service.completeHandle({
@@ -196,10 +201,10 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
         updateBy: userInfo.userId,
       });
 
-      return successResponse(result, '处理完成');
+      return successResponse(result, ts('k_da7gln'));
     }
 
-    return errorResponse('action 必须为 start 或 complete', 400);
+    return errorResponse(ts('k_17a0jsi'), 400);
   } catch (e) {
     if (e instanceof DomainError) return domainErrorToResponse(e);
     throw e;
@@ -207,13 +212,14 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
 }, { logTitle: '更新不合格品处理状态', logType: 'business' });
 
 export const DELETE = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('缺少 id', 400);
+    if (!id) return errorResponse(ts('k_1u4r88h'), 400);
 
     await service.deleteRecord(Number(id));
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   } catch (e) {
     if (e instanceof DomainError) return domainErrorToResponse(e);
     throw e;

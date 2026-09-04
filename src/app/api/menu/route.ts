@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -18,6 +21,7 @@ function buildMenuTree(menus: DbRow[], parentId: number = 0): DbRow[] {
 
 // 获取菜单列表
 export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
@@ -55,8 +59,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     // 构建树形结构
     const menuTree = buildMenuTree(menus as DbRow[]);
 
-    return successResponse(menuTree, '获取菜单列表成功');
+    return successResponse(menuTree, ts('k_1rqbgy9'));
   } catch {
-    return errorResponse('获取菜单列表失败', 500);
+    return errorResponse(ts('k_1bwkshy'), 500);
   }
 });

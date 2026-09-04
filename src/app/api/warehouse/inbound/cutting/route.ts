@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -27,6 +30,7 @@ function generateLabelNo(): string {
 // GET - 获取分切记录列表 / 校验单个标签（?labelNo=xxx）
 export const GET = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const labelNo = searchParams.get('labelNo');
 
@@ -38,24 +42,24 @@ export const GET = withPermission(
       );
 
       if (!label) {
-        return errorResponse('码不存在', 404, 404);
+        return errorResponse(ts('k_tb88fv'), 404, 404);
       }
 
       if (label.is_cut === 1) {
-        return errorResponse('物料已分切', 400, 400);
+        return errorResponse(ts('k_9m6090'), 400, 400);
       }
 
       if (label.is_used === 1) {
-        return errorResponse('物料已使用', 400, 400);
+        return errorResponse(ts('k_17emfzc'), 400, 400);
       }
 
       if (label.label_type !== 1) {
-        return errorResponse('非母材请在采购进货中作业', 400, 400);
+        return errorResponse(ts('k_14v58i'), 400, 400);
       }
 
       const currentQty = parseFloat(label.quantity) || 0;
       if (currentQty <= 0) {
-        return errorResponse('该标签库存量为零或负数，无法分切', 400, 400);
+        return errorResponse(ts('k_1d308dk'), 400, 400);
       }
 
       return successResponse({
@@ -135,6 +139,7 @@ export const GET = withPermission(
 // POST - 执行分切操作
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     const {
@@ -156,10 +161,10 @@ export const POST = withPermission(
     } = body;
 
     if (!cutWidthStr) {
-      return errorResponse('缺少必填字段: cutWidthStr', 400, 400);
+      return errorResponse(ts('k_17irfdd'), 400, 400);
     }
     const finalOperatorId = operatorId || '1';
-    const finalOperatorName = operatorName || '系统管理员';
+    const finalOperatorName = operatorName || ts('k_1csar6s');
 
     let sourceLabel: unknown = null;
 
@@ -179,25 +184,25 @@ export const POST = withPermission(
     }
 
     if (!sourceLabel) {
-      return errorResponse('码不存在', 404, 404);
+      return errorResponse(ts('k_tb88fv'), 404, 404);
     }
 
     if (sourceLabel.is_cut === 1) {
-      return errorResponse('物料已分切', 400, 400);
+      return errorResponse(ts('k_9m6090'), 400, 400);
     }
 
     if (sourceLabel.is_used === 1) {
-      return errorResponse('物料已使用', 400, 400);
+      return errorResponse(ts('k_17emfzc'), 400, 400);
     }
 
     // 仅 label_type=1（原材料/母材）允许分切
     if (sourceLabel.label_type !== 1) {
-      return errorResponse('非母材请在采购进货中作业', 400, 400);
+      return errorResponse(ts('k_14v58i'), 400, 400);
     }
 
     const currentQty = parseFloat(sourceLabel.quantity) || 0;
     if (currentQty <= 0) {
-      return errorResponse('该标签库存量为零或负数，无法分切', 400, 400);
+      return errorResponse(ts('k_1d308dk'), 400, 400);
     }
 
     const cutWidths = cutWidthStr.split('+').map((w: string) => parseFloat(w.trim()));
@@ -205,7 +210,7 @@ export const POST = withPermission(
     for (const width of cutWidths) {
       if (isNaN(width) || width <= 0) {
         return errorResponse(
-          '分切宽幅格式不正确，请使用数字+数字的格式，如：300+400+300',
+          ts('k_jabzv'),
           400,
           400
         );
@@ -244,7 +249,7 @@ export const POST = withPermission(
 
     if (originalW <= 0) {
       return errorResponse(
-        `无法确定母材宽幅：标签和物料档案均缺少 specification/width，请先在物料档案中维护规格（如 1000×1200mm）`,
+        ts('k_jgelb8'),
         400,
         400
       );
@@ -260,7 +265,7 @@ export const POST = withPermission(
 
     // 库存校验（按数量）：现有库存是否满足分切后剩余 >= 0
     if (currentQty < cutTotalWidth) {
-      return errorResponse('库存不足，现有库存无法满足分切需求', 400, 400);
+      return errorResponse(ts('k_e5fenc'), 400, 400);
     }
 
     const recordNo = generateRecordNo();
@@ -447,11 +452,11 @@ export const POST = withPermission(
         };
       });
     } catch (txErr) {
-      console.error('[cutting] 事务失败:', txErr);
+      console.error(ts('k_1h49xnl'), txErr);
       return errorResponse(`分切事务失败: ${(txErr as Error).message}`, 500, 500);
     }
 
-    return successResponse(result, '分切操作成功');
+    return successResponse(result, ts('k_1nyiu0q'));
   },
   { errorMessage: '分切操作失败' }
 );

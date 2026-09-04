@@ -49,6 +49,7 @@ interface DictData {
 }
 
 export default function DictPage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('System');
   const tc = useTranslations('Common');
   const { toast } = useToast();
@@ -106,7 +107,7 @@ export default function DictPage() {
         setTypeForm({ dict_name: '', dict_type: '', status: 1, remark: '' });
         fetchData();
       } else {
-        toast({ title: result.message || '创建失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_1jxltyq'), variant: 'destructive' });
       }
     } catch {
       toast({ title: tc('createFailed'), variant: 'destructive' });
@@ -145,7 +146,7 @@ export default function DictPage() {
         });
         fetchData();
       } else {
-        toast({ title: result.message || '创建失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_1jxltyq'), variant: 'destructive' });
       }
     } catch {
       toast({ title: tc('createFailed'), variant: 'destructive' });
@@ -327,8 +328,7 @@ export default function DictPage() {
                 </Table>
               ) : (
                 <div className="text-center text-muted-foreground py-12">
-                  请从左侧选择一个字典类型
-                </div>
+                  {ts('k_1ueclu2')}</div>
               )}
             </CardContent>
           </Card>

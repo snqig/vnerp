@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { execute, queryOne } from '@/lib/db';
 import {
@@ -32,6 +35,7 @@ interface Company {
 
 // GET - 获取企业信息
 export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type');
 
@@ -48,12 +52,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     return successResponse(company);
   }
 
-  return commonErrors.badRequest('无效的请求类型');
+  return commonErrors.badRequest(ts('k_xflhs8'));
 });
 
 // PUT - 更新企业信息
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body: Company = await request.json();
 
     // 检查企业信息是否存在
@@ -93,7 +98,7 @@ export const PUT = withPermission(
         ]
       );
 
-      return successResponse({ id: result.insertId }, '企业信息创建成功');
+      return successResponse({ id: result.insertId }, ts('k_1pvyl8y'));
     }
 
     // 更新企业信息
@@ -133,10 +138,10 @@ export const PUT = withPermission(
     );
 
     if (result.affectedRows === 0) {
-      return commonErrors.notFound('企业信息不存在');
+      return commonErrors.notFound(ts('k_1nf2v1x'));
     }
 
-    return successResponse(null, '企业信息更新成功');
+    return successResponse(null, ts('k_9deiaf'));
   },
   { logTitle: '更新企业信息' }
 );

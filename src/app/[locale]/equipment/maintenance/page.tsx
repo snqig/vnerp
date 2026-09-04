@@ -131,13 +131,14 @@ const PLAN_STATUS: Record<number, { label: string; color: string }> = {
   4: { label: EQUIPMENT_PLAN_STATUS_LABEL[4], color: 'bg-red-100 text-red-800' },
 };
 export default function EquipmentMaintenancePage() {
+  const ts = useTranslations('Equipment');
   // 翻译钩子
   const tc = useTranslations('Common');
 
   const RECORD_RESULT: Record<number, { label: string; color: string }> = {
     1: { label: tc('normal'), color: 'bg-green-100 text-green-800' },
-    2: { label: '异常', color: 'bg-red-100 text-red-800' },
-    3: { label: '需跟进', color: 'bg-yellow-100 text-yellow-800' },
+    2: { label: ts('k_1uz4mvb'), color: 'bg-red-100 text-red-800' },
+    3: { label: ts('k_1qw8bup'), color: 'bg-yellow-100 text-yellow-800' },
   };
 
   const { toast } = useToast();
@@ -359,25 +360,23 @@ export default function EquipmentMaintenancePage() {
   };
 
   return (
-    <MainLayout title="设备保养">
+    <MainLayout title={ts('k_1q6ppqq')}>
       <div className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex items-center justify-between">
             <TabsList>
               <TabsTrigger value="plan" className="gap-1">
                 <ClipboardList className="w-4 h-4" />
-                保养计划
-              </TabsTrigger>
+                {ts('k_lbzvry')}</TabsTrigger>
               <TabsTrigger value="record" className="gap-1">
                 <Wrench className="w-4 h-4" />
-                保养记录
-              </TabsTrigger>
+                {ts('k_153mfl6')}</TabsTrigger>
             </TabsList>
             <div className="flex gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="搜索单号..."
+                  placeholder={ts('k_1ucphur')}
                   value={searchNo}
                   onChange={(e) => setSearchNo(e.target.value)}
                   className="pl-9 w-48"
@@ -392,13 +391,11 @@ export default function EquipmentMaintenancePage() {
               {activeTab === 'plan' ? (
                 <Button onClick={openNewPlan} className="bg-blue-600 hover:bg-blue-700">
                   <Plus className="w-4 h-4 mr-2" />
-                  新增保养计划
-                </Button>
+                  {ts('k_1cc8vv0')}</Button>
               ) : (
                 <Button onClick={() => openNewRecord()} className="bg-blue-600 hover:bg-blue-700">
                   <Plus className="w-4 h-4 mr-2" />
-                  新增保养记录
-                </Button>
+                  {ts('k_ftslz8')}</Button>
               )}
             </div>
           </div>
@@ -406,7 +403,7 @@ export default function EquipmentMaintenancePage() {
           <TabsContent value="plan">
             <Card>
               <CardHeader>
-                <CardTitle>保养计划</CardTitle>
+                <CardTitle>{ts('k_lbzvry')}</CardTitle>
                 <CardDescription>{tc('maintenancePlanDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
@@ -422,13 +419,13 @@ export default function EquipmentMaintenancePage() {
                         <TableHead className="w-10">
                           <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
                         </TableHead>
-                        <TableHead>计划编号</TableHead>
-                        <TableHead>设备编码</TableHead>
-                        <TableHead>设备名称</TableHead>
-                        <TableHead>计划名称</TableHead>
+                        <TableHead>{ts('k_z08fjd')}</TableHead>
+                        <TableHead>{ts('k_17s4qyf')}</TableHead>
+                        <TableHead>{ts('k_eb1q6f')}</TableHead>
+                        <TableHead>{ts('k_iuncnz')}</TableHead>
                         <TableHead>{tc('maintenanceType')}</TableHead>
-                        <TableHead>周期</TableHead>
-                        <TableHead>下次执行</TableHead>
+                        <TableHead>{ts('k_1psceoo')}</TableHead>
+                        <TableHead>{ts('k_ur9pka')}</TableHead>
                         <TableHead>{tc('status')}</TableHead>
                         <TableHead className="text-right">{tc('actions')}</TableHead>
                       </TableRow>
@@ -439,7 +436,7 @@ export default function EquipmentMaintenancePage() {
                         return (
                           <TableRow key={p.id}>
                             <TableCell>
-                              <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(p.id))} onChange={() => toggle(String(p.id))} aria-label={tc('selectAll')} />
+                              <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(p.id))} onChange={() => toggle(String(p.id))} aria-label={tc('selectRow', { id: p.id })} />
                             </TableCell>
                             <TableCell className="font-mono text-sm">{p.plan_no}</TableCell>
                             <TableCell>{p.equipment_code || '-'}</TableCell>
@@ -467,8 +464,7 @@ export default function EquipmentMaintenancePage() {
                                     className="h-7 text-xs"
                                     onClick={() => handlePlanStatus(p.id, 2)}
                                   >
-                                    开始执行
-                                  </Button>
+                                    {ts('k_16xeupj')}</Button>
                                 )}
                                 {p.status === 2 && (
                                   <Button
@@ -477,8 +473,7 @@ export default function EquipmentMaintenancePage() {
                                     className="h-7 text-xs"
                                     onClick={() => openNewRecord(p)}
                                   >
-                                    填写记录
-                                  </Button>
+                                    {ts('k_vhv7sa')}</Button>
                                 )}
                                 <Button
                                   size="sm"
@@ -519,15 +514,14 @@ export default function EquipmentMaintenancePage() {
                       {plans.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                            暂无保养计划
-                          </TableCell>
+                            {ts('k_c2tohs')}</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
                 )}
                 <div className="flex items-center justify-between mt-4">
-                  <span className="text-sm text-gray-500">共{planTotal}条</span>
+                  <span className="text-sm text-gray-500">{ts('k_1vsm2qk')}{planTotal}{ts('k_1rfm5gs')}</span>
                   <div className="flex gap-2">
                     <Button
                       size="sm"
@@ -535,16 +529,14 @@ export default function EquipmentMaintenancePage() {
                       disabled={planPage <= 1}
                       onClick={() => setPlanPage((p) => p - 1)}
                     >
-                      上一页
-                    </Button>
+                      {tc('prevPage')}</Button>
                     <Button
                       size="sm"
                       variant="outline"
                       disabled={planPage * 20 >= planTotal}
                       onClick={() => setPlanPage((p) => p + 1)}
                     >
-                      下一页
-                    </Button>
+                      {tc('nextPage')}</Button>
                   </div>
                 </div>
               </CardContent>
@@ -554,7 +546,7 @@ export default function EquipmentMaintenancePage() {
           <TabsContent value="record">
             <Card>
               <CardHeader>
-                <CardTitle>保养记录</CardTitle>
+                <CardTitle>{ts('k_153mfl6')}</CardTitle>
                 <CardDescription>{tc('recordDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
@@ -570,14 +562,14 @@ export default function EquipmentMaintenancePage() {
                         <TableHead className="w-10">
                           <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
                         </TableHead>
-                        <TableHead>记录编号</TableHead>
-                        <TableHead>设备编码</TableHead>
-                        <TableHead>设备名称</TableHead>
+                        <TableHead>{ts('k_mbiz3h')}</TableHead>
+                        <TableHead>{ts('k_17s4qyf')}</TableHead>
+                        <TableHead>{ts('k_eb1q6f')}</TableHead>
                         <TableHead>{tc('maintenanceType')}</TableHead>
-                        <TableHead>开始时间</TableHead>
-                        <TableHead>结束时间</TableHead>
-                        <TableHead>停机时长</TableHead>
-                        <TableHead>费用</TableHead>
+                        <TableHead>{ts('k_j6x7pa')}</TableHead>
+                        <TableHead>{ts('k_9uebcl')}</TableHead>
+                        <TableHead>{tc('downtimeHours')}</TableHead>
+                        <TableHead>{ts('k_1j4app0')}</TableHead>
                         <TableHead>{tc('maintenanceResult')}</TableHead>
                         <TableHead className="text-right">{tc('actions')}</TableHead>
                       </TableRow>
@@ -588,7 +580,7 @@ export default function EquipmentMaintenancePage() {
                         return (
                           <TableRow key={r.id}>
                             <TableCell>
-                              <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectAll')} />
+                              <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectRow', { id: r.id })} />
                             </TableCell>
                             <TableCell className="font-mono text-sm">{r.record_no}</TableCell>
                             <TableCell>{r.equipment_code || '-'}</TableCell>
@@ -635,15 +627,14 @@ export default function EquipmentMaintenancePage() {
                       {records.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={10} className="text-center text-gray-400 py-8">
-                            暂无保养记录
-                          </TableCell>
+                            {ts('k_1ugxzr4')}</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
                 )}
                 <div className="flex items-center justify-between mt-4">
-                  <span className="text-sm text-gray-500">共{recordTotal}条</span>
+                  <span className="text-sm text-gray-500">{ts('k_1vsm2qk')}{recordTotal}{ts('k_1rfm5gs')}</span>
                   <div className="flex gap-2">
                     <Button
                       size="sm"
@@ -651,16 +642,14 @@ export default function EquipmentMaintenancePage() {
                       disabled={recordPage <= 1}
                       onClick={() => setRecordPage((p) => p - 1)}
                     >
-                      上一页
-                    </Button>
+                      {tc('prevPage')}</Button>
                     <Button
                       size="sm"
                       variant="outline"
                       disabled={recordPage * 20 >= recordTotal}
                       onClick={() => setRecordPage((p) => p + 1)}
                     >
-                      下一页
-                    </Button>
+                      {tc('nextPage')}</Button>
                   </div>
                 </div>
               </CardContent>
@@ -675,14 +664,14 @@ export default function EquipmentMaintenancePage() {
             <DialogTitle>
               {dialogType === 'plan'
                 ? form.id
-                  ? '编辑保养计划'
-                  : '新增保养计划'
+                  ? ts('k_1ab5x0v')
+                  : ts('k_1cc8vv0')
                 : form.id
-                  ? '编辑保养记录'
-                  : '新增保养记录'}
+                  ? ts('k_1q31o2r')
+                  : ts('k_ftslz8')}
             </DialogTitle>
             <DialogDescription>
-              {dialogType === 'plan' ? '设置设备定期保养计划' : '记录设备保养执行情况'}
+              {dialogType === 'plan' ? ts('k_mza5xi') : ts('k_1haq8sw')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -691,8 +680,7 @@ export default function EquipmentMaintenancePage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>
-                      设备
-                      <span className="text-red-500">*</span>
+                      {ts('k_1kb4ymq')}<span className="text-red-500">*</span>
                     </Label>
                     <Select
                       value={String(form.equipment_id || '')}
@@ -707,7 +695,7 @@ export default function EquipmentMaintenancePage() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="选择设备" />
+                        <SelectValue placeholder={ts('k_jvodvo')} />
                       </SelectTrigger>
                       <SelectContent>
                         {equipmentList.map((eq: Loose) => (
@@ -720,13 +708,12 @@ export default function EquipmentMaintenancePage() {
                   </div>
                   <div className="space-y-2">
                     <Label>
-                      计划名称
-                      <span className="text-red-500">*</span>
+                      {ts('k_iuncnz')}<span className="text-red-500">*</span>
                     </Label>
                     <Input
                       value={form.plan_name || ''}
                       onChange={(e) => setForm({ ...form, plan_name: e.target.value })}
-                      placeholder="如：印刷机月度保养"
+                      placeholder={ts('k_1rl759k')}
                     />
                   </div>
                 </div>
@@ -750,7 +737,7 @@ export default function EquipmentMaintenancePage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>周期类型</Label>
+                    <Label>{ts('k_1lulsd2')}</Label>
                     <Select
                       value={String(form.plan_cycle_type || 'monthly')}
                       onValueChange={(v) => setForm({ ...form, plan_cycle_type: v })}
@@ -796,8 +783,7 @@ export default function EquipmentMaintenancePage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>
-                      设备
-                      <span className="text-red-500">*</span>
+                      {ts('k_1kb4ymq')}<span className="text-red-500">*</span>
                     </Label>
                     <Select
                       value={String(form.equipment_id || '')}
@@ -813,7 +799,7 @@ export default function EquipmentMaintenancePage() {
                       disabled={!!form.plan_id}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="选择设备" />
+                        <SelectValue placeholder={ts('k_jvodvo')} />
                       </SelectTrigger>
                       <SelectContent>
                         {equipmentList.map((eq: Loose) => (
@@ -845,8 +831,7 @@ export default function EquipmentMaintenancePage() {
                 </div>
                 <div className="space-y-2">
                   <Label>
-                    维保日期
-                    <span className="text-red-500">*</span>
+                    {ts('k_1xkpsc6')}<span className="text-red-500">*</span>
                   </Label>
                   <Input
                     type="date"
@@ -856,7 +841,7 @@ export default function EquipmentMaintenancePage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>开始时间</Label>
+                    <Label>{ts('k_j6x7pa')}</Label>
                     <Input
                       type="datetime-local"
                       value={form.start_time || ''}
@@ -864,7 +849,7 @@ export default function EquipmentMaintenancePage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>结束时间</Label>
+                    <Label>{ts('k_9uebcl')}</Label>
                     <Input
                       type="datetime-local"
                       value={form.end_time || ''}
@@ -913,11 +898,11 @@ export default function EquipmentMaintenancePage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>故障描述</Label>
+                  <Label>{ts('k_784d9f')}</Label>
                   <Textarea
                     value={form.fault_desc || ''}
                     onChange={(e) => setForm({ ...form, fault_desc: e.target.value })}
-                    placeholder="描述故障情况..."
+                    placeholder={ts('k_rhj8q1')}
                     rows={2}
                   />
                 </div>
@@ -943,11 +928,9 @@ export default function EquipmentMaintenancePage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              取消
-            </Button>
+              {tc('cancel')}</Button>
             <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-              保存
-            </Button>
+              {ts('k_1c3mapc')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

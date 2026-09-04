@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -10,6 +13,7 @@ const _workflowEngine = new WorkflowEngine();
 
 // 获取所有审批流程配置
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const moduleType = searchParams.get('module'); // 模块: sales_order, purchase_order, etc.
   const isActive = searchParams.get('isActive');
@@ -42,20 +46,21 @@ export const GET = withPermission(async (request: NextRequest) => {
     })
   );
 
-  return successResponse({ list: result }, '获取审批流程配置成功');
+  return successResponse({ list: result }, ts('k_1samhj0'));
 });
 
 // 创建审批流程配置
 export const POST = withPermission(async (request: NextRequest, user: UserInfo) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { workflowName, moduleType, description, nodes, isActive = false, priority = 0 } = body;
 
   if (!workflowName || !moduleType) {
-    return errorResponse('流程名称和模块类型不能为空', 400, 400);
+    return errorResponse(ts('k_125pb60'), 400, 400);
   }
 
   if (!nodes || nodes.length === 0) {
-    return errorResponse('至少需要配置一个审批节点', 400, 400);
+    return errorResponse(ts('k_xepe6w'), 400, 400);
   }
 
   // 创建流程配置
@@ -100,17 +105,18 @@ export const POST = withPermission(async (request: NextRequest, user: UserInfo) 
       workflowId,
       workflowName,
     },
-    '审批流程创建成功'
+    ts('k_kyt8xz')
   );
 });
 
 // 更新审批流程配置
 export const PUT = withPermission(async (request: NextRequest, _user: UserInfo) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { workflowId, workflowName, description, nodes, isActive, priority } = body;
 
   if (!workflowId) {
-    return errorResponse('流程ID不能为空', 400, 400);
+    return errorResponse(ts('k_1kikxb6'), 400, 400);
   }
 
   // 更新流程配置
@@ -163,16 +169,17 @@ export const PUT = withPermission(async (request: NextRequest, _user: UserInfo) 
     }
   }
 
-  return successResponse({ workflowId }, '审批流程更新成功');
+  return successResponse({ workflowId }, ts('k_1punw46'));
 });
 
 // 删除审批流程配置
 export const DELETE = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const workflowId = searchParams.get('workflowId');
 
   if (!workflowId) {
-    return errorResponse('流程ID不能为空', 400, 400);
+    return errorResponse(ts('k_1kikxb6'), 400, 400);
   }
 
   // 检查是否有正在进行的审批实例
@@ -182,7 +189,7 @@ export const DELETE = withPermission(async (request: NextRequest) => {
   )) as DbRow[];
 
   if (activeInstances[0]?.count > 0) {
-    return errorResponse('该流程有正在进行的审批实例，无法删除', 400, 400);
+    return errorResponse(ts('k_g6yayz'), 400, 400);
   }
 
   // 软删除
@@ -190,5 +197,5 @@ export const DELETE = withPermission(async (request: NextRequest) => {
     workflowId,
   ]);
 
-  return successResponse(null, '审批流程删除成功');
+  return successResponse(null, ts('k_1vlofou'));
 });

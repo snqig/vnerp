@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import {
   expandBom,
@@ -23,6 +26,7 @@ import { withPermission } from '@/lib/api-permissions';
  */
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     const validation = validateRequestBody(body, ['productId', 'quantity']);
@@ -35,15 +39,15 @@ export const POST = withPermission(
 
     // 参数验证
     if (!Number.isInteger(productId) || productId <= 0) {
-      return errorResponse('productId 必须是正整数', 400, 400);
+      return errorResponse(ts('k_u7xs5t'), 400, 400);
     }
 
     if (typeof quantity !== 'number' || quantity <= 0) {
-      return errorResponse('quantity 必须是正数', 400, 400);
+      return errorResponse(ts('k_1msuqc2'), 400, 400);
     }
 
     if (maxDepth !== undefined && (!Number.isInteger(maxDepth) || maxDepth < 1 || maxDepth > 20)) {
-      return errorResponse('maxDepth 必须是1-20之间的整数', 400, 400);
+      return errorResponse(ts('k_1pq260'), 400, 400);
     }
 
     try {
@@ -52,9 +56,9 @@ export const POST = withPermission(
         enableCache: enableCache !== false,
       });
 
-      return successResponse(result, 'BOM展开成功');
+      return successResponse(result, ts('k_1rdki9t'));
     } catch (error) {
-      if ((error as Error).message.includes('产品不存在')) {
+      if ((error as Error).message.includes(ts('k_1odjgag'))) {
         return errorResponse((error as Error).message, 404, 404);
       }
       throw error;
@@ -74,6 +78,7 @@ export const POST = withPermission(
  * - maxDepth: 最大递归深度
  */
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const productId = searchParams.get('productId');
   const quantity = searchParams.get('quantity');
@@ -84,22 +89,22 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 清除缓存操作
   if (action === 'clearCache') {
     await clearBomExpansionCache();
-    return successResponse(null, '缓存已清除');
+    return successResponse(null, ts('k_qk9tvp'));
   }
 
   if (!productId || !quantity) {
-    return errorResponse('缺少必填参数: productId, quantity', 400, 400);
+    return errorResponse(ts('k_v3elrb'), 400, 400);
   }
 
   const pid = parseInt(productId);
   const qty = parseFloat(quantity);
 
   if (!Number.isInteger(pid) || pid <= 0) {
-    return errorResponse('productId 必须是正整数', 400, 400);
+    return errorResponse(ts('k_u7xs5t'), 400, 400);
   }
 
   if (qty <= 0) {
-    return errorResponse('quantity 必须是正数', 400, 400);
+    return errorResponse(ts('k_1msuqc2'), 400, 400);
   }
 
   const config = {
@@ -111,14 +116,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     if (format === 'tree') {
       // 返回树形结构
       const result = await getBomExpansionTree(pid, qty, config);
-      return successResponse(result, 'BOM树形展开成功');
+      return successResponse(result, ts('k_167qbpe'));
     } else {
       // 返回平铺列表
       const result = await expandBom(pid, qty, config);
-      return successResponse(result, 'BOM展开成功');
+      return successResponse(result, ts('k_1rdki9t'));
     }
   } catch (error) {
-    if ((error as Error).message.includes('产品不存在')) {
+    if ((error as Error).message.includes(ts('k_1odjgag'))) {
       return errorResponse((error as Error).message, 404, 404);
     }
     throw error;
@@ -143,6 +148,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
  */
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     const validation = validateRequestBody(body, ['action', 'products']);
@@ -154,16 +160,16 @@ export const PUT = withPermission(
     const { action, products, maxDepth, enableCache } = body;
 
     if (!Array.isArray(products) || products.length === 0) {
-      return errorResponse('products 必须是非空数组', 400, 400);
+      return errorResponse(ts('k_1xwl2hw'), 400, 400);
     }
 
     // 验证每个产品项
     for (const item of products) {
       if (!Number.isInteger(item.productId) || item.productId <= 0) {
-        return errorResponse('products 中的 productId 必须是正整数', 400, 400);
+        return errorResponse(ts('k_syvl9i'), 400, 400);
       }
       if (typeof item.quantity !== 'number' || item.quantity <= 0) {
-        return errorResponse('products 中的 quantity 必须是正数', 400, 400);
+        return errorResponse(ts('k_c7k33x'), 400, 400);
       }
     }
 
@@ -185,7 +191,7 @@ export const PUT = withPermission(
               totalLeafMaterials: results.reduce((sum, r) => sum + r.statistics.leafMaterials, 0),
             },
           },
-          '批量BOM展开成功'
+          ts('k_j6dgt1')
         );
       } else if (action === 'merge') {
         // 展开并合并
@@ -212,13 +218,13 @@ export const PUT = withPermission(
               totalQuantity: materialsArray.reduce((sum, m) => sum + m.totalActualQuantity, 0),
             },
           },
-          'BOM合并展开成功'
+          ts('k_ks38pf')
         );
       } else {
         return errorResponse(`不支持的操作类型: ${action}`, 400, 400);
       }
     } catch (error) {
-      if ((error as Error).message.includes('产品不存在')) {
+      if ((error as Error).message.includes(ts('k_1odjgag'))) {
         return errorResponse((error as Error).message, 404, 404);
       }
       throw error;

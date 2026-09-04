@@ -1,3 +1,7 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -227,13 +231,14 @@ function classifyVarianceReason(
   laborVariance: number,
   scrapRate: number
 ): string[] {
+  const ts = t;
   const reasons: string[] = [];
-  if (materialVariance < -100) reasons.push('材料超耗');
-  if (materialVariance > 100) reasons.push('材料节约');
-  if (laborVariance < -50) reasons.push('工时超支');
-  if (laborVariance > 50) reasons.push('效率提升');
-  if (scrapRate > 5) reasons.push('废品率偏高');
-  if (scrapRate > 10) reasons.push('质量异常');
-  if (reasons.length === 0) reasons.push('正常偏差');
+  if (materialVariance < -100) reasons.push(ts('k_7bypva'));
+  if (materialVariance > 100) reasons.push(ts('k_xtgo1e'));
+  if (laborVariance < -50) reasons.push(ts('k_1t9enem'));
+  if (laborVariance > 50) reasons.push(ts('k_zkakhx'));
+  if (scrapRate > 5) reasons.push(ts('k_r5djwx'));
+  if (scrapRate > 10) reasons.push(ts('k_1fp8stu'));
+  if (reasons.length === 0) reasons.push(ts('k_bvi0k7'));
   return reasons;
 }

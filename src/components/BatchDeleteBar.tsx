@@ -22,7 +22,9 @@ export function BatchDeleteBar({ count, onClear, onDelete, loading }: BatchDelet
   if (count === 0) return null;
   return (
     <div className="flex items-center justify-between gap-2 border-b bg-muted/40 px-4 py-2 text-sm">
-      <span className="font-medium">{tc('selectedCount', { count })}</span>
+      <span className="font-medium" aria-live="polite">
+        {tc('selectedCount', { count })}
+      </span>
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" onClick={onClear} disabled={loading}>
           {tc('clearSelection')}

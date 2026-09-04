@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { PurchaseReconciliationWrittenOffEvent } from '@/domain/purchase/events/PurchaseReconciliationEvents';
 import { transaction } from '@/lib/db';
@@ -12,10 +14,11 @@ import type { DbRow } from '@/types/db';
  */
 export class PurchaseReconciliationWrittenOffHandler implements EventHandler<PurchaseReconciliationWrittenOffEvent> {
   async handle(event: PurchaseReconciliationWrittenOffEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { reconciliationId, reconciliationNo, supplierId, totalWriteOffAmount, writeOffRecords } =
       event.payload;
 
-    secureLog('info', '采购对账核销完成，更新应付单状态', {
+    secureLog('info', ts('k_1ssb35o'), {
       reconciliationId,
       reconciliationNo,
       supplierId,
@@ -35,7 +38,7 @@ export class PurchaseReconciliationWrittenOffHandler implements EventHandler<Pur
         );
 
         if (!payableRow || payableRow.length === 0) {
-          secureLog('warn', '应付单不存在或已删除，跳过', {
+          secureLog('warn', ts('k_17zale7'), {
             payableId: record.payableId,
             reconciliationNo,
           });
@@ -49,14 +52,14 @@ export class PurchaseReconciliationWrittenOffHandler implements EventHandler<Pur
         let writeOffAmount = Number(record.amount);
         // 透支保护：并发核销可能导致应付单余额不足，截断为当前余额
         if (writeOffAmount > currentBalance && currentBalance > 0) {
-          secureLog('warn', '核销金额超过应付单当前余额，截断为余额', {
+          secureLog('warn', ts('k_e5to9b'), {
             payableId: record.payableId,
             requestedAmount: writeOffAmount,
             currentBalance,
           });
           writeOffAmount = currentBalance;
         } else if (currentBalance <= 0) {
-          secureLog('warn', '应付单余额已为0，跳过核销', {
+          secureLog('warn', ts('k_vygjfs'), {
             payableId: record.payableId,
             requestedAmount: writeOffAmount,
           });
@@ -80,7 +83,7 @@ export class PurchaseReconciliationWrittenOffHandler implements EventHandler<Pur
           [newPaidAmount, newBalance, newStatus, record.payableId]
         );
 
-        secureLog('info', '更新应付单核销状态', {
+        secureLog('info', ts('k_tfk91l'), {
           payableId: record.payableId,
           payableNo: payable.payable_no,
           writeOffAmount,
@@ -91,7 +94,7 @@ export class PurchaseReconciliationWrittenOffHandler implements EventHandler<Pur
       }
     });
 
-    secureLog('info', '采购对账核销完成处理结束', {
+    secureLog('info', ts('k_194qtwq'), {
       reconciliationId,
       reconciliationNo,
       processedCount: writeOffRecords.length,

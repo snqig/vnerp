@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface PaymentRecordProps {
   id?: number;
   paymentNo: string;
@@ -43,14 +45,15 @@ export class PaymentRecord {
   }
 
   static create(props: PaymentRecordProps): PaymentRecord {
+  const ts = t;
     if (!props.supplierId) {
-      throw new Error('供应商ID不能为空');
+      throw new Error(ts('k_h5paib'));
     }
     if (!props.amount || props.amount <= 0) {
-      throw new Error('付款金额必须大于0');
+      throw new Error(ts('k_3ty25s'));
     }
     if (!props.paymentNo) {
-      throw new Error('付款单号不能为空');
+      throw new Error(ts('k_1hutxfd'));
     }
     return new PaymentRecord(props);
   }

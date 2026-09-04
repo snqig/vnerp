@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -5,6 +8,7 @@ import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action') || 'list';
   const colorName = searchParams.get('colorName') || '';
@@ -19,12 +23,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   if (action === 'detail') {
     const batchNo = searchParams.get('batchNo') || '';
-    if (!batchNo) return errorResponse('缺少batchNo', 400, 400);
+    if (!batchNo) return errorResponse(ts('k_1wed0ij'), 400, 400);
     return await getSurplusDetail(batchNo);
   }
 
-  let where = `WHERE ib.deleted = 0 AND ib.available_qty > 0 AND ib.status = 'normal'
-    AND (ib.material_name LIKE '%专色%' OR ib.material_name LIKE '%调色%' OR ib.material_name LIKE '%余墨%' OR ib.batch_no LIKE 'INK%' OR ib.batch_no LIKE 'MIX%')`;
+  let where = ts('k_4ly84v');
   const params: SqlValue[] = [];
 
   if (colorName) {
@@ -80,32 +83,10 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 });
 
 async function recommendSurplus(pantoneCode: string, colorName: string) {
+  const ts = await getTranslations('Common');
   const recommendations: SqlValue[] = [];
 
-  const surplusInks = await query(`
-    SELECT
-      ib.batch_no,
-      ib.material_name,
-      ib.available_qty,
-      ib.unit_price,
-      ib.expire_date,
-      ib.inbound_date,
-      ib.warehouse_id,
-      w.warehouse_name,
-      DATEDIFF(ib.expire_date, CURDATE()) as days_until_expiry,
-      d.pantone_code,
-      d.color_name as dispatch_color_name,
-      d.formula_no,
-      d.workorder_no as original_workorder
-    FROM inv_inventory_batch ib
-    LEFT JOIN inv_warehouse w ON ib.warehouse_id = w.id
-    LEFT JOIN ink_dispatch d ON d.batch_no = ib.batch_no AND d.deleted = 0
-    WHERE ib.deleted = 0 AND ib.available_qty > 0 AND ib.status = 'normal'
-      AND (ib.expire_date IS NULL OR ib.expire_date >= CURDATE())
-      AND (ib.material_name LIKE '%专色%' OR ib.material_name LIKE '%调色%' OR ib.material_name LIKE '%余墨%'
-        OR ib.batch_no LIKE 'INK%' OR ib.batch_no LIKE 'MIX%')
-    ORDER BY ib.inbound_date ASC
-  `);
+  const surplusInks = await query(ts('k_lkk34o'));
 
   for (const ink of surplusInks) {
     let matchScore = 0;
@@ -114,10 +95,10 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
     if (pantoneCode && ink.pantone_code) {
       if (ink.pantone_code === pantoneCode) {
         matchScore += 50;
-        matchReasons.push('Pantone色号完全匹配');
+        matchReasons.push(ts('k_9sj4q9'));
       } else if (ink.pantone_code.substring(0, 3) === pantoneCode.substring(0, 3)) {
         matchScore += 30;
-        matchReasons.push('Pantone色号相近');
+        matchReasons.push(ts('k_1at3sxg'));
       }
     }
 
@@ -127,21 +108,21 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
         colorName.includes(ink.dispatch_color_name)
       ) {
         matchScore += 30;
-        matchReasons.push('颜色名称匹配');
+        matchReasons.push(ts('k_hl72gw'));
       }
     }
 
     if (ink.available_qty >= 5) {
       matchScore += 10;
-      matchReasons.push('可用量充足');
+      matchReasons.push(ts('k_1rrqmjj'));
     }
 
     if (ink.days_until_expiry && ink.days_until_expiry > 30) {
       matchScore += 10;
-      matchReasons.push('有效期充裕');
+      matchReasons.push(ts('k_13nsq3f'));
     } else if (ink.days_until_expiry && ink.days_until_expiry > 7) {
       matchScore += 5;
-      matchReasons.push('有效期即将到期，优先使用');
+      matchReasons.push(ts('k_tbsq4'));
     }
 
     if (matchScore > 0) {
@@ -172,6 +153,7 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
 }
 
 async function getSurplusDetail(batchNo: string) {
+  const ts = await getTranslations('Common');
   const batchRows = await query(
     `
     SELECT ib.*, w.warehouse_name
@@ -183,7 +165,7 @@ async function getSurplusDetail(batchNo: string) {
   );
 
   if (batchRows.length === 0) {
-    return errorResponse('批次不存在', 404, 404);
+    return errorResponse(ts('k_dlysae'), 404, 404);
   }
 
   const batch = batchRows[0];
@@ -233,6 +215,7 @@ async function getSurplusDetail(batchNo: string) {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       batch_no,
@@ -247,7 +230,7 @@ export const POST = withPermission(
     } = body;
 
     if (!batch_no || !return_weight || Number(return_weight) <= 0) {
-      return errorResponse('缺少必填字段: batch_no, return_weight', 400, 400);
+      return errorResponse(ts('k_1e20aqz'), 400, 400);
     }
 
     const result = await transaction(async (conn) => {
@@ -293,14 +276,14 @@ export const POST = withPermission(
           operator_name || null,
           location_id || null,
           location_name || null,
-          remark || '余墨退回',
+          remark || ts('k_vb4fl2'),
         ]
       );
 
       return { id: insertResult.insertId, usage_no: usageNo, batch_no, return_weight };
     });
 
-    return successResponse(result, '余墨退回成功');
+    return successResponse(result, ts('k_1h7s06f'));
   },
   { logTitle: '余墨退回', logType: 'business' }
 );

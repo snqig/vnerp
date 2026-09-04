@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -10,6 +13,7 @@ const _workflowEngine = new WorkflowEngine();
 
 // 获取待审批任务列表
 export const GET = withPermission(async (request: NextRequest, user: UserInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type'); // pending: 待我审批, initiated: 我发起的
   const page = parseInt(searchParams.get('page') || '1');
@@ -38,7 +42,7 @@ export const GET = withPermission(async (request: NextRequest, user: UserInfo) =
         page,
         pageSize,
       },
-      '获取我发起的审批成功'
+      ts('k_4p7dba')
     );
   }
 
@@ -83,6 +87,6 @@ export const GET = withPermission(async (request: NextRequest, user: UserInfo) =
       page,
       pageSize,
     },
-    '获取待审批任务成功'
+    ts('k_1j1wbu8')
   );
 });

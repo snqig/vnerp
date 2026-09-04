@@ -228,7 +228,7 @@ export default function MaterialReturnPage() {
                           className="h-4 w-4 cursor-pointer accent-blue-600"
                           checked={isSelected(String(item.id))}
                           onChange={() => toggle(String(item.id))}
-                          aria-label={tc('selectAll')}
+                          aria-label={tc('selectRow', { id: item.id })}
                         />
                       </TableCell>
                       <TableCell className="text-xs font-mono">{item.return_no}</TableCell>

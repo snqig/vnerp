@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
 import {
@@ -56,6 +59,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, ['work_order_id', 'process_name']);
     if (!validation.valid) {
@@ -194,20 +198,21 @@ export const POST = withPermission(
       return { id: reportId, report_no: reportNo };
     });
 
-    return successResponse(result, '报工记录创建成功');
+    return successResponse(result, ts('k_cdp42k'));
   },
   { logTitle: '创建报工记录', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
-    if (!body.id) return commonErrors.badRequest('报工ID不能为空');
+    if (!body.id) return commonErrors.badRequest(ts('k_1pwnzxo'));
 
     const existing = await queryOne('SELECT id FROM prd_work_report WHERE id = ? AND deleted = 0', [
       body.id,
     ]);
-    if (!existing) return commonErrors.notFound('报工记录不存在');
+    if (!existing) return commonErrors.notFound(ts('k_129k3ev'));
 
     const fields: string[] = [];
     const values: SqlValue[] = [];
@@ -235,19 +240,20 @@ export const PUT = withPermission(
       await execute(`UPDATE prd_work_report SET ${fields.join(', ')} WHERE id = ?`, values);
     }
 
-    return successResponse(null, '报工记录更新成功');
+    return successResponse(null, ts('k_x66zep'));
   },
   { logTitle: '更新报工记录', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return commonErrors.badRequest('报工ID不能为空');
+    if (!id) return commonErrors.badRequest(ts('k_1pwnzxo'));
 
     await execute('UPDATE prd_work_report SET deleted = 1 WHERE id = ?', [parseInt(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除报工记录', logType: 'business' }
 );

@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export class DomainError extends Error {
   constructor(
     message: string,
@@ -24,7 +26,8 @@ export class InvalidTransitionError extends DomainError {
 
 export class VersionConflictError extends DomainError {
   constructor() {
-    super('数据版本冲突，请刷新后重试', 'VERSION_CONFLICT');
+  const ts = t;
+    super(ts('k_pav27c'), 'VERSION_CONFLICT');
     this.name = 'VersionConflictError';
   }
 }

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -47,6 +50,7 @@ function computeOverrideRiskScore(batch: DbRow): number {
 }
 
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const materialId = searchParams.get('materialId');
   const warehouseId = searchParams.get('warehouseId');
@@ -56,7 +60,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const minPackageQty = Number(searchParams.get('minPackageQty') || 0);
 
   if (!materialId || !warehouseId) {
-    return errorResponse('缺少必填参数: materialId, warehouseId', 400, 400);
+    return errorResponse(ts('k_1hbhq72'), 400, 400);
   }
 
   const batchRows = await query(
@@ -76,8 +80,8 @@ export const GET = withPermission(async (request: NextRequest) => {
       ib.unit,
       CASE
         WHEN ib.expire_date IS NOT NULL AND ib.expire_date < CURDATE() THEN 'EXPIRED'
-        WHEN ib.status = 'frozen' THEN 'FROZEN'
-        WHEN ib.status = 'expired' THEN 'EXPIRED'
+        WHEN ib.alert_level = 'frozen' THEN 'FROZEN'
+        WHEN ib.alert_level = 'expired' THEN 'EXPIRED'
         WHEN ib.available_qty <= 0 THEN 'EMPTY'
         ELSE 'AVAILABLE'
       END as fifo_status,
@@ -90,8 +94,8 @@ export const GET = withPermission(async (request: NextRequest) => {
     WHERE ib.material_id = ? AND ib.warehouse_id = ? AND ib.deleted = 0
     ORDER BY
       CASE
-        WHEN ib.status = 'normal' AND (ib.expire_date IS NULL OR ib.expire_date >= CURDATE()) THEN 0
-        WHEN ib.status = 'frozen' THEN 2
+        WHEN ib.alert_level = 'normal' AND (ib.expire_date IS NULL OR ib.expire_date >= CURDATE()) THEN 0
+        WHEN ib.alert_level = 'frozen' THEN 2
         ELSE 1
       END,
       CASE
@@ -157,10 +161,10 @@ export const GET = withPermission(async (request: NextRequest) => {
         allocated_qty: allocQty,
         is_fifo_recommended: true,
         allocation_reason: batch.is_urgent_expiry
-          ? '即将过期优先出库'
+          ? ts('k_81p0p')
           : batch.compatibility_score > 0
-            ? '兼容性匹配优先'
-            : 'FIFO标准先进先出',
+            ? ts('k_p2hptd')
+            : ts('k_1xnmzi5'),
       });
       remainingQty -= allocQty;
     }
@@ -198,7 +202,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   const overrideLogs = await query(
     `
-    SELECT id, source_type, source_no, recommended_batch, actual_batch, reason, approval_status, create_time
+    SELECT id, recommended_batch_no, actual_batch_no, reason, operator_name, status, create_time
     FROM inv_fifo_override_log
     WHERE material_id = ? AND deleted = 0
     ORDER BY create_time DESC
@@ -224,10 +228,10 @@ export const GET = withPermission(async (request: NextRequest) => {
           compatibilityScore: firstBatch.compatibility_score,
           overrideRiskScore: firstBatch.override_risk_score,
           allocationReason: firstBatch.is_urgent_expiry
-            ? '即将过期优先出库'
+            ? ts('k_81p0p')
             : firstBatch.compatibility_score > 0
-              ? '兼容性匹配优先'
-              : 'FIFO标准先进先出',
+              ? ts('k_p2hptd')
+              : ts('k_1xnmzi5'),
         }
       : null,
     recommendedBatches,

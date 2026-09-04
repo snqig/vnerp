@@ -26,6 +26,7 @@ import {
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
+import { formatDate } from '@/lib/date-utils';
 
 interface ExpiringCert {
   id: number;
@@ -37,10 +38,6 @@ interface ExpiringCert {
   days_remaining: number;
 }
 
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '-';
-  return dateStr.slice(0, 10);
-};
 
 const getExpiryBadge = (days: number) => {
   if (days < 15) {

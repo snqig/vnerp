@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 import mysql from 'mysql2/promise';
 import {
   IPurchaseReturnRepository,
@@ -306,7 +309,9 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
     row: PurPurchaseReturnRow,
     lines: PurPurchaseReturnLineRow[]
   ): PurchaseReturn {
-    const lineProps: PurchaseReturnLineProps[] = (lines || []).map((l) => ({
+    const lineProps: PurchaseReturnLineProps[] = (lines || []).map((l) => {
+  const ts = t;
+  return  ({
       id: l.id,
       returnId: l.return_id,
       lineNo: l.line_no,
@@ -315,7 +320,7 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
       materialCode: l.material_code || '',
       materialName: l.material_name || '',
       materialSpec: l.material_spec || '',
-      unit: l.unit || '件',
+      unit: l.unit || ts('k_w0gthl'),
       quantity: Number(l.quantity),
       unitPrice: Number(l.unit_price),
       amount: Number(l.amount),
@@ -324,7 +329,8 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
       batchNo: l.batch_no || '',
       reason: l.reason || '',
       remark: l.remark || '',
-    }));
+    });
+});
 
     const props: PurchaseReturnProps = {
       id: row.id,

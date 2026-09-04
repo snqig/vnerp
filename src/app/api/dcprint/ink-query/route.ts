@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -5,13 +8,14 @@ import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const qrCode = searchParams.get('qrCode') || '';
   const batchNo = searchParams.get('batchNo') || '';
   const queryType = searchParams.get('queryType') || 'all';
 
   if (!qrCode && !batchNo) {
-    return errorResponse('请提供qrCode或batchNo', 400, 400);
+    return errorResponse(ts('k_19w9tyo'), 400, 400);
   }
 
   let actualBatchNo = batchNo;
@@ -22,13 +26,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       [qrCode]
     );
     if (qrRows.length === 0) {
-      return errorResponse('二维码不存在', 404, 404);
+      return errorResponse(ts('k_1o9pxv'), 404, 404);
     }
     actualBatchNo = qrRows[0].batch_no;
   }
 
   if (!actualBatchNo) {
-    return errorResponse('无法确定批次号', 400, 400);
+    return errorResponse(ts('k_1dz2n7l'), 400, 400);
   }
 
   const result: unknown = {};
@@ -293,7 +297,6 @@ async function queryInventoryExpiry(batchNo: string) {
       unit_price: batch.unit_price,
       inbound_date: batch.inbound_date,
       status: batch.status,
-      freeze_reason: batch.freeze_reason,
     };
 
     info.expiry = {

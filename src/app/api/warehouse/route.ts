@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import mysql from 'mysql2/promise';
 import { query, queryOne, transaction, SqlValue } from '@/lib/db';
@@ -201,6 +204,7 @@ export const GET = withPermission(
 // POST - 创建仓库
 export const POST = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body: Warehouse = await request.json();
 
     // 验证必填字段
@@ -217,7 +221,7 @@ export const POST = withPermission(
     );
 
     if (existing) {
-      return errorResponse('仓库编码已存在', 409, 409);
+      return errorResponse(ts('k_wmnua0'), 409, 409);
     }
 
     // 使用事务创建仓库并记录日志
@@ -250,7 +254,7 @@ export const POST = withPermission(
     });
 
     await logOperation({
-      title: '创建仓库',
+      title: ts('k_1aifxou'),
       oper_type: 'warehouse',
       oper_method: 'POST',
       oper_url: '/api/warehouse',
@@ -259,7 +263,7 @@ export const POST = withPermission(
       status: 1,
     });
 
-    return successResponse(result, '仓库创建成功');
+    return successResponse(result, ts('k_1cgzrtj'));
   },
   { errorMessage: '创建仓库失败' }
 );
@@ -267,11 +271,12 @@ export const POST = withPermission(
 // PUT - 更新仓库
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body: Warehouse = await request.json();
     const { id } = body;
 
     if (!id) {
-      return commonErrors.badRequest('仓库ID不能为空');
+      return commonErrors.badRequest(ts('k_1t9r8nc'));
     }
 
     // 验证必填字段
@@ -288,7 +293,7 @@ export const PUT = withPermission(
     );
 
     if (codeExists) {
-      return errorResponse('仓库编码已存在', 409, 409);
+      return errorResponse(ts('k_wmnua0'), 409, 409);
     }
 
     // 使用事务更新仓库并记录日志
@@ -314,7 +319,7 @@ export const PUT = withPermission(
       );
 
       if ((updateResult as mysql.ResultSetHeader).affectedRows === 0) {
-        throw new Error('仓库不存在或已被删除');
+        throw new Error(ts('k_osrnm7'));
       }
 
       // 记录操作日志
@@ -326,7 +331,7 @@ export const PUT = withPermission(
     });
 
     await logOperation({
-      title: '更新仓库',
+      title: ts('k_1c92jxj'),
       oper_type: 'warehouse',
       oper_method: 'PUT',
       oper_url: '/api/warehouse',
@@ -335,7 +340,7 @@ export const PUT = withPermission(
       status: 1,
     });
 
-    return successResponse(null, '仓库更新成功');
+    return successResponse(null, ts('k_1r75rfq'));
   },
   { errorMessage: '更新仓库失败' }
 );
@@ -343,11 +348,12 @@ export const PUT = withPermission(
 // DELETE - 删除仓库（软删除）
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('仓库ID不能为空');
+      return commonErrors.badRequest(ts('k_1t9r8nc'));
     }
 
     const warehouseId = parseInt(id);
@@ -360,7 +366,7 @@ export const DELETE = withPermission(
       );
 
       if ((rows as DbRow[]).length === 0) {
-        throw new Error('仓库不存在或已被删除');
+        throw new Error(ts('k_osrnm7'));
       }
 
       const name = (rows as DbRow[])[0].name;
@@ -377,7 +383,7 @@ export const DELETE = withPermission(
     });
 
     await logOperation({
-      title: '删除仓库',
+      title: ts('k_kiwxgf'),
       oper_type: 'warehouse',
       oper_method: 'DELETE',
       oper_url: '/api/warehouse',
@@ -386,7 +392,7 @@ export const DELETE = withPermission(
       status: 1,
     });
 
-    return successResponse(null, '仓库删除成功');
+    return successResponse(null, ts('k_ys9qpq'));
   },
   { errorMessage: '删除仓库失败' }
 );

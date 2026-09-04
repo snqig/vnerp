@@ -1,0 +1,128 @@
+========================================================
+  i18n Hardcode Detailed Report
+========================================================
+
+Total entries:        4384
+Total files:          417
+Total modules:        26
+Duplicated occurrences: 1516 (in 292 strings)
+
+--- Top 20 modules ---
+  other                 1739  ##################################################
+  sample                 600  ##############################
+  dcprint                455  #######################
+  warehouse              323  ################
+  settings               302  ###############
+  purchase               171  #########
+  quality                155  ########
+  equipment              148  #######
+  modules                124  ######
+  dashboard              105  #####
+  hr                      86  ####
+  orders                  56  ###
+  business                40  ##
+  production              29  #
+  advanced                18  #
+  sales                    9  
+  base-data                7  
+  finance                  6  
+  not-found.tsx            3  
+  srm                      2  
+
+--- Top 30 files ---
+   201  src/app/api/settings/system/route.ts
+   142  src/app/[locale]/settings/config/page.tsx
+   124  src/app/[locale]/modules/page.tsx
+   121  src/app/[locale]/sample/standard-card/InputV2Form.tsx
+   104  src/app/[locale]/sample/standard-card/input-card/page.tsx
+    90  src/app/[locale]/sample/standard-card/print/page.tsx
+    87  src/app/[locale]/quality/process/page.tsx
+    85  src/app/[locale]/sample/standard-card/input/page.tsx
+    82  src/app/api/system/config/route.ts
+    73  src/app/[locale]/warehouse/split-order/page.tsx
+    67  src/app/[locale]/dashboard/flow/page.tsx
+    67  src/app/[locale]/warehouse/outbound/page.tsx
+    66  src/app/[locale]/dcprint/ink-opening/page.tsx
+    65  src/app/[locale]/dcprint/tool/page.tsx
+    64  src/app/[locale]/sample/standard-card/input-v2/page.tsx
+    58  src/app/[locale]/dcprint/screen-plate/page.tsx
+    54  src/app/[locale]/sample/orders/[id]/edit/page.tsx
+    50  src/app/[locale]/equipment/maintenance/page.tsx
+    49  src/app/[locale]/dcprint/ink-formula/page.tsx
+    49  src/app/[locale]/settings/seed-data/page.tsx
+    42  src/app/[locale]/dcprint/tool-manage/page.tsx
+    42  src/app/[locale]/hr/employee/page.tsx
+    40  src/app/[locale]/business/contract-review/page.tsx
+    38  src/app/[locale]/quality/spc/page.tsx
+    36  src/app/[locale]/dcprint/trace/page.tsx
+    36  src/app/api/system/user/fix-names/route.ts
+    36  src/lib/error-handler.ts
+    35  src/app/[locale]/purchase/request/new/page.tsx
+    34  src/app/[locale]/dashboard/ceo/page.tsx
+    34  src/app/[locale]/purchase/request/form/page.tsx
+
+--- Top 30 duplicated hardcoded strings (out of 292) ---
+   39x  "取消"
+        files: page.tsx, page.tsx, page.tsx ...(32 files)
+   36x  "ID不能为空"
+        files: route.ts, route.ts, route.ts ...(19 files)
+   19x  "操作失败"
+        files: page.tsx, page.tsx, page.tsx ...(7 files)
+   18x  "错误"
+        files: page.tsx, page.tsx, page.tsx
+   17x  "共"
+        files: page.tsx, page.tsx, page.tsx ...(16 files)
+   16x  "物料名称"
+        files: page.tsx, page.tsx, page.tsx ...(14 files)
+   16x  "没有需要更新的字段"
+        files: route.ts, route.ts, route.ts ...(15 files)
+   15x  "失败"
+        files: page.tsx, page.tsx, page.tsx ...(5 files)
+   15x  "上一页"
+        files: page.tsx, page.tsx, page.tsx ...(14 files)
+   15x  "下一页"
+        files: page.tsx, page.tsx, page.tsx ...(14 files)
+   14x  "条"
+        files: page.tsx, page.tsx, page.tsx ...(12 files)
+   13x  "备注"
+        files: page.tsx, InputV2Form.tsx, page.tsx ...(11 files)
+   13x  "单据编码规则"
+        files: route.ts, route.ts
+   12x  "暂无记录"
+        files: page.tsx, page.tsx, page.tsx ...(10 files)
+   12x  "草稿"
+        files: page.tsx, page.tsx, page.tsx ...(11 files)
+   12x  "状态"
+        files: page.tsx, page.tsx, page.tsx ...(9 files)
+   12x  "物料编码"
+        files: page.tsx, page.tsx, page.tsx ...(11 files)
+   12x  "加载中..."
+        files: page.tsx, page.tsx, page.tsx ...(12 files)
+   12x  "仓库管理规则"
+        files: route.ts, route.ts
+   11x  "原材料"
+        files: page.tsx, page.tsx, route.ts ...(4 files)
+   11x  "无效的操作类型"
+        files: route.ts, route.ts, route.ts ...(9 files)
+   10x  "网版"
+        files: page.tsx, page.tsx, page.tsx ...(7 files)
+   10x  "设备编码"
+        files: page.tsx, page.tsx, page.tsx ...(5 files)
+   10x  "设备名称"
+        files: page.tsx, page.tsx, page.tsx ...(5 files)
+   10x  "件"
+        files: page.tsx, page.tsx, page.tsx ...(9 files)
+   10x  "已取消"
+        files: page.tsx, page.tsx, page.tsx ...(10 files)
+   10x  "缺少必要参数"
+        files: route.ts, route.ts, route.ts ...(7 files)
+   10x  "系统基础配置"
+        files: route.ts
+    9x  "删除失败"
+        files: page.tsx, page.tsx, page.tsx ...(6 files)
+    9x  "操作"
+        files: page.tsx, page.tsx, page.tsx ...(9 files)
+
+========================================================
+Detailed data written to i18n-hardcode-detail.json
+========================================================

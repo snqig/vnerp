@@ -36,7 +36,6 @@ import { MoneyDisplay } from '@/components/ui/money-display';
 import { Plus, Search, RefreshCw, Truck, Eye, Trash2, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
-import { mockShipments, mockCustomers, USE_MOCK } from '@/lib/mock-data';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
@@ -55,7 +54,7 @@ interface Shipment {
   id?: number;
   shipment_no?: string; // 格式：SH+YYYYMMDD+4位序号
   delivery_no?: string; // 送货单号
-  sales_order_id: number; // 关联销售订单 ID
+  order_id: number; // 关联销售订单 ID
   sales_order_no?: string; // 销售订单编号
   order_no?: string; // 订单编号
   type: ShipmentType; // 发货类型：normal/partial/return/re_ship
@@ -189,6 +188,7 @@ export default function DeliveryPage() {
   const [salesOrders, setSalesOrders] = useState<
     Array<{ id: number; order_no: string; customer_id: number; customer_name: string }>
   >([]);
+  const [materials, setMaterials] = useState<Loose[]>([]);
   const [total, setTotal] = useState(0);
 
   const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
@@ -217,24 +217,12 @@ export default function DeliveryPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    logger.info({ module: 'Sales', action: 'fetchDelivery' }, '开始获取发货单列表', {
+    logger.info({ module: 'Sales', action: 'fetchDelivery' }, tc('k_1od0l5n'), {
       keyword,
       statusFilter,
       typeFilter,
     });
     try {
-      if (USE_MOCK) {
-        logger.info({ module: 'Sales', action: 'fetchDelivery' }, '使用 mock 数据');
-        const filtered = keyword
-          ? mockShipments.filter(
-              (s) => s.shipment_no?.includes(keyword) || s.customer_name?.includes(keyword)
-            )
-          : mockShipments;
-        setList(filtered);
-        setTotal(filtered.length);
-        return;
-      }
-
       const params = new URLSearchParams();
       if (keyword) params.append('keyword', keyword);
       if (statusFilter !== 'all') params.append('status', statusFilter);
@@ -244,12 +232,12 @@ export default function DeliveryPage() {
       if (result.success) {
         setList(result.data?.list || []);
         setTotal(result.data?.total || 0);
-        logger.info({ module: 'Sales', action: 'fetchDelivery' }, '发货单列表获取成功', {
+        logger.info({ module: 'Sales', action: 'fetchDelivery' }, tc('k_17atxqv'), {
           count: (result.data?.list || []).length,
         });
       }
     } catch (e) {
-      logger.error({ module: 'Sales', action: 'fetchDelivery' }, '获取发货单列表失败', {
+      logger.error({ module: 'Sales', action: 'fetchDelivery' }, tc('k_1mtkise'), {
         error: (e as Error).message,
       });
       toast.error(t('fetchListFailed'));
@@ -259,24 +247,18 @@ export default function DeliveryPage() {
   }, [keyword, statusFilter, typeFilter]);
 
   const fetchCustomers = useCallback(async () => {
-    logger.info({ module: 'Sales', action: 'fetchCustomers' }, '开始获取客户列表');
+    logger.info({ module: 'Sales', action: 'fetchCustomers' }, tc('k_3ao17l'));
     try {
-      if (USE_MOCK) {
-        logger.info({ module: 'Sales', action: 'fetchCustomers' }, '使用 mock 数据');
-        setCustomers(mockCustomers);
-        return;
-      }
-
       const res = await authFetch('/api/customers');
       const result = await res.json();
       if (result.success) {
         setCustomers(result.data?.list || result.data || []);
-        logger.info({ module: 'Sales', action: 'fetchCustomers' }, '客户列表获取成功', {
+        logger.info({ module: 'Sales', action: 'fetchCustomers' }, tc('k_17bqqjl'), {
           count: (result.data?.list || []).length,
         });
       }
     } catch (e) {
-      logger.error({ module: 'Sales', action: 'fetchCustomers' }, '获取客户列表失败', {
+      logger.error({ module: 'Sales', action: 'fetchCustomers' }, tc('k_1ytjkgm'), {
         error: (e as Error).message,
       });
     }
@@ -290,17 +272,28 @@ export default function DeliveryPage() {
         setSalesOrders(result.data?.list || result.data || []);
       }
     } catch (e) {
-      logger.error({ module: 'Sales', action: 'fetchSalesOrders' }, '获取销售订单列表失败', {
+      logger.error({ module: 'Sales', action: 'fetchSalesOrders' }, tc('k_15x0i16'), {
         error: (e as Error).message,
       });
     }
+  }, []);
+
+  const fetchMaterials = useCallback(async () => {
+    try {
+      const res = await authFetch('/api/materials?pageSize=200');
+      const result = await res.json();
+      if (result.success) {
+        setMaterials(result.data?.list || result.data || []);
+      }
+    } catch {}
   }, []);
 
   useEffect(() => {
     fetchData();
     fetchCustomers();
     fetchSalesOrders();
-  }, [fetchData, fetchCustomers, fetchSalesOrders]);
+    fetchMaterials();
+  }, [fetchData, fetchCustomers, fetchSalesOrders, fetchMaterials]);
 
   const addItem = () => {
     setForm((prev) => ({
@@ -335,7 +328,7 @@ export default function DeliveryPage() {
   };
 
   const saveDelivery = async () => {
-    if (!form.sales_order_id) {
+    if (!form.order_id) {
       toast.error(t('selectSalesOrder'));
       return;
     }
@@ -452,7 +445,7 @@ export default function DeliveryPage() {
                       material_name: '',
                       material_spec: '',
                       quantity: 0,
-                      unit: '张',
+                      unit: tc('k_accfpb'),
                       unit_price: 0,
                       amount: 0,
                       batch_no: '',
@@ -560,7 +553,7 @@ export default function DeliveryPage() {
                   {list.map((d) => (
                     <TableRow key={d.id}>
                       <TableCell>
-                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(d.id))} onChange={() => toggle(String(d.id))} aria-label={tc('selectAll')} />
+                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(d.id))} onChange={() => toggle(String(d.id))} aria-label={tc('selectRow', { id: String(d.id) })} />
                       </TableCell>
                       <TableCell className="font-medium">{d.delivery_no}</TableCell>
                       <TableCell>{d.order_no || '-'}</TableCell>
@@ -683,12 +676,12 @@ export default function DeliveryPage() {
                   <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={String(form.sales_order_id || '')}
+                  value={String(form.order_id || '')}
                   onValueChange={(v) => {
                     const order = salesOrders.find((o) => o.id === parseInt(v));
                     setForm((prev) => ({
                       ...prev,
-                      sales_order_id: parseInt(v),
+                      order_id: parseInt(v),
                       order_no: order?.order_no || '',
                       customer_id: order?.customer_id || prev.customer_id,
                       customer_name: order?.customer_name || prev.customer_name,
@@ -803,12 +796,33 @@ export default function DeliveryPage() {
                   {(form.items || []).map((item, idx) => (
                     <TableRow key={idx}>
                       <TableCell>
-                        <Input
-                          value={item.material_name}
-                          onChange={(e) => updateItem(idx, 'material_name', e.target.value)}
-                          placeholder={tc('materialName')}
-                          className="w-32"
-                        />
+                        <Select
+                          value={String(item.material_id || '')}
+                          onValueChange={(v) => {
+                            const m = (materials as Loose[]).find((x: Loose) => String(x.id) === v);
+                            setForm((prev) => {
+                              const items = [...(prev.items || [])];
+                              items[idx] = {
+                                ...items[idx],
+                                material_id: parseInt(v),
+                                material_name: m?.material_name || '',
+                                material_spec: m?.specification || m?.material_spec || '',
+                              };
+                              return { ...prev, items };
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="w-40">
+                            <SelectValue placeholder={tc('materialName')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {materials.map((m: Loose) => (
+                              <SelectItem key={m.id} value={String(m.id)}>
+                                {m.material_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         <Input

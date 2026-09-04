@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export enum DefectLevel {
   FATAL = 'fatal',
   SERIOUS = 'serious',
@@ -49,8 +51,9 @@ export class QualityStandardItem {
   }
 
   private validate(props: QualityStandardItemProps): void {
+  const ts = t;
     if (!props.inspectionItem || props.inspectionItem.trim() === '') {
-      throw new Error('检验项目不能为空');
+      throw new Error(ts('k_g5nkr8'));
     }
   }
 

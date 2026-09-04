@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, SqlValue } from '@/lib/db';
 import {
@@ -128,6 +131,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // POST - 创建角色
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const body: Role = await request.json();
 
     // 验证必填字段
@@ -144,7 +149,7 @@ export const POST = withPermission(
     );
 
     if (existing) {
-      return errorResponse('角色编码已存在', 409, 409);
+      return errorResponse(ts('k_14rslzi'), 409, 409);
     }
 
     const permissions =
@@ -165,7 +170,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId }, '角色创建成功');
+    return successResponse({ id: result.insertId }, tc('roleCreateSuccess'));
   },
   { logTitle: '创建角色' }
 );
@@ -173,11 +178,13 @@ export const POST = withPermission(
 // PUT - 更新角色
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const body: Role = await request.json();
     const { id } = body;
 
     if (!id) {
-      return commonErrors.badRequest('角色ID不能为空');
+      return commonErrors.badRequest(ts('k_2gmrs2'));
     }
 
     // 验证必填字段
@@ -194,7 +201,7 @@ export const PUT = withPermission(
     );
 
     if (!existingRole) {
-      return commonErrors.notFound('角色不存在');
+      return commonErrors.notFound(ts('k_lrx46w'));
     }
 
     const permissions =
@@ -223,10 +230,10 @@ export const PUT = withPermission(
     );
 
     if (result.affectedRows === 0) {
-      return commonErrors.notFound('角色不存在');
+      return commonErrors.notFound(ts('k_lrx46w'));
     }
 
-    return successResponse(null, '角色更新成功');
+    return successResponse(null, tc('roleUpdateSuccess'));
   },
   { logTitle: '更新角色' }
 );
@@ -234,11 +241,13 @@ export const PUT = withPermission(
 // DELETE - 删除角色（软删除）
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('角色ID不能为空');
+      return commonErrors.badRequest(ts('k_2gmrs2'));
     }
 
     const roleId = parseInt(id);
@@ -250,7 +259,7 @@ export const DELETE = withPermission(
     );
 
     if (!existingRole) {
-      return commonErrors.notFound('角色不存在');
+      return commonErrors.notFound(ts('k_lrx46w'));
     }
 
     // 检查是否有用户关联此角色
@@ -260,12 +269,12 @@ export const DELETE = withPermission(
     );
 
     if (hasUsers && hasUsers.count > 0) {
-      return errorResponse('该角色已分配给用户，无法删除', 409, 409);
+      return errorResponse(ts('k_o3j3ba'), 409, 409);
     }
 
     await execute('UPDATE sys_role SET deleted = 1 WHERE id = ?', [roleId]);
 
-    return successResponse(null, '角色删除成功');
+    return successResponse(null, tc('roleDeleted'));
   },
   { logTitle: '删除角色' }
 );

@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { IPurchaseReconciliationRepository } from '@/domain/purchase/repositories/IPurchaseReconciliationRepository';
 import { IPayableRepository } from '@/domain/finance/repositories/IPayableRepository';
 import {
@@ -48,8 +50,9 @@ export class PurchaseReconciliationApplicationService {
   }
 
   async getReconciliationById(id: number): Promise<PurchaseReconciliation> {
+  const ts = await getTranslations('Common');
     const recon = await this.reconciliationRepo.findById(id);
-    if (!recon) throw new NotFoundError('采购对账单不存在');
+    if (!recon) throw new NotFoundError(ts('k_ep1cls'));
     return recon;
   }
 
@@ -116,11 +119,12 @@ export class PurchaseReconciliationApplicationService {
     paidAmount: number;
     balanceAmount: number;
   }> {
+  const ts = await getTranslations('Common');
     const recon = await this.getReconciliationById(input.reconciliationId);
 
     const payable = await this.payableRepo.findById(input.payableId);
     if (!payable) {
-      throw new NotFoundError('应付单不存在');
+      throw new NotFoundError(ts('k_5pya5n'));
     }
 
     const payableBalance = payable.balance.amount;
@@ -200,9 +204,10 @@ export class PurchaseReconciliationApplicationService {
   }
 
   async deleteReconciliation(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const recon = await this.getReconciliationById(id);
     if (recon.status.value !== 1) {
-      throw new DomainError('仅草稿状态的对账单可删除');
+      throw new DomainError(ts('k_1ewo4u4'));
     }
     await this.reconciliationRepo.softDelete(id);
   }

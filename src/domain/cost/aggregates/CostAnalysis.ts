@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export enum CostType {
   DIRECT_MATERIAL = 'direct_material',
   DIRECT_LABOR = 'direct_labor',
@@ -89,8 +91,9 @@ export class CostAnalysis {
     variableCostPerUnit: number;
     sellingPrice: number;
   }): { bepQuantity: number; bepRevenue: number; safetyMargin: number } {
+  const ts = t;
     const contribution = params.sellingPrice - params.variableCostPerUnit;
-    if (contribution <= 0) throw new Error('销售价格必须高于单位变动成本');
+    if (contribution <= 0) throw new Error(ts('k_1wejih4'));
     const bepQuantity = params.fixedCost / contribution;
     return {
       bepQuantity: Math.ceil(bepQuantity),

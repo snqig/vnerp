@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -9,6 +12,7 @@ import type { DbRow } from '@/types/db';
  * 按月/客户统计订单准时交付率
  */
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');
@@ -72,7 +76,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
               : 0,
         },
       },
-      '获取订单交付率报表成功'
+      ts('k_1qki0ru')
     );
   } else {
     // 按客户统计
@@ -95,7 +99,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
     const result = rows.map((row: DbRow) => ({
       customerId: row.customer_id,
-      customerName: row.customer_name || '未知客户',
+      customerName: row.customer_name || ts('k_19qsq2z'),
       totalOrders: row.total_orders,
       completedOrders: row.completed_orders,
       onTimeOrders: row.on_time_orders || 0,
@@ -120,7 +124,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
               : 0,
         },
       },
-      '获取客户交付率报表成功'
+      ts('k_1upffs0')
     );
   }
 });

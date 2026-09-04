@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { IDeliveryRepository } from '@/domain/sales/repositories/IDeliveryRepository';
 import { ISalesOrderRepository } from '@/domain/sales/repositories/ISalesOrderRepository';
 import { Delivery, DeliveryProps } from '@/domain/sales/aggregates/Delivery';
@@ -32,8 +34,9 @@ export class DeliveryApplicationService {
   ) {}
 
   async getDeliveryById(id: number): Promise<Delivery> {
+  const ts = await getTranslations('Common');
     const delivery = await this.deliveryRepo.findById(id);
-    if (!delivery) throw new NotFoundError('发货单不存在');
+    if (!delivery) throw new NotFoundError(ts('k_12d7h0r'));
     return delivery;
   }
 
@@ -159,9 +162,10 @@ export class DeliveryApplicationService {
   }
 
   async deleteDelivery(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const delivery = await this.getDeliveryById(id);
     if (!delivery.canDelete()) {
-      throw new DomainError('仅待发货状态的发货单可删除');
+      throw new DomainError(ts('k_1vf0oeu'));
     }
     await this.deliveryRepo.softDelete(id);
   }

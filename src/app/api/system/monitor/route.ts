@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse } from '@/lib/api-response';
 import { UserInfo } from '@/lib/api-auth';
@@ -11,6 +14,7 @@ import type { DbRow } from '@/types/db';
  */
 export const GET = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'overview';
 
@@ -37,7 +41,7 @@ export const GET = withPermission(
           recentLogs: logCount[0]?.count || 0,
         };
       } catch {
-        dbStats = { error: '数据库查询失败' };
+        dbStats = { error: ts('k_lagav9') };
       }
 
       return successResponse({

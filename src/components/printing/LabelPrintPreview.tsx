@@ -145,6 +145,7 @@ export const LabelPrintPreview: React.FC<{
   onClose?: () => void;
   defaultTemplate?: string;
 }> = ({ labels, onClose, defaultTemplate = '60x40' }) => {
+  const ts = useTranslations('Common');
   const t = useTranslations('QRCode');
   const tc = useTranslations('Common');
   const [selectedTemplate, setSelectedTemplate] = useState<LabelTemplate>(
@@ -161,7 +162,7 @@ export const LabelPrintPreview: React.FC<{
 
   const printLabels = React.useMemo(() => {
     const ctx = { module: 'qrcode', action: 'build_print_labels' };
-    logger.debug(ctx, '构建打印标签列表', {
+    logger.debug(ctx, ts('k_jydy06'), {
       labelsCount: labels.length,
       copies,
     });
@@ -180,7 +181,7 @@ export const LabelPrintPreview: React.FC<{
       handlePrint();
       logger.stepEnd(ctx, 'handlePrint', { status: 'triggered' });
     } catch (error) {
-      logger.error(ctx, '触发打印异常', {
+      logger.error(ctx, ts('k_10ftgox'), {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

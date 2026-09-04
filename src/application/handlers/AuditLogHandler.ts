@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { DomainEvent } from '@/domain/shared/DomainTypes';
 import { logOperation } from '@/lib/api-response';
@@ -5,17 +7,18 @@ import { secureLog } from '@/lib/logger';
 
 export class AuditLogHandler implements EventHandler<DomainEvent> {
   async handle(event: DomainEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const operationMap: Record<string, { title: string; operType: string }> = {
-      'inbound.approved': { title: '入库单审核', operType: '审核' },
-      'inbound.cancelled': { title: '入库单取消', operType: '取消' },
-      'inbound.created': { title: '入库单创建', operType: '创建' },
-      'inbound.submitted': { title: '入库单提交', operType: '提交' },
-      'tool.created': { title: '工装创建', operType: '创建' },
-      'tool.activated': { title: '工装激活', operType: '激活' },
-      'tool.maintenance_started': { title: '工装维修开始', operType: '维修' },
-      'tool.maintenance_completed': { title: '工装维修完成', operType: '维修' },
-      'tool.warning_triggered': { title: '工装预警', operType: '预警' },
-      'tool.scrapped': { title: '工装报废', operType: '报废' },
+      'inbound.approved': { title: ts('k_17le7g5'), operType: ts('k_1ws11do') },
+      'inbound.cancelled': { title: ts('k_6cmsiy'), operType: ts('k_1589w37') },
+      'inbound.created': { title: ts('k_kp5qat'), operType: ts('k_khvw5c') },
+      'inbound.submitted': { title: ts('k_1u1l1dk'), operType: ts('k_ybr38x') },
+      'tool.created': { title: ts('k_mthvqa'), operType: ts('k_khvw5c') },
+      'tool.activated': { title: ts('k_1a0z3ky'), operType: ts('k_sgmlm4') },
+      'tool.maintenance_started': { title: ts('k_4bfx78'), operType: ts('k_v1x3nb') },
+      'tool.maintenance_completed': { title: ts('k_yy6vx5'), operType: ts('k_v1x3nb') },
+      'tool.warning_triggered': { title: ts('k_1sxw9dx'), operType: ts('k_1qswpkf') },
+      'tool.scrapped': { title: ts('k_ah6sir'), operType: ts('k_19qx965') },
     };
 
     const operation = operationMap[event.eventType];

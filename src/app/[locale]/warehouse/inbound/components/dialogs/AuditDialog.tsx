@@ -26,6 +26,7 @@ interface AuditDialogProps {
 
 export function AuditDialog({ open, onOpenChange, currentRecord, onSuccess }: AuditDialogProps) {
   const t = useTranslations('Warehouse');
+  const ts = useTranslations('Warehouse');
   const tc = useTranslations('Common');
   const [generateQr, setGenerateQr] = useState(true);
 
@@ -74,7 +75,7 @@ export function AuditDialog({ open, onOpenChange, currentRecord, onSuccess }: Au
                   quantity: item.quantity || 0,
                   count: 1,
                 })),
-                operator: currentRecord.operator_name || '系统管理员',
+                operator: currentRecord.operator_name || ts('k_1csar6s'),
               }),
             });
             const qrResult = await qrRes.json();

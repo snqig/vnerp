@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, queryOne, transaction } from '@/lib/db';
 import {
@@ -16,11 +19,12 @@ interface RolePermission {
 
 // GET - 获取角色权限
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const roleId = searchParams.get('roleId');
 
   if (!roleId) {
-    return commonErrors.badRequest('角色ID不能为空');
+    return commonErrors.badRequest(ts('k_2gmrs2'));
   }
 
   const roleIdNum = parseInt(roleId);
@@ -32,7 +36,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   if (!existingRole) {
-    return commonErrors.notFound('角色不存在');
+    return commonErrors.notFound(ts('k_lrx46w'));
   }
 
   const result = await query<RolePermission>(
@@ -46,6 +50,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // POST - 保存角色权限
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { role_id, menu_ids } = body;
 
@@ -65,7 +71,7 @@ export const POST = withPermission(
     );
 
     if (!existingRole) {
-      return commonErrors.notFound('角色不存在');
+      return commonErrors.notFound(ts('k_lrx46w'));
     }
 
     // 使用事务保存权限
@@ -93,7 +99,7 @@ export const POST = withPermission(
       }
     });
 
-    return successResponse(null, '权限设置成功');
+    return successResponse(null, tc('permissionSetSuccess'));
   },
   { logTitle: '保存角色权限' }
 );

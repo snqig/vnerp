@@ -74,6 +74,7 @@ const initialForm: RequestForm = {
 };
 
 export default function NewPurchaseRequestPage() {
+  const ts = useTranslations('Purchase');
   // 翻译钩子
   const tc = useTranslations('Common');
 
@@ -122,7 +123,7 @@ export default function NewPurchaseRequestPage() {
 
   const removeItem = (index: number) => {
     if (formData.items.length <= 1) {
-      toast.error('至少需要保留一条明细');
+      toast.error(ts('k_fhvukz'));
       return;
     }
     setFormData((prev) => ({
@@ -139,12 +140,12 @@ export default function NewPurchaseRequestPage() {
     e.preventDefault();
 
     if (!formData.requester_name) {
-      toast.error('请输入申请人');
+      toast.error(ts('k_dhtvr2'));
       return;
     }
 
     if (formData.items.some((item) => !item.material_name || item.quantity <= 0)) {
-      toast.error('请完善物料信息，物料名称和数量不能为空');
+      toast.error(ts('k_152m4pa'));
       return;
     }
 
@@ -164,13 +165,13 @@ export default function NewPurchaseRequestPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success('采购申请创建成功');
+        toast.success(ts('k_r3xg5z'));
         router.push('/purchase/request');
       } else {
-        toast.error(result.message || '创建失败');
+        toast.error(result.message || ts('k_1jxltyq'));
       }
     } catch {
-      toast.error('创建失败');
+      toast.error(ts('k_1jxltyq'));
     } finally {
       setSaving(false);
     }
@@ -188,19 +189,17 @@ export default function NewPurchaseRequestPage() {
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 <FileText className="h-6 w-6" />
-                新增采购申请
-              </h1>
+                {ts('k_u7zqlx')}</h1>
               <p className="text-sm text-muted-foreground">{tc('newRequestDesc')}</p>
             </div>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleSubmit} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
-              保存草稿
-            </Button>
+              {ts('k_gtqgss')}</Button>
             <Button onClick={handleSubmit} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
-              {saving ? '保存中...' : '提交申请'}
+              {saving ? ts('k_rr6ulf') : ts('k_1i76dc3')}
             </Button>
           </div>
         </div>
@@ -209,13 +208,12 @@ export default function NewPurchaseRequestPage() {
           {/* 基本信息 */}
           <Card>
             <CardHeader>
-              <CardTitle>基本信息</CardTitle>
+              <CardTitle>{ts('k_z5lkkb')}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label>
-                  申请日期
-                  <span className="text-red-500">*</span>
+                  {ts('k_1i2qe7n')}<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   type="date"
@@ -226,31 +224,31 @@ export default function NewPurchaseRequestPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>申请类型</Label>
+                <Label>{ts('k_1subwph')}</Label>
                 <Select
                   value={formData.request_type}
                   onValueChange={(v) => setFormData((prev) => ({ ...prev, request_type: v }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择类型" />
+                    <SelectValue placeholder={ts('k_wjmlj1')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="原材料">原材料</SelectItem>
-                    <SelectItem value="辅料">辅料</SelectItem>
-                    <SelectItem value="设备">{tc('equipment')}</SelectItem>
-                    <SelectItem value="办公用品">办公用品</SelectItem>
-                    <SelectItem value="其他">其他</SelectItem>
+                    <SelectItem value={tc('rawMaterial')}>{tc('rawMaterial')}</SelectItem>
+                    <SelectItem value={ts('k_14rp9uj')}>{ts('k_14rp9uj')}</SelectItem>
+                    <SelectItem value={ts('k_1kb4ymq')}>{tc('equipment')}</SelectItem>
+                    <SelectItem value={ts('k_w9s2pw')}>{ts('k_w9s2pw')}</SelectItem>
+                    <SelectItem value={ts('k_dcd4ul')}>{ts('k_dcd4ul')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>申请部门</Label>
+                <Label>{ts('k_1x9z28n')}</Label>
                 <Select
                   value={formData.request_dept}
                   onValueChange={(v) => setFormData((prev) => ({ ...prev, request_dept: v }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择部门" />
+                    <SelectValue placeholder={ts('k_18m3h1b')} />
                   </SelectTrigger>
                   <SelectContent>
                     {departments.map((dept) => (
@@ -263,15 +261,14 @@ export default function NewPurchaseRequestPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  申请人
-                  <span className="text-red-500">*</span>
+                  {ts('k_3fdyof')}<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={formData.requester_name}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, requester_name: e.target.value }))
                   }
-                  placeholder="申请人姓名"
+                  placeholder={ts('k_m06xy3')}
                 />
               </div>
               <div className="space-y-2">
@@ -281,13 +278,13 @@ export default function NewPurchaseRequestPage() {
                   onValueChange={(v) => setFormData((prev) => ({ ...prev, priority: parseInt(v) }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择优先级" />
+                    <SelectValue placeholder={ts('k_1k8e3tk')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="0">低</SelectItem>
-                    <SelectItem value="1">中</SelectItem>
-                    <SelectItem value="2">高</SelectItem>
-                    <SelectItem value="3">紧急</SelectItem>
+                    <SelectItem value="0">{ts('k_1kffmxd')}</SelectItem>
+                    <SelectItem value="1">{ts('k_b7cu2g')}</SelectItem>
+                    <SelectItem value="2">{ts('k_pk6gtj')}</SelectItem>
+                    <SelectItem value="3">{ts('k_9tbknt')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -302,13 +299,13 @@ export default function NewPurchaseRequestPage() {
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label>建议供应商</Label>
+                <Label>{ts('k_yrjgkw')}</Label>
                 <Input
                   value={formData.supplier_name}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, supplier_name: e.target.value }))
                   }
-                  placeholder="供应商名称"
+                  placeholder={ts('k_15o1hhd')}
                 />
               </div>
             </CardContent>
@@ -317,11 +314,10 @@ export default function NewPurchaseRequestPage() {
           {/* 采购物料明细 */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>采购物料明细</CardTitle>
+              <CardTitle>{ts('k_1fk0uv7')}</CardTitle>
               <Button type="button" variant="outline" size="sm" onClick={addItem}>
                 <Plus className="h-4 w-4 mr-2" />
-                添加物料
-              </Button>
+                {ts('k_1l3uqwk')}</Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -331,13 +327,13 @@ export default function NewPurchaseRequestPage() {
                     className="grid grid-cols-12 gap-2 items-end p-4 border rounded-lg bg-gray-50 dark:bg-slate-800 dark:border-slate-700"
                   >
                     <div className="col-span-1">
-                      <Label className="text-xs">行号</Label>
+                      <Label className="text-xs">{ts('k_11vy4t0')}</Label>
                       <div className="text-sm font-medium py-2 text-gray-900 dark:text-white">
                         {index + 1}
                       </div>
                     </div>
                     <div className="col-span-2">
-                      <Label className="text-xs">物料编码</Label>
+                      <Label className="text-xs">{tc('materialCode')}</Label>
                       <Input
                         value={item.material_code}
                         onChange={(e) => updateItem(index, 'material_code', e.target.value)}
@@ -346,8 +342,7 @@ export default function NewPurchaseRequestPage() {
                     </div>
                     <div className="col-span-2">
                       <Label className="text-xs">
-                        物料名称
-                        <span className="text-red-500">*</span>
+                        {tc('materialName')}<span className="text-red-500">*</span>
                       </Label>
                       <Input
                         value={item.material_name}
@@ -356,7 +351,7 @@ export default function NewPurchaseRequestPage() {
                       />
                     </div>
                     <div className="col-span-2">
-                      <Label className="text-xs">规格型号</Label>
+                      <Label className="text-xs">{ts('k_17faar3')}</Label>
                       <Input
                         value={item.material_spec}
                         onChange={(e) => updateItem(index, 'material_spec', e.target.value)}
@@ -373,8 +368,7 @@ export default function NewPurchaseRequestPage() {
                     </div>
                     <div className="col-span-1">
                       <Label className="text-xs">
-                        数量
-                        <span className="text-red-500">*</span>
+                        {ts('k_1i54xuo')}<span className="text-red-500">*</span>
                       </Label>
                       <Input
                         type="number"
@@ -387,7 +381,7 @@ export default function NewPurchaseRequestPage() {
                       />
                     </div>
                     <div className="col-span-1">
-                      <Label className="text-xs">单价</Label>
+                      <Label className="text-xs">{ts('k_isc1c5')}</Label>
                       <Input
                         type="number"
                         min="0"
@@ -422,8 +416,7 @@ export default function NewPurchaseRequestPage() {
               {/* 合计 */}
               <div className="flex justify-end mt-4 pt-4 border-t">
                 <div className="text-lg font-bold text-gray-900 dark:text-white">
-                  合计金额：
-                  <span className="text-blue-600 dark:text-blue-400">
+                  {ts('k_71hi4y')}<span className="text-blue-600 dark:text-blue-400">
                     ¥{getTotalAmount().toFixed(2)}
                   </span>
                 </div>
@@ -441,7 +434,7 @@ export default function NewPurchaseRequestPage() {
                 className="w-full min-h-[100px] p-3 border rounded-md bg-card text-foreground"
                 value={formData.remark}
                 onChange={(e) => setFormData((prev) => ({ ...prev, remark: e.target.value }))}
-                placeholder="其他备注信息..."
+                placeholder={ts('k_14vkwz4')}
               />
             </CardContent>
           </Card>

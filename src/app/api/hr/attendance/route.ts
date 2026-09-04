@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -103,6 +106,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 // 创建考勤记录
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     // 验证必填字段
@@ -134,19 +138,19 @@ export const POST = withPermission(
     } = body;
 
     if (!isValidDate(attendanceDate)) {
-      return errorResponse('考勤日期格式不正确，应为 YYYY-MM-DD', 400, 400);
+      return errorResponse(ts('k_shn1t9'), 400, 400);
     }
 
     if (!isValidTime(checkInTime)) {
-      return errorResponse('上班时间格式不正确，应为 HH:mm', 400, 400);
+      return errorResponse(ts('k_1wb66wb'), 400, 400);
     }
 
     if (!isValidTime(checkOutTime)) {
-      return errorResponse('下班时间格式不正确，应为 HH:mm', 400, 400);
+      return errorResponse(ts('k_1f1ravu'), 400, 400);
     }
 
     if (!isValidStatus(status)) {
-      return errorResponse('考勤状态值不正确，应为 normal/late/absent/leave', 400, 400);
+      return errorResponse(ts('k_1o5dgbb'), 400, 400);
     }
 
     // 计算工作时长（如果未提供）
@@ -183,7 +187,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId }, '考勤记录创建成功');
+    return successResponse({ id: result.insertId }, ts('k_122gnm1'));
   },
   { errorMessage: '创建考勤记录失败' }
 );
@@ -191,11 +195,12 @@ export const POST = withPermission(
 // 更新考勤记录
 export const PUT = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...updateData } = body;
 
     if (!id) {
-      return commonErrors.badRequest('考勤记录ID不能为空');
+      return commonErrors.badRequest(ts('k_j8w8ge'));
     }
 
     // 检查考勤记录是否存在
@@ -205,7 +210,7 @@ export const PUT = withPermission(
     );
 
     if (!attendance) {
-      return commonErrors.notFound('考勤记录不存在');
+      return commonErrors.notFound(ts('k_5w2tnw'));
     }
 
     // 计算工作时长（如果未提供）
@@ -248,7 +253,7 @@ export const PUT = withPermission(
       ]
     );
 
-    return successResponse(null, '考勤记录更新成功');
+    return successResponse(null, ts('k_2a0ohc'));
   },
   { errorMessage: '更新考勤记录失败' }
 );
@@ -256,11 +261,12 @@ export const PUT = withPermission(
 // 删除考勤记录（软删除）
 export const DELETE = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('考勤记录ID不能为空');
+      return commonErrors.badRequest(ts('k_j8w8ge'));
     }
 
     // 检查考勤记录是否存在
@@ -270,12 +276,12 @@ export const DELETE = withPermission(
     );
 
     if (!attendance) {
-      return commonErrors.notFound('考勤记录不存在');
+      return commonErrors.notFound(ts('k_5w2tnw'));
     }
 
     await execute('UPDATE hr_attendance SET deleted = 1 WHERE id = ?', [id]);
 
-    return successResponse(null, '考勤记录删除成功');
+    return successResponse(null, ts('k_ftcl8o'));
   },
   { errorMessage: '删除考勤记录失败' }
 );

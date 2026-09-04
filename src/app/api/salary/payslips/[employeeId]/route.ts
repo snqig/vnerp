@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -11,10 +14,11 @@ export const GET = withPermission(
     _userInfo: UserInfo,
     { params }: { params: Promise<{ employeeId: string }> }
   ) => {
+  const ts = await getTranslations('Common');
     const { employeeId: rawId } = await params;
     const employeeId = Number(rawId);
     if (!rawId || !/^\d+$/.test(rawId)) {
-      return errorResponse('员工ID无效', 400, 400);
+      return errorResponse(ts('k_id1lt7'), 400, 400);
     }
 
     const [calc] = await query<DbRow>(
@@ -22,7 +26,7 @@ export const GET = withPermission(
       [employeeId]
     );
     if (!calc) {
-      return errorResponse('未找到该员工的工资核算数据', 404, 404);
+      return errorResponse(ts('k_1he5qsh'), 404, 404);
     }
 
     const [emp] = await query<DbRow>(

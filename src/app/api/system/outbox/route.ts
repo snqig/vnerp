@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -52,6 +55,7 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const action = body.action;
 
@@ -65,12 +69,12 @@ export const POST = withPermission(
 
     if (action === 'start') {
       OutboxPoller.start();
-      return successResponse({ running: true }, 'Outbox轮询服务已启动');
+      return successResponse({ running: true }, ts('k_1fcvaaf'));
     }
 
     if (action === 'stop') {
       OutboxPoller.stop();
-      return successResponse({ running: false }, 'Outbox轮询服务已停止');
+      return successResponse({ running: false }, ts('k_1bu47ru'));
     }
 
     if (action === 'replay-dead-letter') {

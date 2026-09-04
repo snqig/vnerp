@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 import mysql from 'mysql2/promise';
 import {
   IPurchaseOrderRepository,
@@ -357,7 +360,9 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
       createBy: order.create_by ?? undefined,
       auditBy: order.audit_by ?? undefined,
       auditTime: order.audit_time ?? undefined,
-      lines: (lines || []).map((line) => ({
+      lines: (lines || []).map((line) => {
+  const ts = t;
+  return  ({
         id: line.id,
         orderId: line.po_id,
         lineNo: line.line_no,
@@ -365,7 +370,7 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
         materialCode: line.material_code || '',
         materialName: line.material_name || '',
         materialSpec: line.material_spec || '',
-        unit: line.unit || '件',
+        unit: line.unit || ts('k_w0gthl'),
         orderQty: Number(line.order_qty),
         receivedQty: Number(line.received_qty) || 0,
         returnedQty: Number(line.returned_qty) || 0,
@@ -380,7 +385,8 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
         baseLineTotal: Number(line.base_line_total) || 0,
         requireDate: line.require_date ?? undefined,
         remark: line.remark ?? undefined,
-      })),
+      });
+}),
       createTime: order.create_time ?? undefined,
       updateTime: order.update_time ?? undefined,
     };

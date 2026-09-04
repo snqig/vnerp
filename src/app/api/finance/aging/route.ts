@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { escapeId } from 'mysql2';
 import { successResponse } from '@/lib/api-response';
@@ -13,6 +16,7 @@ import type { DbRow } from '@/types/db';
  */
 
 export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'receivable';
   const asOfDate = searchParams.get('asOfDate') || new Date().toISOString().slice(0, 10);
@@ -32,13 +36,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
 
   // 账龄区间
   const ageBuckets = [
-    { label: '未到期', min: -9999, max: 0 },
-    { label: '1-30天', min: 1, max: 30 },
-    { label: '31-60天', min: 31, max: 60 },
-    { label: '61-90天', min: 61, max: 90 },
-    { label: '91-180天', min: 91, max: 180 },
-    { label: '181-365天', min: 181, max: 365 },
-    { label: '365天以上', min: 366, max: 9999 },
+    { label: ts('k_1yao054'), min: -9999, max: 0 },
+    { label: ts('k_1xpwhaj'), min: 1, max: 30 },
+    { label: ts('k_1mhk1ex'), min: 31, max: 60 },
+    { label: ts('k_7kmdbx'), min: 61, max: 90 },
+    { label: ts('k_1hesoj8'), min: 91, max: 180 },
+    { label: ts('k_1wkm3fl'), min: 181, max: 365 },
+    { label: ts('k_1bm4js9'), min: 366, max: 9999 },
   ];
 
   const rows = await query(
@@ -57,7 +61,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
 
   for (const row of rows) {
     const partnerId = row.partner_id || 0;
-    const partnerName = row.partner_name || '未知';
+    const partnerName = row.partner_name || ts('k_1lpnuh4');
 
     if (!partnerSummary[partnerId]) {
       partnerSummary[partnerId] = {

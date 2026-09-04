@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 import { IOutboundOrderRepository } from '@/domain/warehouse/repositories/IOutboundOrderRepository';
 import { OutboundOrder, OutboundOrderProps } from '@/domain/warehouse/aggregates/OutboundOrder';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
@@ -11,9 +14,10 @@ export class OutboundApplicationService {
   constructor(private readonly orderRepo: IOutboundOrderRepository) {}
 
   async getOrderById(id: number): Promise<OutboundOrder> {
+  const ts = await getTranslations('Common');
     const order = await this.orderRepo.findById(id);
     if (!order) {
-      throw new NotFoundError('出库单不存在');
+      throw new NotFoundError(ts('k_14l2xo0'));
     }
     return order;
   }
@@ -51,6 +55,7 @@ export class OutboundApplicationService {
   private assertNoDuplicateOutboundLines(
     items: Array<{ materialId?: number | null; batchNo?: string | null }>
   ): void {
+  const ts = t;
     const counts = new Map<string, number>();
     for (const item of items ?? []) {
       const key = `${item.materialId ?? ''}__${item.batchNo ?? ''}`;
@@ -60,7 +65,7 @@ export class OutboundApplicationService {
       if (count > 1) {
         const [materialId, batchNo] = key.split('__');
         throw AppError.conflict(
-          `出库明细存在重复行：物料#${materialId || '空'} 批次「${batchNo || '空'}」出现了 ${count} 次，请合并后重试`
+          `出库明细存在重复行：物料#${materialId || ts('k_1yw5ep9')} 批次「${batchNo || ts('k_1yw5ep9')}」出现了 ${count} 次，请合并后重试`
         );
       }
     }
@@ -132,9 +137,10 @@ export class OutboundApplicationService {
   }
 
   async deleteOrder(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const order = await this.getOrderById(id);
     if (!order.canDelete()) {
-      throw new DomainError('当前状态的出库单不能删除');
+      throw new DomainError(ts('k_1fm1unw'));
     }
     await this.orderRepo.softDelete(id);
   }

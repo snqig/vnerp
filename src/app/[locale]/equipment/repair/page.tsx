@@ -55,6 +55,7 @@ const typeMap: Record<number, string> = {
 };
 
 export default function EquipmentRepairPage() {
+  const ts = useTranslations('Equipment');
   // 翻译钩子
   const tc = useTranslations('Common');
 
@@ -62,9 +63,9 @@ export default function EquipmentRepairPage() {
     number,
     { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
   > = {
-    1: { label: '待维修', variant: 'outline' },
-    2: { label: '维修中', variant: 'default' },
-    3: { label: '已完成', variant: 'secondary' },
+    1: { label: ts('k_kv3w6u'), variant: 'outline' },
+    2: { label: ts('k_1jvastq'), variant: 'default' },
+    3: { label: ts('k_19j4h'), variant: 'secondary' },
     4: { label: tc('closed'), variant: 'destructive' },
   };
 
@@ -178,7 +179,7 @@ export default function EquipmentRepairPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">设备维修</h1>
+          <h1 className="text-2xl font-bold">{ts('k_15hkir8')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
@@ -199,8 +200,7 @@ export default function EquipmentRepairPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增维修单
-            </Button>
+              {ts('k_1f62jlo')}</Button>
           </div>
         </div>
         <Card>
@@ -219,13 +219,13 @@ export default function EquipmentRepairPage() {
                       aria-label={tc('selectAll')}
                     />
                   </TableHead>
-                  <TableHead className="text-xs">维修单号</TableHead>
-                  <TableHead className="text-xs">设备编码</TableHead>
-                  <TableHead className="text-xs">设备名称</TableHead>
-                  <TableHead className="text-xs">故障日期</TableHead>
-                  <TableHead className="text-xs">故障描述</TableHead>
-                  <TableHead className="text-xs">维修类型</TableHead>
-                  <TableHead className="text-xs">维修人</TableHead>
+                  <TableHead className="text-xs">{ts('k_1j82wwz')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_17s4qyf')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_eb1q6f')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_3s4z78')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_784d9f')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_1migccd')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_gquu0n')}</TableHead>
                   <TableHead className="text-xs">{tc('status')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
@@ -241,7 +241,7 @@ export default function EquipmentRepairPage() {
                           className="h-4 w-4 cursor-pointer accent-blue-600"
                           checked={isSelected(String(item.id))}
                           onChange={() => toggle(String(item.id))}
-                          aria-label={tc('selectAll')}
+                          aria-label={tc('selectRow', { id: item.id })}
                         />
                       </TableCell>
                       <TableCell className="text-xs font-mono">{item.repair_no}</TableCell>
@@ -267,8 +267,7 @@ export default function EquipmentRepairPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 2)}
                             >
-                              开始维修
-                            </Button>
+                              {ts('k_r6qw02')}</Button>
                           )}
                           {item.status === 2 && (
                             <Button
@@ -277,8 +276,7 @@ export default function EquipmentRepairPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 3)}
                             >
-                              完成
-                            </Button>
+                              {ts('k_8cfjmp')}</Button>
                           )}
                           <Button
                             size="sm"
@@ -307,8 +305,7 @@ export default function EquipmentRepairPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                      暂无记录
-                    </TableCell>
+                      {tc('noRecords')}</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -316,7 +313,7 @@ export default function EquipmentRepairPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共{total}条</span>
+          <span className="text-sm text-gray-500">{ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -324,40 +321,38 @@ export default function EquipmentRepairPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
-            </Button>
+              {tc('prevPage')}</Button>
             <Button
               size="sm"
               variant="outline"
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
-            </Button>
+              {tc('nextPage')}</Button>
           </div>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增维修单</DialogTitle>
+              <DialogTitle>{ts('k_1f62jlo')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>设备编码</Label>
+                <Label>{ts('k_17s4qyf')}</Label>
                 <Input
                   value={editItem.equipment_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, equipment_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>设备名称</Label>
+                <Label>{ts('k_eb1q6f')}</Label>
                 <Input
                   value={editItem.equipment_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, equipment_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>故障日期</Label>
+                <Label>{ts('k_3s4z78')}</Label>
                 <Input
                   type="date"
                   value={editItem.fault_date || ''}
@@ -365,7 +360,7 @@ export default function EquipmentRepairPage() {
                 />
               </div>
               <div>
-                <Label>维修类型</Label>
+                <Label>{ts('k_1migccd')}</Label>
                 <Select
                   value={String(editItem.repair_type || 2)}
                   onValueChange={(v) => setEditItem({ ...editItem, repair_type: Number(v) })}
@@ -374,21 +369,21 @@ export default function EquipmentRepairPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">预防性维修</SelectItem>
-                    <SelectItem value="2">故障维修</SelectItem>
-                    <SelectItem value="3">紧急维修</SelectItem>
+                    <SelectItem value="1">{ts('k_1s9r742')}</SelectItem>
+                    <SelectItem value="2">{ts('k_4ebikq')}</SelectItem>
+                    <SelectItem value="3">{ts('k_xa2tkr')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>维修人</Label>
+                <Label>{ts('k_gquu0n')}</Label>
                 <UserSelect
                   value={editItem.repair_person || ''}
                   onChange={(v) => setEditItem({ ...editItem, repair_person: v })}
                 />
               </div>
               <div className="col-span-2">
-                <Label>故障描述</Label>
+                <Label>{ts('k_784d9f')}</Label>
                 <Input
                   value={editItem.fault_desc || ''}
                   onChange={(e) => setEditItem({ ...editItem, fault_desc: e.target.value })}
@@ -397,8 +392,7 @@ export default function EquipmentRepairPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
-              </Button>
+                {tc('cancel')}</Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>

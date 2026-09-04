@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { errorResponse, successResponse, commonErrors } from '@/lib/api-response';
@@ -7,6 +10,7 @@ import bcrypt from 'bcryptjs';
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     // 限流：每 IP 15 分钟最多 10 次密码修改，防暴力篡改
     const clientIP = getClientIP(request);
     const rateResult = await checkRateLimit(clientIP, {
@@ -31,7 +35,7 @@ export const POST = withPermission(
     const { oldPassword, newPassword, targetUserId } = body;
 
     if (!oldPassword || !newPassword) {
-      return errorResponse('缺少必填字段: oldPassword, newPassword', 400, 400);
+      return errorResponse(ts('k_1l4stqd'), 400, 400);
     }
 
     // 默认改自己的密码；仅 admin 可指定 targetUserId 改他人密码
@@ -39,7 +43,7 @@ export const POST = withPermission(
     const effectiveUserId = isAdmin && targetUserId ? Number(targetUserId) : userInfo.userId;
 
     if (!Number.isFinite(effectiveUserId)) {
-      return errorResponse('targetUserId 必须为数字', 400, 400);
+      return errorResponse(ts('k_w40s1h'), 400, 400);
     }
 
     // 从系统配置读取密码策略
@@ -76,15 +80,15 @@ export const POST = withPermission(
     }
 
     if (!/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
-      return errorResponse('新密码必须包含字母和数字', 400, 400);
+      return errorResponse(ts('k_a2rlaz'), 400, 400);
     }
 
     if (requireUpperCase && !/[A-Z]/.test(newPassword)) {
-      return errorResponse('新密码必须包含大写字母', 400, 400);
+      return errorResponse(ts('k_1xoit3u'), 400, 400);
     }
 
     if (requireSpecialChar && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword)) {
-      return errorResponse('新密码必须包含特殊字符', 400, 400);
+      return errorResponse(ts('k_15jyv94'), 400, 400);
     }
 
     const users = await query(
@@ -93,18 +97,18 @@ export const POST = withPermission(
     );
 
     if (!users || users.length === 0) {
-      return commonErrors.notFound('用户不存在');
+      return commonErrors.notFound(ts('k_17nv4bz'));
     }
 
     const user = users[0];
     const isValid = await bcrypt.compare(oldPassword, user.password);
     if (!isValid) {
-      return errorResponse('原密码错误', 400, 400);
+      return errorResponse(ts('k_pvb58r'), 400, 400);
     }
 
     const isSamePassword = await bcrypt.compare(newPassword, user.password);
     if (isSamePassword) {
-      return errorResponse('新密码不能与旧密码相同', 400, 400);
+      return errorResponse(ts('k_wm996m'), 400, 400);
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -117,11 +121,11 @@ export const POST = withPermission(
       await execute(
         `INSERT INTO sys_operation_log (title, oper_name, oper_url, request_method, oper_ip, oper_time, status)
          VALUES (?, ?, ?, ?, ?, NOW(), ?)`,
-        ['修改密码', user.username, '/api/auth/change-password', 'POST', '', 1]
+        [ts('k_1pt7oo1'), user.username, '/api/auth/change-password', 'POST', '', 1]
       );
     } catch {}
 
-    return successResponse(null, '密码修改成功');
+    return successResponse(null, ts('k_4xbt44'));
   },
   { logTitle: '修改密码', logType: 'auth' }
 );

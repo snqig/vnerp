@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -92,6 +95,7 @@ interface Warehouse {
 // POST - 初始化仓库数据
 export const POST = withPermission(
   async (_request: NextRequest) => {
+  const ts = await getTranslations('Common');
     // 检查是否需要添加category_id字段
     const checkColumn = await queryOne<{ count: number }>(`
     SELECT COUNT(*) as count FROM information_schema.columns
@@ -100,7 +104,7 @@ export const POST = withPermission(
 
     if (checkColumn && checkColumn.count === 0) {
       await execute(
-        'ALTER TABLE inv_warehouse ADD COLUMN category_id BIGINT UNSIGNED DEFAULT NULL COMMENT "仓库分类ID" AFTER warehouse_name'
+        ts('k_gup3wx')
       );
       await execute('ALTER TABLE inv_warehouse ADD KEY idx_category_id (category_id)');
     }
@@ -149,7 +153,7 @@ export const POST = withPermission(
         data: finalData,
         count: finalData.length,
       },
-      '仓库数据初始化成功'
+      ts('k_160b8bc')
     );
   },
   { errorMessage: '初始化仓库数据失败' }

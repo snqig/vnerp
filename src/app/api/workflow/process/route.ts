@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -11,15 +14,16 @@ const workflowEngine = new WorkflowEngine();
 // 执行审批操作
 export const POST = withPermission(
   async (request: NextRequest, user: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { instanceId, taskId, action, comment } = body;
 
     if (!instanceId || !taskId || !action) {
-      return errorResponse('缺少必要的参数', 400, 400);
+      return errorResponse(ts('k_1jhw5lg'), 400, 400);
     }
 
     if (!['approve', 'reject'].includes(action)) {
-      return errorResponse('无效的审批动作', 400, 400);
+      return errorResponse(ts('k_19dupyx'), 400, 400);
     }
 
     try {
@@ -46,7 +50,7 @@ export const POST = withPermission(
         result.message
       );
     } catch (error) {
-      return errorResponse('审批处理失败: ' + (error as Error).message, 500, 500);
+      return errorResponse(ts('k_r1v0zd') + (error as Error).message, 500, 500);
     }
   },
   { logTitle: '执行审批操作' }
@@ -54,13 +58,14 @@ export const POST = withPermission(
 
 // 获取审批详情
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const instanceId = searchParams.get('instanceId');
   const sourceType = searchParams.get('sourceType');
   const sourceId = searchParams.get('sourceId');
 
   if (!instanceId && !(sourceType && sourceId)) {
-    return errorResponse('缺少实例ID或来源信息', 400, 400);
+    return errorResponse(ts('k_11ms3jh'), 400, 400);
   }
 
   let instance;
@@ -78,7 +83,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   }
 
   if (!instance) {
-    return errorResponse('审批实例不存在', 404, 404);
+    return errorResponse(ts('k_gewfjb'), 404, 404);
   }
 
   // 获取任务列表
@@ -149,6 +154,6 @@ export const GET = withPermission(async (request: NextRequest) => {
         createTime: t.create_time,
       })),
     },
-    '获取审批详情成功'
+    ts('k_1ql9z8u')
   );
 });

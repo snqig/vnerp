@@ -1,3 +1,7 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -57,11 +61,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   return successResponse({
-    list: rows.map((row: DbRow) => ({
+    list: rows.map((row: DbRow) => {
+  const ts = t;
+  return  ({
       ...row,
-      type_name: TYPE_MAP[row.type] || '未知',
-      status_name: STATUS_MAP[row.status] || '未知',
-    })),
+      type_name: TYPE_MAP[row.type] || ts('k_1lpnuh4'),
+      status_name: STATUS_MAP[row.status] || ts('k_1lpnuh4'),
+    });
+}),
     total,
     page,
     pageSize,
@@ -69,6 +76,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 });
 
 export const POST = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const {
     type = 1,
@@ -82,27 +90,27 @@ export const POST = withPermission(async (request: NextRequest, _userInfo) => {
   } = body;
 
   if (!from_warehouse_id) {
-    return errorResponse('请选择调出仓库', 400, 400);
+    return errorResponse(ts('k_vqjfur'), 400, 400);
   }
 
   if (!to_warehouse_id) {
-    return errorResponse('请选择调入仓库', 400, 400);
+    return errorResponse(ts('k_l4ganq'), 400, 400);
   }
 
   if (![1, 2].includes(type)) {
-    return errorResponse('调拨类型无效（1=库位调拨，2=仓库调拨）', 400, 400);
+    return errorResponse(ts('k_1s5wyn2'), 400, 400);
   }
 
   if (type === 1 && from_warehouse_id !== to_warehouse_id) {
-    return errorResponse('库位调拨必须在同一仓库内进行', 400, 400);
+    return errorResponse(ts('k_1jzjwz0'), 400, 400);
   }
 
   if (!from_location && type === 1) {
-    return errorResponse('请选择调出库位', 400, 400);
+    return errorResponse(ts('k_11r9q71'), 400, 400);
   }
 
   if (!to_location && type === 1) {
-    return errorResponse('请选择调入库位', 400, 400);
+    return errorResponse(ts('k_qk44qs'), 400, 400);
   }
 
   const transferNo = generateTransferNo();
@@ -110,23 +118,23 @@ export const POST = withPermission(async (request: NextRequest, _userInfo) => {
   // 系统设置 category.require_on_business：调拨单要求物料已归类
   if (items && Array.isArray(items) && items.length > 0) {
     const materialIds = (items as DbRow[]).map((item: DbRow) => item.material_id).filter(Boolean);
-    secureLog('info', '[warehouse/transfer] 开始物料分类校验', {
+    secureLog('info', ts('k_y3muv9'), {
       itemCount: items.length,
       materialIds,
     });
     const categoryCheck = await checkMaterialsCategorized(materialIds);
-    secureLog('info', '[warehouse/transfer] 物料分类校验完成', {
+    secureLog('info', ts('k_19cbevo'), {
       blocked: categoryCheck.blocked,
       uncategorizedCount: categoryCheck.uncategorized.length,
     });
     if (categoryCheck.blocked) {
-      secureLog('warn', '[warehouse/transfer] 物料分类校验阻断提交', {
+      secureLog('warn', ts('k_jzuj74'), {
         message: categoryCheck.message,
       });
       return errorResponse(categoryCheck.message!, 400, 400);
     }
     if (categoryCheck.message) {
-      secureLog('warn', '[warehouse/transfer] 物料分类校验警告', {
+      secureLog('warn', ts('k_1klmc4g'), {
         message: categoryCheck.message,
       });
     }
@@ -182,7 +190,7 @@ export const POST = withPermission(async (request: NextRequest, _userInfo) => {
         status: 0,
         uncategorizedMaterials: categoryCheck.uncategorized,
       },
-      categoryCheck.message ? `调拨单创建成功。${categoryCheck.message}` : '调拨单创建成功'
+      categoryCheck.message ? `调拨单创建成功。${categoryCheck.message}` : ts('k_w65uch')
     );
   }
 
@@ -238,11 +246,12 @@ export const POST = withPermission(async (request: NextRequest, _userInfo) => {
       transfer_no: transferNo,
       status: 0,
     },
-    '调拨单创建成功'
+    ts('k_w65uch')
   );
 });
 
 export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id, action, approver_id } = body;
 
@@ -251,27 +260,27 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
   ]);
 
   if (!transfer) {
-    return commonErrors.notFound('调拨单不存在');
+    return commonErrors.notFound(ts('k_118ryb8'));
   }
 
   switch (action) {
     case 'submit':
       // 提交审批：草稿→待审批
       if (transfer.status !== 0) {
-        return errorResponse('只有草稿状态的调拨单才能提交审批', 400, 400);
+        return errorResponse(ts('k_1bnm2sz'), 400, 400);
       }
       await execute(`UPDATE inv_transfer_order SET status = 1, update_time = NOW() WHERE id = ?`, [
         id,
       ]);
-      return successResponse(null, '调拨单已提交审批');
+      return successResponse(null, ts('k_w7efif'));
 
     case 'approve':
       if (transfer.status !== 1) {
-        return errorResponse('只有待审批的调拨单才能审批', 400, 400);
+        return errorResponse(ts('k_hmi4kz'), 400, 400);
       }
 
       if (!approver_id) {
-        return errorResponse('请指定审批人', 400, 400);
+        return errorResponse(ts('k_141pjml'), 400, 400);
       }
 
       await execute(
@@ -281,41 +290,42 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
         [approver_id, id]
       );
 
-      return successResponse(null, '调拨单审批通过');
+      return successResponse(null, ts('k_1gbywpo'));
 
     case 'reject':
       if (transfer.status !== 1) {
-        return errorResponse('只有待审批的调拨单才能驳回', 400, 400);
+        return errorResponse(ts('k_ia45zk'), 400, 400);
       }
 
       await execute(`UPDATE inv_transfer_order SET status = 4, update_time = NOW() WHERE id = ?`, [
         id,
       ]);
 
-      return successResponse(null, '调拨单已驳回');
+      return successResponse(null, ts('k_u77yvk'));
 
     case 'cancel':
       if (![0, 1].includes(transfer.status)) {
-        return errorResponse('只能取消草稿或待审批的调拨单', 400, 400);
+        return errorResponse(ts('k_1srdhz7'), 400, 400);
       }
 
       await execute(`UPDATE inv_transfer_order SET status = 4, update_time = NOW() WHERE id = ?`, [
         id,
       ]);
 
-      return successResponse(null, '调拨单已取消');
+      return successResponse(null, ts('k_14ws6tb'));
 
     default:
-      return errorResponse('无效的操作类型', 400, 400);
+      return errorResponse(ts('k_4ty90w'), 400, 400);
   }
 });
 
 export const DELETE = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
   if (!id) {
-    return errorResponse('缺少ID参数', 400, 400);
+    return errorResponse(ts('k_g0g39f'), 400, 400);
   }
 
   const transfer = await queryOne(`SELECT * FROM inv_transfer_order WHERE id = ? AND deleted = 0`, [
@@ -323,16 +333,16 @@ export const DELETE = withPermission(async (request: NextRequest, _userInfo) => 
   ]);
 
   if (!transfer) {
-    return commonErrors.notFound('调拨单不存在');
+    return commonErrors.notFound(ts('k_118ryb8'));
   }
 
   if (![0, 4].includes(transfer.status)) {
-    return errorResponse('只能删除草稿或已取消的调拨单', 400, 400);
+    return errorResponse(ts('k_ohmnjs'), 400, 400);
   }
 
   await execute(`UPDATE inv_transfer_order SET deleted = 1, update_time = NOW() WHERE id = ?`, [
     Number(id),
   ]);
 
-  return successResponse(null, '调拨单删除成功');
+  return successResponse(null, ts('k_pda8'));
 });

@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import {
   WorkReportCreatedEvent,
@@ -53,11 +55,12 @@ export class WorkReport {
   }
 
   static create(props: WorkReportProps): WorkReport {
-    if (!props.reportNo) throw new DomainError('报工单号不能为空');
-    if (!props.workOrderId) throw new DomainError('关联工单不能为空');
-    if (!props.processName) throw new DomainError('工序名称不能为空');
+  const ts = t;
+    if (!props.reportNo) throw new DomainError(ts('k_11d2ilp'));
+    if (!props.workOrderId) throw new DomainError(ts('k_1emjamq'));
+    if (!props.processName) throw new DomainError(ts('k_1pqo4pu'));
     if (props.qualifiedQty <= 0 && props.defectiveQty <= 0) {
-      throw new DomainError('合格数或不良数至少有一个大于0');
+      throw new DomainError(ts('k_px4afd'));
     }
 
     const report = new WorkReport(
@@ -117,7 +120,8 @@ export class WorkReport {
   }
 
   approve(userId: number): void {
-    if (this._status !== 'draft') throw new DomainError('只有草稿状态的报工单才能审核');
+  const ts = t;
+    if (this._status !== 'draft') throw new DomainError(ts('k_gp7qkj'));
     this._status = 'approved';
     // Tool IDs would be resolved from process name / equipment mapping in application layer
     this._domainEvents.push(
@@ -136,8 +140,9 @@ export class WorkReport {
   }
 
   cancel(reason: string, userId: number): void {
+  const ts = t;
     if (this._status !== 'draft' && this._status !== 'approved') {
-      throw new DomainError('当前状态不允许作废');
+      throw new DomainError(ts('k_1atqguz'));
     }
     this._status = 'cancelled';
     this._domainEvents.push(

@@ -20,6 +20,7 @@ interface UseCuttingDeps {
 
 export function useCutting(deps: UseCuttingDeps) {
   const t = useTranslations('Warehouse');
+  const ts = useTranslations('Warehouse');
   const {
     currentLabel,
     user,
@@ -82,15 +83,15 @@ export function useCutting(deps: UseCuttingDeps) {
       // 解析分切宽度
       const widths = cuttingForm.cutWidths.split('+').map(Number);
       const hasInvalid = widths.some((w) => isNaN(w) || w <= 0);
-      logger.info(ctx, '分切宽度解析', { widths, hasInvalid });
+      logger.info(ctx, ts('k_11n3day'), { widths, hasInvalid });
       if (hasInvalid) {
-        logger.warn(ctx, '存在无效宽度值，将跳过规格校验', { widths });
+        logger.warn(ctx, ts('k_1v3jsob'), { widths });
       }
 
       // 规格宽度解析与校验
       const spec = currentLabel.specification || currentLabel.materialSpec || '';
       const specWidth = parseSpecWidth(spec);
-      logger.info(ctx, '规格宽度解析', { spec, specWidth });
+      logger.info(ctx, ts('k_1y4x3m1'), { spec, specWidth });
       if (specWidth !== null) {
         const totalCutWidth = widths.reduce((sum, w) => sum + w, 0);
         logger.branch(ctx, 'specCheck', 'totalCutWidth <= specWidth', totalCutWidth <= specWidth, {
@@ -102,7 +103,7 @@ export function useCutting(deps: UseCuttingDeps) {
           return;
         }
       } else {
-        logger.warn(ctx, '未能解析规格宽度，跳过总量校验', { spec });
+        logger.warn(ctx, ts('k_1poobch'), { spec });
       }
 
       // 组装请求数据
@@ -117,7 +118,7 @@ export function useCutting(deps: UseCuttingDeps) {
         typeof recordId === 'string' ? parseInt(recordId.split('-')[0], 10) : recordId;
       const operatorId = cuttingForm.operatorId || user?.id || '1';
       const operatorName =
-        cuttingForm.operatorName || user?.realName || user?.username || '系统管理员';
+        cuttingForm.operatorName || user?.realName || user?.username || ts('k_1csar6s');
 
       const requestBody = {
         sourceLabelId: numericRecordId || null,
@@ -136,7 +137,7 @@ export function useCutting(deps: UseCuttingDeps) {
         orderNo: currentLabel.order_no || currentLabel.orderNo || '',
         originalWidth: specWidth,
       };
-      logger.info(ctx, '发送分切请求', {
+      logger.info(ctx, ts('k_kgwl2h'), {
         url: '/api/warehouse/inbound/cutting',
         sourceLabelId: requestBody.sourceLabelId,
         sourceLabelNo: requestBody.sourceLabelNo,
@@ -149,7 +150,7 @@ export function useCutting(deps: UseCuttingDeps) {
         method: 'POST',
         body: JSON.stringify(requestBody),
       });
-      logger.info(ctx, '分切API响应', { status: response.status, ok: response.ok });
+      logger.info(ctx, ts('k_xpb36v'), { status: response.status, ok: response.ok });
 
       const result = await response.json();
       if (result.success) {
@@ -179,23 +180,23 @@ export function useCutting(deps: UseCuttingDeps) {
               body: JSON.stringify({
                 parentQrContent,
                 splits,
-                operator: cuttingForm.operatorName || '系统管理员',
+                operator: cuttingForm.operatorName || ts('k_1csar6s'),
               }),
             });
-            logger.info(ctx, '子QR码生成完成', { splitCount: splits.length });
+            logger.info(ctx, ts('k_q6l06g'), { splitCount: splits.length });
           }
         } catch (qrErr) {
-          logger.warn(ctx, '子QR码生成失败(不影响主流程)', { error: (qrErr as Error).message });
+          logger.warn(ctx, ts('k_1wecwc3'), { error: (qrErr as Error).message });
         }
 
         // 刷新入库单列表
-        logger.info(ctx, '开始刷新入库单列表');
+        logger.info(ctx, ts('k_iddmed'));
         await fetchInboundRecords();
-        logger.info(ctx, '入库单列表刷新完成');
+        logger.info(ctx, ts('k_1csg63c'));
 
         // 映射新标签到 PrintLabel
         if (result.data?.newLabels && result.data.newLabels.length > 0) {
-          logger.info(ctx, '开始映射分切结果到打印标签', { count: result.data.newLabels.length });
+          logger.info(ctx, ts('k_51mz2u'), { count: result.data.newLabels.length });
           const newPrintLabels = result.data.newLabels.map((nl: Loose, idx: number) => ({
             id: nl.id || `cut-${idx}`,
             labelNo:
@@ -223,7 +224,7 @@ export function useCutting(deps: UseCuttingDeps) {
             isRemainder: nl.isRemainder || false,
             sourceLabelNo: `${currentLabel.order_no || currentLabel.labelNo}-${(currentLabel.item?.idx ?? currentLabel.itemIdx ?? 0) + 1}`,
           }));
-          logger.info(ctx, '分切结果映射完成', {
+          logger.info(ctx, ts('k_4d7vud'), {
             mappedCount: newPrintLabels.length,
             labels: newPrintLabels.map((p: PrintLabel) => ({
               id: p.id,
@@ -235,16 +236,16 @@ export function useCutting(deps: UseCuttingDeps) {
           });
           setPrintLabels(newPrintLabels);
           setIsCuttingResultOpen(true);
-          logger.info(ctx, '已打开分切结果对话框');
+          logger.info(ctx, ts('k_1gobj0u'));
         } else {
-          logger.warn(ctx, 'API返回成功但无新标签数据', { data: result.data });
+          logger.warn(ctx, ts('k_bdiap1'), { data: result.data });
         }
       } else {
-        logger.error(ctx, '分切API返回失败', { message: result.message, code: result.code });
+        logger.error(ctx, ts('k_83jmia'), { message: result.message, code: result.code });
         toast.error(result.message || t('cutFailed'));
       }
     } catch (error) {
-      logger.error(ctx, '分切过程异常', {
+      logger.error(ctx, ts('k_1u0nwam'), {
         error: (error as Error).message,
         stack: (error as Error).stack,
       });

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { getConfig } from '@/lib/global-config';
@@ -5,16 +8,17 @@ import { withPermission } from '@/lib/api-permissions';
 import { logger } from '@/lib/logger';
 
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
     const overview: unknown = {
       totalInspections: 0,
-      passRate: 96.8,
+      passRate: 0,
       todayInspections: 0,
       todayPassRate: 0,
       pendingInspections: 0,
-      defectRate: 3.2,
+      defectRate: 0,
       passedInspections: 0,
       failedInspections: 0,
     };
@@ -130,6 +134,6 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       data: { overview, byType, defectTrend, topDefects, recentInspections, processQuality },
     });
   } catch {
-    return NextResponse.json({ success: false, message: '获取质量看板数据失败' }, { status: 500 });
+    return NextResponse.json({ success: false, message: ts('k_xg9g53') }, { status: 500 });
   }
 });

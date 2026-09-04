@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -35,6 +38,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       product_id,
@@ -51,7 +55,7 @@ export const POST = withPermission(
     } = body;
 
     if (!product_id || !lifecycle_stage) {
-      return errorResponse('产品ID和生命周期阶段不能为空', 400, 400);
+      return errorResponse(ts('k_73w5oy'), 400, 400);
     }
 
     const result = await execute(
@@ -72,16 +76,17 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId }, '产品生命周期记录创建成功');
+    return successResponse({ id: result.insertId }, ts('k_1yu3inj'));
   },
   { logTitle: '创建产品生命周期记录', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...fields } = body;
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     const updateFields: string[] = [];
     const updateValues: SqlValue[] = [];
@@ -109,18 +114,19 @@ export const PUT = withPermission(
         [...updateValues, id]
       );
     }
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新产品生命周期记录', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
     await execute('UPDATE plm_product_lifecycle SET deleted = 1 WHERE id = ?', [id]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除产品生命周期记录', logType: 'business' }
 );

@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { SalesOrderStatus, SalesStatus } from '../value-objects/SalesOrderStatus';
 import { SalesOrderLine, SalesOrderLineProps } from '../entities/SalesOrderLine';
@@ -78,11 +80,12 @@ export class SalesOrder {
   ) {}
 
   static create(props: SalesOrderProps): SalesOrder {
+  const ts = t;
     if (!props.customerId || props.customerId <= 0) {
-      throw new DomainError('客户不能为空');
+      throw new DomainError(ts('k_xtrekw'));
     }
     if (!props.lines || props.lines.length === 0) {
-      throw new DomainError('销售明细不能为空');
+      throw new DomainError(ts('k_1i12uf9'));
     }
 
     const lines = props.lines.map((line, index) =>

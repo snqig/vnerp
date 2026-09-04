@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -22,12 +25,13 @@ interface ExecutionResult {
 // POST - 初始化库存相关表
 export const POST = withPermission(
   async (_request: NextRequest) => {
+  const ts = await getTranslations('Common');
     // 读取 SQL 文件
     const sqlFilePath = path.join(process.cwd(), 'database', 'inventory_tables.sql');
 
     // 检查文件是否存在
     if (!fs.existsSync(sqlFilePath)) {
-      return errorResponse('SQL文件不存在', 404, 404);
+      return errorResponse(ts('k_nqikvh'), 404, 404);
     }
 
     const sqlContent = fs.readFileSync(sqlFilePath, 'utf-8');
@@ -62,7 +66,7 @@ export const POST = withPermission(
           results.push({
             success: true,
             statement: statement.substring(0, 50) + '...',
-            message: '表已存在，跳过',
+            message: ts('k_2q841v'),
           });
         } else {
           errors.push(`执行失败: ${statement.substring(0, 50)}... - ${(error as Error).message}`);
@@ -78,7 +82,7 @@ export const POST = withPermission(
         successCount: results.filter((r) => r.success).length,
         errorCount: errors.length,
       },
-      '库存表初始化完成'
+      ts('k_1elqq74')
     );
   },
   { errorMessage: '初始化库存表失败' }

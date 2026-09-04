@@ -24,6 +24,7 @@ import {
 import { Search, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { authFetch } from '@/lib/auth-fetch';
+import { formatDate } from '@/lib/date-utils';
 
 interface CostItem {
   id: number;
@@ -205,7 +206,7 @@ export default function CostPage() {
                       <TableCell className="font-mono text-sm">{c.order_no}</TableCell>
                       <TableCell>{c.department}</TableCell>
                       <TableCell className="text-right">¥{formatAmount(c.amount)}</TableCell>
-                      <TableCell>{c.cost_date?.slice(0, 10)}</TableCell>
+                      <TableCell>{formatDate(c.cost_date)}</TableCell>
                       <TableCell className="max-w-xs truncate">{c.description}</TableCell>
                     </TableRow>
                   ))

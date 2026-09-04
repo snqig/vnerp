@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { ReturnOrderStatus, ReturnOrderStatusValue } from '../value-objects/ReturnOrderStatus';
 import { ReturnOrderLine, ReturnOrderLineProps } from '../entities/ReturnOrderLine';
@@ -88,20 +90,21 @@ export class ReturnOrder {
   ) {}
 
   static create(props: ReturnOrderProps): ReturnOrder {
+  const ts = t;
     if (!props.orderId || props.orderId <= 0) {
-      throw new DomainError('销售订单ID不能为空');
+      throw new DomainError(ts('k_ptru8h'));
     }
     if (!props.customerId || props.customerId <= 0) {
-      throw new DomainError('客户ID不能为空');
+      throw new DomainError(ts('k_ct4431'));
     }
     if (!props.warehouseId || props.warehouseId <= 0) {
-      throw new DomainError('仓库ID不能为空');
+      throw new DomainError(ts('k_1t9r8nc'));
     }
     if (!props.lines || props.lines.length === 0) {
-      throw new DomainError('退货明细不能为空');
+      throw new DomainError(ts('k_13rzlse'));
     }
     if (!props.reason || !props.reason.trim()) {
-      throw new DomainError('退货原因不能为空');
+      throw new DomainError(ts('k_k1lmap'));
     }
 
     const lines = props.lines.map((line, index) =>
@@ -256,11 +259,12 @@ export class ReturnOrder {
   }
 
   approve(approveBy: number): void {
+  const ts = t;
     if (!this._status.canApprove()) {
       throw new DomainError(`当前状态"${this._status.label}"不允许审核`);
     }
     if (!approveBy || approveBy <= 0) {
-      throw new DomainError('审核人不能为空');
+      throw new DomainError(ts('k_1myt2j0'));
     }
     this._status = this._status.transitionTo(2);
     this._approveBy = approveBy;
@@ -323,11 +327,12 @@ export class ReturnOrder {
       returnNo: string
     ) => ReceivableResult
   ): void {
+  const ts = t;
     if (!this._status.canComplete()) {
       throw new DomainError(`当前状态"${this._status.label}"不允许完成`);
     }
     if (!completeBy || completeBy <= 0) {
-      throw new DomainError('完成人不能为空');
+      throw new DomainError(ts('k_eheezv'));
     }
 
     const items = this._lines.map((l) => ({
@@ -341,7 +346,7 @@ export class ReturnOrder {
 
     const inboundResult = inboundCallback(items, this.warehouseId, this.id!, this.returnNo);
     if (!inboundResult || !inboundResult.inboundOrderId || !inboundResult.inboundOrderNo) {
-      throw new DomainError('入库单创建失败，无法完成退货');
+      throw new DomainError(ts('k_1w2atir'));
     }
 
     const receivableResult = receivableCallback(
@@ -351,7 +356,7 @@ export class ReturnOrder {
       this.returnNo
     );
     if (!receivableResult || !receivableResult.receivableId || !receivableResult.receivableNo) {
-      throw new DomainError('红字应收单创建失败，无法完成退货');
+      throw new DomainError(ts('k_61vyru'));
     }
 
     this._inboundOrderId = inboundResult.inboundOrderId;

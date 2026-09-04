@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, type SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
@@ -19,17 +22,18 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { name, scenario, htmlTemplate, widthMm, heightMm, qrSizeMm } = body;
     if (!name || !scenario || !htmlTemplate) {
-      return errorResponse('缺少必填字段: name, scenario, htmlTemplate', 400, 400);
+      return errorResponse(ts('k_4eolw0'), 400, 400);
     }
     const result = await execute(
       `INSERT INTO label_template (name, scenario, html_template, width_mm, height_mm, qr_size_mm, status, create_time, update_time)
        VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW())`,
       [name, scenario, htmlTemplate, widthMm || 60, heightMm || 40, qrSizeMm || 20]
     );
-    return successResponse({ id: result.insertId }, '标签模板创建成功');
+    return successResponse({ id: result.insertId }, ts('k_1lsouo8'));
   },
   { logTitle: '创建标签模板' }
 );

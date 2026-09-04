@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface StandardCardInkProps {
   id?: number;
   standardCardId?: number;
@@ -35,14 +37,15 @@ export class StandardCardInk {
   }
 
   private validate(props: StandardCardInkProps): void {
+  const ts = t;
     if (!props.inkId) {
-      throw new Error('油墨ID不能为空');
+      throw new Error(ts('k_1yv82qr'));
     }
     if (props.unitConsumption < 0) {
-      throw new Error('单耗不能为负数');
+      throw new Error(ts('k_26c9bk'));
     }
     if (props.ratio && !/^[\d:]+$/.test(props.ratio)) {
-      throw new Error('配比格式错误，应为数字和冒号组成');
+      throw new Error(ts('k_1eb3qtj'));
     }
   }
 

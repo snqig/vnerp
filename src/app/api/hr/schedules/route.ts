@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { getDrizzleDb } from '@/lib/db';
 import { eq, and, desc, count, type SQLWrapper } from 'drizzle-orm';
@@ -49,11 +52,12 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { employeeId, shiftId, startDate, endDate } = body;
 
     if (!employeeId || !shiftId || !startDate) {
-      return errorResponse('缺少必填字段', 400, 400);
+      return errorResponse(ts('k_1g8af20'), 400, 400);
     }
 
     try {
@@ -103,9 +107,9 @@ export const POST = withPermission(
           });
       }
 
-      return successResponse(null, '排班创建成功');
+      return successResponse(null, ts('k_ntfcto'));
     } catch (error) {
-      return errorResponse('排班创建失败', 500, 500);
+      return errorResponse(ts('k_17k2hav'), 500, 500);
     }
   },
   { errorMessage: '创建排班失败' }
@@ -113,12 +117,13 @@ export const POST = withPermission(
 
 export const DELETE = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('缺少排班ID', 400, 400);
+    if (!id) return errorResponse(ts('k_1ak7vy0'), 400, 400);
 
     await db.delete(hrSchedule).where(eq(hrSchedule.id, Number(id)));
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { errorMessage: '删除排班失败' }
 );

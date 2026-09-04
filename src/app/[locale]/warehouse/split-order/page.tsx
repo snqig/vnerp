@@ -78,6 +78,7 @@ const STATUS_MAP: Record<
 };
 
 export default function SplitOrderPage() {
+  const ts = useTranslations('Warehouse');
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
   const { toast } = useToast();
@@ -137,21 +138,21 @@ export default function SplitOrderPage() {
         setParentSplittable(splittable);
         if (splittable) {
           toast({
-            title: '已找到母料批次',
+            title: ts('k_16am7tf'),
             description: `${batch.material_name} (可用: ${batch.available_qty})`,
           });
         } else {
           toast({
-            title: '该物料不可分切',
+            title: ts('k_1fm1c2h'),
             description: `【${batch.material_name}】非卷材类物料，不能创建分切单`,
             variant: 'destructive',
           });
         }
       } else {
-        toast({ title: '未找到批次', variant: 'destructive' });
+        toast({ title: ts('k_uz75cl'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '查询失败', variant: 'destructive' });
+      toast({ title: ts('k_qoguk0'), variant: 'destructive' });
     }
   };
 
@@ -180,13 +181,13 @@ export default function SplitOrderPage() {
 
   const handleCreate = async () => {
     if (!parentBatchId || details.length === 0) {
-      toast({ title: '请填写完整信息', variant: 'destructive' });
+      toast({ title: ts('k_p6jf36'), variant: 'destructive' });
       return;
     }
     if (!parentSplittable) {
       toast({
-        title: '该物料不可分切',
-        description: '请选择薄膜/纸张/包装/原材料等卷材类物料的批次',
+        title: ts('k_1fm1c2h'),
+        description: ts('k_1s1n0h4'),
         variant: 'destructive',
       });
       return;
@@ -212,15 +213,15 @@ export default function SplitOrderPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功', description: `分切单 ${result.data.splitNo}` });
+        toast({ title: ts('k_kiombh'), description: `分切单 ${result.data.splitNo}` });
         setShowCreate(false);
         resetForm();
         fetchData();
       } else {
-        toast({ title: '创建失败', description: result.message, variant: 'destructive' });
+        toast({ title: ts('k_1jxltyq'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '创建失败', variant: 'destructive' });
+      toast({ title: ts('k_1jxltyq'), variant: 'destructive' });
     }
   };
 
@@ -237,18 +238,18 @@ export default function SplitOrderPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '审核通过', description: `生成${result.data.childCount}个小料批次` });
+        toast({ title: ts('k_1wqkzrj'), description: `生成${result.data.childCount}个小料批次` });
         fetchData();
       } else {
-        toast({ title: '审核失败', description: result.message, variant: 'destructive' });
+        toast({ title: ts('k_rkq87q'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '审核失败', variant: 'destructive' });
+      toast({ title: ts('k_rkq87q'), variant: 'destructive' });
     }
   };
 
   const handleVoid = async (id: number) => {
-    if (!confirm('确认作废此分切单？')) return;
+    if (!confirm(ts('k_1985cqh'))) return;
     try {
       const res = await authFetch('/api/warehouse/split-order', {
         method: 'PATCH',
@@ -256,13 +257,13 @@ export default function SplitOrderPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '已作废' });
+        toast({ title: ts('k_1o0kows') });
         fetchData();
       } else {
-        toast({ title: '作废失败', description: result.message, variant: 'destructive' });
+        toast({ title: ts('k_agd11i'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: '作废失败', variant: 'destructive' });
+      toast({ title: ts('k_agd11i'), variant: 'destructive' });
     }
   };
 
@@ -293,7 +294,7 @@ export default function SplitOrderPage() {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold">分切单管理</h1>
+            <h1 className="text-2xl font-bold">{ts('k_1xvd5o6')}</h1>
             <Button
               onClick={() => {
                 resetForm();
@@ -301,26 +302,25 @@ export default function SplitOrderPage() {
               }}
             >
               <Plus className="mr-2 h-4 w-4" />
-              新建分切单
-            </Button>
+              {ts('k_8r4lf')}</Button>
           </div>
 
           <div className="flex gap-2 mb-4">
             <Input
-              placeholder="搜索分切单号/物料..."
+              placeholder={ts('k_15x9dnn')}
               value={searchNo}
               onChange={(e) => setSearchNo(e.target.value)}
               className="max-w-xs"
             />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-28">
-                <SelectValue placeholder="全部状态" />
+                <SelectValue placeholder={ts('k_igzce8')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value=" ">全部</SelectItem>
-                <SelectItem value="0">草稿</SelectItem>
-                <SelectItem value="1">已审核</SelectItem>
-                <SelectItem value="3">已作废</SelectItem>
+                <SelectItem value=" ">{ts('k_q6w6ul')}</SelectItem>
+                <SelectItem value="0">{tc('draft')}</SelectItem>
+                <SelectItem value="1">{ts('k_7j2xv0')}</SelectItem>
+                <SelectItem value="3">{ts('k_1o0kows')}</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" onClick={() => fetchData()}>
@@ -331,20 +331,20 @@ export default function SplitOrderPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>分切单号</TableHead>
-                <TableHead>分切日期</TableHead>
-                <TableHead>母料批次</TableHead>
-                <TableHead>物料名称</TableHead>
-                <TableHead>出库数量</TableHead>
-                <TableHead>损耗</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead>操作人</TableHead>
-                <TableHead>操作</TableHead>
+                <TableHead>{ts('k_1epfrdq')}</TableHead>
+                <TableHead>{ts('k_1qbyx86')}</TableHead>
+                <TableHead>{ts('k_cqonvx')}</TableHead>
+                <TableHead>{tc('materialName')}</TableHead>
+                <TableHead>{ts('k_1f04p8j')}</TableHead>
+                <TableHead>{ts('k_1b2ia9n')}</TableHead>
+                <TableHead>{tc('status')}</TableHead>
+                <TableHead>{ts('k_15sp2wy')}</TableHead>
+                <TableHead>{tc('operation')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {list.map((item) => {
-                const cfg = STATUS_MAP[item.status] || { label: '未知', variant: 'outline' };
+                const cfg = STATUS_MAP[item.status] || { label: ts('k_1lpnuh4'), variant: 'outline' };
                 return (
                   <TableRow key={item.id}>
                     <TableCell className="font-mono">{item.split_no}</TableCell>
@@ -394,15 +394,14 @@ export default function SplitOrderPage() {
               {list.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center text-muted-foreground">
-                    暂无数据
-                  </TableCell>
+                    {ts('k_6tzr61')}</TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
 
           <div className="flex items-center justify-between mt-4">
-            <span className="text-sm text-muted-foreground">共 {total} 条</span>
+            <span className="text-sm text-muted-foreground">{ts('k_1vsm2qk')}{total} {ts('k_1rfm5gs')}</span>
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -410,16 +409,14 @@ export default function SplitOrderPage() {
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
               >
-                上一页
-              </Button>
+                {tc('prevPage')}</Button>
               <Button
                 variant="outline"
                 size="sm"
                 disabled={page * 20 >= total}
                 onClick={() => setPage(page + 1)}
               >
-                下一页
-              </Button>
+                {tc('nextPage')}</Button>
             </div>
           </div>
         </CardContent>
@@ -428,61 +425,58 @@ export default function SplitOrderPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>新建分切单</DialogTitle>
+            <DialogTitle>{ts('k_8r4lf')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex gap-2 items-end">
               <div className="flex-1">
-                <Label>母料批次号</Label>
+                <Label>{ts('k_rsru9a')}</Label>
                 <Input
                   value={parentBatchNo}
                   onChange={(e) => setParentBatchNo(e.target.value)}
-                  placeholder="输入批次号后点击查询"
+                  placeholder={ts('k_14l03tl')}
                 />
               </div>
               <Button variant="outline" onClick={searchParentBatch}>
-                查询
-              </Button>
+                {ts('k_16mfmhy')}</Button>
             </div>
             {parentInfo && (
               <div className="p-3 bg-muted rounded text-sm space-y-1">
                 <div>
-                  物料: {parentInfo.material_name} (编码: {parentInfo.material_code})
+                  {ts('k_uq0zmv')}{parentInfo.material_name} {ts('k_1khtyf8')}{parentInfo.material_code})
                 </div>
                 <div>
-                  可用量: {parentInfo.available_qty} / 总量: {parentInfo.quantity}
+                  {ts('k_tn41rr')}{parentInfo.available_qty} {ts('k_j9483u')}{parentInfo.quantity}
                 </div>
                 <div>
-                  规格: {parentInfo.specification || '-'} | 宽幅: {parentInfo.width || '-'}
+                  {ts('k_17gr6it')}{parentInfo.specification || '-'} {ts('k_1up8rq3')}{parentInfo.width || '-'}
                 </div>
                 {!parentSplittable && (
                   <div className="mt-1 text-red-600 font-medium">
-                    ⚠ 该物料【{parentInfo.material_name}
-                    】不可分切（仅薄膜/纸张/包装/原材料等卷材类允许）
-                  </div>
+                    {ts('k_enbil6')}{parentInfo.material_name}
+                    {ts('k_21761g')}</div>
                 )}
               </div>
             )}
             <div>
-              <Label>备注</Label>
+              <Label>{tc('remark')}</Label>
               <Textarea value={remark} onChange={(e) => setRemark(e.target.value)} rows={2} />
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label>分切明细</Label>
+                <Label>{ts('k_1d53f9q')}</Label>
                 <Button variant="outline" size="sm" onClick={addDetailRow}>
-                  + 添加行
-                </Button>
+                  {ts('k_jvcsab')}</Button>
               </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>份数</TableHead>
-                    <TableHead>单份数量</TableHead>
-                    <TableHead>小计</TableHead>
-                    <TableHead>宽幅</TableHead>
-                    <TableHead>损耗</TableHead>
-                    <TableHead>备注</TableHead>
+                    <TableHead>{ts('k_1o2ukqw')}</TableHead>
+                    <TableHead>{ts('k_sximke')}</TableHead>
+                    <TableHead>{ts('k_12g7a19')}</TableHead>
+                    <TableHead>{ts('k_1kv361j')}</TableHead>
+                    <TableHead>{ts('k_1b2ia9n')}</TableHead>
+                    <TableHead>{tc('remark')}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -552,11 +546,9 @@ export default function SplitOrderPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreate(false)}>
-              取消
-            </Button>
+              {tc('cancel')}</Button>
             <Button onClick={handleCreate} disabled={!parentSplittable}>
-              创建分切单
-            </Button>
+              {ts('k_i8yydq')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -564,24 +556,24 @@ export default function SplitOrderPage() {
       <Dialog open={showDetail} onOpenChange={setShowDetail}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>分切单详情 - {currentOrder?.split_no}</DialogTitle>
+            <DialogTitle>{ts('k_g8w5d7')}{currentOrder?.split_no}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 text-sm">
             <div>
-              母料: {currentOrder?.material_name} | 出库: {currentOrder?.out_qty} | 损耗:{' '}
+              {ts('k_rbxrez')}{currentOrder?.material_name} {ts('k_1xo9wf8')}{currentOrder?.out_qty} {ts('k_38pvfb')}{' '}
               {currentOrder?.total_waste}
             </div>
           </div>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>子批次号</TableHead>
-                <TableHead>份数</TableHead>
-                <TableHead>单份数量</TableHead>
-                <TableHead>总数量</TableHead>
-                <TableHead>宽幅</TableHead>
-                <TableHead>分摊成本</TableHead>
-                <TableHead>类型</TableHead>
+                <TableHead>{ts('k_1mrrasq')}</TableHead>
+                <TableHead>{ts('k_1o2ukqw')}</TableHead>
+                <TableHead>{ts('k_sximke')}</TableHead>
+                <TableHead>{ts('k_2tzyir')}</TableHead>
+                <TableHead>{ts('k_1kv361j')}</TableHead>
+                <TableHead>{ts('k_tkmy39')}</TableHead>
+                <TableHead>{ts('k_anh4cj')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -593,7 +585,7 @@ export default function SplitOrderPage() {
                   <TableCell>{(d as Loose).total_qty}</TableCell>
                   <TableCell>{d.width}</TableCell>
                   <TableCell>{(d as Loose).allocated_cost || '-'}</TableCell>
-                  <TableCell>{(d as Loose).is_waste ? '损耗' : '正品'}</TableCell>
+                  <TableCell>{(d as Loose).is_waste ? ts('k_1b2ia9n') : ts('k_156cbqh')}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

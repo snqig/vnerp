@@ -1,3 +1,6 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { InboundOrderApprovedEvent } from '@/domain/warehouse/events/InboundOrderEvents';
 import { PurchaseOrder, PurchaseOrderProps } from '@/domain/purchase/aggregates/PurchaseOrder';
@@ -103,7 +106,9 @@ function mapToProps(order: PurchaseOrderRow, lines: PurchaseOrderLineRow[]): Pur
     createBy: order.create_by ?? undefined,
     auditBy: order.audit_by ?? undefined,
     auditTime: order.audit_time ?? undefined,
-    lines: (lines || []).map((line) => ({
+    lines: (lines || []).map((line) => {
+  const ts = t;
+  return  ({
       id: line.id,
       orderId: line.po_id,
       lineNo: line.line_no,
@@ -111,7 +116,7 @@ function mapToProps(order: PurchaseOrderRow, lines: PurchaseOrderLineRow[]): Pur
       materialCode: line.material_code || '',
       materialName: line.material_name || '',
       materialSpec: line.material_spec || '',
-      unit: line.unit || '件',
+      unit: line.unit || ts('k_w0gthl'),
       orderQty: Number(line.order_qty),
       receivedQty: Number(line.received_qty) || 0,
       returnedQty: Number(line.returned_qty) || 0,
@@ -126,7 +131,8 @@ function mapToProps(order: PurchaseOrderRow, lines: PurchaseOrderLineRow[]): Pur
       baseLineTotal: Number(line.base_line_total) || 0,
       requireDate: line.require_date ?? undefined,
       remark: line.remark ?? undefined,
-    })),
+    });
+}),
     createTime: order.create_time ?? undefined,
     updateTime: order.update_time ?? undefined,
   };
@@ -134,12 +140,13 @@ function mapToProps(order: PurchaseOrderRow, lines: PurchaseOrderLineRow[]): Pur
 
 export class PurchaseInboundSyncHandler implements EventHandler<InboundOrderApprovedEvent> {
   async handle(event: InboundOrderApprovedEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { inboundId, inboundNo, poId, items } = event.payload;
     const ctx = { module: 'purchase-inbound', action: 'sync', inboundId, poId };
     let phase = 'init';
 
     if (!poId) {
-      logger.info(ctx, '跳过：无采购订单关联', { inboundNo });
+      logger.info(ctx, ts('k_1azg923'), { inboundNo });
       return;
     }
 
@@ -156,7 +163,7 @@ export class PurchaseInboundSyncHandler implements EventHandler<InboundOrderAppr
             poId,
             inboundNo,
           });
-          logger.info(ctx, '跳过：采购订单不存在或状态不可入库 [phase=lock_po]', {
+          logger.info(ctx, ts('k_1x8ore7'), {
             poId,
             inboundNo,
           });
@@ -171,14 +178,14 @@ export class PurchaseInboundSyncHandler implements EventHandler<InboundOrderAppr
 
         if (!lineRows || lineRows.length === 0) {
           secureLog('warn', 'Purchase order lines not found for inbound sync', { poId, inboundNo });
-          logger.warn(ctx, '采购订单行不存在，跳过 [phase=lock_po_lines]', { poId, inboundNo });
+          logger.warn(ctx, ts('k_1tbpmfc'), { poId, inboundNo });
           return;
         }
 
         const order = orderRows[0] as unknown as PurchaseOrderRow;
         const lines = lineRows as unknown as PurchaseOrderLineRow[];
         const purchaseOrder = PurchaseOrder.reconstitute(mapToProps(order, lines));
-        logger.info(ctx, '采购订单聚合根重建完成', {
+        logger.info(ctx, ts('k_1h86l8i'), {
           poId,
           lineCount: lines.length,
           inboundItemCount: items.length,
@@ -200,7 +207,7 @@ export class PurchaseInboundSyncHandler implements EventHandler<InboundOrderAppr
               materialId: item.materialId,
               inboundNo,
             });
-            logger.warn(ctx, '入库明细未匹配到采购行，跳过', {
+            logger.warn(ctx, ts('k_17gfcmb'), {
               materialId: item.materialId,
               inboundQty: item.quantity,
             });
@@ -215,7 +222,7 @@ export class PurchaseInboundSyncHandler implements EventHandler<InboundOrderAppr
         }
 
         if (lineReceives.length === 0) {
-          logger.warn(ctx, '无匹配的入库明细，跳过回写', { poId, inboundNo });
+          logger.warn(ctx, ts('k_zup9oe'), { poId, inboundNo });
           return;
         }
 
@@ -235,7 +242,7 @@ export class PurchaseInboundSyncHandler implements EventHandler<InboundOrderAppr
           'UPDATE pur_purchase_order SET status = ?, received_quantity = ?, update_time = NOW() WHERE id = ?',
           [purchaseOrder.status.toDbCode(), purchaseOrder.totalReceivedQty, poId]
         );
-        logger.info(ctx, '采购订单已收量与状态更新完成', {
+        logger.info(ctx, ts('k_7kgh00'), {
           poId,
           inboundNo,
           newStatus: purchaseOrder.status.value,

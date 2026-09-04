@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -51,6 +54,7 @@ const TYPE_WAREHOUSE_MAPPING: Record<number, { preferred_prefix: string; preferr
   };
 
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const results: LinkageItem[] = [];
   const summary = {
     total_material_categories: 0,
@@ -101,7 +105,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     for (const mc of materialCategories) {
       const dom = dominantType.get(Number(mc.id));
       const categoryType = dom ? dom.type : null;
-      const typeName = categoryType !== null ? MATERIAL_TYPE_NAMES[categoryType] || '未知' : '未知';
+      const typeName = categoryType !== null ? MATERIAL_TYPE_NAMES[categoryType] || ts('k_1lpnuh4') : ts('k_1lpnuh4');
       const preferred = categoryType !== null ? TYPE_WAREHOUSE_MAPPING[categoryType] : undefined;
 
       const item: LinkageItem = {
@@ -160,11 +164,12 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { materialCategoryId, warehouseCategoryId } = body;
 
     if (!materialCategoryId || !warehouseCategoryId) {
-      return errorResponse('物料分类ID和仓库分类ID不能为空', 400);
+      return errorResponse(ts('k_y3xn9l'), 400);
     }
 
     const mc = (await query(
@@ -173,7 +178,7 @@ export const POST = withPermission(
     )) as DbRow[];
 
     if (mc.length === 0) {
-      return errorResponse('物料分类不存在', 404);
+      return errorResponse(ts('k_1f1qg13'), 404);
     }
 
     const wh = (await query(
@@ -182,7 +187,7 @@ export const POST = withPermission(
     )) as DbRow[];
 
     if (wh.length === 0) {
-      return errorResponse('仓库分类不存在', 404);
+      return errorResponse(ts('k_lojzv'), 404);
     }
 
     return successResponse({

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -6,6 +9,7 @@ import { generateReceivable } from '@/lib/finance-core';
 import { withPermission } from '@/lib/api-permissions';
 // 查询应收单列表
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -20,7 +24,7 @@ export const GET = withPermission(async (request: NextRequest) => {
       [Number(id)]
     );
     if (rows.length === 0) {
-      return errorResponse('应收单不存在', 404, 404);
+      return errorResponse(ts('k_167sbwh'), 404, 404);
     }
     const row = rows[0];
     const receipts = await query(
@@ -62,7 +66,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     [...params, pageSize, (page - 1) * pageSize]
   );
 
-  return successResponse({ list: rows, total, page, pageSize }, '获取应收单列表成功');
+  return successResponse({ list: rows, total, page, pageSize }, ts('k_16bs9pb'));
 });
 
 // 生成应收单
@@ -90,14 +94,15 @@ export const POST = withPermission(async (request: NextRequest) => {
 // 删除应收单（软删除）；原单数路由 /api/finance/receivable 的 DELETE 无处理器（405），
 // 合并后由本路由统一承接。
 export const DELETE = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) {
-    return successResponse(null, '缺少应收单ID', 400);
+    return successResponse(null, ts('k_vrgtdc'), 400);
   }
   await query(
     `UPDATE fin_receivable SET deleted = 1, update_time = NOW() WHERE id = ? AND deleted = 0`,
     [Number(id)]
   );
-  return successResponse(null, '删除成功');
+  return successResponse(null, ts('k_1hlqs'));
 });

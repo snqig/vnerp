@@ -14,6 +14,7 @@ import { User, Lock, Camera, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function ProfilePage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('System');
   const tc = useTranslations('Common');
   const { toast } = useToast();
@@ -70,7 +71,7 @@ export default function ProfilePage() {
           setUserInfo(updated);
         }
       } else {
-        toast({ title: result.message || '保存失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_1q9u8le'), variant: 'destructive' });
       }
     } catch {
       toast({ title: tc('saveFailed'), variant: 'destructive' });
@@ -106,7 +107,7 @@ export default function ProfilePage() {
         toast({ title: tc('passwordChanged') });
         setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
       } else {
-        toast({ title: result.message || '密码修改失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_ekqi8v'), variant: 'destructive' });
       }
     } catch {
       toast({ title: tc('saveFailed'), variant: 'destructive' });
@@ -173,18 +174,16 @@ export default function ProfilePage() {
             <TabsList>
               <TabsTrigger value="profile">
                 <User className="h-4 w-4 mr-1" />
-                基本信息
-              </TabsTrigger>
+                {ts('k_z5lkkb')}</TabsTrigger>
               <TabsTrigger value="password">
                 <Lock className="h-4 w-4 mr-1" />
-                修改密码
-              </TabsTrigger>
+                {ts('k_1pt7oo1')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile">
               <Card>
                 <CardHeader>
-                  <CardTitle>基本信息</CardTitle>
+                  <CardTitle>{ts('k_z5lkkb')}</CardTitle>
                   <CardDescription>{tc('basicInfoDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -211,7 +210,7 @@ export default function ProfilePage() {
                   </div>
                   <Button onClick={handleSaveProfile} disabled={saving}>
                     <Save className="h-4 w-4 mr-1" />
-                    {saving ? '保存中...' : tc('save')}
+                    {saving ? ts('k_rr6ulf') : tc('save')}
                   </Button>
                 </CardContent>
               </Card>
@@ -235,14 +234,14 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label>新密码</Label>
+                    <Label>{ts('k_9sfqbi')}</Label>
                     <Input
                       type="password"
                       value={passwordForm.newPassword}
                       onChange={(e) =>
                         setPasswordForm((f) => ({ ...f, newPassword: e.target.value }))
                       }
-                      placeholder="至少6位字符"
+                      placeholder={ts('k_2pave1')}
                     />
                   </div>
                   <div className="space-y-1">
@@ -257,7 +256,7 @@ export default function ProfilePage() {
                   </div>
                   <Button onClick={handleChangePassword} disabled={saving}>
                     <Lock className="h-4 w-4 mr-1" />
-                    {saving ? '修改中...' : '确认修改'}
+                    {saving ? ts('k_k82vuz') : ts('k_13ekny6')}
                   </Button>
                 </CardContent>
               </Card>

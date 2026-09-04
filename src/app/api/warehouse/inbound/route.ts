@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import {
   successResponse,
@@ -98,6 +101,7 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     let validated: unknown;
@@ -117,23 +121,23 @@ export const POST = withPermission(
     const materialIds = (validated.items as DbRow[])
       .map((item) => item.material_id)
       .filter(Boolean);
-    secureLog('info', '[warehouse/inbound] 开始物料分类校验', {
+    secureLog('info', ts('k_a0z1x7'), {
       itemCount: validated.items.length,
       materialIds,
     });
     const categoryCheck = await checkMaterialsCategorized(materialIds);
-    secureLog('info', '[warehouse/inbound] 物料分类校验完成', {
+    secureLog('info', ts('k_gjldgm'), {
       blocked: categoryCheck.blocked,
       uncategorizedCount: categoryCheck.uncategorized.length,
     });
     if (categoryCheck.blocked) {
-      secureLog('warn', '[warehouse/inbound] 物料分类校验阻断提交', {
+      secureLog('warn', ts('k_1qgc68u'), {
         message: categoryCheck.message,
       });
       return errorResponse(categoryCheck.message!, 400, 400);
     }
     if (categoryCheck.message) {
-      secureLog('warn', '[warehouse/inbound] 物料分类校验警告', {
+      secureLog('warn', ts('k_1ih8l62'), {
         message: categoryCheck.message,
       });
     }
@@ -168,7 +172,7 @@ export const POST = withPermission(
         order_no: result.orderNo,
         uncategorizedMaterials: categoryCheck.uncategorized,
       },
-      categoryCheck.message ? `入库单创建成功。${categoryCheck.message}` : '入库单创建成功'
+      categoryCheck.message ? `入库单创建成功。${categoryCheck.message}` : ts('k_1ous8wg')
     );
   },
   { errorMessage: '操作失败' }
@@ -176,6 +180,7 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     let validated: unknown;
@@ -198,22 +203,22 @@ export const PUT = withPermission(
     try {
       if (action === 'approve' || status === 'approved') {
         const result = await service.approveOrder(id);
-        return successResponse(result, '入库单审核成功');
+        return successResponse(result, ts('k_1vvjc9s'));
       }
 
       if (action === 'submit' || status === 'pending') {
         const result = await service.submitOrder(id);
-        return successResponse(result, '入库单提交成功');
+        return successResponse(result, ts('k_7i6e5h'));
       }
 
       if (action === 'cancel' || status === 'cancelled') {
         const result = await service.cancelOrder(id);
-        return successResponse(result, '入库单取消成功');
+        return successResponse(result, ts('k_1b5l3nn'));
       }
 
       if (action === 'unapprove') {
         const result = await service.unapproveOrder(id);
-        return successResponse(result, '入库单反审核成功');
+        return successResponse(result, ts('k_1xh6o6j'));
       }
 
       if (action === 'update') {
@@ -234,7 +239,7 @@ export const PUT = withPermission(
           remark: validated.remark ?? null,
           items: mappedItems,
         });
-        return successResponse(result, '入库单更新成功');
+        return successResponse(result, ts('k_1io7zcd'));
       }
 
       if (remark !== undefined) {
@@ -243,10 +248,10 @@ export const PUT = withPermission(
           'UPDATE inv_inbound_order SET remark = ?, update_time = NOW() WHERE id = ? AND status != ?',
           [remark, id, 'completed']
         );
-        return successResponse({ id, remark }, '入库单更新成功');
+        return successResponse({ id, remark }, ts('k_1io7zcd'));
       }
 
-      return errorResponse('未知操作', 400, 400);
+      return errorResponse(ts('k_ztn3ax'), 400, 400);
     } catch (error) {
       if (error instanceof NotFoundError) {
         return commonErrors.notFound(error.message);
@@ -265,18 +270,19 @@ export const PUT = withPermission(
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('入库单ID不能为空', 400, 400);
+      return errorResponse(ts('k_fhnzfn'), 400, 400);
     }
 
     const service = getInboundService();
 
     try {
       await service.deleteOrder(parseInt(id));
-      return successResponse(null, '入库单删除成功');
+      return successResponse(null, ts('k_12yjget'));
     } catch (error) {
       if (error instanceof NotFoundError) {
         return commonErrors.notFound(error.message);
@@ -292,11 +298,12 @@ export const DELETE = withPermission(
 
 export const PATCH = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('入库单ID不能为空', 400, 400);
+      return errorResponse(ts('k_fhnzfn'), 400, 400);
     }
 
     const { execute, query } = await import('@/lib/db');
@@ -307,16 +314,16 @@ export const PATCH = withPermission(
       ]);
 
       if (!rows || rows.length === 0) {
-        return errorResponse('入库单不存在或未被删除', 404, 404);
+        return errorResponse(ts('k_3lfcls'), 404, 404);
       }
 
       await execute('UPDATE inv_inbound_order SET deleted = 0, update_time = NOW() WHERE id = ?', [
         parseInt(id),
       ]);
 
-      return successResponse(null, '入库单已恢复');
+      return successResponse(null, ts('k_k5s23r'));
     } catch (error) {
-      return errorResponse(error instanceof Error ? error.message : '恢复失败', 500, 500);
+      return errorResponse(error instanceof Error ? error.message : ts('k_frrymi'), 500, 500);
     }
   },
   { errorMessage: '恢复失败' }

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import {
   successResponse,
@@ -50,6 +53,7 @@ export const GET = withPermission(
 // 创建/更新定时任务
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, ['task_name', 'task_type', 'cron_expression']);
 
@@ -74,7 +78,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId }, '定时任务创建成功');
+    return successResponse({ id: result.insertId }, ts('k_14ly005'));
   },
   { errorMessage: '操作失败' }
 );
@@ -82,28 +86,29 @@ export const POST = withPermission(
 // 更新任务状态
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action } = body;
 
     if (!id || !action) {
-      return errorResponse('参数不完整', 400, 400);
+      return errorResponse(ts('k_8dtv5q'), 400, 400);
     }
 
     if (action === 'pause') {
       await execute('UPDATE sys_scheduled_task SET status = ? WHERE id = ?', ['paused', id]);
-      return successResponse(null, '任务已暂停');
+      return successResponse(null, ts('k_go3w0n'));
     }
 
     if (action === 'resume') {
       await execute('UPDATE sys_scheduled_task SET status = ? WHERE id = ?', ['active', id]);
-      return successResponse(null, '任务已恢复');
+      return successResponse(null, ts('k_h0y0k4'));
     }
 
     if (action === 'execute') {
       // 手动触发执行
       const tasks = await query('SELECT * FROM sys_scheduled_task WHERE id = ?', [id]);
       if (tasks.length === 0) {
-        return errorResponse('任务不存在', 404, 404);
+        return errorResponse(ts('k_2f9ctw'), 404, 404);
       }
 
       const task = tasks[0];
@@ -137,7 +142,7 @@ export const PUT = withPermission(
           [executionResult, id]
         );
 
-        return successResponse({ result: executionResult }, '任务执行完成');
+        return successResponse({ result: executionResult }, ts('k_hsong6'));
       } catch (error) {
         await execute(
           `UPDATE sys_task_execution_log SET end_time = NOW(), status = 'failed', result = ? WHERE task_id = ? AND status = 'running'`,
@@ -170,15 +175,15 @@ export const PUT = withPermission(
       }
 
       if (updates.length === 0) {
-        return errorResponse('没有需要更新的字段', 400, 400);
+        return errorResponse(ts('k_1kyikfw'), 400, 400);
       }
 
       params.push(id);
       await execute(`UPDATE sys_scheduled_task SET ${updates.join(', ')} WHERE id = ?`, params);
-      return successResponse(null, '任务更新成功');
+      return successResponse(null, ts('k_187fmiw'));
     }
 
-    return errorResponse('不支持的操作', 400, 400);
+    return errorResponse(ts('k_12cy0bd'), 400, 400);
   },
   { errorMessage: '操作失败' }
 );
@@ -186,12 +191,13 @@ export const PUT = withPermission(
 // 删除任务
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('任务ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_o2b6rq'), 400, 400);
 
     await execute('DELETE FROM sys_scheduled_task WHERE id = ?', [Number(id)]);
-    return successResponse(null, '任务删除成功');
+    return successResponse(null, ts('k_1hjm94w'));
   },
   { errorMessage: '操作失败' }
 );
@@ -227,5 +233,6 @@ async function executeDataCleanup(config: string | null): Promise<string> {
 }
 
 async function executeReportGeneration(_config: string | null): Promise<string> {
-  return '报表生成任务已触发（异步执行中）';
+  const ts = await getTranslations('Common');
+  return ts('k_1spjsvy');
 }

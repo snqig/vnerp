@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -55,6 +58,7 @@ export const GET = withPermission(
 // 创建/发布公告
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const tc = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, ['title', 'content']);
 
@@ -82,7 +86,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId }, '公告创建成功');
+    return successResponse({ id: result.insertId }, tc('announcementCreated'));
   },
   { errorMessage: '操作失败' }
 );
@@ -90,11 +94,13 @@ export const POST = withPermission(
 // 更新公告
 export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action } = body;
 
     if (!id) {
-      return errorResponse('公告ID不能为空', 400, 400);
+      return errorResponse(ts('k_ui0x5k'), 400, 400);
     }
 
     if (action === 'publish') {
@@ -102,7 +108,7 @@ export const PUT = withPermission(
         `UPDATE sys_announcement SET status = 'published', publish_time = NOW(), update_time = NOW() WHERE id = ?`,
         [id]
       );
-      return successResponse(null, '公告已发布');
+      return successResponse(null, tc('announcementPublished'));
     }
 
     if (action === 'read') {
@@ -111,7 +117,7 @@ export const PUT = withPermission(
         `INSERT IGNORE INTO sys_announcement_read (announcement_id, user_id, read_time) VALUES (?, ?, NOW())`,
         [id, userInfo.userId]
       );
-      return successResponse(null, '已标记已读');
+      return successResponse(null, ts('k_u9ibi9'));
     }
 
     // 通用更新
@@ -149,7 +155,7 @@ export const PUT = withPermission(
     }
 
     if (updates.length === 0) {
-      return errorResponse('没有需要更新的字段', 400, 400);
+      return errorResponse(ts('k_1kyikfw'), 400, 400);
     }
 
     updates.push('update_time = NOW()');
@@ -157,7 +163,7 @@ export const PUT = withPermission(
 
     await execute(`UPDATE sys_announcement SET ${updates.join(', ')} WHERE id = ?`, params);
 
-    return successResponse(null, '公告更新成功');
+    return successResponse(null, ts('k_l16vo6'));
   },
   { errorMessage: '操作失败' }
 );
@@ -165,17 +171,19 @@ export const PUT = withPermission(
 // 删除公告
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('公告ID不能为空', 400, 400);
+      return errorResponse(ts('k_ui0x5k'), 400, 400);
     }
 
     await execute('DELETE FROM sys_announcement_read WHERE announcement_id = ?', [Number(id)]);
     await execute('DELETE FROM sys_announcement WHERE id = ?', [Number(id)]);
 
-    return successResponse(null, '公告已删除');
+    return successResponse(null, tc('announcementDeleted'));
   },
   { errorMessage: '操作失败' }
 );

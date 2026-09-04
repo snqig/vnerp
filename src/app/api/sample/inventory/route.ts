@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { queryPaginated, execute, SqlValue } from '@/lib/db';
 import {
@@ -44,6 +47,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     const validation = validateRequestBody(body, ['productName', 'quantity']);
@@ -66,18 +70,19 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId }, '样品库存创建成功');
+    return successResponse({ id: result.insertId }, ts('k_6xhza'));
   },
   { logTitle: '创建样品库存' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action, ...updateData } = body;
 
     if (!id) {
-      return errorResponse('样品库存ID不能为空', 400, 400);
+      return errorResponse(ts('k_fzbnhh'), 400, 400);
     }
 
     if (action) {
@@ -125,7 +130,7 @@ export const PUT = withPermission(
       }
 
       if (fields.length === 0) {
-        return errorResponse('没有要更新的字段', 400, 400);
+        return errorResponse(ts('k_ovfx8a'), 400, 400);
       }
 
       params.push(id);
@@ -135,7 +140,7 @@ export const PUT = withPermission(
       );
     }
 
-    return successResponse({ id }, '操作成功');
+    return successResponse({ id }, ts('k_d209xt'));
   },
   { logTitle: '更新样品库存' }
 );

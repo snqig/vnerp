@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -35,6 +38,7 @@ function calcNextExecuteDate(
 }
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
 
   // 即将到期提醒：查询 next_execute_date 在 lead_days 窗口内的计划
@@ -67,7 +71,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       [Number(id)]
     );
     if (!rows || rows.length === 0) {
-      return errorResponse('维保计划不存在', 404, 404);
+      return errorResponse(ts('k_7mif3w'), 404, 404);
     }
     return successResponse(rows[0]);
   }
@@ -129,6 +133,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       equipment_id,
@@ -145,7 +150,7 @@ export const POST = withPermission(
     } = body;
 
     if (!equipment_id || !plan_name) {
-      return errorResponse('设备ID和计划名称不能为空', 400, 400);
+      return errorResponse(ts('k_17jwbx9'), 400, 400);
     }
 
     // 验证设备存在
@@ -153,7 +158,7 @@ export const POST = withPermission(
       Number(equipment_id),
     ]);
     if (!equipRows || equipRows.length === 0) {
-      return errorResponse('设备不存在', 404, 404);
+      return errorResponse(ts('k_19l0z6t'), 404, 404);
     }
 
     // 生成计划编号
@@ -195,7 +200,7 @@ export const POST = withPermission(
 
     return successResponse(
       { id: result.insertId, plan_no: planNo, next_execute_date: nextExecuteDate },
-      '维保计划创建成功'
+      ts('k_1iw4rq1')
     );
   },
   { logTitle: '创建维保计划', logType: 'business' }
@@ -203,10 +208,11 @@ export const POST = withPermission(
 
 export const PUT = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, ...fields } = body;
 
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     const allowedFields = [
       'plan_name',
@@ -236,7 +242,7 @@ export const PUT = withPermission(
     }
 
     if (updateFields.length === 0) {
-      return errorResponse('没有可更新的字段', 400, 400);
+      return errorResponse(ts('k_15vo87k'), 400, 400);
     }
 
     // 如果更新了周期，且未显式提供 next_execute_date，则重新计算
@@ -268,23 +274,24 @@ export const PUT = withPermission(
       updateValues
     );
 
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新维保计划', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('ID不能为空', 400, 400);
+    if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     await execute('UPDATE eq_maintenance_plan SET deleted = 1, update_by = ? WHERE id = ?', [
       userInfo?.userId || null,
       Number(id),
     ]);
 
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除维保计划', logType: 'business' }
 );

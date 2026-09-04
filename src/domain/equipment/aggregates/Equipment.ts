@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent } from '@/domain/shared/DomainEvent';
 import {
   EquipmentCreatedEvent,
@@ -90,8 +92,9 @@ export class Equipment {
   }
 
   changeStatus(newStatus: EquipmentStatus): void {
+  const ts = t;
     if (this.status === EquipmentStatus.SCRAPPED) {
-      throw new Error('已报废设备无法变更状态');
+      throw new Error(ts('k_k29qfk'));
     }
     if (this.status === newStatus) return;
     const oldStatus = this.status;
@@ -106,11 +109,12 @@ export class Equipment {
   }
 
   startMaintenance(): void {
+  const ts = t;
     if (this.status === EquipmentStatus.SCRAPPED) {
-      throw new Error('已报废设备无法维修');
+      throw new Error(ts('k_1nbzomr'));
     }
     if (this.status === EquipmentStatus.MAINTENANCE) {
-      throw new Error('设备已在维修中');
+      throw new Error(ts('k_mzdbyh'));
     }
     const oldStatus = this.status;
     this.status = EquipmentStatus.MAINTENANCE;
@@ -124,8 +128,9 @@ export class Equipment {
   }
 
   completeMaintenance(maintenanceDate: string, nextMaintenanceDate?: string): void {
+  const ts = t;
     if (this.status !== EquipmentStatus.MAINTENANCE) {
-      throw new Error('设备不在维修状态');
+      throw new Error(ts('k_1stw3eo'));
     }
     this.status = EquipmentStatus.RUNNING;
     this.lastMaintenanceDate = maintenanceDate;
@@ -142,8 +147,9 @@ export class Equipment {
   }
 
   scrap(): void {
+  const ts = t;
     if (this.status === EquipmentStatus.SCRAPPED) {
-      throw new Error('设备已报废');
+      throw new Error(ts('k_f2qolc'));
     }
     this.status = EquipmentStatus.SCRAPPED;
     this._events.push(

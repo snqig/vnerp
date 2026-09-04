@@ -35,6 +35,7 @@ const mockRecords: PieceWorkRecord[] = [
 ];
 
 export default function PieceWorkPage() {
+  const ts = useTranslations('Common');
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
 
@@ -74,15 +75,15 @@ export default function PieceWorkPage() {
   const totalAmount = records.reduce((s, r) => s + r.amount, 0);
 
   return (
-    <MainLayout title={t('pieceWork') || '计件产量'}>
+    <MainLayout title={t('pieceWork') || ts('k_8kbc4s')}>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Package className="h-6 w-6 text-blue-500" />
-            <h1 className="text-2xl font-bold">{t('pieceWork') || '计件产量'}</h1>
+            <h1 className="text-2xl font-bold">{t('pieceWork') || ts('k_8kbc4s')}</h1>
           </div>
           <Button variant="outline">
-            <Upload className="h-4 w-4 mr-2" />{t('importCsv') || '导入CSV'}
+            <Upload className="h-4 w-4 mr-2" />{t('importCsv') || ts('k_1hyar6y')}
           </Button>
         </div>
 
@@ -90,19 +91,19 @@ export default function PieceWorkPage() {
           <CardHeader>
             <div className="flex flex-wrap items-end gap-4">
               <div className="space-y-1">
-                <Label className="text-xs">{t('employeeId') || '员工ID'}</Label>
+                <Label className="text-xs">{t('employeeId') || ts('k_yg2hbv')}</Label>
                 <Input className="w-32" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">{t('processCode') || '工序编号'}</Label>
+                <Label className="text-xs">{t('processCode') || ts('k_1dy4roy')}</Label>
                 <Input className="w-32" value={processCode} onChange={(e) => setProcessCode(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">{t('startDate') || '开始日期'}</Label>
+                <Label className="text-xs">{t('startDate') || ts('k_pwsjm4')}</Label>
                 <Input type="date" className="w-36" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">{t('endDate') || '结束日期'}</Label>
+                <Label className="text-xs">{t('endDate') || ts('k_jtgmsb')}</Label>
                 <Input type="date" className="w-36" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
               </div>
               <Button onClick={fetchRecords}>
@@ -117,15 +118,15 @@ export default function PieceWorkPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('date') || '日期'}</TableHead>
-                  <TableHead>{t('employeeName') || '员工'}</TableHead>
-                  <TableHead>{t('processCode') || '工序编号'}</TableHead>
-                  <TableHead>{t('productCode') || '产品编号'}</TableHead>
-                  <TableHead className="text-right">{t('quantity') || '数量'}</TableHead>
-                  <TableHead className="text-right">{t('defectCount') || '次品'}</TableHead>
-                  <TableHead className="text-right">{t('passRate') || '合格率'}</TableHead>
-                  <TableHead className="text-right">{t('unitPrice') || '单价'}</TableHead>
-                  <TableHead className="text-right">{t('amount') || '金额'}</TableHead>
+                  <TableHead>{t('date') || ts('k_14s86i5')}</TableHead>
+                  <TableHead>{t('employeeName') || ts('k_bckr52')}</TableHead>
+                  <TableHead>{t('processCode') || ts('k_1dy4roy')}</TableHead>
+                  <TableHead>{t('productCode') || ts('k_kc3quy')}</TableHead>
+                  <TableHead className="text-right">{t('quantity') || ts('k_1i54xuo')}</TableHead>
+                  <TableHead className="text-right">{t('defectCount') || ts('k_1k01jvb')}</TableHead>
+                  <TableHead className="text-right">{t('passRate') || ts('k_8wg6le')}</TableHead>
+                  <TableHead className="text-right">{t('unitPrice') || ts('k_isc1c5')}</TableHead>
+                  <TableHead className="text-right">{t('amount') || ts('k_1jl9r8z')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -144,7 +145,7 @@ export default function PieceWorkPage() {
                 ))}
                 {records.length > 0 && (
                   <TableRow className="bg-muted/50 font-semibold">
-                    <TableCell colSpan={4} className="text-right">{tc('total') || '合计'}</TableCell>
+                    <TableCell colSpan={4} className="text-right">{tc('total') || ts('k_3jbcte')}</TableCell>
                     <TableCell className="text-right">{totalQuantity}</TableCell>
                     <TableCell colSpan={3}></TableCell>
                     <TableCell className="text-right">¥{totalAmount.toFixed(2)}</TableCell>
@@ -153,7 +154,7 @@ export default function PieceWorkPage() {
                 {records.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      {loading ? (tc('loading') || '加载中...') : (t('noData') || '暂无数据')}
+                      {loading ? (tc('loading') || ts('k_ldc0z9')) : (t('noData') || ts('k_6tzr61'))}
                     </TableCell>
                   </TableRow>
                 )}

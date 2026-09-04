@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { getDrizzleDb } from '@/lib/db';
 import { eq, and, desc, count } from 'drizzle-orm';
@@ -55,6 +58,7 @@ export const GET = withPermission(
 
 export const POST = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const result = await db.insert(hrCertificate).values({
       employeeId: body.employee_id,
@@ -69,15 +73,16 @@ export const POST = withPermission(
       fileUrl: body.file_url,
       remark: body.remark,
     });
-    return successResponse({ id: Number(result[0].insertId) }, '证书创建成功');
+    return successResponse({ id: Number(result[0].insertId) }, ts('k_5fek3q'));
   },
   { errorMessage: '创建证书失败' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
-    if (!body.id) return errorResponse('缺少证书ID', 400, 400);
+    if (!body.id) return errorResponse(ts('k_joydeu'), 400, 400);
     await db
       .update(hrCertificate)
       .set({
@@ -94,21 +99,22 @@ export const PUT = withPermission(
         remark: body.remark,
       })
       .where(eq(hrCertificate.id, body.id));
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { errorMessage: '更新证书失败' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return errorResponse('缺少证书ID', 400, 400);
+    if (!id) return errorResponse(ts('k_joydeu'), 400, 400);
     await db
       .update(hrCertificate)
       .set({ deleted: 1 })
       .where(eq(hrCertificate.id, Number(id)));
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { errorMessage: '删除证书失败' }
 );

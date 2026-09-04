@@ -43,6 +43,7 @@ interface Item {
 }
 
 export default function ProductionInboundPage() {
+  const ts = useTranslations('Warehouse');
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
@@ -153,8 +154,7 @@ export default function ProductionInboundPage() {
                 }}
               >
                 <Plus className="h-3 w-3 mr-1" />
-                新增入库
-              </Button>
+                {ts('k_5sawab')}</Button>
             </>
           }
         />
@@ -163,12 +163,12 @@ export default function ProductionInboundPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">入库单号</TableHead>
-                  <TableHead className="text-xs">工单号</TableHead>
+                  <TableHead className="text-xs">{ts('k_8p71nd')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_jzt8aw')}</TableHead>
                   <TableHead className="text-xs">{tc('warehouse')}</TableHead>
-                  <TableHead className="text-xs">入库日期</TableHead>
-                  <TableHead className="text-xs">质检状态</TableHead>
-                  <TableHead className="text-xs">操作人</TableHead>
+                  <TableHead className="text-xs">{ts('k_wv7sht')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_p7p4rs')}</TableHead>
+                  <TableHead className="text-xs">{ts('k_15sp2wy')}</TableHead>
                   <TableHead className="text-xs">{tc('status')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
@@ -196,8 +196,7 @@ export default function ProductionInboundPage() {
                             className="h-6 text-xs px-2"
                             onClick={() => handleStatusChange(item.id, 2)}
                           >
-                            确认入库
-                          </Button>
+                            {ts('k_1jot12v')}</Button>
                         )}
                         <Button
                           size="sm"
@@ -225,8 +224,7 @@ export default function ProductionInboundPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                      暂无记录
-                    </TableCell>
+                      {tc('noRecords')}</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -276,7 +274,7 @@ export default function ProductionInboundPage() {
                 />
               </div>
               <div>
-                <Label>入库日期</Label>
+                <Label>{ts('k_wv7sht')}</Label>
                 <Input
                   type="date"
                   value={editItem.inbound_date || ''}
@@ -284,14 +282,14 @@ export default function ProductionInboundPage() {
                 />
               </div>
               <div>
-                <Label>工单号</Label>
+                <Label>{ts('k_jzt8aw')}</Label>
                 <Input
                   value={editItem.work_order_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, work_order_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>操作人</Label>
+                <Label>{ts('k_15sp2wy')}</Label>
                 <UserSelect
                   value={editItem.operator_name || ''}
                   onChange={(v) => setEditItem({ ...editItem, operator_name: v })}
@@ -300,8 +298,7 @@ export default function ProductionInboundPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
-              </Button>
+                {tc('cancel')}</Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>

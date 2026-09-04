@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 
@@ -9,6 +10,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Common');
   return (
     <html lang="zh-CN">
       <body style={{ margin: 0, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -49,10 +52,9 @@ export default function GlobalError({
               <h2
                 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: '#1f2329' }}
               >
-                系统发生严重错误
-              </h2>
+                {ts('k_1dm8f8t')}</h2>
               <p style={{ fontSize: '14px', color: '#86909c' }}>
-                {error.message || '请稍后重试或联系管理员'}
+                {error.message || ts('k_8hnomn')}
               </p>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -72,8 +74,7 @@ export default function GlobalError({
                 }}
               >
                 <RefreshCw style={{ width: '16px', height: '16px' }} />
-                重试
-              </button>
+                {tc('retry')}</button>
               {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a
                 href="/"
@@ -92,8 +93,7 @@ export default function GlobalError({
                 }}
               >
                 <Home style={{ width: '16px', height: '16px' }} />
-                返回首页
-              </a>
+                {tc('backToHome')}</a>
             </div>
           </div>
         </div>

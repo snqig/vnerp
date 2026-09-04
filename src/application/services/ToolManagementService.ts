@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { execute, transaction } from '@/lib/db';
 import { logger, secureLog } from '@/lib/logger';
 import { Tool } from '@/domain/dcprint/aggregates/Tool';
@@ -275,6 +277,7 @@ export class ToolManagementService {
     let phase = 'init';
     try {
       await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
         phase = 'load_tool';
         const rows = await conn.execute(
           'SELECT * FROM dcprint_tool WHERE id = ? AND deleted = 0 FOR UPDATE',
@@ -290,7 +293,7 @@ export class ToolManagementService {
         phase = 'record_usage';
         const usageResult = tool.recordUsage(input.useCount);
 
-        logger.info(ctx, `寿命与成本计算`, {
+        logger.info(ctx, ts('k_8fnral'), {
           toolType: tool.toolType,
           toolCode: tool.toolCode,
           delta: { useCount: input.useCount, amortizedCost: usageResult.amortizedCost },
@@ -333,7 +336,7 @@ export class ToolManagementService {
           ]
         );
 
-        logger.info(ctx, `报工记录已写入`, {
+        logger.info(ctx, ts('k_12a29z4'), {
           toolType: tool.toolType,
           workOrderNo: input.workOrderNo,
           amortizedCost: usageResult.amortizedCost,
@@ -364,7 +367,7 @@ export class ToolManagementService {
               usedCount: usageResult.newUsedCount,
               remainLife: usageResult.newRemainLife,
               netValue: usageResult.newNetValue,
-              scrapReason: '寿命耗尽自动报废',
+              scrapReason: ts('k_a7twpf'),
             }),
           ]);
           secureLog('warn', 'Tool reached end of life, auto-scrapped', {
@@ -394,6 +397,7 @@ export class ToolManagementService {
     let phase = 'init';
     try {
       return await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
         phase = 'load_tool';
         const rows = await conn.execute(
           'SELECT * FROM dcprint_tool WHERE id = ? AND deleted = 0 FOR UPDATE',
@@ -429,7 +433,7 @@ export class ToolManagementService {
           ]
         )) as unknown as [{ insertId: number }, unknown];
 
-        logger.info(ctx, `维修记录已创建`, {
+        logger.info(ctx, ts('k_1mmshtz'), {
           maintenanceId: result.insertId,
           lifeBefore: tool.remainLife,
         });
@@ -470,6 +474,7 @@ export class ToolManagementService {
     let phase = 'init';
     try {
       await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
         phase = 'load_maintenance';
         const mRows = await conn.execute(
           'SELECT * FROM dcprint_tool_maintenance WHERE id = ? AND status = 1 FOR UPDATE',
@@ -502,7 +507,7 @@ export class ToolManagementService {
         const lifeAdjustment = input.lifeAfter - (m.life_before as number);
         tool.completeMaintenance(input.maintenanceCost, input.lifeAfter);
 
-        logger.info(ctx, `维修后成本重算`, {
+        logger.info(ctx, ts('k_1ozeicr'), {
           toolId: m.tool_id,
           toolType: tool.toolType,
           toolCode: tool.toolCode,
@@ -541,7 +546,7 @@ export class ToolManagementService {
           ]
         );
 
-        logger.info(ctx, `维修完成`, {
+        logger.info(ctx, ts('k_1371zz7'), {
           toolId: m.tool_id,
           toolType: tool.toolType,
           newStatus: tool.status,
@@ -549,7 +554,7 @@ export class ToolManagementService {
         });
 
         if (tool.status === ToolStatus.WARNING) {
-          logger.info(ctx, `维修后仍达预警阈值 → status=4`, {
+          logger.info(ctx, ts('k_766mkb'), {
             toolId: m.tool_id,
             toolCode: tool.toolCode,
             usedCount: tool.usedCount,
@@ -584,6 +589,7 @@ export class ToolManagementService {
     let phase = 'init';
     try {
       await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
         phase = 'load_tool';
         const rows = await conn.execute(
           'SELECT * FROM dcprint_tool WHERE id = ? AND deleted = 0 FOR UPDATE',
@@ -599,7 +605,7 @@ export class ToolManagementService {
         phase = 'validate_status';
         tool.scrap(input.scrapReason, input.scrapBy);
 
-        logger.info(ctx, `手动报废`, {
+        logger.info(ctx, ts('k_1jghbzm'), {
           toolType: tool.toolType,
           toolCode: tool.toolCode,
           scrapReason: input.scrapReason,

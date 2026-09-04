@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 /**
  * 油墨配方版本聚合根
  *
@@ -119,11 +121,12 @@ export class InkFormulaVersion {
   }
 
   private validateCreation(props: InkFormulaVersionProps): void {
+  const ts = t;
     if (!props.colorId || props.colorId <= 0) {
-      throw new DomainError('色号ID不能为空');
+      throw new DomainError(ts('k_1sirdml'));
     }
     if (!props.versionNo || props.versionNo.trim() === '') {
-      throw new DomainError('版本号不能为空');
+      throw new DomainError(ts('k_1whf9q4'));
     }
     if (!props.versionNo.match(/^V\d+\.\d+$/)) {
       throw new DomainError(`版本号格式不合法: ${props.versionNo}，应为 V主.次 格式`);
@@ -237,8 +240,9 @@ export class InkFormulaVersion {
 
   /** 版本生效：草稿 → 已生效 */
   activate(operatorId: number): void {
+  const ts = t;
     if (!canTransition(this._status, FormulaStatus.ACTIVE)) {
-      throw new InvalidTransitionError(getStatusLabel(this._status), '已生效');
+      throw new InvalidTransitionError(getStatusLabel(this._status), ts('k_jgzqv6'));
     }
     this._status = FormulaStatus.ACTIVE;
     this._activateBy = operatorId;
@@ -261,11 +265,12 @@ export class InkFormulaVersion {
 
   /** 版本作废：已生效 → 已作废 */
   cancel(operatorId: number, reason: string): void {
+  const ts = t;
     if (!canTransition(this._status, FormulaStatus.CANCELLED)) {
-      throw new InvalidTransitionError(getStatusLabel(this._status), '已作废');
+      throw new InvalidTransitionError(getStatusLabel(this._status), ts('k_1o0kows'));
     }
     if (!reason || reason.trim() === '') {
-      throw new DomainError('作废原因不能为空');
+      throw new DomainError(ts('k_hqq3sd'));
     }
     this._status = FormulaStatus.CANCELLED;
     this._cancelBy = operatorId;
@@ -291,8 +296,9 @@ export class InkFormulaVersion {
 
   /** 更新明细（仅草稿可操作） */
   updateItems(newItems: FormulaItemProps[]): void {
+  const ts = t;
     if (!this.canEdit) {
-      throw new DomainError('只有草稿版本可以修改明细');
+      throw new DomainError(ts('k_18lmupx'));
     }
     this._items = newItems.map((item, index) => {
       const props = { ...item };
@@ -313,8 +319,9 @@ export class InkFormulaVersion {
     unit?: string;
     shelfLifeHours?: number;
   }): void {
+  const ts = t;
     if (!this.canEdit) {
-      throw new DomainError('只有草稿版本可以编辑');
+      throw new DomainError(ts('k_ulxnpx'));
     }
     if (data.versionName !== undefined) this._versionName = data.versionName;
     if (data.changeReason !== undefined) this._changeReason = data.changeReason;
@@ -526,10 +533,11 @@ export class InkFormulaVersion {
 }
 
 function getStatusLabel(status: FormulaStatus): string {
+  const ts = t;
   const labels: Record<FormulaStatus, string> = {
-    [FormulaStatus.DRAFT]: '草稿',
-    [FormulaStatus.ACTIVE]: '已生效',
-    [FormulaStatus.CANCELLED]: '已作废',
+    [FormulaStatus.DRAFT]: ts('k_oc54qp'),
+    [FormulaStatus.ACTIVE]: ts('k_jgzqv6'),
+    [FormulaStatus.CANCELLED]: ts('k_1o0kows'),
   };
   return labels[status] || String(status);
 }

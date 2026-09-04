@@ -64,6 +64,7 @@ const STATUS_MAP: Record<
 };
 
 export default function ProcessCardPage() {
+  const ts = useTranslations('Dcprint');
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
   const router = useRouter();
@@ -100,7 +101,7 @@ export default function ProcessCardPage() {
         });
       }
     } catch {
-      toast.error('加载工艺卡列表失败');
+      toast.error(ts('k_1945u9p'));
     } finally {
       setLoading(false);
     }
@@ -115,13 +116,13 @@ export default function ProcessCardPage() {
       const res = await authFetch(`/api/dcprint/sample-card/${id}/submit`, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        toast.success('工艺卡已提交');
+        toast.success(ts('k_14yk4ax'));
         fetchCards();
       } else {
-        toast.error(data.message || '操作失败');
+        toast.error(data.message || ts('k_ydow7a'));
       }
     } catch {
-      toast.error('操作失败');
+      toast.error(ts('k_ydow7a'));
     }
   };
 
@@ -130,45 +131,45 @@ export default function ProcessCardPage() {
       const res = await authFetch(`/api/dcprint/sample-card/${id}/confirm`, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        toast.success('工艺卡已确认');
+        toast.success(ts('k_sojurb'));
         fetchCards();
       } else {
-        toast.error(data.message || '操作失败');
+        toast.error(data.message || ts('k_ydow7a'));
       }
     } catch {
-      toast.error('操作失败');
+      toast.error(ts('k_ydow7a'));
     }
   };
 
   const handleCancel = async (id: number) => {
-    if (!confirm('确认作废此工艺卡？')) return;
+    if (!confirm(ts('k_1yr6vyp'))) return;
     try {
       const res = await authFetch(`/api/dcprint/sample-card/${id}/cancel`, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        toast.success('工艺卡已作废');
+        toast.success(ts('k_regfno'));
         fetchCards();
       } else {
-        toast.error(data.message || '操作失败');
+        toast.error(data.message || ts('k_ydow7a'));
       }
     } catch {
-      toast.error('操作失败');
+      toast.error(ts('k_ydow7a'));
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确认删除此工艺卡？')) return;
+    if (!confirm(ts('k_1s94v9q'))) return;
     try {
       const res = await authFetch(`/api/dcprint/sample-card/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        toast.success('删除成功');
+        toast.success(ts('k_1hlqs'));
         fetchCards();
       } else {
-        toast.error(data.message || '删除失败');
+        toast.error(data.message || ts('k_1ijrr73'));
       }
     } catch {
-      toast.error('删除失败');
+      toast.error(ts('k_1ijrr73'));
     }
   };
 
@@ -179,25 +180,25 @@ export default function ProcessCardPage() {
           <Card className="cursor-pointer hover:bg-muted" onClick={() => setFilterStatus('all')}>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold">{stats.total}</div>
-              <div className="text-sm text-muted-foreground">全部</div>
+              <div className="text-sm text-muted-foreground">{ts('k_q6w6ul')}</div>
             </CardContent>
           </Card>
           <Card className="cursor-pointer hover:bg-muted" onClick={() => setFilterStatus('1')}>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-gray-500">{stats.draft}</div>
-              <div className="text-sm text-muted-foreground">草稿</div>
+              <div className="text-sm text-muted-foreground">{ts('k_oc54qp')}</div>
             </CardContent>
           </Card>
           <Card className="cursor-pointer hover:bg-muted" onClick={() => setFilterStatus('2')}>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-blue-500">{stats.sampling}</div>
-              <div className="text-sm text-muted-foreground">打样中</div>
+              <div className="text-sm text-muted-foreground">{ts('k_1lta3ye')}</div>
             </CardContent>
           </Card>
           <Card className="cursor-pointer hover:bg-muted" onClick={() => setFilterStatus('3')}>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-green-500">{stats.confirmed}</div>
-              <div className="text-sm text-muted-foreground">已确认</div>
+              <div className="text-sm text-muted-foreground">{ts('k_nmir1b')}</div>
             </CardContent>
           </Card>
         </div>
@@ -240,16 +241,16 @@ export default function ProcessCardPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>打样编号</TableHead>
-                    <TableHead>打样名称</TableHead>
-                    <TableHead>客户</TableHead>
-                    <TableHead>产品</TableHead>
-                    <TableHead>版本</TableHead>
-                    <TableHead>基材</TableHead>
-                    <TableHead>印刷色</TableHead>
-                    <TableHead>预估工时</TableHead>
-                    <TableHead>总成本</TableHead>
-                    <TableHead>状态</TableHead>
+                    <TableHead>{ts('k_1y8ybpg')}</TableHead>
+                    <TableHead>{ts('k_11gs5ia')}</TableHead>
+                    <TableHead>{ts('k_ush9hy')}</TableHead>
+                    <TableHead>{ts('k_aa5e9x')}</TableHead>
+                    <TableHead>{ts('k_va46gx')}</TableHead>
+                    <TableHead>{ts('k_1t8ltxj')}</TableHead>
+                    <TableHead>{ts('k_4sf5la')}</TableHead>
+                    <TableHead>{ts('k_q7sxwm')}</TableHead>
+                    <TableHead>{ts('k_1ugaydy')}</TableHead>
+                    <TableHead>{ts('k_1ccx4t4')}</TableHead>
                     <TableHead>{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -267,7 +268,7 @@ export default function ProcessCardPage() {
                       <TableCell>¥{card.total_cost?.toFixed(2) || '0.00'}</TableCell>
                       <TableCell>
                         <Badge variant={STATUS_MAP[card.status]?.variant || 'secondary'}>
-                          {STATUS_MAP[card.status]?.label || '未知'}
+                          {STATUS_MAP[card.status]?.label || ts('k_1lpnuh4')}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -282,8 +283,7 @@ export default function ProcessCardPage() {
                               onClick={() => router.push(`/dcprint/process-card/${card.id}`)}
                             >
                               <Eye className="h-4 w-4 mr-2" />
-                              查看
-                            </DropdownMenuItem>
+                              {ts('k_10fbkvl')}</DropdownMenuItem>
                             {card.status === 1 && (
                               <>
                                 <DropdownMenuItem
@@ -296,8 +296,7 @@ export default function ProcessCardPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleSubmit(card.id)}>
                                   <Send className="h-4 w-4 mr-2" />
-                                  提交
-                                </DropdownMenuItem>
+                                  {ts('k_ybr38x')}</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleDelete(card.id)}>
                                   <Trash2 className="h-4 w-4 mr-2 text-red-500" />
                                   {tc('delete')}
@@ -308,12 +307,10 @@ export default function ProcessCardPage() {
                               <>
                                 <DropdownMenuItem onClick={() => handleConfirm(card.id)}>
                                   <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-                                  确认
-                                </DropdownMenuItem>
+                                  {ts('k_kre8wf')}</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleCancel(card.id)}>
                                   <XCircle className="h-4 w-4 mr-2 text-red-500" />
-                                  作废
-                                </DropdownMenuItem>
+                                  {ts('k_wph6a4')}</DropdownMenuItem>
                               </>
                             )}
                           </DropdownMenuContent>

@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { IReconciliationRepository } from '@/domain/sales/repositories/IReconciliationRepository';
 import { IReceivableRepository } from '@/domain/finance/repositories/IReceivableRepository';
 import { IDeliveryRepository } from '@/domain/sales/repositories/IDeliveryRepository';
@@ -29,14 +31,16 @@ export class ReconciliationApplicationService {
   ) {}
 
   async getReconciliationById(id: number): Promise<Reconciliation> {
+  const ts = await getTranslations('Common');
     const recon = await this.reconciliationRepo.findById(id);
-    if (!recon) throw new NotFoundError('对账单不存在');
+    if (!recon) throw new NotFoundError(ts('k_6o9z58'));
     return recon;
   }
 
   async createReconciliation(
     props: ReconciliationProps
   ): Promise<{ id: number; reconciliationNo: string }> {
+  const ts = await getTranslations('Common');
     if (props.lines && props.lines.length > 0) {
       const currencies = new Set<string>();
       for (const line of props.lines) {
@@ -48,7 +52,7 @@ export class ReconciliationApplicationService {
         }
       }
       if (currencies.size > 1) {
-        throw new DomainError('对账单中包含了多种币种的发货单，无法创建统一对账单');
+        throw new DomainError(ts('k_rm2ygv'));
       }
     }
 
@@ -141,11 +145,12 @@ export class ReconciliationApplicationService {
     receivedAmount: number;
     balanceAmount: number;
   }> {
+  const ts = await getTranslations('Common');
     const recon = await this.getReconciliationById(input.reconciliationId);
 
     const receivable = await this.receivableRepo.findById(input.receivableId);
     if (!receivable) {
-      throw new NotFoundError('应收单不存在');
+      throw new NotFoundError(ts('k_167sbwh'));
     }
 
     const receivableBalance = receivable.balance.amount;
@@ -243,9 +248,10 @@ export class ReconciliationApplicationService {
   }
 
   async deleteReconciliation(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const recon = await this.getReconciliationById(id);
     if (recon.status.value !== 1) {
-      throw new DomainError('仅草稿状态的对账单可删除');
+      throw new DomainError(ts('k_1ewo4u4'));
     }
     await this.reconciliationRepo.softDelete(id);
   }

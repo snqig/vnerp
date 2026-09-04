@@ -74,6 +74,7 @@ const typeMap: Record<number, string> = {
 type ActionMode = 'create' | 'start' | 'complete';
 
 export default function UnqualifiedPage() {
+  const ts = useTranslations('Quality');
   const t = useTranslations('Quality');
   const tc = useTranslations('Common');
 
@@ -280,8 +281,8 @@ export default function UnqualifiedPage() {
               {t('addHandleOrder')}
             </Button>
             <GlobalExportToolbar
-              filename="不合格品处理单"
-              title="不合格品处理单"
+              filename={ts('k_erek5s')}
+              title={ts('k_erek5s')}
               columns={[
                 { key: 'handle_no', label: t('handleNo'), width: 18 },
                 { key: 'material_code', label: tc('materialCode'), width: 15 },

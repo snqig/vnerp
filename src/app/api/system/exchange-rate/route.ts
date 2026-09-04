@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { execute, queryOne, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -13,6 +16,7 @@ import { UserInfo } from '@/lib/auth';
 
 // GET - 汇率列表或最新汇率查询
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const from = searchParams.get('from');
   const to = searchParams.get('to');
@@ -28,7 +32,7 @@ export const GET = withPermission(async (request: NextRequest) => {
       [from, to]
     );
     if (!rate) {
-      return successResponse(null, '未找到汇率记录');
+      return successResponse(null, ts('k_uigql6'));
     }
     return successResponse(rate);
   }
@@ -40,7 +44,7 @@ export const GET = withPermission(async (request: NextRequest) => {
       [from, to, date]
     );
     if (!rate) {
-      return successResponse(null, '未找到指定日期的汇率记录');
+      return successResponse(null, ts('k_1gywtrn'));
     }
     return successResponse(rate);
   }
@@ -70,6 +74,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 // POST - 录入汇率
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, [
       'from_currency',
@@ -82,25 +87,25 @@ export const POST = withPermission(
     }
 
     if (body.from_currency === body.to_currency) {
-      return errorResponse('源币种和目标币种不能相同', 400, 400);
+      return errorResponse(ts('k_1o2bgrg'), 400, 400);
     }
 
     const rate = Number(body.rate);
     if (!Number.isFinite(rate) || rate <= 0) {
-      return errorResponse('汇率必须大于 0', 400, 400);
+      return errorResponse(ts('k_35qbbi'), 400, 400);
     }
 
     const fromExists = await queryOne('SELECT 1 FROM sys_currency WHERE code = ? AND deleted = 0', [
       body.from_currency,
     ]);
     if (!fromExists) {
-      return errorResponse('源币种不存在', 400, 400);
+      return errorResponse(ts('k_1bhixq0'), 400, 400);
     }
     const toExists = await queryOne('SELECT 1 FROM sys_currency WHERE code = ? AND deleted = 0', [
       body.to_currency,
     ]);
     if (!toExists) {
-      return errorResponse('目标币种不存在', 400, 400);
+      return errorResponse(ts('k_1cp1v9n'), 400, 400);
     }
 
     const result = await execute(
@@ -118,7 +123,7 @@ export const POST = withPermission(
     );
 
     clearExchangeRateCache();
-    return successResponse({ id: result.insertId }, '汇率录入成功');
+    return successResponse({ id: result.insertId }, ts('k_7bi4ow'));
   },
   { logTitle: '录入汇率' }
 );
@@ -126,15 +131,16 @@ export const POST = withPermission(
 // DELETE - 删除汇率记录
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) {
-      return commonErrors.badRequest('汇率记录ID不能为空');
+      return commonErrors.badRequest(ts('k_ewxe43'));
     }
 
     await execute('DELETE FROM sys_exchange_rate WHERE id = ?', [parseInt(id)]);
     clearExchangeRateCache();
-    return successResponse(null, '汇率记录删除成功');
+    return successResponse(null, ts('k_1thw7t1'));
   },
   { logTitle: '删除汇率' }
 );

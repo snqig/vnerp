@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { query, execute, transaction, queryOne } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import type { PoolConnection } from 'mysql2/promise';
@@ -137,6 +139,7 @@ export class WorkflowEngine {
     initiatorName: string;
     amount?: number;
   }): Promise<{ instanceId: number; message: string }> {
+  const ts = await getTranslations('Common');
     const { moduleType, sourceType, sourceId, sourceNo, initiatorId, initiatorName, amount } =
       params;
 
@@ -144,14 +147,14 @@ export class WorkflowEngine {
 
     if (!workflow) {
       secureLog('warn', 'No workflow configured for module', { moduleType });
-      return { instanceId: 0, message: '该模块未配置审批流程' };
+      return { instanceId: 0, message: ts('k_1dzu8yf') };
     }
 
     const _startNode = workflow.nodes.find((n: WorkflowNode) => n.node_type === 'start');
     const firstApproveNode = workflow.nodes.find((n: WorkflowNode) => n.node_type === 'approve');
 
     if (!firstApproveNode) {
-      return { instanceId: 0, message: '审批流程配置错误，缺少审批节点' };
+      return { instanceId: 0, message: ts('k_xdw0sm') };
     }
 
     const instanceId = await transaction(async (conn) => {
@@ -217,6 +220,7 @@ export class WorkflowEngine {
     instanceId: number,
     node: WorkflowNode
   ): Promise<void> {
+  const ts = await getTranslations('Common');
     const approverIds = JSON.parse(node.approver_ids || '[]');
     const approverNames = (node.approver_names || '').split(',').filter(Boolean);
 
@@ -226,7 +230,7 @@ export class WorkflowEngine {
           instance_id, node_id, node_name, approver_id, approver_name,
           status, create_time
         ) VALUES (?, ?, ?, ?, ?, 1, NOW())`,
-        [instanceId, node.id, node.node_name, approverIds[0], approverNames[0] || '审批人']
+        [instanceId, node.id, node.node_name, approverIds[0], approverNames[0] || ts('k_1lakt7z')]
       );
     } else if (node.approver_type === 'role') {
       const roleApprovers = await this.getRoleApprovers(approverIds);
@@ -260,6 +264,7 @@ export class WorkflowEngine {
     action: 'approve' | 'reject';
     comment?: string;
   }): Promise<{ success: boolean; message: string; nextNode?: string }> {
+  const ts = await getTranslations('Common');
     const { instanceId, taskId, approverId, action, comment } = params;
 
     const task = await queryOne<ApprovalTaskRow>(
@@ -268,15 +273,15 @@ export class WorkflowEngine {
     );
 
     if (!task) {
-      return { success: false, message: '审批任务不存在' };
+      return { success: false, message: ts('k_5e9w3y') };
     }
 
     if (task.approver_id !== approverId) {
-      return { success: false, message: '您没有该审批任务的权限' };
+      return { success: false, message: ts('k_m9y025') };
     }
 
     if (task.status !== 1) {
-      return { success: false, message: '该任务已处理' };
+      return { success: false, message: ts('k_14n4p4g') };
     }
 
     const instance = await queryOne<ApprovalInstanceRow>(
@@ -285,7 +290,7 @@ export class WorkflowEngine {
     );
 
     if (!instance || instance.status !== 1) {
-      return { success: false, message: '审批实例状态异常' };
+      return { success: false, message: ts('k_njrx43') };
     }
 
     const workflow = await queryOne<WorkflowConfigRow>(
@@ -300,7 +305,7 @@ export class WorkflowEngine {
 
     if (action === 'reject') {
       await this.rejectWorkflow(instance, task, comment || '', nodes);
-      return { success: true, message: '审批已驳回' };
+      return { success: true, message: ts('k_m2ve3q') };
     }
 
     // 审批通过
@@ -317,10 +322,10 @@ export class WorkflowEngine {
 
     if (nextNode) {
       await this.moveToNextNode(instance, nextNode);
-      return { success: true, message: '审批通过', nextNode: nextNode.node_name };
+      return { success: true, message: ts('k_egho7s'), nextNode: nextNode.node_name };
     } else {
       await this.completeWorkflow(instance);
-      return { success: true, message: '审批流程已完成' };
+      return { success: true, message: ts('k_np0ksn') };
     }
   }
 
@@ -331,6 +336,7 @@ export class WorkflowEngine {
     nodes: WorkflowNode[]
   ): Promise<void> {
     await transaction(async (conn) => {
+  const tc = await getTranslations('Common');
       await conn.execute(
         `UPDATE wf_approval_task SET
           status = 3, action = 'reject', comment = ?, action_time = NOW()
@@ -359,7 +365,7 @@ export class WorkflowEngine {
             startNode.node_name,
             instance.initiator_id,
             instance.initiator_name,
-            `被驳回，驳回原因：${comment || '无'}`,
+            `被驳回，驳回原因：${comment || tc('none')}`,
           ]
         );
 
@@ -502,9 +508,9 @@ export class WorkflowEngine {
   }
 
   private async getDepartmentHead(): Promise<{ id: number; name: string } | null> {
+  const ts = await getTranslations('Common');
     const rows = await query<{ id: number; name: string }>(
-      `SELECT id, real_name as name FROM sys_user
-       WHERE position LIKE '%主管%' OR position LIKE '%经理%' LIMIT 1`
+      ts('k_iwz1j7')
     );
 
     return rows.length > 0 ? rows[0] : null;

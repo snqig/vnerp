@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useEffect } from 'react';
 
@@ -10,6 +11,7 @@ interface ChartProps {
 }
 
 export function ChartImage({ url, title, loading = false, onError }: ChartProps) {
+  const ts = useTranslations('Common');
   const [imageLoaded, setImageLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
@@ -24,7 +26,7 @@ export function ChartImage({ url, title, loading = false, onError }: ChartProps)
 
   const handleError = () => {
     setHasError(true);
-    onError?.('图表加载失败');
+    onError?.(ts('k_s6johq'));
   };
 
   if (loading || !imageLoaded) {
@@ -32,7 +34,7 @@ export function ChartImage({ url, title, loading = false, onError }: ChartProps)
       <div className="flex items-center justify-center h-full min-h-[200px] bg-white/5 rounded-lg">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-2"></div>
-          <p className="text-white/50 text-sm">加载图表中...</p>
+          <p className="text-white/50 text-sm">{ts('k_1h3lvir')}</p>
         </div>
       </div>
     );
@@ -42,13 +44,12 @@ export function ChartImage({ url, title, loading = false, onError }: ChartProps)
     return (
       <div className="flex items-center justify-center h-full min-h-[200px] bg-red-500/10 rounded-lg">
         <div className="text-center">
-          <p className="text-red-400 text-sm mb-2">图表加载失败</p>
+          <p className="text-red-400 text-sm mb-2">{ts('k_s6johq')}</p>
           <button
             onClick={() => window.location.reload()}
             className="text-cyan-400 hover:text-cyan-300 text-sm underline"
           >
-            点击重试
-          </button>
+            {ts('k_10ex5dr')}</button>
         </div>
       </div>
     );
@@ -59,7 +60,7 @@ export function ChartImage({ url, title, loading = false, onError }: ChartProps)
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
-        alt={title || '图表'}
+        alt={title || ts('k_1c2w2i3')}
         className="w-full h-auto object-contain"
         onLoad={handleLoad}
         onError={handleError}
@@ -76,25 +77,26 @@ export function ChartPlaceholder({
   title?: string;
   type?: 'loading' | 'empty' | 'error';
 }) {
+  const ts = useTranslations('Common');
   return (
     <div className="flex items-center justify-center h-full min-h-[200px] bg-white/5 rounded-lg">
       <div className="text-center">
         {type === 'loading' && (
           <>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-2"></div>
-            <p className="text-white/50 text-sm">加载图表中...</p>
+            <p className="text-white/50 text-sm">{ts('k_1h3lvir')}</p>
           </>
         )}
         {type === 'empty' && (
           <>
             <div className="text-white/30 text-4xl mb-2">📊</div>
-            <p className="text-white/40 text-sm">暂无数据</p>
+            <p className="text-white/40 text-sm">{ts('k_6tzr61')}</p>
           </>
         )}
         {type === 'error' && (
           <>
             <div className="text-red-400 text-4xl mb-2">⚠️</div>
-            <p className="text-red-400 text-sm">图表加载失败</p>
+            <p className="text-red-400 text-sm">{ts('k_s6johq')}</p>
           </>
         )}
       </div>

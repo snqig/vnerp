@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
@@ -40,17 +41,19 @@ interface QRCodeScannerProps {
 }
 
 export function QRCodeScanner({
-  placeholder = '扫描或输入二维码...',
+  placeholder = ts('k_1v6ose0'),
   onScan,
   validate,
   scanMode = 'query',
-  autoFocus = true,
+  autoFocus = false,
   showHistory = true,
   showCamera = true,
   inputOnly = false,
   disabled = false,
   className = '',
 }: QRCodeScannerProps) {
+  const tc = useTranslations('Common');
+  const ts = useTranslations('Common');
   const { toast } = useToast();
   const locale = useLocale();
   const [mode, setMode] = useState<'manual' | 'camera'>('manual');
@@ -85,19 +88,19 @@ export function QRCodeScanner({
         const message = typeof validationResult === 'object' ? validationResult.message : undefined;
 
         if (!isValid) {
-          setLastResult({ success: false, message: message || '验证失败' });
+          setLastResult({ success: false, message: message || ts('k_1auwe14') });
           setHistory((prev) => [
             {
               qrCode: trimmedCode,
               time: new Date().toISOString(),
               success: false,
-              message: message || '验证失败',
+              message: message || ts('k_1auwe14'),
             },
             ...prev.slice(0, 19),
           ]);
           toast({
-            title: '验证失败',
-            description: message || '二维码验证不通过',
+            title: ts('k_1auwe14'),
+            description: message || ts('k_vf58rh'),
             variant: 'destructive',
           });
           setIsProcessing(false);
@@ -118,24 +121,24 @@ export function QRCodeScanner({
         ...prev.slice(0, 19),
       ]);
 
-      toast({ title: '扫描成功', description: trimmedCode });
+      toast({ title: ts('k_mxo5dy'), description: trimmedCode });
 
       // 清空输入
       setInputValue('');
     } catch (error) {
-      setLastResult({ success: false, message: (error as Error).message || '处理失败' });
+      setLastResult({ success: false, message: (error as Error).message || ts('k_8uoust') });
       setHistory((prev) => [
         {
           qrCode: trimmedCode,
           time: new Date().toISOString(),
           success: false,
-          message: (error as Error).message || '处理失败',
+          message: (error as Error).message || ts('k_8uoust'),
         },
         ...prev.slice(0, 19),
       ]);
       toast({
-        title: '扫描失败',
-        description: (error as Error).message || '请重试',
+        title: tc('scanFailed'),
+        description: (error as Error).message || ts('k_e16dng'),
         variant: 'destructive',
       });
     } finally {
@@ -177,8 +180,8 @@ export function QRCodeScanner({
       scannerControlsRef.current = controls;
     } catch (err) {
       toast({
-        title: '摄像头启动失败',
-        description: err instanceof Error ? err.message : '无法访问摄像头',
+        title: ts('k_70cj65'),
+        description: err instanceof Error ? err.message : ts('k_1ink02q'),
         variant: 'destructive',
       });
       setMode('manual');
@@ -201,17 +204,17 @@ export function QRCodeScanner({
   const getModeLabel = () => {
     switch (scanMode) {
       case 'inbound':
-        return '扫码入库';
+        return ts('k_lhzirh');
       case 'outbound':
-        return '扫码出库';
+        return ts('k_1vlzpeu');
       case 'feed':
-        return '扫码投料';
+        return ts('k_1jxw2b3');
       case 'query':
-        return '扫码查询';
+        return ts('k_11sdqre');
       case 'verify':
-        return '扫码验证';
+        return ts('k_9ks60i');
       default:
-        return '扫码';
+        return ts('k_16tvy7l');
     }
   };
 
@@ -253,7 +256,7 @@ export function QRCodeScanner({
               muted
               playsInline
             />
-            <p className="text-xs text-muted-foreground">将摄像头对准二维码，识别后自动提交。</p>
+            <p className="text-xs text-muted-foreground">{ts('k_riml6r')}</p>
           </div>
         )}
         {/* 输入区域 */}
@@ -288,8 +291,7 @@ export function QRCodeScanner({
             ) : (
               <>
                 <ScanLine className="h-4 w-4 mr-1" />
-                确认
-              </>
+                {ts('k_kre8wf')}</>
             )}
           </Button>
         </div>
@@ -307,7 +309,7 @@ export function QRCodeScanner({
               <AlertCircle className="h-5 w-5" />
             )}
             <span className="text-sm font-medium">
-              {lastResult.success ? '验证成功' : lastResult.message}
+              {lastResult.success ? ts('k_die2kv') : lastResult.message}
             </span>
           </div>
         )}
@@ -319,13 +321,12 @@ export function QRCodeScanner({
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <History className="h-4 w-4" />
                 <span>
-                  {'扫描历史'}
+                  {ts('k_u3w4mj')}
                   {history.length})
                 </span>
               </div>
               <Button variant="ghost" size="sm" onClick={handleClearHistory}>
-                清空
-              </Button>
+                {tc('clear')}</Button>
             </div>
             <div className="space-y-1 max-h-32 overflow-y-auto">
               {history.slice(0, 5).map((item, index) => (

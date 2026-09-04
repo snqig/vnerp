@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useEffect, useState, useCallback } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
@@ -52,12 +53,13 @@ interface WarehouseSelectProps {
 export function WarehouseSelect({
   value,
   onChange,
-  placeholder = '先选分类再选仓库',
+  placeholder = ts('k_1im9jpt'),
   className,
   showCategory = true,
   activeOnly = true,
   disabled = false,
 }: WarehouseSelectProps) {
+  const ts = useTranslations('Common');
   const [categories, setCategories] = useState<WarehouseCategory[]>([]);
   const [warehouses, setWarehouses] = useState<WarehouseItem[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
@@ -113,10 +115,10 @@ export function WarehouseSelect({
           disabled={disabled}
         >
           <SelectTrigger className={className} style={{ minWidth: '120px' }}>
-            <SelectValue placeholder="分类" />
+            <SelectValue placeholder={ts('k_1kbcp7q')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">全部分类</SelectItem>
+            <SelectItem value="all">{ts('k_uq5kla')}</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c.id} value={String(c.id)}>
                 {c.name}
@@ -132,8 +134,7 @@ export function WarehouseSelect({
         <SelectContent>
           {filteredWarehouses.length === 0 ? (
             <SelectItem value="_empty" disabled>
-              该分类下暂无仓库
-            </SelectItem>
+              {ts('k_1a4t0kg')}</SelectItem>
           ) : (
             filteredWarehouses.map((w) => (
               <SelectItem key={w.id} value={String(w.id)}>

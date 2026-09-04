@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { WorkOrderMaterialIssuedEvent } from '@/domain/production/events/WorkOrderEvents';
 import { transaction } from '@/lib/db';
@@ -12,12 +14,13 @@ import { appendInventoryTransaction, recomputeInventorySummary } from '@/lib/inv
  */
 export class WorkOrderMaterialIssuedHandler implements EventHandler<WorkOrderMaterialIssuedEvent> {
   async handle(event: WorkOrderMaterialIssuedEvent): Promise<void> {
+  const ts = await getTranslations('Common');
     const { workOrderId, workOrderNo, issuedItems } = event.payload;
     const ctx = { module: 'work-order-issue', action: 'deduct', workOrderId, workOrderNo };
     let phase = 'init';
 
     if (!issuedItems || issuedItems.length === 0) {
-      logger.info(ctx, '跳过：无领料明细', { workOrderNo });
+      logger.info(ctx, ts('k_mrgnrg'), { workOrderNo });
       return;
     }
 
@@ -34,7 +37,7 @@ export class WorkOrderMaterialIssuedHandler implements EventHandler<WorkOrderMat
           ) as any;
 
           if (invRows.length === 0) {
-            secureLog('warn', '领料失败：库存记录不存在，跳过', {
+            secureLog('warn', ts('k_1b05sov'), {
               workOrderNo,
               materialId: item.materialId,
               warehouseId: item.warehouseId,
@@ -63,7 +66,7 @@ export class WorkOrderMaterialIssuedHandler implements EventHandler<WorkOrderMat
              WHERE id = ?`,
             [item.quantity, item.quantity, inv.id]
           );
-          logger.info(ctx, `库存扣减`, {
+          logger.info(ctx, ts('k_15h50w8'), {
             inventoryId: inv.id,
             materialId: item.materialId,
             materialName: item.materialName,
@@ -92,13 +95,13 @@ export class WorkOrderMaterialIssuedHandler implements EventHandler<WorkOrderMat
                   `UPDATE inv_inventory_batch SET available_qty = 0, quantity = 0, status = 3, update_time = NOW() WHERE id = ?`,
                   [batch.id]
                 );
-                logger.info(ctx, `批次清零`, { batchId: batch.id, batchNo: item.batchNo });
+                logger.info(ctx, ts('k_1gbbhug'), { batchId: batch.id, batchNo: item.batchNo });
               } else {
                 await conn.execute(
                   `UPDATE inv_inventory_batch SET available_qty = available_qty - ?, quantity = quantity - ?, update_time = NOW() WHERE id = ?`,
                   [item.quantity, item.quantity, batch.id]
                 );
-                logger.info(ctx, `批次扣减`, {
+                logger.info(ctx, ts('k_1920lw1'), {
                   batchId: batch.id,
                   batchNo: item.batchNo,
                   deductQty: item.quantity,
@@ -126,19 +129,19 @@ export class WorkOrderMaterialIssuedHandler implements EventHandler<WorkOrderMat
             remark: `工单领料出库: ${item.materialName || ''}`,
             createBy: null,
           });
-          logger.info(ctx, `出库流水记录`, {
+          logger.info(ctx, ts('k_1ooa9c8'), {
             materialId: item.materialId,
             quantity: item.quantity,
           });
         }
       });
 
-      secureLog('info', '工单领料库存扣减完成', {
+      secureLog('info', ts('k_1jwtr1v'), {
         workOrderNo,
         workOrderId,
         itemCount: issuedItems.length,
       });
-      logger.info(ctx, `领料完成`, { workOrderNo, itemCount: issuedItems.length });
+      logger.info(ctx, ts('k_19ec1mk'), { workOrderNo, itemCount: issuedItems.length });
     } catch (err) {
       logger.error(ctx, `WorkOrderMaterialIssued 失败 [phase=${phase}]`, {
         error: err instanceof Error ? err.message : String(err),

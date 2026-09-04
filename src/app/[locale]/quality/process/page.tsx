@@ -366,6 +366,7 @@ const mockQualityProcesses: QualityProcess[] = [
 ];
 
 export default function QualityProcessPage() {
+  const ts = useTranslations('Quality');
   // 翻译钩子
   const t = useTranslations('Quality');
   const tc = useTranslations('Common');
@@ -416,12 +417,12 @@ export default function QualityProcessPage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const fetchProcesses = async () => {
-    logger.info({ module: 'Quality', action: 'fetchProcesses' }, '开始获取品质过程检验数据');
+    logger.info({ module: 'Quality', action: 'fetchProcesses' }, ts('k_1e3gk2g'));
     try {
       setLoading(true);
 
       if (USE_MOCK) {
-        logger.info({ module: 'Quality', action: 'fetchProcesses' }, '使用 mock 数据');
+        logger.info({ module: 'Quality', action: 'fetchProcesses' }, ts('k_1b38xbu'));
         setProcesses(mockQualityProcesses);
         setStats({
           pending: mockQualityProcesses.filter((p) => p.burdening_status === 1).length,
@@ -470,12 +471,12 @@ export default function QualityProcessPage() {
           today: list.length,
           week: list.length,
         });
-        logger.info({ module: 'Quality', action: 'fetchProcesses' }, '品质过程检验数据获取成功', {
+        logger.info({ module: 'Quality', action: 'fetchProcesses' }, ts('k_s0muv8'), {
           count: list.length,
         });
       }
     } catch (error) {
-      logger.error({ module: 'Quality', action: 'fetchProcesses' }, '获取品质过程检验数据失败', {
+      logger.error({ module: 'Quality', action: 'fetchProcesses' }, ts('k_xsfonz'), {
         error: (error as Error).message,
       });
     } finally {
@@ -511,29 +512,29 @@ export default function QualityProcessPage() {
     {
       id: 1,
       inspectNo: 'QI20240318001',
-      inspectType: '尺寸检验',
-      result: '合格',
-      inspector: '张三',
+      inspectType: ts('k_91d8n7'),
+      result: ts('k_109sg5t'),
+      inspector: ts('k_9zg2wy'),
       inspectTime: '2024-03-18 10:30:00',
-      remark: '尺寸符合要求',
+      remark: ts('k_1u1vobi'),
     },
     {
       id: 2,
       inspectNo: 'QI20240318002',
-      inspectType: '颜色检验',
-      result: '合格',
-      inspector: '李四',
+      inspectType: ts('k_7qnq7b'),
+      result: ts('k_109sg5t'),
+      inspector: ts('k_153eri6'),
       inspectTime: '2024-03-18 11:00:00',
-      remark: '颜色正常',
+      remark: ts('k_1c2ekhs'),
     },
     {
       id: 3,
       inspectNo: 'QI20240319001',
-      inspectType: '外观检验',
-      result: '合格',
-      inspector: '王五',
+      inspectType: ts('k_17nj8fx'),
+      result: ts('k_109sg5t'),
+      inspector: ts('k_1i8i0ai'),
       inspectTime: '2024-03-19 09:30:00',
-      remark: '外观无缺陷',
+      remark: ts('k_16u9ylg'),
     },
   ];
 
@@ -601,9 +602,9 @@ export default function QualityProcessPage() {
       );
 
       setIsInspectOpen(false);
-      alert('检验提交成功');
+      alert(ts('k_st0wtk'));
     } catch {
-      alert('提交失败');
+      alert(ts('k_f66edb'));
     } finally {
       setLoading(false);
     }
@@ -768,8 +769,8 @@ export default function QualityProcessPage() {
                   {tc('print')}
                 </Button>
                 <GlobalExportToolbar
-                  filename="过程检验报告"
-                  title="过程检验报告"
+                  filename={ts('k_1ebuor4')}
+                  title={ts('k_1ebuor4')}
                   landscape
                   columns={[
                     { key: 'card_no', label: t('cardNo'), width: 18 },
@@ -1499,9 +1500,9 @@ export default function QualityProcessPage() {
                         <TableCell>
                           <Badge
                             className={
-                              record.result === '合格'
+                              record.result === ts('k_109sg5t')
                                 ? 'bg-green-100 text-green-700'
-                                : record.result === '不合格'
+                                : record.result === ts('k_1ujsxic')
                                   ? 'bg-red-100 text-red-700'
                                   : 'bg-orange-100 text-orange-700'
                             }

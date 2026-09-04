@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import {
   BarChart,
@@ -41,11 +42,11 @@ const labels: Record<string, string> = {
 };
 
 export function LaborCostChart({ data }: LaborCostChartProps) {
+  const ts = useTranslations('Common');
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-[400px] text-muted-foreground">
-        暂无数据
-      </div>
+        {ts('k_6tzr61')}</div>
     );
   }
 

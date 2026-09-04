@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, queryOne, execute, SqlValue } from '@/lib/db';
 import {
@@ -16,6 +19,7 @@ const reconciliationService = PurchaseReconciliationApplicationService.create();
 
 // 采购对账单：列表查询 / 详情查询
 export const GET = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const keyword = searchParams.get('keyword') || '';
@@ -43,7 +47,7 @@ export const GET = withPermission(async (request: NextRequest) => {
        WHERE id = ? AND deleted = 0`,
       [parseInt(id)]
     );
-    if (!rc) return commonErrors.notFound('采购对账单不存在');
+    if (!rc) return commonErrors.notFound(ts('k_ep1cls'));
 
     const writeOffs = await query<unknown>(
       `SELECT id, reconciliation_id, payable_id, amount, write_off_date, remark, create_time
@@ -115,6 +119,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 // 创建采购对账单：自动聚合收货金额与退货金额
 export const POST = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const validation = validateRequestBody(body, ['supplier_id', 'period_start', 'period_end']);
     if (!validation.valid) {
@@ -199,7 +204,7 @@ export const POST = withPermission(
           return_amount: returnAmount,
           line_count: lines.length,
         },
-        '采购对账单创建成功'
+        ts('k_1h8g4v9')
       );
     } catch (error) {
       if (error instanceof DomainError) {
@@ -214,22 +219,23 @@ export const POST = withPermission(
 // 对账单操作：确认 / 核销 / 关闭 / 修改折扣
 export const PUT = withPermission(
   async (request: NextRequest, userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action } = body;
 
     if (!id || !action) {
-      return errorResponse('参数不完整：需要 id 和 action', 400, 400);
+      return errorResponse(ts('k_ghp81y'), 400, 400);
     }
 
     try {
       if (action === 'confirm') {
         const result = await reconciliationService.confirmReconciliation(id, userInfo.userId);
-        return successResponse(result, '采购对账单确认成功');
+        return successResponse(result, ts('k_14bdr4e'));
       }
 
       if (action === 'writeOff') {
         if (!body.payable_id || !body.amount) {
-          return errorResponse('核销操作需要 payable_id 和 amount', 400, 400);
+          return errorResponse(ts('k_1afmu7x'), 400, 400);
         }
         const result = await reconciliationService.writeOff({
           reconciliationId: id,
@@ -239,18 +245,18 @@ export const PUT = withPermission(
           operatorId: userInfo.userId,
           remark: body.remark,
         });
-        return successResponse(result, '核销成功');
+        return successResponse(result, ts('k_shfy40'));
       }
 
       if (action === 'close') {
         const result = await reconciliationService.closeReconciliation(id, userInfo.userId);
-        return successResponse(result, '采购对账单已关闭');
+        return successResponse(result, ts('k_1ysv4ud'));
       }
 
       if (action === 'updateDiscount') {
         const recon = await reconciliationService.getReconciliationById(id);
         if (recon.status.value !== 1) {
-          return errorResponse('仅草稿状态可修改折扣', 400, 400);
+          return errorResponse(ts('k_1geom3a'), 400, 400);
         }
         const discount = Number(body.discount_amount) || 0;
         const netAmount = recon.netAmount;
@@ -262,10 +268,10 @@ export const PUT = withPermission(
          WHERE id = ?`,
           [discount, balanceAmount, id]
         );
-        return successResponse({ discountAmount: discount, balanceAmount }, '折扣更新成功');
+        return successResponse({ discountAmount: discount, balanceAmount }, ts('k_oy7hrp'));
       }
 
-      return errorResponse('不支持的操作类型', 400, 400);
+      return errorResponse(ts('k_j9tktz'), 400, 400);
     } catch (error) {
       if (error instanceof DomainError || error instanceof NotFoundError) {
         return errorResponse(error.message, 400, 400);
@@ -279,13 +285,14 @@ export const PUT = withPermission(
 // 软删除对账单（仅草稿状态）
 export const DELETE = withPermission(
   async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return commonErrors.badRequest('对账单ID不能为空');
+    if (!id) return commonErrors.badRequest(ts('k_5466vi'));
 
     try {
       await reconciliationService.deleteReconciliation(parseInt(id));
-      return successResponse(null, '采购对账单删除成功');
+      return successResponse(null, ts('k_10y7ksc'));
     } catch (error) {
       if (error instanceof DomainError || error instanceof NotFoundError) {
         return errorResponse(error.message, 400, 400);

@@ -75,6 +75,7 @@ interface UserFormData {
 }
 
 export default function UserManagementPage() {
+  const ts = useTranslations('Common');
   // 翻译钩子
   const t = useTranslations('Common');
   const tc = useTranslations('Common');
@@ -150,122 +151,122 @@ export default function UserManagementPage() {
       {
         id: 1,
         username: 'admin',
-        real_name: '超级管理员',
+        real_name: ts('k_1fcdmqa'),
         email: 'admin@dcprint.com',
         phone: '13800000001',
         department_id: 1,
-        dept_name: '管理部',
+        dept_name: ts('k_1f4z30i'),
         status: 1,
         first_login: 0,
-        roles: [{ id: 1, role_name: '超级管理员', role_code: 'super_admin' }],
+        roles: [{ id: 1, role_name: ts('k_1fcdmqa'), role_code: 'super_admin' }],
       },
       {
         id: 2,
         username: 'zhangwei',
-        real_name: '张伟',
+        real_name: ts('k_3vr19c'),
         email: 'zhangwei@dcprint.com',
         phone: '13800000002',
         department_id: 2,
-        dept_name: '业务部',
+        dept_name: ts('k_axb29w'),
         status: 1,
         first_login: 0,
-        roles: [{ id: 2, role_name: '业务经理', role_code: 'business_manager' }],
+        roles: [{ id: 2, role_name: ts('k_ojn305'), role_code: 'business_manager' }],
       },
       {
         id: 3,
         username: 'lina',
-        real_name: '李娜',
+        real_name: ts('k_o5eojb'),
         email: 'lina@dcprint.com',
         phone: '13800000003',
         department_id: 2,
-        dept_name: '业务部',
+        dept_name: ts('k_axb29w'),
         status: 1,
         first_login: 0,
-        roles: [{ id: 3, role_name: '业务员', role_code: 'sales' }],
+        roles: [{ id: 3, role_name: ts('k_15vw6tw'), role_code: 'sales' }],
       },
       {
         id: 4,
         username: 'wangqiang',
-        real_name: '王强',
+        real_name: ts('k_nqtivk'),
         email: 'wangqiang@dcprint.com',
         phone: '13800000004',
         department_id: 3,
-        dept_name: '工程技术部',
+        dept_name: ts('k_boxyuc'),
         status: 1,
         first_login: 0,
-        roles: [{ id: 4, role_name: '工程师', role_code: 'engineer' }],
+        roles: [{ id: 4, role_name: ts('k_1tyjla3'), role_code: 'engineer' }],
       },
       {
         id: 5,
         username: 'liuyang',
-        real_name: '刘洋',
+        real_name: ts('k_9nfhqc'),
         email: 'liuyang@dcprint.com',
         phone: '13800000005',
         department_id: 4,
-        dept_name: '生产部',
+        dept_name: ts('k_18glq49'),
         status: 1,
         first_login: 0,
-        roles: [{ id: 5, role_name: '生产主管', role_code: 'production_manager' }],
+        roles: [{ id: 5, role_name: ts('k_d1s7gj'), role_code: 'production_manager' }],
       },
       {
         id: 6,
         username: 'chenming',
-        real_name: '陈明',
+        real_name: ts('k_orolx7'),
         email: 'chenming@dcprint.com',
         phone: '13800000006',
         department_id: 5,
-        dept_name: '仓库管理部',
+        dept_name: ts('k_qe62zc'),
         status: 1,
         first_login: 0,
-        roles: [{ id: 7, role_name: '仓管员', role_code: 'warehouse_keeper' }],
+        roles: [{ id: 7, role_name: ts('k_hdkgmr'), role_code: 'warehouse_keeper' }],
       },
       {
         id: 7,
         username: 'zhaolei',
-        real_name: '赵磊',
+        real_name: ts('k_qkv38u'),
         email: 'zhaolei@dcprint.com',
         phone: '13800000007',
         department_id: 5,
-        dept_name: '仓库管理部',
+        dept_name: ts('k_qe62zc'),
         status: 1,
         first_login: 0,
-        roles: [{ id: 6, role_name: '仓库主管', role_code: 'warehouse_manager' }],
+        roles: [{ id: 6, role_name: ts('k_1bngyff'), role_code: 'warehouse_manager' }],
       },
       {
         id: 8,
         username: 'sunli',
-        real_name: '孙丽',
+        real_name: ts('k_wrfy17'),
         email: 'sunli@dcprint.com',
         phone: '13800000008',
         department_id: 6,
-        dept_name: '采购部',
+        dept_name: ts('k_1rgc4zf'),
         status: 1,
         first_login: 0,
-        roles: [{ id: 8, role_name: '采购员', role_code: 'purchaser' }],
+        roles: [{ id: 8, role_name: ts('k_epyr6z'), role_code: 'purchaser' }],
       },
       {
         id: 9,
         username: 'zhoujie',
-        real_name: '周杰',
+        real_name: ts('k_1gmpisl'),
         email: 'zhoujie@dcprint.com',
         phone: '13800000009',
         department_id: 7,
-        dept_name: '品质部',
+        dept_name: ts('k_11g5fpo'),
         status: 1,
         first_login: 0,
-        roles: [{ id: 9, role_name: '品质检验员', role_code: 'qc_inspector' }],
+        roles: [{ id: 9, role_name: ts('k_l5ij28'), role_code: 'qc_inspector' }],
       },
       {
         id: 10,
         username: 'wufang',
-        real_name: '吴芳',
+        real_name: ts('k_vy0n74'),
         email: 'wufang@dcprint.com',
         phone: '13800000010',
         department_id: 8,
-        dept_name: '财务行政部',
+        dept_name: ts('k_1jqantr'),
         status: 1,
         first_login: 0,
-        roles: [{ id: 10, role_name: '财务', role_code: 'accountant' }],
+        roles: [{ id: 10, role_name: ts('k_8s57ik'), role_code: 'accountant' }],
       },
     ];
 
@@ -308,16 +309,16 @@ export default function UserManagementPage() {
 
   const loadMockRoles = () => {
     const mockRoles = [
-      { id: 1, role_name: '超级管理员', role_code: 'super_admin' },
-      { id: 2, role_name: '业务经理', role_code: 'business_manager' },
-      { id: 3, role_name: '业务员', role_code: 'sales' },
-      { id: 4, role_name: '工程师', role_code: 'engineer' },
-      { id: 5, role_name: '生产主管', role_code: 'production_manager' },
-      { id: 6, role_name: '仓库主管', role_code: 'warehouse_manager' },
-      { id: 7, role_name: '仓管员', role_code: 'warehouse_keeper' },
-      { id: 8, role_name: '采购员', role_code: 'purchaser' },
-      { id: 9, role_name: '品质检验员', role_code: 'qc_inspector' },
-      { id: 10, role_name: '财务', role_code: 'accountant' },
+      { id: 1, role_name: ts('k_1fcdmqa'), role_code: 'super_admin' },
+      { id: 2, role_name: ts('k_ojn305'), role_code: 'business_manager' },
+      { id: 3, role_name: ts('k_15vw6tw'), role_code: 'sales' },
+      { id: 4, role_name: ts('k_1tyjla3'), role_code: 'engineer' },
+      { id: 5, role_name: ts('k_d1s7gj'), role_code: 'production_manager' },
+      { id: 6, role_name: ts('k_1bngyff'), role_code: 'warehouse_manager' },
+      { id: 7, role_name: ts('k_hdkgmr'), role_code: 'warehouse_keeper' },
+      { id: 8, role_name: ts('k_epyr6z'), role_code: 'purchaser' },
+      { id: 9, role_name: ts('k_l5ij28'), role_code: 'qc_inspector' },
+      { id: 10, role_name: ts('k_8s57ik'), role_code: 'accountant' },
     ];
     setRoles(mockRoles);
   };
@@ -357,14 +358,14 @@ export default function UserManagementPage() {
 
   const loadMockDepartments = () => {
     const mockDepartments = [
-      { id: 1, dept_name: '管理部' },
-      { id: 2, dept_name: '业务部' },
-      { id: 3, dept_name: '工程技术部' },
-      { id: 4, dept_name: '生产部' },
-      { id: 5, dept_name: '仓库管理部' },
-      { id: 6, dept_name: '采购部' },
-      { id: 7, dept_name: '品质部' },
-      { id: 8, dept_name: '财务行政部' },
+      { id: 1, dept_name: ts('k_1f4z30i') },
+      { id: 2, dept_name: ts('k_axb29w') },
+      { id: 3, dept_name: ts('k_boxyuc') },
+      { id: 4, dept_name: ts('k_18glq49') },
+      { id: 5, dept_name: ts('k_qe62zc') },
+      { id: 6, dept_name: ts('k_1rgc4zf') },
+      { id: 7, dept_name: ts('k_11g5fpo') },
+      { id: 8, dept_name: ts('k_1jqantr') },
     ];
     setDepartments(mockDepartments);
   };
@@ -404,16 +405,16 @@ export default function UserManagementPage() {
 
   const loadMockEmployees = () => {
     const mockEmployees = [
-      { id: 1, name: '超级管理员', employee_no: 'E001' },
-      { id: 2, name: '张伟', employee_no: 'E002' },
-      { id: 3, name: '李娜', employee_no: 'E003' },
-      { id: 4, name: '王强', employee_no: 'E004' },
-      { id: 5, name: '刘洋', employee_no: 'E005' },
-      { id: 6, name: '陈明', employee_no: 'E006' },
-      { id: 7, name: '赵磊', employee_no: 'E007' },
-      { id: 8, name: '孙丽', employee_no: 'E008' },
-      { id: 9, name: '周杰', employee_no: 'E009' },
-      { id: 10, name: '吴芳', employee_no: 'E010' },
+      { id: 1, name: ts('k_1fcdmqa'), employee_no: 'E001' },
+      { id: 2, name: ts('k_3vr19c'), employee_no: 'E002' },
+      { id: 3, name: ts('k_o5eojb'), employee_no: 'E003' },
+      { id: 4, name: ts('k_nqtivk'), employee_no: 'E004' },
+      { id: 5, name: ts('k_9nfhqc'), employee_no: 'E005' },
+      { id: 6, name: ts('k_orolx7'), employee_no: 'E006' },
+      { id: 7, name: ts('k_qkv38u'), employee_no: 'E007' },
+      { id: 8, name: ts('k_wrfy17'), employee_no: 'E008' },
+      { id: 9, name: ts('k_1gmpisl'), employee_no: 'E009' },
+      { id: 10, name: ts('k_vy0n74'), employee_no: 'E010' },
     ];
     setEmployees(mockEmployees);
   };
@@ -434,7 +435,7 @@ export default function UserManagementPage() {
     }
     const found = employees.some((e) => e.name === name.trim());
     if (!found) {
-      setNameWarning('该姓名在员工档案中不存在，请确认');
+      setNameWarning(ts('k_v6y3qx'));
       return false;
     }
     setNameWarning('');
@@ -614,8 +615,7 @@ export default function UserManagementPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                      暂无记录
-                    </TableCell>
+                      {t('noRecords')}</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -623,7 +623,7 @@ export default function UserManagementPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共{total}条</span>
+          <span className="text-sm text-gray-500">{ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -631,16 +631,14 @@ export default function UserManagementPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
-            </Button>
+              {t('prevPage')}</Button>
             <Button
               size="sm"
               variant="outline"
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
-            </Button>
+              {t('nextPage')}</Button>
           </div>
         </div>
 
@@ -653,13 +651,12 @@ export default function UserManagementPage() {
         >
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.id ? '编辑用户' : '新增用户'}</DialogTitle>
+              <DialogTitle>{editItem.id ? ts('k_cbf2mt') : ts('k_183giky')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>
-                  用户名
-                  <span className="text-red-500">*</span>
+                  {ts('k_u9jq8n')}<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={editItem.username || ''}
@@ -670,20 +667,18 @@ export default function UserManagementPage() {
               </div>
               <div>
                 <Label>
-                  密码
-                  {!editItem.id && <span className="text-red-500">*</span>}
+                  {ts('k_1aph6eg')}{!editItem.id && <span className="text-red-500">*</span>}
                 </Label>
                 <Input
                   type="password"
                   value={editItem.password || ''}
                   onChange={(e) => setEditItem({ ...editItem, password: e.target.value })}
-                  placeholder={editItem.id ? '留空不修改' : '请输入密码'}
+                  placeholder={editItem.id ? ts('k_129o8fs') : tc('passwordRequired')}
                 />
               </div>
               <div>
                 <Label>
-                  姓名
-                  <span className="text-red-500">*</span>
+                  {ts('k_10ld5dp')}<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={editItem.real_name || ''}
@@ -695,7 +690,7 @@ export default function UserManagementPage() {
                   onBlur={() => {
                     if (editItem.real_name) checkEmployeeName(editItem.real_name);
                   }}
-                  placeholder="请输入姓名"
+                  placeholder={ts('k_p7rfum')}
                 />
                 {nameWarning && <p className="text-xs text-amber-600 mt-1">{nameWarning}</p>}
               </div>
@@ -708,7 +703,7 @@ export default function UserManagementPage() {
                 />
               </div>
               <div>
-                <Label>手机</Label>
+                <Label>{ts('k_1yx08wg')}</Label>
                 <Input
                   value={editItem.phone || ''}
                   onChange={(e) => setEditItem({ ...editItem, phone: e.target.value })}
@@ -724,7 +719,7 @@ export default function UserManagementPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择部门" />
+                    <SelectValue placeholder={ts('k_18m3h1b')} />
                   </SelectTrigger>
                   <SelectContent>
                     {departments.map((d) => (
@@ -767,7 +762,7 @@ export default function UserManagementPage() {
                       });
                     }}
                   >
-                    {roles.length === (editItem.role_ids || []).length ? '取消全选' : '全选'}
+                    {roles.length === (editItem.role_ids || []).length ? ts('k_1yw46hk') : ts('k_1yb2sje')}
                   </Button>
                 )}
               </div>
@@ -801,8 +796,7 @@ export default function UserManagementPage() {
                 ))}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                可同时为用户分配多个角色，权限会自动合并
-              </p>
+                {ts('k_cgrzph')}</p>
             </div>
             <DialogFooter>
               <Button
@@ -812,8 +806,7 @@ export default function UserManagementPage() {
                   setNameWarning('');
                 }}
               >
-                取消
-              </Button>
+                {t('cancel')}</Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>

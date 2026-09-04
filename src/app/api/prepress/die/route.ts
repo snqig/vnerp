@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -38,6 +41,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       die_code,
@@ -86,13 +90,14 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId, qr_code: qrCode }, '刀具创建成功');
+    return successResponse({ id: result.insertId, qr_code: qrCode }, ts('k_5wfndo'));
   },
   { logTitle: '刀具入库', logType: 'business' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const {
       id,
@@ -127,18 +132,19 @@ export const PUT = withPermission(
       ]);
     if (remark !== undefined)
       await execute('UPDATE prd_die SET remark = ? WHERE id = ? AND deleted = 0', [remark, id]);
-    return successResponse(null, '更新成功');
+    return successResponse(null, ts('k_1795bzg'));
   },
   { logTitle: '更新刀具', logType: 'business' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
+    if (!id) return NextResponse.json({ success: false, message: ts('k_js4lo9') }, { status: 400 });
     await execute('UPDATE prd_die SET deleted = 1 WHERE id = ?', [Number(id)]);
-    return successResponse(null, '删除成功');
+    return successResponse(null, ts('k_1hlqs'));
   },
   { logTitle: '删除刀具', logType: 'business' }
 );

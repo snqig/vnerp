@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { execute, queryOne, transaction, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -99,6 +102,7 @@ function buildQueryConditions(params: {
 
 // GET - 获取客户列表或单个客户
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const status = searchParams.get('status');
@@ -123,7 +127,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
 
     if (!customer) {
-      return commonErrors.notFound('客户不存在');
+      return commonErrors.notFound(ts('k_ob0ao9'));
     }
 
     return successResponse(customer);
@@ -149,6 +153,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // POST - 创建新客户
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body: Customer = await request.json();
 
     // 验证必填字段
@@ -169,7 +174,7 @@ export const POST = withPermission(
     );
 
     if (existingCustomer) {
-      return errorResponse('客户编码已存在', 409, 409);
+      return errorResponse(ts('k_1iamdln'), 409, 409);
     }
 
     const result = await execute(
@@ -201,7 +206,7 @@ export const POST = withPermission(
         body.tax_number,
         body.bank_name,
         body.bank_account,
-        body.salesman_id,
+        body.salesman_id ?? null,
         body.follow_up_status || 1,
         body.status ?? 1,
         body.remark,
@@ -209,7 +214,7 @@ export const POST = withPermission(
     );
 
     await invalidateCache('api:customers');
-    return successResponse({ id: result.insertId }, '客户创建成功');
+    return successResponse({ id: result.insertId }, ts('k_z91oum'));
   },
   { logTitle: '创建客户', logType: 'business' }
 );
@@ -217,11 +222,12 @@ export const POST = withPermission(
 // PUT - 更新客户
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('缺少客户ID');
+      return commonErrors.badRequest(ts('k_t0eo5e'));
     }
 
     const customerId = parseInt(id);
@@ -234,7 +240,7 @@ export const PUT = withPermission(
     );
 
     if (!existingCustomer) {
-      return commonErrors.notFound('客户不存在或已被删除');
+      return commonErrors.notFound(ts('k_1saxg52'));
     }
 
     // 如果修改了客户编码，检查是否与其他客户冲突
@@ -245,53 +251,62 @@ export const PUT = withPermission(
       );
 
       if (codeExists) {
-        return errorResponse('客户编码已存在', 409, 409);
+        return errorResponse(ts('k_1iamdln'), 409, 409);
       }
     }
 
+    const fieldMapping: { [key: string]: string } = {
+      customer_code: 'customer_code',
+      customer_name: 'customer_name',
+      short_name: 'short_name',
+      customer_type: 'customer_type',
+      industry: 'industry',
+      scale: 'scale',
+      credit_level: 'credit_level',
+      province: 'province',
+      city: 'city',
+      district: 'district',
+      address: 'address',
+      contact_name: 'contact_name',
+      contact_phone: 'contact_phone',
+      contact_email: 'contact_email',
+      fax: 'fax',
+      website: 'website',
+      business_license: 'business_license',
+      tax_number: 'tax_number',
+      bank_name: 'bank_name',
+      bank_account: 'bank_account',
+      salesman_id: 'salesman_id',
+      follow_up_status: 'follow_up_status',
+      status: 'status',
+      remark: 'remark',
+    };
+
+    const updateFields: string[] = [];
+    const updateParams: SqlValue[] = [];
+    for (const [key, value] of Object.entries(body)) {
+      if (fieldMapping[key] && value !== undefined) {
+        updateFields.push(`${fieldMapping[key]} = ?`);
+        updateParams.push(value);
+      }
+    }
+
+    if (updateFields.length === 0) {
+      return errorResponse(ts('k_ovfx8a'), 400, 400);
+    }
+
+    updateParams.push(customerId);
     const result = await execute(
-      `UPDATE crm_customer SET
-        customer_code = ?, customer_name = ?, short_name = ?, customer_type = ?,
-        industry = ?, scale = ?, credit_level = ?, province = ?, city = ?, district = ?, address = ?,
-        contact_name = ?, contact_phone = ?, contact_email = ?, fax = ?, website = ?,
-        business_license = ?, tax_number = ?, bank_name = ?, bank_account = ?,
-        salesman_id = ?, follow_up_status = ?, status = ?, remark = ?
-      WHERE id = ? AND deleted = 0`,
-      [
-        body.customer_code,
-        body.customer_name,
-        body.short_name,
-        body.customer_type,
-        body.industry,
-        body.scale,
-        body.credit_level,
-        body.province,
-        body.city,
-        body.district,
-        body.address,
-        body.contact_name,
-        body.contact_phone,
-        body.contact_email,
-        body.fax,
-        body.website,
-        body.business_license,
-        body.tax_number,
-        body.bank_name,
-        body.bank_account,
-        body.salesman_id,
-        body.follow_up_status,
-        body.status,
-        body.remark,
-        customerId,
-      ]
+      `UPDATE crm_customer SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ? AND deleted = 0`,
+      updateParams
     );
 
     if (result.affectedRows === 0) {
-      return commonErrors.notFound('客户不存在或已被删除');
+      return commonErrors.notFound(ts('k_1saxg52'));
     }
 
     await invalidateCache('api:customers');
-    return successResponse(null, '客户更新成功');
+    return successResponse(null, ts('k_1qq0iy3'));
   },
   { logTitle: '更新客户', logType: 'business' }
 );
@@ -299,11 +314,12 @@ export const PUT = withPermission(
 // DELETE - 删除客户（软删除）
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('缺少客户ID');
+      return commonErrors.badRequest(ts('k_t0eo5e'));
     }
 
     const customerId = parseInt(id);
@@ -315,7 +331,7 @@ export const DELETE = withPermission(
     );
 
     if (!existingCustomer) {
-      return commonErrors.notFound('客户不存在或已被删除');
+      return commonErrors.notFound(ts('k_1saxg52'));
     }
 
     // 使用事务软删除
@@ -324,7 +340,7 @@ export const DELETE = withPermission(
     });
 
     await invalidateCache('api:customers');
-    return successResponse(null, '客户删除成功');
+    return successResponse(null, ts('k_6v0l17'));
   },
   { logTitle: '删除客户', logType: 'business' }
 );

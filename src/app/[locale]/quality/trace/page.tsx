@@ -104,6 +104,7 @@ const TRACE_TYPE_MAP: Record<number, { label: string; color: string }> = {
 };
 
 export default function TracePage() {
+  const ts = useTranslations('Quality');
   // 翻译钩子
   const t = useTranslations('Quality');
   const tc = useTranslations('Common');
@@ -377,7 +378,7 @@ export default function TracePage() {
                       </div>
                       <ArrowRight className="h-5 w-5 text-muted-foreground mx-2" />
                       {traceResult.materials
-                        .filter((m) => m.materialType === '2' || m.materialType === '辅料')
+                        .filter((m) => m.materialType === '2' || m.materialType === ts('k_14rp9uj'))
                         .map((mat, idx) => (
                           <div key={idx} className="flex items-center">
                             <div className="flex flex-col items-center p-4 rounded-lg min-w-[100px] bg-green-50 border border-green-200">
@@ -394,7 +395,7 @@ export default function TracePage() {
                             </div>
                             {idx <
                               traceResult.materials.filter(
-                                (m) => m.materialType === '2' || m.materialType === '辅料'
+                                (m) => m.materialType === '2' || m.materialType === ts('k_14rp9uj')
                               ).length -
                                 1 && <ArrowRight className="h-5 w-5 text-muted-foreground mx-2" />}
                           </div>
@@ -452,12 +453,12 @@ export default function TracePage() {
                             <TableCell>
                               <Badge
                                 className={
-                                  mat.materialType === '1' || mat.materialType === '主材'
+                                  mat.materialType === '1' || mat.materialType === ts('k_1gqlef2')
                                     ? 'bg-blue-100 text-blue-800'
                                     : 'bg-green-100 text-green-800'
                                 }
                               >
-                                {mat.materialType === '1' || mat.materialType === '主材'
+                                {mat.materialType === '1' || mat.materialType === ts('k_1gqlef2')
                                   ? t('mainMaterial')
                                   : t('auxiliaryMaterial')}
                               </Badge>
@@ -502,8 +503,8 @@ export default function TracePage() {
                   {tc('refresh')}
                 </Button>
                 <GlobalExportToolbar
-                  filename="追溯记录"
-                  title="追溯记录报告"
+                  filename={ts('k_1upxefi')}
+                  title={ts('k_dfq6ox')}
                   columns={[
                     { key: 'trace_no', label: t('traceNo'), width: 18 },
                     { key: 'card_no', label: t('cardNo'), width: 15 },

@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 ﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, SqlValue } from '@/lib/db';
 import {
@@ -28,7 +31,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
-  let where = 'WHERE deleted = 0';
+  let where = 'WHERE d.deleted = 0';
   const values: SqlValue[] = [];
 
   if (keyword) {
@@ -41,7 +44,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     values.push(parseInt(status));
   }
 
-  const countResult = await query(`SELECT COUNT(*) as total FROM sys_department ${where}`, values);
+  const countResult = await query(`SELECT COUNT(*) as total FROM sys_department d ${where}`, values);
   const total = (countResult as DbRow[])[0]?.total || 0;
 
   const departments = await query<Department>(
@@ -62,6 +65,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body: Department = await request.json();
 
     const validation = validateRequestBody(body, ['dept_code', 'dept_name']);
@@ -75,7 +79,7 @@ export const POST = withPermission(
     );
 
     if (existing) {
-      return errorResponse('部门编码已存在', 409, 409);
+      return errorResponse(ts('k_12asp1i'), 409, 409);
     }
 
     const result = await execute(
@@ -90,18 +94,19 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: result.insertId }, '部门创建成功');
+    return successResponse({ id: result.insertId }, ts('k_1cw6qfp'));
   },
   { logTitle: '创建部门' }
 );
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body: Department = await request.json();
     const { id } = body;
 
     if (!id) {
-      return commonErrors.badRequest('部门ID不能为空');
+      return commonErrors.badRequest(ts('k_fv8gwq'));
     }
 
     const validation = validateRequestBody(body, ['dept_code', 'dept_name']);
@@ -115,7 +120,7 @@ export const PUT = withPermission(
     );
 
     if (!existingDept) {
-      return commonErrors.notFound('部门不存在');
+      return commonErrors.notFound(ts('k_1tab01s'));
     }
 
     const codeExists = await queryOne<{ id: number }>(
@@ -124,7 +129,7 @@ export const PUT = withPermission(
     );
 
     if (codeExists) {
-      return errorResponse('部门编码已存在', 409, 409);
+      return errorResponse(ts('k_12asp1i'), 409, 409);
     }
 
     const result = await execute(
@@ -141,21 +146,23 @@ export const PUT = withPermission(
     );
 
     if (result.affectedRows === 0) {
-      return commonErrors.notFound('部门不存在');
+      return commonErrors.notFound(ts('k_1tab01s'));
     }
 
-    return successResponse(null, '部门更新成功');
+    return successResponse(null, ts('k_1iy4ubo'));
   },
   { logTitle: '更新部门' }
 );
 
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return commonErrors.badRequest('部门ID不能为空');
+      return commonErrors.badRequest(ts('k_fv8gwq'));
     }
 
     const deptId = parseInt(id);
@@ -166,7 +173,7 @@ export const DELETE = withPermission(
     );
 
     if (!existingDept) {
-      return commonErrors.notFound('部门不存在');
+      return commonErrors.notFound(ts('k_1tab01s'));
     }
 
     const hasChildren = await queryOne<{ count: number }>(
@@ -175,7 +182,7 @@ export const DELETE = withPermission(
     );
 
     if (hasChildren && hasChildren.count > 0) {
-      return errorResponse('该部门下有子部门，无法删除', 409, 409);
+      return errorResponse(ts('k_tntb8n'), 409, 409);
     }
 
     const hasEmployees = await queryOne<{ count: number }>(
@@ -184,12 +191,12 @@ export const DELETE = withPermission(
     );
 
     if (hasEmployees && hasEmployees.count > 0) {
-      return errorResponse('该部门下有员工，无法删除', 409, 409);
+      return errorResponse(ts('k_7c7kji'), 409, 409);
     }
 
     await execute('UPDATE sys_department SET deleted = 1 WHERE id = ?', [deptId]);
 
-    return successResponse(null, '部门删除成功');
+    return successResponse(null, tc('deptDeleted'));
   },
   { logTitle: '删除部门' }
 );

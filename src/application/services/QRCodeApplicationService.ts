@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { QRCode, QR_TYPE, type QRCodeProps } from '@/domain/trace/QRCode';
 import type {
   IQRCodeRepository,
@@ -33,8 +35,9 @@ export class QRCodeApplicationService {
     refId?: number | null;
     refNo?: string | null;
   }): Promise<{ ids: number[]; qrCodes: string[] }> {
-    if (props.count <= 0) throw new DomainError('生成数量必须大于0');
-    if (props.quantity <= 0) throw new DomainError('数量必须大于0');
+  const ts = await getTranslations('Common');
+    if (props.count <= 0) throw new DomainError(ts('k_1wdgl62'));
+    if (props.quantity <= 0) throw new DomainError(ts('k_bit7af'));
 
     const qrType = props.qrType || QR_TYPE.MATERIAL;
     const qrCodes: QRCode[] = [];
@@ -85,12 +88,13 @@ export class QRCodeApplicationService {
     parentQrCode: string,
     splits: SplitInput[]
   ): Promise<{ childIds: number[]; childCodes: string[] }> {
+  const ts = await getTranslations('Common');
     const parent = await this.qrCodeRepo.findByContent(parentQrCode);
-    if (!parent) throw new NotFoundError('父二维码不存在');
-    if (parent.status !== 1) throw new DomainError('父二维码已失效');
+    if (!parent) throw new NotFoundError(ts('k_8gk8m7'));
+    if (parent.status !== 1) throw new DomainError(ts('k_1ki7xuv'));
 
     const totalQuantity = splits.reduce((sum, s) => sum + s.quantity, 0);
-    if (totalQuantity > parent.quantity) throw new DomainError('拆分总量超过父码剩余数量');
+    if (totalQuantity > parent.quantity) throw new DomainError(ts('k_bn27n1'));
 
     const childIds: number[] = [];
     const childCodes: string[] = [];
@@ -142,10 +146,23 @@ export class QRCodeApplicationService {
   }
 
   async recordScan(qrCode: string, operator: string, location: string): Promise<void> {
+  const ts = await getTranslations('Common');
     const qr = await this.qrCodeRepo.findByContent(qrCode);
-    if (!qr) throw new NotFoundError('二维码不存在');
+    if (!qr) throw new NotFoundError(ts('k_1o9pxv'));
 
     await transaction(async (conn) => {
+      // P0 幂等：同一二维码+操作员+位置在 10 秒内重复调用（如 Pad 离线队列网络重试）
+      // 视为同一笔扫码，跳过写流水与计数，避免重复扫码记录 + 虚增 scan_count
+      const [recent] = await conn.query(
+        `SELECT id FROM qrcode_scan_log
+         WHERE qr_code = ? AND operator_name = ? AND scan_message = ? AND create_time >= NOW() - INTERVAL 10 SECOND
+         LIMIT 1`,
+        [qrCode, operator, `扫码位置: ${location}`]
+      );
+      if (Array.isArray(recent) && recent.length > 0) {
+        return;
+      }
+
       await conn.execute(
         `INSERT INTO qrcode_scan_log (qr_code, qr_type, scan_type, operator_name, scan_result, scan_message, create_time)
          VALUES (?, ?, ?, ?, 'success', ?, NOW())`,
@@ -168,8 +185,9 @@ export class QRCodeApplicationService {
   }
 
   async getTraceTimeline(qrCode: string): Promise<TraceTimelineItem[]> {
+  const ts = await getTranslations('Common');
     const qr = await this.qrCodeRepo.findByContent(qrCode);
-    if (!qr) throw new NotFoundError('二维码不存在');
+    if (!qr) throw new NotFoundError(ts('k_1o9pxv'));
     return this.qrCodeRepo.queryTraceTimeline(qrCode);
   }
 
@@ -180,8 +198,9 @@ export class QRCodeApplicationService {
     paperType: string,
     printCount: number = 1
   ): Promise<void> {
+  const ts = await getTranslations('Common');
     const qr = await this.qrCodeRepo.findById(qrId);
-    if (!qr) throw new NotFoundError('二维码不存在');
+    if (!qr) throw new NotFoundError(ts('k_1o9pxv'));
     await execute(
       `INSERT INTO print_log (qr_id, template_id, print_time, operator, paper_type, print_count)
        VALUES (?, ?, NOW(), ?, ?, ?)`,

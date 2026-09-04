@@ -64,6 +64,7 @@ interface SystemConfigResponse {
 }
 
 export default function BasicsSettingsPage() {
+  const ts = useTranslations('Common');
   // 翻译钩子
   const tc = useTranslations('Common');
 
@@ -145,13 +146,13 @@ export default function BasicsSettingsPage() {
       const result = await ApiClient.post('/api/settings/system', { updates });
 
       if (result.success) {
-        toast.success(result.message || '保存成功');
+        toast.success(result.message || ts('k_16krn1'));
         await loadConfigs();
       } else {
-        toast.error(result.message || '保存失败');
+        toast.error(result.message || ts('k_1q9u8le'));
       }
     } catch (e) {
-      toast.error((e as Error).message || '保存失败');
+      toast.error((e as Error).message || ts('k_1q9u8le'));
     } finally {
       setSaving(false);
     }
@@ -238,8 +239,7 @@ export default function BasicsSettingsPage() {
             {group.display_name || group.category}
           </CardTitle>
           <CardDescription>
-            配置
-            {group.display_name || group.category}
+            {ts('k_1x99t4y')}{group.display_name || group.category}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -251,7 +251,7 @@ export default function BasicsSettingsPage() {
           {hasPermission('settings:basics:edit') && (
             <Button onClick={() => handleSave(group.category)} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
-              {saving ? '保存中...' : '保存设置'}
+              {saving ? ts('k_rr6ulf') : ts('k_1y4m9v0')}
             </Button>
           )}
         </div>
@@ -261,7 +261,7 @@ export default function BasicsSettingsPage() {
 
   if (loading) {
     return (
-      <MainLayout title="系统设置">
+      <MainLayout title={ts('k_1a2tyf')}>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         </div>
@@ -270,7 +270,7 @@ export default function BasicsSettingsPage() {
   }
 
   return (
-    <MainLayout title="系统设置">
+    <MainLayout title={ts('k_1a2tyf')}>
       <div className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="flex flex-wrap w-full gap-1">
@@ -282,8 +282,7 @@ export default function BasicsSettingsPage() {
               ))}
             <TabsTrigger value="theme" className="flex items-center gap-1">
               <Palette className="h-4 w-4" />
-              主题设置
-            </TabsTrigger>
+              {ts('k_hkn47m')}</TabsTrigger>
           </TabsList>
 
           {isAdmin &&
@@ -298,8 +297,7 @@ export default function BasicsSettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Palette className="h-5 w-5" />
-                  主题设置
-                </CardTitle>
+                  {ts('k_hkn47m')}</CardTitle>
                 <CardDescription>{tc('themeSettingsDesc')}</CardDescription>
               </CardHeader>
               <CardContent>

@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { UnqualifiedStatus, UnqualifiedStatusValue } from '../value-objects/UnqualifiedStatus';
 import { HandleMethod, HandleMethodValue } from '../value-objects/HandleMethod';
@@ -83,11 +85,12 @@ export class UnqualifiedProduct {
   }
 
   static create(props: UnqualifiedProductProps): UnqualifiedProduct {
+  const ts = t;
     if (!props.inspectionId || props.inspectionId <= 0) {
-      throw new DomainError('检验单ID不能为空');
+      throw new DomainError(ts('k_sldnwj'));
     }
     if (props.quantity === undefined || props.quantity <= 0) {
-      throw new DomainError('不合格数量必须大于0');
+      throw new DomainError(ts('k_1r79tz4'));
     }
 
     const handleType = props.handleType ? HandleMethod.from(props.handleType) : undefined;
@@ -208,14 +211,15 @@ export class UnqualifiedProduct {
   }
 
   assignResponsible(dept: string, person: string): void {
+  const ts = t;
     if (this._status.value === 'completed') {
       throw new DomainError(`当前状态"${this._status.label()}"不允许分配责任人`);
     }
     if (!dept || !dept.trim()) {
-      throw new DomainError('责任部门不能为空');
+      throw new DomainError(ts('k_1tuvq05'));
     }
     if (!person || !person.trim()) {
-      throw new DomainError('责任人不能为空');
+      throw new DomainError(ts('k_1joih2d'));
     }
     this._responsibleDept = dept.trim();
     this._responsiblePerson = person.trim();
@@ -242,20 +246,21 @@ export class UnqualifiedProduct {
   }
 
   completeHandle(handler: string, handleResult: number, costAmount: number): void {
+  const ts = t;
     if (!this._status.canComplete()) {
       throw new DomainError(`当前状态"${this._status.label()}"不允许完成处理`);
     }
     if (!this._responsibleDept || !this._responsiblePerson) {
-      throw new DomainError('完成处理前必须先分配责任部门和责任人');
+      throw new DomainError(ts('k_17qioo1'));
     }
     if (!handler || !handler.trim()) {
-      throw new DomainError('处理人不能为空');
+      throw new DomainError(ts('k_z5ky01'));
     }
     if (handleResult !== 1 && handleResult !== 2) {
-      throw new DomainError('处理结果必须为: 1-合格 或 2-不合格');
+      throw new DomainError(ts('k_1qad9h0'));
     }
     if (costAmount < 0) {
-      throw new DomainError('损失金额不能为负数');
+      throw new DomainError(ts('k_sxaiey'));
     }
 
     this._handler = handler.trim();

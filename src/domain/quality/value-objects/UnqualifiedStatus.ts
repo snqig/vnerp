@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '../../shared/DomainTypes';
 
 export type UnqualifiedStatusValue = 'pending' | 'handling' | 'completed';
@@ -87,10 +89,11 @@ export class UnqualifiedStatus {
   }
 
   label(): string {
+  const ts = t;
     const labels: Record<UnqualifiedStatusValue, string> = {
-      pending: '待处理',
-      handling: '处理中',
-      completed: '已完成',
+      pending: ts('k_titry'),
+      handling: ts('k_1h3kna'),
+      completed: ts('k_19j4h'),
     };
     return labels[this.value];
   }

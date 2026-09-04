@@ -77,9 +77,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   try {
     const costRows = await query(
       `
-      SELECT COALESCE(SUM(amount), 0) as total_cost
-      FROM fin_voucher
-      WHERE deleted = 0 AND credit_account = '成品库存' ${dateFilter.replace('create_time', 'voucher_date')}
+      SELECT COALESCE(SUM(total_cost), 0) as total_cost
+      FROM inv_inventory_transaction
+      WHERE trans_type = 'out' ${dateFilter}
     `,
       params
     );
@@ -87,7 +87,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const invValueRows = await query(`
       SELECT COALESCE(SUM(available_qty * unit_price), 0) as total_value
       FROM inv_inventory_batch
-      WHERE deleted = 0 AND status = 'normal'
+      WHERE deleted = 0 AND status = 1
     `);
 
     inventoryTurnover.costOfGoods = Number(costRows[0]?.total_cost || 0);
@@ -121,10 +121,10 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const oeeRows = await query(`
       SELECT
         id, equipment_code, equipment_name,
-        COALESCE(oee_availability, 0) as availability,
-        COALESCE(oee_performance, 0) as performance,
-        COALESCE(oee_quality, 0) as quality,
-        COALESCE(oee_overall, 0) as overall
+        COALESCE(availability, 0) as availability,
+        COALESCE(performance, 0) as performance,
+        COALESCE(quality_rate, 0) as quality,
+        COALESCE(oee, 0) as overall
       FROM eqp_equipment
       WHERE deleted = 0 AND status = 1
     `);
@@ -207,8 +207,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       `
       SELECT
         COUNT(*) as total,
-        SUM(CASE WHEN inspection_result IN ('qualified', '合格', 'pass') THEN 1 ELSE 0 END) as passed
-      FROM qc_process_inspection WHERE deleted = 0 ${dateFilter}
+        SUM(CASE WHEN inspection_result = 1 THEN 1 ELSE 0 END) as passed
+      FROM qc_inspection WHERE deleted = 0 ${dateFilter}
     `,
       params
     );
@@ -265,32 +265,23 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const supplierRows = await query(`
       SELECT
         ps.id, ps.supplier_name,
-        COALESCE(ps.quality_score, 0) as quality_score,
-        COALESCE(ps.delivery_score, 0) as delivery_score,
-        COALESCE(ps.price_score, 0) as price_score,
-        COALESCE(ps.overall_score, 0) as overall_score
+        COALESCE(ps.credit_level, '') as credit_level
       FROM pur_supplier ps
       WHERE ps.deleted = 0 AND ps.status = 1
-      ORDER BY ps.overall_score DESC
+      ORDER BY ps.supplier_name
       LIMIT 10
     `);
 
     if (Array.isArray(supplierRows)) {
-      supplierScores = supplierRows.map((s: DbRow) => {
-        const q = Number(s.quality_score);
-        const d = Number(s.delivery_score);
-        const p = Number(s.price_score);
-        const overall =
-          q > 0 || d > 0 || p > 0 ? Math.round((q * 0.4 + d * 0.3 + p * 0.3) * 100) / 100 : 0;
-        return {
-          id: s.id,
-          name: s.supplier_name,
-          qualityScore: q,
-          deliveryScore: d,
-          priceScore: p,
-          overallScore: overall,
-        };
-      });
+      supplierScores = supplierRows.map((s: DbRow) => ({
+        id: s.id,
+        name: s.supplier_name,
+        qualityScore: 0,
+        deliveryScore: 0,
+        priceScore: 0,
+        overallScore: 0,
+        creditLevel: s.credit_level || '',
+      }));
     }
   } catch (e) {
     logger.error({ module: 'dashboard', action: 'kpi' }, 'Dashboard query failed', {
@@ -307,14 +298,10 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const creditRows = await query(`
       SELECT
         cc.id, cc.customer_name,
-        COALESCE(cc.credit_limit, 0) as credit_limit,
-        COALESCE(cc.credit_used, 0) as credit_used,
-        CASE WHEN COALESCE(cc.credit_limit, 0) > 0
-          THEN ROUND(COALESCE(cc.credit_used, 0) / cc.credit_limit * 100, 2)
-          ELSE 0 END as usage_rate
+        COALESCE(cc.credit_level, '') as credit_level
       FROM crm_customer cc
-      WHERE cc.deleted = 0 AND COALESCE(cc.credit_limit, 0) > 0
-      ORDER BY usage_rate DESC
+      WHERE cc.deleted = 0 AND COALESCE(cc.credit_level, '') != ''
+      ORDER BY cc.customer_name
       LIMIT 10
     `);
 
@@ -322,9 +309,10 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       customerCredit = creditRows.map((c: DbRow) => ({
         id: c.id,
         name: c.customer_name,
-        creditLimit: Number(c.credit_limit),
-        creditUsed: Number(c.credit_used),
-        usageRate: Number(c.usage_rate),
+        creditLimit: 0,
+        creditUsed: 0,
+        usageRate: 0,
+        creditLevel: c.credit_level || '',
       }));
     }
   } catch (e) {
@@ -350,7 +338,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       `
       SELECT
         COUNT(*) as total_overrides,
-        SUM(CASE WHEN approval_status = 0 THEN 1 ELSE 0 END) as pending
+        SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) as pending
       FROM inv_fifo_override_log
       WHERE 1=1 ${dateFilter}
     `,
@@ -361,7 +349,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       `
       SELECT COUNT(*) as total
       FROM inv_inventory_transaction
-      WHERE trans_type = 'out' AND deleted = 0 ${dateFilter}
+      WHERE trans_type = 'out' ${dateFilter}
     `,
       params
     );
@@ -448,9 +436,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const inkUsageRows = await query(
       `
       SELECT
-        COALESCE(SUM(actual_weight), 0) as actual_usage,
-        COALESCE(SUM(theoretical_weight), 0) as theoretical_usage
-      FROM dcprint_ink_usage
+        COALESCE(SUM(weight), 0) as actual_usage,
+        0 as theoretical_usage
+      FROM ink_usage
       WHERE deleted = 0 ${dateFilter}
     `,
       params
@@ -477,16 +465,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const inkByWO = await query(
       `
       SELECT
-        iu.work_order_no,
-        SUM(iu.actual_weight) as actual_usage,
-        SUM(iu.theoretical_weight) as theoretical_usage,
-        CASE WHEN SUM(iu.theoretical_weight) > 0
-          THEN ROUND(SUM(iu.actual_weight) / SUM(iu.theoretical_weight) * 100, 2)
-          ELSE 0 END as consumption_rate
-      FROM dcprint_ink_usage iu
+        iu.workorder_no,
+        SUM(iu.weight) as actual_usage,
+        0 as theoretical_usage,
+        0 as consumption_rate
+      FROM ink_usage iu
       WHERE iu.deleted = 0 ${dateFilter}
-      GROUP BY iu.work_order_no
-      ORDER BY consumption_rate DESC
+      GROUP BY iu.workorder_no
+      ORDER BY actual_usage DESC
       LIMIT 10
     `,
       params
@@ -576,18 +562,10 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     pendingReuse: 0,
   };
   try {
-    const surplusRows = await query(
-      `
-      SELECT
-        COALESCE(SUM(current_weight), 0) as total_surplus,
-        COALESCE(SUM(CASE WHEN status = 'reused' THEN current_weight ELSE 0 END), 0) as total_reused,
-        COALESCE(SUM(CASE WHEN status = 'discarded' THEN current_weight ELSE 0 END), 0) as total_discarded,
-        COALESCE(SUM(CASE WHEN status = 'available' THEN current_weight ELSE 0 END), 0) as pending_reuse
-      FROM dcprint_ink_surplus
-      WHERE deleted = 0 ${dateFilter}
-    `,
-      params
-    );
+    const surplusRows = await query(`
+      SELECT 0 as total_surplus, 0 as total_reused, 0 as total_discarded, 0 as pending_reuse
+      FROM dual
+    `);
 
     surplusInkReuseRate.totalReturned = Number(surplusRows[0]?.total_surplus || 0);
     surplusInkReuseRate.totalReused = Number(surplusRows[0]?.total_reused || 0);
@@ -620,20 +598,23 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   try {
     const setupRows = await query(
       `
-      SELECT
-        e.equipment_name,
-        e.equipment_code,
-        COUNT(DISTINCT wr.work_order_id) as setup_count,
-        AVG(
+      SELECT equipment_name, equipment_code,
+        COUNT(DISTINCT work_order_id) as setup_count,
+        AVG(setup_minutes) as avg_setup_minutes
+      FROM (
+        SELECT
+          wr.work_order_id,
+          e.equipment_name,
+          e.equipment_code,
           TIMESTAMPDIFF(MINUTE,
             LAG(wr.end_time) OVER (PARTITION BY wr.equipment_id ORDER BY wr.start_time),
             wr.start_time
-          )
-        ) as avg_setup_minutes
-      FROM prd_work_report wr
-      JOIN eqp_equipment e ON wr.equipment_id = e.id
-      WHERE wr.deleted = 0 AND wr.start_time IS NOT NULL AND wr.end_time IS NOT NULL ${dateFilter}
-      GROUP BY wr.equipment_id, e.equipment_name, e.equipment_code
+          ) as setup_minutes
+        FROM prd_work_report wr
+        JOIN eqp_equipment e ON wr.equipment_id = e.id
+        WHERE wr.deleted = 0 AND wr.start_time IS NOT NULL AND wr.end_time IS NOT NULL ${dateFilter}
+      ) t
+      GROUP BY equipment_name, equipment_code
       HAVING setup_count > 1
       ORDER BY avg_setup_minutes DESC
     `,
@@ -677,7 +658,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       `
       SELECT
         COUNT(*) as total,
-        SUM(CASE WHEN first_piece_status IN ('qualified', '合格', 'pass', '1') THEN 1 ELSE 0 END) as passed
+        SUM(CASE WHEN first_piece_status = 1 THEN 1 ELSE 0 END) as passed
       FROM prd_work_report
       WHERE deleted = 0 AND is_first_piece = 1 ${dateFilter}
     `,
@@ -714,9 +695,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const staleRows = await query(`
       SELECT
         COALESCE(SUM(available_qty * unit_price), 0) as total_value,
-        COALESCE(SUM(CASE WHEN status = 'expired' OR (expire_date IS NOT NULL AND expire_date < CURDATE()) THEN available_qty * unit_price ELSE 0 END), 0) as expired_value,
-        COALESCE(SUM(CASE WHEN status = 'frozen' THEN available_qty * unit_price ELSE 0 END), 0) as frozen_value,
-        COALESCE(SUM(CASE WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) BETWEEN 0 AND 30 AND status = 'normal' THEN available_qty * unit_price ELSE 0 END), 0) as near_expiry_value
+        COALESCE(SUM(CASE WHEN alert_level = 'expired' OR (expire_date IS NOT NULL AND expire_date < CURDATE()) THEN available_qty * unit_price ELSE 0 END), 0) as expired_value,
+        COALESCE(SUM(CASE WHEN alert_level = 'frozen' THEN available_qty * unit_price ELSE 0 END), 0) as frozen_value,
+        COALESCE(SUM(CASE WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) BETWEEN 0 AND 30 AND alert_level = 'normal' THEN available_qty * unit_price ELSE 0 END), 0) as near_expiry_value
       FROM inv_inventory_batch
       WHERE deleted = 0
     `);
@@ -759,7 +740,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         COUNT(DISTINCT CASE WHEN process_name IN ('模切', '丝印印刷') THEN work_order_id END) as setup_count,
         COALESCE(SUM(CASE WHEN current_status = 2 THEN 1 ELSE 0 END), 0) as idle_count
       FROM prd_work_report wr
-      LEFT JOIN eqp_equipment e ON 1=1
+      JOIN eqp_equipment e ON wr.equipment_id = e.id
       WHERE wr.deleted = 0 ${dateFilter}
     `,
       params

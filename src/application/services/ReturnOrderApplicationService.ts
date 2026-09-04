@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { IReturnOrderRepository } from '@/domain/sales/repositories/IReturnOrderRepository';
 import { IInboundOrderRepository } from '@/domain/warehouse/repositories/IInboundOrderRepository';
 import { IReceivableRepository } from '@/domain/finance/repositories/IReceivableRepository';
@@ -42,8 +44,9 @@ export class ReturnOrderApplicationService {
   ) {}
 
   async getReturnById(id: number): Promise<ReturnOrder> {
+  const ts = await getTranslations('Common');
     const ret = await this.returnRepo.findById(id);
-    if (!ret) throw new NotFoundError('退货单不存在');
+    if (!ret) throw new NotFoundError(ts('k_rhkfm6'));
     return ret;
   }
 
@@ -227,9 +230,10 @@ export class ReturnOrderApplicationService {
   }
 
   async deleteReturn(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const ret = await this.getReturnById(id);
     if (!ret.canDelete()) {
-      throw new DomainError('仅待审核状态的退货单可删除');
+      throw new DomainError(ts('k_a6lxvo'));
     }
     await this.returnRepo.softDelete(id);
   }

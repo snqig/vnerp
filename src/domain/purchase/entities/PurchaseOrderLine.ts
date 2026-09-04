@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 import { DomainError } from '../../shared/DomainTypes';
 
 export interface PurchaseOrderLineProps {
@@ -54,14 +56,15 @@ export class PurchaseOrderLine {
   ) {}
 
   static create(props: PurchaseOrderLineProps): PurchaseOrderLine {
+  const ts = t;
     if (!props.materialId || props.materialId <= 0) {
-      throw new DomainError('采购明细物料ID不能为空');
+      throw new DomainError(ts('k_c8uhxk'));
     }
     if (!props.orderQty || props.orderQty <= 0) {
-      throw new DomainError('采购数量必须大于0');
+      throw new DomainError(ts('k_1f1fmpn'));
     }
     if (props.unitPrice < 0) {
-      throw new DomainError('采购单价不能为负数');
+      throw new DomainError(ts('k_xt3gho'));
     }
 
     const amount = (props.orderQty || 0) * (props.unitPrice || 0);
@@ -81,7 +84,7 @@ export class PurchaseOrderLine {
       props.materialCode || '',
       props.materialName || '',
       props.materialSpec || '',
-      props.unit || '件',
+      props.unit || ts('k_w0gthl'),
       props.orderQty,
       props.receivedQty || 0,
       props.returnedQty || 0,
@@ -100,6 +103,7 @@ export class PurchaseOrderLine {
   }
 
   static reconstitute(props: PurchaseOrderLineProps): PurchaseOrderLine {
+  const ts = t;
     return new PurchaseOrderLine(
       props.id,
       props.orderId,
@@ -108,7 +112,7 @@ export class PurchaseOrderLine {
       props.materialCode || '',
       props.materialName || '',
       props.materialSpec || '',
-      props.unit || '件',
+      props.unit || ts('k_w0gthl'),
       props.orderQty,
       props.receivedQty || 0,
       props.returnedQty || 0,
@@ -176,11 +180,12 @@ export class PurchaseOrderLine {
   }
 
   receive(quantity: number, tolerancePercent: number = 0): void {
+  const ts = t;
     if (this._isClosed) {
       throw new DomainError(`行${this.lineNo}已关闭，不允许入库`);
     }
     if (quantity <= 0) {
-      throw new DomainError('入库数量必须大于0');
+      throw new DomainError(ts('k_eg3g3'));
     }
     const newReceivedQty = this._receivedQty + quantity;
     const maxAllowed = this._orderQty * (1 + tolerancePercent / 100);
@@ -193,10 +198,11 @@ export class PurchaseOrderLine {
   }
 
   reverseReceive(quantity: number): void {
+  const ts = t;
     if (this._isClosed) {
       throw new DomainError(`行${this.lineNo}已关闭，不允许回补`);
     }
-    if (quantity <= 0) throw new DomainError('回补数量必须大于0');
+    if (quantity <= 0) throw new DomainError(ts('k_tjjydk'));
     if (quantity > this._receivedQty) {
       throw new DomainError(`回补数量${quantity}超过已收数量${this._receivedQty}`);
     }

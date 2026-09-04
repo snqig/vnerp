@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, X } from 'lucide-react';
@@ -30,6 +31,7 @@ interface MaterialPickerProps {
 }
 
 export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps) {
+  const ts = useTranslations('Common');
   const [keyword, setKeyword] = useState('');
   const [categoryCode, setCategoryCode] = useState('');
   const [categories, setCategories] = useState<MaterialCategoryOption[]>([]);
@@ -61,7 +63,7 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
       if (!result.success) {
         // 后端已给出明确原因（编码不存在/已停用/格式非法），照实提示，
         // 不能吞掉后静默展示全量数据
-        setErrorMsg(result.message || '物料查询失败');
+        setErrorMsg(result.message || ts('k_1febudi'));
         setMaterials([]);
         setTotal(0);
         setHint('');
@@ -76,7 +78,7 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
     } catch {
       setMaterials([]);
       setTotal(0);
-      setErrorMsg('物料查询失败，请检查网络后重试');
+      setErrorMsg(ts('k_d8zavj'));
     } finally {
       setLoading(false);
     }
@@ -194,7 +196,7 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="搜索物料编码或名称..."
+            placeholder={ts('k_1vgjlmr')}
             style={{
               flex: 1,
               border: 'none',
@@ -228,8 +230,7 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
               color: '#6b7280',
             }}
           >
-            ESC 关闭
-          </button>
+            {ts('k_srs9oy')}</button>
         </div>
 
         <div
@@ -241,7 +242,7 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
             gap: '10px',
           }}
         >
-          <label style={{ fontSize: '13px', color: '#6b7280', flexShrink: 0 }}>物料分类</label>
+          <label style={{ fontSize: '13px', color: '#6b7280', flexShrink: 0 }}>{ts('k_195l80o')}</label>
           <select
             value={categoryCode}
             onChange={(e) => setCategoryCode(e.target.value)}
@@ -255,7 +256,7 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
               background: 'white',
             }}
           >
-            <option value="">全部分类</option>
+            <option value="">{ts('k_uq5kla')}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.category_code}>
                 {c.category_code} · {c.category_name}
@@ -275,8 +276,7 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
                 color: '#6b7280',
               }}
             >
-              清除
-            </button>
+              {ts('k_380azw')}</button>
           )}
         </div>
 
@@ -306,12 +306,12 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
               color: '#6b7280',
             }}
           >
-            <span>物料编码</span>
-            <span>物料名称</span>
-            <span>物料分类</span>
-            <span>规格</span>
-            <span>单位</span>
-            <span>参考单价</span>
+            <span>{ts('k_zsv6bq')}</span>
+            <span>{ts('k_a60ciy')}</span>
+            <span>{ts('k_195l80o')}</span>
+            <span>{ts('k_1h40xod')}</span>
+            <span>{ts('k_1xadx6v')}</span>
+            <span>{ts('k_auuq52')}</span>
           </div>
         </div>
 
@@ -320,19 +320,18 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
             <div
               style={{ padding: '40px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}
             >
-              加载中...
-            </div>
+              {ts('k_ldc0z9')}</div>
           ) : materials.length === 0 ? (
             <div
               style={{ padding: '40px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}
             >
               {errorMsg
-                ? '请调整筛选条件后重试'
+                ? ts('k_1m4nzeu')
                 : categoryCode
                   ? `分类「${categoryCode}」下未找到${keyword ? `与"${keyword}"匹配的` : ''}物料`
                   : keyword
                     ? `未找到与"${keyword}"匹配的物料`
-                    : '暂无物料数据，请先在物料主档中录入'}
+                    : ts('k_1az3bkj')}
             </div>
           ) : (
             materials.map((mat, idx) => (
@@ -378,8 +377,7 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
                   </span>
                 ) : (
                   <span style={{ fontSize: '12px', color: '#dc2626', fontWeight: 600 }}>
-                    未归类
-                  </span>
+                    {ts('k_1ch9faq')}</span>
                 )}
                 <span style={{ fontSize: '13px', color: '#6b7280' }}>
                   {mat.specification || '-'}
@@ -405,10 +403,10 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
           }}
         >
           <span>
-            共{total}
-            {'种物料'}
+            {ts('k_1vsm2qk')}{total}
+            {ts('k_14y40i6')}
           </span>
-          <span>↑↓ 选择 · Enter 确认 · Esc 关闭</span>
+          <span>{ts('k_tjyp44')}</span>
         </div>
       </div>
     </div>

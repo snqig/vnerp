@@ -61,6 +61,7 @@ interface MenuItem {
 
 export default function MenusPage() {
   // 翻译钩子
+  const ts = useTranslations('Common');
   const t = useTranslations('Common');
   const tc = useTranslations('Common');
 
@@ -248,7 +249,7 @@ export default function MenusPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: editItem.is_new ? '菜单创建成功' : '菜单更新成功' });
+        toast({ title: editItem.is_new ? ts('k_1dusbu') : ts('k_1t26jbj') });
         setShowDialog(false);
         fetchData();
       } else {
@@ -270,7 +271,7 @@ export default function MenusPage() {
         toast({ title: tc('deleteSuccess') });
         fetchData();
       } else {
-        toast({ title: result.message || '删除失败', variant: 'destructive' });
+        toast({ title: result.message || ts('k_1ijrr73'), variant: 'destructive' });
       }
     } catch {
       toast({ title: tc('deleteFailed'), variant: 'destructive' });

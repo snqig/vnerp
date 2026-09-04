@@ -67,6 +67,7 @@ const CURRENT_STATUS: Record<number, { label: string; color: string }> = {
 };
 
 export default function EquipmentPage() {
+  const ts = useTranslations('Equipment');
   // 翻译钩子
   const tc = useTranslations('Common');
 
@@ -92,7 +93,7 @@ export default function EquipmentPage() {
         setTypeStats(result.data?.typeStats || []);
       }
     } catch {
-      toast.error('获取设备列表失败');
+      toast.error(ts('k_tim4fu'));
     } finally {
       setLoading(false);
     }
@@ -104,7 +105,7 @@ export default function EquipmentPage() {
 
   const saveEquipment = async () => {
     if (!form.equipment_code || !form.equipment_name) {
-      toast.error('请填写设备编码和名称');
+      toast.error(ts('k_d89iud'));
       return;
     }
     try {
@@ -116,14 +117,14 @@ export default function EquipmentPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast.success(editing ? '设备更新成功' : '设备创建成功');
+        toast.success(editing ? ts('k_q4yls7') : ts('k_p97dky'));
         setDialogOpen(false);
         fetchData();
       } else {
         toast.error(result.message || tc('error'));
       }
     } catch {
-      toast.error('保存设备失败');
+      toast.error(ts('k_t22vxx'));
     }
   };
 
@@ -133,25 +134,25 @@ export default function EquipmentPage() {
       const res = await authFetch(`/api/equipment?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast.success('设备删除成功');
+        toast.success(ts('k_zxk76f'));
         fetchData();
       } else {
-        toast.error(result.message || '删除失败');
+        toast.error(result.message || ts('k_1ijrr73'));
       }
     } catch {
-      toast.error('删除设备失败');
+      toast.error(ts('k_1ij9q14'));
     }
   };
 
   return (
-    <MainLayout title="设备管理">
+    <MainLayout title={ts('k_14ygvtp')}>
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {typeStats.map((s: Loose) => (
             <Card key={s.equipment_type}>
               <CardContent className="pt-4">
                 <div className="text-sm text-gray-500">
-                  {EQUIPMENT_TYPES[s.equipment_type] || '其他'}
+                  {EQUIPMENT_TYPES[s.equipment_type] || ts('k_dcd4ul')}
                 </div>
                 <div className="text-2xl font-bold">{s.count}</div>
                 <div className="text-xs text-gray-400">
@@ -168,8 +169,7 @@ export default function EquipmentPage() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Cpu className="w-5 h-5" />
-                设备台账
-              </CardTitle>
+                {tc('equipmentAccount')}</CardTitle>
               <CardDescription>{tc('equipmentAccount')}</CardDescription>
             </div>
             <Button
@@ -181,15 +181,14 @@ export default function EquipmentPage() {
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              新增设备
-            </Button>
+              {ts('k_1wff940')}</Button>
           </CardHeader>
           <CardContent>
             <div className="flex gap-3 mb-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="搜索设备编码/名称/品牌..."
+                  placeholder={ts('k_md8kwx')}
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   className="pl-9"
@@ -197,10 +196,10 @@ export default function EquipmentPage() {
               </div>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="设备类型" />
+                  <SelectValue placeholder={ts('k_6dnny8')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部类型</SelectItem>
+                  <SelectItem value="all">{ts('k_zao217')}</SelectItem>
                   {Object.entries(EQUIPMENT_TYPES).map(([k, v]) => (
                     <SelectItem key={k} value={k}>
                       {v}
@@ -221,12 +220,12 @@ export default function EquipmentPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>设备编码</TableHead>
-                    <TableHead>设备名称</TableHead>
+                    <TableHead>{ts('k_17s4qyf')}</TableHead>
+                    <TableHead>{ts('k_eb1q6f')}</TableHead>
                     <TableHead>{tc('type')}</TableHead>
                     <TableHead>{tc('brandModel')}</TableHead>
-                    <TableHead>位置</TableHead>
-                    <TableHead>产能</TableHead>
+                    <TableHead>{tc('location')}</TableHead>
+                    <TableHead>{ts('k_okezj5')}</TableHead>
                     <TableHead>OEE</TableHead>
                     <TableHead>{tc('status')}</TableHead>
                     <TableHead className="text-right">{tc('actions')}</TableHead>
@@ -239,7 +238,7 @@ export default function EquipmentPage() {
                       <TableCell>{eq.equipment_name}</TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {EQUIPMENT_TYPES[eq.equipment_type] || '其他'}
+                          {EQUIPMENT_TYPES[eq.equipment_type] || ts('k_dcd4ul')}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -291,38 +290,36 @@ export default function EquipmentPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg" resizable>
           <DialogHeader>
-            <DialogTitle>{editing ? '编辑设备' : '新增设备'}</DialogTitle>
-            <DialogDescription>{editing ? '修改设备信息' : '填写设备基本信息'}</DialogDescription>
+            <DialogTitle>{editing ? ts('k_11p3hrz') : ts('k_1wff940')}</DialogTitle>
+            <DialogDescription>{editing ? ts('k_1buzra7') : ts('k_ix32n0')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
-                  设备编码
-                  <span className="text-red-500">*</span>
+                  {ts('k_17s4qyf')}<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={form.equipment_code || ''}
                   onChange={(e) => setForm({ ...form, equipment_code: e.target.value })}
-                  placeholder="如: EQP001"
+                  placeholder={ts('k_1ktubuq')}
                   disabled={editing}
                 />
               </div>
               <div className="space-y-2">
                 <Label>
-                  设备名称
-                  <span className="text-red-500">*</span>
+                  {ts('k_eb1q6f')}<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={form.equipment_name || ''}
                   onChange={(e) => setForm({ ...form, equipment_name: e.target.value })}
-                  placeholder="请输入设备名称"
+                  placeholder={ts('k_1wkt1ns')}
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>设备类型</Label>
+                <Label>{ts('k_6dnny8')}</Label>
                 <Select
                   value={String(form.equipment_type ?? 1)}
                   onValueChange={(v) => setForm({ ...form, equipment_type: parseInt(v) })}
@@ -350,36 +347,36 @@ export default function EquipmentPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>型号</Label>
+                <Label>{ts('k_k2pa13')}</Label>
                 <Input
                   value={form.model || ''}
                   onChange={(e) => setForm({ ...form, model: e.target.value })}
-                  placeholder="型号"
+                  placeholder={ts('k_k2pa13')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>安装位置</Label>
+                <Label>{ts('k_1e6msf0')}</Label>
                 <Input
                   value={form.location || ''}
                   onChange={(e) => setForm({ ...form, location: e.target.value })}
-                  placeholder="位置"
+                  placeholder={tc('location')}
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>额定产能</Label>
+                <Label>{ts('k_3uy4l6')}</Label>
                 <Input
                   type="number"
                   value={form.rated_capacity || ''}
                   onChange={(e) =>
                     setForm({ ...form, rated_capacity: parseFloat(e.target.value) || 0 })
                   }
-                  placeholder="产能/小时"
+                  placeholder={ts('k_zu5xvv')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>运行状态</Label>
+                <Label>{ts('k_1ihgm6s')}</Label>
                 <Select
                   value={String(form.current_status ?? 1)}
                   onValueChange={(v) => setForm({ ...form, current_status: parseInt(v) })}
@@ -409,11 +406,9 @@ export default function EquipmentPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              取消
-            </Button>
+              {tc('cancel')}</Button>
             <Button onClick={saveEquipment} className="bg-blue-600 hover:bg-blue-700">
-              保存
-            </Button>
+              {ts('k_1c3mapc')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

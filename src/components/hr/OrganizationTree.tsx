@@ -80,6 +80,7 @@ function TreeNode({
   onDelete: (n: OrgNode) => void;
   onAddChild: (parent: OrgNode) => void;
 }) {
+  const ts = useTranslations('Common');
   const [expanded, setExpanded] = useState(depth < 2);
   const hasChildren = node.children && node.children.length > 0;
   const config = typeConfig[node.type];
@@ -113,11 +114,11 @@ function TreeNode({
               <Plus className="h-3 w-3" />
             </Button>
           )}
-          <Button variant="ghost" size="icon" className="h-6 w-6" title="编辑"
+          <Button variant="ghost" size="icon" className="h-6 w-6" title={ts('k_qreyeg')}
             onClick={(e) => { e.stopPropagation(); onEdit(node); }}>
             <Pencil className="h-3 w-3" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" title="删除"
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" title={ts('k_1t2vi4h')}
             onClick={(e) => { e.stopPropagation(); onDelete(node); }}>
             <Trash2 className="h-3 w-3" />
           </Button>
@@ -136,6 +137,7 @@ function TreeNode({
 }
 
 export function OrganizationTree() {
+  const ts = useTranslations('Common');
   const [tree, setTree] = useState<OrgNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -177,18 +179,18 @@ export function OrganizationTree() {
       const res = await authFetch(`/api/organization/crud?id=${node.id}&type=${node.type}`, { method: 'DELETE' });
       const json = await res.json();
       if (json.code === 200) {
-        toast.success('删除成功');
+        toast.success(ts('k_1hlqs'));
         fetchTree();
       } else {
-        toast.error(json.message || '删除失败');
+        toast.error(json.message || ts('k_1ijrr73'));
       }
     } catch {
-      toast.error('删除请求失败');
+      toast.error(ts('k_ocz376'));
     }
   };
 
   const handleSave = async () => {
-    if (!form.code || !form.name) { toast.error('编码和名称为必填'); return; }
+    if (!form.code || !form.name) { toast.error(ts('k_jburx9')); return; }
     setSaving(true);
     try {
       const method = isEdit ? 'PUT' : 'POST';
@@ -200,14 +202,14 @@ export function OrganizationTree() {
       });
       const json = await res.json();
       if (json.code === 200) {
-        toast.success(isEdit ? '更新成功' : '创建成功');
+        toast.success(isEdit ? ts('k_1795bzg') : ts('k_kiombh'));
         setDialogOpen(false);
         fetchTree();
       } else {
-        toast.error(json.message || '保存失败');
+        toast.error(json.message || ts('k_1q9u8le'));
       }
     } catch {
-      toast.error('保存请求失败');
+      toast.error(ts('k_19o22j'));
     }
     setSaving(false);
   };
@@ -219,7 +221,7 @@ export function OrganizationTree() {
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-semibold text-muted-foreground">{t('orgTree')}</span>
         <Button size="sm" variant="outline" onClick={() => openCreate()}>
-          <Plus className="h-3 w-3 mr-1" />新增{t('orgGroup')}
+          <Plus className="h-3 w-3 mr-1" />{ts('k_159s6ub')}{t('orgGroup')}
         </Button>
       </div>
 
@@ -235,53 +237,53 @@ export function OrganizationTree() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{isEdit ? '编辑' : '新增'}{typeNames[form.type] || form.type}</DialogTitle>
+            <DialogTitle>{isEdit ? ts('k_qreyeg') : ts('k_159s6ub')}{typeNames[form.type] || form.type}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>编码 <span className="text-red-500">*</span></Label>
-              <Input value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} placeholder="如 HQ" />
+              <Label>{ts('k_1lqzgmw')}<span className="text-red-500">*</span></Label>
+              <Input value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} placeholder={ts('k_1u6vx58')} />
             </div>
             <div className="space-y-1.5">
-              <Label>名称 <span className="text-red-500">*</span></Label>
-              <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="如 总部" />
+              <Label>{ts('k_hzx914')}<span className="text-red-500">*</span></Label>
+              <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={ts('k_w9hn8s')} />
             </div>
             <div className="space-y-1.5">
-              <Label>排序</Label>
+              <Label>{ts('k_dqvmz2')}</Label>
               <Input type="number" value={form.sortOrder} onChange={e => setForm({ ...form, sortOrder: Number(e.target.value) })} />
             </div>
             {(form.type === 'workshop') && (
               <div className="space-y-1.5">
-                <Label>负责人</Label>
+                <Label>{ts('k_17eokaf')}</Label>
                 <Input value={form.managerName || ''} onChange={e => setForm({ ...form, managerName: e.target.value })} />
               </div>
             )}
             {(form.type === 'team') && (
               <div className="space-y-1.5">
-                <Label>班组长</Label>
+                <Label>{ts('k_15yrcy9')}</Label>
                 <Input value={form.teamLeader || ''} onChange={e => setForm({ ...form, teamLeader: e.target.value })} />
               </div>
             )}
             {(form.type === 'position') && (
               <>
                 <div className="space-y-1.5">
-                  <Label>技能等级</Label>
+                  <Label>{ts('k_z8knke')}</Label>
                   <Input type="number" value={form.skillLevel || 1} onChange={e => setForm({ ...form, skillLevel: Number(e.target.value) })} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>薪资范围</Label>
-                  <Input value={form.baseSalaryRange || ''} onChange={e => setForm({ ...form, baseSalaryRange: e.target.value })} placeholder="如 5000-8000" />
+                  <Label>{ts('k_112uh78')}</Label>
+                  <Input value={form.baseSalaryRange || ''} onChange={e => setForm({ ...form, baseSalaryRange: e.target.value })} placeholder={ts('k_7r3a5p')} />
                 </div>
               </>
             )}
             <div className="space-y-1.5 col-span-2">
-              <Label>备注</Label>
+              <Label>{ts('k_b5m1l6')}</Label>
               <Input value={form.remark} onChange={e => setForm({ ...form, remark: e.target.value })} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>取消</Button>
-            <Button onClick={handleSave} disabled={saving}>{saving ? '保存中...' : '保存'}</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{ts('k_1589w37')}</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving ? ts('k_rr6ulf') : ts('k_1c3mapc')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

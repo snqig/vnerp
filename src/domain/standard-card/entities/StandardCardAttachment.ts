@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export interface StandardCardAttachmentProps {
   id?: number;
   standardCardId?: number;
@@ -41,18 +43,19 @@ export class StandardCardAttachment {
   }
 
   private validate(props: StandardCardAttachmentProps): void {
+  const ts = t;
     if (!props.fileName || props.fileName.trim() === '') {
-      throw new Error('文件名不能为空');
+      throw new Error(ts('k_1fdyncp'));
     }
     if (!props.filePath || props.filePath.trim() === '') {
-      throw new Error('文件路径不能为空');
+      throw new Error(ts('k_yr2hf1'));
     }
     if (props.fileSize <= 0) {
-      throw new Error('文件大小必须大于0');
+      throw new Error(ts('k_1m4vthp'));
     }
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
     if (props.fileType && !allowedTypes.includes(props.fileType)) {
-      throw new Error('不支持的文件类型，仅支持PDF、JPG、PNG');
+      throw new Error(ts('k_xiw21a'));
     }
   }
 

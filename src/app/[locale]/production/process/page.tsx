@@ -393,7 +393,7 @@ export default function ProductionProcessPage() {
                               className="h-4 w-4 cursor-pointer accent-blue-600"
                               checked={isSelected(String(process.id))}
                               onChange={() => toggle(String(process.id))}
-                              aria-label={tc('selectAll')}
+                              aria-label={tc('selectRow', { id: process.id })}
                             />
                           </TableCell>
                           <TableCell className="font-medium">

@@ -68,6 +68,7 @@ interface MaterialLabel {
 // 是否徽章 - 需要在组件内部使用翻译
 export default function MaterialLabelsPage() {
   // 翻译钩子
+  const ts = useTranslations('Dcprint');
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
   const { user } = useAuth();
@@ -138,7 +139,7 @@ export default function MaterialLabelsPage() {
         setLoading(true);
 
         if (USE_MOCK) {
-          logger.info({ module: 'Dcprint', action: 'fetchLabels' }, '使用 mock 标签数据');
+          logger.info({ module: 'Dcprint', action: 'fetchLabels' }, ts('k_5env5j'));
           setLabels(mockLabels);
           setTotal(mockLabels.length);
           setLoading(false);
@@ -166,13 +167,13 @@ export default function MaterialLabelsPage() {
         if (result.success) {
           setLabels(result.data?.list || []);
           setTotal(result.data?.pagination?.total || 0);
-          logger.info({ module: 'Dcprint', action: 'fetchLabels' }, '标签数据获取成功', {
+          logger.info({ module: 'Dcprint', action: 'fetchLabels' }, ts('k_1bz6yje'), {
             count: (result.data?.list || []).length,
           });
         }
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
-          logger.error({ module: 'Dcprint', action: 'fetchLabels' }, '获取标签数据失败', {
+          logger.error({ module: 'Dcprint', action: 'fetchLabels' }, ts('k_o8qflh'), {
             error: (error as Error).message,
           });
         }

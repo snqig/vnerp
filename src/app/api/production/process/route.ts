@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { getTrPrefix, generateDocNo } from '@/lib/global-config';
@@ -77,6 +80,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, processStatus, currentProcess, operatorId, operatorName, remark, cardNo } = body;
 
@@ -98,16 +102,17 @@ export const PUT = withPermission(
       [generateDocNo(getTrPrefix()), id, cardNo, currentProcess, operatorId, operatorName, remark]
     );
 
-    return successResponse(null, '流程更新成功');
+    return successResponse(null, ts('k_cylyzw'));
   },
   { logTitle: '更新生产流程', logType: 'business' }
 );
 
 export const DELETE = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) {
-    return errorResponse('流程卡ID不能为空', 400);
+    return errorResponse(ts('k_mfrb7v'), 400);
   }
 
   await query(
@@ -115,5 +120,5 @@ export const DELETE = withPermission(async (request: NextRequest, _userInfo) => 
     [id]
   );
 
-  return successResponse(null, '流程卡删除成功');
+  return successResponse(null, ts('k_9deum5'));
 });

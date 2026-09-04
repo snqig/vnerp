@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -48,8 +51,8 @@ export const GET = withPermission(
       `SELECT f.*, m.material_name, m.material_code, m.unit,
               w.warehouse_name, u.real_name as operator_name
        FROM inv_stock_freeze f
-       LEFT JOIN materials m ON f.material_id = m.id
-       LEFT JOIN warehouses w ON f.warehouse_id = w.id
+       LEFT JOIN inv_material m ON f.material_id = m.id
+       LEFT JOIN inv_warehouse w ON f.warehouse_id = w.id
        LEFT JOIN sys_user u ON f.create_by = u.id
        ${where}
        ORDER BY f.create_time DESC
@@ -65,6 +68,7 @@ export const GET = withPermission(
 // 创建冻结记录
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'freeze', action: 'create', userId: userInfo.userId, traceId };
 
@@ -79,48 +83,48 @@ export const POST = withPermission(
       source_id,
     } = body;
 
-    logger.stepStart(ctx, '库存冻结', { material_id, warehouse_id, freeze_quantity, freeze_type });
+    logger.stepStart(ctx, ts('k_ouse9g'), { material_id, warehouse_id, freeze_quantity, freeze_type });
 
     if (!material_id || !warehouse_id || !freeze_quantity) {
-      logger.branch(ctx, '参数校验', '必填参数完整性', false, {
+      logger.branch(ctx, ts('k_199cfle'), ts('k_1wepfy4'), false, {
         material_id,
         warehouse_id,
         freeze_quantity,
       });
-      return errorResponse('物料ID、仓库ID和冻结数量不能为空', 400, 400);
+      return errorResponse(ts('k_1961dqv'), 400, 400);
     }
 
     if (freeze_quantity <= 0) {
-      logger.branch(ctx, '参数校验', '冻结数量>0', false, { freeze_quantity });
-      return errorResponse('冻结数量必须大于0', 400, 400);
+      logger.branch(ctx, ts('k_199cfle'), ts('k_12iy4jo'), false, { freeze_quantity });
+      return errorResponse(ts('k_vod75l'), 400, 400);
     }
 
-    logger.branch(ctx, '参数校验', '必填参数完整性', true);
+    logger.branch(ctx, ts('k_199cfle'), ts('k_1wepfy4'), true);
 
     // 检查可用库存
-    logger.stepStart(ctx, '查询库存', { material_id, warehouse_id });
+    logger.stepStart(ctx, ts('k_1gzwyvp'), { material_id, warehouse_id });
     const stock = await query(
-      'SELECT quantity, frozen_qty FROM stock WHERE material_id = ? AND warehouse_id = ?',
+      'SELECT quantity, frozen_qty FROM inv_inventory WHERE material_id = ? AND warehouse_id = ?',
       [material_id, warehouse_id]
     );
     logger.db(ctx, 'SELECT', 'stock', { material_id, warehouse_id, rows: stock.length });
 
     if (stock.length === 0) {
-      logger.branch(ctx, '库存检查', '库存记录存在', false);
-      return errorResponse('库存记录不存在', 404, 404);
+      logger.branch(ctx, ts('k_11c3iyl'), ts('k_1snl15h'), false);
+      return errorResponse(ts('k_fh3hkg'), 404, 404);
     }
 
     const availableQty = Number(stock[0].quantity) - Number(stock[0].frozen_qty || 0);
     logger.info(ctx, `可用库存: ${availableQty}, 请求冻结: ${freeze_quantity}`);
 
     if (availableQty < freeze_quantity) {
-      logger.branch(ctx, '库存检查', '可用库存>=冻结数量', false, {
+      logger.branch(ctx, ts('k_11c3iyl'), ts('k_gew53r'), false, {
         availableQty,
         freeze_quantity,
       });
       return errorResponse(`可用库存不足，当前可用: ${availableQty}`, 400, 400);
     }
-    logger.branch(ctx, '库存检查', '可用库存>=冻结数量', true);
+    logger.branch(ctx, ts('k_11c3iyl'), ts('k_gew53r'), true);
 
     // 创建冻结记录
     const result = await execute(
@@ -143,13 +147,13 @@ export const POST = withPermission(
 
     // 更新库存冻结数量
     await execute(
-      'UPDATE stock SET frozen_qty = COALESCE(frozen_qty, 0) + ?, update_time = NOW() WHERE material_id = ? AND warehouse_id = ?',
+      'UPDATE inv_inventory SET frozen_qty = COALESCE(frozen_qty, 0) + ?, update_time = NOW() WHERE material_id = ? AND warehouse_id = ?',
       [freeze_quantity, material_id, warehouse_id]
     );
     logger.db(ctx, 'UPDATE', 'stock', { material_id, warehouse_id, freeze_quantity });
 
-    logger.stepEnd(ctx, '库存冻结', { insertId: result.insertId });
-    return successResponse({ id: result.insertId }, '库存冻结成功');
+    logger.stepEnd(ctx, ts('k_ouse9g'), { insertId: result.insertId });
+    return successResponse({ id: result.insertId }, ts('k_q0ku2x'));
   },
   { errorMessage: '操作失败' }
 );
@@ -157,21 +161,23 @@ export const POST = withPermission(
 // 解冻
 export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
     const traceId = generateTraceId();
     const ctx = { module: 'freeze', action: 'unfreeze', userId: userInfo.userId, traceId };
 
     const body = await request.json();
     const { id, action } = body;
 
-    logger.stepStart(ctx, '库存解冻', { id, action });
+    logger.stepStart(ctx, ts('k_9us8sk'), { id, action });
 
     if (!id) {
-      logger.branch(ctx, '参数校验', 'ID非空', false);
-      return errorResponse('冻结记录ID不能为空', 400, 400);
+      logger.branch(ctx, ts('k_199cfle'), ts('k_1r5h0gw'), false);
+      return errorResponse(ts('k_1ebe6wr'), 400, 400);
     }
 
     if (action === 'unfreeze') {
-      logger.branch(ctx, '操作类型', '完全解冻', true);
+      logger.branch(ctx, tc('operType'), ts('k_1wrd767'), true);
       const freeze = await query('SELECT * FROM inv_stock_freeze WHERE id = ? AND status = ?', [
         id,
         'active',
@@ -179,8 +185,8 @@ export const PUT = withPermission(
       logger.db(ctx, 'SELECT', 'inv_stock_freeze', { id, rows: freeze.length });
 
       if (freeze.length === 0) {
-        logger.branch(ctx, '记录检查', '冻结记录存在且活跃', false);
-        return errorResponse('冻结记录不存在或已解冻', 404, 404);
+        logger.branch(ctx, ts('k_yzrkvx'), ts('k_qnv08u'), false);
+        return errorResponse(ts('k_ww9wi5'), 404, 404);
       }
 
       const record = freeze[0];
@@ -198,7 +204,7 @@ export const PUT = withPermission(
 
       // 减少库存冻结数量
       await execute(
-        'UPDATE stock SET frozen_qty = GREATEST(COALESCE(frozen_qty, 0) - ?, 0), update_time = NOW() WHERE material_id = ? AND warehouse_id = ?',
+        'UPDATE inv_inventory SET frozen_qty = GREATEST(COALESCE(frozen_qty, 0) - ?, 0), update_time = NOW() WHERE material_id = ? AND warehouse_id = ?',
         [record.freeze_quantity, record.material_id, record.warehouse_id]
       );
       logger.db(ctx, 'UPDATE', 'stock', {
@@ -207,16 +213,16 @@ export const PUT = withPermission(
         unfreeze_qty: record.freeze_quantity,
       });
 
-      logger.stepEnd(ctx, '完全解冻');
-      return successResponse(null, '库存已解冻');
+      logger.stepEnd(ctx, ts('k_1wrd767'));
+      return successResponse(null, ts('k_12tthmy'));
     }
 
     if (action === 'partial_unfreeze') {
-      logger.branch(ctx, '操作类型', '部分解冻', true);
+      logger.branch(ctx, tc('operType'), ts('k_11icigx'), true);
       const { unfreeze_quantity } = body;
       if (!unfreeze_quantity || unfreeze_quantity <= 0) {
-        logger.branch(ctx, '参数校验', '解冻数量>0', false, { unfreeze_quantity });
-        return errorResponse('解冻数量必须大于0', 400, 400);
+        logger.branch(ctx, ts('k_199cfle'), ts('k_1oiymec'), false, { unfreeze_quantity });
+        return errorResponse(ts('k_y2bahl'), 400, 400);
       }
 
       const freeze = await query('SELECT * FROM inv_stock_freeze WHERE id = ? AND status = ?', [
@@ -226,17 +232,17 @@ export const PUT = withPermission(
       logger.db(ctx, 'SELECT', 'inv_stock_freeze', { id, rows: freeze.length });
 
       if (freeze.length === 0) {
-        logger.branch(ctx, '记录检查', '冻结记录存在且活跃', false);
-        return errorResponse('冻结记录不存在或已解冻', 404, 404);
+        logger.branch(ctx, ts('k_yzrkvx'), ts('k_qnv08u'), false);
+        return errorResponse(ts('k_ww9wi5'), 404, 404);
       }
 
       const record = freeze[0];
       if (unfreeze_quantity > Number(record.freeze_quantity)) {
-        logger.branch(ctx, '数量校验', '解冻数量<=冻结数量', false, {
+        logger.branch(ctx, ts('k_1mx6vwt'), ts('k_7os8mq'), false, {
           unfreeze_quantity,
           freeze_quantity: record.freeze_quantity,
         });
-        return errorResponse('解冻数量不能超过冻结数量', 400, 400);
+        return errorResponse(ts('k_fita5z'), 400, 400);
       }
 
       const remainQty = Number(record.freeze_quantity) - unfreeze_quantity;
@@ -246,13 +252,13 @@ export const PUT = withPermission(
       );
 
       if (remainQty <= 0) {
-        logger.branch(ctx, '剩余判断', '剩余<=0→完全解冻', true);
+        logger.branch(ctx, ts('k_lngnek'), ts('k_4m6ws4'), true);
         await execute(
           `UPDATE inv_stock_freeze SET status = 'released', release_time = NOW(), release_by = ?, update_time = NOW() WHERE id = ?`,
           [userInfo.userId, id]
         );
       } else {
-        logger.branch(ctx, '剩余判断', '剩余>0→更新冻结数量', true);
+        logger.branch(ctx, ts('k_lngnek'), ts('k_1b7rmy2'), true);
         await execute(
           `UPDATE inv_stock_freeze SET freeze_quantity = ?, update_time = NOW() WHERE id = ?`,
           [remainQty, id]
@@ -261,7 +267,7 @@ export const PUT = withPermission(
 
       // 减少库存冻结数量
       await execute(
-        'UPDATE stock SET frozen_qty = GREATEST(COALESCE(frozen_qty, 0) - ?, 0), update_time = NOW() WHERE material_id = ? AND warehouse_id = ?',
+        'UPDATE inv_inventory SET frozen_qty = GREATEST(COALESCE(frozen_qty, 0) - ?, 0), update_time = NOW() WHERE material_id = ? AND warehouse_id = ?',
         [unfreeze_quantity, record.material_id, record.warehouse_id]
       );
       logger.db(ctx, 'UPDATE', 'stock', {
@@ -270,12 +276,12 @@ export const PUT = withPermission(
         unfreeze_qty: unfreeze_quantity,
       });
 
-      logger.stepEnd(ctx, '部分解冻', { remainQty });
-      return successResponse(null, remainQty > 0 ? '部分解冻成功' : '库存已解冻');
+      logger.stepEnd(ctx, ts('k_11icigx'), { remainQty });
+      return successResponse(null, remainQty > 0 ? ts('k_n4ib10') : ts('k_12tthmy'));
     }
 
-    logger.branch(ctx, '操作类型', '有效操作(unfreeze/partial_unfreeze)', false, { action });
-    return errorResponse('无效的操作类型', 400, 400);
+    logger.branch(ctx, tc('operType'), ts('k_ucnvo9'), false, { action });
+    return errorResponse(ts('k_4ty90w'), 400, 400);
   },
   { errorMessage: '操作失败' }
 );

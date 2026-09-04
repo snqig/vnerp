@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -11,6 +14,8 @@ import {
 } from '@/lib/spc-analysis';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const tc = await getTranslations('Common');
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
 
@@ -23,7 +28,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const endDate = searchParams.get('end_date') || new Date().toISOString().slice(0, 10);
     const subgroupSize = parseInt(searchParams.get('subgroup_size') || '5');
 
-    if (!materialId) return errorResponse('请提供物料ID', 400, 400);
+    if (!materialId) return errorResponse(ts('k_3gnago'), 400, 400);
 
     const spcData = await transaction(async (conn) => {
       return await getSPCDataFromDB(
@@ -36,7 +41,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       );
     });
 
-    if (spcData.length === 0) return successResponse({ message: '无足够数据生成控制图' });
+    if (spcData.length === 0) return successResponse({ message: ts('k_dhu8z1') });
 
     const chart = calculateXbarRChart(spcData);
     return successResponse(chart);
@@ -63,7 +68,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
     const pareto = calculatePareto(
       defects.map((d: DbRow) => ({
-        defect_type: d.defect_type || '未分类',
+        defect_type: d.defect_type || tc('unclassified'),
         count: Number(d.count),
       }))
     );
@@ -101,5 +106,5 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return successResponse(pChart);
   }
 
-  return errorResponse('未知操作，支持: xbar-r, pareto, p-chart', 400, 400);
+  return errorResponse(ts('k_1hvwiqx'), 400, 400);
 });

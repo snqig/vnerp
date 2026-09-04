@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 export type ShipmentStatus =
   | 'draft' // 草稿
   | 'pending_review' // 待审批
@@ -112,9 +114,10 @@ export class ShipmentStateMachine {
   }
 
   static canTransition(from: ShipmentStatus, to: ShipmentStatus): boolean {
+  const ts = t;
     const config = shipmentStateMachineConfig[from];
     if (!config) {
-      console.warn('[ShipmentStateMachine] 无效的源状态', { from });
+      console.warn(ts('k_g49onm'), { from });
       return false;
     }
     return config.allowedTransitions.includes(to);

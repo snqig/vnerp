@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { ISalesOrderRepository } from '@/domain/sales/repositories/ISalesOrderRepository';
 import { SalesOrder, SalesOrderProps } from '@/domain/sales/aggregates/SalesOrder';
 import { SalesOrderStatus } from '@/domain/sales/value-objects/SalesOrderStatus';
@@ -23,8 +25,9 @@ export class SalesApplicationService {
   ) {}
 
   async getOrderById(id: number): Promise<SalesOrder> {
+  const ts = await getTranslations('Common');
     const order = await this.orderRepo.findById(id);
-    if (!order) throw new NotFoundError('销售单不存在');
+    if (!order) throw new NotFoundError(ts('k_wkpxed'));
     return order;
   }
 
@@ -179,6 +182,7 @@ export class SalesApplicationService {
     id: number,
     lineShipments: Array<{ lineNo: number; quantity: number; batchNo: string; warehouseId: number }>
   ): Promise<{ id: number; status: string }> {
+  const ts = await getTranslations('Common');
     const order = await this.getOrderById(id);
 
     for (const shipment of lineShipments) {
@@ -189,7 +193,7 @@ export class SalesApplicationService {
         shipment.warehouseId,
         shipment.quantity
       );
-      if (!check.sufficient) throw new DomainError(check.message || '库存不足');
+      if (!check.sufficient) throw new DomainError(check.message || ts('k_ynb6da'));
     }
 
     const previousStatus = order.status.value;
@@ -230,8 +234,9 @@ export class SalesApplicationService {
   }
 
   async deleteOrder(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const order = await this.getOrderById(id);
-    if (!order.canDelete()) throw new DomainError('当前状态的销售单不能删除');
+    if (!order.canDelete()) throw new DomainError(ts('k_1e961wf'));
     await this.orderRepo.softDelete(id);
   }
 

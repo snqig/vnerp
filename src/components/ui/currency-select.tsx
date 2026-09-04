@@ -28,6 +28,7 @@ interface CurrencySelectProps {
 }
 
 export function CurrencySelect({ value, onChange, placeholder, disabled }: CurrencySelectProps) {
+  const ts = useTranslations('Common');
   const t = useTranslations('Common');
   const [currencies, setCurrencies] = useState<Currency[]>([]);
 
@@ -67,12 +68,12 @@ export function CurrencySelect({ value, onChange, placeholder, disabled }: Curre
       disabled={disabled}
     >
       <SelectTrigger>
-        <SelectValue placeholder={placeholder ?? t('selectCurrency') ?? '选择币种'} />
+        <SelectValue placeholder={placeholder ?? t('selectCurrency') ?? ts('k_1jctmjh')} />
       </SelectTrigger>
       <SelectContent>
         {currencies.length === 0 ? (
           <SelectItem value="_empty" disabled>
-            {t('noCurrency') || '暂无币种'}
+            {t('noCurrency') || ts('k_1r91l2t')}
           </SelectItem>
         ) : (
           currencies.map((currency) => (

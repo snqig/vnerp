@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import {
   IInboundOrderRepository,
   Pagination,
@@ -6,6 +8,7 @@ import {
 } from '@/domain/warehouse/repositories/IInboundOrderRepository';
 import { InboundOrder, InboundOrderProps } from '@/domain/warehouse/aggregates/InboundOrder';
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
+import type { DbConnection } from '@/types/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import type { InboundStatus } from '@/domain/warehouse/value-objects/OrderStatus';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
@@ -338,13 +341,14 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
     data: InboundOrderContentUpdate
   ): Promise<{ id: number; orderNo: string }> {
     return await transaction(async (conn) => {
+  const ts = await getTranslations('Common');
       const [rows] = await conn.execute<RowDataPacket[]>(
         'SELECT order_no FROM inv_inbound_order WHERE id = ? AND deleted = 0',
         [id]
       );
       const row = rows[0];
       if (!row) {
-        throw new Error('入库单不存在或已被删除');
+        throw new Error(ts('k_x2pmqg'));
       }
 
       await conn.execute(
@@ -408,15 +412,31 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
   async updateInspectionAndFinance(
     id: number,
     inspectionStatus: number,
-    _financePosted: boolean
+    financePosted: boolean,
+    conn?: DbConnection
   ): Promise<void> {
-    try {
-      await execute('UPDATE inv_inbound_order SET qc_status = ? WHERE id = ?', [
-        inspectionStatus === 3 ? 'pass' : 'pending',
-        id,
-      ]);
-    } catch (error) {
-      console.error('[MysqlInboundOrderRepository] 更新质检状态失败:', error);
+    // inspection_status / finance_posted 两列已由迁移脚本补齐：
+    //   scripts/migrate-add-inbound-inspection-columns.cjs
+    // 补齐前它们不存在，本 SQL 必抛 ER_BAD_FIELD_ERROR(1054)，原实现又被 try/catch 静默吞掉，
+    // 导致质检/记账状态从来没有被真正持久化。
+    // 现在同时写 qc_status（历史在用的质检列，实测已有 62 条 'pass'），让两个质检状态来源保持同步。
+    //
+    // ⚠️ 必须在调用方的事务连接(conn)上执行：本方法常在 transaction(async (conn) => {...}) 回调内被调用，
+    // 若改用模块级 execute() 会从连接池取另一条独立连接去更新同一行，而事务连接仍持有该行锁未提交，
+    // 从而触发 Lock wait timeout（ER_LOCK_WAIT_TIMEOUT）且被旧 try/catch 静默吞掉 —— 既写不进、又不报错。
+    const sql = `UPDATE inv_inbound_order
+        SET inspection_status = ?, finance_posted = ?, qc_status = ?, update_time = NOW()
+      WHERE id = ?`;
+    const params = [
+      inspectionStatus,
+      financePosted ? 1 : 0,
+      inspectionStatus === 3 ? 'pass' : 'pending',
+      id,
+    ];
+    if (conn) {
+      await conn.execute(sql, params);
+    } else {
+      await execute(sql, params);
     }
   }
 

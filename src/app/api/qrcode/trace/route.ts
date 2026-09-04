@@ -1,3 +1,7 @@
+import { t } from '@/lib/server-translate';
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -10,6 +14,7 @@ const CACHE_PREFIX = 'trace:qr';
 const CACHE_TTL = 300;
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const qrCode = searchParams.get('qr_code') || '';
   const refNo = searchParams.get('ref_no') || '';
@@ -17,7 +22,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const materialCode = searchParams.get('material_code') || '';
 
   if (!qrCode && !refNo && !batchNo && !materialCode) {
-    return errorResponse('请提供二维码编码、单号、批次号或物料编码', 400, 400);
+    return errorResponse(ts('k_svtypp'), 400, 400);
   }
 
   let record: unknown = null;
@@ -46,7 +51,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  if (!record) return errorResponse('未找到对应的二维码记录', 404, 404);
+  if (!record) return errorResponse(ts('k_pn7c6u'), 404, 404);
 
   const cached = await getCachedTrace(record.qr_code);
   if (cached) {
@@ -176,7 +181,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   if (batchInfo) {
     timeline.push({
       time: batchInfo.create_time || batchInfo.created_at,
-      event: '批次入库',
+      event: ts('k_195mcqf'),
       operator: '-',
       result: 'success',
       message: `批次 ${record.batch_no} 入库，总量: ${batchInfo.quantity}，可用: ${batchInfo.available_qty}`,
@@ -187,7 +192,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     inboundInfo.forEach((item: DbRow) => {
       timeline.push({
         time: item.create_time,
-        event: '入库记录',
+        event: ts('k_esnmlm'),
         operator: '-',
         result: 'success',
         message: `入库单 ${item.inbound_order_no || '-'}，数量: ${item.quantity}`,
@@ -217,35 +222,37 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 });
 
 function getTypeLabel(type: string): string {
+  const ts = t;
   const map: Record<string, string> = {
-    material: '原料',
-    product: '成品',
-    workorder: '工单',
-    ink: '油墨',
-    screen_plate: '网版',
-    die: '刀具',
-    shipment: '出货',
-    ink_open: '开罐',
-    ink_mixed: '调色',
+    material: ts('k_dhq105'),
+    product: ts('k_19fnn2i'),
+    workorder: ts('k_1ggw60f'),
+    ink: ts('k_w1cwb8'),
+    screen_plate: ts('k_cu41ng'),
+    die: ts('k_1nk792w'),
+    shipment: ts('k_ynam66'),
+    ink_open: ts('k_17q5izh'),
+    ink_mixed: ts('k_1suo6rk'),
   };
   return map[type] || type;
 }
 
 function getScanTypeLabel(type: string): string {
+  const ts = t;
   const map: Record<string, string> = {
-    inbound: '入库扫描',
-    outbound: '出库扫描',
-    issue: '领料扫描',
-    report: '报工扫描',
-    check: '检验扫描',
-    inventory: '盘点扫描',
-    ink_open: '开罐扫描',
-    ink_use: '油墨使用',
-    plate_use: '网版领用',
-    plate_clean: '网版清洗',
-    die_use: '刀具使用',
-    die_sharpen: '刀具刃磨',
-    trace: '追溯查询',
+    inbound: ts('k_7wqbhn'),
+    outbound: ts('k_1ochef8'),
+    issue: ts('k_1id1ypm'),
+    report: ts('k_1jvd57t'),
+    check: ts('k_ibv66j'),
+    inventory: ts('k_zox95w'),
+    ink_open: ts('k_cl6d9z'),
+    ink_use: ts('k_1pfmn4r'),
+    plate_use: ts('k_1029kz6'),
+    plate_clean: ts('k_533fms'),
+    die_use: ts('k_e9vzbr'),
+    die_sharpen: ts('k_1888bl7'),
+    trace: ts('k_1g1b5nq'),
   };
   return map[type] || type;
 }

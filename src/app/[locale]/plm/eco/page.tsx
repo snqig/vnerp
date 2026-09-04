@@ -35,6 +35,7 @@ import { Plus, Search, Edit, Trash2, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { useTranslations } from 'next-intl';
+import { formatDate } from '@/lib/date-utils';
 
 interface EcoRecord {
   id?: number;
@@ -274,7 +275,7 @@ export default function EcoPage() {
                     </TableCell>
                     <TableCell>{r.applicant || '-'}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {r.apply_time?.slice(0, 10)}
+                      {formatDate(r.apply_time)}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">

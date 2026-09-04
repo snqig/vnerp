@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { IWorkOrderRepository } from '@/domain/production/repositories/IWorkOrderRepository';
 import {
   IPickOrderRepository,
@@ -42,8 +44,9 @@ export class ProductionApplicationService {
   // ==================== 工单基础 ====================
 
   async getWorkOrderById(id: number): Promise<WorkOrder> {
+  const ts = await getTranslations('Common');
     const wo = await this.workOrderRepo.findById(id);
-    if (!wo) throw new NotFoundError('工单不存在');
+    if (!wo) throw new NotFoundError(ts('k_lmufdi'));
     return wo;
   }
 
@@ -149,8 +152,9 @@ export class ProductionApplicationService {
   }
 
   async deleteWorkOrder(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const wo = await this.getWorkOrderById(id);
-    if (!wo.canDelete()) throw new DomainError('当前状态的工单不能删除');
+    if (!wo.canDelete()) throw new DomainError(ts('k_5z1vo4'));
     await this.workOrderRepo.softDelete(id);
   }
 
@@ -312,20 +316,23 @@ export class ProductionApplicationService {
   // ==================== 工具方法 ====================
 
   private async loadPickOrder(id: number): Promise<PickOrder> {
+  const ts = await getTranslations('Common');
     const po = await this.pickOrderRepo!.findById(id);
-    if (!po) throw new NotFoundError('领料单不存在');
+    if (!po) throw new NotFoundError(ts('k_1uzqc9i'));
     return po;
   }
 
   private async loadWorkReport(id: number): Promise<WorkReport> {
+  const ts = await getTranslations('Common');
     const report = await this.workReportRepo!.findById(id);
-    if (!report) throw new NotFoundError('报工单不存在');
+    if (!report) throw new NotFoundError(ts('k_xivpyp'));
     return report;
   }
 
   private async loadFinishOrder(id: number): Promise<FinishOrder> {
+  const ts = await getTranslations('Common');
     const order = await this.finishOrderRepo!.findById(id);
-    if (!order) throw new NotFoundError('完工入库单不存在');
+    if (!order) throw new NotFoundError(ts('k_aurri8'));
     return order;
   }
 

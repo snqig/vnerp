@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 /**
  * 打样工艺卡 — 应用服务
  *
@@ -210,6 +212,7 @@ export class SampleProcessCardService {
 
   /** 创建工艺卡 */
   async createCard(data: SampleProcessCardInput, userId: number): Promise<number> {
+  const ts = await getTranslations('Common');
     const ctx = { module: 'sample-card', action: 'createCard', userId };
     let phase = 'init';
     const sampleNo = data.sample_no || (await generateSampleNo());
@@ -226,7 +229,7 @@ export class SampleProcessCardService {
       const totalToolCost = Math.round(toolCost * 10000) / 10000;
       const totalCost = baseCost.materialCost + baseCost.laborCost + totalToolCost;
 
-      logger.info(ctx, `成本计算`, {
+      logger.info(ctx, ts('k_xn6k19'), {
         sampleNo,
         sampleName: data.sample_name,
         itemCount: data.items.length,
@@ -318,7 +321,7 @@ export class SampleProcessCardService {
           );
         }
 
-        logger.info(ctx, `工艺卡创建完成`, {
+        logger.info(ctx, ts('k_7gtshw'), {
           cardId,
           sampleNo,
           itemCount: data.items.length,
@@ -342,12 +345,13 @@ export class SampleProcessCardService {
     data: Partial<SampleProcessCardInput>,
     userId: number
   ): Promise<void> {
+  const ts = await getTranslations('Common');
     const existing = await query(
       `SELECT status FROM dcprint_sample_process_card WHERE id = ? AND deleted = 0 LIMIT 1`,
       [id]
     );
-    if (existing.length === 0) throw new Error('工艺卡不存在');
-    if (existing[0].status !== 1) throw new Error('仅草稿状态可编辑');
+    if (existing.length === 0) throw new Error(ts('k_1ctslgw'));
+    if (existing[0].status !== 1) throw new Error(ts('k_1f3sk0j'));
 
     const toolCost = await fetchToolCosts(data.die_tool_id, data.screen_plate_id);
     const baseCost =
@@ -369,7 +373,7 @@ export class SampleProcessCardService {
         [id]
       )) as DbResult;
       if (lockRows.length === 0) {
-        throw new Error('工艺卡不存在或已删除');
+        throw new Error(ts('k_a317l8'));
       }
 
       const params: (string | number | null)[] = [
@@ -461,12 +465,13 @@ export class SampleProcessCardService {
 
   /** 删除（软删除，仅草稿可删） */
   async deleteCard(id: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const existing = await query(
       `SELECT status FROM dcprint_sample_process_card WHERE id = ? AND deleted = 0 LIMIT 1`,
       [id]
     );
-    if (existing.length === 0) throw new Error('工艺卡不存在');
-    if (existing[0].status !== 1) throw new Error('仅草稿状态可删除');
+    if (existing.length === 0) throw new Error(ts('k_1ctslgw'));
+    if (existing[0].status !== 1) throw new Error(ts('k_pllx42'));
     await execute(`UPDATE dcprint_sample_process_card SET deleted = 1 WHERE id = ?`, [id]);
   }
 
@@ -475,18 +480,19 @@ export class SampleProcessCardService {
     id: number,
     userId: number
   ): Promise<{ workOrderId: number; workOrderNo: string }> {
+  const ts = await getTranslations('Common');
     const ctx = { module: 'sample-card', action: 'submitCard', cardId: id, userId };
     let phase = 'init';
     try {
       phase = 'load_card';
       const card = await this.getCardDetail(id);
       if (!card) {
-        logger.warn(ctx, `工艺卡不存在`);
-        throw new Error('工艺卡不存在');
+        logger.warn(ctx, ts('k_1ctslgw'));
+        throw new Error(ts('k_1ctslgw'));
       }
       if (card.status !== 1) {
-        logger.warn(ctx, `状态非草稿，无法提交`, { status: card.status });
-        throw new Error('仅草稿状态可提交');
+        logger.warn(ctx, ts('k_1kkzft9'), { status: card.status });
+        throw new Error(ts('k_1v4i1e'));
       }
 
       // 生成打样工单号
@@ -494,7 +500,7 @@ export class SampleProcessCardService {
       const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
       const workOrderNo = `SWO${ymd}${String(id).padStart(5, '0')}`;
 
-      logger.info(ctx, `准备生成打样工单`, {
+      logger.info(ctx, ts('k_19e5ii1'), {
         sampleNo: card.sample_no,
         sampleName: card.sample_name,
         workOrderNo,
@@ -527,10 +533,10 @@ export class SampleProcessCardService {
           [workOrderId, id]
         );
 
-        logger.info(ctx, `打样工单已生成`, {
+        logger.info(ctx, ts('k_89t9za'), {
           workOrderId,
           workOrderNo,
-          statusTransition: '1(草稿) → 2(打样中)',
+          statusTransition: ts('k_qnfoa9'),
         });
         return { workOrderId, workOrderNo };
       });
@@ -544,60 +550,63 @@ export class SampleProcessCardService {
 
   /** 确认工艺卡（打样中→已确认） */
   async confirmCard(id: number, userId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const ctx = { module: 'sample-card', action: 'confirmCard', cardId: id, userId };
     const existing = await query(
       `SELECT status FROM dcprint_sample_process_card WHERE id = ? AND deleted = 0 LIMIT 1`,
       [id]
     );
     if (existing.length === 0) {
-      logger.warn(ctx, `工艺卡不存在`);
-      throw new Error('工艺卡不存在');
+      logger.warn(ctx, ts('k_1ctslgw'));
+      throw new Error(ts('k_1ctslgw'));
     }
     if (existing[0].status !== 2) {
-      logger.warn(ctx, `状态非打样中，无法确认`, { status: existing[0].status });
-      throw new Error('仅打样中状态可确认');
+      logger.warn(ctx, ts('k_1cughn8'), { status: existing[0].status });
+      throw new Error(ts('k_nm7s0f'));
     }
 
     await execute(
       `UPDATE dcprint_sample_process_card SET status = 3, confirm_by = ?, confirm_time = NOW(), update_by = ?, update_time = NOW() WHERE id = ?`,
       [userId, userId, id]
     );
-    logger.info(ctx, `工艺卡已确认`, { statusTransition: '2(打样中) → 3(已确认)' });
+    logger.info(ctx, ts('k_sojurb'), { statusTransition: ts('k_gpm9qz') });
   }
 
   /** 作废工艺卡 */
   async cancelCard(id: number, userId: number): Promise<void> {
+  const ts = await getTranslations('Common');
     const ctx = { module: 'sample-card', action: 'cancelCard', cardId: id, userId };
     const existing = await query(
       `SELECT status FROM dcprint_sample_process_card WHERE id = ? AND deleted = 0 LIMIT 1`,
       [id]
     );
     if (existing.length === 0) {
-      logger.warn(ctx, `工艺卡不存在`);
-      throw new Error('工艺卡不存在');
+      logger.warn(ctx, ts('k_1ctslgw'));
+      throw new Error(ts('k_1ctslgw'));
     }
     if (existing[0].status === 4) {
-      logger.warn(ctx, `工艺卡已作废，重复操作`);
-      throw new Error('已作废的工艺卡不可重复操作');
+      logger.warn(ctx, ts('k_1c6t87r'));
+      throw new Error(ts('k_1ffzml1'));
     }
 
     await execute(
       `UPDATE dcprint_sample_process_card SET status = 4, update_by = ?, update_time = NOW() WHERE id = ?`,
       [userId, id]
     );
-    logger.info(ctx, `工艺卡已作废`, { beforeStatus: existing[0].status });
+    logger.info(ctx, ts('k_regfno'), { beforeStatus: existing[0].status });
   }
 
   /** 基于旧版本复制新版本（版本号自动+1） */
   async duplicateVersion(sourceId: number, userId: number): Promise<number> {
+  const ts = await getTranslations('Common');
     const ctx = { module: 'sample-card', action: 'duplicateVersion', sourceId, userId };
     let phase = 'init';
     try {
       phase = 'load_source';
       const source = await this.getCardDetail(sourceId);
       if (!source) {
-        logger.warn(ctx, `源工艺卡不存在`);
-        throw new Error('源工艺卡不存在');
+        logger.warn(ctx, ts('k_phuem6'));
+        throw new Error(ts('k_phuem6'));
       }
 
       // 生成新版本号：V1.0 → V1.1（小版本）
@@ -605,7 +614,7 @@ export class SampleProcessCardService {
       const newVersion = `V${versionParts[0]}.${(versionParts[1] || 0) + 1}`;
       const newSampleNo = await generateSampleNo();
 
-      logger.info(ctx, `版本复制`, {
+      logger.info(ctx, ts('k_ek0pxy'), {
         sourceSampleNo: source.sample_no,
         sourceVersion: source.version_no,
         newSampleNo,
@@ -696,7 +705,7 @@ export class SampleProcessCardService {
           }
         }
 
-        logger.info(ctx, `版本复制完成`, {
+        logger.info(ctx, ts('k_1ytnfru'), {
           newCardId,
           newSampleNo,
           newVersion,
@@ -737,46 +746,47 @@ export class SampleProcessCardService {
     options: { markupRate?: number; quantity?: number; validUntil?: string; remark?: string },
     userId: number
   ): Promise<{ quoteId: number; quoteNo: string; quotedPrice: number }> {
-    secureLog('info', '[generateQuote] 开始生成报价单', { cardId, options, userId });
+  const ts = await getTranslations('Common');
+    secureLog('info', ts('k_1qkt6bz'), { cardId, options, userId });
     const card = await this.getCardDetail(cardId);
     if (!card) {
-      secureLog('warn', '[generateQuote] 工艺卡不存在', { cardId });
-      throw new Error('工艺卡不存在');
+      secureLog('warn', ts('k_16fdsxv'), { cardId });
+      throw new Error(ts('k_1ctslgw'));
     }
     if (card.status !== 3) {
-      secureLog('warn', '[generateQuote] 工艺卡状态非已确认', { cardId, status: card.status });
-      throw new Error('仅已确认状态可生成报价');
+      secureLog('warn', ts('k_bu9qz7'), { cardId, status: card.status });
+      throw new Error(ts('k_17lglwp'));
     }
     if (card.quote_id) {
-      secureLog('warn', '[generateQuote] 工艺卡已生成过报价单', {
+      secureLog('warn', ts('k_p14lv1'), {
         cardId,
         existingQuoteId: card.quote_id,
       });
-      throw new Error('该工艺卡已生成过报价单，不可重复生成');
+      throw new Error(ts('k_1im37d8'));
     }
 
     const markupRate = options.markupRate ?? 30;
     const quantity = options.quantity ?? 1;
     if (options.markupRate === undefined) {
-      secureLog('warn', '[generateQuote] markupRate 未提供，使用默认值 30', { cardId });
+      secureLog('warn', ts('k_11l2eqd'), { cardId });
     }
     if (options.quantity === undefined) {
-      secureLog('warn', '[generateQuote] quantity 未提供，使用默认值 1', { cardId });
+      secureLog('warn', ts('k_59o9a6'), { cardId });
     }
     if (!card.customer_id) {
-      secureLog('warn', '[generateQuote] 工艺卡缺少 customer_id，报价将无关联客户', { cardId });
+      secureLog('warn', ts('k_osk2nd'), { cardId });
     }
     const quoteNo = await this.generateQuoteNo();
     const totalCost = Number(card.total_cost || 0);
     if (totalCost <= 0) {
-      secureLog('warn', '[generateQuote] 工艺卡总成本为 0，报价将为 0', { cardId, totalCost });
+      secureLog('warn', ts('k_iyrcu7'), { cardId, totalCost });
     }
     const materialCost = Number(card.total_material_cost || 0);
     const laborCost = Number(card.total_labor_cost || 0);
     const toolCost = Number(card.total_tool_cost || 0);
     const quotedPrice = Math.round(totalCost * (1 + markupRate / 100) * quantity * 10000) / 10000;
 
-    secureLog('info', '[generateQuote] 报价计算完成', {
+    secureLog('info', ts('k_1smrh8a'), {
       cardId,
       sampleNo: card.sample_no,
       costBreakdown: { materialCost, laborCost, toolCost, totalCost },
@@ -790,7 +800,7 @@ export class SampleProcessCardService {
     try {
       return await transaction(async (conn) => {
         phase = 'insert_sal_quote';
-        secureLog('info', '[generateQuote] 开始写入 sal_quote', { quoteNo });
+        secureLog('info', ts('k_2eagqe'), { quoteNo });
         const [result] = (await conn.execute(
           `INSERT INTO sal_quote
            (quote_no, quote_date, customer_id, customer_name, sample_card_id, sample_no, product_name,
@@ -817,17 +827,17 @@ export class SampleProcessCardService {
           ]
         )) as [ResultSetHeader, any];
         const quoteId = result.insertId;
-        secureLog('info', '[generateQuote] sal_quote 写入成功', { quoteId, quoteNo });
+        secureLog('info', ts('k_9unjwg'), { quoteId, quoteNo });
 
         phase = 'update_card_quote_id';
-        secureLog('info', '[generateQuote] 回写工艺卡 quote_id', { cardId, quoteId });
+        secureLog('info', ts('k_18okc5p'), { cardId, quoteId });
         await conn.execute(
           `UPDATE dcprint_sample_process_card SET quote_id = ?, update_by = ?, update_time = NOW() WHERE id = ?`,
           [quoteId, userId, cardId]
         );
 
         phase = 'save_events';
-        secureLog('info', '[generateQuote] 持久化领域事件', { cardId, quoteId });
+        secureLog('info', ts('k_7sy2ak'), { cardId, quoteId });
         await getDomainEventOutbox().saveEvents(conn, 'SampleProcessCard', cardId, [
           new SampleCardQuoteGeneratedEvent({
             cardId,
@@ -839,7 +849,7 @@ export class SampleProcessCardService {
           }),
         ]);
 
-        secureLog('info', '[generateQuote] 报价单生成完成', {
+        secureLog('info', ts('k_tn8oyi'), {
           cardId,
           quoteId,
           quoteNo,
@@ -849,7 +859,7 @@ export class SampleProcessCardService {
         return { quoteId, quoteNo, quotedPrice };
       });
     } catch (error) {
-      secureLog('error', '[generateQuote] 报价生成失败', {
+      secureLog('error', ts('k_v9id3z'), {
         cardId,
         quoteNo,
         quotedPrice,
@@ -887,42 +897,43 @@ export class SampleProcessCardService {
     options: { planQty?: number; planStartDate?: string; planEndDate?: string; priority?: string },
     userId: number
   ): Promise<{ workOrderId: number; workOrderNo: string }> {
-    secureLog('info', '[convertToFormalWorkOrder] 开始转正式工单', { cardId, options, userId });
+  const ts = await getTranslations('Common');
+    secureLog('info', ts('k_xw1mna'), { cardId, options, userId });
     const card = await this.getCardDetail(cardId);
     if (!card) {
-      secureLog('warn', '[convertToFormalWorkOrder] 工艺卡不存在', { cardId });
-      throw new Error('工艺卡不存在');
+      secureLog('warn', ts('k_15e1ohe'), { cardId });
+      throw new Error(ts('k_1ctslgw'));
     }
     if (card.status !== 3) {
-      secureLog('warn', '[convertToFormalWorkOrder] 工艺卡状态非已确认', {
+      secureLog('warn', ts('k_lrw1v4'), {
         cardId,
         status: card.status,
       });
-      throw new Error('仅已确认状态可转正式工单');
+      throw new Error(ts('k_1lge0em'));
     }
     if (card.formal_work_order_id) {
-      secureLog('warn', '[convertToFormalWorkOrder] 工艺卡已转过正式工单', {
+      secureLog('warn', ts('k_14ft2we'), {
         cardId,
         existingWorkOrderId: card.formal_work_order_id,
       });
-      throw new Error('该工艺卡已转过正式工单，不可重复转换');
+      throw new Error(ts('k_26q6jj'));
     }
 
     const planQty = options.planQty ?? 1000;
     if (options.planQty === undefined) {
-      secureLog('warn', '[convertToFormalWorkOrder] planQty 未提供，使用默认值 1000', { cardId });
+      secureLog('warn', ts('k_1nv7aaz'), { cardId });
     }
     const workOrderNo = await this.generateFormalWorkOrderNo();
     const productName = card.sample_name || card.product_name || `打样产品 ${card.sample_no}`;
     if (!card.sample_name && !card.product_name) {
       secureLog(
         'warn',
-        '[convertToFormalWorkOrder] 工艺卡缺少 sample_name 和 product_name，使用兜底名称',
+        ts('k_g0vr4q'),
         { cardId, productName }
       );
     }
 
-    secureLog('info', '[convertToFormalWorkOrder] 准备数据完成', {
+    secureLog('info', ts('k_19xms66'), {
       cardId,
       sampleNo: card.sample_no,
       workOrderNo,
@@ -936,7 +947,7 @@ export class SampleProcessCardService {
     try {
       return await transaction(async (conn) => {
         phase = 'insert_work_order';
-        secureLog('info', '[convertToFormalWorkOrder] 写入 prod_work_order', {
+        secureLog('info', ts('k_1s5rzwx'), {
           workOrderNo,
           planQty,
         });
@@ -957,21 +968,21 @@ export class SampleProcessCardService {
           ]
         )) as [ResultSetHeader, any];
         const workOrderId = result.insertId;
-        secureLog('info', '[convertToFormalWorkOrder] prod_work_order 写入成功', {
+        secureLog('info', ts('k_1qhaxb8'), {
           workOrderId,
           workOrderNo,
         });
 
         if (card.items && card.items.length > 0) {
           phase = 'insert_bom_items';
-          secureLog('info', '[convertToFormalWorkOrder] 写入 BOM 明细', {
+          secureLog('info', ts('k_ckzk81'), {
             workOrderId,
             itemCount: card.items.length,
           });
           let lineNo = 1;
           for (const item of card.items) {
             if (!item.material_id) {
-              secureLog('warn', '[convertToFormalWorkOrder] BOM 行缺少 material_id，将写入 null', {
+              secureLog('warn', ts('k_mv9pk6'), {
                 workOrderId,
                 lineNo,
                 materialName: item.material_name,
@@ -979,7 +990,7 @@ export class SampleProcessCardService {
             }
             const itemQty = Number(item.unit_dosage || 0) * planQty;
             const itemTotal = itemQty * Number(item.unit_cost || 0);
-            secureLog('info', '[convertToFormalWorkOrder] BOM 行', {
+            secureLog('info', ts('k_jcmvuf'), {
               lineNo,
               materialName: item.material_name,
               materialId: item.material_id,
@@ -1005,18 +1016,18 @@ export class SampleProcessCardService {
               ]
             );
           }
-          secureLog('info', '[convertToFormalWorkOrder] BOM 明细写入完成', {
+          secureLog('info', ts('k_4bczwj'), {
             workOrderId,
             totalLines: lineNo - 1,
           });
         } else {
-          secureLog('info', '[convertToFormalWorkOrder] 无物料明细，跳过 BOM 写入', {
+          secureLog('info', ts('k_41ddap'), {
             workOrderId,
           });
         }
 
         phase = 'update_card_work_order_id';
-        secureLog('info', '[convertToFormalWorkOrder] 回写工艺卡 formal_work_order_id', {
+        secureLog('info', ts('k_1ascoj2'), {
           cardId,
           workOrderId,
         });
@@ -1026,7 +1037,7 @@ export class SampleProcessCardService {
         );
 
         phase = 'save_events';
-        secureLog('info', '[convertToFormalWorkOrder] 持久化领域事件', { cardId, workOrderId });
+        secureLog('info', ts('k_epcyen'), { cardId, workOrderId });
         await getDomainEventOutbox().saveEvents(conn, 'SampleProcessCard', cardId, [
           new SampleCardConvertedToWorkOrderEvent({
             cardId,
@@ -1037,7 +1048,7 @@ export class SampleProcessCardService {
           }),
         ]);
 
-        secureLog('info', '[convertToFormalWorkOrder] 转正式工单完成', {
+        secureLog('info', ts('k_16s9b85'), {
           cardId,
           workOrderId,
           workOrderNo,
@@ -1047,7 +1058,7 @@ export class SampleProcessCardService {
         return { workOrderId, workOrderNo };
       });
     } catch (error) {
-      secureLog('error', '[convertToFormalWorkOrder] 转正式工单失败', {
+      secureLog('error', ts('k_1sky87z'), {
         cardId,
         workOrderNo,
         planQty,
@@ -1075,11 +1086,12 @@ export class SampleProcessCardService {
     };
     workOrderNo: string | null;
   }> {
+  const ts = await getTranslations('Common');
     const ctx = { module: 'sample-card', action: 'getCostVariance', cardId };
     const card = await this.getCardDetail(cardId);
     if (!card) {
-      logger.warn(ctx, `工艺卡不存在`);
-      throw new Error('工艺卡不存在');
+      logger.warn(ctx, ts('k_1ctslgw'));
+      throw new Error(ts('k_1ctslgw'));
     }
 
     const estimated = {
@@ -1126,7 +1138,7 @@ export class SampleProcessCardService {
           : 0,
     };
 
-    logger.info(ctx, `成本差异分析`, {
+    logger.info(ctx, ts('k_1laoljv'), {
       sampleNo: card.sample_no,
       workOrderNo,
       estimated,

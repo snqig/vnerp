@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import GlassGauge from '@/components/GlassGauge';
+import VerticalMarquee from '@/components/ui/VerticalMarquee';
 import {
   TrendingUp,
   TrendingDown,
@@ -83,59 +84,34 @@ const PRIORITY_MAP: Record<string, { labelKey: string; className: string }> = {
   low: { labelKey: 'low', className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
 };
 
+/**
+ * 纵向无缝无限循环滚动（垂直跑马灯）
+ *
+ * 已抽取为共享组件 `VerticalMarquee`（src/components/ui/VerticalMarquee.tsx），
+ * 此处保留同名包装以便页面内多处调用最小化改动。
+ *
+ * 相比旧实现修复的问题：
+ *  - 旧版把 isPaused 放进 useEffect 依赖，悬停再离开会重建动画并把 scrollPos 归零
+ *    → 视觉上突然跳回顶部；新版用 animationPlayState 暂停，位置保持不变
+ *  - 旧版用 requestAnimationFrame 逐帧改 scrollTop（触发重排）；
+ *    新版用 CSS transform 动画（GPU 合成层），大数据量下不掉帧
+ *  - 新版按内容高度换算 duration，速度恒定（旧版固定步长，内容多少都同一速度但无法调节）
+ *  - 新版内容不足一屏时自动停止滚动且只渲染一份，不留空白
+ *  - 新版尊重 prefers-reduced-motion
+ */
 function AutoScroll({
   children,
   maxHeight = 320,
-  _speed = 50,
+  _speed = 30,
 }: {
   children: React.ReactNode;
   maxHeight?: number;
   _speed?: number;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const innerRef = useRef<HTMLDivElement>(null);
-  const [isPaused, setIsPaused] = useState(false);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    const inner = innerRef.current;
-    if (!container || !inner) return;
-
-    let animId: number;
-    let scrollPos = 0;
-    const contentHeight = inner.scrollHeight / 2;
-    const viewportHeight = maxHeight;
-
-    if (contentHeight <= viewportHeight) return;
-
-    const step = () => {
-      if (!isPaused) {
-        scrollPos += 0.3;
-        if (scrollPos >= contentHeight) {
-          scrollPos = 0;
-        }
-        container.scrollTop = scrollPos;
-      }
-      animId = requestAnimationFrame(step);
-    };
-
-    animId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(animId);
-  }, [isPaused, maxHeight, children]);
-
   return (
-    <div
-      ref={containerRef}
-      className="overflow-hidden"
-      style={{ maxHeight: `${maxHeight}px` }}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
-      <div ref={innerRef}>
-        {children}
-        {children}
-      </div>
-    </div>
+    <VerticalMarquee maxHeight={maxHeight} speed={_speed}>
+      {children}
+    </VerticalMarquee>
   );
 }
 
@@ -527,7 +503,7 @@ export default function ProductionDashboard() {
                             </div>
                             <div className="bg-white/10 rounded-full h-1.5 overflow-hidden">
                               <div
-                                className={`h-full rounded-full transition-all ${eq.efficiency > 80 ? 'bg-green-400' : eq.efficiency > 60 ? 'bg-yellow-400' : 'bg-red-400'}`}
+                                className={`h-full rounded-full transition-[width] ${eq.efficiency > 80 ? 'bg-green-400' : eq.efficiency > 60 ? 'bg-yellow-400' : 'bg-red-400'}`}
                                 style={{ width: `${eq.efficiency}%` }}
                               />
                             </div>
@@ -618,7 +594,7 @@ export default function ProductionDashboard() {
                             </div>
                             <div className="bg-white/10 rounded-full h-2 overflow-hidden">
                               <div
-                                className={`h-full rounded-full transition-all ${order.progress >= 100 ? 'bg-green-400' : order.progress >= 50 ? 'bg-cyan-400' : 'bg-amber-400'}`}
+                                className={`h-full rounded-full transition-[width] ${order.progress >= 100 ? 'bg-green-400' : order.progress >= 50 ? 'bg-cyan-400' : 'bg-amber-400'}`}
                                 style={{ width: `${order.progress}%` }}
                               />
                             </div>

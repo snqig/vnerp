@@ -260,6 +260,7 @@ const formatDate = (dateStr: string | null | undefined) => {
 };
 
 export default function SalesOrdersPage() {
+  const ts = useTranslations('Orders');
   const t = useTranslations('Orders');
   const tc = useTranslations('Common');
   const { companyName } = useCompanyName();
@@ -870,7 +871,7 @@ export default function SalesOrdersPage() {
             material_code: item.material_code || '',
             material_name: item.material_name,
             quantity: parseFloat(item.quantity),
-            unit: item.unit || '个',
+            unit: item.unit || ts('k_d5a1x9'),
             unit_price: parseFloat(item.unit_price),
           })),
           remark: (document.getElementById('remark') as HTMLInputElement)?.value,
@@ -916,7 +917,7 @@ export default function SalesOrdersPage() {
             material_code: item.material_code || '',
             material_name: item.material_name,
             quantity: parseFloat(item.quantity) || 0,
-            unit: item.unit || '个',
+            unit: item.unit || ts('k_d5a1x9'),
             unit_price: parseFloat(item.unit_price) || 0,
           })),
           remark: (document.getElementById('remark') as HTMLInputElement)?.value,
@@ -1024,8 +1025,8 @@ export default function SalesOrdersPage() {
                   </Button>
                 )}
                 <GlobalExportToolbar
-                  filename="销售订单"
-                  title="销售订单列表"
+                  filename={ts('k_m6144y')}
+                  title={ts('k_vj18tx')}
                   landscape
                   columns={[
                     { key: 'order_no', label: t('orderNo'), width: 18 },
@@ -1491,7 +1492,7 @@ export default function SalesOrdersPage() {
                                         {t('productNameCol')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground">
-                                        {t('materialCode') || '物料编码'}
+                                        {t('materialCode') || ts('k_zsv6bq')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground text-right">
                                         {t('quantity')}
@@ -1612,7 +1613,7 @@ export default function SalesOrdersPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t('product')}</TableHead>
-                      <TableHead>{t('materialCode') || '物料编码'}</TableHead>
+                      <TableHead>{t('materialCode') || ts('k_zsv6bq')}</TableHead>
                       <TableHead>{t('quantity')}</TableHead>
                       <TableHead>{t('unit')}</TableHead>
                       <TableHead>{t('unitPrice')}</TableHead>
@@ -1691,7 +1692,7 @@ export default function SalesOrdersPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t('product')}</TableHead>
-                      <TableHead>{t('materialCode') || '物料编码'}</TableHead>
+                      <TableHead>{t('materialCode') || ts('k_zsv6bq')}</TableHead>
                       <TableHead>{t('quantity')}</TableHead>
                       <TableHead>{t('unit')}</TableHead>
                       <TableHead>{t('unitPrice')}</TableHead>

@@ -42,6 +42,7 @@ interface Receivable {
 
 export default function ReceivablesPage() {
   // 翻译钩子
+  const ts = useTranslations('Common');
   const tc = useTranslations('Common');
 
   const [receivables, setReceivables] = useState<Receivable[]>([]);
@@ -78,9 +79,9 @@ export default function ReceivablesPage() {
 
   const getStatusBadge = (status: number) => {
     const map: Record<number, { label: string; variant: Loose }> = {
-      1: { label: '未收款', variant: 'secondary' },
-      2: { label: '部分收款', variant: 'warning' },
-      3: { label: '已结清', variant: 'success' },
+      1: { label: ts('k_u424d'), variant: 'secondary' },
+      2: { label: ts('k_16bz1c3'), variant: 'warning' },
+      3: { label: ts('k_1wu2z9'), variant: 'success' },
     };
     const s = map[status] || { label: tc('unknown'), variant: 'default' };
     return <Badge variant={s.variant}>{s.label}</Badge>;

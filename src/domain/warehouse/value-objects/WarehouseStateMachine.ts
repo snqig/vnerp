@@ -1,3 +1,5 @@
+import { t } from '@/lib/server-translate';
+
 // 仓库单据状态机
 // 定义入库单和出库单的状态流转规则
 
@@ -152,7 +154,8 @@ export class WarehouseStateMachine {
     fromStatus: string,
     toStatus: string
   ): string {
-    const typeLabel = type === 'inbound' ? '入库单' : '出库单';
+  const ts = t;
+    const typeLabel = type === 'inbound' ? ts('k_1xpvpw') : ts('k_hsx2l9');
     const stateMachine = type === 'inbound' ? inboundStateMachine : outboundStateMachine;
     const fromLabel =
       stateMachine[fromStatus as InboundStatus | OutboundStatus]?.label || fromStatus;

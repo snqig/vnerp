@@ -40,6 +40,7 @@ interface ExchangeRate {
 }
 
 export default function ExchangeRatePage() {
+  const ts = useTranslations('Common');
   const tc = useTranslations('Common');
   const [rates, setRates] = useState<ExchangeRate[]>([]);
   const [loading, setLoading] = useState(false);
@@ -65,7 +66,7 @@ export default function ExchangeRatePage() {
         toast.error(result.message || tc('fetchFailed'));
       }
     } catch (error) {
-      logger.error({ module: 'Currency', action: 'fetchRates' }, '获取汇率列表失败', {
+      logger.error({ module: 'Currency', action: 'fetchRates' }, ts('k_6sc3y7'), {
         error: (error as Error).message,
       });
       toast.error(tc('fetchFailed'));

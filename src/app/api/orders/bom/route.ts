@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, transaction, queryPaginated, SqlValue } from '@/lib/db';
 import {
@@ -88,6 +91,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
  */
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     const validation = validateRequestBody(body, [
@@ -108,22 +112,22 @@ export const POST = withPermission(
       product_spec,
       version = 'V1.0',
       base_qty = 1,
-      unit = '件',
+      unit = ts('k_w0gthl'),
       remark,
       lines,
     } = body;
 
     if (!Array.isArray(lines) || lines.length === 0) {
-      return errorResponse('BOM明细不能为空', 400, 400);
+      return errorResponse(ts('k_17omlkz'), 400, 400);
     }
 
     if (!product_code.trim() || !product_name.trim()) {
-      return errorResponse('产品编码和产品名称不能为空', 400, 400);
+      return errorResponse(ts('k_gzzrj3'), 400, 400);
     }
 
     const hasInvalidLine = lines.some((line: DbRow) => !line.material_code || !line.material_name);
     if (hasInvalidLine) {
-      return errorResponse('BOM明细中物料编码和名称不能为空', 400, 400);
+      return errorResponse(ts('k_gg1f5q'), 400, 400);
     }
 
     return await transaction(async (connection) => {
@@ -194,7 +198,7 @@ export const POST = withPermission(
             line.material_code,
             line.material_name,
             line.material_spec || '',
-            line.unit || '件',
+            line.unit || ts('k_w0gthl'),
             line.consumption_qty,
             line.loss_rate || 0,
             line.unit_cost || 0,
@@ -204,7 +208,7 @@ export const POST = withPermission(
         );
       }
 
-      return successResponse({ bomId, bomNo }, 'BOM创建成功');
+      return successResponse({ bomId, bomNo }, ts('k_1bt43tl'));
     });
   },
   { logTitle: '创建BOM', logType: 'business' }
@@ -216,11 +220,12 @@ export const POST = withPermission(
  */
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
     const { id, action, ...updateData } = body;
 
     if (!id) {
-      return errorResponse('BOM ID不能为空', 400, 400);
+      return errorResponse(ts('k_c6q9wg'), 400, 400);
     }
 
     return await transaction(async (connection) => {
@@ -231,7 +236,7 @@ export const PUT = withPermission(
       );
 
       if ((bomRows as DbRow[]).length === 0) {
-        throw new Error('BOM不存在');
+        throw new Error(ts('k_ksotfg'));
       }
 
       const bom = (bomRows as DbRow[])[0];
@@ -243,7 +248,7 @@ export const PUT = withPermission(
           [BOM_STATUS.AUDITED, id]
         );
 
-        return successResponse({ id }, 'BOM审核成功');
+        return successResponse({ id }, ts('k_qja399'));
       }
 
       if (action === 'publish') {
@@ -257,7 +262,7 @@ export const PUT = withPermission(
           [BOM_STATUS.PUBLISHED, id]
         );
 
-        return successResponse({ id }, 'BOM发布成功');
+        return successResponse({ id }, ts('k_14quixw'));
       }
 
       if (action === 'disable') {
@@ -266,12 +271,12 @@ export const PUT = withPermission(
           [BOM_STATUS.DISABLED, id]
         );
 
-        return successResponse({ id }, 'BOM停用成功');
+        return successResponse({ id }, ts('k_19954eo'));
       }
 
       // 普通更新
       if (bom.status >= BOM_STATUS.PUBLISHED) {
-        throw new Error('已发布的BOM不能直接修改，请创建新版本');
+        throw new Error(ts('k_1tgh9gt'));
       }
 
       const updateFields: string[] = [];
@@ -321,7 +326,7 @@ export const PUT = withPermission(
               line.material_code,
               line.material_name,
               line.material_spec || '',
-              line.unit || '件',
+              line.unit || ts('k_w0gthl'),
               line.consumption_qty,
               line.loss_rate || 0,
               line.unit_cost || 0,
@@ -337,7 +342,7 @@ export const PUT = withPermission(
         );
       }
 
-      return successResponse({ id }, 'BOM更新成功');
+      return successResponse({ id }, ts('k_m94zwg'));
     });
   },
   { logTitle: '更新BOM', logType: 'business' }
@@ -349,11 +354,12 @@ export const PUT = withPermission(
  */
 export const DELETE = withPermission(
   async (request: NextRequest, _userInfo) => {
+  const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return errorResponse('BOM ID不能为空', 400, 400);
+      return errorResponse(ts('k_c6q9wg'), 400, 400);
     }
 
     const bom = await query('SELECT status, version FROM bom_header WHERE id = ? AND deleted = 0', [
@@ -361,13 +367,13 @@ export const DELETE = withPermission(
     ]);
 
     if ((bom as DbRow[]).length === 0) {
-      return errorResponse('BOM不存在', 404, 404);
+      return errorResponse(ts('k_ksotfg'), 404, 404);
     }
 
     const bomData = (bom as DbRow[])[0];
 
     if (bomData.status >= BOM_STATUS.PUBLISHED) {
-      return errorResponse('已发布的BOM不能删除，请停用它', 400, 400);
+      return errorResponse(ts('k_198cxid'), 400, 400);
     }
 
     await transaction(async (connection) => {
@@ -377,13 +383,12 @@ export const DELETE = withPermission(
       );
 
       await connection.execute(
-        `INSERT INTO bom_version_history (bom_id, version, change_type, change_content, change_reason, operate_time)
-       VALUES (?, ?, 'DELETE', '删除BOM', 'BOM删除', NOW())`,
+        ts('k_12iriee'),
         [id, bomData.version]
       );
     });
 
-    return successResponse(null, 'BOM删除成功');
+    return successResponse(null, ts('k_zb3gk8'));
   },
   { logTitle: '删除BOM', logType: 'business' }
 );

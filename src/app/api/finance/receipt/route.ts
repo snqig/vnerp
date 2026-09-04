@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -49,10 +52,11 @@ export const GET = withPermission(async (request: NextRequest) => {
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
+  const ts = await getTranslations('Common');
     const body = await request.json();
 
     if (!body.receivable_id || !body.amount || !body.receipt_date) {
-      return errorResponse('缺少必填字段: receivable_id, amount, receipt_date', 400, 400);
+      return errorResponse(ts('k_1onzq15'), 400, 400);
     }
 
     try {
@@ -66,7 +70,7 @@ export const POST = withPermission(
         remark: body.remark,
         createBy: userInfo.userId,
       });
-      return successResponse(result, '收款登记成功');
+      return successResponse(result, ts('k_g26ckf'));
     } catch (error) {
       if (error instanceof NotFoundError) return errorResponse(error.message, 404, 404);
       if (error instanceof DomainError) return errorResponse(error.message, 400, 400);

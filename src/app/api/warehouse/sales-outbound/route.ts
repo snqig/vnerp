@@ -1,3 +1,6 @@
+import { getTranslations } from 'next-intl/server';
+
+;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, logOperation } from '@/lib/api-response';
@@ -54,6 +57,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 });
 
 export const POST = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const {
     order_id,
@@ -68,31 +72,31 @@ export const POST = withPermission(async (request: NextRequest) => {
   } = body;
 
   if (!warehouse_id) {
-    return errorResponse('仓库ID不能为空', 400, 400);
+    return errorResponse(ts('k_1t9r8nc'), 400, 400);
   }
   if (!items || !Array.isArray(items) || items.length === 0) {
-    return errorResponse('出库明细不能为空', 400, 400);
+    return errorResponse(ts('k_15xvt0o'), 400, 400);
   }
 
   // 系统设置 category.require_on_business：销售出库单要求物料已归类
   const materialIds = (items as DbRow[]).map((item: DbRow) => item.material_id).filter(Boolean);
-  secureLog('info', '[warehouse/sales-outbound] 开始物料分类校验', {
+  secureLog('info', ts('k_gt16v1'), {
     itemCount: items.length,
     materialIds,
   });
   const categoryCheck = await checkMaterialsCategorized(materialIds);
-  secureLog('info', '[warehouse/sales-outbound] 物料分类校验完成', {
+  secureLog('info', ts('k_vyvuy4'), {
     blocked: categoryCheck.blocked,
     uncategorizedCount: categoryCheck.uncategorized.length,
   });
   if (categoryCheck.blocked) {
-    secureLog('warn', '[warehouse/sales-outbound] 物料分类校验阻断提交', {
+    secureLog('warn', ts('k_1006c0o'), {
       message: categoryCheck.message,
     });
     return errorResponse(categoryCheck.message!, 400, 400);
   }
   if (categoryCheck.message) {
-    secureLog('warn', '[warehouse/sales-outbound] 物料分类校验警告', {
+    secureLog('warn', ts('k_vtkku0'), {
       message: categoryCheck.message,
     });
   }
@@ -112,13 +116,13 @@ export const POST = withPermission(async (request: NextRequest) => {
         [order_id]
       );
       if (orderRows.length === 0) {
-        throw new Error('销售订单不存在');
+        throw new Error(ts('k_1gccwsl'));
       }
       if (orderRows[0].status < 20) {
-        throw new Error('销售订单未审核，不能出库');
+        throw new Error(ts('k_1gn0r8m'));
       }
       if (orderRows[0].status >= 90) {
-        throw new Error('销售订单已关闭，不能出库');
+        throw new Error(ts('k_1ybsap9'));
       }
     }
 
@@ -183,16 +187,17 @@ export const POST = withPermission(async (request: NextRequest) => {
 
   return successResponse(
     { ...result, uncategorizedMaterials: categoryCheck.uncategorized },
-    categoryCheck.message ? `销售出库单创建成功。${categoryCheck.message}` : '销售出库单创建成功'
+    categoryCheck.message ? `销售出库单创建成功。${categoryCheck.message}` : ts('k_1j7yesz')
   );
 });
 
 export const PUT = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const body = await request.json();
   const { id, action, status, remark } = body;
 
   if (!id) {
-    return errorResponse('出库单ID不能为空', 400, 400);
+    return errorResponse(ts('k_1ddnsve'), 400, 400);
   }
 
   if (action === 'post') {
@@ -203,13 +208,13 @@ export const PUT = withPermission(async (request: NextRequest) => {
       );
 
       if (outboundRows.length === 0) {
-        throw new Error('出库单不存在');
+        throw new Error(ts('k_14l2xo0'));
       }
 
       const outbound = outboundRows[0];
 
       if (outbound.status >= 3) {
-        throw new Error('出库单已完成或已取消，不能重复过账');
+        throw new Error(ts('k_ir4gpo'));
       }
 
       const [itemRows] = await conn.execute(
@@ -242,7 +247,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
         const [batchRows] = await conn.execute(
           `SELECT id, batch_no, available_qty, unit_price, inbound_date
            FROM inv_inventory_batch
-           WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 'normal'
+           WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 1
            ORDER BY inbound_date ASC, id ASC
            FOR UPDATE`,
           [item.material_id, outbound.warehouse_id]
@@ -265,8 +270,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
         if (usedBatch && fifoRecommended && usedBatch !== fifoRecommended) {
           try {
             await conn.execute(
-              `INSERT INTO inv_fifo_override_log (source_type, source_id, source_no, material_id, material_name, recommended_batch, actual_batch, reason, operator_name, approval_status)
-               VALUES ('sales_outbound', ?, ?, ?, ?, ?, ?, '手动指定批次', ?, 0)`,
+              ts('k_1xstgvz'),
               [
                 id,
                 outbound.outbound_no,
@@ -315,8 +319,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
         try {
           const voucherNo = 'FV' + Date.now() + String(item.id).slice(-4);
           await conn.execute(
-            `INSERT INTO fin_voucher (voucher_no, voucher_date, source_type, source_id, source_no, debit_account, credit_account, amount, cost_price, quantity, batch_no, material_id, material_name, warehouse_id)
-             VALUES (?, CURDATE(), 'sales_outbound', ?, ?, '应收账款', '成品库存', ?, ?, ?, ?, ?, ?, ?)`,
+            ts('k_50povp'),
             [
               voucherNo,
               id,
@@ -415,15 +418,15 @@ export const PUT = withPermission(async (request: NextRequest) => {
     }
 
     await logOperation({
-      title: '销售出库过账',
-      oper_type: '出库',
+      title: ts('k_hcca9'),
+      oper_type: ts('k_dwwra2'),
       oper_method: 'PUT',
       oper_url: '/api/warehouse/sales-outbound',
       oper_param: JSON.stringify({ id, action: 'post' }),
       oper_result: `出库单过账成功，已生成出货二维码 ${qrCode}`,
     });
 
-    return successResponse(result, '出库过账成功');
+    return successResponse(result, ts('k_12nvv6a'));
   }
 
   if (status !== undefined)
@@ -436,25 +439,26 @@ export const PUT = withPermission(async (request: NextRequest) => {
       remark,
       id,
     ]);
-  return successResponse(null, '更新成功');
+  return successResponse(null, ts('k_1795bzg'));
 });
 
 export const DELETE = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
-  if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
+  if (!id) return NextResponse.json({ success: false, message: ts('k_js4lo9') }, { status: 400 });
 
   const outbound = await query(
     'SELECT status FROM inv_sales_outbound WHERE id = ? AND deleted = 0',
     [Number(id)]
   );
   if (outbound.length === 0) {
-    return errorResponse('出库单不存在', 404, 404);
+    return errorResponse(ts('k_14l2xo0'), 404, 404);
   }
   if (outbound[0].status >= 3) {
-    return errorResponse('已完成的出库单不能删除', 400, 400);
+    return errorResponse(ts('k_1x6as9t'), 400, 400);
   }
 
   await execute('UPDATE inv_sales_outbound SET deleted = 1 WHERE id = ?', [Number(id)]);
-  return successResponse(null, '删除成功');
+  return successResponse(null, ts('k_1hlqs'));
 });

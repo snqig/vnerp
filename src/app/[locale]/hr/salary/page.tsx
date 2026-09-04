@@ -828,8 +828,7 @@ export default function HRSalaryPage() {
                   </DialogTitle>
                   <DialogDescription>
                     {currentMonth}
-                    薪资明细
-                  </DialogDescription>
+                    {tc('salaryDetail')}</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
@@ -1039,8 +1038,7 @@ export default function HRSalaryPage() {
                   </DialogTitle>
                   <DialogDescription>
                     {currentMonth}
-                    薪资明细
-                  </DialogDescription>
+                    {tc('salaryDetail')}</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
