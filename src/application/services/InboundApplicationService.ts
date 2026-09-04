@@ -334,7 +334,7 @@ export class InboundApplicationService {
 
     const previousStatus = order.status.value;
 
-    if (previousStatus === 'draft') {
+    if (previousStatus === 'draft' || previousStatus === 'rejected') {
       order.submit();
     }
 
@@ -419,6 +419,33 @@ export class InboundApplicationService {
     order.clearDomainEvents();
 
     return { id, status: 'cancelled' };
+  }
+
+  async rejectOrder(id: number): Promise<{ id: number; status: string }> {
+    const order = await this.getOrderById(id);
+
+    const previousStatus = order.status.value;
+    order.reject();
+
+    await transaction(async (conn) => {
+      const statusPredicate =
+        previousStatus === 'completed' ? "status IN ('approved','completed')" : 'status = ?';
+      const predicateParams = previousStatus === 'completed' ? [] : [previousStatus];
+      const [result] = (await conn.execute(
+        `UPDATE inv_inbound_order SET status = 'rejected', update_time = NOW() WHERE id = ? AND ${statusPredicate}`,
+        [id, ...predicateParams]
+      )) as [ResultSetHeader, any];
+      if (result.affectedRows === 0) {
+        throw new VersionConflictError();
+      }
+
+      const events = order.getDomainEvents();
+      await getDomainEventOutbox().saveEvents(conn, 'InboundOrder', id, events);
+    });
+
+    order.clearDomainEvents();
+
+    return { id, status: 'rejected' };
   }
 
   async deleteOrder(id: number): Promise<void> {

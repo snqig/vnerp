@@ -900,9 +900,9 @@ export default function OutboundManagementPage() {
   // 计算统计数据
   const totalOutboundToday = outboundRecords
     .filter((r) => r.date === new Date().toISOString().slice(0, 10))
-    .reduce((sum, r) => sum + r.quantity, 0);
+    .reduce((sum, r) => sum + (Number(r.quantity) || 0), 0);
 
-  const totalOutboundMonth = outboundRecords.reduce((sum, r) => sum + r.quantity, 0);
+  const totalOutboundMonth = outboundRecords.reduce((sum, r) => sum + (Number(r.quantity) || 0), 0);
 
   return (
     <MainLayout>

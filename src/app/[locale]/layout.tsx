@@ -6,6 +6,7 @@ import { IntlProvider } from '@/components/IntlProvider';
 import { notFound } from 'next/navigation';
 import { locales, type Locale } from '@/i18n/locales';
 import { AuthProvider, type InitialAuthData } from '@/contexts/AuthContext';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 import { ToastProviderComponent } from '@/components/ui/toast';
 import { SnowAdminThemeProvider } from '@/hooks/useSnowAdminTheme';
 import SystemConfigInitializer from '@/components/SystemConfigInitializer';
@@ -128,7 +129,9 @@ export default async function LocaleLayout({
         <SnowAdminThemeProvider>
           <AuthProvider initialAuth={initialAuth}>
             <SystemConfigInitializer />
-            <ToastProviderComponent>{children}</ToastProviderComponent>
+            <ToastProviderComponent>
+              <AuthGuard>{children}</AuthGuard>
+            </ToastProviderComponent>
           </AuthProvider>
         </SnowAdminThemeProvider>
       </IntlProvider>

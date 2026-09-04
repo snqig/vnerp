@@ -39,9 +39,9 @@ export const createInboundOrderSchema = z
 
 export const updateInboundOrderSchema = z.object({
   id: z.number().int().positive('入库单ID必须为正整数'),
-  action: z.enum(['submit', 'approve', 'cancel', 'unapprove', 'update']).optional(),
+  action: z.enum(['submit', 'approve', 'cancel', 'unapprove', 'update', 'reject']).optional(),
   // 扩展 status 枚举加入 'draft'：编辑草稿单时前端可能原样回传当前状态，避免校验 422
-  status: z.enum(['draft', 'pending', 'approved', 'cancelled']).optional(),
+  status: z.enum(['draft', 'pending', 'approved', 'cancelled', 'rejected']).optional(),
   remark: z.string().max(500, '备注最长500字符').optional(),
   // 内容级修改（action='update' 时生效）：仅草稿/待审核单允许
   supplier_name: z.string().max(100, '供应商名称最长100字符').optional(),

@@ -206,6 +206,11 @@ export const PUT = withPermission(
         return successResponse(result, ts('k_1vvjc9s'));
       }
 
+      if (action === 'reject' || status === 'rejected') {
+        const result = await service.rejectOrder(id);
+        return successResponse(result, '入库单已驳回');
+      }
+
       if (action === 'submit' || status === 'pending') {
         const result = await service.submitOrder(id);
         return successResponse(result, ts('k_7i6e5h'));

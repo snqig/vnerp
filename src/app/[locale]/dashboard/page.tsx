@@ -44,6 +44,7 @@ interface DashboardData {
     totalEmployees: number;
     todayProduction: number;
     productionChange: number;
+    todayRevenue: number;
   };
   recentOrders: {
     id: number;
@@ -76,6 +77,7 @@ export default function DashboardPage() {
       totalEmployees: 0,
       todayProduction: 0,
       productionChange: 0,
+      todayRevenue: 0,
     },
     recentOrders: [],
     alerts: [],
@@ -243,7 +245,8 @@ export default function DashboardPage() {
                   <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
                 )}
                 <span className={s.productionChange >= 0 ? 'text-green-600' : 'text-red-600'}>
-                  +{s.productionChange}%
+                  {s.productionChange >= 0 ? '+' : ''}
+                  {s.productionChange}%
                 </span>
                 <span className="text-muted-foreground ml-1">{t('vsYesterday')}</span>
               </div>
@@ -255,8 +258,8 @@ export default function DashboardPage() {
               <DollarSign className="h-4 w-4 text-emerald-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">¥{(s.todayOrders * 15000).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">{t('estimatedRevenue')}</p>
+              <div className="text-2xl font-bold">¥{(s.todayRevenue || 0).toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">{t('actualRevenue')}</p>
             </CardContent>
           </Card>
         </div>

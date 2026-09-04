@@ -1,6 +1,6 @@
 import { DomainError } from '../../shared/DomainTypes';
 
-export type InboundStatus = 'draft' | 'pending' | 'completed' | 'cancelled';
+export type InboundStatus = 'draft' | 'pending' | 'completed' | 'cancelled' | 'rejected';
 
 const DB_TO_DOMAIN_STATUS: Record<string, InboundStatus> = {
   draft: 'draft',
@@ -8,6 +8,7 @@ const DB_TO_DOMAIN_STATUS: Record<string, InboundStatus> = {
   approved: 'completed',
   completed: 'completed',
   cancelled: 'cancelled',
+  rejected: 'rejected',
 };
 
 export class OrderStatus {
@@ -25,9 +26,12 @@ export class OrderStatus {
   static cancelled(): OrderStatus {
     return new OrderStatus('cancelled');
   }
+  static rejected(): OrderStatus {
+    return new OrderStatus('rejected');
+  }
   static from(value: string): OrderStatus {
     const mappedValue = DB_TO_DOMAIN_STATUS[value] || value as InboundStatus;
-    const validStatuses: InboundStatus[] = ['draft', 'pending', 'completed', 'cancelled'];
+    const validStatuses: InboundStatus[] = ['draft', 'pending', 'completed', 'cancelled', 'rejected'];
     if (!validStatuses.includes(mappedValue)) {
       throw new DomainError(`无效的入库单状态: ${value}`);
     }
@@ -36,9 +40,10 @@ export class OrderStatus {
 
   private static transitions: Record<InboundStatus, InboundStatus[]> = {
     draft: ['pending', 'cancelled'],
-    pending: ['completed', 'cancelled'],
+    pending: ['completed', 'cancelled', 'rejected'],
     completed: ['pending'],
     cancelled: [],
+    rejected: ['pending', 'cancelled'],
   };
 
   private static operations: Record<InboundStatus, string[]> = {
@@ -46,6 +51,7 @@ export class OrderStatus {
     pending: ['audit', 'cancel', 'view'],
     completed: ['unaudit', 'view'],
     cancelled: ['view'],
+    rejected: ['edit', 'delete', 'submit', 'audit', 'view'],
   };
 
   canTransitionTo(target: InboundStatus): boolean {

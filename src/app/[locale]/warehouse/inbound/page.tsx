@@ -6,12 +6,9 @@ import QRCode from 'qrcode';
 import { MainLayout } from '@/components/layout';
 import {
   ArrowDownLeft,
-  CheckCircle2,
   QrCode,
   Printer,
   Scissors,
-  Edit,
-  Trash2,
   Eye,
   ArrowRightLeft,
   MoreHorizontal,
@@ -54,11 +51,12 @@ import type {
   InboundRecord,
   SourceLabelData,
 } from './types';
-import { statusConfig, INITIAL_FORM_DATA, isCuttableMaterial } from './types';
+import { INITIAL_FORM_DATA, isCuttableMaterial } from './types';
 
 import { InboundToolbar } from './components/InboundToolbar';
 import { InboundStatsCards } from './components/InboundStatsCards';
 import { InboundDialogs } from './components/InboundDialogs';
+import { InboundRecordViews, type InboundViewMode } from './components/InboundRecordViews';
 import { TransferOutDialog } from './components/dialogs/TransferOutDialog';
 import { OutboundDialog } from './components/dialogs/OutboundDialog';
 import { WorkshopPickDialog } from './components/dialogs/WorkshopPickDialog';
@@ -129,6 +127,19 @@ export default function InboundManagementPage() {
 
   // 标签选择状态
   const [selectedLabels, setSelectedLabels] = useState<Set<string>>(new Set());
+
+  // 入库记录显示方式（列表 / 表格 / 看板），持久化到 localStorage
+  const [viewMode, setViewMode] = useState<InboundViewMode>(() => {
+    if (typeof window === 'undefined') return 'list';
+    const saved = window.localStorage.getItem('inbound:viewMode');
+    return saved === 'table' || saved === 'kanban' ? saved : 'list';
+  });
+  const changeViewMode = (mode: InboundViewMode) => {
+    setViewMode(mode);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('inbound:viewMode', mode);
+    }
+  };
 
   // 二维码状态
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
@@ -363,6 +374,50 @@ export default function InboundManagementPage() {
     }
   };
 
+  // 行操作回调（供列表/表格/看板三种视图复用）
+  const openEdit = (record: InboundRecord) => {
+    const firstItem = record.items?.[0] || ({} as Partial<InboundItem>);
+    setCurrentRecord(record);
+    setFormData({
+      materialCode: String(firstItem.material_code || ''),
+      materialName: firstItem.material_name || '',
+      specification: firstItem.material_spec || '',
+      quantity: String(firstItem.quantity || ''),
+      unit: firstItem.unit || '',
+      supplier: record.supplier_name || '',
+      warehouse: String(record.warehouse_id || ''),
+      purchaseOrderNo: record.po_no || '',
+      batchNo: firstItem.batch_no || '',
+      remark: record.remark || '',
+      isMixed: false,
+      mixedMaterialRemark: '',
+      colorCode: '',
+      machineNo: '',
+      width: '',
+      isRawMaterial: false,
+      currency: record.currency || 'CNY',
+      baseCurrency: record.base_currency || '',
+    });
+    setIsEditDialogOpen(true);
+  };
+  const openAudit = (record: InboundRecord) => {
+    setCurrentRecord(record);
+    setIsAuditDialogOpen(true);
+  };
+  const openPrint = (record: InboundRecord) => {
+    const labels = mapRecordsToLabels([record]);
+    setPrintLabels(labels);
+    setIsPrintPreviewOpen(true);
+  };
+  const openTransfer = (record: InboundRecord) => {
+    setTransferSourceRecords([record]);
+    setIsTransferDialogOpen(true);
+  };
+  const openDelete = (record: InboundRecord) => {
+    setDeleteTarget(record);
+    setIsDeleteDialogOpen(true);
+  };
+
   return (
     <MainLayout title={t('inboundManagement')}>
       <div className="space-y-6">
@@ -397,12 +452,34 @@ export default function InboundManagementPage() {
         >
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
                 <CardTitle className="flex items-center gap-2">
                   <ArrowDownLeft className="h-5 w-5" />
                   {t('inboundRecords')}
                 </CardTitle>
-                {selectedRecords.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* 显示方式切换：列表 / 表格 / 看板 */}
+                  <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 p-0.5 bg-slate-50 dark:bg-slate-800">
+                    {([
+                      { key: 'list', label: '列表' },
+                      { key: 'table', label: '表格' },
+                      { key: 'kanban', label: '看板' },
+                    ] as const).map((m) => (
+                      <button
+                        key={m.key}
+                        type="button"
+                        onClick={() => changeViewMode(m.key)}
+                        className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                          viewMode === m.key
+                            ? 'bg-white dark:bg-slate-900 shadow-sm font-medium'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                  {selectedRecords.length > 0 && (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">
                       {t('selectedCount', { count: selectedRecords.length })}
@@ -460,218 +537,23 @@ export default function InboundManagementPage() {
                     </DropdownMenu>
                   </div>
                 )}
+                </div>
               </div>
               <CardDescription>{t('manageInboundRecords')}</CardDescription>
             </CardHeader>
             <CardContent>
-              {inboundRecords.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">{t('noInboundRecords')}</div>
-              ) : (
-                <div className="space-y-3">
-                  {/* 全选行 */}
-                  <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <Checkbox
-                      checked={
-                        selectedRecords.length === inboundRecords.length &&
-                        inboundRecords.length > 0
-                      }
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedRecords(inboundRecords.map((r) => r.id));
-                        } else {
-                          setSelectedRecords([]);
-                        }
-                      }}
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      {selectedRecords.length === inboundRecords.length && inboundRecords.length > 0
-                        ? t('cancelSelectAll')
-                        : t('selectAll')}
-                    </span>
-                  </div>
-                  {inboundRecords.map((record) => {
-                    const statusInfo = statusConfig[record.status] || statusConfig.draft;
-                    const firstItem = record.items?.[0] || ({} as Partial<InboundItem>);
-                    const materialCode = firstItem.material_code || '-';
-                    const materialSummary =
-                      (record.items?.length || 0) > 1
-                        ? `${firstItem.material_name} 等${record.items?.length}项`
-                        : firstItem.material_name || '-';
-                    const spec = firstItem.material_spec || '-';
-                    const qtyUnit =
-                      firstItem.quantity !== undefined
-                        ? `${firstItem.quantity} ${firstItem.unit || ''}`
-                        : `共 ${record.total_quantity || 0} 件`;
-                    const warehouseName = record.warehouse_name || '-';
-                    const poNo = record.po_no || '-';
-                    const batchNo = firstItem.batch_no || '-';
-                    const currency = record.currency || 'CNY';
-                    const remark = record.remark || '-';
-                    return (
-                      <div
-                        key={record.id}
-                        className="p-4 border rounded-lg hover:bg-muted transition-colors"
-                      >
-                        <div className="flex items-center gap-3 mb-3">
-                          <Checkbox
-                            checked={selectedRecords.includes(record.id)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedRecords((prev) => [...prev, record.id]);
-                              } else {
-                                setSelectedRecords((prev) => prev.filter((id) => id !== record.id));
-                              }
-                            }}
-                          />
-                          <p className="font-medium text-sm">{record.order_no}</p>
-                          <Badge className={statusInfo.color}>{tc(statusInfo.labelKey)}</Badge>
-                          <div className="ml-auto">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button size="sm" variant="outline" className="gap-1">
-                                  <MoreHorizontal className="w-3 h-3" />
-                                  {tc('operation')}</Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                {(record.status === 'draft' || record.status === 'pending') && (
-                                  <>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setCurrentRecord(record);
-                                        setFormData({
-                                          materialCode: String(firstItem.material_code || ''),
-                                          materialName: firstItem.material_name || '',
-                                          specification: firstItem.material_spec || '',
-                                          quantity: String(firstItem.quantity || ''),
-                                          unit: firstItem.unit || '',
-                                          supplier: record.supplier_name || '',
-                                          warehouse: String(record.warehouse_id || ''),
-                                          purchaseOrderNo: record.po_no || '',
-                                          batchNo: firstItem.batch_no || '',
-                                          remark: record.remark || '',
-                                          isMixed: false,
-                                          mixedMaterialRemark: '',
-                                          colorCode: '',
-                                          machineNo: '',
-                                          width: '',
-                                          isRawMaterial: false,
-                                          currency: record.currency || 'CNY',
-                                          baseCurrency: record.base_currency || '',
-                                        });
-                                        setIsEditDialogOpen(true);
-                                      }}
-                                    >
-                                      <Edit className="w-4 h-4" />
-                                      {tc('edit')}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setCurrentRecord(record);
-                                        setIsAuditDialogOpen(true);
-                                      }}
-                                    >
-                                      <CheckCircle2 className="w-4 h-4" />
-                                      {tc('audit')}
-                                    </DropdownMenuItem>
-                                  </>
-                                )}
-                                {(record.status === 'approved' || record.status === 'completed') && (
-                                  <>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        const labels = mapRecordsToLabels([record]);
-                                        setPrintLabels(labels);
-                                        setIsPrintPreviewOpen(true);
-                                      }}
-                                    >
-                                      <QrCode className="w-4 h-4" />
-                                      {t('printQRCode')}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setTransferSourceRecords([record]);
-                                        setIsTransferDialogOpen(true);
-                                      }}
-                                    >
-                                      <ArrowRightLeft className="w-4 h-4" />
-                                      {ts('k_1j10cql')}</DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => openRowOutbound('raw', record)}>
-                                      <PackageMinus className="w-4 h-4" />
-                                      {ts('k_i8a8h6')}</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => openRowOutbound('workshop', record)}>
-                                      <Factory className="w-4 h-4" />
-                                      {ts('k_1ujut5g')}</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => openRowOutbound('prodReturn', record)}>
-                                      <Undo2 className="w-4 h-4" />
-                                      {ts('k_18y1htk')}</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => openRowOutbound('purReturn', record)}>
-                                      <Truck className="w-4 h-4" />
-                                      {ts('k_ri2ei6')}</DropdownMenuItem>
-                                  </>
-                                )}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  className="text-red-600"
-                                  onClick={() => {
-                                    setDeleteTarget(record);
-                                    setIsDeleteDialogOpen(true);
-                                  }}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  {tc('delete')}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 ml-7">
-                          <div>
-                            <p className="text-xs text-gray-500">{tc('materialCode')}</p>
-                            <p className="text-sm truncate">{materialCode}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">{tc('material')}</p>
-                            <p className="font-medium text-sm truncate">{materialSummary}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">{tc('specification')}</p>
-                            <p className="text-sm truncate">{spec}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">{tc('quantity')}/{tc('unit')}</p>
-                            <p className="text-sm">{qtyUnit}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">{tc('supplier')}</p>
-                            <p className="text-sm truncate">{record.supplier_name || '-'}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">{tc('warehouse')}</p>
-                            <p className="text-sm truncate">{warehouseName}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">{t('purchaseOrderNo')}</p>
-                            <p className="text-sm truncate">{poNo}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">{tc('batchNo')}</p>
-                            <p className="text-sm truncate">{batchNo}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">{tc('currency')}</p>
-                            <p className="text-sm">{currency}</p>
-                          </div>
-                          <div className="col-span-2">
-                            <p className="text-xs text-gray-500">{tc('remark')}</p>
-                            <p className="text-sm truncate">{remark}</p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              <InboundRecordViews
+                viewMode={viewMode}
+                records={inboundRecords}
+                selectedRecords={selectedRecords}
+                setSelectedRecords={setSelectedRecords}
+                onEdit={openEdit}
+                onAudit={openAudit}
+                onPrint={openPrint}
+                onTransfer={openTransfer}
+                onOutbound={openRowOutbound}
+                onDelete={openDelete}
+              />
             </CardContent>
           </Card>
         </motion.div>

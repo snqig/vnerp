@@ -61,6 +61,8 @@ export interface InitialAuthData {
 
 interface AuthContextType extends AuthState {
   isHydrated: boolean;
+  /** 认证检查是否已完成（initAuth 跑完，无论成功/失败/无 token）。AuthGuard 据此决定是否放行。 */
+  authResolved: boolean;
   login: (
     username: string,
     password: string,
@@ -145,6 +147,7 @@ export function AuthProvider({
   });
 
   const [isHydrated, setIsHydrated] = useState(false);
+  const [authResolved, setAuthResolved] = useState(false);
 
   // 在组件渲染阶段调用 useTranslations（而非事件回调/普通函数内），避免 "Invalid hook call"
   const ts = useTranslations('Common');
@@ -250,16 +253,14 @@ export function AuthProvider({
     authChecked.current = true;
 
     const initAuth = async () => {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+      try {
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
 
-      if (token && userStr) {
-        try {
+        if (token && userStr) {
           const user = JSON.parse(userStr);
 
           // SSR 已注入 initialAuth：直接采用服务端菜单，跳过首次 fetch。
-          // 仅恢复 user / isAuthenticated（这些字段 SSR 阶段无法从 localStorage 读取），
-          // 仍触发后台静默刷新，保证菜单最终与服务端一致；同时持久化到 localStorage 作降级缓存。
           const ssrInitial = initialAuthRef.current;
           if (ssrInitial && ssrInitial.menus.length > 0) {
             setState({
@@ -289,11 +290,14 @@ export function AuthProvider({
 
           // 等待 API 返回菜单数据
           await fetchMenus(token);
-        } catch {
+        } else {
           setState((prev) => ({ ...prev, isLoading: false }));
         }
-      } else {
+      } catch {
         setState((prev) => ({ ...prev, isLoading: false }));
+      } finally {
+        // 认证检查结束（含无 token / 解析失败 / 拉取菜单异常），AuthGuard 据此放行判定。
+        setAuthResolved(true);
       }
     };
 
@@ -433,6 +437,7 @@ export function AuthProvider({
       value={{
         ...state,
         isHydrated,
+        authResolved,
         login,
         logout,
         register,

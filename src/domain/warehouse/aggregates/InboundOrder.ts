@@ -292,6 +292,11 @@ export class InboundOrder {
     );
   }
 
+  reject(): void {
+    this._status = this._status.transitionTo('rejected');
+    // 驳回无下游副作用（不触发库存入库 / 应付 / 采购收货事件链），故不发布领域事件。
+  }
+
   unapprove(): void {
     this._status = this._status.transitionTo('pending');
     this._inspectionStatus = 0;

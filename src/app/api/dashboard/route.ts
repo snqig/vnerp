@@ -76,6 +76,19 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
+    let todayRevenue = 0;
+    try {
+      const rows = await query(`
+        SELECT COALESCE(SUM(total_amount), 0) as total
+        FROM sal_order WHERE deleted = 0 AND DATE(create_time) = CURDATE()
+      `);
+      if (Array.isArray(rows) && rows.length > 0) todayRevenue = Number(rows[0].total || 0);
+    } catch (e) {
+      logger.error({ module: 'dashboard', action: 'overview' }, 'Dashboard revenue query failed', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+
     let recentOrders: SqlValue[] = [];
     try {
       const rows = await query(`
@@ -161,6 +174,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
           totalEmployees,
           todayProduction,
           productionChange,
+          todayRevenue,
         },
         recentOrders: recentOrders.map((o: DbRow) => ({
           id: o.id,
