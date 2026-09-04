@@ -265,7 +265,7 @@
 
 **验证**：`pnpm lint:baseline` 退出 0；`node scripts/lint-gate.mjs` 与基线比对通过（current == baseline，无回归）。脚本初版因 `main()` 漏写 `async` 报 SyntaxError，已修复。
 
-**策略要点**：存量 2.2 万警告一次性清零不现实，故采用“债务冻结 + 增量守门”——禁止新增/恶化，新文件零错误。真正降债靠 P1-#18（`Loose=any` 替换）与 P2-F（i18n 提取）。详见 `docs/lint-strategy.md`。
+**策略要点**：存量 2.2 万警告一次性清零不现实，故采用“债务冻结 + 增量守门”——禁止新增/恶化，新文件零错误。真正降债靠 P1-#18（`Loose=any` 替换）与 P2-F（i18n 提取）。详见 `docs/03-技术规范/lint-strategy.md`。
 
 ---
 
