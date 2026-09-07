@@ -6084,7 +6084,9 @@
     "k_tesjdn": "系统版本",
     "k_1cfg610": "普通用户",
     "k_1blhdsx": "禁用用户",
-    "k_dg32uj": "锁定用户"
+    "k_dg32uj": "锁定用户",
+    "k_inbound_approve_requires_qc": "Phiếu nhập kho chưa qua kiểm tra chất lượng, không thể phê duyệt",
+    "k_product_qc_required": "Thành phẩm chưa qua kiểm tra chất lượng, không được hoàn thành nhập kho"
   },
   "Nav": {
     "dashboard_center": "Trung tâm Bảng điều khiển",
@@ -7821,7 +7823,8 @@
     "k_156cbqh": "正品",
     "k_1hw00sx": "并发冲突，请刷新后重试",
     "k_leccqh": "库存调整",
-    "k_zfkd36": "盘点单列表"
+    "k_zfkd36": "盘点单列表",
+    "cuttingNoLabelSelected": "Vui lòng chọn nhãn cần cắt trong quản lý nhãn trước, sau đó nhấn nút \"Cắt\" trên thẻ nhãn"
   },
   "Production": {
     "title": "Quản lý sản xuất",
@@ -11795,5 +11798,43 @@
     "k_1onwh1j": "追溯时间",
     "k_1yh2yft": "正向追溯",
     "k_19f7liv": "反向追溯"
+  },
+  "Error": {
+    "UNAUTHORIZED": "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại",
+    "FORBIDDEN": "Bạn không có quyền thực hiện hành động này",
+    "INVALID_TOKEN": "Thông tin đăng nhập không hợp lệ, vui lòng đăng nhập lại",
+    "TOKEN_EXPIRED": "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại",
+    "LOGIN_FAILED": "Tên đăng nhập hoặc mật khẩu không đúng",
+    "ACCOUNT_LOCKED": "Tài khoản đã bị khóa, vui lòng thử lại sau",
+    "ACCOUNT_DISABLED": "Tài khoản đã bị vô hiệu hóa, vui lòng liên hệ quản trị viên",
+    "PERMISSION_DENIED": "Không đủ quyền, vui lòng liên hệ quản trị viên",
+    "ROLE_NOT_FOUND": "Vai trò không tồn tại",
+    "INSUFFICIENT_PRIVILEGES": "Quyền của bạn không đủ để thực hiện hành động này",
+    "NOT_FOUND": "Dữ liệu yêu cầu không tồn tại",
+    "DUPLICATE_ENTRY": "Dữ liệu đã tồn tại, vui lòng không thêm trùng",
+    "DATA_INTEGRITY_ERROR": "Lỗi toàn vẹn dữ liệu, vui lòng kiểm tra dữ liệu liên quan",
+    "FOREIGN_KEY_ERROR": "Bản ghi này đang được tham chiếu bởi bản ghi khác, không thể xóa",
+    "VALIDATION_ERROR": "Xác thực dữ liệu thất bại, vui lòng kiểm tra đầu vào",
+    "INSUFFICIENT_STOCK": "Không đủ tồn kho, không thể xuất kho",
+    "ORDER_STATUS_ERROR": "Trạng thái đơn hàng không cho phép thao tác này",
+    "APPROVAL_PENDING": "Chứng từ này đang chờ phê duyệt, vui lòng không gửi lại",
+    "ALREADY_APPROVED": "Chứng từ này đã được phê duyệt, vui lòng không thao tác lại",
+    "BATCH_EXPIRED": "Lô hàng đã hết hạn",
+    "COST_CALCULATION_ERROR": "Lỗi tính toán chi phí",
+    "INTERNAL_ERROR": "Lỗi hệ thống nội bộ, vui lòng thử lại sau",
+    "DATABASE_ERROR": "Thao tác cơ sở dữ liệu thất bại, vui lòng thử lại sau",
+    "NETWORK_ERROR": "Kết nối mạng thất bại, vui lòng kiểm tra mạng",
+    "RATE_LIMITED": "Thao tác quá thường xuyên, vui lòng thử lại sau",
+    "SERVICE_UNAVAILABLE": "Dịch vụ tạm thời không khả dụng, vui lòng thử lại sau",
+    "HTTP_400": "Tham số yêu cầu không hợp lệ, vui lòng kiểm tra đầu vào",
+    "HTTP_401": "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại",
+    "HTTP_403": "Bạn không có quyền thực hiện hành động này",
+    "HTTP_404": "Tài nguyên yêu cầu không tồn tại",
+    "HTTP_409": "Xung đột dữ liệu, vui lòng làm mới và thử lại",
+    "HTTP_422": "Xác thực dữ liệu thất bại, vui lòng kiểm tra đầu vào",
+    "HTTP_429": "Thao tác quá thường xuyên, vui lòng thử lại sau",
+    "HTTP_500": "Lỗi máy chủ nội bộ, vui lòng thử lại sau",
+    "HTTP_502": "Dịch vụ tạm thời không khả dụng, vui lòng thử lại sau",
+    "HTTP_503": "Dịch vụ đang bảo trì, vui lòng thử lại sau"
   }
 }
