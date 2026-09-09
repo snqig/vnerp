@@ -39,9 +39,18 @@ function loadMessages() {
   const data = JSON.parse(raw); // 若损坏会在此抛出
   const namespaces = {};
   for (const ns of Object.keys(data)) {
-    namespaces[ns] = new Set(Object.keys(data[ns] || {}));
+    // 扁平化为点键（支持嵌套），如 'consistency.typeLabels.workorder_completion'
+    namespaces[ns] = new Set(flatten(data[ns] || {}, ''));
   }
   return { data, namespaces };
+}
+
+// 扁平化对象为点键集合（不含命名空间前缀，与调用点相对键一致）
+function flatten(obj, prefix, out = new Set()) {
+  if (obj === null || typeof obj !== 'object') { if (prefix) out.add(prefix); return out; }
+  if (Array.isArray(obj)) { obj.forEach((v, i) => flatten(v, prefix ? `${prefix}.${i}` : `${i}`, out)); return out; }
+  for (const k of Object.keys(obj)) flatten(obj[k], prefix ? `${prefix}.${k}` : k, out);
+  return out;
 }
 
 // ---------- 解析单个文件 ----------
@@ -131,7 +140,7 @@ function main() {
   // 全局 key 索引：key -> Set(命名空间)，用于"任意空间存在即有效"回退
   const globalKeyNs = new Map();
   for (const ns of Object.keys(namespaces)) {
-    for (const k of namespaces[ns]) {
+    for (const k of namespaces[ns]) { // 已是扁平点键
       if (!globalKeyNs.has(k)) globalKeyNs.set(k, new Set());
       globalKeyNs.get(k).add(ns);
     }
@@ -170,7 +179,7 @@ function main() {
   if (CHECK_UNUSED) {
     const usedKeySet = usedAll;
     for (const ns of Object.keys(data)) {
-      for (const k of Object.keys(data[ns] || {})) {
+      for (const k of flatten(data[ns] || '', '')) { // 扁平点键，与 usedAll 一致
         if (!usedKeySet.has(`${ns}.${k}`)) unused.push({ ns, key: k });
       }
     }
