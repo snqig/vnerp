@@ -19,6 +19,16 @@
 //   node scripts/i18n-codemod-p2.cjs --dir "src/app/[locale]/dcprint" --check
 //
 // 幂等：改写后字面量变为 ts('k_..')/tc('..')，重跑不再替换；绑定已存在则跳过注入。
+//
+// ⚠️ 提交约束（防中文丢失回归 / 裸 key，对应审计报告 P0-2）：
+//   本 codemod 对单个文件做两次「独立、非原子」写——
+//     ① 改写 .tsx（中文 → ts('k_xxx')）；
+//     ② 把 k_xxx: '中文' 写入全部 4 个 locale 文件（messages/{zh-CN,en,vi,zh-TW}.json）。
+//   两步无共校验。若仅提交了 .tsx 而 messages 被回退 / 漏提，调用点会引用 messages 中
+//   不存在的键 → 中文丢失；zh-CN 作为 fallback 基被回退时全语言裸 key。
+//   因此：源文件改动 + 4 个 locale 文件改动 必须纳入【同一次提交】，
+//   严禁只提交 .tsx 而回退 / 漏提 messages。提交前务必跑
+//   scripts/verify-codemod-consistency.mjs 校验「代码引用的键均存在于 zh-CN」。
 
 const ts = require('typescript');
 const fs = require('fs');

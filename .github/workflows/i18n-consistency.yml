@@ -1,0 +1,28 @@
+name: i18n Consistency Guard
+
+# 保护 messages/zh-CN.json（next-intl 的 deepMerge fallback 基）：
+# 若 zh-CN.json 被单独回退 / 漏提，但 .tsx 中仍保留 ts('k_xxx') 引用，
+# 则脚本会检测到「代码引用但 zh-CN 缺失」的 key 并以 exit 1 阻断 CI，
+# 防止中文丢失 / 全语言裸 key 回归。
+# 脚本为纯 Node（无外部依赖），无需 pnpm install。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  i18n-consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify i18n codemod consistency (zh-CN fallback base guard)
+        run: node scripts/verify-codemod-consistency.mjs
