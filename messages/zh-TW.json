@@ -8205,8 +8205,7 @@
     "units": {
       "sheet": "張",
       "roll": "捲",
-      "piece": "個",
-      "label": "單位"
+      "piece": "個"
     },
     "urgent": "緊急",
     "usageRate": "利用率",
