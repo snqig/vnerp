@@ -1,0 +1,209 @@
+# 排除 . 开头的文件和目录
+.*
+
+# 但保留以下文件（取消注释以启用）
+!.gitignore
+# !.env.example
+# !.eslintrc.js
+# !.prettierrc.js
+
+# superpowers-zh 安装的 bootstrap 文件（与项目无关，不同步）
+CLAUDE.md
+CODEBUDDY.md
+
+# agency-agents-zh 角色定义库（workflow-runner 依赖，与项目无关，不同步）
+agency-agents-zh/
+
+# 保留工程治理相关配置（需纳入版本控制）
+!.github/
+!.husky/
+
+# 但排除 Trae IDE Agent 配置（与项目无关，不同步）
+.github/hooks/
+.github/skills/
+
+# 明确排除 IDE/工具/Agent 相关目录（与项目无关，不同步）
+.agentic-tools-mcp/
+.agents/
+.augment.claude/
+.continue/
+.cursor/
+.iflow/
+.roo/
+.superdesign/
+.venv/
+.vs/
+.agency-agents/
+agency-agents
+-github/
+trae/
+
+# Trae IDE 自动化脚本与文档（与项目无关，不同步）
+scripts/trae-auto-continue*
+scripts/trae-desktop-auto-continue*
+docs/TRADE-AUTO-CONTINUE.md
+docs/TRADE-DESKTOP-AUTO-CONTINUE.md
+
+# 调试产物（_devlog/_probe/_smoke/inspect_/根目录 .cjs 一次性脚本）
+# 归档目录：scripts/dev-notes/；历史遗留于根目录的同名文件在此统一忽略
+/_*.txt
+/_*.log
+/_*.json
+/_*.cjs
+/_*.md
+/inspect_*.js
+/*.cjs
+scripts/dev-notes/
+
+# 依赖目录
+node_modules/
+__pycache__/
+.pytest_cache/
+
+# 构建输出
+.next/
+out/
+build/
+dist/
+coverage/
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 调试/会话凭据文件（含 token，切勿入库）
+auth.json
+cj.txt
+login.json
+
+# 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.temp
+.cache/
+
+# 临时生成的 i18n 缺失清单
+i18n-missing.json
+
+# 临时 eslint 诊断输出
+eslint_errors.json
+eslint_full_report.json
+eslint_current_report.json
+
+# 调试脚本与测试截图（根目录）
+/test-*.js
+/test-*.ps1
+/test-*.py
+/debug-*.ps1
+/scan-*.js
+/patch-*.js
+/fix_*.py
+/test_*.png
+/sample-*.png
+/orders-*.png
+/debug-*.png
+
+# 临时调试脚本（下划线前缀）
+scripts/_*.js
+scripts/_*.mjs
+scripts/_*.cjs
+
+# 临时 eslint any 清理脚本与分析输出
+scripts/fix-any-batch.mjs
+scripts/fix-remaining-ts-errors.mjs
+scripts/show-remaining-any.mjs
+scripts/any-pattern-*.txt
+git-all-diffs.txt
+
+# 审计结果输出（临时生成）
+scripts/audit-final-result.json
+
+# 数据库备份
+/backups/
+*.bak
+
+# 基线报告（CI 生成，不需跟踪）
+docs/baseline/
+
+# 临时脚本目录
+scripts/temp/
+
+# 密钥文件
+*.pem
+*.key
+
+# 测试运行产物（E2E 截图目录、Playwright 结果目录）
+/test-screenshots/
+/test-results/
+/test-results.json
+/playwright-report/
+
+# i18n 检查脚本输出目录（截图、result.json）
+/scripts/i18n-check/
+
+# 临时覆盖率/调试脚本
+/scripts/tmp-cov.js
+
+# AI 智能体实验目录（与 ERP 核心业务无关）
+/agency-agents/
+agency-agents
+
+# 并发测试运行产物（带时间戳，自动生成）
+tests/concurrency/reports/
+
+i18n-key-check.result.json
+
+# Git worktrees
+worktrees/
+
+# ===== 仓库清理 2026-09-10：与 ERP 业务无关的调试产物/报告/监控配置 =====
+# 以下文件此前已被提交，本次统一取消跟踪并从索引移除；此处规则防止再次入库。
+
+# 根目录一次性调试 HTML / 脚本 / 文本
+_*.html
+devlog_*.txt
+head.txt
+colcheck.mjs
+do_split.js
+repro_bom.js
+test_endpoints.js
+extract_tables*.js
+tmp_*.mjs
+
+# i18n / eslint 诊断报告（非源码，CI 自动生成）
+i18n-*
+eslint-baseline*
+eslint-stdout.txt
+eslint-unused-vars-output.txt
+
+# 工作汇总 / 报告 / 截图（本地产物，不入仓）
+overview*
+inbound-*
+split_plan.json
+standard-card-fill-data.json
+wechat-community-qrcode.jpg
+
+# 监控 / 基础设施（与业务源码无关，按需单独管理）
+prometheus/
+grafana/
+alertmanager/
+nginx/
+docker-compose.monitoring.yml
