@@ -25,7 +25,7 @@ export const POST = withPermission(
       return errorResponse(ts('k_v8vb9i'), 400, 400);
     }
 
-    const check = await queryOne(`SELECT * FROM inventory_checks WHERE id = ? AND deleted = 0`, [
+    const check = await queryOne(`SELECT * FROM inv_stocktaking WHERE id = ? AND deleted = 0`, [
       checkId,
     ]);
 
@@ -42,7 +42,7 @@ export const POST = withPermission(
     }
 
     // 库存记录直接取自 qrcode_record（其本身携带 material_name/batch_no/location 等字段），
-    // 不再依赖遗留幽灵表 wh_inventory（权威 schema 中已无建表定义）。
+    // 盘点明细用真实表 inv_stocktaking_item（inventory_checks/inventory_check_items 为幽灵表）。
     const inventoryItem = await queryOne(
       `SELECT qr_code, material_name, batch_no, location AS warehouse_location
      FROM qrcode_record
@@ -55,8 +55,8 @@ export const POST = withPermission(
     }
 
     const checkItem = await queryOne(
-      `SELECT * FROM inventory_check_items
-     WHERE check_id = ? AND qr_code = ?`,
+      `SELECT * FROM inv_stocktaking_item
+     WHERE taking_id = ? AND qr_code = ?`,
       [checkId, qr_code]
     );
 
@@ -64,36 +64,27 @@ export const POST = withPermission(
       return errorResponse(ts('k_1r7887z'), 400, 400);
     }
 
-    const difference = actual_quantity - checkItem.book_quantity;
+    const difference = actual_quantity - checkItem.system_qty;
 
-    let split_flag = 0;
-    let parent_qr_code = null;
+    const split_flag = checkItem.split_flag || 0;
+    const parent_qr_code = checkItem.parent_qr_code || null;
 
-    const splitInfo = await queryOne(`SELECT * FROM material_splits WHERE child_qr_code = ?`, [
-      qr_code,
-    ]);
-
-    if (splitInfo) {
-      split_flag = 1;
-      parent_qr_code = splitInfo.parent_qr_code;
-    }
-
+    // 扫码回填：写实盘数与差异（差异审批由 diff-process 负责，不在此调库存）
     await execute(
-      `UPDATE inventory_check_items
-     SET actual_quantity = ?,
-         difference = ?,
-         status = 1,
-         updated_at = NOW()
+      `UPDATE inv_stocktaking_item
+     SET actual_qty = ?,
+         diff_qty = ?,
+         update_time = NOW()
      WHERE id = ?`,
       [actual_quantity, difference, checkItem.id]
     );
 
     const stats = await queryOne(
       `SELECT
-      COUNT(CASE WHEN status = 1 THEN 1 END) as checked_count,
+      COUNT(CASE WHEN actual_qty IS NOT NULL THEN 1 END) as checked_count,
       COUNT(*) as total_count
-     FROM inventory_check_items
-     WHERE check_id = ?`,
+     FROM inv_stocktaking_item
+     WHERE taking_id = ?`,
       [checkId]
     );
 
@@ -104,10 +95,10 @@ export const POST = withPermission(
         split_flag: SPLIT_FLAG_MAP[split_flag] || ts('k_14a2qfi'),
         parent_qr_code: parent_qr_code,
         warehouse_location: inventoryItem.warehouse_location,
-        book_quantity: checkItem.book_quantity,
+        book_quantity: checkItem.system_qty,
         actual_quantity: actual_quantity,
         difference: difference,
-        progress: Math.round((stats.checked_count / stats.total_count) * 100),
+        progress: stats.total_count > 0 ? Math.round((stats.checked_count / stats.total_count) * 100) : 0,
       },
       ts('k_p0ycon')
     );

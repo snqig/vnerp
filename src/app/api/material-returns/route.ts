@@ -119,7 +119,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     if (!item.materialId) continue;
 
     const material = await queryOne(
-      `SELECT id, material_code, material_name FROM bas_material WHERE id = ?`,
+      `SELECT id, material_code, material_name FROM inv_material WHERE id = ?`,
       [Number(item.materialId)]
     );
 

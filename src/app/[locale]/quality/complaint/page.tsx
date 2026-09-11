@@ -34,6 +34,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  buildQualityFormMessages,
+  buildComplaintSchema,
+  firstZodMessage,
+} from '@/lib/validators/quality-form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
@@ -155,11 +160,16 @@ export default function Complaint8DPage() {
   }, [page]);
 
   const handleSave = async () => {
+    const parsed = buildComplaintSchema(buildQualityFormMessages((k) => tc(k))).safeParse(editItem);
+    if (!parsed.success) {
+      toast({ title: firstZodMessage(parsed.error), variant: 'destructive' });
+      return;
+    }
     try {
       const method = editItem.id ? 'PUT' : 'POST';
       const res = await authFetch('/api/quality/complaint', {
         method,
-        body: JSON.stringify(editItem),
+        body: JSON.stringify(parsed.data),
       });
       const result = await res.json();
       if (result.success) {
@@ -176,7 +186,7 @@ export default function Complaint8DPage() {
 
   const handleSave8D = async () => {
     try {
-      const res = await fetch('/api/quality/complaint', {
+      const res = await authFetch('/api/quality/complaint', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editItem),

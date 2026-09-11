@@ -2339,7 +2339,8 @@ export async function seedInventoryData(
   ];
   for (const inv of inventoryData) {
     await conn.execute(
-      `INSERT INTO inv_inventory (material_id, material_name, warehouse_id, warehouse_name, quantity, available_qty, locked_qty, unit, unit_cost, total_cost, safety_stock, version) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, 100, 1)`,
+      `INSERT INTO inv_inventory (material_id, material_name, warehouse_id, warehouse_name, quantity, available_qty, locked_qty, unit, unit_cost, total_cost, safety_stock, version) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, 100, 1)
+       ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id), quantity = VALUES(quantity), available_qty = VALUES(available_qty), locked_qty = 0, unit_cost = VALUES(unit_cost), total_cost = VALUES(total_cost), deleted = 0`,
       [
         inv.mid,
         inv.name,

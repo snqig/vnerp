@@ -120,7 +120,7 @@ export const POST = withPermission(async (request: NextRequest) => {
       m.material_name,
       m.unit
     FROM inv_inventory i
-    LEFT JOIN bas_material m ON i.material_id = m.id
+    LEFT JOIN inv_material m ON i.material_id = m.id
     WHERE i.warehouse_id = ?
       AND i.quantity > 0
       AND i.deleted = 0`,

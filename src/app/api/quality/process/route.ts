@@ -1,7 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 
-;
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse, paginatedResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -36,25 +35,34 @@ async function queryPaginatedLocal(
   };
 }
 
-// 获取当前检验状态
-async function getCurrentInspectStatus(cardId: number): Promise<InspectStatus> {
-  const [result] = await query<{ inspect_result: string }>(
-    `SELECT inspect_result FROM qc_process_inspection WHERE card_id = ? ORDER BY created_at DESC LIMIT 1`,
-    [cardId]
+// 检验结果：字符串状态 -> qc_inspection.inspection_result tinyint（1=合格 2=不合格 3=让步接收）
+const RESULT_TO_CODE: Record<string, number> = {
+  pass: 1,
+  fail: 2,
+  concession: 3,
+  rework: 2,
+  scrap: 2,
+};
+
+const CODE_TO_STATUS: Record<number, InspectStatus> = {
+  1: 'pass',
+  2: 'fail',
+  3: 'concession',
+};
+
+// 获取当前检验状态（经 source_type/source_no 关联流程卡，qc_inspection 无 card_id 列）
+async function getCurrentInspectStatus(cardNo: string): Promise<InspectStatus> {
+  const rows = await query<{ inspection_result: number }>(
+    `SELECT inspection_result FROM qc_inspection
+     WHERE source_type = 'process_card' AND source_no = ? AND deleted = 0
+     ORDER BY inspection_date DESC, id DESC LIMIT 1`,
+    [cardNo]
   );
+  const result = rows[0];
 
   if (!result) return 'pending';
 
-  const statusMap: Record<string, InspectStatus> = {
-    pending: 'pending',
-    inspecting: 'inspecting',
-    pass: 'pass',
-    fail: 'fail',
-    rework: 'rework',
-    scrap: 'scrap',
-  };
-
-  return statusMap[result.inspect_result] || 'pending';
+  return CODE_TO_STATUS[result.inspection_result] || 'pending';
 }
 
 // 获取品质检验列表
@@ -62,11 +70,27 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
   const cardNo = searchParams.get('cardNo');
+  const cardId = searchParams.get('cardId');
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
+  // 按流程卡查询检验记录（检验记录弹窗用）
+  if (cardId) {
+    const records = await query(
+      `SELECT qi.id, qi.inspection_no AS inspectNo, qi.inspection_result AS inspectResult,
+              qi.qualified_qty AS qualifiedQty, qi.unqualified_qty AS defectQty,
+              qi.inspector, qi.remark, qi.inspection_date AS inspectTime
+       FROM qc_inspection qi
+       JOIN prd_process_card pc ON qi.source_type = 'process_card' AND qi.source_no = pc.card_no
+       WHERE pc.id = ? AND qi.deleted = 0
+       ORDER BY qi.inspection_date DESC, qi.id DESC`,
+      [parseInt(cardId)]
+    );
+    return successResponse(records);
+  }
+
   let sql = `
-    SELECT 
+    SELECT
       pc.id,
       pc.card_no as cardNo,
       pc.qr_code as qrCode,
@@ -120,17 +144,7 @@ export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
     const body = await request.json();
-    const {
-      cardId,
-      cardNo,
-      inspectType,
-      inspectResult,
-      defectType,
-      defectQty,
-      qualifiedQty,
-      inspector,
-      remark,
-    } = body;
+    const { cardId, cardNo, inspectResult, defectQty, qualifiedQty, inspector, remark } = body;
 
     // 参数验证
     if (!cardId || !inspectResult) {
@@ -138,13 +152,13 @@ export const POST = withPermission(
     }
 
     // 验证检验结果值是否合法
-    const validResults = ['pending', 'inspecting', 'pass', 'fail', 'rework', 'scrap'];
+    const validResults = ['pass', 'fail', 'concession', 'rework', 'scrap'];
     if (!validResults.includes(inspectResult)) {
       return errorResponse(`无效的检验结果: ${inspectResult}`, 400);
     }
 
     // 状态机验证
-    const currentStatus = await getCurrentInspectStatus(cardId);
+    const currentStatus = await getCurrentInspectStatus(cardNo);
     const targetStatus = inspectResult as InspectStatus;
 
     if (!StateMachineValidator.canTransitionInspect(currentStatus, targetStatus)) {
@@ -157,21 +171,20 @@ export const POST = withPermission(
     // 生成检验编号
     const inspectNo = generateDocNo(getQiPrefix());
 
-    // 插入到品质检验表 qc_process_inspection
+    // 插入通用检验表 qc_inspection（inspection_type: 1=来料 2=过程；inspection_result tinyint 1=合格 2=不合格 3=让步接收）
     await query(
-      `INSERT INTO qc_process_inspection (
-      inspect_no, card_id, card_no, inspect_type, inspect_result,
-      defect_type, defect_qty, qualified_qty, inspector, remark, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      `INSERT INTO qc_inspection (
+      inspection_no, inspection_type, source_type, source_no,
+      inspection_qty, qualified_qty, unqualified_qty, inspection_result,
+      inspector, inspection_date, remark
+    ) VALUES (?, 2, 'process_card', ?, ?, ?, ?, ?, ?, CURDATE(), ?)`,
       [
         inspectNo,
-        cardId,
         cardNo,
-        inspectType,
-        inspectResult,
-        defectType,
-        defectQty,
-        qualifiedQty,
+        Number(qualifiedQty || 0) + Number(defectQty || 0),
+        Number(qualifiedQty || 0),
+        Number(defectQty || 0),
+        RESULT_TO_CODE[inspectResult],
         inspector,
         remark,
       ]
@@ -188,16 +201,20 @@ export const POST = withPermission(
       remark
     );
 
-    // 更新流程卡状态
-    if (inspectResult === 'pass') {
+    // 更新流程卡状态（pass/concession 均视为检验通过）
+    if (inspectResult === 'pass' || inspectResult === 'concession') {
       await query(
         `UPDATE prd_process_card SET burdening_status = burdening_status + 1, update_time = NOW() WHERE id = ?`,
         [cardId]
       );
     } else if (inspectResult === 'fail') {
-      // 检验失败时，可以设置特定状态
       await query(
         `UPDATE prd_process_card SET burdening_status = 5, update_time = NOW() WHERE id = ?`,
+        [cardId]
+      );
+    } else if (inspectResult === 'rework') {
+      await query(
+        `UPDATE prd_process_card SET burdening_status = 6, update_time = NOW() WHERE id = ?`,
         [cardId]
       );
     }
@@ -220,23 +237,24 @@ export const PUT = withPermission(
     }
 
     // 验证检验结果值是否合法
-    const validResults = ['pending', 'inspecting', 'pass', 'fail', 'rework', 'scrap'];
+    const validResults = ['pass', 'fail', 'concession', 'rework', 'scrap'];
     if (!validResults.includes(inspectResult)) {
       return errorResponse(`无效的检验结果: ${inspectResult}`, 400);
     }
 
     // 获取当前检验记录
-    const [currentRecord] = await query<{ card_id: number; inspect_result: string }>(
-      `SELECT card_id, inspect_result FROM qc_process_inspection WHERE id = ?`,
+    const rows = await query<{ source_no: string; inspection_result: number }>(
+      `SELECT source_no, inspection_result FROM qc_inspection WHERE id = ? AND deleted = 0`,
       [id]
     );
+    const currentRecord = rows[0];
 
     if (!currentRecord) {
       return errorResponse(ts('k_1emlkd9'), 404);
     }
 
     // 状态机验证
-    const currentStatus = (currentRecord.inspect_result || 'pending') as InspectStatus;
+    const currentStatus = CODE_TO_STATUS[currentRecord.inspection_result] || ('pending' as InspectStatus);
     const targetStatus = inspectResult as InspectStatus;
 
     if (!StateMachineValidator.canTransitionInspect(currentStatus, targetStatus)) {
@@ -248,16 +266,25 @@ export const PUT = withPermission(
 
     // 更新检验记录
     await query(
-      `UPDATE qc_process_inspection 
-     SET inspect_result = ?, qualified_qty = ?, defect_qty = ?, inspector = ?, remark = ?, updated_at = NOW()
+      `UPDATE qc_inspection
+     SET inspection_result = ?, qualified_qty = ?, unqualified_qty = ?,
+         inspection_qty = ?, inspector = ?, remark = ?, update_time = NOW()
      WHERE id = ?`,
-      [inspectResult, qualifiedQty, defectQty, inspector, remark, id]
+      [
+        RESULT_TO_CODE[inspectResult],
+        Number(qualifiedQty || 0),
+        Number(defectQty || 0),
+        Number(qualifiedQty || 0) + Number(defectQty || 0),
+        inspector,
+        remark,
+        id,
+      ]
     );
 
     // 记录状态流转日志
     StateTransitionLogger.logTransition(
       'inspect',
-      currentRecord.card_id,
+      id,
       currentStatus,
       targetStatus,
       undefined,
@@ -265,21 +292,21 @@ export const PUT = withPermission(
       remark
     );
 
-    // 更新流程卡状态
-    if (inspectResult === 'pass') {
+    // 更新流程卡状态（pass/concession 均视为检验通过）
+    if (inspectResult === 'pass' || inspectResult === 'concession') {
       await query(
-        `UPDATE prd_process_card SET burdening_status = burdening_status + 1, update_time = NOW() WHERE id = ?`,
-        [currentRecord.card_id]
+        `UPDATE prd_process_card SET burdening_status = burdening_status + 1, update_time = NOW() WHERE card_no = ?`,
+        [currentRecord.source_no]
       );
     } else if (inspectResult === 'fail') {
       await query(
-        `UPDATE prd_process_card SET burdening_status = 5, update_time = NOW() WHERE id = ?`,
-        [currentRecord.card_id]
+        `UPDATE prd_process_card SET burdening_status = 5, update_time = NOW() WHERE card_no = ?`,
+        [currentRecord.source_no]
       );
     } else if (inspectResult === 'rework') {
       await query(
-        `UPDATE prd_process_card SET burdening_status = 6, update_time = NOW() WHERE id = ?`,
-        [currentRecord.card_id]
+        `UPDATE prd_process_card SET burdening_status = 6, update_time = NOW() WHERE card_no = ?`,
+        [currentRecord.source_no]
       );
     }
 

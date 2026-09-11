@@ -213,7 +213,7 @@ export class CostAmortizationService {
         m.id, m.material_code, SUM(wm.required_qty) as total_qty, 
         m.cost_price, m.unit
        FROM prod_work_order_material_req wm
-       LEFT JOIN bas_material m ON wm.material_id = m.id
+       LEFT JOIN inv_material m ON wm.material_id = m.id
        WHERE wm.work_order_id = ?
        GROUP BY m.id`,
       [workOrderId]

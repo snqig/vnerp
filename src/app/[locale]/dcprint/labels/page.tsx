@@ -38,7 +38,6 @@ import { LabelPrintTrigger, LabelData } from '@/components/printing/LabelPrintPr
 import { PrinterManagement } from '@/components/printing/PrinterManagement';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
-import { mockLabels, USE_MOCK } from '@/lib/mock-data';
 
 // 物料标签类型
 interface MaterialLabel {
@@ -137,14 +136,6 @@ export default function MaterialLabelsPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        if (USE_MOCK) {
-          logger.info({ module: 'Dcprint', action: 'fetchLabels' }, ts('k_5env5j'));
-          setLabels(mockLabels);
-          setTotal(mockLabels.length);
-          setLoading(false);
-          return;
-        }
 
         const params = new URLSearchParams();
         if (keyword) params.append('keyword', keyword);

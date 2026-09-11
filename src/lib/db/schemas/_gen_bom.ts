@@ -46,5 +46,12 @@ export const bomLine = mysqlTable('bom_line', {
 }, (t) => ({
   idxBomId: index('idx_bom_id').on(t.bomId),
   pk: primaryKey({ columns: [t.id] }),
-}));
+    fk_bomHeader_bomId: foreignKey({
+      name: 'fk_bom_line_header',
+      columns: [t.bomId],
+      foreignColumns: [bomHeader.id],
+    })
+      .onDelete('cascade')
+      .onUpdate('no action'),
+  }));
 

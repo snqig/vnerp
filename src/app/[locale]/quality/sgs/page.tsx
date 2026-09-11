@@ -33,6 +33,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, AlertTriangle, FileCheck, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  buildQualityFormMessages,
+  buildSgsSchema,
+  firstZodMessage,
+} from '@/lib/validators/quality-form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
@@ -289,11 +294,16 @@ export default function SGSManagementPage() {
   }, []);
 
   const handleSave = async () => {
+    const parsed = buildSgsSchema(buildQualityFormMessages((k) => tc(k))).safeParse(editItem);
+    if (!parsed.success) {
+      toast({ title: firstZodMessage(parsed.error), variant: 'destructive' });
+      return;
+    }
     try {
       const method = editItem.id ? 'PUT' : 'POST';
       const res = await authFetch('/api/quality/sgs', {
         method,
-        body: JSON.stringify(editItem),
+        body: JSON.stringify(parsed.data),
       });
       const result = await res.json();
       if (result.success) {
@@ -312,7 +322,7 @@ export default function SGSManagementPage() {
   const handleDelete = async (id: number) => {
     if (!confirm(t('confirmDeleteSGS'))) return;
     try {
-      const res = await fetch('/api/quality/sgs?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/quality/sgs?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: tc('deleteSuccess') });

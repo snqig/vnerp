@@ -936,7 +936,11 @@ export const POST = withPermission(
       for (const inv of inventories) {
         await conn.execute(
           `INSERT INTO inv_inventory (material_id, warehouse_id, quantity, locked_qty, available_qty, batch_no)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id),
+           quantity = VALUES(quantity), locked_qty = VALUES(locked_qty),
+           available_qty = VALUES(available_qty), batch_no = VALUES(batch_no),
+           deleted = 0`,
           [
             matMap[inv.matCode] || null,
             whMap[inv.whCode] || null,

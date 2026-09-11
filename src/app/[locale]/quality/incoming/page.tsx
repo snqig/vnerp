@@ -55,6 +55,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { toast } from 'sonner';
+import {
+  buildQualityFormMessages,
+  buildIncomingSchema,
+  firstZodMessage,
+} from '@/lib/validators/quality-form';
 
 const getInspectionTypeOptions = (t: (key: string) => string) => [
   { value: 'full', label: t('fullInspection') },
@@ -292,25 +297,16 @@ export default function IncomingInspectionPage() {
   };
 
   const handleSave = async () => {
+    const parsed = buildIncomingSchema(buildQualityFormMessages((k) => tc(k))).safeParse(formData);
+    if (!parsed.success) {
+      toast.error(firstZodMessage(parsed.error));
+      return;
+    }
     try {
       const res = await authFetch('/api/quality/incoming', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          inspectionDate: formData.inspectionDate,
-          supplierName: formData.supplierName,
-          materialCode: formData.materialCode,
-          materialName: formData.materialName,
-          specification: formData.specification,
-          batchNo: formData.batchNo,
-          quantity: formData.quantity,
-          unit: formData.unit,
-          inspectionType: formData.inspectionType,
-          inspectionResult: formData.inspectionResult,
-          inspectorName: formData.inspectorName,
-          remark: formData.remark,
-          items: formData.items,
-        }),
+        body: JSON.stringify(parsed.data),
       });
       const result = await res.json();
       if (result.success) {
@@ -327,6 +323,11 @@ export default function IncomingInspectionPage() {
 
   const handleUpdate = async () => {
     if (!currentInspection) return;
+    const parsed = buildIncomingSchema(buildQualityFormMessages((k) => tc(k))).safeParse(formData);
+    if (!parsed.success) {
+      toast.error(firstZodMessage(parsed.error));
+      return;
+    }
     try {
       const res = await authFetch('/api/quality/incoming', {
         method: 'PUT',
@@ -334,19 +335,7 @@ export default function IncomingInspectionPage() {
         body: JSON.stringify({
           id: currentInspection.dbId,
           inspectionNo: currentInspection.id,
-          inspectionDate: formData.inspectionDate,
-          supplierName: formData.supplierName,
-          materialCode: formData.materialCode,
-          materialName: formData.materialName,
-          specification: formData.specification,
-          batchNo: formData.batchNo,
-          quantity: formData.quantity,
-          unit: formData.unit,
-          inspectionType: formData.inspectionType,
-          inspectionResult: formData.inspectionResult,
-          inspectorName: formData.inspectorName,
-          remark: formData.remark,
-          items: formData.items,
+          ...parsed.data,
         }),
       });
       const result = await res.json();

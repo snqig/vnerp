@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server';
 
 ;
 import { NextRequest } from 'next/server';
-import { transaction, SqlValue } from '@/lib/db';
+import { transaction } from '@/lib/db';
 import { successResponse, errorResponse, logOperation } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { WarehouseStateMachine } from '@/domain/warehouse/value-objects/WarehouseStateMachine';
@@ -34,7 +34,10 @@ export const POST = withPermission(
       return errorResponse(ts('k_1ddnsve'), 400);
     }
 
-    const deductionDetails: SqlValue[] = [];
+    // 事务内错误的 Response 必须经 txCtl 载体显式带出：
+    // 在 .catch 回调里直接 return 会被丢弃，导致 NOT_FOUND 变 200 假成功
+    const txCtl: { error: ReturnType<typeof errorResponse> | null } = { error: null };
+    const deductionDetails: DbRow[] = [];
 
     await transaction(async (connection) => {
       logger.debug(`[OUTBOUND] Starting transaction for outbound order: ${id}`);
@@ -279,51 +282,23 @@ export const POST = withPermission(
         );
       }
 
-      // 更新销售订单累计出库数量（如果关联了销售订单）
-      if (orderInfo && orderInfo.length > 0 && orderInfo[0].sales_order_no) {
-        const salesOrderNo = orderInfo[0].sales_order_no;
-
-        const totalOutQty = itemRows.reduce(
-          (sum: number, item: DbRow) => sum + parseFloat(String(item.qty)),
-          0
-        );
-
-        await connection.execute(
-          `UPDATE sales_order SET
-          total_out_quantity = COALESCE(total_out_quantity, 0) + ?,
-          update_time = NOW()
-        WHERE order_no = ?`,
-          [totalOutQty, salesOrderNo]
-        );
-
-        // 检查是否全部出库完成
-        const [soItems] = await connection.execute(
-          `SELECT SUM(quantity) as total_qty FROM sales_order_item WHERE sales_order_id = (SELECT id FROM sales_order WHERE order_no = ?)`,
-          [salesOrderNo]
-        );
-        const [soOutbound] = await connection.execute(
-          `SELECT COALESCE(total_out_quantity, 0) as total_out FROM sales_order WHERE order_no = ?`,
-          [salesOrderNo]
-        );
-
-        if (soItems[0]?.total_qty && soOutbound[0]?.total_out >= soItems[0].total_qty) {
-          await connection.execute(
-            `UPDATE sales_order SET status = 3, update_time = NOW() WHERE order_no = ? AND status != 9`,
-            [salesOrderNo]
-          );
-        } else if (soOutbound[0]?.total_out > 0) {
-          await connection.execute(
-            `UPDATE sales_order SET status = 2, update_time = NOW() WHERE order_no = ? AND status = 1`,
-            [salesOrderNo]
-          );
-        }
-      }
+      // 注：sales_order/sales_order_item 为幽灵表（live 库不存在），原累计出库/状态回写块已删除。
+      // 销售出库进度如需统计，应基于真实表 sal_order 另行实现。
     }).catch((error) => {
       const msg = error instanceof Error ? error.message : String(error);
-      if (msg.startsWith('NOT_FOUND:')) return errorResponse(msg.slice(10), 404);
-      if (msg.startsWith('BAD_REQUEST:')) return errorResponse(msg.slice(12), 400);
+      // i18n 翻译值可能自带前缀，防御性剥离重复前缀；经 txCtl 显式带出
+      if (msg.startsWith('NOT_FOUND:')) {
+        txCtl.error = errorResponse(msg.replace(/^(NOT_FOUND:)+/, ''), 404);
+        return;
+      }
+      if (msg.startsWith('BAD_REQUEST:')) {
+        txCtl.error = errorResponse(msg.replace(/^(BAD_REQUEST:)+/, ''), 400);
+        return;
+      }
       throw error;
     });
+
+    if (txCtl.error) return txCtl.error;
 
     await logOperation({
       title: tc('confirmIssue'),
@@ -362,6 +337,9 @@ export const PUT = withPermission(
     }
 
     let orderNo = '';
+
+    // 同 POST：错误 Response 经 txCtl 载体显式带出，避免 404 变 200 假成功
+    const txCtl: { error: ReturnType<typeof errorResponse> | null } = { error: null };
 
     await transaction(async (connection) => {
       const [orderRows] = await connection.execute(
@@ -478,10 +456,19 @@ export const PUT = withPermission(
       );
     }).catch((error) => {
       const msg = error instanceof Error ? error.message : String(error);
-      if (msg.startsWith('NOT_FOUND:')) return errorResponse(msg.slice(10), 404);
-      if (msg.startsWith('BAD_REQUEST:')) return errorResponse(msg.slice(12), 400);
+      // i18n 翻译值可能自带前缀，防御性剥离重复前缀；经 txCtl 显式带出
+      if (msg.startsWith('NOT_FOUND:')) {
+        txCtl.error = errorResponse(msg.replace(/^(NOT_FOUND:)+/, ''), 404);
+        return;
+      }
+      if (msg.startsWith('BAD_REQUEST:')) {
+        txCtl.error = errorResponse(msg.replace(/^(BAD_REQUEST:)+/, ''), 400);
+        return;
+      }
       throw error;
     });
+
+    if (txCtl.error) return txCtl.error;
 
     await logOperation({
       title: ts('k_1pv4eum'),

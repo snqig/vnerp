@@ -8,6 +8,7 @@ export type InspectStatus =
   | 'inspecting' // 检验中
   | 'pass' // 合格
   | 'fail' // 不合格
+  | 'concession' // 让步接收
   | 'rework' // 返工
   | 'scrap'; // 报废
 
@@ -33,16 +34,21 @@ export const inspectStateMachine: Record<
   pending: {
     label: '待检验',
     color: 'bg-gray-100 text-gray-700',
-    allowedTransitions: ['inspecting'],
+    allowedTransitions: ['inspecting', 'pass', 'fail', 'concession', 'rework', 'scrap'],
   },
   inspecting: {
     label: '检验中',
     color: 'bg-blue-100 text-blue-700',
-    allowedTransitions: ['pass', 'fail'],
+    allowedTransitions: ['pass', 'fail', 'concession'],
   },
   pass: {
     label: '合格',
     color: 'bg-green-100 text-green-700',
+    allowedTransitions: [],
+  },
+  concession: {
+    label: '让步接收',
+    color: 'bg-amber-100 text-amber-700',
     allowedTransitions: [],
   },
   fail: {

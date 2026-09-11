@@ -103,8 +103,8 @@ export default function UserManagementPage() {
       });
       const res = await authFetch('/api/system/user?' + params);
       if (!res.ok) {
-        // 使用模拟数据
-        loadMockData();
+        setList([]);
+        setTotal(0);
         return;
       }
       const result = await res.json();
@@ -127,158 +127,23 @@ export default function UserManagementPage() {
             rawData.total || rawData.totalCount || rawData.totalRecords || rawList.length;
         }
 
-        // 如果数据为空，使用模拟数据
-        if (rawList.length === 0) {
-          loadMockData();
-          return;
-        }
-
         setList(rawList);
         setTotal(totalCount);
       } else {
-        // API没有返回成功标志，使用模拟数据
-        loadMockData();
+        setList([]);
+        setTotal(0);
       }
     } catch {
-      // 出错时使用模拟数据
-      loadMockData();
+      setList([]);
+      setTotal(0);
     }
-  };
-
-  // 模拟数据函数
-  const loadMockData = () => {
-    const mockUsers = [
-      {
-        id: 1,
-        username: 'admin',
-        real_name: ts('k_1fcdmqa'),
-        email: 'admin@dcprint.com',
-        phone: '13800000001',
-        department_id: 1,
-        dept_name: ts('k_1f4z30i'),
-        status: 1,
-        first_login: 0,
-        roles: [{ id: 1, role_name: ts('k_1fcdmqa'), role_code: 'super_admin' }],
-      },
-      {
-        id: 2,
-        username: 'zhangwei',
-        real_name: ts('k_3vr19c'),
-        email: 'zhangwei@dcprint.com',
-        phone: '13800000002',
-        department_id: 2,
-        dept_name: ts('k_axb29w'),
-        status: 1,
-        first_login: 0,
-        roles: [{ id: 2, role_name: ts('k_ojn305'), role_code: 'business_manager' }],
-      },
-      {
-        id: 3,
-        username: 'lina',
-        real_name: ts('k_o5eojb'),
-        email: 'lina@dcprint.com',
-        phone: '13800000003',
-        department_id: 2,
-        dept_name: ts('k_axb29w'),
-        status: 1,
-        first_login: 0,
-        roles: [{ id: 3, role_name: ts('k_15vw6tw'), role_code: 'sales' }],
-      },
-      {
-        id: 4,
-        username: 'wangqiang',
-        real_name: ts('k_nqtivk'),
-        email: 'wangqiang@dcprint.com',
-        phone: '13800000004',
-        department_id: 3,
-        dept_name: ts('k_boxyuc'),
-        status: 1,
-        first_login: 0,
-        roles: [{ id: 4, role_name: ts('k_1tyjla3'), role_code: 'engineer' }],
-      },
-      {
-        id: 5,
-        username: 'liuyang',
-        real_name: ts('k_9nfhqc'),
-        email: 'liuyang@dcprint.com',
-        phone: '13800000005',
-        department_id: 4,
-        dept_name: ts('k_18glq49'),
-        status: 1,
-        first_login: 0,
-        roles: [{ id: 5, role_name: ts('k_d1s7gj'), role_code: 'production_manager' }],
-      },
-      {
-        id: 6,
-        username: 'chenming',
-        real_name: ts('k_orolx7'),
-        email: 'chenming@dcprint.com',
-        phone: '13800000006',
-        department_id: 5,
-        dept_name: ts('k_qe62zc'),
-        status: 1,
-        first_login: 0,
-        roles: [{ id: 7, role_name: ts('k_hdkgmr'), role_code: 'warehouse_keeper' }],
-      },
-      {
-        id: 7,
-        username: 'zhaolei',
-        real_name: ts('k_qkv38u'),
-        email: 'zhaolei@dcprint.com',
-        phone: '13800000007',
-        department_id: 5,
-        dept_name: ts('k_qe62zc'),
-        status: 1,
-        first_login: 0,
-        roles: [{ id: 6, role_name: ts('k_1bngyff'), role_code: 'warehouse_manager' }],
-      },
-      {
-        id: 8,
-        username: 'sunli',
-        real_name: ts('k_wrfy17'),
-        email: 'sunli@dcprint.com',
-        phone: '13800000008',
-        department_id: 6,
-        dept_name: ts('k_1rgc4zf'),
-        status: 1,
-        first_login: 0,
-        roles: [{ id: 8, role_name: ts('k_epyr6z'), role_code: 'purchaser' }],
-      },
-      {
-        id: 9,
-        username: 'zhoujie',
-        real_name: ts('k_1gmpisl'),
-        email: 'zhoujie@dcprint.com',
-        phone: '13800000009',
-        department_id: 7,
-        dept_name: ts('k_11g5fpo'),
-        status: 1,
-        first_login: 0,
-        roles: [{ id: 9, role_name: ts('k_l5ij28'), role_code: 'qc_inspector' }],
-      },
-      {
-        id: 10,
-        username: 'wufang',
-        real_name: ts('k_vy0n74'),
-        email: 'wufang@dcprint.com',
-        phone: '13800000010',
-        department_id: 8,
-        dept_name: ts('k_1jqantr'),
-        status: 1,
-        first_login: 0,
-        roles: [{ id: 10, role_name: ts('k_8s57ik'), role_code: 'accountant' }],
-      },
-    ];
-
-    setList(mockUsers);
-    setTotal(mockUsers.length);
   };
 
   const fetchRoles = async () => {
     try {
       const res = await authFetch('/api/system/roles');
       if (!res.ok) {
-        loadMockRoles();
+        setRoles([]);
         return;
       }
       const result = await res.json();
@@ -294,40 +159,20 @@ export default function UserManagementPage() {
             rawList = [];
           }
         }
-        if (rawList.length === 0) {
-          loadMockRoles();
-          return;
-        }
         setRoles(rawList);
       } else {
-        loadMockRoles();
+        setRoles([]);
       }
     } catch {
-      loadMockRoles();
+      setRoles([]);
     }
-  };
-
-  const loadMockRoles = () => {
-    const mockRoles = [
-      { id: 1, role_name: ts('k_1fcdmqa'), role_code: 'super_admin' },
-      { id: 2, role_name: ts('k_ojn305'), role_code: 'business_manager' },
-      { id: 3, role_name: ts('k_15vw6tw'), role_code: 'sales' },
-      { id: 4, role_name: ts('k_1tyjla3'), role_code: 'engineer' },
-      { id: 5, role_name: ts('k_d1s7gj'), role_code: 'production_manager' },
-      { id: 6, role_name: ts('k_1bngyff'), role_code: 'warehouse_manager' },
-      { id: 7, role_name: ts('k_hdkgmr'), role_code: 'warehouse_keeper' },
-      { id: 8, role_name: ts('k_epyr6z'), role_code: 'purchaser' },
-      { id: 9, role_name: ts('k_l5ij28'), role_code: 'qc_inspector' },
-      { id: 10, role_name: ts('k_8s57ik'), role_code: 'accountant' },
-    ];
-    setRoles(mockRoles);
   };
 
   const fetchDepartments = async () => {
     try {
       const res = await authFetch('/api/organization/department');
       if (!res.ok) {
-        loadMockDepartments();
+        setDepartments([]);
         return;
       }
       const result = await res.json();
@@ -343,38 +188,20 @@ export default function UserManagementPage() {
             rawList = [];
           }
         }
-        if (rawList.length === 0) {
-          loadMockDepartments();
-          return;
-        }
         setDepartments(rawList);
       } else {
-        loadMockDepartments();
+        setDepartments([]);
       }
     } catch {
-      loadMockDepartments();
+      setDepartments([]);
     }
-  };
-
-  const loadMockDepartments = () => {
-    const mockDepartments = [
-      { id: 1, dept_name: ts('k_1f4z30i') },
-      { id: 2, dept_name: ts('k_axb29w') },
-      { id: 3, dept_name: ts('k_boxyuc') },
-      { id: 4, dept_name: ts('k_18glq49') },
-      { id: 5, dept_name: ts('k_qe62zc') },
-      { id: 6, dept_name: ts('k_1rgc4zf') },
-      { id: 7, dept_name: ts('k_11g5fpo') },
-      { id: 8, dept_name: ts('k_1jqantr') },
-    ];
-    setDepartments(mockDepartments);
   };
 
   const fetchEmployees = async () => {
     try {
       const res = await authFetch('/api/organization/employee?pageSize=9999');
       if (!res.ok) {
-        loadMockEmployees();
+        setEmployees([]);
         return;
       }
       const result = await res.json();
@@ -390,33 +217,13 @@ export default function UserManagementPage() {
             rawList = [];
           }
         }
-        if (rawList.length === 0) {
-          loadMockEmployees();
-          return;
-        }
         setEmployees(rawList);
       } else {
-        loadMockEmployees();
+        setEmployees([]);
       }
     } catch {
-      loadMockEmployees();
+      setEmployees([]);
     }
-  };
-
-  const loadMockEmployees = () => {
-    const mockEmployees = [
-      { id: 1, name: ts('k_1fcdmqa'), employee_no: 'E001' },
-      { id: 2, name: ts('k_3vr19c'), employee_no: 'E002' },
-      { id: 3, name: ts('k_o5eojb'), employee_no: 'E003' },
-      { id: 4, name: ts('k_nqtivk'), employee_no: 'E004' },
-      { id: 5, name: ts('k_9nfhqc'), employee_no: 'E005' },
-      { id: 6, name: ts('k_orolx7'), employee_no: 'E006' },
-      { id: 7, name: ts('k_qkv38u'), employee_no: 'E007' },
-      { id: 8, name: ts('k_wrfy17'), employee_no: 'E008' },
-      { id: 9, name: ts('k_1gmpisl'), employee_no: 'E009' },
-      { id: 10, name: ts('k_vy0n74'), employee_no: 'E010' },
-    ];
-    setEmployees(mockEmployees);
   };
 
   useEffect(() => {

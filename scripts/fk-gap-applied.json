@@ -1,18 +1,67 @@
 {
   "applied": [
     {
-      "table": "dcprint_sample_process_step",
-      "column": "card_id",
-      "ref": "dcprint_sample_process_card",
+      "table": "biz_order_line",
+      "column": "order_id",
+      "ref": "biz_order_header",
       "refColumn": "id",
-      "name": "fk_sample_step_card"
+      "name": "biz_order_line_ibfk_1"
     },
     {
-      "table": "dcprint_sample_process_template_step",
-      "column": "template_id",
-      "ref": "dcprint_sample_process_template",
+      "table": "bom_alternative",
+      "column": "bom_id",
+      "ref": "bom_header",
       "refColumn": "id",
-      "name": "fk_tpl_step_card"
+      "name": "bom_alternative_ibfk_1"
+    },
+    {
+      "table": "bom_alternative",
+      "column": "bom_line_id",
+      "ref": "bom_line",
+      "refColumn": "id",
+      "name": "bom_alternative_ibfk_2"
+    },
+    {
+      "table": "bom_alternative",
+      "column": "bom_id",
+      "ref": "bom_header",
+      "refColumn": "id",
+      "name": "fk_bom_alt_header"
+    },
+    {
+      "table": "bom_alternative",
+      "column": "bom_line_id",
+      "ref": "bom_line",
+      "refColumn": "id",
+      "name": "fk_bom_alt_line"
+    },
+    {
+      "table": "bom_alternative",
+      "column": "material_id",
+      "ref": "bom_material",
+      "refColumn": "id",
+      "name": "fk_bom_alt_material"
+    },
+    {
+      "table": "bom_line",
+      "column": "material_id",
+      "ref": "std_material",
+      "refColumn": "id",
+      "name": "fk_bom_line_material"
+    },
+    {
+      "table": "bom_version_history",
+      "column": "bom_id",
+      "ref": "bom_header",
+      "refColumn": "id",
+      "name": "bom_version_history_ibfk_1"
+    },
+    {
+      "table": "bom_version_history",
+      "column": "bom_id",
+      "ref": "bom_header",
+      "refColumn": "id",
+      "name": "fk_bom_history_header"
     },
     {
       "table": "fin_payable",
@@ -29,55 +78,6 @@
       "name": "fk_fin_receivable_customer"
     },
     {
-      "table": "fin_voucher_line",
-      "column": "customer_id",
-      "ref": "crm_customer",
-      "refColumn": "id",
-      "name": "fk_fin_voucher_line_customer"
-    },
-    {
-      "table": "fin_voucher_line",
-      "column": "supplier_id",
-      "ref": "pur_supplier",
-      "refColumn": "id",
-      "name": "fk_fin_voucher_line_supplier"
-    },
-    {
-      "table": "inv_inbound_order",
-      "column": "warehouse_id",
-      "ref": "inv_warehouse",
-      "refColumn": "id",
-      "name": "fk_inv_inbound_warehouse"
-    },
-    {
-      "table": "inv_inventory",
-      "column": "material_id",
-      "ref": "inv_material",
-      "refColumn": "id",
-      "name": "fk_inv_inventory_material"
-    },
-    {
-      "table": "inv_inventory",
-      "column": "warehouse_id",
-      "ref": "inv_warehouse",
-      "refColumn": "id",
-      "name": "fk_inv_inventory_warehouse"
-    },
-    {
-      "table": "inv_inventory_batch",
-      "column": "material_id",
-      "ref": "inv_material",
-      "refColumn": "id",
-      "name": "fk_inv_inventory_batch_material"
-    },
-    {
-      "table": "inv_inventory_batch",
-      "column": "warehouse_id",
-      "ref": "inv_warehouse",
-      "refColumn": "id",
-      "name": "fk_inv_inventory_batch_warehouse"
-    },
-    {
       "table": "inv_material",
       "column": "category_id",
       "ref": "inv_material_category",
@@ -85,81 +85,18 @@
       "name": "fk_material_category"
     },
     {
-      "table": "inv_outbound_item",
-      "column": "material_id",
-      "ref": "inv_material",
-      "refColumn": "id",
-      "name": "fk_inv_outbound_item_material"
-    },
-    {
-      "table": "inv_outbound_order",
-      "column": "warehouse_id",
-      "ref": "inv_warehouse",
-      "refColumn": "id",
-      "name": "fk_inv_outbound_order_warehouse"
-    },
-    {
-      "table": "inv_outbound_order",
-      "column": "warehouse_id",
-      "ref": "inv_warehouse",
-      "refColumn": "id",
-      "name": "fk_inv_outbound_warehouse"
-    },
-    {
-      "table": "inv_production_inbound",
-      "column": "work_order_id",
-      "ref": "prd_work_order",
-      "refColumn": "id",
-      "name": "fk_inv_prod_inbound_workorder"
-    },
-    {
-      "table": "inv_sales_outbound",
-      "column": "customer_id",
-      "ref": "crm_customer",
-      "refColumn": "id",
-      "name": "fk_inv_sales_outbound_customer"
-    },
-    {
-      "table": "inv_sales_outbound",
+      "table": "link_order_po",
       "column": "order_id",
-      "ref": "sal_order",
+      "ref": "biz_order_header",
       "refColumn": "id",
-      "name": "fk_inv_sales_outbound_order"
+      "name": "link_order_po_ibfk_1"
     },
     {
-      "table": "inv_stock_adjust",
-      "column": "approver_id",
-      "ref": "sys_user",
+      "table": "link_order_po",
+      "column": "po_id",
+      "ref": "pur_purchase_order",
       "refColumn": "id",
-      "name": "fk_inv_adjust_approver"
-    },
-    {
-      "table": "inv_stock_adjust",
-      "column": "operator_id",
-      "ref": "sys_user",
-      "refColumn": "id",
-      "name": "fk_inv_adjust_operator"
-    },
-    {
-      "table": "inv_stocktaking",
-      "column": "warehouse_id",
-      "ref": "inv_warehouse",
-      "refColumn": "id",
-      "name": "fk_inv_stocktaking_warehouse"
-    },
-    {
-      "table": "inv_transfer_order",
-      "column": "approver_id",
-      "ref": "sys_user",
-      "refColumn": "id",
-      "name": "fk_inv_transfer_approver"
-    },
-    {
-      "table": "inv_transfer_order",
-      "column": "operator_id",
-      "ref": "sys_user",
-      "refColumn": "id",
-      "name": "fk_inv_transfer_operator"
+      "name": "link_order_po_ibfk_2"
     },
     {
       "table": "prd_bom_detail",
@@ -169,18 +106,32 @@
       "name": "fk_prd_bom_detail_material"
     },
     {
+      "table": "prd_die_maintenance",
+      "column": "die_id",
+      "ref": "prd_die_template",
+      "refColumn": "id",
+      "name": "fk_die_maint_template"
+    },
+    {
+      "table": "prd_die_usage_log",
+      "column": "die_id",
+      "ref": "prd_die_template",
+      "refColumn": "id",
+      "name": "fk_die_usage_template"
+    },
+    {
+      "table": "prd_process_card",
+      "column": "main_label_id",
+      "ref": "inv_material_label",
+      "refColumn": "id",
+      "name": "fk_process_card_main_label"
+    },
+    {
       "table": "prd_schedule",
       "column": "product_id",
       "ref": "inv_material",
       "refColumn": "id",
       "name": "fk_prd_schedule_product"
-    },
-    {
-      "table": "prd_schedule",
-      "column": "work_order_id",
-      "ref": "prd_work_order",
-      "refColumn": "id",
-      "name": "fk_prd_schedule_work_order"
     },
     {
       "table": "prd_schedule_detail",
@@ -190,11 +141,11 @@
       "name": "fk_prd_schedule_detail_equipment"
     },
     {
-      "table": "prd_schedule_detail",
-      "column": "work_order_id",
-      "ref": "prd_work_order",
+      "table": "prd_screen_plate",
+      "column": "customer_id",
+      "ref": "mdm_customer",
       "refColumn": "id",
-      "name": "fk_prd_schedule_detail_work_order"
+      "name": "fk_screen_plate_customer"
     },
     {
       "table": "prd_standard_card",
@@ -202,20 +153,6 @@
       "ref": "crm_customer",
       "refColumn": "id",
       "name": "fk_prd_std_card_customer"
-    },
-    {
-      "table": "prd_work_order",
-      "column": "material_id",
-      "ref": "inv_material",
-      "refColumn": "id",
-      "name": "fk_prd_wo_material"
-    },
-    {
-      "table": "prd_work_order",
-      "column": "sales_order_id",
-      "ref": "sal_order",
-      "refColumn": "id",
-      "name": "fk_prd_wo_sales_order"
     },
     {
       "table": "prd_work_order",
@@ -232,18 +169,11 @@
       "name": "fk_prd_work_order_sales_order"
     },
     {
-      "table": "prd_work_order_color_seq",
-      "column": "work_order_id",
-      "ref": "prd_work_order",
+      "table": "pur_order_line_std",
+      "column": "po_id",
+      "ref": "pur_order_std",
       "refColumn": "id",
-      "name": "fk_prd_wo_color_seq_workorder"
-    },
-    {
-      "table": "pur_purchase_order",
-      "column": "supplier_id",
-      "ref": "pur_supplier",
-      "refColumn": "id",
-      "name": "fk_pur_po_supplier"
+      "name": "fk_po_line_std_po"
     },
     {
       "table": "pur_purchase_order_line",
@@ -253,25 +183,18 @@
       "name": "fk_pur_line_material"
     },
     {
-      "table": "sal_delivery",
-      "column": "customer_id",
-      "ref": "crm_customer",
+      "table": "pur_request_line",
+      "column": "pr_id",
+      "ref": "pur_request",
       "refColumn": "id",
-      "name": "fk_sal_delivery_customer"
+      "name": "pur_request_line_ibfk_1"
     },
     {
-      "table": "sal_delivery",
-      "column": "warehouse_id",
-      "ref": "inv_warehouse",
+      "table": "qc_final_inspection",
+      "column": "work_order_id",
+      "ref": "prd_process_card",
       "refColumn": "id",
-      "name": "fk_sal_delivery_warehouse"
-    },
-    {
-      "table": "sal_delivery_detail",
-      "column": "material_id",
-      "ref": "inv_material",
-      "refColumn": "id",
-      "name": "fk_sal_delivery_detail_material"
+      "name": "fk_qc_final_pc"
     },
     {
       "table": "sal_order",
@@ -295,13 +218,6 @@
       "name": "fk_sal_order_detail_material"
     },
     {
-      "table": "sal_order_detail",
-      "column": "order_id",
-      "ref": "sal_order",
-      "refColumn": "id",
-      "name": "fk_sal_order_detail_order"
-    },
-    {
       "table": "sal_reconciliation",
       "column": "customer_id",
       "ref": "crm_customer",
@@ -309,39 +225,25 @@
       "name": "fk_sal_recon_customer"
     },
     {
-      "table": "sal_return",
-      "column": "customer_id",
-      "ref": "crm_customer",
+      "table": "screen_plate_history",
+      "column": "screen_plate_id",
+      "ref": "prd_screen_plate",
       "refColumn": "id",
-      "name": "fk_sal_return_customer"
+      "name": "screen_plate_history_ibfk_1"
     },
     {
-      "table": "sal_return",
-      "column": "receivable_id",
-      "ref": "fin_receivable",
+      "table": "std_bom_line",
+      "column": "bom_id",
+      "ref": "std_bom_header",
       "refColumn": "id",
-      "name": "fk_sal_return_receivable"
+      "name": "fk_std_bom_line_header"
     },
     {
-      "table": "sal_return",
-      "column": "warehouse_id",
-      "ref": "inv_warehouse",
-      "refColumn": "id",
-      "name": "fk_sal_return_warehouse"
-    },
-    {
-      "table": "sal_return_detail",
-      "column": "material_id",
-      "ref": "inv_material",
-      "refColumn": "id",
-      "name": "fk_sal_return_detail_material"
-    },
-    {
-      "table": "sal_return_order",
+      "table": "std_purchase_order_line",
       "column": "order_id",
-      "ref": "sal_order",
+      "ref": "std_purchase_order",
       "refColumn": "id",
-      "name": "fk_sal_return_order_order"
+      "name": "fk_std_po_line_order"
     },
     {
       "table": "sys_department",
@@ -351,39 +253,25 @@
       "name": "fk_sys_department_leader"
     },
     {
-      "table": "sys_role_menu",
-      "column": "menu_id",
-      "ref": "sys_menu",
+      "table": "test_ba",
+      "column": "bom_id",
+      "ref": "bom_header",
       "refColumn": "id",
-      "name": "fk_role_menu_menu"
+      "name": "test_ba_ibfk_1"
     },
     {
-      "table": "sys_role_menu",
-      "column": "role_id",
-      "ref": "sys_role",
+      "table": "test_ba",
+      "column": "bom_line_id",
+      "ref": "bom_line",
       "refColumn": "id",
-      "name": "fk_role_menu_role"
+      "name": "test_ba_ibfk_2"
     },
     {
-      "table": "sys_user",
-      "column": "department_id",
-      "ref": "sys_department",
+      "table": "test_bvh",
+      "column": "bom_id",
+      "ref": "bom_header",
       "refColumn": "id",
-      "name": "fk_sys_user_department"
-    },
-    {
-      "table": "sys_user_role",
-      "column": "role_id",
-      "ref": "sys_role",
-      "refColumn": "id",
-      "name": "fk_user_role_role"
-    },
-    {
-      "table": "sys_user_role",
-      "column": "user_id",
-      "ref": "sys_user",
-      "refColumn": "id",
-      "name": "fk_user_role_user"
+      "name": "test_bvh_ibfk_1"
     }
   ],
   "skippedSelfRefOrCycle": [
@@ -392,6 +280,13 @@
       "column": "parent_id",
       "ref": "inv_material_category",
       "name": "fk_material_category_parent",
+      "reason": "self-ref (skip per convention, TS7022)"
+    },
+    {
+      "table": "inv_material_label",
+      "column": "parent_label_id",
+      "ref": "inv_material_label",
+      "name": "fk_label_parent",
       "reason": "self-ref (skip per convention, TS7022)"
     },
     {

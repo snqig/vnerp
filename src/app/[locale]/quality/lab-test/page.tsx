@@ -33,6 +33,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  buildQualityFormMessages,
+  buildLabTestSchema,
+  firstZodMessage,
+} from '@/lib/validators/quality-form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
@@ -124,12 +129,17 @@ export default function LabTestPage() {
   }, [page]);
 
   const handleSave = async () => {
+    const parsed = buildLabTestSchema(buildQualityFormMessages((k) => tc(k))).safeParse(editItem);
+    if (!parsed.success) {
+      toast({ title: firstZodMessage(parsed.error), variant: 'destructive' });
+      return;
+    }
     try {
       const method = editItem.id ? 'PUT' : 'POST';
-      const res = await fetch('/api/quality/lab-test', {
+      const res = await authFetch('/api/quality/lab-test', {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editItem),
+        body: JSON.stringify(parsed.data),
       });
       const result = await res.json();
       if (result.success) {
@@ -147,7 +157,7 @@ export default function LabTestPage() {
   const handleDelete = async (id: number) => {
     if (!confirm(t('confirmDeleteTest'))) return;
     try {
-      const res = await fetch('/api/quality/lab-test?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/quality/lab-test?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: tc('deleteSuccess') });

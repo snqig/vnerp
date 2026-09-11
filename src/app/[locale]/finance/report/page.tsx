@@ -233,7 +233,7 @@ export default function FinanceReportPage() {
                     <TableRow key={r.id}>
                       <TableCell>{r.period}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{r.type}</Badge>
+                        <Badge variant="outline">{tc(r.type)}</Badge>
                       </TableCell>
                       <TableCell>{r.category}</TableCell>
                       <TableCell className="text-right text-green-600">

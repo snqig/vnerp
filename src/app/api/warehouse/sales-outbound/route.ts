@@ -112,7 +112,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   const result = await transaction(async (conn) => {
     if (order_id) {
       const [orderRows] = await conn.execute(
-        'SELECT id, order_no, status, total_amount FROM sales_order WHERE id = ? AND deleted = 0 FOR UPDATE',
+        'SELECT id, order_no, status, total_amount FROM sal_order WHERE id = ? AND deleted = 0 FOR UPDATE',
         [order_id]
       );
       if (orderRows.length === 0) {
@@ -341,54 +341,8 @@ export const PUT = withPermission(async (request: NextRequest) => {
         [id]
       );
 
-      if (outbound.order_id) {
-        const _totalOutQty = itemRows.reduce(
-          (sum: number, item: DbRow) => sum + Number(item.quantity || 0),
-          0
-        );
-
-        const [soItemRows] = await conn.execute(
-          'SELECT id, material_id, quantity, delivered_qty FROM sales_order_item WHERE order_id = ?',
-          [outbound.order_id]
-        );
-
-        for (const soItem of soItemRows) {
-          const matchedOutItems = itemRows.filter(
-            (i: DbRow) => i.material_id === soItem.material_id
-          );
-          const outQty = matchedOutItems.reduce(
-            (sum: number, i: DbRow) => sum + Number(i.quantity || 0),
-            0
-          );
-          if (outQty > 0) {
-            await conn.execute(
-              'UPDATE sales_order_item SET delivered_qty = COALESCE(delivered_qty, 0) + ? WHERE id = ?',
-              [outQty, soItem.id]
-            );
-          }
-        }
-
-        const [updatedSoItems] = await conn.execute(
-          'SELECT quantity, COALESCE(delivered_qty, 0) as delivered_qty FROM sales_order_item WHERE order_id = ?',
-          [outbound.order_id]
-        );
-
-        const allDelivered = updatedSoItems.every(
-          (item: DbRow) => Number(item.delivered_qty) >= Number(item.quantity)
-        );
-        const anyDelivered = updatedSoItems.some((item: DbRow) => Number(item.delivered_qty) > 0);
-
-        if (allDelivered) {
-          await conn.execute('UPDATE sales_order SET status = 50 WHERE id = ? AND deleted = 0', [
-            outbound.order_id,
-          ]);
-        } else if (anyDelivered) {
-          await conn.execute(
-            'UPDATE sales_order SET status = 40 WHERE id = ? AND status < 40 AND deleted = 0',
-            [outbound.order_id]
-          );
-        }
-      }
+      // 注：sales_order/sales_order_item 为幽灵表（live 库不存在，sal_order_item 亦无 delivered_qty 列），
+      // 原「累计发货/状态回写」死代码块已删除；销售出库进度应基于真实表 sal_order 另行实现。
 
       return { id, status: 3 };
     });

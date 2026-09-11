@@ -207,3 +207,6 @@ grafana/
 alertmanager/
 nginx/
 docker-compose.monitoring.yml
+
+# 归档目录（本地产物，不入仓；已被 .* 隐式忽略，显式声明）
+.workbuddy/archive/

@@ -60,7 +60,6 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import ApiClient from '@/lib/api-client';
 import { logger } from '@/lib/logger';
-import { mockPurchaseOrders, mockSuppliers, USE_MOCK } from '@/lib/mock-data';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { MoneyDisplay } from '@/components/ui/money-display';
 import { CurrencySelect } from '@/components/ui/currency-select';
@@ -221,23 +220,6 @@ export default function PurchaseOrdersPage() {
       try {
         setLoading(true);
 
-        if (USE_MOCK) {
-          logger.info({ module: 'Purchase', action: 'fetchOrders' }, ts('k_1b38xbu'));
-          const filtered = searchKeyword
-            ? mockPurchaseOrders.filter(
-                (o) => o.po_no?.includes(searchKeyword) || o.supplier_name?.includes(searchKeyword)
-              )
-            : mockPurchaseOrders;
-          const statusFiltered =
-            statusFilter !== 'all'
-              ? filtered.filter((o) => String(o.status) === statusFilter)
-              : filtered;
-          setOrders(statusFiltered);
-          setTotal(statusFiltered.length);
-          setSelectedOrders([]);
-          return;
-        }
-
         const data = await ApiClient.get('/api/purchase/orders', {
           page,
           pageSize,
@@ -272,12 +254,6 @@ export default function PurchaseOrdersPage() {
   const fetchSuppliers = useCallback(async () => {
     logger.info({ module: 'Purchase', action: 'fetchSuppliers' }, ts('k_4hpxzn'));
     try {
-      if (USE_MOCK) {
-        logger.info({ module: 'Purchase', action: 'fetchSuppliers' }, ts('k_1b38xbu'));
-        setSuppliers(mockSuppliers);
-        return;
-      }
-
       const data = await ApiClient.get('/api/purchase/suppliers');
       if (data.success) {
         setSuppliers(data.data?.list || data.data || []);

@@ -1,3 +1,4 @@
+import { purPurchaseOrder } from './procurement';
 import {
   bigint,
   date,
@@ -185,6 +186,13 @@ export const invInboundOrders = mysqlTable(
       name: 'fk_inv_inbound_warehouse',
       columns: [table.warehouseId],
       foreignColumns: [invWarehouse.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
+      fk_purPurchaseOrder_poId: foreignKey({
+      name: 'fk_inv_inbound_order_po',
+      columns: [table.poId],
+      foreignColumns: [purPurchaseOrder.id],
     })
       .onDelete('restrict')
       .onUpdate('cascade'),

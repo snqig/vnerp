@@ -133,14 +133,14 @@ export const POST = withPermission(
       }
     }
 
-    // 更新库存成本价
+    // 更新库存成本价（真实表 inv_inventory，cost_price 列存在）
     if (warehouseId) {
       await execute(
-        'UPDATE stock SET cost_price = ?, update_time = NOW() WHERE material_id = ? AND warehouse_id = ?',
+        'UPDATE inv_inventory SET cost_price = ?, update_time = NOW() WHERE material_id = ? AND warehouse_id = ?',
         [currentCostPrice, Number(materialId), Number(warehouseId)]
       );
     } else {
-      await execute('UPDATE stock SET cost_price = ?, update_time = NOW() WHERE material_id = ?', [
+      await execute('UPDATE inv_inventory SET cost_price = ?, update_time = NOW() WHERE material_id = ?', [
         currentCostPrice,
         Number(materialId),
       ]);

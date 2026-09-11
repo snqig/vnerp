@@ -64,7 +64,6 @@ import {
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
-import { mockQualityFinal, USE_MOCK } from '@/lib/mock-data';
 
 // 终检数据类型
 interface FinalInspect {
@@ -166,32 +165,6 @@ export default function QualityFinalPage() {
     logger.info({ module: 'Quality', action: 'fetchFinals' }, ts('k_1l16c5f'));
     try {
       setLoading(true);
-
-      if (USE_MOCK) {
-        logger.info({ module: 'Quality', action: 'fetchFinals' }, ts('k_1b38xbu'));
-        setFinals(mockQualityFinal);
-        const pendingCount = mockQualityFinal.filter(
-          (f: FinalInspect) => f.burdening_status === 1
-        ).length;
-        const inspectingCount = mockQualityFinal.filter(
-          (f: FinalInspect) => f.burdening_status === 2
-        ).length;
-        const passedCount = mockQualityFinal.filter(
-          (f: FinalInspect) => f.burdening_status === 3
-        ).length;
-        setStats({
-          pending: pendingCount,
-          inspecting: inspectingCount,
-          passed: passedCount,
-          today: mockQualityFinal.length,
-          week: mockQualityFinal.length,
-          passRate:
-            mockQualityFinal.length > 0
-              ? Math.round((passedCount / mockQualityFinal.length) * 100)
-              : 0,
-        });
-        return;
-      }
 
       const res = await authFetch('/api/quality/final');
       const data = await res.json();

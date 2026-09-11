@@ -36,6 +36,13 @@ import { useToast } from '@/hooks/use-toast';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
+import {
+  buildQualityFormMessages,
+  buildUnqualifiedCreateSchema,
+  buildUnqualifiedStartSchema,
+  buildUnqualifiedCompleteSchema,
+  firstZodMessage,
+} from '@/lib/validators/quality-form';
 
 interface Item {
   id: number;
@@ -169,23 +176,21 @@ export default function UnqualifiedPage() {
   };
 
   const handleSave = async () => {
+    const msgs = buildQualityFormMessages((k) => tc(k));
     try {
       if (actionMode === 'create') {
-        const payload: Record<string, unknown> = {
-          inspection_id: editItem.inspection_id,
-          source_type: editItem.source_type,
-          source_no: editItem.source_no,
-          material_id: editItem.material_id,
-          material_code: editItem.material_code,
-          material_name: editItem.material_name,
-          quantity: editItem.quantity,
-          defect_type: editItem.defect_type,
-          defect_desc: editItem.defect_desc,
-          handle_type: editItem.handle_type,
-          responsible_dept: editItem.responsible_dept,
-          responsible_person: editItem.responsible_person,
-          remark: editItem.remark,
-        };
+        const parsed = buildUnqualifiedCreateSchema(msgs).safeParse({
+          ...editItem,
+          handle_type:
+            typeof editItem.handle_type === 'number'
+              ? ['rework', 'scrap', 'concession', 'return'][editItem.handle_type - 1]
+              : editItem.handle_type,
+        });
+        if (!parsed.success) {
+          toast({ title: firstZodMessage(parsed.error), variant: 'destructive' });
+          return;
+        }
+        const payload: Record<string, unknown> = { ...parsed.data };
         const res = await authFetch('/api/quality/unqualified', {
           method: 'POST',
           body: JSON.stringify(payload),
@@ -199,15 +204,20 @@ export default function UnqualifiedPage() {
           toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
         }
       } else if (actionMode === 'start') {
+        const parsed = buildUnqualifiedStartSchema(msgs).safeParse({
+          action: 'start',
+          id: editItem.id,
+          handle_type: ['rework', 'scrap', 'concession', 'return'][startForm.handle_type - 1],
+          responsible_dept: startForm.responsible_dept,
+          responsible_person: startForm.responsible_person,
+        });
+        if (!parsed.success) {
+          toast({ title: firstZodMessage(parsed.error), variant: 'destructive' });
+          return;
+        }
         const res = await authFetch('/api/quality/unqualified', {
           method: 'PUT',
-          body: JSON.stringify({
-            action: 'start',
-            id: editItem.id,
-            handle_type: ['rework', 'scrap', 'concession', 'return'][startForm.handle_type - 1],
-            responsible_dept: startForm.responsible_dept,
-            responsible_person: startForm.responsible_person,
-          }),
+          body: JSON.stringify(parsed.data),
         });
         const result = await res.json();
         if (result.success) {
@@ -218,15 +228,20 @@ export default function UnqualifiedPage() {
           toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
         }
       } else if (actionMode === 'complete') {
+        const parsed = buildUnqualifiedCompleteSchema(msgs).safeParse({
+          action: 'complete',
+          id: editItem.id,
+          handler: completeForm.handler,
+          handle_result: completeForm.handle_result,
+          cost_amount: completeForm.cost_amount,
+        });
+        if (!parsed.success) {
+          toast({ title: firstZodMessage(parsed.error), variant: 'destructive' });
+          return;
+        }
         const res = await authFetch('/api/quality/unqualified', {
           method: 'PUT',
-          body: JSON.stringify({
-            action: 'complete',
-            id: editItem.id,
-            handler: completeForm.handler,
-            handle_result: completeForm.handle_result,
-            cost_amount: completeForm.cost_amount,
-          }),
+          body: JSON.stringify(parsed.data),
         });
         const result = await res.json();
         if (result.success) {

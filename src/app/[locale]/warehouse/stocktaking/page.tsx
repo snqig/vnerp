@@ -378,7 +378,7 @@ export default function StocktakingPage() {
                       <TableCell className="text-xs text-center">{item.total_items}</TableCell>
                       <TableCell className="text-xs text-center">{item.diff_items}</TableCell>
                       <TableCell className="text-xs text-center font-mono">
-                        ¥{item.diff_amount?.toFixed(2)}
+                        ¥{(Number(item.diff_amount) || 0).toFixed(2)}
                       </TableCell>
                       <TableCell>
                         <Badge variant={st.variant} className="text-xs">
