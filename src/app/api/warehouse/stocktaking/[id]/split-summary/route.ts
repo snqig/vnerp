@@ -18,7 +18,7 @@ export const GET = withPermission(
       return errorResponse(ts('k_10yzxw7'), 400, 400);
     }
 
-    const check = await queryOne(`SELECT * FROM inventory_checks WHERE id = ? AND deleted = 0`, [
+    const check = await queryOne(`SELECT * FROM inv_stocktaking WHERE id = ? AND deleted = 0`, [
       checkId,
     ]);
 
@@ -27,13 +27,13 @@ export const GET = withPermission(
     }
 
     const parentItem = await query(
-      `SELECT ici.*,
+      `SELECT si.*,
             m.material_name,
             m.unit
-     FROM inventory_check_items ici
-     LEFT JOIN bas_material m ON ici.material_id = m.id
-     WHERE ici.check_id = ?
-       AND ici.qr_code = ?`,
+     FROM inv_stocktaking_item si
+     LEFT JOIN inv_material m ON si.material_id = m.id
+     WHERE si.taking_id = ?
+       AND si.qr_code = ?`,
       [checkId, parentQrCode]
     );
 
@@ -42,12 +42,12 @@ export const GET = withPermission(
     }
 
     const smallItems = await query(
-      `SELECT ici.*
-     FROM inventory_check_items ici
-     WHERE ici.check_id = ?
-       AND ici.parent_qr_code = ?
-       AND ici.split_flag = 1
-     ORDER BY ici.id`,
+      `SELECT si.*
+     FROM inv_stocktaking_item si
+     WHERE si.taking_id = ?
+       AND si.parent_qr_code = ?
+       AND si.split_flag = 1
+     ORDER BY si.id`,
       [checkId, parentQrCode]
     );
 
@@ -55,8 +55,8 @@ export const GET = withPermission(
     let totalSmallActualQty = 0;
 
     for (const item of smallItems) {
-      totalSmallBookQty += item.book_quantity || 0;
-      totalSmallActualQty += item.actual_quantity || 0;
+      totalSmallBookQty += item.system_qty || 0;
+      totalSmallActualQty += item.actual_qty || 0;
     }
 
     return successResponse({
@@ -64,23 +64,23 @@ export const GET = withPermission(
       material_name: parentItem[0].material_name,
       batch_no: parentItem[0].batch_no,
       unit: parentItem[0].unit,
-      whole_material_book_qty: parentItem[0].book_quantity,
-      whole_material_actual_qty: parentItem[0].actual_quantity,
+      whole_material_book_qty: parentItem[0].system_qty,
+      whole_material_actual_qty: parentItem[0].actual_qty,
       split_small_qty: smallItems.length,
       total_small_book_qty: totalSmallBookQty,
       total_small_actual_qty: totalSmallActualQty,
       difference:
-        (parentItem[0].actual_quantity || 0) +
+        (parentItem[0].actual_qty || 0) +
         totalSmallActualQty -
-        (parentItem[0].book_quantity || 0) -
+        (parentItem[0].system_qty || 0) -
         totalSmallBookQty,
       small_materials: smallItems.map((item) => ({
         qr_code: item.qr_code,
         batch_no: item.batch_no,
-        book_quantity: item.book_quantity,
-        actual_quantity: item.actual_quantity,
-        difference: item.difference,
-        status: item.status,
+        book_quantity: item.system_qty,
+        actual_quantity: item.actual_qty,
+        difference: item.diff_qty,
+        status: item.diff_status,
       })),
     });
   }

@@ -28,7 +28,6 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
-import { mockProcessCards, USE_MOCK } from '@/lib/mock-data';
 
 // 流程卡类型
 interface ProcessCard {
@@ -98,12 +97,6 @@ export default function ProcessCardsPage() {
 
   const fetchCards = async () => {
     try {
-      if (USE_MOCK) {
-        logger.info({ module: 'Dcprint', action: 'fetchProcessCards' }, ts('k_1pat73x'));
-        setCards(mockProcessCards);
-        return;
-      }
-
       const response = await authFetch('/api/dcprint/process-cards');
       const result = await response.json();
       if (result.success) {

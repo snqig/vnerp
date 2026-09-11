@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { useCompanyName } from '@/hooks/useCompanyName';
 import { useState, useRef, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,6 +68,7 @@ export default function TracePage() {
   const ts = useTranslations('Dcprint');
   // 翻译钩子
   const tc = useTranslations('Common');
+  const { companyName } = useCompanyName();
 
   const [qrCode, setQrCode] = useState('');
   const [traceResult, setTraceResult] = useState<TraceResult | null>(null);
@@ -147,9 +149,98 @@ export default function TracePage() {
     qrInputRef.current?.focus();
   };
 
+  // 打印追溯单：新窗口渲染 A4 单据并唤起浏览器打印
   const handlePrint = () => {
-    // TODO: 实现打印功能
-    alert(ts('k_nhn0cj'));
+    if (!traceResult) {
+      alert(ts('k_nhn0cj'));
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert(tc('cannotOpenPrintWindow'));
+      return;
+    }
+
+    const esc = (v: unknown) =>
+      String(v ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
+    const typeLabel = (t: string) =>
+      esc(t === 'main' ? ts('k_1gqlef2') : t === 'auxiliary' ? ts('k_14rp9uj') : t);
+
+    const materialRows = traceResult.materials
+      .map(
+        (m) => `
+      <tr>
+        <td>${esc(m.labelNo)}</td>
+        <td>${typeLabel(m.materialType)}</td>
+        <td>${esc(m.materialCode)}</td>
+        <td>${esc(m.materialName)}</td>
+        <td>${esc(m.specification)}</td>
+        <td>${esc(m.batchNo)}</td>
+        <td>${esc(m.supplierName)}</td>
+        <td>${esc(m.receiveDate)}</td>
+        <td>${m.quantity != null ? esc(m.quantity) : '-'}${m.unit ? ' ' + esc(m.unit) : ''}</td>
+      </tr>`
+      )
+      .join('');
+
+    const infoRow = (label: string, value: unknown) =>
+      `<tr><td class="lbl">${esc(label)}</td><td>${esc(value || '-')}</td></tr>`;
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(ts('k_1iaqhub'))} ${esc(traceResult.traceNo)}</title>
+      <style>
+        @page { size: A4 portrait; margin: 12mm; }
+        body { font-family: "Microsoft YaHei", Arial, sans-serif; padding: 16px; color: #333; }
+        h1 { text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 10px; color: #16a34a; font-size: 20px; }
+        .info { text-align: center; color: #666; margin-bottom: 12px; font-size: 13px; }
+        h2 { font-size: 14px; color: #16a34a; border-left: 4px solid #16a34a; padding-left: 8px; margin: 16px 0 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { border: 1px solid #999; padding: 5px 6px; text-align: center; }
+        th { background-color: #f0fdf4; font-weight: bold; color: #15803d; }
+        table.info-table td { text-align: left; border: none; border-bottom: 1px dashed #ccc; padding: 4px 6px; }
+        table.info-table td.lbl { width: 30%; color: #666; }
+        .footer { margin-top: 20px; display: flex; justify-content: space-between; color: #999; font-size: 11px; }
+        @media print { body { padding: 0; } }
+      </style></head>
+      <body>
+        <h1>${esc(ts('k_1iaqhub'))}</h1>
+        <div class="info">${esc(tc('dcTraceNoPrefix'))}${esc(traceResult.traceNo)} | ${esc(tc('printTime'))}: ${new Date().toLocaleString()}</div>
+
+        <h2>${esc(ts('k_q3ivm0'))}</h2>
+        <table class="info-table">
+          ${infoRow(ts('k_1wr50ow'), traceResult.card.cardNo)}
+          ${infoRow(ts('k_jzt8aw'), traceResult.card.workOrderNo)}
+          ${infoRow(ts('k_1kiv8l6'), traceResult.card.productCode)}
+          ${infoRow(ts('k_ksjvvz'), traceResult.card.productName)}
+        </table>
+
+        <h2>${esc(ts('k_17hv1vq'))}</h2>
+        <table class="info-table">
+          ${infoRow(ts('k_3oet4n'), traceResult.mainMaterial.labelNo)}
+          ${infoRow(ts('k_fqm675'), traceResult.mainMaterial.materialCode)}
+          ${infoRow(ts('k_a60ciy'), traceResult.mainMaterial.materialName)}
+          ${infoRow(tc('specification'), traceResult.mainMaterial.specification)}
+          ${infoRow(ts('k_1glawu1'), traceResult.mainMaterial.batchNo)}
+          ${infoRow(tc('supplier'), traceResult.mainMaterial.supplierName)}
+          ${infoRow(ts('k_1k8gh4h'), traceResult.mainMaterial.receiveDate)}
+        </table>
+
+        <h2>${esc(ts('k_1l65urb'))}</h2>
+        <table>
+          <thead><tr><th>${esc(ts('k_3oet4n'))}</th><th>${esc(tc('type'))}</th><th>${esc(ts('k_fqm675'))}</th><th>${esc(ts('k_a60ciy'))}</th><th>${esc(tc('specification'))}</th><th>${esc(ts('k_1glawu1'))}</th><th>${esc(tc('supplier'))}</th><th>${esc(ts('k_1k8gh4h'))}</th><th>${esc(tc('quantity'))}</th></tr></thead>
+          <tbody>${materialRows}</tbody>
+        </table>
+
+        <div class="footer"><span>${esc(companyName)}</span><span>${esc(ts('k_vrpz58'))}: ${traceResult.materials.length}</span></div>
+        <script>window.onload=function(){window.print();}</script>
+      </body></html>`;
+    printWindow.document.write(html);
+    printWindow.document.close();
   };
 
   return (

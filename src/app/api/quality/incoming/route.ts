@@ -11,6 +11,7 @@ import {
   validateRequestBody,
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { buildQualityFormMessages } from '@/lib/validators/quality-form';
 import type { DbRow } from '@/types/db';
 
 // 获取进料检验列表
@@ -137,6 +138,16 @@ export const POST = withPermission(
 
     if (!validation.valid) {
       return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
+
+    // 数量必须为正数（防字符串/0/负数入库）
+    const qtyNum = Number(body.quantity);
+    if (!Number.isFinite(qtyNum) || qtyNum <= 0) {
+      return errorResponse(
+        buildQualityFormMessages((k) => ts(k)).qtyMustBePositive,
+        400,
+        400
+      );
     }
 
     const {

@@ -177,13 +177,14 @@ export class PurchaseReturnApplicationService {
       const outboundOrderId = obResult.insertId;
 
       // 2. 创建红字应付单（fin_payable，负数金额代表供应商应退）
+      //    source_type 枚举（tinyint）：1=采购入库 2=生产工单 3=采购退货红字；source_no=退货关联的采购订单号
       const payableNo = await generateDocumentNo('payable');
       const refundAmount = ret.totalAmount;
       const [payResult] = await conn.execute<ResultSetHeader>(
         `INSERT INTO fin_payable
          (payable_no, source_type, source_no, supplier_id,
           amount, paid_amount, balance, due_date, status, remark, deleted, create_time, update_time)
-         VALUES (?, 'purchase_return', ?, ?, ?, ?, 0, ?, NULL, 1, ?, 0, NOW(), NOW())`,
+         VALUES (?, 3, ?, ?, ?, ?, 0, ?, NULL, 1, ?, 0, NOW(), NOW())`,
         [
           payableNo,
           orderNo,

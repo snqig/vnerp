@@ -133,7 +133,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   let orderInfo: unknown = null;
   if (record.ref_no && record.ref_no.startsWith('SO')) {
-    orderInfo = await queryOne('SELECT * FROM sales_order WHERE order_no = ? AND deleted = 0', [
+    orderInfo = await queryOne('SELECT * FROM sal_order WHERE order_no = ? AND deleted = 0', [
       record.ref_no,
     ]);
   }

@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toast } from 'sonner';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -188,7 +189,10 @@ export default function SPCPage() {
   }, [fetchMaterials]);
 
   const handleGenerateXbarR = async () => {
-    if (!xbarMaterialId) return;
+    if (!xbarMaterialId) {
+      toast.error(tc('required'));
+      return;
+    }
     setXbarLoading(true);
     try {
       const res = await authFetch(

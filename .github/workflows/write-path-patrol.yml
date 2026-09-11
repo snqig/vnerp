@@ -1,0 +1,52 @@
+name: Write Path Patrol
+
+# 写路径巡检（防回退门）：覆盖 2026-09-10 修复闭环的四类写路径缺陷，防止回归 ——
+#   1. 幽灵表代码引用（bas_material/sales_order/stock/inventory_checks 等）
+#   2. inv_inventory 裸 INSERT（uk_material_warehouse 不含 deleted，必须 UPSERT）
+#   3. fin_payable.source_type(tinyint) 字符串注入（STRICT 模式抛 1366）
+#   4. 幽灵表/_bak_* 表 DB 残留（CI 中以 MySQL service 实测）
+#   5. 出库确认假成功探针（无 dev server 时自动跳过）
+# 任何 FAIL 以 exit 1 阻断。纯 Node 脚本，无需构建。
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  write-path-patrol:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: vnerp_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: vnerp_test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run write-path patrol
+        run: node scripts/write-path-patrol.mjs

@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { useCompanyName } from '@/hooks/useCompanyName';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { DbRow } from '@/types/db';
 import { motion } from 'framer-motion';
@@ -49,6 +50,8 @@ interface OutboundRecord {
   status: string;
   auditStatus: string;
   type: string;
+  /** 后端原始类型码（production/sales/return/transfer/normal/raw_material/other），编辑回填用 */
+  outboundType?: string;
   remark: string;
   isRawMaterial: boolean;
   materialId?: number;
@@ -153,6 +156,8 @@ function mapOutboundRow(o: DbRow, ts: (key: string) => string): OutboundRecord {
     return: ts('k_1913pi7'),
     transfer: ts('k_x2noxr'),
     other: ts('k_le3tde'),
+    normal: ts('normalOutbound'),
+    raw_material: ts('rawMaterialOutbound'),
   };
   return {
     id: String(o.id),
@@ -170,6 +175,7 @@ function mapOutboundRow(o: DbRow, ts: (key: string) => string): OutboundRecord {
     batchNo: firstItem?.batchNo || '',
     batch_no: firstItem?.batchNo || '',
     type: typeLabel[o.outboundType] || o.outboundType || '',
+    outboundType: o.outboundType || '',
     status: o.status,
     auditStatus: o.auditStatus,
     isRawMaterial: false,
@@ -321,20 +327,21 @@ export default function OutboundManagementPage() {
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
+  const { companyName } = useCompanyName();
 
-  // 单位选项（支持国际化）
+  // 单位选项（value=入库存储用的规范单位串且唯一；label=国际化显示）
   const unitOptions = useMemo(
     () => [
       { value: 'M', label: t('unitM') },
       { value: 'KG', label: t('unitKG') },
-      { value: ts('k_1v8rak6'), label: t('unitRoll') },
-      { value: ts('k_btluu6'), label: t('unitPiece') },
-      { value: ts('k_accfpb'), label: t('unitSheet') },
-      { value: ts('k_1vl54uh'), label: t('unitBarrel') },
-      { value: ts('k_1e2x02k'), label: t('unitBox') },
+      { value: '卷', label: t('unitRoll') },
+      { value: '个', label: t('unitPiece') },
+      { value: '张', label: t('unitSheet') },
+      { value: '桶', label: t('unitBucket') },
+      { value: '盒', label: t('unitBox') },
       { value: 'PCS', label: t('unitPCS') },
-      { value: ts('k_1mchwba'), label: t('unitSet') },
-      { value: ts('k_w0gthl'), label: t('unitItem') },
+      { value: '套', label: t('unitSet') },
+      { value: '条', label: t('unitItem') },
     ],
     [t]
   );
@@ -540,16 +547,7 @@ export default function OutboundManagementPage() {
       unit: record.unit || '',
       warehouse: record.warehouseId ? String(record.warehouseId) : '',
       remark: record.remark || '',
-      outboundType:
-        record.type === ts('k_g4v5tc')
-          ? 'production'
-          : record.type === ts('k_270k8')
-            ? 'sales'
-            : record.type === ts('k_1913pi7')
-              ? 'return'
-              : record.type === ts('k_x2noxr')
-                ? 'transfer'
-                : 'other',
+      outboundType: record.outboundType || 'other',
       isRawMaterial: record.isRawMaterial || false,
       batchNo: record.batchNo || '',
       width: record.width?.toString() || '',
@@ -873,12 +871,78 @@ export default function OutboundManagementPage() {
     setFifoConfirming(false);
   };
 
-  // 打印
+  // 列印：新窗口渲染 A4 报表并唤起浏览器打印（选中行优先，未选则列印当前筛选结果）
   const handlePrint = () => {
-    if (selectedRecords.length === 0) {
-      toast.error(t('printFirst'));
+    const dataToPrint =
+      selectedRecords.length > 0
+        ? filteredRecords.filter((r) => selectedRecords.includes(r.id))
+        : filteredRecords;
+
+    if (dataToPrint.length === 0) {
+      toast.error(tc('noDataToPrint'));
+      return;
     }
-    toast.success(t('printSent'));
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error(tc('cannotOpenPrintWindow'));
+      return;
+    }
+
+    const esc = (v: unknown) =>
+      String(v ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
+    const rows = dataToPrint
+      .map(
+        (r, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${esc(r.orderNo || r.id)}</td>
+        <td>${esc(r.date)}</td>
+        <td>${esc(r.materialName)}</td>
+        <td>${esc(r.spec)}</td>
+        <td>${esc(r.quantity)}</td>
+        <td>${esc(r.unit)}</td>
+        <td>${r.total_amount != null ? esc(r.total_amount) : '-'}</td>
+        <td>${esc(r.currency || '-')}</td>
+        <td>${esc(r.warehouse)}</td>
+        <td>${esc(r.batchNo || r.batch_no || '-')}</td>
+        <td>${esc(r.type)}</td>
+        <td>${esc(tc(statusConfig[r.status]?.labelKey || 'unknown') || r.status)}</td>
+        <td>${esc(r.operator)}</td>
+      </tr>`
+      )
+      .join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(t('outboundManagement'))}</title>
+      <style>
+        @page { size: A4 landscape; margin: 10mm; }
+        body { font-family: "Microsoft YaHei", Arial, sans-serif; padding: 20px; color: #333; }
+        h1 { text-align: center; border-bottom: 2px solid #1a56db; padding-bottom: 10px; color: #1a56db; font-size: 20px; }
+        .info { text-align: center; color: #666; margin-bottom: 15px; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { border: 1px solid #999; padding: 5px 6px; text-align: center; }
+        th { background-color: #f0f4ff; font-weight: bold; color: #1a56db; }
+        .footer { margin-top: 20px; text-align: right; color: #999; font-size: 11px; }
+        @media print { body { padding: 0; } }
+      </style></head>
+      <body>
+        <h1>${esc(t('outboundManagement'))}</h1>
+        <div class="info">${esc(tc('printTime'))}: ${new Date().toLocaleString()} | ${esc(tc('totalRecords', { total: dataToPrint.length }))}</div>
+        <table>
+          <thead><tr><th>${esc(tc('serialNo'))}</th><th>${esc(t('outboundNo'))}</th><th>${esc(tc('date'))}</th><th>${esc(tc('materialName'))}</th><th>${esc(tc('specification'))}</th><th>${esc(tc('quantity'))}</th><th>${esc(tc('unit'))}</th><th>${esc(tc('amount'))}</th><th>${esc(tc('currency'))}</th><th>${esc(tc('warehouse'))}</th><th>${esc(tc('batchNo'))}</th><th>${esc(tc('type'))}</th><th>${esc(tc('status'))}</th><th>${esc(t('operator'))}</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="footer">${esc(companyName)}</div>
+        <script>window.onload=function(){window.print();}</script>
+      </body></html>`;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    toast.success(tc('printingRecords', { count: dataToPrint.length }));
   };
 
   // 选择记录

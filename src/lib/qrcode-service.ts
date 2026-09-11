@@ -25,7 +25,11 @@ export interface QRCodeRecord {
   id: number;
   qr_code: string;
   qr_type: string;
-  source_type: string;
+  /** 真实列 ref_id（兼容别名 source_id，追溯链依赖） */
+  ref_id: number;
+  /** 真实列 ref_no（兼容别名 source_no） */
+  ref_no: string;
+  /** 兼容别名：SELECT q.ref_id AS source_id 喂给 getTraceHistory */
   source_id: number;
   source_no: string;
   material_id?: number;
@@ -36,9 +40,11 @@ export interface QRCodeRecord {
   warehouse_id?: number;
   warehouse_name?: string;
   production_date?: string;
-  expire_date?: string;
+  expiry_date?: string;
   qr_image_url?: string;
-  status: string;
+  trace_url?: string;
+  /** tinyint：1=有效 0=失效 9=已删 */
+  status: number;
   create_time: string;
 }
 
@@ -152,13 +158,13 @@ export class QRCodeService {
 
     return await transaction(async (conn) => {
       const [result] = await conn.execute(
-        `INSERT INTO inv_qr_code (qr_code, qr_type, source_type, source_id, source_no, material_id, material_code, material_name, warehouse_id, production_date, expire_date, trace_url, create_time)
-         VALUES (?, 'material', 'material', ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, material_id, material_code, material_name, warehouse_id, production_date, expiry_date, trace_url, status, create_time)
+         VALUES (?, 'material', ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())`,
         [
           qrCode,
           materialId,
-          materialId,
           materialCode,
+          materialId,
           materialCode,
           materialName,
           options?.warehouseId || null,
@@ -177,7 +183,7 @@ export class QRCodeService {
       });
       const qrImageUrl = await this.generateQRCodeImage(qrContent);
 
-      await conn.execute(`UPDATE inv_qr_code SET qr_image_url = ? WHERE id = ?`, [
+      await conn.execute(`UPDATE qrcode_record SET qr_image_url = ? WHERE id = ?`, [
         qrImageUrl,
         qrId,
       ]);
@@ -202,13 +208,13 @@ export class QRCodeService {
   ): Promise<{ qrCode: string; qrImageUrl: string; qrId: number }> {
     return await transaction(async (conn) => {
       const [result] = await conn.execute(
-        `INSERT INTO inv_qr_code (qr_code, qr_type, source_type, source_id, source_no, material_id, material_code, material_name, batch_no, warehouse_id, production_date, expire_date, trace_url, create_time)
-         VALUES (?, 'batch', 'batch', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, material_id, material_code, material_name, batch_no, warehouse_id, production_date, expiry_date, trace_url, status, create_time)
+         VALUES (?, 'batch', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())`,
         [
           batchNo,
           materialId,
-          materialId,
           materialCode,
+          materialId,
           materialCode,
           materialName,
           batchNo,
@@ -231,7 +237,7 @@ export class QRCodeService {
       });
       const qrImageUrl = await this.generateQRCodeImage(qrContent);
 
-      await conn.execute(`UPDATE inv_qr_code SET qr_image_url = ? WHERE id = ?`, [
+      await conn.execute(`UPDATE qrcode_record SET qr_image_url = ? WHERE id = ?`, [
         qrImageUrl,
         qrId,
       ]);
@@ -253,12 +259,12 @@ export class QRCodeService {
   ): Promise<{ qrCode: string; qrImageUrl: string; qrId: number }> {
     return await transaction(async (conn) => {
       const [result] = await conn.execute(
-        `INSERT INTO inv_qr_code (qr_code, qr_type, source_type, source_id, source_no, work_order_no, trace_url, create_time)
-         VALUES (?, 'workorder', 'workorder', ?, ?, ?, ?, NOW())`,
+        `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, work_order_no, trace_url, status, create_time)
+         VALUES (?, 'workorder', ?, ?, ?, ?, 1, NOW())`,
         [
           workOrderNo,
           workOrderId,
-          workOrderId,
+          workOrderNo,
           workOrderNo,
           this.generateTraceUrl('workorder', workOrderId, workOrderNo),
         ]
@@ -273,7 +279,7 @@ export class QRCodeService {
       });
       const qrImageUrl = await this.generateQRCodeImage(qrContent);
 
-      await conn.execute(`UPDATE inv_qr_code SET qr_image_url = ? WHERE id = ?`, [
+      await conn.execute(`UPDATE qrcode_record SET qr_image_url = ? WHERE id = ?`, [
         qrImageUrl,
         qrId,
       ]);
@@ -286,8 +292,8 @@ export class QRCodeService {
 
   static async getQRCodeInfo(qrCode: string): Promise<QRCodeRecord | null> {
     const rows = await query(
-      `SELECT q.*, w.warehouse_name
-       FROM inv_qr_code q
+      `SELECT q.*, q.ref_id AS source_id, q.ref_no AS source_no, w.warehouse_name
+       FROM qrcode_record q
        LEFT JOIN inv_warehouse w ON q.warehouse_id = w.id
        WHERE q.qr_code = ? AND q.deleted = 0`,
       [qrCode]
@@ -309,7 +315,7 @@ export class QRCodeService {
       materialName: qrInfo.material_name || '',
       batchNo: qrInfo.batch_no || '',
       productionDate: qrInfo.production_date,
-      expireDate: qrInfo.expire_date,
+      expireDate: qrInfo.expiry_date,
       currentWarehouse: qrInfo.warehouse_name,
       traceHistory: history,
     };
@@ -382,8 +388,8 @@ export class QRCodeService {
 
   static async getBatchQRCodeList(materialId: number): Promise<QRCodeRecord[]> {
     const rows = await query(
-      `SELECT q.*, w.warehouse_name
-       FROM inv_qr_code q
+      `SELECT q.*, q.ref_id AS source_id, q.ref_no AS source_no, w.warehouse_name
+       FROM qrcode_record q
        LEFT JOIN inv_warehouse w ON q.warehouse_id = w.id
        WHERE q.material_id = ? AND q.qr_type = 'batch' AND q.deleted = 0
        ORDER BY q.create_time DESC`,
@@ -393,8 +399,9 @@ export class QRCodeService {
   }
 
   static async invalidateQRCode(qrCode: string, reason: string): Promise<void> {
+    // qrcode_record.status 为 tinyint（1=有效 0=失效），且无 update_time 列（否则 1054）
     await execute(
-      `UPDATE inv_qr_code SET status = 'invalidated', remark = CONCAT(IFNULL(remark, ''), ' | ', ?), update_time = NOW() WHERE qr_code = ?`,
+      `UPDATE qrcode_record SET status = 0, remark = CONCAT(IFNULL(remark, ''), ' | ', ?) WHERE qr_code = ?`,
       [reason, qrCode]
     );
     secureLog('info', 'QR code invalidated', { qrCode, reason });

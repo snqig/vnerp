@@ -460,8 +460,8 @@ export class FinanceApplicationService {
       await conn.execute(
         `INSERT INTO fin_payment_record
          (payment_no, payable_id, supplier_id, amount, payment_date,
-          payment_method, remark, deleted, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
+          payment_method, remark, deleted, create_by, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, NOW())`,
         [
           paymentNo,
           input.payableId,
@@ -470,6 +470,7 @@ export class FinanceApplicationService {
           input.paymentDate || null,
           input.paymentMethod || null,
           input.remark || null,
+          input.createBy ?? null,
         ]
       );
 

@@ -29,6 +29,7 @@ export interface AppendTransactionInput {
   materialId: number;
   batchNo?: string | null;
   warehouseId: number;
+  locationId?: number | null;
   /** 正数；方向由 transType 表达（return 表示冲销/反向） */
   quantity: number;
   unitPrice?: number;

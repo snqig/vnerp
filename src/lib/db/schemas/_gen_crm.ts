@@ -68,7 +68,14 @@ export const crmCustomerAnalysis = mysqlTable('crm_customer_analysis', {
   idxLevel: index('idx_level').on(t.customerLevel),
   idxPeriod: index('idx_period').on(t.analysisPeriod),
   pk: primaryKey({ columns: [t.id] }),
-}));
+    fk_crmCustomer_customerId: foreignKey({
+      name: 'fk_crm_customer_analysis_customer',
+      columns: [t.customerId],
+      foreignColumns: [crmCustomer.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
+  }));
 
 export const crmCustomerFollowUp = mysqlTable('crm_customer_follow_up', {
   id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().notNull(),

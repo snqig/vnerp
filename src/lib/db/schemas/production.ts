@@ -1,3 +1,4 @@
+import { invMaterialLabel } from './_gen_warehouse_missing';
 import { crmCustomer } from './_gen_crm';
 import {
   bigint,
@@ -187,6 +188,13 @@ export const prdPickOrder = mysqlTable(
     pickNoIdx: uniqueIndex('uk_pick_no').on(table.pickNo),
     workOrderIdx: index('idx_pick_work_order').on(table.workOrderId),
     statusIdx: index('idx_pick_status').on(table.status),
+      fk_prdWorkOrder_workOrderId: foreignKey({
+      name: 'fk_prd_material_issue_work_order',
+      columns: [table.workOrderId],
+      foreignColumns: [prdWorkOrder.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
   })
 );
 
@@ -593,6 +601,13 @@ export const prdProcessCard = mysqlTable(
     cardNoIdx: uniqueIndex('uk_card_no').on(table.cardNo),
     workOrderIdx: index('idx_work_order').on(table.workOrderId),
     mainLabelIdx: index('idx_main_label').on(table.mainLabelId),
+      fk_invMaterialLabel_mainLabelId: foreignKey({
+      name: 'fk_process_card_main_label',
+      columns: [table.mainLabelId],
+      foreignColumns: [invMaterialLabel.id],
+    })
+      .onDelete('set null')
+      .onUpdate('no action'),
   })
 );
 

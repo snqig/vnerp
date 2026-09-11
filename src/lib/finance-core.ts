@@ -254,8 +254,8 @@ export async function recordPayment(
       await conn.execute(
         `INSERT INTO fin_payment_record (
           payment_no, payable_id, supplier_id, amount,
-          payment_date, payment_method, remark, deleted, create_time
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
+          payment_date, payment_method, remark, create_by, deleted, create_time
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
         [
           paymentNo,
           payableId,
@@ -264,6 +264,7 @@ export async function recordPayment(
           paymentDate,
           paymentMethod,
           '采购付款',
+          operatorId ?? null,
         ]
       );
 

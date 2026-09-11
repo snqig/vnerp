@@ -87,6 +87,20 @@ export const invCuttingDetail = mysqlTable(
     idxNewLabel: index('idx_new_label').on(t.newLabelId),
     idxRecordId: index('idx_record_id').on(t.recordId),
     pk: primaryKey({ columns: [t.id] }),
+      fk_invMaterialLabel_newLabelId: foreignKey({
+      name: 'fk_inv_cutting_detail_new_label',
+      columns: [t.newLabelId],
+      foreignColumns: [invMaterialLabel.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
+    fk_invCuttingRecord_recordId: foreignKey({
+      name: 'fk_inv_cutting_detail_record',
+      columns: [t.recordId],
+      foreignColumns: [invCuttingRecord.id],
+    })
+      .onDelete('cascade')
+      .onUpdate('cascade'),
   })
 );
 
@@ -113,6 +127,13 @@ export const invCuttingRecord = mysqlTable(
     idxSourceLabel: index('idx_source_label').on(t.sourceLabelId),
     pk: primaryKey({ columns: [t.id] }),
     ukRecordNo: uniqueIndex('uk_record_no').on(t.recordNo),
+      fk_invMaterialLabel_sourceLabelId: foreignKey({
+      name: 'fk_inv_cutting_record_source_label',
+      columns: [t.sourceLabelId],
+      foreignColumns: [invMaterialLabel.id],
+    })
+      .onDelete('restrict')
+      .onUpdate('cascade'),
   })
 );
 
@@ -423,6 +444,20 @@ export const invMaterialLabel = mysqlTable(
     idxWarehouse: index('idx_warehouse').on(t.warehouseId),
     pk: primaryKey({ columns: [t.id] }),
     ukLabelNo: uniqueIndex('uk_label_no').on(t.labelNo),
+      fk_invLocation_locationId: foreignKey({
+      name: 'fk_label_location',
+      columns: [t.locationId],
+      foreignColumns: [invLocation.id],
+    })
+      .onDelete('set null')
+      .onUpdate('no action'),
+    fk_invWarehouse_warehouseId: foreignKey({
+      name: 'fk_label_warehouse',
+      columns: [t.warehouseId],
+      foreignColumns: [invWarehouse.id],
+    })
+      .onDelete('set null')
+      .onUpdate('no action'),
   })
 );
 

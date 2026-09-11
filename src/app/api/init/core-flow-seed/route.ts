@@ -1073,7 +1073,8 @@ export const POST = withPermission(async (_request: NextRequest) => {
       const wh = warehouses[(i - 1) % warehouses.length];
       const qty = randomInt(100, 10000);
       await conn.execute(
-        `INSERT INTO inv_inventory (material_id, material_name, warehouse_id, warehouse_name, quantity, available_qty, locked_qty, unit, unit_cost, total_cost, safety_stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO inv_inventory (material_id, material_name, warehouse_id, warehouse_name, quantity, available_qty, locked_qty, unit, unit_cost, total_cost, safety_stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id), quantity = VALUES(quantity), available_qty = VALUES(available_qty), locked_qty = VALUES(locked_qty), unit_cost = VALUES(unit_cost), total_cost = VALUES(total_cost), deleted = 0`,
         [
           mat.id,
           mat.material_name,

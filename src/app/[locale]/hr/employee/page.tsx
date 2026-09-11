@@ -39,13 +39,6 @@ import { useCompanyName } from '@/hooks/useCompanyName';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
 import { authFetch } from '@/lib/auth-fetch';
-import {
-  mockEmployees,
-  mockDepartments,
-  mockRoles,
-  USE_MOCK_HR_DATA,
-  mockApiListResponse,
-} from '@/lib/mock-hr-data';
 import type { Employee, Department, Role } from './types';
 import { EmployeeFormDialog } from './components/dialogs/EmployeeFormDialog';
 import { PrintDialog } from './components/dialogs/PrintDialog';
@@ -163,22 +156,15 @@ export default function EmployeePage() {
     try {
       let employeeList: Employee[];
 
-      if (USE_MOCK_HR_DATA) {
-        // 使用模拟数据
-        logger.info({ module: 'Hr', action: 'fetchEmployees' }, ts('k_1b38xbu'));
-        const _mockResponse = mockApiListResponse(mockEmployees);
-        employeeList = mockEmployees;
+      const url = debouncedSearch
+        ? `/api/organization/employee?keyword=${encodeURIComponent(debouncedSearch)}`
+        : '/api/organization/employee';
+      const response = await authFetch(url);
+      const result = await response.json();
+      if (result.success) {
+        employeeList = Array.isArray(result.data) ? result.data : result.data?.list || [];
       } else {
-        const url = debouncedSearch
-          ? `/api/organization/employee?keyword=${encodeURIComponent(debouncedSearch)}`
-          : '/api/organization/employee';
-        const response = await authFetch(url);
-        const result = await response.json();
-        if (result.success) {
-          employeeList = Array.isArray(result.data) ? result.data : result.data?.list || [];
-        } else {
-          throw new Error('API returned unsuccessful');
-        }
+        throw new Error('API returned unsuccessful');
       }
 
       setEmployees(employeeList);
@@ -202,15 +188,10 @@ export default function EmployeePage() {
     try {
       let deptList: Department[] = [];
 
-      if (USE_MOCK_HR_DATA) {
-        logger.info({ module: 'Hr', action: 'fetchDepartments' }, ts('k_1b38xbu'));
-        deptList = mockDepartments as unknown as Department[];
-      } else {
-        const response = await fetch('/api/organization/department');
-        const result = await response.json();
-        if (result.success) {
-          deptList = Array.isArray(result.data) ? result.data : result.data?.list || [];
-        }
+      const response = await fetch('/api/organization/department');
+      const result = await response.json();
+      if (result.success) {
+        deptList = Array.isArray(result.data) ? result.data : result.data?.list || [];
       }
 
       setDepartments(deptList);
@@ -230,15 +211,10 @@ export default function EmployeePage() {
     try {
       let roleList: Role[] = [];
 
-      if (USE_MOCK_HR_DATA) {
-        logger.info({ module: 'Hr', action: 'fetchRoles' }, ts('k_1b38xbu'));
-        roleList = mockRoles as unknown as Role[];
-      } else {
-        const response = await authFetch('/api/organization/role');
-        const result = await response.json();
-        if (result.success) {
-          roleList = Array.isArray(result.data) ? result.data : result.data?.list || [];
-        }
+      const response = await authFetch('/api/organization/role');
+      const result = await response.json();
+      if (result.success) {
+        roleList = Array.isArray(result.data) ? result.data : result.data?.list || [];
       }
 
       setRoles(roleList);

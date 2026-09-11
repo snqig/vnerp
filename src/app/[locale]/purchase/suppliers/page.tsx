@@ -50,7 +50,6 @@ import { useCompanyName } from '@/hooks/useCompanyName';
 import { useDebounce } from '@/hooks/use-debounce';
 import { SearchInput } from '@/components/ui/search-input';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { USE_MOCK, mockSuppliers } from '@/lib/mock-data';
 import { CurrencySelect } from '@/components/ui/currency-select';
 
 interface Supplier {
@@ -176,33 +175,7 @@ export default function SuppliersPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      if (USE_MOCK) {
-        let data = [...mockSuppliers].map((s) => ({
-          ...s,
-          status: typeof s.status === 'string' ? parseInt(s.status) : s.status,
-        })) as Supplier[];
-        if (debouncedKeyword) {
-          const kw = debouncedKeyword.toLowerCase();
-          data = data.filter(
-            (s) =>
-              s.supplier_code.toLowerCase().includes(kw) ||
-              s.supplier_name.toLowerCase().includes(kw) ||
-              s.short_name.toLowerCase().includes(kw)
-          );
-        }
-        if (statusFilter !== 'all') {
-          data = data.filter((s) => s.status === parseInt(statusFilter));
-        }
-        if (gradeFilter !== 'all') {
-          data = data.filter((s) => s.credit_level === gradeFilter);
-        }
-        const pageSize = 20;
-        const start = (page - 1) * pageSize;
-        const end = start + pageSize;
-        const paginatedData = data.slice(start, end);
-        setList(paginatedData);
-        setTotal(data.length);
-      } else {
+      {
         const params = new URLSearchParams({
           page: String(page),
           pageSize: '20',
@@ -268,27 +241,20 @@ export default function SuppliersPage() {
     }
     setSaving(true);
     try {
-      if (USE_MOCK) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      const url = '/api/purchase/suppliers';
+      const method = editId ? 'PUT' : 'POST';
+      const body = editId ? { id: editId, ...form } : form;
+      const res = await authFetch(url, {
+        method,
+        body: JSON.stringify(body),
+      });
+      const result = await res.json();
+      if (result.success) {
         toast({ title: editId ? tc('updateSuccess') : tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        const url = '/api/purchase/suppliers';
-        const method = editId ? 'PUT' : 'POST';
-        const body = editId ? { id: editId, ...form } : form;
-        const res = await authFetch(url, {
-          method,
-          body: JSON.stringify(body),
-        });
-        const result = await res.json();
-        if (result.success) {
-          toast({ title: editId ? tc('updateSuccess') : tc('createSuccess') });
-          setShowDialog(false);
-          fetchData();
-        } else {
-          toast({ title: result.message || tc('error'), variant: 'destructive' });
-        }
+        toast({ title: result.message || tc('error'), variant: 'destructive' });
       }
     } catch (_error) {
       toast({ title: tc('saveFailed'), variant: 'destructive' });
@@ -302,20 +268,14 @@ export default function SuppliersPage() {
       return;
     }
     try {
-      if (USE_MOCK) {
-        await new Promise((resolve) => setTimeout(resolve, 300));
+      const url = `/api/purchase/suppliers?id=${id}`;
+      const res = await authFetch(url, { method: 'DELETE' });
+      const result = await res.json();
+      if (result.success) {
         toast({ title: tc('deleteSuccess') });
         fetchData();
       } else {
-        const url = `/api/purchase/suppliers?id=${id}`;
-        const res = await authFetch(url, { method: 'DELETE' });
-        const result = await res.json();
-        if (result.success) {
-          toast({ title: tc('deleteSuccess') });
-          fetchData();
-        } else {
-          toast({ title: result.message || tc('deleteFailed'), variant: 'destructive' });
-        }
+        toast({ title: result.message || tc('deleteFailed'), variant: 'destructive' });
       }
     } catch (_error) {
       toast({ title: tc('deleteFailed'), variant: 'destructive' });

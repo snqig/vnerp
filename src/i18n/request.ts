@@ -4,6 +4,28 @@ import { locales, defaultLocale } from './locales';
 
 const seenMissingKeys = new Set<string>();
 
+/**
+ * 深合并消息：base(默认语言 zh-CN) 为底层，override(目标语言) 优先。
+ * 目标语言缺失的 key 自动回退到默认语言，杜绝 en/vi/zh-TW 渲染出裸 `Namespace.key`
+ * （同时让 Error 命名空间等仅存在于 zh-CN 的键对所有语言可用）。
+ */
+function deepMerge(base: any, override: any): any {
+  if (Array.isArray(base) || Array.isArray(override)) return override ?? base;
+  if (
+    base &&
+    override &&
+    typeof base === 'object' &&
+    typeof override === 'object'
+  ) {
+    const out: Record<string, unknown> = { ...base };
+    for (const key of Object.keys(override)) {
+      out[key] = deepMerge(base[key], override[key]);
+    }
+    return out;
+  }
+  return override ?? base;
+}
+
 export default getRequestConfig(async ({ requestLocale }) => {
   let locale = await requestLocale;
 
@@ -11,12 +33,17 @@ export default getRequestConfig(async ({ requestLocale }) => {
     locale = defaultLocale;
   }
 
-  let messages;
+  // 默认语言(zh-CN)消息作为回退底层；目标语言缺失的 key 回退到中文。
+  const defaultMessages = (await import(`../../messages/${defaultLocale}.json`)).default;
+  let localeMessages;
   try {
-    messages = (await import(`../../messages/${locale}.json`)).default;
+    localeMessages = (await import(`../../messages/${locale}.json`)).default;
   } catch {
-    messages = (await import(`../../messages/${defaultLocale}.json`)).default;
+    localeMessages = defaultMessages;
   }
+
+  const messages =
+    locale === defaultLocale ? localeMessages : deepMerge(defaultMessages, localeMessages);
 
   return {
     locale,

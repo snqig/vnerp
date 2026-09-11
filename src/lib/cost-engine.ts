@@ -383,19 +383,17 @@ export class CostEngine {
                  SUM(CASE WHEN type = 'out' THEN qty ELSE 0 END) as out_qty,
                  SUM(CASE WHEN type = 'out' THEN amount ELSE 0 END) as out_amount
           FROM (
-            SELECT material_id, qty, amount, 'in' as type
-            FROM wh_inventory_log
-            WHERE trans_type IN ('purchase_in', 'production_in', 'other_in', 'transfer_in')
-              AND trans_date BETWEEN ? AND ?
+            SELECT material_id, quantity as qty, total_cost as amount, 'in' as type
+            FROM inv_inventory_transaction
+            WHERE trans_type = 'in'
+              AND create_time BETWEEN ? AND ?
               ${warehouseId ? 'AND warehouse_id = ?' : ''}
-              AND deleted = 0
             UNION ALL
-            SELECT material_id, -qty as qty, -amount as amount, 'out' as type
-            FROM wh_inventory_log
-            WHERE trans_type IN ('sales_out', 'production_out', 'other_out', 'transfer_out')
-              AND trans_date BETWEEN ? AND ?
+            SELECT material_id, -quantity as qty, -total_cost as amount, 'out' as type
+            FROM inv_inventory_transaction
+            WHERE trans_type = 'out'
+              AND create_time BETWEEN ? AND ?
               ${warehouseId ? 'AND warehouse_id = ?' : ''}
-              AND deleted = 0
           ) t
           GROUP BY material_id
         ) stats ON stats.material_id = im.id

@@ -33,6 +33,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  buildQualityFormMessages,
+  buildSupplierAuditSchema,
+  firstZodMessage,
+} from '@/lib/validators/quality-form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
@@ -123,6 +128,13 @@ export default function SupplierAuditPage() {
   }, [page]);
 
   const handleSave = async () => {
+    const parsed = buildSupplierAuditSchema(buildQualityFormMessages((k) => tc(k))).safeParse(
+      editItem
+    );
+    if (!parsed.success) {
+      toast({ title: firstZodMessage(parsed.error), variant: 'destructive' });
+      return;
+    }
     try {
       const totalScore =
         (editItem.quality_system_score || 0) +
@@ -132,7 +144,7 @@ export default function SupplierAuditPage() {
       const method = editItem.id ? 'PUT' : 'POST';
       const res = await authFetch('/api/quality/supplier-audit', {
         method,
-        body: JSON.stringify({ ...editItem, total_score: totalScore }),
+        body: JSON.stringify({ ...parsed.data, total_score: totalScore }),
       });
       const result = await res.json();
       if (result.success) {
