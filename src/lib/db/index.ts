@@ -220,14 +220,55 @@ export async function transaction<T>(
 }
 
 /**
+ * 判断事务错误是否可安全重放
+ *
+ * 覆盖两类可重试错误：
+ *
+ * 1. 乐观锁 / 版本冲突（既有行为）：错误文案含 "已被其他操作修改"、"affectedRows"、"version"。
+ *
+ * 2. InnoDB 并发冲突（QA BUG-001，2026-09-14 补齐）：
+ *    - errno 1213 `ER_LOCK_DEADLOCK`（Deadlock found when trying to get lock）
+ *    - errno 1205 `ER_LOCK_WAIT_TIMEOUT`（Lock wait timeout exceeded）
+ *    - SQLSTATE 40001（Serialization failure；MySQL 死锁即回此状态码）
+ *
+ *    这类错误发生时 InnoDB 已把**整个事务**回滚（不存在部分写入残留），
+ *    因此在应用层重放事务是业界标准做法，也是 mysql2 官方推荐的
+ *    "catch ER_LOCK_DEADLOCK and retry the transaction" 落地方式。
+ */
+export function isRetryableTransactionError(error: unknown): boolean {
+  const err = error as
+    | (Error & { errno?: number; code?: string; sqlState?: string; sqlMessage?: string })
+    | null
+    | undefined;
+  if (!err || typeof err !== 'object') return false;
+
+  const message = `${err.message ?? ''} ${err.sqlMessage ?? ''}`;
+
+  // 1. 乐观锁 / 版本冲突（保持既有行为不变）
+  if (
+    message.includes('已被其他操作修改') ||
+    message.includes('affectedRows') ||
+    message.includes('version')
+  ) {
+    return true;
+  }
+
+  // 2. InnoDB 死锁 / 锁等待超时：优先按错误码判断，其次按错误文案兜底
+  if (err.errno === 1213 || err.errno === 1205) return true;
+  if (err.code === 'ER_LOCK_DEADLOCK' || err.code === 'ER_LOCK_WAIT_TIMEOUT') return true;
+  if (err.sqlState === '40001') return true;
+  return /Deadlock found when trying to get lock|Lock wait timeout exceeded/i.test(message);
+}
+
+/**
  * 带重试的事务处理
- * @description 在事务失败时自动重试，适用于乐观锁冲突场景。
- *   检测包含 "已被其他操作修改"、"affectedRows"、"version" 等关键字的错误，
+ * @description 在事务失败时自动重试，适用于乐观锁冲突与 InnoDB 死锁/锁等待超时场景
+ *   （判定口径见 {@link isRetryableTransactionError}）。
  *   以指数退避策略延迟后重试（延迟 = min(100 * 2^attempt + random(0-50), 1000)ms）。
  * @param callback - 事务回调函数
- * @param maxRetries - 最大重试次数，默认为 3
+ * @param maxRetries - 最大尝试次数，默认为 3
  * @returns 回调函数的返回值
- * @throws 非乐观锁错误立即抛出，或达到最大重试次数后抛出最后一次错误
+ * @throws 不可重试错误立即抛出，或达到最大尝试次数后抛出最后一次错误
  */
 export async function transactionWithRetry<T>(
   callback: (connection: DbConnection) => Promise<T>,
@@ -240,11 +281,7 @@ export async function transactionWithRetry<T>(
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       lastError = err;
-      const isOptimisticLockError =
-        err.message?.includes('已被其他操作修改') ||
-        err.message?.includes('affectedRows') ||
-        err.message?.includes('version');
-      if (!isOptimisticLockError || attempt >= maxRetries - 1) {
+      if (!isRetryableTransactionError(error) || attempt >= maxRetries - 1) {
         throw error;
       }
       const delay = Math.min(100 * Math.pow(2, attempt) + Math.random() * 50, 1000);
