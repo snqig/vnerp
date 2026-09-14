@@ -53,13 +53,14 @@ interface WarehouseSelectProps {
 export function WarehouseSelect({
   value,
   onChange,
-  placeholder = ts('k_1im9jpt'),
+  placeholder,
   className,
   showCategory = true,
   activeOnly = true,
   disabled = false,
 }: WarehouseSelectProps) {
   const ts = useTranslations('Common');
+  const resolvedPlaceholder = placeholder ?? ts('k_1im9jpt');
   const [categories, setCategories] = useState<WarehouseCategory[]>([]);
   const [warehouses, setWarehouses] = useState<WarehouseItem[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
@@ -129,7 +130,7 @@ export function WarehouseSelect({
       )}
       <Select value={value ? String(value) : ''} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger className={className}>
-          <SelectValue placeholder={selectedWarehouse ? selectedWarehouse.name : placeholder} />
+          <SelectValue placeholder={selectedWarehouse ? selectedWarehouse.name : resolvedPlaceholder} />
         </SelectTrigger>
         <SelectContent>
           {filteredWarehouses.length === 0 ? (

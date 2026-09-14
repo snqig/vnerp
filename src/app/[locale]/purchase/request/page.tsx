@@ -112,6 +112,14 @@ export default function PurchaseRequestPage() {
     },
   };
 
+  // 申请类型：存储值可能是英文代码（种子数据 'material'）或已本地化的中文标签（
+  // new/form 页直接存显示文案）。英文代码需翻译，中文标签原样透传，未知值兜底原值。
+  const typeLabel = (v?: string | null): string => {
+    if (!v) return '-';
+    if (v === 'material') return ts('rawMaterial');
+    return v;
+  };
+
   const statusMapCN: Record<number, string> = {
     0: tc('draft'),
     1: t('statusPendingApproval'),
@@ -361,7 +369,7 @@ export default function PurchaseRequestPage() {
       formatDate(r.request_date),
       r.request_dept || '',
       r.requester_name || '',
-      r.request_type || '',
+      typeLabel(r.request_type),
       priorityMapCN[r.priority] || ts('k_b7cu2g'),
       String(r.total_amount),
       statusMapCN[r.status] || ts('k_1lpnuh4'),
@@ -397,7 +405,7 @@ export default function PurchaseRequestPage() {
       <td>${formatDate(r.request_date)}</td>
       <td>${r.request_dept || '-'}</td>
       <td>${r.requester_name || '-'}</td>
-      <td>${r.request_type || '-'}</td>
+      <td>${typeLabel(r.request_type)}</td>
       <td>${priorityMapCN[r.priority] || ts('k_b7cu2g')}</td>
       <td>${formatAmount(r.total_amount, r.currency)}</td>
       <td>${statusMapCN[r.status] || ts('k_1lpnuh4')}</td>
@@ -483,7 +491,12 @@ export default function PurchaseRequestPage() {
                   },
                   { key: 'request_dept', label: t('requestDept'), width: 12 },
                   { key: 'requester_name', label: t('requester'), width: 12 },
-                  { key: 'request_type', label: tc('type'), width: 10 },
+                  {
+                    key: 'request_type',
+                    label: tc('type'),
+                    width: 10,
+                    formatter: (v) => typeLabel(v),
+                  },
                   {
                     key: 'priority',
                     label: tc('priority'),
@@ -684,7 +697,7 @@ export default function PurchaseRequestPage() {
                         <TableCell>{formatDate(request.request_date)}</TableCell>
                         <TableCell>{request.request_dept || '-'}</TableCell>
                         <TableCell>{request.requester_name || '-'}</TableCell>
-                        <TableCell>{request.request_type || '-'}</TableCell>
+                        <TableCell>{typeLabel(request.request_type)}</TableCell>
                         <TableCell>
                           <span
                             className={`px-2 py-1 rounded text-xs ${priorityMap[request.priority]?.color || ''}`}

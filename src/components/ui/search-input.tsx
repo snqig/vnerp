@@ -17,7 +17,7 @@ interface SearchInputProps {
 }
 
 export function SearchInput({
-  placeholder = ts('k_lha7zb'),
+  placeholder,
   value: controlledValue,
   onChange,
   onSearch,
@@ -26,6 +26,7 @@ export function SearchInput({
   inputClassName = '',
 }: SearchInputProps) {
   const ts = useTranslations('Common');
+  const resolvedPlaceholder = placeholder ?? ts('k_lha7zb');
   const [internalValue, setInternalValue] = useState(controlledValue ?? '');
   const isControlled = controlledValue !== undefined;
   const currentValue = isControlled ? controlledValue : internalValue;
@@ -74,7 +75,7 @@ export function SearchInput({
       <Input
         ref={inputRef}
         type="search"
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         value={currentValue}
         onChange={handleChange}
         onKeyDown={handleKeyDown}

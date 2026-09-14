@@ -6,7 +6,7 @@ import { MainLayout } from '@/components/layout';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import GlassGauge from '@/components/GlassGauge';
 import VerticalMarquee from '@/components/ui/VerticalMarquee';
-import { ChartImage, ChartPlaceholder } from '@/components/WarehouseCharts';
+import { ChartPlaceholder } from '@/components/WarehouseCharts';
 import {
   Package,
   ArrowDown,
@@ -22,7 +22,7 @@ import {
   TrendingDown,
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, Line } from 'recharts';
 
 interface WarehouseData {
   overview: {
@@ -195,30 +195,19 @@ export default function WarehouseDashboard() {
       ? warehouses3D.reduce((sum, w) => sum + w.occupancy, 0) / warehouses3D.length
       : 0;
 
-  const categoryChartUrl = useMemo(() => {
-    if (data.categoryDistribution.length === 0) return '';
-    const baseUrl = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=';
-    const prompt = `Business pie chart showing ${data.categoryDistribution.map((c) => `${c.material_type}: ${c.count} items`).join(', ')} with professional colors, dark theme`;
-    return baseUrl + encodeURIComponent(prompt) + '&image_size=square';
-  }, [data.categoryDistribution]);
-
-  const _occupancyChartUrls = useMemo(() => {
-    if (data.warehouseOccupancy.length === 0) return [];
-    return data.warehouseOccupancy.map((w) => {
-      const occupancy = w.capacity ? (w.total_qty / w.capacity) * 100 : avgOccupancy;
-      return {
-        name: w.warehouse_name,
-        occupancy,
-        color: occupancy > 80 ? '#ef4444' : occupancy > 50 ? '#f59e0b' : '#10b981',
-      };
+  /** 按日期聚合 recentTransactions 为每日入库/出库数量（用于出入库趋势图） */
+  const dailyTrend = useMemo(() => {
+    const map: Record<string, { inbound: number; outbound: number }> = {};
+    data.recentTransactions.forEach((t) => {
+      const day = (t.create_time || '').substring(0, 10);
+      if (!day) return;
+      if (!map[day]) map[day] = { inbound: 0, outbound: 0 };
+      if (t.transaction_type === 'inbound') map[day].inbound += Number(t.quantity) || 0;
+      else if (t.transaction_type === 'outbound') map[day].outbound += Number(t.quantity) || 0;
     });
-  }, [data.warehouseOccupancy, avgOccupancy]);
-
-  const trendChartUrl = useMemo(() => {
-    if (data.recentTransactions.length === 0) return '';
-    const baseUrl = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=';
-    const prompt = `Business line chart showing warehouse inbound and outbound trends over 7 days, professional style, dark theme, cyan and green colors`;
-    return baseUrl + encodeURIComponent(prompt) + '&image_size=landscape_16_9';
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, v]) => ({ date, ...v }));
   }, [data.recentTransactions]);
 
   return (
@@ -456,11 +445,42 @@ export default function WarehouseDashboard() {
               {data.categoryDistribution.length === 0 ? (
                 <ChartPlaceholder title={t('materialTypes')} type="empty" />
               ) : (
-                <ChartImage
-                  url={categoryChartUrl}
-                  title={t('materialCategoryDistribution')}
-                  loading={loading}
-                />
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={data.categoryDistribution}
+                      dataKey="count"
+                      nameKey="material_type"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      innerRadius={50}
+                      paddingAngle={2}
+                      label={({ material_type, percent }) =>
+                        `${material_type} ${(percent * 100).toFixed(0)}%`
+                      }
+                    >
+                      {data.categoryDistribution.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number, name: string) => [
+                        value,
+                        name === 'count' ? t('quantity') : name,
+                      ]}
+                      contentStyle={{
+                        backgroundColor: 'rgba(15,23,42,0.95)',
+                        borderColor: 'rgba(6,182,212,0.3)',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                      }}
+                    />
+                    <Legend
+                      wrapperStyle={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               )}
             </div>
           </div>
@@ -475,7 +495,33 @@ export default function WarehouseDashboard() {
               {data.recentTransactions.length === 0 ? (
                 <ChartPlaceholder title={t('inoutTrend')} type="empty" />
               ) : (
-                <ChartImage url={trendChartUrl} title={t('inoutTrend')} loading={loading} />
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dailyTrend} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 10 }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 10 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(15,23,42,0.95)',
+                        borderColor: 'rgba(6,182,212,0.3)',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                      }}
+                    />
+                    <Legend
+                      wrapperStyle={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px' }}
+                    />
+                    <Bar dataKey="inbound" name={tc('inbound')} fill="#10b981" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="outbound" name={tc('outbound')} fill="#f97316" radius={[2, 2, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               )}
             </div>
           </div>

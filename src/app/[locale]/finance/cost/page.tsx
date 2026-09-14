@@ -98,7 +98,7 @@ export default function CostPage() {
   }, [fetchData, fetchSummary]);
 
   // fin_cost_record.amount 以「元」存储（如 1250.00 = ¥1250.00），直接格式化即可，无需 /100。
-  const formatAmount = (amount: number) => (amount || 0).toFixed(2);
+  const formatAmount = (amount: number) => Number(amount || 0).toFixed(2);
 
   return (
     <MainLayout>

@@ -28,10 +28,11 @@ interface UserSelectProps {
 export function UserSelect({
   value,
   onChange,
-  placeholder = ts('k_o3jh8u'),
+  placeholder,
   className,
 }: UserSelectProps) {
   const ts = useTranslations('Common');
+  const resolvedPlaceholder = placeholder ?? ts('k_o3jh8u');
   const [users, setUsers] = useState<UserItem[]>([]);
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export function UserSelect({
   return (
     <Select value={value || ''} onValueChange={onChange}>
       <SelectTrigger className={className}>
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={resolvedPlaceholder} />
       </SelectTrigger>
       <SelectContent>
         {users.map((u) => (

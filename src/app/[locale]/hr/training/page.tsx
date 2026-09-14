@@ -57,10 +57,10 @@ const statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  0: { label: 'pending', variant: 'outline' },
-  1: { label: 'inProgress', variant: 'default' },
-  2: { label: 'completed', variant: 'secondary' },
-  3: { label: 'cancelled', variant: 'destructive' },
+  0: { label: 'trainingPending', variant: 'outline' },
+  1: { label: 'trainingInProgress', variant: 'default' },
+  2: { label: 'trainingCompleted', variant: 'secondary' },
+  3: { label: 'trainingCancelled', variant: 'destructive' },
 };
 
 
@@ -209,7 +209,7 @@ export default function TrainingPage() {
                       <TableCell className="text-xs">{item.training_place || '-'}</TableCell>
                       <TableCell>
                         <Badge variant={st.variant} className="text-xs">
-                          {st.label}
+                          {t(st.label)}
                         </Badge>
                       </TableCell>
                       <TableCell>
