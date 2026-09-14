@@ -62,10 +62,13 @@ describe('领料并发测试', () => {
 
         // 先创建一个测试工单（prod_work_order 使用 work_order_no，status 为 VARCHAR）
         // execute() 返回 ResultSetHeader 直接（非数组），不能用数组解构
+        // prd_material_issue.work_order_id 的 FK 指向【遗留表 prd_work_order】，
+        // 故这里必须写入 prd_work_order（material_id/plan_qty 为 NOT NULL），
+        // 否则 FK 约束 fk_prd_material_issue_work_order 失败。
         const woResult: any = await execute(
-          `INSERT INTO prod_work_order (work_order_no, status, create_time, update_time, deleted)
-           VALUES (?, 'pending', NOW(), NOW(), 0)`,
-          [`WO_${Date.now()}_${index}`]
+          `INSERT INTO prd_work_order (work_order_no, material_id, plan_qty, status, create_time, update_time, deleted)
+           VALUES (?, ?, ?, 1, NOW(), NOW(), 0)`,
+          [`WO_${Date.now()}_${index}`, testMaterial.id, 1]
         );
         const workOrderId = woResult.insertId;
 
@@ -272,9 +275,9 @@ describe('领料并发测试', () => {
           await transaction(async (conn) => {
             // 创建工单
             const [woResult]: any = await conn.execute(
-              `INSERT INTO prod_work_order (order_no, status, create_time, update_time, deleted)
-               VALUES (?, 1, NOW(), NOW(), 0)`,
-              [`WO_LOW_${Date.now()}_${index}`]
+              `INSERT INTO prd_work_order (work_order_no, material_id, plan_qty, status, create_time, update_time, deleted)
+               VALUES (?, ?, ?, 1, NOW(), NOW(), 0)`,
+              [`WO_LOW_${Date.now()}_${index}`, lowStockMaterial.id, 1]
             );
             const workOrderId = woResult.insertId;
 

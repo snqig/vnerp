@@ -220,7 +220,14 @@ describe('端到端流程：销售→MRP→生产→库存→应收', () => {
       const calls = mockConn.execute.mock.calls.map((c) => c[0] as string);
 
       expect(calls.some((s) => s.includes('SELECT id, quantity, available_qty') && s.includes('inv_inventory'))).toBe(true);
-      expect(calls.some((s) => s.includes('UPDATE inv_inventory') && s.includes('quantity = quantity +'))).toBe(true);
+      expect(
+        calls.some(
+          (s) =>
+            s.includes('INSERT INTO inv_inventory') &&
+            s.includes('ON DUPLICATE KEY UPDATE') &&
+            s.includes('quantity = quantity + VALUES(quantity)')
+        )
+      ).toBe(true);
       expect(calls.some((s) => s.includes('INSERT INTO inv_inventory_batch'))).toBe(true);
       expect(calls.some((s) => s.includes('INSERT INTO inv_inventory_transaction'))).toBe(true);
       const compTxn = mockConn.execute.mock.calls.find(
@@ -483,7 +490,14 @@ describe('端到端流程：销售→MRP→生产→库存→应收', () => {
       await completeHandler.handle(completeEvent);
 
       const completeCalls = mockConn.execute.mock.calls.map((c) => c[0] as string);
-      expect(completeCalls.some((s) => s.includes('UPDATE inv_inventory') && s.includes('quantity = quantity +'))).toBe(true);
+      expect(
+        completeCalls.some(
+          (s) =>
+            s.includes('INSERT INTO inv_inventory') &&
+            s.includes('ON DUPLICATE KEY UPDATE') &&
+            s.includes('quantity = quantity + VALUES(quantity)')
+        )
+      ).toBe(true);
       expect(completeCalls.some((s) => s.includes('INSERT INTO inv_inventory_batch'))).toBe(true);
 
       mockConn.execute.mockClear();

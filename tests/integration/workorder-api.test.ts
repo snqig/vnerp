@@ -413,12 +413,16 @@ describe('工单 API 集成测试', () => {
   describe('DELETE /api/workorders - 删除工单', () => {
     it('正常流程：pending 状态允许删除', async () => {
       mockConnection.execute
+        // 1. 查工单
         .mockResolvedValueOnce([
           [{ id: 1, work_order_no: 'WO001', order_no: 'SO001', status: 'pending' }],
         ])
+        // 2. 查已领用/完工数量（0 → 允许删除）
+        .mockResolvedValueOnce([[{ consumed: 0 }]])
+        // 3. 软删除 UPDATE
         .mockResolvedValueOnce([{ affectedRows: 1 }])
-        .mockResolvedValueOnce([[{ cnt: 0 }]])
-        .mockResolvedValueOnce([{}]);
+        // 4. 查同订单其他活动工单（无 → 回滚销售订单状态）
+        .mockResolvedValueOnce([[{ cnt: 0 }]]);
 
       const req = makeRequest('DELETE', undefined, 'id=WO001');
       const { status, data } = await parseResponse(await DELETE(req as any));
@@ -449,17 +453,36 @@ describe('工单 API 集成测试', () => {
       expect(data.message).toBe('工单不存在');
     });
 
-    it('业务异常：生产中的工单不能删除抛错（500）', async () => {
-      mockConnection.execute.mockResolvedValueOnce([
-        [{ id: 1, work_order_no: 'WO001', order_no: 'SO001', status: 'producing' }],
-      ]);
+    it('业务异常：已发生领用/完工的工单不能删除抛错（500）', async () => {
+      mockConnection.execute
+        // 1. 查工单（生产中）
+        .mockResolvedValueOnce([
+          [{ id: 1, work_order_no: 'WO001', order_no: 'SO001', status: 'producing' }],
+        ])
+        // 2. 已发生领用/完工（consumed > 0 → 禁止删除）
+        .mockResolvedValueOnce([[{ consumed: 5 }]]);
 
       const req = makeRequest('DELETE', undefined, 'id=WO001');
       const { status, data } = await parseResponse(await DELETE(req as any));
 
       expect(status).toBe(500);
-      expect(data.message).toContain('生产中');
-      expect(data.message).toContain('请先取消');
+      expect(data.message).toContain('不能删除');
+    });
+
+    it('正常流程：生产中的工单未发生领用时允许删除（软删除可恢复）', async () => {
+      mockConnection.execute
+        .mockResolvedValueOnce([
+          [{ id: 1, work_order_no: 'WO001', order_no: 'SO001', status: 'producing' }],
+        ])
+        .mockResolvedValueOnce([[{ consumed: 0 }]])
+        .mockResolvedValueOnce([{ affectedRows: 1 }])
+        .mockResolvedValueOnce([[{ cnt: 1 }]]);
+
+      const req = makeRequest('DELETE', undefined, 'id=WO001');
+      const { status, data } = await parseResponse(await DELETE(req as any));
+
+      expect(status).toBe(200);
+      expect(data.success).toBe(true);
     });
   });
 

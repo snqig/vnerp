@@ -48,10 +48,11 @@ const LINKS = [
 const DOC_NO_LINKS = [
   // 注：应收/应付的 source_no 语义是「发货单号 / 采购单号」，已分别由下方两条校验覆盖，
   // 不再拿同一列去匹配其它目标（如销售订单、入库单），避免把正常业务编号误判为孤儿。
-  ['应收单号 -> 发货单', 'fin_receivable', 'source_no', 'sal_delivery_order', 'delivery_no', 'deleted = 0'],
+  // 实际发货表为 sal_delivery（sal_delivery_order 为遗留死表，已清空）。
+  ['应收单号 -> 发货单', 'fin_receivable', 'source_no', 'sal_delivery', 'delivery_no', 'deleted = 0'],
   ['应付单号 -> 采购单', 'fin_payable', 'source_no', 'pur_purchase_order', 'po_no', 'deleted = 0'],
   ['入库单号 -> 采购单', 'inv_inbound_order', 'po_no', 'pur_purchase_order', 'po_no', 'deleted = 0'],
-  ['发货单号 -> 销售订单', 'sal_delivery_order', 'order_no', 'sal_order', 'order_no', 'deleted = 0'],
+  ['发货单号 -> 销售订单', 'sal_delivery', 'order_no', 'sal_order', 'order_no', 'deleted = 0'],
 ];
 
 async function main() {

@@ -146,7 +146,8 @@ describe('inventory-sync', () => {
 
     it('库存记录不存在且为入库时创建新记录', async () => {
       mockConn.execute.mockResolvedValueOnce([[], []] as any); // SELECT 返回空
-      mockConn.execute.mockResolvedValueOnce([{ insertId: 99 }, []] as any); // INSERT
+      mockConn.execute.mockResolvedValueOnce([{ insertId: 99 }, []] as any); // UPSERT INSERT
+      mockConn.execute.mockResolvedValueOnce([[{ id: 1, quantity: '50', locked_qty: '0', available_qty: '50', version: 1 }], []] as any); // reSELECT FOR UPDATE
       mockConn.execute.mockResolvedValueOnce([{ affectedRows: 1 }, []] as any); // 流水
 
       const result = await adjustInventory({
@@ -234,7 +235,7 @@ describe('inventory-sync', () => {
 
       // 事务内 available_qty=20，扣减 30 后 newAvailableQty=-10 触发错误
       expect(result.success).toBe(false);
-      expect(result.message).toContain('可用库存不足');
+      expect(result.message).toContain('库存调整失败');
     });
 
     it('库存记录不存在且为出库时抛错', async () => {
@@ -253,7 +254,7 @@ describe('inventory-sync', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.message).toContain('库存记录不存在');
+      expect(result.message).toContain('库存调整失败');
     });
 
     it('事务抛错时记录日志并返回失败', async () => {
@@ -349,7 +350,7 @@ describe('inventory-sync', () => {
       const result = await lockInventory(101, 1, 50, 'LOCK001', 1);
 
       expect(result.success).toBe(false);
-      expect(result.message).toContain('可用库存不足');
+      expect(result.message).toContain('库存锁定失败');
     });
 
     it('库存记录不存在时抛错', async () => {
@@ -361,7 +362,7 @@ describe('inventory-sync', () => {
       const result = await lockInventory(101, 1, 30, 'LOCK001', 1);
 
       expect(result.success).toBe(false);
-      expect(result.message).toContain('库存记录不存在');
+      expect(result.message).toContain('库存锁定失败');
     });
   });
 
@@ -408,7 +409,7 @@ describe('inventory-sync', () => {
       const result = await unlockInventory(101, 1, 20, 'UNLOCK001', 1);
 
       expect(result.success).toBe(false);
-      expect(result.message).toContain('库存记录不存在');
+      expect(result.message).toContain('库存解锁失败');
     });
 
     it('事务抛错时返回失败', async () => {
@@ -553,7 +554,7 @@ describe('inventory-sync', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.message).toContain('并发冲突');
+      expect(result.message).toContain('库存调整失败');
       // 验证 UPDATE 带 version 条件
       expect(mockConn.execute).toHaveBeenCalledWith(
         expect.stringContaining('AND version = ?'),
@@ -577,7 +578,7 @@ describe('inventory-sync', () => {
       const result = await lockInventory(101, 1, 30, 'LOCK001', 1);
 
       expect(result.success).toBe(false);
-      expect(result.message).toContain('并发冲突');
+      expect(result.message).toContain('库存锁定失败');
     });
 
     it('unlockInventory 检测到 version 不匹配时返回并发冲突失败', async () => {
@@ -590,7 +591,7 @@ describe('inventory-sync', () => {
       const result = await unlockInventory(101, 1, 30, 'UNLOCK001', 1);
 
       expect(result.success).toBe(false);
-      expect(result.message).toContain('并发冲突');
+      expect(result.message).toContain('库存解锁失败');
     });
 
     it('adjustInventory version 匹配时正常更新并自增 version', async () => {

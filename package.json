@@ -17,6 +17,8 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json}\"",
     "prepare": "husky",
     "ts-check": "tsc --noEmit",
+    "tsc:baseline": "node scripts/tsc-baseline.mjs",
+    "tsc:baseline:update": "node scripts/tsc-baseline.mjs --update",
     "preinstall": "npx only-allow pnpm",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
