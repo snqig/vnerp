@@ -111,6 +111,9 @@ export function proxy(request: NextRequest) {
       '/api/auth/register',
       '/api/auth/logout',
       '/api/auth/refresh',
+      // 与 src/lib/api-permissions.ts 的 PUBLIC_ROUTES 对齐：
+      // reset-lock 是「账号被锁后、登录前」的恢复入口，此刻不可能持有 access_token
+      '/api/auth/reset-lock',
       '/api/health',
       '/api/migrations',
     ].some((p) => pathname.startsWith(p));

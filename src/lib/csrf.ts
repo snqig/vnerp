@@ -9,6 +9,9 @@ const CSRF_EXEMPT_PATHS = [
   '/api/auth/login',
   '/api/auth/register',
   '/api/auth/refresh',
+  // reset-lock：账号锁定恢复入口，调用时尚未登录、也不会有 csrf_token cookie。
+  // 该路由自身在生产环境直接返回 403（见 src/app/api/auth/reset-lock/route.ts），故豁免风险可控。
+  '/api/auth/reset-lock',
   '/api/init',
   '/api/migrations',
 ];
