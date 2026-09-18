@@ -117,19 +117,19 @@ const capabilityColor = (value: number): string => {
   return 'text-red-600 dark:text-red-400';
 };
 
-const capabilityLabel = (value: number): string => {
-  const tc = useTranslations('Common');
-  const ts = useTranslations('Quality');
-  if (value >= 1.33) return tc('excellent');
-  if (value >= 1.0) return ts('k_1whyb9e');
-  return ts('k_tecew2');
-};
+// capabilityLabel 已移入 SPCPage 组件内部（避免在非组件函数中调用 hook）
 
 export default function SPCPage() {
   const ts = useTranslations('Quality');
   // 翻译钩子
   const tc = useTranslations('Common');
   const locale = useLocale();
+
+  const capabilityLabel = (value: number): string => {
+    if (value >= 1.33) return tc('excellent');
+    if (value >= 1.0) return ts('k_1whyb9e');
+    return ts('k_tecew2');
+  };
 
   const [activeTab, setActiveTab] = useState('xbar-r');
   const [materials, setMaterials] = useState<Material[]>([]);

@@ -11,6 +11,7 @@
  * category.require_on_business 系统配置决定。
  */
 import { checkMaterialsCategorized } from '@/lib/category-validation';
+import { logger } from '@/lib/logger';
 
 export interface BusinessCategoryCheckResult {
   /** 是否应当阻断提交 */
@@ -66,7 +67,7 @@ export async function validateBusinessMaterials(
   } catch (e) {
     // 校验本身出错不应阻断业务（可能是数据库临时不可用），
     // 记录日志后放行业务，由上层监控告警。
-    console.error(
+    logger.error(
       `[business-material-validation] 物料分类校验异常（${context}）:`,
       (e as Error).message
     );

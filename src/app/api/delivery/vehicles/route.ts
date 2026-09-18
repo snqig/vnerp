@@ -42,7 +42,7 @@ interface Vehicle {
 function buildQueryConditions(params: { status: string | null; keyword: string | null }): {
   sql: string;
   countSql: string;
-  values: DbRow[];
+  values: SqlValue[];
 } {
   let sql = `SELECT * FROM delivery_vehicle WHERE deleted = 0`;
   let countSql = `SELECT COUNT(*) as total FROM delivery_vehicle WHERE deleted = 0`;

@@ -6,6 +6,7 @@ import { query, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
+import { SalesOrderStatusCode } from '@/lib/order-status';
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
@@ -170,9 +171,14 @@ export const PUT = withPermission(async (request: NextRequest) => {
           );
 
           if (allApproved || !anyRejected) {
+            // 合同评审通过 ⇒ 销售订单进入「已确认」（契约码 2）。
+            // 修复前写的是 status = 20 —— 20 属于另一套「10-60」状态家族，
+            // 不在 sal_order.status 的契约取值域（1..5）内，
+            // 会让订单在列表/导出里成为「未知(20)」的孤儿状态（BUG-ORD-002）。
+            // 守卫由 `status < 20` 改为「仅当仍处待确认时提升」，语义等价且不再越界。
             await conn.execute(
-              'UPDATE sal_order SET status = 20 WHERE id = ? AND status < 20 AND deleted = 0',
-              [r.order_id]
+              `UPDATE sal_order SET status = ?, update_time = NOW() WHERE id = ? AND status = ? AND deleted = 0`,
+              [SalesOrderStatusCode.CONFIRMED, r.order_id, SalesOrderStatusCode.PENDING]
             );
           }
         }

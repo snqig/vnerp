@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,15 +25,15 @@ import {
 import { GlobalExportService, ExportColumn } from '@/lib/global-export-service';
 import { toast } from 'sonner';
 
-export interface GlobalExportToolbarProps {
+export interface GlobalExportToolbarProps<T = Record<string, unknown>> {
   /** 导出文件名（不含扩展名） */
   filename: string;
   /** 报表标题 */
   title?: string;
   /** 列定义 */
   columns: ExportColumn[];
-  /** 数据 */
-  data: Record<string, unknown>[];
+  /** 数据（接受任意行类型数组，内部按列键访问时归一为 Record<string, unknown>） */
+  data: T[];
   /** 副标题 */
   subtitle?: string;
   /** 是否横向（PDF） */
@@ -53,7 +54,7 @@ export interface GlobalExportToolbarProps {
   size?: 'default' | 'sm' | 'lg' | 'icon';
 }
 
-export function GlobalExportToolbar({
+export function GlobalExportToolbar<T = Record<string, unknown>>({
   filename,
   title,
   columns,
@@ -67,7 +68,7 @@ export function GlobalExportToolbar({
   disabled = false,
   buttonText,
   size = 'sm',
-}: GlobalExportToolbarProps) {
+}: GlobalExportToolbarProps<T>) {
   const ts = useTranslations('Common');
   const t = useTranslations('Common');
   const [exporting, setExporting] = useState(false);
@@ -94,14 +95,14 @@ export function GlobalExportToolbar({
           filename,
           title: title || filename,
           columns,
-          data,
+          data: data as Record<string, unknown>[],
           subtitle,
           landscape,
           footer,
         });
         toast.success(`${formatLabels[format]} ${t('exportSuccess') || ts('k_1hkfymq')}`);
       } catch (error) {
-        console.error('Export error:', error);
+        logger.error('Export error:', error);
         toast.error(
           `${formatLabels[format]} ${t('exportFailed') || ts('k_19nphi1')}: ${(error as Error).message}`
         );

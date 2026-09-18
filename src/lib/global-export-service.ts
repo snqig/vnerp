@@ -43,6 +43,7 @@ import {
   WidthType,
 } from 'docx';
 import { saveAs } from 'file-saver';
+import type { DbRow } from '@/types/db';
 
 // ──────────────────────────────────────────────
 // 类型定义
@@ -58,7 +59,7 @@ export interface ExportColumn {
   /** 列宽（Excel 列宽 / PDF 列宽百分比） */
   width?: number;
   /** 值格式化函数 */
-  formatter?: (value: unknown, row: Record<string, unknown>) => string | number;
+  formatter?: (value: any, row: DbRow) => string | number;
 }
 
 export interface ExportOptions {
@@ -115,11 +116,11 @@ class GlobalExportServiceClass {
 
     // 构建工作表数据
     const header = columns.map((c) => c.label);
-    const rows = data.map((row) =>
+    const rows: (string | number)[][] = data.map((row) =>
       columns.map((col) => {
         const rawValue = row[col.key];
         if (col.formatter) return col.formatter(rawValue, row);
-        return rawValue ?? '';
+        return (rawValue ?? '') as string | number;
       })
     );
 

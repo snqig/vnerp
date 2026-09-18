@@ -26,7 +26,9 @@ import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
-import { PageHeader, StatusBadge, usePaginatedList } from '@/components/common';
+import { StatusBadge, usePaginatedList } from '@/components/common';
+import { useRowSelection } from '@/lib/useRowSelection';
+import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useTranslations } from 'next-intl';
 
 interface Item {
@@ -67,6 +69,30 @@ export default function ProductionInboundPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
   const [warehouses, setWarehouses] = useState<{ id: number; name: string; code: string }[]>([]);
+
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
+    useRowSelection(list, (r) => String(r.id));
+  const [deleting, setDeleting] = useState(false);
+
+  const handleBatchDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
+    setDeleting(true);
+    let okCount = 0; let failMsg = '';
+    for (const id of ids) {
+      try {
+        const res = await authFetch(`/api/warehouse/production-inbound?id=${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) okCount++; else failMsg = data.message || failMsg;
+      } catch { failMsg = tc('error'); }
+    }
+    setDeleting(false);
+    if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
+    if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
+    clear();
+    refresh();
+  };
 
   const fetchWarehouses = async () => {
     try {
@@ -131,38 +157,40 @@ export default function ProductionInboundPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
-        <PageHeader
-          title={t('productionInbound')}
-          actions={
-            <>
-              <div className="flex items-center gap-2">
-                <Input
-                  placeholder={tc('searchOrderNo')}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-36 h-8 text-sm"
-                />
-                <Button size="sm" variant="outline" onClick={refresh}>
-                  <Search className="h-3 w-3" />
-                </Button>
-              </div>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setEditItem({});
-                  setShowDialog(true);
-                }}
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                {ts('k_5sawab')}</Button>
-            </>
-          }
-        />
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">{t('productionInbound')}</h1>
+          <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder={tc('searchOrderNo')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-36 h-8 text-sm"
+              />
+              <Button size="sm" variant="outline" onClick={refresh}>
+                <Search className="h-3 w-3" />
+              </Button>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditItem({});
+                setShowDialog(true);
+              }}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              {ts('k_5sawab')}</Button>
+          </div>
+        </div>
         <Card>
           <CardContent className="p-0">
+            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
+                  </TableHead>
                   <TableHead className="text-xs">{ts('k_8p71nd')}</TableHead>
                   <TableHead className="text-xs">{ts('k_jzt8aw')}</TableHead>
                   <TableHead className="text-xs">{tc('warehouse')}</TableHead>
@@ -176,6 +204,9 @@ export default function ProductionInboundPage() {
               <TableBody>
                 {list.map((item) => (
                   <TableRow key={item.id}>
+                    <TableCell>
+                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(item.id))} onChange={() => toggle(String(item.id))} aria-label={tc('selectRow', { id: item.id })} />
+                    </TableCell>
                     <TableCell className="text-xs font-mono">{item.inbound_no}</TableCell>
                     <TableCell className="text-xs">{item.work_order_no || '-'}</TableCell>
                     <TableCell className="text-xs">{item.warehouse_name || '-'}</TableCell>
@@ -223,7 +254,7 @@ export default function ProductionInboundPage() {
                 ))}
                 {list.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                       {tc('noRecords')}</TableCell>
                   </TableRow>
                 )}

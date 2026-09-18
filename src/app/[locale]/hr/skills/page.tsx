@@ -35,6 +35,8 @@ import { Plus, Search, Edit, Trash2, Star, CheckCircle2, XCircle } from 'lucide-
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/lib/date-utils';
+import { useRowSelection } from '@/lib/useRowSelection';
+import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
 interface Skill {
   id: number;
@@ -78,6 +80,30 @@ export default function SkillsPage() {
   const [skillCategory, setSkillCategory] = useState('_all');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Skill>>({});
+
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
+    useRowSelection(list, (r) => String(r.id));
+  const [deleting, setDeleting] = useState(false);
+
+  const handleBatchDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
+    setDeleting(true);
+    let okCount = 0; let failMsg = '';
+    for (const id of ids) {
+      try {
+        const res = await authFetch(`/api/hr/skills?id=${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.code === 200) okCount++; else failMsg = data.message || failMsg;
+      } catch { failMsg = tc('error'); }
+    }
+    setDeleting(false);
+    if (okCount > 0) toast.success(tc('batchDeleteSuccess', { count: okCount }));
+    if (failMsg) toast.error(failMsg);
+    clear();
+    fetchData();
+  };
 
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
@@ -201,9 +227,13 @@ export default function SkillsPage() {
 
         <Card>
           <CardContent className="p-0">
+            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
+                  </TableHead>
                   <TableHead className="text-xs">{t('employeeName')}</TableHead>
                   <TableHead className="text-xs">{t('skillName')}</TableHead>
                   <TableHead className="text-xs">{t('skillCategory')}</TableHead>
@@ -217,6 +247,9 @@ export default function SkillsPage() {
               <TableBody>
                 {list.map((item) => (
                   <TableRow key={item.id}>
+                    <TableCell>
+                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(item.id))} onChange={() => toggle(String(item.id))} aria-label={tc('selectRow', { id: item.id })} />
+                    </TableCell>
                     <TableCell className="text-xs">{item.employee_name}</TableCell>
                     <TableCell className="text-xs font-medium">{item.skill_name}</TableCell>
                     <TableCell className="text-xs">
@@ -274,7 +307,7 @@ export default function SkillsPage() {
                 ))}
                 {list.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                       {tc('noData')}
                     </TableCell>
                   </TableRow>

@@ -177,7 +177,7 @@ export default function FinanceReportPage() {
                 [
                   { key: 'period', label: tc('period'), width: 18 },
                   { key: 'type', label: tc('type'), width: 12 },
-                  { key: 'category', label: tc('category'), width: 15 },
+                  { key: 'category', label: tc('category'), width: 15, formatter: (v) => tc(String(v)) },
                   {
                     key: 'revenue',
                     label: tc('revenue'),
@@ -235,7 +235,7 @@ export default function FinanceReportPage() {
                       <TableCell>
                         <Badge variant="outline">{tc(r.type)}</Badge>
                       </TableCell>
-                      <TableCell>{r.category}</TableCell>
+                      <TableCell>{tc(r.category)}</TableCell>
                       <TableCell className="text-right text-green-600">
                         ¥{formatAmount(r.revenue)}
                       </TableCell>
@@ -259,7 +259,7 @@ export default function FinanceReportPage() {
         </Card>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{tc('totalRecords', { total })}</span>
+          <span>{tc('totalRecords', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               variant="outline"

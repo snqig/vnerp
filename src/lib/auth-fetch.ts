@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * authFetch: 带认证令牌的 fetch 封装
  *
@@ -25,12 +26,17 @@ async function refreshAccessToken(): Promise<string | null> {
 
   const _startTime = Date.now();
 
+  // 「记住我」会话语义：rememberMe=false 时 token 存 sessionStorage。
+  // 透传给 refresh 路由，让其下发的 cookie 同样保持浏览器会话级，
+  // 否则一次无感刷新会把 session 登录「升级」成 24h 持久 cookie（免登复活）。
+  const rememberMe = !(typeof window !== 'undefined' && !localStorage.getItem('token') && !!sessionStorage.getItem('token'));
+
   refreshPromise = (async () => {
     try {
       const res = await fetch('/api/auth/refresh', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken, userId }),
+        body: JSON.stringify({ refreshToken, userId, rememberMe }),
       });
       if (!res.ok) {
         return null;
@@ -108,7 +114,7 @@ export async function authFetch(url: string, options: RequestInit = {}): Promise
       if (err instanceof DOMException && err.name === 'AbortError') {
         throw err;
       }
-      console.error(`[authFetch] 网络请求失败: ${method} ${reqUrl}`, err);
+      logger.error(`[authFetch] 网络请求失败: ${method} ${reqUrl}`, err);
       throw err;
     }
   };

@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useRef } from 'react';
@@ -158,7 +159,6 @@ export default function QualityFinalPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [finals, setFinals] = useState<FinalInspect[]>([]);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
 
   const fetchFinals = async () => {
@@ -268,6 +268,10 @@ export default function QualityFinalPage() {
     handleSort,
     sortedData: _sortedFinalInspects,
   } = useTableSort(filteredFinals, 'id');
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    filteredFinals,
+    (r) => String(r.id)
+  );
 
   // 查看详情
   const handleViewDetail = (final: FinalInspect) => {
@@ -494,8 +498,8 @@ export default function QualityFinalPage() {
                     },
                   ]}
                   data={
-                    selectedIds.length > 0
-                      ? filteredFinals.filter((f) => selectedIds.includes(f.id))
+                    selectedCount > 0
+                      ? filteredFinals.filter((f) => isSelected(String(f.id)))
                       : filteredFinals
                   }
                 />
@@ -525,19 +529,7 @@ export default function QualityFinalPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        <Checkbox
-                          checked={
-                            selectedIds.length === filteredFinals.length &&
-                            filteredFinals.length > 0
-                          }
-                          onCheckedChange={() => {
-                            if (selectedIds.length === filteredFinals.length) {
-                              setSelectedIds([]);
-                            } else {
-                              setSelectedIds(filteredFinals.map((f: FinalInspect) => f.id));
-                            }
-                          }}
-                        />
+                        <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                       </TableHead>
                       <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
                       <SortableTableHeader
@@ -576,14 +568,8 @@ export default function QualityFinalPage() {
                       <TableRow key={final.id}>
                         <TableCell>
                           <Checkbox
-                            checked={selectedIds.includes(final.id)}
-                            onCheckedChange={() =>
-                              setSelectedIds((prev: number[]) =>
-                                prev.includes(final.id)
-                                  ? prev.filter((i: number) => i !== final.id)
-                                  : [...prev, final.id]
-                              )
-                            }
+                            checked={isSelected(String(final.id))}
+                            onCheckedChange={() => toggle(String(final.id))}
                           />
                         </TableCell>
                         <TableCell className="text-center text-muted-foreground">

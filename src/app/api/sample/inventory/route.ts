@@ -125,7 +125,7 @@ export const PUT = withPermission(
       for (const [key, value] of Object.entries(updateData)) {
         if (fieldMap[key] && value !== undefined) {
           fields.push(`${fieldMap[key]} = ?`);
-          params.push(value);
+          params.push(value as SqlValue);
         }
       }
 

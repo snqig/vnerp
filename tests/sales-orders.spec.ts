@@ -5,24 +5,8 @@
  */
 
 import { test, expect } from '@playwright/test';
-
-const TEST_USERS = {
-  admin: {
-    username: 'admin',
-    password: 'admin123',
-  },
-};
-
-async function login(page: any) {
-  await page.goto('/en/login', { waitUntil: 'domcontentloaded' });
-  await page.waitForLoadState('networkidle');
-  await page.waitForSelector('input#username', { timeout: 60000 });
-  await page.fill('input#username', TEST_USERS.admin.username);
-  await page.fill('input#password', TEST_USERS.admin.password);
-  await page.getByRole('button', { name: 'Login' }).click();
-  await page.waitForURL('**/en/dashboard', { timeout: 60000 });
-  await page.waitForTimeout(2000);
-}
+// BUG-003/004：统一走共享认证 helper（admin/admin123 + /dashboard 断言 + CSRF 注入 + 绝对地址 reset-lock）
+import { login } from './utils/api-auth';
 
 test.describe('销售订单页面测试', () => {
   test.beforeEach(async ({ page }) => {

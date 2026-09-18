@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, Suspense } from 'react';
+import { logger } from '@/lib/logger';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { authFetch } from '@/lib/auth-fetch';
@@ -123,6 +124,7 @@ function PrintPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tc = useTranslations('Common');
+  const tsc = useTranslations('Sample.StandardCard');
   const printRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -136,7 +138,7 @@ function PrintPageContent() {
         if (id) {
           const response = await authFetch(`/api/standard-cards?id=${id}`);
           if (!response.ok) {
-            console.error('[Print:Load] response not ok, status=', response.status);
+            logger.error('[Print:Load] response not ok, status=', response.status);
             setError(`加载数据失败 (HTTP ${response.status})`);
             setLoading(false);
             return;
@@ -231,7 +233,7 @@ function PrintPageContent() {
               extraField: item.extra_field || '',
             });
           } else {
-            console.error('[Print:Load] API returned no data:', result.message);
+            logger.error('[Print:Load] API returned no data:', result.message);
             setError(result.message || '标准卡不存在');
           }
         } else {
@@ -269,7 +271,7 @@ function PrintPageContent() {
     printWindow.document.write(`
       <html>
         <head>
-          <title>标准卡打印</title>
+          <title>${tsc('cardFormTitle')}</title>
           <style>
             @page { size: A4 landscape; margin: 0; }
             body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: white; }

@@ -7,6 +7,7 @@
  */
 
 import { getConnection } from '@/lib/db';
+import type { DbConnection } from '@/types/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { secureLog } from '@/lib/logger';
 import { CalcParamService } from '@/lib/calc-param-service';
@@ -399,7 +400,7 @@ export function generateBucketDates(
  */
 export class MRPEngine {
   private config: MRPConfig;
-  private conn: PoolConnection | null;
+  private conn: DbConnection | null;
   private warnings: string[] = [];
 
   /**
@@ -408,7 +409,7 @@ export class MRPEngine {
    * @param config - 可选，部分 MRP 配置参数，未指定的使用默认值
    * @param conn - 可选，外部数据库连接，不传则 run 时自动获取
    */
-  constructor(config?: Partial<MRPConfig>, conn?: PoolConnection) {
+  constructor(config?: Partial<MRPConfig>, conn?: DbConnection) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.conn = conn || null;
   }
@@ -506,7 +507,7 @@ export class MRPEngine {
   }
 
   private async collectGrossRequirements(
-    conn: PoolConnection,
+    conn: DbConnection,
     startDate: string,
     endDate: string,
     productIds?: number[]
@@ -584,7 +585,7 @@ export class MRPEngine {
   }
 
   private async processAllMaterials(
-    conn: PoolConnection,
+    conn: DbConnection,
     demands: { materialId: number; quantity: number; dueDate: string }[],
     startDate: string,
     horizonDays: number,
@@ -697,7 +698,7 @@ export class MRPEngine {
   }
 
   private async calculateMaterialBuckets(
-    conn: PoolConnection,
+    conn: DbConnection,
     materialId: number,
     materialInfo: MaterialInfoRow,
     demandDates: Map<string, number>,
@@ -814,7 +815,7 @@ export class MRPEngine {
   }
 
   private async getMaterialInfo(
-    conn: PoolConnection,
+    conn: DbConnection,
     materialId: number
   ): Promise<MaterialInfoRow | null> {
     const [rows] = await conn.query<MaterialInfoRow[]>(
@@ -832,7 +833,7 @@ export class MRPEngine {
   }
 
   private async getCurrentInventory(
-    conn: PoolConnection,
+    conn: DbConnection,
     materialId: number,
     warehouseId?: number
   ): Promise<number> {
@@ -851,7 +852,7 @@ export class MRPEngine {
   }
 
   private async getScheduledReceipts(
-    conn: PoolConnection,
+    conn: DbConnection,
     materialId: number,
     startDate: string,
     horizonDays: number,
@@ -914,7 +915,7 @@ export class MRPEngine {
   }
 
   private async getBOMChildren(
-    conn: PoolConnection,
+    conn: DbConnection,
     productId: number
   ): Promise<{ material_id: number; consumption_qty: number; loss_rate: number }[]> {
     const [rows] = await conn.query<BomChildRow[]>(
@@ -957,7 +958,7 @@ export class MRPEngine {
    * @returns 各工作中心按日期汇总的产能负荷分析
    */
   async calculateCapacityRequired(
-    conn: PoolConnection,
+    conn: DbConnection,
     materials: MRPMaterialResult[],
     startDate: string,
     horizonDays: number

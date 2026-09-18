@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbConnection } from '@/types/db';
 
 import {
   ISampleOrderRepository,
@@ -394,7 +395,7 @@ export class SampleOrderApplicationService {
     aggregateId: number,
     aggregate: DomainEventAggregate,
     parentCtx?: Record<string, unknown>,
-    conn?: PoolConnection
+    conn?: DbConnection
   ): Promise<void> {
   const ts = await getTranslations('Common');
     const events = [...(aggregate.domainEvents || [])];

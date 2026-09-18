@@ -71,8 +71,8 @@ export default function PieceWorkPage() {
 
   useEffect(() => { fetchRecords(); }, []);
 
-  const totalQuantity = records.reduce((s, r) => s + r.quantity, 0);
-  const totalAmount = records.reduce((s, r) => s + r.amount, 0);
+  const totalQuantity = records.reduce((s, r) => s + Number(r.quantity), 0);
+  const totalAmount = records.reduce((s, r) => s + Number(r.amount), 0);
 
   return (
     <MainLayout title={t('pieceWork') || ts('k_8kbc4s')}>
@@ -140,7 +140,7 @@ export default function PieceWorkPage() {
                     <TableCell className="text-right text-red-500">{r.defectCount}</TableCell>
                     <TableCell className="text-right">{r.passRate}%</TableCell>
                     <TableCell className="text-right">¥{r.unitPrice}</TableCell>
-                    <TableCell className="text-right font-medium">¥{r.amount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-medium">¥{Number(r.amount).toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
                 {records.length > 0 && (
@@ -148,7 +148,7 @@ export default function PieceWorkPage() {
                     <TableCell colSpan={4} className="text-right">{tc('total') || ts('k_3jbcte')}</TableCell>
                     <TableCell className="text-right">{totalQuantity}</TableCell>
                     <TableCell colSpan={3}></TableCell>
-                    <TableCell className="text-right">¥{totalAmount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">¥{Number(totalAmount).toFixed(2)}</TableCell>
                   </TableRow>
                 )}
                 {records.length === 0 && (

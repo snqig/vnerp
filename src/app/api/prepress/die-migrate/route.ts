@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbRow } from '@/types/db';
 
 ;
 import { NextRequest } from 'next/server';
@@ -30,7 +31,7 @@ async function safeCreateTable(tableName: string, sql: string) {
 export const POST = withPermission(
   async (_request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
-    const results: SqlValue[] = [];
+    const results: DbRow[] = [];
 
     results.push(
       await safeAlterTable(

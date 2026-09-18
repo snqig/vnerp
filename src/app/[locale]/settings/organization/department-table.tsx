@@ -72,14 +72,18 @@ function buildDepartmentTree(departments: Department[]): Department[] {
   return roots;
 }
 
-// 状态标签
-function getStatusBadge(status: number) {
+// 状态标签（组件；保留 getStatusBadge 函数式调用以兼容全站旧用法）
+function StatusBadge({ status }: { status: number }) {
   const ts = useTranslations('Common');
   return status === 1 ? (
     <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{ts('k_5pm2ma')}</Badge>
   ) : (
     <Badge className="bg-muted text-muted-foreground hover:bg-muted">{ts('k_6q9o5l')}</Badge>
   );
+}
+
+export function getStatusBadge(status: number) {
+  return <StatusBadge status={status} />;
 }
 
 // 渲染部门行

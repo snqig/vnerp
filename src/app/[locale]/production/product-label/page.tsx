@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useRef, useCallback } from 'react';
@@ -74,7 +75,6 @@ export default function ProductLabelPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [printItems, setPrintItems] = useState<Item[]>([]);
   const [qrDataUrls, setQrDataUrls] = useState<Record<number, string>>({});
   const printRef = useRef<HTMLDivElement>(null);
@@ -101,22 +101,14 @@ export default function ProductLabelPage() {
     fetchData();
   }, [fetchData]);
 
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    list,
+    (r) => String(r.id)
+  );
 
-  const toggleSelectAll = () => {
-    if (selectedIds.size === list.length && list.length > 0) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(list.map((i) => i.id)));
-    }
-  };
+  const toggleSelect = (id: number) => toggle(String(id));
+
+  const toggleSelectAll = () => toggleAll();
 
   const handleSave = async () => {
     try {
@@ -169,7 +161,7 @@ export default function ProductLabelPage() {
   };
 
   const handleBatchPrint = async () => {
-    const items = list.filter((i) => selectedIds.has(i.id));
+    const items = list.filter((i) => isSelected(String(i.id)));
     if (items.length === 0) {
       toast({ title: t('selectLabelFirst'), variant: 'destructive' });
       return;
@@ -309,16 +301,16 @@ export default function ProductLabelPage() {
                   formatter: (v) => getExportLabel(v),
                 },
               ]}
-              data={selectedIds.size > 0 ? list.filter((i) => selectedIds.has(i.id)) : list}
+              data={selectedCount > 0 ? list.filter((i) => isSelected(String(i.id))) : list}
             />
             <Button
               size="sm"
               variant="outline"
               onClick={handleBatchPrint}
-              disabled={selectedIds.size === 0}
+              disabled={selectedCount === 0}
             >
               <QrCode className="h-3 w-3 mr-1" />
-              {t('printLabelCount', { count: selectedIds.size })}
+              {t('printLabelCount', { count: selectedCount })}
             </Button>
             <Button
               size="sm"
@@ -340,7 +332,7 @@ export default function ProductLabelPage() {
                 <TableRow>
                   <TableHead className="w-10">
                     <Checkbox
-                      checked={list.length > 0 && selectedIds.size === list.length}
+                      checked={allSelected}
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
@@ -366,11 +358,11 @@ export default function ProductLabelPage() {
                   return (
                     <TableRow
                       key={item.id}
-                      className={selectedIds.has(item.id) ? 'bg-blue-50' : ''}
+                      className={isSelected(String(item.id)) ? 'bg-blue-50' : ''}
                     >
                       <TableCell>
                         <Checkbox
-                          checked={selectedIds.has(item.id)}
+                          checked={isSelected(String(item.id))}
                           onCheckedChange={() => toggleSelect(item.id)}
                         />
                       </TableCell>
@@ -449,7 +441,7 @@ export default function ProductLabelPage() {
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">
             {tc('total', { count: total })}{' '}
-            {selectedIds.size > 0 && t('selectedCount', { count: selectedIds.size })}
+            {selectedCount > 0 && t('selectedCount', { count: selectedCount })}
           </span>
           <div className="flex gap-2">
             <Button

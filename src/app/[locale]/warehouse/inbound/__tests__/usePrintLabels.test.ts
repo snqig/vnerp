@@ -25,6 +25,7 @@ vi.mock('@/lib/logger', () => ({
 
 import { usePrintLabels } from '../hooks/usePrintLabels';
 import { toast } from 'sonner';
+import { t } from '@test/i18n-test-helpers';
 
 const sampleRecord: InboundRecord = {
   id: 1,
@@ -84,7 +85,7 @@ describe('usePrintLabels', () => {
       await result.current.handlePrintLabels();
     });
 
-    expect(toast.error).toHaveBeenCalledWith('printWindowBlocked');
+    expect(toast.error).toHaveBeenCalledWith(t('printWindowBlocked'));
     window.open = originalOpen;
   });
 
@@ -135,7 +136,7 @@ describe('usePrintLabels', () => {
       await result.current.handlePrintLabels();
     });
 
-    expect(toast.error).toHaveBeenCalledWith('printFailed');
+    expect(toast.error).toHaveBeenCalledWith(t('printFailed'));
     window.open = originalOpen;
   });
 

@@ -60,6 +60,7 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import ApiClient from '@/lib/api-client';
 import { logger } from '@/lib/logger';
+import { useRowSelection } from '@/lib/useRowSelection';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { MoneyDisplay } from '@/components/ui/money-display';
 import { CurrencySelect } from '@/components/ui/currency-select';
@@ -195,7 +196,6 @@ export default function PurchaseOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
   const [detailItems, setDetailItems] = useState<Loose[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
-  const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
 
@@ -231,7 +231,6 @@ export default function PurchaseOrdersPage() {
           const ordersList = Array.isArray(data.data) ? data.data : data.data?.list || [];
           setOrders(ordersList);
           setTotal(data.pagination?.total || 0);
-          setSelectedOrders([]);
           logger.info({ module: 'Purchase', action: 'fetchOrders' }, ts('k_1fywe87'), {
             count: ordersList.length,
           });
@@ -368,19 +367,19 @@ export default function PurchaseOrdersPage() {
   };
 
   const handleBatchDelete = async () => {
-    if (!selectedOrders.length) return;
+    if (!selected.size) return;
 
-    const selectedOrderInfo = orders.filter((o) => selectedOrders.includes(o.id));
+    const selectedOrderInfo = orders.filter((o) => selected.has(String(o.id)));
     const orderNumbers = selectedOrderInfo.map((o) => o.po_no).join(', ');
 
-    if (!confirm(tc('confirmBatchDelete', { count: selectedOrders.length, orderNumbers }))) return;
+    if (!confirm(tc('confirmBatchDelete', { count: selectedOrderInfo.length, orderNumbers }))) return;
 
     try {
       setLoading(true);
 
       // 逐个删除采购单
       let successCount = 0;
-      for (const orderId of selectedOrders) {
+      for (const { id: orderId } of selectedOrderInfo) {
         const data = await ApiClient.delete('/api/purchase/orders', { id: orderId });
         if (data.success) {
           successCount++;
@@ -532,18 +531,6 @@ export default function PurchaseOrdersPage() {
     }
   };
 
-  const toggleSelectAll = () => {
-    if (selectedOrders.length === orders.length) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(orders.map((o) => o.id));
-    }
-  };
-
-  const toggleSelect = (id: number) => {
-    setSelectedOrders((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
-  };
-
   const handleSort = (field: string) => {
     if (sortField === field) {
       if (sortOrder === 'asc') {
@@ -587,9 +574,18 @@ export default function PurchaseOrdersPage() {
     });
   }, [orders, sortField, sortOrder]);
 
+  const {
+    selected,
+    selectedCount,
+    isSelected,
+    allSelected,
+    toggle,
+    toggleAll,
+    selectAllRef,
+  } = useRowSelection(sortedOrders, (o) => String(o.id));
+
   const handlePrintList = () => {
-    const dataToPrint =
-      selectedOrders.length > 0 ? orders.filter((o) => selectedOrders.includes(o.id)) : orders;
+    const dataToPrint = selected.size > 0 ? orders.filter((o) => selected.has(String(o.id))) : orders;
 
     if (dataToPrint.length === 0) {
       toast({ title: tc('info'), description: tc('noDataToPrint'), variant: 'destructive' });
@@ -769,12 +765,12 @@ export default function PurchaseOrdersPage() {
                 <Button variant="outline" onClick={handlePrintList}>
                   <Printer className="h-4 w-4 mr-2" />
                   {tc('print')}
-                  {selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}
+                  {selectedCount > 0 ? `(${selectedCount})` : ''}
                 </Button>
-                {selectedOrders.length > 0 && (
+                {selectedCount > 0 && (
                   <Button variant="destructive" onClick={handleBatchDelete}>
                     <Trash2 className="h-4 w-4 mr-2" />
-                    {tc('delete')}({selectedOrders.length})
+                    {tc('delete')}({selectedCount})
                   </Button>
                 )}
                 <GlobalExportToolbar
@@ -823,8 +819,8 @@ export default function PurchaseOrdersPage() {
                     { key: 'remark', label: tc('remark'), width: 20 },
                   ]}
                   data={
-                    selectedOrders.length > 0
-                      ? orders.filter((o) => selectedOrders.includes(o.id))
+                    selected.size > 0
+                      ? orders.filter((o) => selected.has(String(o.id)))
                       : sortedOrders
                   }
                 />
@@ -1011,7 +1007,7 @@ export default function PurchaseOrdersPage() {
           <CardHeader>
             <CardTitle>{t('purchaseOrders')}</CardTitle>
             <CardDescription>
-              {tc('totalRecords', { total })} {tc('purchase')}
+              {tc('totalRecords', { count: total })} {tc('purchase')}
               {tc('record')}
             </CardDescription>
           </CardHeader>
@@ -1028,9 +1024,13 @@ export default function PurchaseOrdersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">
-                      <Checkbox
-                        checked={orders.length > 0 && selectedOrders.length === orders.length}
-                        onCheckedChange={toggleSelectAll}
+                      <input
+                        ref={selectAllRef}
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer accent-blue-600"
+                        checked={allSelected}
+                        onChange={toggleAll}
+                        aria-label={tc('selectAll')}
                       />
                     </TableHead>
                     <TableHead className="w-10"></TableHead>
@@ -1111,8 +1111,8 @@ export default function PurchaseOrdersPage() {
                         <TableRow key={order.id} className="hover:bg-muted/50">
                           <TableCell>
                             <Checkbox
-                              checked={selectedOrders.includes(order.id)}
-                              onCheckedChange={() => toggleSelect(order.id)}
+                              checked={isSelected(String(order.id))}
+                              onCheckedChange={() => toggle(String(order.id))}
                             />
                           </TableCell>
                           <TableCell>

@@ -171,8 +171,12 @@ export function suggestScheduleDates(params: {
     maxIterations--;
 
     for (const scheduled of sortedSchedule) {
+      // 归一化到本地 0 点：date-only 字符串被 new Date() 解析为 UTC 0 点，
+      // 在 GMT+8 会变成当日本地 08:00，与已归零的 start/end 比较会漏判冲突
       const scheduledStart = new Date(scheduled.suggested_start_date);
+      scheduledStart.setHours(0, 0, 0, 0);
       const scheduledEnd = new Date(scheduled.suggested_end_date);
+      scheduledEnd.setHours(0, 0, 0, 0);
 
       if (start <= scheduledEnd && end >= scheduledStart) {
         conflicts.push({

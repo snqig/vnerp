@@ -1,4 +1,5 @@
 import { t } from '@/lib/server-translate';
+import { logger } from '@/lib/logger';
 
 export type ShipmentStatus =
   | 'draft' // 草稿
@@ -117,7 +118,7 @@ export class ShipmentStateMachine {
   const ts = t;
     const config = shipmentStateMachineConfig[from];
     if (!config) {
-      console.warn(ts('k_g49onm'), { from });
+      logger.warn(ts('k_g49onm'), { from });
       return false;
     }
     return config.allowedTransitions.includes(to);

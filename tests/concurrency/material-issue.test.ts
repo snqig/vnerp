@@ -60,12 +60,13 @@ describe('领料并发测试', () => {
       const createMaterialIssue = async (index: number): Promise<number> => {
         const issueNo = `MR_${Date.now()}_${index}`;
 
-        // 先创建一个测试工单（prod_work_order 使用 work_order_no，status 为 VARCHAR）
-        // execute() 返回 ResultSetHeader 直接（非数组），不能用数组解构
+        // 先创建一个测试工单。FK 迁移后 prd_material_issue.work_order_id 已指向
+        // 【在用表 prod_work_order】，故必须写入 prod_work_order（planned_qty，
+        // 无 material_id 列），否则 FK 约束校验失败。
         const woResult: any = await execute(
-          `INSERT INTO prod_work_order (work_order_no, status, create_time, update_time, deleted)
-           VALUES (?, 'pending', NOW(), NOW(), 0)`,
-          [`WO_${Date.now()}_${index}`]
+          `INSERT INTO prod_work_order (work_order_no, planned_qty, status, create_time, update_time, deleted)
+           VALUES (?, ?, 1, NOW(), NOW(), 0)`,
+          [`WO_${Date.now()}_${index}`, 1]
         );
         const workOrderId = woResult.insertId;
 
@@ -270,11 +271,11 @@ describe('领料并发测试', () => {
           const issueNo = `MR_LOW_${Date.now()}_${index}`;
 
           await transaction(async (conn) => {
-            // 创建工单
+            // 创建工单（FK 已指向 prod_work_order）
             const [woResult]: any = await conn.execute(
-              `INSERT INTO prod_work_order (order_no, status, create_time, update_time, deleted)
-               VALUES (?, 1, NOW(), NOW(), 0)`,
-              [`WO_LOW_${Date.now()}_${index}`]
+              `INSERT INTO prod_work_order (work_order_no, planned_qty, status, create_time, update_time, deleted)
+               VALUES (?, ?, 1, NOW(), NOW(), 0)`,
+              [`WO_LOW_${Date.now()}_${index}`, 1]
             );
             const workOrderId = woResult.insertId;
 

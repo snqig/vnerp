@@ -13,7 +13,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
-    const overview: unknown = {
+    const overview: Record<string, any> = {
       todayOrders: 0,
       todayProduction: 0,
       todayDelivery: 0,
@@ -84,7 +84,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    const production: unknown = {
+    const production: Record<string, any> = {
       efficiency: 0,
       activeOrders: 0,
       completedToday: 0,
@@ -175,7 +175,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    const quality: unknown = {
+    const quality: Record<string, any> = {
       passRate: 0,
       totalInspections: 0,
       passedInspections: 0,
@@ -215,7 +215,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    const finance: unknown = {
+    const finance: Record<string, any> = {
       totalReceivable: 0,
       totalPayable: 0,
       monthRevenue: 0,
@@ -257,7 +257,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    const inventory: unknown = {
+    const inventory: Record<string, any> = {
       totalItems: 0,
       lowStock: 0,
       totalValue: 0,
@@ -313,7 +313,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let orderTrend: SqlValue[] = [];
+    let orderTrend: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT DATE(create_time) as date, COUNT(*) as count
@@ -327,7 +327,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let topProducts: SqlValue[] = [];
+    let topProducts: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT product_name, SUM(plan_qty) as total_qty
@@ -341,7 +341,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let workshopDaily: SqlValue[] = [];
+    let workshopDaily: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT product_name, SUM(plan_qty) as total_qty
@@ -361,7 +361,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let materialConsumption: SqlValue[] = [];
+    let materialConsumption: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT material_name, SUM(order_qty) as total_qty
@@ -380,7 +380,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let monthlyMaterialConsumption: SqlValue[] = [];
+    let monthlyMaterialConsumption: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT material_name, SUM(order_qty) as total_qty
@@ -399,7 +399,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let workshopHistory: SqlValue[] = [];
+    let workshopHistory: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT YEAR(create_time) as year, SUM(plan_qty) as total_qty
@@ -418,7 +418,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    const shiftData: unknown = {
+    const shiftData: Record<string, any> = {
       dayShift: { plan: 0, actual: 0, rate: 0 },
       middleShift: { plan: 0, actual: 0, rate: 0 },
       nightShift: { plan: 0, actual: 0, rate: 0 },
@@ -470,7 +470,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
 
     const materialUsage: SqlValue[] = [];
 
-    let processRelations: SqlValue[] = [];
+    let processRelations: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT DISTINCT product_name

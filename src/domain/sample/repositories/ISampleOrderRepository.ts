@@ -1,4 +1,5 @@
 import type { PoolConnection } from 'mysql2/promise';
+import type { DbConnection } from '@/types/db';
 import { SampleOrder } from '@/domain/sample/aggregates/SampleOrder';
 import { SampleOrderStatus } from '@/domain/sample/value-objects/SampleOrderStatus';
 
@@ -38,10 +39,10 @@ export interface ISampleOrderRepository {
   ): Promise<{ list: SampleOrder[]; total: number }>;
 
   /** 保存新样单，返回自增ID。可选传入外部事务连接以加入同一事务 */
-  save(order: SampleOrder, conn?: PoolConnection): Promise<number>;
+  save(order: SampleOrder, conn?: DbConnection): Promise<number>;
 
   /** 更新已有样单。可选传入外部事务连接以加入同一事务 */
-  update(order: SampleOrder, conn?: PoolConnection): Promise<void>;
+  update(order: SampleOrder, conn?: DbConnection): Promise<void>;
 
   /** 删除样单 (仅草稿状态) */
   delete(id: number): Promise<void>;

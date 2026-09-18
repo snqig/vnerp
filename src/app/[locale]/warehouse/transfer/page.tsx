@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
@@ -108,6 +109,10 @@ export default function TransferPage() {
 
   const { toast } = useToast();
   const [list, setList] = useState<TransferOrder[]>([]);
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    list,
+    (r) => String(r.id)
+  );
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
@@ -116,7 +121,6 @@ export default function TransferPage() {
   const [locations, setLocations] = useState<
     { id: number; code: string; name: string; wh_id: number }[]
   >([]);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [sortField, setSortField] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -379,17 +383,9 @@ export default function TransferPage() {
     });
   }, [list, sortField, sortDirection]);
 
-  const toggleSelectAll = () => {
-    if (selectedIds.length === list.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(list.map((item) => item.id));
-    }
-  };
+  const toggleSelectAll = () => toggleAll();
 
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
-  };
+  const toggleSelect = (id: number) => toggle(String(id));
 
   const SortableHeader = ({ field, children }: { field: string; children: React.ReactNode }) => (
     <TableHead
@@ -448,7 +444,7 @@ export default function TransferPage() {
                 <TableRow className="bg-muted/50">
                   <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center w-12">
                     <Checkbox
-                      checked={selectedIds.length === list.length && list.length > 0}
+                      checked={allSelected}
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
@@ -476,7 +472,7 @@ export default function TransferPage() {
                     <TableRow key={item.id} className="hover:bg-muted/30 even:bg-muted/20">
                       <TableCell className="border border-border text-center">
                         <Checkbox
-                          checked={selectedIds.includes(item.id)}
+                          checked={isSelected(String(item.id))}
                           onCheckedChange={() => toggleSelect(item.id)}
                         />
                       </TableCell>

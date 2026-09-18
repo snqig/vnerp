@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { logger } from '@/lib/logger';
 
 ;
 import { NextRequest, NextResponse } from 'next/server';
@@ -51,6 +52,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
     const { refreshToken, userId } = body;
+    // 「记住我」会话语义透传：不勾记住我 → 刷新后的 cookie 保持浏览器会话级（无 maxAge）。
+    // 缺省 true 兼容旧客户端。
+    const rememberMe = body?.rememberMe !== false;
 
     if (!refreshToken || !userId) {
       return errorResponse(ts('k_1o6vhsg'), 400);
@@ -122,14 +126,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         path: '/',
-        maxAge: 24 * 60 * 60, // 24h
+        ...(rememberMe ? { maxAge: 24 * 60 * 60 } : {}),
       });
       response.cookies.set('refresh_token', newRefreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         path: '/',
-        maxAge: 7 * 24 * 60 * 60, // 7d
+        ...(rememberMe ? { maxAge: 7 * 24 * 60 * 60 } : {}),
       });
 
       return response;
@@ -137,7 +141,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       await releaseRefreshLock(refreshToken);
     }
   } catch (error) {
-    console.error('[Refresh API] Error:', error);
+    logger.error('[Refresh API] Error:', error);
     return errorResponse(ts('k_o0y947'), 500);
   }
 }

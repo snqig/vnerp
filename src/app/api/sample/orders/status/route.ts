@@ -15,7 +15,7 @@ export const PUT = withPermission(
   async (request: NextRequest, userInfo: DbRow) => {
   const ts = await getTranslations('Common');
     const traceId = generateTraceId();
-    const ctx = { module: 'sample', action: 'PUT_status', traceId, userId: userInfo.id };
+    const ctx = { module: 'sample', action: 'PUT_status', traceId, userId: userInfo.userId };
     const body = await request.json();
     const { id, action, reason, salesOrderId } = body;
 
@@ -23,7 +23,7 @@ export const PUT = withPermission(
       return errorResponse(ts('k_a46a63'), 400, 400);
     }
 
-    const userId = userInfo.id;
+    const userId = userInfo.userId;
     logger.info(ctx, ts('k_eblrpl'), { id, action, reason, salesOrderId });
 
     try {
@@ -58,9 +58,9 @@ export const PUT = withPermission(
 
       logger.info(ctx, ts('k_2xqych'), { id, action });
       return successResponse({ id, action }, ts('k_d209xt'));
-    } catch (err: DbRow) {
-      logger.error(ctx, ts('k_q5fh6e'), { id, action, error: err.message });
-      return errorResponse(err.message || ts('k_ydow7a'), 400, 400);
+    } catch (err) {
+      logger.error(ctx, ts('k_q5fh6e'), { id, action, error: err instanceof Error ? err.message : String(err) });
+      return errorResponse((err instanceof Error ? err.message : String(err)) || ts('k_ydow7a'), 400, 400);
     }
   },
   { logTitle: '打样单状态变更' }

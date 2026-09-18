@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbRow } from '@/types/db';
 
 ;
 import { NextRequest, NextResponse } from 'next/server';
@@ -12,7 +13,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
-    const overview: unknown = {
+    const overview: Record<string, unknown> = {
       totalOrders: 0,
       todayOrders: 0,
       monthRevenue: 0,
@@ -53,7 +54,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let orderTrend: SqlValue[] = [];
+    let orderTrend: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT DATE(create_time) as date, COUNT(*) as count, COALESCE(SUM(total_amount), 0) as amount
@@ -67,7 +68,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let topCustomers: SqlValue[] = [];
+    let topCustomers: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT c.customer_name, COUNT(*) as order_count, COALESCE(SUM(o.total_amount), 0) as total_amount
@@ -82,7 +83,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let topProducts: SqlValue[] = [];
+    let topProducts: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT i.material_name AS product_name, SUM(i.quantity) as total_qty, COALESCE(SUM(i.total_price), 0) as total_amount
@@ -99,7 +100,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let recentOrders: SqlValue[] = [];
+    let recentOrders: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT o.id, o.order_no, c.customer_name, o.total_amount, o.status, o.delivery_date, o.create_time
@@ -114,7 +115,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let statusDistribution: SqlValue[] = [];
+    let statusDistribution: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT status, COUNT(*) as count FROM sal_order WHERE deleted = 0 GROUP BY status

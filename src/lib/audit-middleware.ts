@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import type { DbRow } from '@/types/db';
 import { logOperation, setAuditUserContext, clearAuditUserContext } from '@/lib/audit-logger';
 import { maskSensitiveData } from '@/lib/logger';
 
@@ -149,9 +150,9 @@ export function withAudit(
     setAuditUserContext(userId ? Number(userId) : undefined, username || undefined, ip, userAgent);
 
     // 解析请求参数
-    let requestParam: unknown = null;
+    let requestParam: DbRow | null = null;
     if (!options?.skipRequestBody && ['POST', 'PUT', 'PATCH'].includes(method)) {
-      requestParam = await parseRequestBody(request);
+      requestParam = (await parseRequestBody(request)) as DbRow;
     }
 
     // 从URL查询参数中提取
@@ -166,7 +167,7 @@ export function withAudit(
     }
 
     let response: NextResponse;
-    let responseData: unknown = null;
+    let responseData: DbRow | null = null;
     let errorMsg = '';
     let status = 1;
 

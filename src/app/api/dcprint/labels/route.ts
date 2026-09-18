@@ -331,7 +331,7 @@ export const DELETE = withPermission(
 async function queryPaginated<T>(
   sql: string,
   countSql: string,
-  params: DbRow[],
+  params: SqlValue[],
   pagination: { page: number; pageSize: number }
 ) {
   const { page, pageSize } = pagination;

@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbRow } from '@/types/db';
 
 ;
 import { NextRequest, NextResponse } from 'next/server';
@@ -12,7 +13,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
-    const overview: unknown = {
+    const overview: Record<string, any> = {
       totalInspections: 0,
       passRate: 0,
       todayInspections: 0,
@@ -57,7 +58,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let byType: SqlValue[] = [];
+    let byType: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT inspection_type, COUNT(*) as total,
@@ -71,7 +72,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let defectTrend: SqlValue[] = [];
+    let defectTrend: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT DATE(inspection_date) as date, COUNT(*) as total,
@@ -86,7 +87,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let topDefects: SqlValue[] = [];
+    let topDefects: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT defect_type, COUNT(*) as count FROM qc_unqualified WHERE deleted = 0
@@ -99,7 +100,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let recentInspections: SqlValue[] = [];
+    let recentInspections: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT id, inspection_no, inspection_type, inspection_result, inspector, inspection_date as inspect_time, remark
@@ -112,7 +113,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let processQuality: SqlValue[] = [];
+    let processQuality: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT pc.product_name, pc.burdening_status,

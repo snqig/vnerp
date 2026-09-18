@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { getTranslator } from '@/lib/i18n-server';
+import { salesOrderStatusMeta } from '@/lib/order-status';
 import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
@@ -13,20 +14,15 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 获取翻译函数
   const t = await getTranslator('Export');
 
-  // 状态映射
-  const STATUS_MAP: Record<string, string> = {
-    '1': t('statusPending'),
-    '2': t('statusConfirmed'),
-    '3': t('statusPartialShip'),
-    '4': t('statusCompleted'),
-    '5': t('statusCancelled'),
-    '10': t('statusDraft'),
-    '20': t('statusConfirmed'),
-    '30': t('statusInProduction'),
-    '40': t('statusShipped'),
-    '50': t('statusCompleted'),
-    '60': t('statusReconciled'),
-  };
+  // 状态映射 —— 由唯一真相源派生（BUG-ORD-002）。
+  // 修复前这里手写了两套并行映射（1-5 与 10-60），同一张单在两个家族下含义不同：
+  //   3 → statusPartialShip（契约含义：部分发货），却被 /api/orders/sales 的
+  //   「审核通过」写成 3 ⇒ 审核过的订单一律显示为「部分发货」。
+  // 历史码（0/6/9、10-60）由 salesOrderStatusMeta() 归一到契约码后再取标签。
+  const statusLabelOf = (status: unknown): string | number =>
+    salesOrderStatusMeta(status).labelKey === 'unknown'
+      ? ((status as string | number) ?? '')
+      : t(salesOrderStatusMeta(status).labelKey);
 
   if (format === 'excel' || format === 'xls' || format === 'csv') {
     const orders = await query(
@@ -54,7 +50,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       order.order_date || '',
       order.delivery_date || '',
       order.total_amount || 0,
-      STATUS_MAP[String(order.status)] || order.status,
+      statusLabelOf(order.status),
       `"${(order.remark || '').replace(/"/g, '""')}"`,
     ]);
 
@@ -85,7 +81,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   const items = await query('SELECT * FROM sal_order_item WHERE order_id = ?', [order.id]);
 
-  const statusLabel = STATUS_MAP[String(order.status)] || order.status;
+  const statusLabel = statusLabelOf(order.status);
 
   const htmlContent = `<!DOCTYPE html>
 <html>

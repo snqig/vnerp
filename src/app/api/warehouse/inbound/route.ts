@@ -104,7 +104,7 @@ export const POST = withPermission(
   const ts = await getTranslations('Common');
     const body = await request.json();
 
-    let validated: unknown;
+    let validated: DbRow;
     try {
       validated = createInboundOrderSchema.parse(body);
     } catch (e) {
@@ -183,7 +183,7 @@ export const PUT = withPermission(
   const ts = await getTranslations('Common');
     const body = await request.json();
 
-    let validated: unknown;
+    let validated: DbRow;
     try {
       validated = updateInboundOrderSchema.parse(body);
     } catch (e) {

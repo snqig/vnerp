@@ -95,7 +95,7 @@ export const POST = withPermission(async (request: NextRequest) => {
 
   // 计算自动分配方案（先进先出）
   let remaining = required_qty || 0;
-  const allocationPlan: SqlValue[] = [];
+  const allocationPlan: DbRow[] = [];
 
   if (required_qty) {
     for (const batch of rows) {

@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbConnection } from '@/types/db';
 
 import {
   ISampleOrderRepository,
@@ -98,8 +99,12 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
     };
   }
 
-  async save(order: SampleOrder, conn?: PoolConnection): Promise<number> {
+  async save(order: SampleOrder, conn?: DbConnection): Promise<number> {
     const p = order.toProps();
+    // ⚠️ 列数（31）/ 占位符数（30 个 ? + 1 个 NOW()）/ 参数量（30）三者必须一致。
+    // 历史缺陷：VALUES 第二组少写一个 ?（只有 10 个），导致
+    //   ER_WRONG_VALUE_COUNT_ON_ROW: Column count doesn't match value count at row 1
+    // 创建打样单 100% 失败（E2E TC-SAMPLE-001 暴露）。
     const result = await this.execWith(
       conn,
       `INSERT INTO sal_sample_order
@@ -109,7 +114,7 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
         process_card_id, work_order_id, sales_order_id, sample_fee, fee_charged, fee_deductible,
         fee_deducted, sample_version, parent_version_id, converted_at, converted_by)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(),
-               ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+               ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         p.orderNo,
         p.notifyDate || null,
@@ -146,7 +151,7 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
     return result.insertId;
   }
 
-  async update(order: SampleOrder, conn?: PoolConnection): Promise<void> {
+  async update(order: SampleOrder, conn?: DbConnection): Promise<void> {
     const p = order.toProps();
     await this.execWith(
       conn,
@@ -199,7 +204,7 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
    * 当 conn 提供时，使用该连接（加入外部事务）；否则回退到全局 execute（走连接池）。
    */
   private async execWith(
-    conn: PoolConnection | undefined,
+    conn: DbConnection | undefined,
     sql: string,
     values: SqlValue[]
   ): Promise<ResultSetHeader> {

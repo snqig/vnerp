@@ -110,7 +110,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     [materialId, warehouseId]
   );
 
-  const availableBatches = batchRows
+  const availableBatches: DbRow[] = batchRows
     .filter((b: DbRow) => b.fifo_status === 'AVAILABLE')
     .map((b: DbRow) => {
       const expiryWeight = computeExpiryWeight(b.expire_date);
@@ -136,7 +136,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const frozenBatches = batchRows.filter((b: DbRow) => b.fifo_status === 'FROZEN');
   const expiredBatches = batchRows.filter((b: DbRow) => b.fifo_status === 'EXPIRED');
 
-  const recommendedBatches: SqlValue[] = [];
+  const recommendedBatches: DbRow[] = [];
   let totalAvailable = 0;
   let remainingQty = requiredQty;
 

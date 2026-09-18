@@ -1,4 +1,5 @@
 import { t } from '@/lib/server-translate';
+import { logger } from '@/lib/logger';
 import { getTranslations } from 'next-intl/server';
 
 import mysql from 'mysql2/promise';
@@ -328,7 +329,7 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
     try {
       statusValue = PurchaseOrderStatus.fromDbCode(order.status).value;
     } catch {
-      console.warn(
+      logger.warn(
         `[PurchaseRepository] 未知采购单状态码 status=${order.status} (order id=${order.id}, po_no=${order.po_no})，降级为 draft`
       );
       statusValue = 'draft' as PurchaseOrderProps['status'];

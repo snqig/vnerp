@@ -60,7 +60,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = Object.entries(SNAKE_TO_CAMEL).re
 );
 
 function snakeBodyToCamelProps(body: DbRow): Partial<SampleOrderProps> {
-  const props: unknown = {};
+  const props: Record<string, unknown> = {};
   for (const key of Object.keys(body)) {
     const camelKey = SNAKE_TO_CAMEL[key] ?? key;
     props[camelKey] = body[key];
@@ -69,7 +69,7 @@ function snakeBodyToCamelProps(body: DbRow): Partial<SampleOrderProps> {
 }
 
 function camelPropsToSnake(props: SampleOrderProps): unknown {
-  const result: unknown = {};
+  const result: Record<string, unknown> = {};
   for (const key of Object.keys(props) as (keyof SampleOrderProps)[]) {
     const snakeKey = CAMEL_TO_SNAKE[key as string] ?? (key as string);
     result[snakeKey] = props[key];

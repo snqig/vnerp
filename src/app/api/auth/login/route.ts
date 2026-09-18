@@ -74,7 +74,7 @@ function getClientIP(request: NextRequest): string {
 }
 
 export async function POST(request: NextRequest) {
-  const ts = await getTranslations({ namespace: 'Common' });
+  const ts = await getTranslations('Common');
   const traceId = generateTraceId();
   const ctx = { module: 'auth', action: 'login', traceId };
 
@@ -110,6 +110,9 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { username, password } = body;
+    // 「记住我」语义：勾选 → cookie 持久化 24h（免登）；不勾 → session cookie（关浏览器即失效，重开必须重新登录）。
+    // 缺省 true 兼容旧客户端（旧前端不传此字段时行为与之前一致）。
+    const rememberMe = body?.rememberMe !== false;
 
     if (!username || !password) {
       logger.branch(ctx, ts('k_199cfle'), ts('k_1wfavyu'), false);
@@ -294,7 +297,7 @@ export async function POST(request: NextRequest) {
           departmentName = deptResult[0].dept_name;
         }
       } catch (error) {
-        console.error(ts('k_1r17wi0'), error);
+        logger.error(ts('k_1r17wi0'), error);
       }
     }
 
@@ -405,7 +408,8 @@ export async function POST(request: NextRequest) {
         : process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: ACCESS_COOKIE_MAX_AGE,
+      // 不勾「记住我」时不设 maxAge → 浏览器会话 cookie，关闭浏览器即失效
+      ...(rememberMe ? { maxAge: ACCESS_COOKIE_MAX_AGE } : {}),
     });
     response.cookies.set('refresh_token', refreshToken, {
       httpOnly: true,
@@ -414,7 +418,7 @@ export async function POST(request: NextRequest) {
         : process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: REFRESH_TOKEN_TTL_SECONDS,
+      ...(rememberMe ? { maxAge: REFRESH_TOKEN_TTL_SECONDS } : {}),
     });
 
     // 登录成功后下发 CSRF token cookie
@@ -435,7 +439,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function logLogin(username: string, request: NextRequest, success: boolean, message: string) {
-  const ts = await getTranslations({ namespace: 'Common' });
+  const ts = await getTranslations('Common');
   try {
     const ip = getClientIP(request);
     const userAgent = request.headers.get('user-agent') || '';
@@ -445,7 +449,7 @@ async function logLogin(username: string, request: NextRequest, success: boolean
       [username, ip, userAgent, success ? 1 : 0, success ? '' : message]
     );
   } catch (error) {
-    console.error(ts('k_1ybewqg'), error);
+    logger.error(ts('k_1ybewqg'), error);
   }
 }
 

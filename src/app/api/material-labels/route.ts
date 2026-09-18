@@ -212,7 +212,7 @@ async function handleCut(body: DbRow) {
     return errorResponse(`分切总宽度 ${totalCutWidth} 超过原宽度 ${parent.width}`, 400);
   }
 
-  const newLabels: SqlValue[] = [];
+  const newLabels: DbRow[] = [];
 
   for (const cutWidth of cutWidths) {
     const newLabelNo = generateLabelNo();

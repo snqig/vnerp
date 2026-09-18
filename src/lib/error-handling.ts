@@ -5,6 +5,7 @@
  * 统一处理异常、保护系统稳定性并实现优雅降级。
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { isUniqueViolation, mapUniqueErrorToMessage } from './db/errors';
 
 /**
@@ -293,9 +294,9 @@ function logError(error: AppError, req?: NextRequest, rawMessage?: string) {
   };
 
   if (error.statusCode >= 500) {
-    console.error('[ERROR]', JSON.stringify(logData, null, 2));
+    logger.error('[ERROR]', JSON.stringify(logData, null, 2));
   } else {
-    console.warn('[WARN]', JSON.stringify(logData));
+    logger.warn('[WARN]', JSON.stringify(logData));
   }
 }
 

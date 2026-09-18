@@ -97,7 +97,7 @@ export const GET = withPermission(
 
     if (requiredQty > 0) {
       const allocation = await planFIFOAllocation(
-        { query },
+        { query } as any,
         resolvedMaterialId,
         parseInt(warehouseId),
         requiredQty
@@ -162,7 +162,7 @@ export const POST = withPermission(
       const orderNo = `CK${dateStr}${seq}`;
 
       const allAllocations: FIFOAllocationResult[] = [];
-      const allOutboundItems: SqlValue[] = [];
+      const allOutboundItems: DbRow[] = [];
 
       for (const item of items) {
         const {
@@ -368,7 +368,7 @@ export const PATCH = withPermission(
         throw new Error(ts('k_1q5was7'));
       }
 
-      const deductionDetails: SqlValue[] = [];
+      const deductionDetails: DbRow[] = [];
 
       for (const item of items) {
         const requiredQty = parseFloat(item.quantity);

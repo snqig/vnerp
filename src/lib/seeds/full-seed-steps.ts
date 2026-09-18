@@ -668,7 +668,7 @@ export async function seedCommercialData(
   saleOrderIds: number[];
   purchaseOrders: Record<string, unknown>[];
   deliveryOrders: Record<string, unknown>[];
-  salesOrders: Record<string, unknown>[];
+  salesOrders: Record<string, any>[];
 }> {
   const ts = await getTranslations('Common');
   const salesOrders = [
@@ -1423,7 +1423,7 @@ export async function seedProductionData(
   conn: DbConnection,
   stats: Record<string, number>,
   saleOrderIds: number[],
-  salesOrders: Record<string, unknown>[],
+  salesOrders: Record<string, any>[],
   materials: Record<string, unknown>[]
 ) {
   const ts = await getTranslations('Common');
@@ -1712,7 +1712,7 @@ export async function seedProductionData(
     );
     const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
     const woId = rows[0].id;
-    const soItem = salesOrders[wo.soi]?.items?.[0];
+    const soItem = salesOrders[(wo.soi as number)]?.items?.[0];
     if (soItem) {
       await conn.execute(
         `INSERT INTO prod_work_order_item (work_order_id, line_no, material_id, material_name, quantity, unit, unit_price, total_price) VALUES (?, 1, ?, ?, ?, ?, ?, ?)`,

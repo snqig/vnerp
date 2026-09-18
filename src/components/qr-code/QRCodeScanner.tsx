@@ -41,7 +41,7 @@ interface QRCodeScannerProps {
 }
 
 export function QRCodeScanner({
-  placeholder = ts('k_1v6ose0'),
+  placeholder,
   onScan,
   validate,
   scanMode = 'query',
@@ -54,6 +54,7 @@ export function QRCodeScanner({
 }: QRCodeScannerProps) {
   const tc = useTranslations('Common');
   const ts = useTranslations('Common');
+  const resolvedPlaceholder = placeholder ?? ts('k_1v6ose0');
   const { toast } = useToast();
   const locale = useLocale();
   const [mode, setMode] = useState<'manual' | 'camera'>('manual');
@@ -267,7 +268,7 @@ export function QRCodeScanner({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={placeholder}
+              placeholder={resolvedPlaceholder}
               disabled={disabled || isProcessing}
               className="font-mono"
             />

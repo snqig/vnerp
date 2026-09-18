@@ -72,11 +72,11 @@ describe('calculatePriorityScore', () => {
     expect(score).toBeLessThanOrEqual(100);
   });
 
-  it('material ready adds score compared to not ready', () => {
+  it('material readiness does not affect priority score (策略A：缺料不参与评分)', () => {
     const order = createWorkOrder({ priority: 'normal' });
     const scoreReady = calculatePriorityScore(order, true);
     const scoreNotReady = calculatePriorityScore(order, false);
-    expect(scoreReady).toBeGreaterThan(scoreNotReady);
+    expect(scoreReady).toBe(scoreNotReady);
   });
 });
 

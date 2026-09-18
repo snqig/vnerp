@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
@@ -58,7 +59,6 @@ export default function InventoryPage() {
   const [status, setStatus] = useState('all');
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
   const { toast } = useToast();
 
@@ -107,7 +107,7 @@ export default function InventoryPage() {
           const result = await res.json();
           if (result.success) {
             toast({ title: tc('frozenCount', { count: ids.length }) });
-            setSelectedIds([]);
+            clear();
             fetchInventory();
           } else {
             toast({ title: result.message || tc('freezeFailed'), variant: 'destructive' });
@@ -215,6 +215,10 @@ export default function InventoryPage() {
       return 0;
     });
   }, [inventoryItems, sortField, sortOrder]);
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll, selected, clear } = useRowSelection(
+    sortedInventory,
+    (r) => String(r.id)
+  );
 
   useEffect(() => {
     fetchInventory();
@@ -461,10 +465,10 @@ export default function InventoryPage() {
           </CardHeader>
           <CardContent>
             <BatchToolbar
-              selectedIds={selectedIds}
+              selectedIds={[...selected].map(Number)}
               totalItems={inventoryItems.length}
-              onSelectAll={() => setSelectedIds(sortedInventory.map((i: Loose) => i.id))}
-              onClearSelection={() => setSelectedIds([])}
+              onSelectAll={toggleAll}
+              onClearSelection={clear}
               actions={batchActions}
             />
             {loading ? (
@@ -476,16 +480,7 @@ export default function InventoryPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[40px]">
-                      <Checkbox
-                        checked={
-                          selectedIds.length === sortedInventory.length &&
-                          sortedInventory.length > 0
-                        }
-                        onCheckedChange={(checked) => {
-                          if (checked) setSelectedIds(sortedInventory.map((i: Loose) => i.id));
-                          else setSelectedIds([]);
-                        }}
-                      />
+                      <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted"
@@ -586,11 +581,8 @@ export default function InventoryPage() {
                     <TableRow key={item.id}>
                       <TableCell className="w-[40px]">
                         <Checkbox
-                          checked={selectedIds.includes(item.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) setSelectedIds((prev) => [...prev, item.id]);
-                            else setSelectedIds((prev) => prev.filter((id) => id !== item.id));
-                          }}
+                          checked={isSelected(String(item.id))}
+                          onCheckedChange={() => toggle(String(item.id))}
                         />
                       </TableCell>
                       <TableCell className="font-mono">

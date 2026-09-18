@@ -1,4 +1,5 @@
-'use client';
+'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useCallback } from 'react';
@@ -117,8 +118,11 @@ export default function TracePage() {
   const [error, setError] = useState('');
   const [_keyword, _setKeyword] = useState('');
   const [traceTypeFilter, setTraceTypeFilter] = useState('all');
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { sortField, sortDirection, handleSort, sortedData } = useTableSort(records, 'trace_no');
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    sortedData,
+    (r) => String(r.id)
+  );
 
   const fetchRecords = useCallback(async () => {
     try {
@@ -517,8 +521,8 @@ export default function TracePage() {
                     { key: 'trace_time', label: t('traceTime'), width: 18 },
                   ]}
                   data={
-                    selectedIds.length > 0
-                      ? sortedData.filter((r) => selectedIds.includes(r.id))
+                    selectedCount > 0
+                      ? sortedData.filter((r) => isSelected(String(r.id)))
                       : sortedData
                   }
                 />
@@ -530,16 +534,7 @@ export default function TracePage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedIds.length === sortedData.length && sortedData.length > 0}
-                      onCheckedChange={() =>
-                        setSelectedIds(
-                          selectedIds.length === sortedData.length
-                            ? []
-                            : sortedData.map((r) => r.id)
-                        )
-                      }
-                    />
+                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                   </TableHead>
                   <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
                   <SortableTableHeader
@@ -593,13 +588,9 @@ export default function TracePage() {
                   sortedData.map((r, index) => (
                     <TableRow key={r.id}>
                       <TableCell>
-                        <Checkbox
-                          checked={selectedIds.includes(r.id)}
-                          onCheckedChange={() =>
-                            setSelectedIds((prev) =>
-                              prev.includes(r.id) ? prev.filter((i) => i !== r.id) : [...prev, r.id]
-                            )
-                          }
+                        <Checkbox
+                          checked={isSelected(String(r.id))}
+                          onCheckedChange={() => toggle(String(r.id))}
                         />
                       </TableCell>
                       <TableCell className="text-center text-muted-foreground">

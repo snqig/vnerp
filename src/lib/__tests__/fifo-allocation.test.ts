@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect, vi } from 'vitest';
+import type { DbConnection } from '@/types/db';
 
 describe('FIFO Allocation Logic', () => {
   describe('allocateFIFO - quantity calculation', () => {
@@ -23,10 +24,14 @@ describe('FIFO Allocation Logic', () => {
       const conn = {
         query: vi.fn().mockResolvedValue([batches]),
         execute: vi.fn(),
+        beginTransaction: vi.fn(),
+        commit: vi.fn(),
+        rollback: vi.fn(),
+        release: vi.fn(),
       };
 
       const { allocateFIFO } = await import('@/lib/fifo-allocation');
-      const result = await allocateFIFO(conn, 1, 1, 100);
+      const result = await allocateFIFO(conn as unknown as DbConnection, 1, 1, 100);
 
       expect(result.allocated_qty).toBe(30);
       expect(result.shortage).toBe(70);
@@ -81,10 +86,14 @@ describe('FIFO Allocation Logic', () => {
       const conn = {
         query: vi.fn().mockResolvedValue([batches]),
         execute: vi.fn(),
+        beginTransaction: vi.fn(),
+        commit: vi.fn(),
+        rollback: vi.fn(),
+        release: vi.fn(),
       };
 
       const { allocateFIFO } = await import('@/lib/fifo-allocation');
-      const result = await allocateFIFO(conn, 1, 1, 120);
+      const result = await allocateFIFO(conn as unknown as DbConnection, 1, 1, 120);
 
       expect(result.allocations).toHaveLength(3);
       expect(result.allocations[0].allocate_qty).toBe(40);
@@ -98,10 +107,14 @@ describe('FIFO Allocation Logic', () => {
       const conn = {
         query: vi.fn().mockResolvedValue([[]]),
         execute: vi.fn(),
+        beginTransaction: vi.fn(),
+        commit: vi.fn(),
+        rollback: vi.fn(),
+        release: vi.fn(),
       };
 
       const { allocateFIFO } = await import('@/lib/fifo-allocation');
-      const result = await allocateFIFO(conn, 1, 1, 50);
+      const result = await allocateFIFO(conn as unknown as DbConnection, 1, 1, 50);
 
       expect(result.allocations).toHaveLength(0);
       expect(result.allocated_qty).toBe(0);
@@ -129,10 +142,14 @@ describe('FIFO Allocation Logic', () => {
       const conn = {
         query: vi.fn().mockResolvedValue([batches]),
         execute: vi.fn(),
+        beginTransaction: vi.fn(),
+        commit: vi.fn(),
+        rollback: vi.fn(),
+        release: vi.fn(),
       };
 
       const { allocateFIFO } = await import('@/lib/fifo-allocation');
-      const result = await allocateFIFO(conn, 1, 1, 100);
+      const result = await allocateFIFO(conn as unknown as DbConnection, 1, 1, 100);
 
       expect(result.allocated_qty).toBe(100);
       expect(result.shortage).toBe(0);
@@ -158,10 +175,14 @@ describe('FIFO Allocation Logic', () => {
       const conn = {
         query: vi.fn().mockResolvedValue([batches]),
         execute: vi.fn(),
+        beginTransaction: vi.fn(),
+        commit: vi.fn(),
+        rollback: vi.fn(),
+        release: vi.fn(),
       };
 
       const { allocateFIFO } = await import('@/lib/fifo-allocation');
-      const result = await allocateFIFO(conn, 1, 1, 30);
+      const result = await allocateFIFO(conn as unknown as DbConnection, 1, 1, 30);
 
       expect(result.allocations[0].version).toBe(5);
     });
@@ -188,10 +209,14 @@ describe('FIFO Allocation Logic', () => {
       const conn = {
         query: queryMock,
         execute: vi.fn(),
+        beginTransaction: vi.fn(),
+        commit: vi.fn(),
+        rollback: vi.fn(),
+        release: vi.fn(),
       };
 
       const { allocateFIFO } = await import('@/lib/fifo-allocation');
-      await allocateFIFO(conn, 1, 1, 50);
+      await allocateFIFO(conn as unknown as DbConnection, 1, 1, 50);
 
       const sql = queryMock.mock.calls[0][0];
       expect(sql).toContain('FOR UPDATE');
@@ -233,7 +258,7 @@ describe('FIFO Allocation Logic', () => {
       };
 
       await expect(
-        executeFIFODeductionWithRetry(conn, allocation, {
+        executeFIFODeductionWithRetry(conn as unknown as DbConnection, allocation, {
           sourceType: 'outbound',
           sourceId: 1,
           sourceNo: 'CK001',
@@ -286,7 +311,7 @@ describe('FIFO Allocation Logic', () => {
         ],
       };
 
-      await executeFIFODeductionWithRetry(conn, allocation, {
+      await executeFIFODeductionWithRetry(conn as unknown as DbConnection, allocation, {
         sourceType: 'outbound',
         sourceId: 1,
         sourceNo: 'CK001',
@@ -306,11 +331,15 @@ describe('FIFO Allocation Logic', () => {
       const conn = {
         query: vi.fn().mockResolvedValue([[]]),
         execute: vi.fn(),
+        beginTransaction: vi.fn(),
+        commit: vi.fn(),
+        rollback: vi.fn(),
+        release: vi.fn(),
       };
 
       const { executeSpecifiedBatchDeduction } = await import('@/lib/fifo-allocation');
       await expect(
-        executeSpecifiedBatchDeduction(conn, {
+        executeSpecifiedBatchDeduction(conn as unknown as DbConnection, {
           batchNo: 'NONEXIST',
           materialId: 1,
           materialCode: 'M001',
@@ -342,11 +371,15 @@ describe('FIFO Allocation Logic', () => {
           ],
         ]),
         execute: vi.fn(),
+        beginTransaction: vi.fn(),
+        commit: vi.fn(),
+        rollback: vi.fn(),
+        release: vi.fn(),
       };
 
       const { executeSpecifiedBatchDeduction } = await import('@/lib/fifo-allocation');
       await expect(
-        executeSpecifiedBatchDeduction(conn, {
+        executeSpecifiedBatchDeduction(conn as unknown as DbConnection, {
           batchNo: 'B001',
           materialId: 1,
           materialCode: 'M001',
@@ -386,7 +419,7 @@ describe('FIFO Allocation Logic', () => {
       };
 
       const { executeSpecifiedBatchDeduction } = await import('@/lib/fifo-allocation');
-      await executeSpecifiedBatchDeduction(conn, {
+      await executeSpecifiedBatchDeduction(conn as unknown as DbConnection, {
         batchNo: 'B001',
         materialId: 1,
         materialCode: 'M001',

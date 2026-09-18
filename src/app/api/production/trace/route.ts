@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbRow } from '@/types/db';
 
 ;
 import { NextRequest } from 'next/server';
@@ -17,17 +18,17 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return errorResponse(ts('k_n38pb6'), 400, 400);
   }
 
-  let traceLinks: SqlValue[] = [];
+  let traceLinks: DbRow[] = [];
 
   if (sn) {
-    traceLinks = await buildTraceChain(sn);
+    traceLinks = (await buildTraceChain(sn)) as DbRow[];
   } else if (batchNo) {
     const rows = await query(
       'SELECT sn FROM prd_product_trace_link WHERE material_batch = ? AND deleted = 0',
       [batchNo]
     );
     if (rows.length > 0) {
-      traceLinks = await buildTraceChain(rows[0].sn);
+      traceLinks = (await buildTraceChain(rows[0].sn)) as DbRow[];
     }
   } else if (workorderNo) {
     const rows = await query(
@@ -35,7 +36,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       [workorderNo]
     );
     if (rows.length > 0) {
-      traceLinks = await buildTraceChain(rows[0].sn);
+      traceLinks = (await buildTraceChain(rows[0].sn)) as DbRow[];
     }
   }
 
@@ -141,7 +142,7 @@ export const POST = withPermission(
 );
 
 async function buildTraceChain(startSn: string): Promise<unknown[]> {
-  const chain: SqlValue[] = [];
+  const chain: DbRow[] = [];
   const visited = new Set<string>();
 
   async function traverse(sn: string, level: number) {

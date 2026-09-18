@@ -1,5 +1,6 @@
 'use client';
 import { useTranslations } from 'next-intl';
+import { logger } from '@/lib/logger';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -229,7 +230,7 @@ export function useStandardCardForm({ mode }: UseStandardCardFormOptions) {
 
       return newId;
     } catch (e) {
-      console.error(ts('k_tr8cpr'), e instanceof Error ? e.message : e, e);
+      logger.error(ts('k_tr8cpr'), e instanceof Error ? e.message : e, e);
       toast({ title: ts('k_ztg78'), variant: 'destructive' });
       return null;
     } finally {

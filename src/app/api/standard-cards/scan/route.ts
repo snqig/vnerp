@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbRow } from '@/types/db';
 
 ;
 import { NextRequest } from 'next/server';
@@ -25,7 +26,7 @@ export const POST = withPermission(
     }
 
     // 通过二维码查找关联的工单
-    const qrRecord = await queryOne<unknown>(
+    const qrRecord = await queryOne(
       'SELECT * FROM qrcode_record WHERE qr_code = ? AND deleted = 0',
       [qr_code]
     );
@@ -62,9 +63,9 @@ export const POST = withPermission(
     );
 
     // 为每个标准卡加载明细数据
-    const cardsWithItems: SqlValue[] = [];
+    const cardsWithItems: DbRow[] = [];
     for (const card of cards) {
-      let items: SqlValue[] = [];
+      let items: DbRow[] = [];
 
       switch (card.type as StandardCardType) {
         case 'color':

@@ -97,7 +97,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   )) as DbRow[];
 
   // 获取流程配置
-  const workflow: unknown = (await query('SELECT * FROM wf_workflow_config WHERE id = ?', [
+  const workflow = (await query('SELECT * FROM wf_workflow_config WHERE id = ?', [
     instance.workflow_id,
   ])) as DbRow[];
 

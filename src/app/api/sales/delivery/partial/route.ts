@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbConnection } from '@/types/db';
 
 ;
 ﻿import { NextRequest } from 'next/server';
@@ -35,7 +36,7 @@ export const POST = withPermission(
     }
 
     try {
-      const result = await transaction(async (conn: mysql.PoolConnection) => {
+      const result = await transaction(async (conn: DbConnection) => {
         // 锁定销售订单行，防止并发提交部分发货申请导致超发（TOCTOU）
         const [orderRows] = await conn.query<mysql.RowDataPacket[]>(
           `SELECT * FROM sal_order WHERE id = ? AND deleted = 0 FOR UPDATE`,

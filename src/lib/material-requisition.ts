@@ -85,7 +85,7 @@ export async function autoGenerateRequisition(
 
     // 3. 创建领料单
     const result = await transaction(async (conn) => {
-      const requisitionNo = generateDocNo(getConfig('mr_prefix') || 'MR');
+      const requisitionNo = generateDocNo((getConfig('mr_prefix') as string) || 'MR');
 
       const [reqResult]: Loose = await conn.execute(
         `INSERT INTO material_requisitions (
@@ -189,7 +189,7 @@ export async function submitOverRequisition(
   const status = overApproval ? 0 : 1; // 需要审批则为待审批，否则直接待出库
 
   try {
-    const requisitionNo = generateDocNo(getConfig('mr_prefix') || 'MR');
+    const requisitionNo = generateDocNo((getConfig('mr_prefix') as string) || 'MR');
 
     const result: Loose = await execute(
       `INSERT INTO material_requisitions (
@@ -264,7 +264,7 @@ export async function submitSupplementaryRequisition(
   const status = dualApproval ? 0 : 1;
 
   try {
-    const requisitionNo = generateDocNo(getConfig('mr_prefix') || 'MR');
+    const requisitionNo = generateDocNo((getConfig('mr_prefix') as string) || 'MR');
     const original = originalRows[0];
 
     const result: Loose = await execute(

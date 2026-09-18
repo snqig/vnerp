@@ -13,11 +13,7 @@
  */
 
 import { test, expect, type Page, type APIResponse } from '@playwright/test';
-
-const TEST_USER = {
-  username: 'admin',
-  password: 'admin123',
-};
+import { login } from '../utils/api-auth';
 
 /** 工装状态枚举（与 ToolStatus.ts 对齐） */
 const TOOL_STATUS = {
@@ -30,23 +26,6 @@ const TOOL_STATUS = {
 
 /** 工装类型：1=网版 2=刀模 3=其他 */
 const TOOL_TYPE = 1;
-
-async function login(page: Page): Promise<void> {
-  await fetch('/api/auth/reset-lock', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'admin' }),
-  }).catch(() => {});
-
-  await page.goto('/en/login', { waitUntil: 'domcontentloaded' });
-  await page.waitForLoadState('networkidle');
-  await page.waitForSelector('input#username', { timeout: 60000 });
-  await page.fill('input#username', TEST_USER.username);
-  await page.fill('input#password', TEST_USER.password);
-  await page.getByRole('button', { name: 'Login' }).click();
-  await page.waitForURL('**/en/dashboard', { timeout: 60000 });
-  await page.waitForTimeout(1500);
-}
 
 async function parseJson(resp: APIResponse): Promise<Loose> {
   return (await resp.json()) as Loose;

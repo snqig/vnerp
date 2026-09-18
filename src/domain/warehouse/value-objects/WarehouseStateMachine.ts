@@ -1,4 +1,5 @@
 import { t } from '@/lib/server-translate';
+import { logger } from '@/lib/logger';
 
 // 仓库单据状态机
 // 定义入库单和出库单的状态流转规则
@@ -198,7 +199,7 @@ export interface InventoryTransaction {
 export class InventoryTransactionLogger {
   static async log(transaction: InventoryTransaction): Promise<void> {
     // 这里可以将日志保存到数据库或发送到日志服务
-    console.warn('[InventoryTransaction]', {
+    logger.warn('[InventoryTransaction]', {
       transType: transaction.transType,
       materialName: transaction.materialName,
       quantity: transaction.quantity,

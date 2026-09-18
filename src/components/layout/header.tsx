@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef as _useRef } from 'react';
 import { Link, usePathname } from '@/i18n/navigation';
+import type { DbRow } from '@/types/db';
 import {
   Bell,
   User,
@@ -107,7 +108,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
   const router = useRouter();
   const pathname = usePathname();
   const { menus: authMenus, logout } = useAuth();
-  const { companyName } = useCompanyName();
+  const { companyName, logoUrl } = useCompanyName();
   const t = useTranslations('Nav');
   const ta = useTranslations('Auth');
   const tc = useTranslations('Common');
@@ -249,7 +250,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
         {navigationMode !== 'sidebar' && (
           <div className="flex items-center gap-2 mr-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/loginlogo.png" alt={ts('k_1jq3bkn')} className="w-7 h-7 rounded-lg object-contain" />
+            <img src={logoUrl} alt={ts('k_1jq3bkn')} className="w-7 h-7 rounded-lg object-contain" />
             <span
               suppressHydrationWarning
               className="font-bold text-sm text-foreground hidden md:inline"

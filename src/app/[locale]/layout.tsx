@@ -11,12 +11,9 @@ import { ToastProviderComponent } from '@/components/ui/toast';
 import { SnowAdminThemeProvider } from '@/hooks/useSnowAdminTheme';
 import SystemConfigInitializer from '@/components/SystemConfigInitializer';
 import { HtmlLangSetter } from '@/components/HtmlLangSetter';
-import { query } from '@/lib/db';
 import { getMenusByToken } from '@/lib/menu-service';
-
-let cachedCompanyName: string | null = null;
-let cacheTimestamp: number = 0;
-const CACHE_TTL = 5 * 60 * 1000;
+import { getCompanyProfile, resolveCompanyDisplayName } from '@/lib/company-profile';
+import { CompanyProfileProvider } from '@/components/providers/company-profile-provider';
 
 async function getMessagesByLocale(locale: string) {
   try {
@@ -24,28 +21,6 @@ async function getMessagesByLocale(locale: string) {
   } catch {
     return (await import(`../../../messages/zh-CN.json`)).default;
   }
-}
-
-async function getCompanyName(locale: string): Promise<string> {
-  const tc = await getTranslations({ locale, namespace: 'Common' });
-  const now = Date.now();
-  if (cachedCompanyName && now - cacheTimestamp < CACHE_TTL) {
-    return cachedCompanyName;
-  }
-  try {
-    const rows = await query<{ config_value: string }>(
-      `SELECT config_value FROM sys_config WHERE config_key IN ('company_name', 'company_short_name') ORDER BY FIELD(config_key, 'company_name', 'company_short_name') LIMIT 1`
-    );
-    if (Array.isArray(rows) && rows.length > 0 && rows[0]?.config_value) {
-      cachedCompanyName = rows[0].config_value;
-      cacheTimestamp = now;
-      return cachedCompanyName!;
-    }
-  } catch {
-    if (cachedCompanyName) return cachedCompanyName;
-  }
-  const messages = await getMessagesByLocale(locale);
-  return messages?.Common?.companyName || tc('companyName');
 }
 
 /**
@@ -93,7 +68,12 @@ export async function generateMetadata({
   const ts = await getTranslations({ locale, namespace: 'Common' });
   const messages = await getMessagesByLocale(locale);
 
-  const title = messages?.Common?.appTitle || 'VNERP';
+  // 标题取自公司档案（即 settings/organization 的「公司全称」），不硬编码公司名
+  const profile = await getCompanyProfile();
+  const title = resolveCompanyDisplayName(
+    profile,
+    messages?.Common?.companyName || ts('companyName')
+  );
   const description = messages?.Common?.appDescription || ts('k_1iivgid');
 
   return {
@@ -119,21 +99,30 @@ export default async function LocaleLayout({
   }
 
   const messages = await getMessages();
-  const _companyName = await getCompanyName(locale);
   const initialAuth = await prefetchMenus();
+  // 公司档案（`sys_company`）：`generateMetadata` 已读取过，此处命中同一进程内缓存，
+  // 不会有额外查询。透传给客户端用于播种，使首帧即显示真实公司名 / LOGO ——
+  // 登录页处于未登录状态，无法由客户端接口在首帧前取到品牌信息。
+  const profile = await getCompanyProfile();
 
   return (
     <>
       <HtmlLangSetter locale={locale} />
       <IntlProvider locale={locale} messages={messages}>
-        <SnowAdminThemeProvider>
-          <AuthProvider initialAuth={initialAuth}>
-            <SystemConfigInitializer />
-            <ToastProviderComponent>
-              <AuthGuard>{children}</AuthGuard>
-            </ToastProviderComponent>
-          </AuthProvider>
-        </SnowAdminThemeProvider>
+        <CompanyProfileProvider
+          fullName={profile.fullName}
+          shortName={profile.shortName}
+          logo={profile.logo}
+        >
+          <SnowAdminThemeProvider>
+            <AuthProvider initialAuth={initialAuth}>
+              <SystemConfigInitializer />
+              <ToastProviderComponent>
+                <AuthGuard>{children}</AuthGuard>
+              </ToastProviderComponent>
+            </AuthProvider>
+          </SnowAdminThemeProvider>
+        </CompanyProfileProvider>
       </IntlProvider>
     </>
   );

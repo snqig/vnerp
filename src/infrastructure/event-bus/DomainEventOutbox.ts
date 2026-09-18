@@ -1,10 +1,11 @@
 import { execute, query } from '@/lib/db';
+import type { DbConnection } from '@/types/db';
 import { DomainEvent } from '@/domain/shared/DomainTypes';
 import type { PoolConnection } from 'mysql2/promise';
 
 export class DomainEventOutbox {
   static async saveEvents(
-    conn: PoolConnection,
+    conn: DbConnection,
     aggregateType: string,
     aggregateId: number,
     events: DomainEvent[]

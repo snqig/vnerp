@@ -213,7 +213,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       },
     ];
     const matMap: Record<string, number> = {};
-    const matInfoMap: Record<string, unknown> = {};
+    const matInfoMap: Record<string, DbRow> = {};
     for (let i = 1; i <= 50; i++) {
       const mt = matTypes[(i - 1) % matTypes.length];
       const spec = mt.specs[(i - 1) % mt.specs.length];
@@ -377,7 +377,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== 1. 销售订单 (sal_order + sal_order_detail) =====
     const orderIds: number[] = [];
-    const orderData: SqlValue[] = [];
+    const orderData: DbRow[] = [];
     for (let i = 1; i <= TOTAL_ORDERS; i++) {
       const customer = customers[(i - 1) % customers.length];
       const orderDate = randomDate(yearStart, now);
@@ -452,7 +452,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== 2. 生产工单 (prod_work_order) =====
     const woIds: number[] = [];
-    const woData: SqlValue[] = [];
+    const woData: DbRow[] = [];
     for (let i = 1; i <= TOTAL_ORDERS; i++) {
       const od = orderData[(i - 1) % orderData.length];
       const planStart = new Date(new Date(od.orderDate).getTime() + randomInt(3, 10) * 86400000)
@@ -510,7 +510,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== 3. 采购入库 (inv_inbound_order + inv_inbound_item + inv_material_label) =====
     const labelIds: number[] = [];
-    const labelData: SqlValue[] = [];
+    const labelData: DbRow[] = [];
     for (let i = 1; i <= TOTAL_ORDERS; i++) {
       const wo = woData[(i - 1) % woData.length];
       const supplier = suppliers[(i - 1) % suppliers.length];
@@ -646,7 +646,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== 4. 分切管理 (inv_cutting_record + inv_cutting_detail) =====
     const cuttingLabelIds: number[] = [];
-    const cuttingLabelData: SqlValue[] = [];
+    const cuttingLabelData: DbRow[] = [];
     for (let i = 1; i <= 30; i++) {
       const srcLabel = labelData[(i - 1) % labelData.length];
       if (!srcLabel.width) continue;
@@ -732,7 +732,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== 5. 工艺流程卡 (prd_process_card + prd_process_card_material) =====
     const cardIds: number[] = [];
-    const cardData: SqlValue[] = [];
+    const cardData: DbRow[] = [];
     for (let i = 1; i <= TOTAL_ORDERS; i++) {
       const wo = woData[(i - 1) % woData.length];
       const mainLabel = labelData[(i - 1) % labelData.length];

@@ -1,4 +1,5 @@
 import { t } from '@/lib/server-translate';
+import { SalesOrderStatusCode, normalizeSalesOrderStatus } from '@/lib/order-status';
 
 import { DomainError } from '../../shared/DomainTypes';
 
@@ -52,30 +53,52 @@ export class SalesOrderStatus {
     return new SalesOrderStatus(value as SalesStatus);
   }
 
+  /**
+   * 从库内状态码构造。
+   *
+   * ⚠️ 状态码契约的唯一真相源是 src/lib/order-status.ts
+   *    （依据 live 库 sal_order.status 列注释：1-待确认 … 5-已取消）。
+   *
+   * 修复前的旧表是 0=draft,1=submitted,2=approved,3=partially_shipped,4=completed,6=voided,9=closed，
+   * 与库内契约在 1/2/3 上整体错位：API 层写 3 表示"已审核"，本表读 3 却是"部分发货"，
+   * 导出与列表页又是第三套。现统一为「先经 normalizeSalesOrderStatus 归一到 1..5，再回映领域态」，
+   * 旧码（0/6/9 与 10-60 家族）自动兼容，不再抛错。
+   */
   static fromDbCode(code: number): SalesOrderStatus {
+    const normalized = normalizeSalesOrderStatus(code);
+    if (normalized === null) {
+      throw new DomainError(`无效的销售单状态码: ${code}`);
+    }
     const map: Record<number, SalesStatus> = {
-      0: 'draft',
-      1: 'submitted',
-      2: 'approved',
-      3: 'partially_shipped',
-      4: 'completed',
-      6: 'voided',
-      9: 'closed',
+      [SalesOrderStatusCode.PENDING]: 'draft',
+      // 契约态 2「已确认」回映为领域态 submitted，
+      // 以便 SalesOrder.approve()（canApprove 仅 submitted 为真）仍可正常流转。
+      [SalesOrderStatusCode.CONFIRMED]: 'submitted',
+      [SalesOrderStatusCode.PARTIALLY_SHIPPED]: 'partially_shipped',
+      [SalesOrderStatusCode.COMPLETED]: 'completed',
+      [SalesOrderStatusCode.CANCELLED]: 'voided',
     };
-    const status = map[code];
-    if (!status) throw new DomainError(`无效的销售单状态码: ${code}`);
-    return new SalesOrderStatus(status);
+    return new SalesOrderStatus(map[normalized]);
   }
 
+  /**
+   * 映射到库内状态码（契约码 1..5）。
+   *
+   * 契约只有 5 个态，而领域层有 7 个：其中
+   *   submitted / approved  → 同为 2（已确认）
+   *   completed / closed    → 同为 4（已完成）
+   * 即「已提交且已审核」「已完成且已关闭」在库内不可区分，这是本契约的既定取舍。
+   * 领域层的事件与流转规则不受影响（仍按细粒度状态运行），只是落库时被折叠。
+   */
   toDbCode(): number {
     const map: Record<SalesStatus, number> = {
-      draft: 0,
-      submitted: 1,
-      approved: 2,
-      partially_shipped: 3,
-      completed: 4,
-      voided: 6,
-      closed: 9,
+      draft: SalesOrderStatusCode.PENDING,
+      submitted: SalesOrderStatusCode.CONFIRMED,
+      approved: SalesOrderStatusCode.CONFIRMED,
+      partially_shipped: SalesOrderStatusCode.PARTIALLY_SHIPPED,
+      completed: SalesOrderStatusCode.COMPLETED,
+      closed: SalesOrderStatusCode.COMPLETED,
+      voided: SalesOrderStatusCode.CANCELLED,
     };
     return map[this.value];
   }

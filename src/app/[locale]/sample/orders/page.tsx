@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { MainLayout } from '@/components/layout';
@@ -96,7 +97,6 @@ export default function SampleOrdersPage() {
   const debouncedKeyword = useDebounce(searchKeyword, 300);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedCustomer, setSelectedCustomer] = useState('all');
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
   const [pagination, setPagination] = useState({
@@ -151,6 +151,10 @@ export default function SampleOrdersPage() {
       return 0;
     });
   }, [orders, sortField, sortOrder]);
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    sortedOrders,
+    (r) => String(r.id)
+  );
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -342,16 +346,8 @@ export default function SampleOrdersPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const toggleSelect = (id: number) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedIds(next);
-  };
-  const toggleSelectAll = () => {
-    if (selectedIds.size === sortedOrders.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(sortedOrders.map((o) => o.id)));
-  };
+  const toggleSelect = (id: number) => toggle(String(id));
+  const toggleSelectAll = () => toggleAll();;
 
   const _exportColumns = [
     { key: 'notify_date', header: t('notifyDate') },
@@ -380,7 +376,7 @@ export default function SampleOrdersPage() {
 
   const _handlePrint = () => {
     const items =
-      selectedIds.size > 0 ? sortedOrders.filter((o) => selectedIds.has(o.id)) : sortedOrders;
+      selectedCount > 0 ? sortedOrders.filter((o) => isSelected(String(o.id))) : sortedOrders;
     if (items.length === 0) {
       toast({ title: t('noDataToPrint'), variant: 'destructive' });
       return;
@@ -600,8 +596,8 @@ export default function SampleOrdersPage() {
                     },
                   ]}
                   data={
-                    selectedIds.size > 0
-                      ? sortedOrders.filter((o) => selectedIds.has(o.id))
+                    selectedCount > 0
+                      ? sortedOrders.filter((o) => isSelected(String(o.id)))
                       : sortedOrders
                   }
                 />
@@ -642,7 +638,7 @@ export default function SampleOrdersPage() {
             <CardTitle>{t('sampleOrderList')}</CardTitle>
             <CardDescription>
               {t('totalOrders', { total: pagination.total })}
-              {selectedIds.size > 0 ? `，${t('selectedItems', { count: selectedIds.size })}` : ''}
+              {selectedCount > 0 ? `，${t('selectedItems', { count: selectedCount })}` : ''}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -661,7 +657,7 @@ export default function SampleOrdersPage() {
                     <tr className="border-b bg-muted/50">
                       <th className="h-12 px-4 text-left align-middle font-medium w-[40px]">
                         <Checkbox
-                          checked={selectedIds.size > 0 && selectedIds.size === sortedOrders.length}
+                          checked={allSelected}
                           onCheckedChange={toggleSelectAll}
                         />
                       </th>
@@ -689,11 +685,11 @@ export default function SampleOrdersPage() {
                     {sortedOrders.map((order, index) => (
                       <tr
                         key={order.id}
-                        className={`border-b transition-colors hover:bg-muted/50 ${selectedIds.has(order.id) ? 'bg-primary/5' : ''}`}
+                        className={`border-b transition-colors hover:bg-muted/50 ${isSelected(String(order.id)) ? 'bg-primary/5' : ''}`}
                       >
                         <td className="p-4">
                           <Checkbox
-                            checked={selectedIds.has(order.id)}
+                            checked={isSelected(String(order.id))}
                             onCheckedChange={() => toggleSelect(order.id)}
                           />
                         </td>

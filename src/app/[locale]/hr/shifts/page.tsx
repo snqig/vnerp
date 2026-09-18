@@ -22,6 +22,8 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Clock, Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useRowSelection } from '@/lib/useRowSelection';
+import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
 interface Shift {
   id: number;
@@ -134,6 +136,30 @@ export default function ShiftsPage() {
     !search || s.shiftName.toLowerCase().includes(search.toLowerCase())
   );
 
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
+    useRowSelection(filtered, (r) => String(r.id));
+  const [deleting, setDeleting] = useState(false);
+
+  const handleBatchDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
+    setDeleting(true);
+    let okCount = 0; let failMsg = '';
+    for (const id of ids) {
+      try {
+        const res = await authFetch(`/api/hr/shifts?id=${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.code === 200) okCount++; else failMsg = data.message || failMsg;
+      } catch { failMsg = tc('error'); }
+    }
+    setDeleting(false);
+    if (okCount > 0) toast.success(tc('batchDeleteSuccess', { count: okCount }));
+    if (failMsg) toast.error(failMsg);
+    clear();
+    fetchShifts();
+  };
+
   return (
     <MainLayout title={t('shift') || ts('k_4ndpw8')}>
       <div className="container mx-auto py-6 space-y-6">
@@ -161,9 +187,13 @@ export default function ShiftsPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
+            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
+                  </TableHead>
                   <TableHead>{t('shiftName') || ts('k_cc9p5i')}</TableHead>
                   <TableHead>{t('startTime') || ts('k_j6x7pa')}</TableHead>
                   <TableHead>{t('endTime') || ts('k_9uebcl')}</TableHead>
@@ -177,6 +207,9 @@ export default function ShiftsPage() {
               <TableBody>
                 {filtered.map((shift) => (
                   <TableRow key={shift.id}>
+                    <TableCell>
+                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(shift.id))} onChange={() => toggle(String(shift.id))} aria-label={tc('selectRow', { id: shift.id })} />
+                    </TableCell>
                     <TableCell className="font-medium">{shift.shiftName}</TableCell>
                     <TableCell>{shift.startTime}</TableCell>
                     <TableCell>{shift.endTime}</TableCell>
@@ -202,7 +235,7 @@ export default function ShiftsPage() {
                 ))}
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       {t('noData') || ts('k_6tzr61')}
                     </TableCell>
                   </TableRow>

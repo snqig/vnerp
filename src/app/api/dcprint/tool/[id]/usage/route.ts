@@ -36,7 +36,7 @@ export const POST = withPermission(
         processId: body.processId,
         processName: body.processName,
         useCount: body.useCount,
-        operatorId: userInfo?.id,
+        operatorId: userInfo.userId,
         operatorName: userInfo?.username,
         remark: body.remark,
       });

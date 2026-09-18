@@ -5,6 +5,7 @@
  * 统一处理认证、权限和错误处理逻辑。
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import {
   extractToken,
   verifyToken,
@@ -213,7 +214,7 @@ export function withAuthAndErrorHandler(
       if (error instanceof Error && isUniqueViolation(error)) {
         return errorResponse(mapUniqueErrorToMessage(error), 409, 409);
       }
-      console.error(`[API Error] ${options?.errorMessage || '请求处理失败'}:`, error);
+      logger.error(`[API Error] ${options?.errorMessage || '请求处理失败'}:`, error);
       return errorResponse(options?.errorMessage || '服务器内部错误', 500);
     }
   };

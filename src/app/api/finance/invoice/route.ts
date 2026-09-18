@@ -139,7 +139,7 @@ export const POST = withPermission(
         ]
       );
 
-      const invoiceId = result.insertId;
+      const invoiceId = (result as { insertId: number }).insertId;
 
       for (let i = 0; i < body.items.length; i++) {
         const item = body.items[i];

@@ -12,6 +12,7 @@ import {
 import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
+import { AppError } from '@/lib/error-handling';
 import { PurchaseApplicationService } from '@/application/services/PurchaseApplicationService';
 import { CurrencyApplicationService } from '@/application/services/CurrencyApplicationService';
 import { RepositoryRegistry } from '@/infrastructure/RepositoryRegistry';
@@ -40,12 +41,22 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
   const service = getPurchaseService();
-  const result = await service.listOrders(status, page, pageSize, {
-    keyword: keyword || undefined,
-    supplierId: supplierId ? parseInt(supplierId) : undefined,
-    startDate: startDate || undefined,
-    endDate: endDate || undefined,
-  });
+  let result;
+  try {
+    result = await service.listOrders(status, page, pageSize, {
+      keyword: keyword || undefined,
+      supplierId: supplierId ? parseInt(supplierId) : undefined,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+    });
+  } catch (error) {
+    // status 为非法/存量状态码（如 2、3、abc）时，领域层 PurchaseOrderStatus.fromDbCode
+    // 会抛 DomainError。withAuthAndErrorHandler 只映射 AppError，若不在此转译会被吞成 500。
+    if (error instanceof DomainError) {
+      throw AppError.badRequest(error.message);
+    }
+    throw error;
+  }
 
   const serializedData = result.data.map((order) => ({
     id: order.id,

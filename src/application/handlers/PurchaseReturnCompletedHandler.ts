@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbConnection } from '@/types/db';
 
 import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { PurchaseReturnCompletedEvent } from '@/domain/purchase/events/PurchaseReturnEvents';
@@ -69,7 +70,7 @@ export class PurchaseReturnCompletedHandler implements EventHandler<PurchaseRetu
     });
   }
 
-  private async checkOrderReturnStatus(conn: PoolConnection, orderId: number): Promise<void> {
+  private async checkOrderReturnStatus(conn: DbConnection, orderId: number): Promise<void> {
   const ts = await getTranslations('Common');
     const [rows] = await conn.execute<RowDataPacket[]>(
       `SELECT

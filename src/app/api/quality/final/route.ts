@@ -17,7 +17,7 @@ import type { DbRow } from '@/types/db';
 async function queryPaginatedLocal(
   sql: string,
   countSql: string,
-  values: DbRow[],
+  values: SqlValue[],
   pagination: { page: number; pageSize: number }
 ) {
   const { page, pageSize } = pagination;

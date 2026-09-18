@@ -21,7 +21,8 @@ import {
   verifyInventoryNotNegative,
   TestResult,
 } from './utils';
-import { query, execute, transaction } from '@/lib/db';
+import { query, execute, transaction, transactionWithRetry } from '@/lib/db';
+import { upsertInventoryBatch, upsertInventorySummary } from '@/lib/inventory-write';
 
 // P0-2 基线重置已完成（Migration 019）：inv_inbound_order.operator_id/operator_name/warehouse_code/warehouse_name 已补齐
 // 表名映射：po_purchase_order → pur_purchase_order，po_purchase_order_item → pur_purchase_order_line
@@ -126,7 +127,8 @@ describe('采购入库并发测试', () => {
       // 审核入库单的函数
       const approveInbound = async (inboundId: number): Promise<TestResult> => {
         try {
-          await transaction(async (conn) => {
+          // QA BUG-001 修复：外层 transactionWithRetry 兜底重试 InnoDB 死锁（errno 1213/1205）
+          await transactionWithRetry(async (conn) => {
             // 获取入库单信息并加锁
             const [inboundRows]: any = await conn.execute(
               `SELECT id, order_no, status, warehouse_id
@@ -154,69 +156,31 @@ describe('采购入库并发测试', () => {
             for (const item of itemRows) {
               const qty = parseFloat(String(item.quantity));
 
-              // 检查是否已存在该批次的库存
-              const [existingBatch]: any = await conn.execute(
-                `SELECT id, quantity FROM inv_inventory_batch
-                 WHERE batch_no = ? AND material_id = ? AND warehouse_id = ? AND deleted = 0
-                 FOR UPDATE`,
-                [item.batch_no, item.material_id, inbound.warehouse_id]
-              );
+              // ---- QA BUG-001 修复：统一锁序（汇总行 → 批次行）+ 一律 UPSERT ----
+              // 1) 汇总表 inv_inventory 先写。UPSERT 不持间隙锁。
+              await upsertInventorySummary(conn, {
+                materialId: item.material_id,
+                materialName: item.material_name,
+                warehouseId: inbound.warehouse_id,
+                quantity: qty,
+                unit: '个',
+              });
 
-              if (existingBatch && existingBatch.length > 0) {
-                // 批次已存在，增加数量
-                await conn.execute(
-                  `UPDATE inv_inventory_batch SET
-                    quantity = quantity + ?,
-                    available_qty = available_qty + ?,
-                    update_time = NOW()
-                  WHERE id = ?`,
-                  [qty, qty, existingBatch[0].id]
-                );
-              } else {
-                // 创建新批次
-                await conn.execute(
-                  `INSERT INTO inv_inventory_batch (
-                    batch_no, material_id, material_name, warehouse_id, quantity, available_qty,
-                    status, create_time, update_time, deleted
-                  ) VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW(), 0)`,
-                  [item.batch_no, item.material_id, '测试物料', inbound.warehouse_id, qty, qty]
-                );
-              }
-
-              // 检查是否已存在该物料的库存记录
-              const [existingInventory]: any = await conn.execute(
-                `SELECT id, quantity, available_qty FROM inv_inventory
-                 WHERE material_id = ? AND warehouse_id = ? AND deleted = 0
-                 FOR UPDATE`,
-                [item.material_id, inbound.warehouse_id]
-              );
-
-              if (existingInventory && existingInventory.length > 0) {
-                // 更新库存
-                await conn.execute(
-                  `UPDATE inv_inventory SET
-                    quantity = quantity + ?,
-                    available_qty = available_qty + ?,
-                    update_time = NOW()
-                  WHERE id = ?`,
-                  [qty, qty, existingInventory[0].id]
-                );
-              } else {
-                // 创建库存记录
-                await conn.execute(
-                  `INSERT INTO inv_inventory (
-                    material_id, warehouse_id, quantity, available_qty, batch_no,
-                    create_time, update_time, deleted
-                  ) VALUES (?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
-                  [
-                    item.material_id,
-                    inbound.warehouse_id,
-                    qty,
-                    qty,
-                    item.batch_no,
-                  ]
-                );
-              }
+              // 2) 批次表 inv_inventory_batch 后写，同样 UPSERT。
+              //    原实现为「SELECT ... FOR UPDATE 判存在 → INSERT/UPDATE」：
+              //    批次行尚不存在时，FOR UPDATE 会对唯一索引间隙加**间隙锁**
+              //    （间隙锁互相兼容，6 个事务可同时持有），
+              //    随后 INSERT 需要**插入意向锁**（与其它事务的间隙锁互斥）
+              //    → 环形等待 → InnoDB 死锁，实测 6 并发仅 1 成功。
+              await upsertInventoryBatch(conn, {
+                batchNo: item.batch_no,
+                materialId: item.material_id,
+                materialName: item.material_name,
+                warehouseId: inbound.warehouse_id,
+                quantity: qty,
+                unitPrice: 0,
+                status: 1,
+              });
 
               // 记录库存流水
               await conn.execute(
@@ -296,6 +260,11 @@ describe('采购入库并发测试', () => {
       // 断言
       expect(report.successCount + report.failureCount).toBe(concurrentCount);
       expect(notNegativeCheck.valid).toBe(true);
+
+      // QA BUG-001 回归断言：消除「间隙锁 → 插入意向锁」死锁后，6 并发审核应全部成功。
+      // 修复前实测为 1 成功 / 5 死锁（16.67%）。
+      expect(report.failureCount).toBe(0);
+      expect(report.successCount).toBe(concurrentCount);
     },
     TEST_CONFIG.TEST_TIMEOUT * 2
   );
@@ -320,24 +289,24 @@ describe('采购入库并发测试', () => {
           const orderNo = `IN_OVER_${Date.now()}_${index}`;
           const poNo = `PO_OVER_${Date.now()}_${index}`;
 
-          await transaction(async (conn) => {
-            // 创建采购订单
+          await transactionWithRetry(async (conn) => {
+            // 创建采购订单（实际表名 pur_purchase_order；order_date 为 NOT NULL 必须提供）
             const [poResult]: any = await conn.execute(
-              `INSERT INTO po_purchase_order (
-                order_no, supplier_id, supplier_name, status, total_amount,
-                operator_id, operator_name, create_time, update_time, deleted
-              ) VALUES (?, 1, '测试供应商', 2, 0, 1, '测试操作员', NOW(), NOW(), 0)`,
+              `INSERT INTO pur_purchase_order (
+                po_no, supplier_id, supplier_name, order_date, status, total_amount,
+                create_time, update_time, deleted
+              ) VALUES (?, 1, '测试供应商', NOW(), 2, 0, NOW(), NOW(), 0)`,
               [poNo]
             );
             const poId = poResult.insertId;
 
-            // 创建采购订单明细
+            // 创建采购订单明细（实际表名 pur_purchase_order_line，主键列为 po_id / order_qty）
             await conn.execute(
-              `INSERT INTO po_purchase_order_item (
-                order_id, material_id, material_name, quantity, unit_price,
+              `INSERT INTO pur_purchase_order_line (
+                po_id, line_no, material_id, material_code, material_name, order_qty, unit_price,
                 received_qty, create_time
-              ) VALUES (?, ?, ?, ?, 0, 0, NOW())`,
-              [poId, testMat.id, testMat.material_name, poQuantity]
+              ) VALUES (?, 1, ?, ?, ?, ?, 0, 0, NOW())`,
+              [poId, testMat.id, testMat.material_code, testMat.material_name, poQuantity]
             );
 
             // 创建入库单（超收）
@@ -412,31 +381,14 @@ describe('采购入库并发测试', () => {
                 );
               }
 
-              // 创建库存记录
-              const [existingInventory]: any = await conn.execute(
-                `SELECT id, quantity FROM inv_inventory
-                 WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE`,
-                [item.material_id, inbound.warehouse_id]
-              );
-
-              if (existingInventory && existingInventory.length > 0) {
-                await conn.execute(
-                  `UPDATE inv_inventory SET
-                    quantity = quantity + ?,
-                    available_qty = available_qty + ?,
-                    update_time = NOW()
-                  WHERE id = ?`,
-                  [qty, qty, existingInventory[0].id]
-                );
-              } else {
-                await conn.execute(
-                  `INSERT INTO inv_inventory (
-                    material_id, warehouse_id, quantity, available_qty,
-                    create_time, update_time, deleted
-                  ) VALUES (?, ?, ?, ?, NOW(), NOW(), 0)`,
-                  [item.material_id, inbound.warehouse_id, qty, qty]
-                );
-              }
+              // 写入库存（统一走 UPSERT 原语，避免「SELECT ... FOR UPDATE 判存在 → INSERT」的间隙锁死锁）
+              await upsertInventorySummary(conn, {
+                materialId: item.material_id,
+                materialName: testMat.material_name,
+                warehouseId: inbound.warehouse_id,
+                quantity: qty,
+                unit: '个',
+              });
             }
 
             // 更新入库单状态
@@ -474,7 +426,13 @@ describe('采购入库并发测试', () => {
       );
       expect(notNegativeCheck.valid).toBe(true);
 
-      console.log(`\n结果分析:`);
+      // 超收场景的预期结果是「全部被业务规则拒绝」，且拒绝原因必须是超收校验，
+      // 而非 SQL 错误。原实现误用不存在的 po_purchase_order 表名，
+      // 导致 4/4 因「Table doesn't exist」失败，却因断言过弱而被判为"通过"（假绿灯）。
+      expect(report.successCount).toBe(0);
+      expect(report.errors.length).toBeGreaterThan(0);
+      expect(report.errors.every((e) => /超收校验失败/.test(e.error))).toBe(true);
+
       console.log(`- 成功数量: ${report.successCount}`);
       console.log(`- 失败数量: ${report.failureCount}`);
       console.log(`- 最终库存: ${notNegativeCheck.quantity}`);

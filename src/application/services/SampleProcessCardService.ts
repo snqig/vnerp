@@ -24,6 +24,7 @@ import type {
   SampleProcessStepInput,
 } from '@/lib/validators/sample-card.schema';
 import type { ResultSetHeader } from 'mysql2/promise';
+import type { DbResult } from '@/types/db';
 
 // ===== 类型定义 =====
 

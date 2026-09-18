@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DepartmentTable } from './department-table';
+import { CompanyLogoUploader } from './company-logo-uploader';
 import { authFetch } from '@/lib/auth-fetch';
 
 // 企业信息接口
@@ -64,6 +65,8 @@ interface Company {
   fax: string;
   postcode: string;
   description: string;
+  /** LOGO 资源路径（`sys_company.logo`），由 CompanyLogoUploader 维护 */
+  logo?: string | null;
 }
 
 // 部门接口
@@ -698,6 +701,10 @@ export default function OrganizationPage() {
                   </div>
                 ) : company ? (
                   <div className="space-y-6">
+                    <CompanyLogoUploader
+                      logo={company.logo ?? null}
+                      onChange={(logo) => setCompany({ ...company, logo })}
+                    />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>{tc('companyFullName')}</Label>
@@ -1022,13 +1029,22 @@ export default function OrganizationPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">{tc('topDepartment')}</SelectItem>
-                  {departments
-                    .filter((d) => d.id !== deptForm.id) // 排除自己，避免循环引用
-                    .map((dept) => (
-                      <SelectItem key={dept.id} value={String(dept.id)}>
-                        {dept.dept_name}
-                      </SelectItem>
-                    ))}
+                  {(() => {
+                    // 去重兜底：若 DB 因 seed 重复执行产生同名部门，下拉只显示每个名称的第一项
+                    const seen = new Set<string>();
+                    return departments
+                      .filter((d) => d.id !== deptForm.id) // 排除自己，避免循环引用
+                      .filter((d) => {
+                        if (seen.has(d.dept_name)) return false;
+                        seen.add(d.dept_name);
+                        return true;
+                      })
+                      .map((dept) => (
+                        <SelectItem key={dept.id} value={String(dept.id)}>
+                          {dept.dept_name}
+                        </SelectItem>
+                      ));
+                  })()}
                 </SelectContent>
               </Select>
             </div>

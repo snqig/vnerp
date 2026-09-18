@@ -68,10 +68,22 @@ import {
 
 describe('物料领用管理 - material-requisition', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // resetAllMocks 会清空 mockReturnValueOnce/mockRejectedValueOnce 队列，
+    // 避免用例间 once 值泄漏（clearAllMocks 不清 once 队列，曾导致异常路径用例误判成功/失败）
+    vi.resetAllMocks();
+    vi.mocked(transaction).mockImplementation((fn: any) => fn(mockConn));
+    vi.mocked(query).mockResolvedValue([]);
+    vi.mocked(execute).mockResolvedValue([{ insertId: 0 }, []] as any);
+    vi.mocked(getConfig).mockImplementation((key?: string): unknown => {
+      const config: Record<string, unknown> = {
+        mr_prefix: 'MR',
+        over_requisition_approval: true,
+        replenish_dual_approval: true,
+      };
+      return key ? config[key] : { ...config };
+    });
     mockConn.query.mockReset();
     mockConn.execute.mockReset();
-    vi.mocked(transaction).mockImplementation((fn: any) => fn(mockConn));
   });
 
   // ============================================================

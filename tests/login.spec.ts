@@ -4,11 +4,12 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { resetAdminLock } from './utils/api-auth';
 
 const TEST_USERS = {
   admin: {
     username: 'admin',
-    password: '521223',
+    password: 'admin123',
     role: '超级管理员'
   },
   invalid: {
@@ -29,17 +30,13 @@ test.describe('登录模块测试', () => {
    * TC-LOGIN-001: 正常登录流程
    */
   test('TC-LOGIN-001: 使用有效凭据正常登录', async ({ page }) => {
-    await fetch('/api/auth/reset-lock', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin' }),
-    }).catch(() => {});
+    await resetAdminLock();
 
     await page.fill('input#username', TEST_USERS.admin.username);
     await page.fill('input#password', TEST_USERS.admin.password);
     await page.locator('input#password').press('Enter');
 
-    await expect(page).toHaveURL('/', { timeout: 60000 });
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 60000 });
 
     await expect(page.locator('nav').first()).toBeVisible({ timeout: 10000 });
   });
@@ -55,7 +52,8 @@ test.describe('登录模块测试', () => {
     const errorMessage = page.locator('[data-testid="login-error"]');
     await expect(errorMessage).toBeVisible({ timeout: 10000 });
 
-    await expect(page).toHaveURL('/login');
+    // next-intl 会给无前缀路径补 locale（/login → /zh-CN/login），故用包含匹配
+    await expect(page).toHaveURL(/\/login/);
   });
 
   /**
@@ -69,7 +67,8 @@ test.describe('登录模块测试', () => {
     const errorMessage = page.locator('[data-testid="login-error"]');
     await expect(errorMessage).toBeVisible({ timeout: 10000 });
 
-    await expect(page).toHaveURL('/login');
+    // next-intl 会给无前缀路径补 locale（/login → /zh-CN/login），故用包含匹配
+    await expect(page).toHaveURL(/\/login/);
   });
 
   /**
@@ -86,11 +85,7 @@ test.describe('登录模块测试', () => {
    * TC-LOGIN-005: 记住我功能验证
    */
   test('TC-LOGIN-005: 记住我功能验证', async ({ page }) => {
-    await fetch('/api/auth/reset-lock', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin' }),
-    }).catch(() => {});
+    await resetAdminLock();
 
     await page.fill('input#username', TEST_USERS.admin.username);
     await page.fill('input#password', TEST_USERS.admin.password);
@@ -105,7 +100,7 @@ test.describe('登录模块测试', () => {
 
     await page.locator('input#password').press('Enter');
 
-    await expect(page).toHaveURL('/', { timeout: 60000 });
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 60000 });
 
     const token = await page.evaluate(() => localStorage.getItem('token'));
     expect(token).toBeTruthy();
@@ -115,7 +110,9 @@ test.describe('登录模块测试', () => {
    * UI测试: 登录页面元素显示检查
    */
   test('UI测试: 登录页面元素显示检查', async ({ page }) => {
-    await expect(page.locator('h1')).toContainText('欢迎回来');
+    // h1 文案由 messages 的 Auth.welcome 提供（zh-CN: "欢迎使用 印刷生产经营信息管理系统 Print MIS"）。
+    // 断言品牌名而非中文文案，避免 locale 切换导致用例假失败。
+    await expect(page.locator('h1').first()).toContainText('Print MIS');
 
     await expect(page.locator('label', { hasText: '用户名' })).toBeVisible();
     await expect(page.locator('label', { hasText: '密码' })).toBeVisible();

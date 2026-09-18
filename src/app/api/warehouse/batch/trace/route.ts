@@ -18,7 +18,7 @@ export const GET = withPermission(
       return errorResponse(ts('k_syy0ma'), 400, 400);
     }
 
-    const batchRows = await query<unknown>(
+    const batchRows = await query(
       `SELECT
       id, batch_no, material_id, material_code, material_name,
       quantity, available_qty, locked_qty, unit_cost, unit_price,
@@ -36,7 +36,7 @@ export const GET = withPermission(
 
     const batchSnapshot = batchRows[0];
 
-    const logRows = await query<unknown>(
+    const logRows = await query(
       `SELECT
       l.id, l.material_id, l.warehouse_id, l.batch_no,
       l.operation_type, l.operation_qty, l.before_qty, l.after_qty,
@@ -77,7 +77,7 @@ export const GET = withPermission(
     const OPERATION_TYPE_LABELS = OPERATION_TYPE_LABEL;
 
     for (const log of logRows) {
-      const entry: unknown = {
+      const entry: Record<string, unknown> = {
         log_id: log.id,
         operation_type: log.operation_type,
         operation_type_label:
@@ -215,7 +215,7 @@ export const GET = withPermission(
         // If document lookup fails, continue without document details
       }
 
-      traceChain.push(entry);
+      traceChain.push(entry as any);
     }
 
     const totalIn = logRows

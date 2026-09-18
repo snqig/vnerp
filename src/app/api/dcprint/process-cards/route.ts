@@ -139,7 +139,7 @@ export const POST = withPermission(
     } = body;
 
     // 检查主材标签是否已被使用
-    const mainLabel = await queryOne<unknown>(
+    const mainLabel = await queryOne(
       `SELECT is_used, is_main_material FROM inv_material_label WHERE id = ? AND deleted = 0`,
       [mainLabelId]
     );
@@ -252,7 +252,7 @@ async function addMaterialToCard(cardIdentifier: string | number, data: DbRow) {
   const { labelId, labelNo, createUserId: _createUserId, createUserName: _createUserName } = data;
 
   // 获取流程卡信息
-  const card = await queryOne<unknown>(
+  const card = await queryOne(
     `SELECT id, card_no, lock_status FROM prd_process_card WHERE ${typeof cardIdentifier === 'number' ? 'id' : 'card_no'} = ? AND deleted = 0`,
     [cardIdentifier]
   );
@@ -266,7 +266,7 @@ async function addMaterialToCard(cardIdentifier: string | number, data: DbRow) {
   }
 
   // 获取标签信息
-  const label = await queryOne<unknown>(
+  const label = await queryOne(
     `SELECT material_code, material_name, specification, batch_no, quantity, unit
      FROM inv_material_label WHERE id = ? AND deleted = 0`,
     [labelId]
@@ -382,7 +382,7 @@ export const DELETE = withPermission(
 async function queryPaginated(
   sql: string,
   countSql: string,
-  params: DbRow[],
+  params: SqlValue[],
   pagination: { page: number; pageSize: number }
 ) {
   const { page, pageSize } = pagination;
@@ -390,7 +390,7 @@ async function queryPaginated(
 
   try {
     const [data, countResult] = await Promise.all([
-      query<unknown[]>(`${sql} LIMIT ? OFFSET ?`, [...(params || []), pageSize, offset]),
+      query(`${sql} LIMIT ? OFFSET ?`, [...(params || []), pageSize, offset]),
       queryOne<{ total: number }>(countSql, params || []),
     ]);
 

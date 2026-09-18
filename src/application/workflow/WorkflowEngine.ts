@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbConnection } from '@/types/db';
 
 import { query, execute, transaction, queryOne } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
@@ -216,7 +217,7 @@ export class WorkflowEngine {
   }
 
   private async createApprovalTasks(
-    conn: PoolConnection,
+    conn: DbConnection,
     instanceId: number,
     node: WorkflowNode
   ): Promise<void> {
@@ -455,7 +456,7 @@ export class WorkflowEngine {
   }
 
   private async completeWorkflowInstance(
-    conn: PoolConnection,
+    conn: DbConnection,
     instance: ApprovalInstanceRow
   ): Promise<void> {
     await conn.execute(
@@ -470,7 +471,12 @@ export class WorkflowEngine {
   private async triggerBusinessCallback(instance: ApprovalInstanceRow): Promise<void> {
     try {
       if (instance.source_type === 'sales_order') {
-        await execute(`UPDATE sal_order SET status = 3, audit_time = NOW() WHERE id = ?`, [
+        // 审批通过 ⇒ 销售订单进入「已确认」（契约码 2，见 src/lib/order-status.ts）。
+        // 修复前写 `status = 3, audit_time = NOW()`：
+        //   ① sal_order 无 audit_time 列 → 语句必然报错，被外层 catch 吞掉，
+        //      销售订单审批回调**从未真正生效**；
+        //   ② 3 的契约含义是「部分发货」，不是「已审核」（BUG-ORD-002）。
+        await execute(`UPDATE sal_order SET status = 2, update_time = NOW() WHERE id = ?`, [
           instance.source_id,
         ]);
       } else if (instance.source_type === 'purchase_order') {

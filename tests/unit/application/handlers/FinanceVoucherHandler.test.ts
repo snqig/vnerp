@@ -11,6 +11,8 @@ const { mockExecute, mockTransaction } = vi.hoisted(() => {
 
 vi.mock('@/lib/db', () => ({
   transaction: (...args: unknown[]) => mockTransaction(args[0] as Function),
+  execute: (...args: unknown[]) => mockExecute(args[0], ...args.slice(1)),
+  query: (...args: unknown[]) => mockExecute(args[0], ...args.slice(1)),
 }));
 
 vi.mock('@/lib/logger', () => ({
@@ -111,8 +113,10 @@ describe('FinanceVoucherHandler', () => {
   it('workorder.completed totalAmount 为 0 时跳过', async () => {
     await handler.handle(makeWorkOrderEvent());
 
-    // WorkOrderCompletedEvent 的 totalAmount 默认为 0（handler 中设置为 0）
-    expect(mockExecute).not.toHaveBeenCalled();
+    // handler 先 SELECT 计算工单金额，金额为 0 时跳过创建应付单（不会 INSERT fin_payable）
+    expect(mockExecute).toHaveBeenCalled();
+    const insertCalls = mockExecute.mock.calls.filter((c) => String(c[0]).includes('INSERT INTO fin_payable'));
+    expect(insertCalls).toHaveLength(0);
   });
 
   it('多次处理同一 inbound 事件不会重复创建应付单（幂等验证）', async () => {

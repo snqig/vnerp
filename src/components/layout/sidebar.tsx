@@ -236,7 +236,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
     logout,
     isHydrated,
   } = useAuth();
-  const { companyName } = useCompanyName();
+  const { companyName, logoUrl } = useCompanyName();
   const t = useTranslations('Auth');
   const tc = useTranslations('Common');
   const tn = useTranslations('Nav');
@@ -577,11 +577,11 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
         {navigationMode !== 'mixed' && (
           <div className="h-16 flex items-center justify-center border-b border-border">
             {collapsed ? (
-              <img src="/loginlogo.png" alt={ts('k_1jq3bkn')} className="w-8 h-8 rounded-lg object-contain" />
+              <img src={logoUrl} alt={ts('k_1jq3bkn')} className="w-8 h-8 rounded-lg object-contain" />
             ) : (
               <div className="flex items-center gap-2">
                 <img
-                  src="/loginlogo.png"
+                  src={logoUrl}
                   alt={ts('k_1jq3bkn')}
                   className="w-8 h-8 rounded-lg object-contain"
                 />

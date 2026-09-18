@@ -8,6 +8,8 @@ import { randomUUID } from 'crypto';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
 import { withPermission } from '@/lib/api-permissions';
+import { BusinessError } from '@/lib/error-handling';
+import { SalesOrderStatusCode, normalizeSalesOrderStatus } from '@/lib/order-status';
 import type { DbRow } from '@/types/db';
 const WORK_ORDER_STATUS = {
   PENDING: 'pending',
@@ -17,13 +19,9 @@ const WORK_ORDER_STATUS = {
   CANCELLED: 'cancelled',
 } as const;
 
-const SALE_ORDER_STATUS = {
-  DRAFT: 'draft',
-  CONFIRMED: 'confirmed',
-  PRODUCING: 'producing',
-  COMPLETED: 'completed',
-  CANCELLED: 'cancelled',
-} as const;
+// 说明：此处原先另有一套**字符串**销售订单状态常量（'draft'/'confirmed'/'producing'/…），
+// 而 sal_order.status 是 tinyint —— JS 中 number === string 恒为 false，
+// 该常量的比较分支从未命中过（BUG-ORD-002）。现已统一到 src/lib/order-status.ts。
 
 export const GET = withPermission(
   async (request: NextRequest) => {
@@ -132,11 +130,13 @@ export const POST = withPermission(
 
       const saleOrder = (orderRows as DbRow[])[0];
       if (!saleOrder) {
-        throw new Error(ts('k_1gccwsl'));
+        throw new BusinessError(ts('k_1gccwsl'), 'SALE_ORDER_NOT_FOUND');
       }
 
-      if (String(saleOrder.status) === '5' || saleOrder.status === SALE_ORDER_STATUS.CANCELLED) {
-        throw new Error(ts('k_10kxtv3'));
+      // 已取消订单不得建工单。修复前为 `String(status) === '5' || status === 'cancelled'`，
+      // 后半段恒 false（tinyint vs 字符串）；前半段只认字面量 5，历史码（6/60 等）会漏判。
+      if (normalizeSalesOrderStatus(saleOrder.status) === SalesOrderStatusCode.CANCELLED) {
+        throw new BusinessError(ts('k_10kxtv3'), 'SALE_ORDER_CANCELLED');
       }
 
       const [existingWO] = await connection.execute(
@@ -145,7 +145,10 @@ export const POST = withPermission(
       );
 
       if ((existingWO as DbRow[])[0].cnt > 0) {
-        throw new Error(ts('k_qvbzap'));
+        // 业务规则冲突，须返回 400 + 具体原因：
+        // 若抛普通 Error，全局处理器会将其折叠为 500「创建工单失败」，客户端无法区分
+        // 「参数错误」「订单状态非法」「重复建单」，也无法据此做幂等/提示处理。
+        throw new BusinessError(ts('k_qvbzap'), 'WORK_ORDER_ALREADY_EXISTS');
       }
 
       const workOrderNo = await generateDocumentNo('work_order');
@@ -378,8 +381,12 @@ export const PUT = withPermission(
 
         if ((otherActiveWO as DbRow[])[0].cnt === 0) {
           await connection.execute(
-            `UPDATE sal_order SET status = 2, update_time = NOW() WHERE order_no = ? AND deleted = 0`,
-            [workOrder.order_no]
+            `UPDATE sal_order SET status = ?, update_time = NOW() WHERE order_no = ? AND deleted = 0 AND status <> ?`,
+            [
+              SalesOrderStatusCode.CONFIRMED,
+              workOrder.order_no,
+              SalesOrderStatusCode.CANCELLED,
+            ]
           );
         }
       }
@@ -452,8 +459,12 @@ export const DELETE = withPermission(
 
         if ((otherActiveWO as DbRow[])[0].cnt === 0) {
           await connection.execute(
-            `UPDATE sal_order SET status = 2, update_time = NOW() WHERE order_no = ? AND deleted = 0`,
-            [workOrder.order_no]
+            `UPDATE sal_order SET status = ?, update_time = NOW() WHERE order_no = ? AND deleted = 0 AND status <> ?`,
+            [
+              SalesOrderStatusCode.CONFIRMED,
+              workOrder.order_no,
+              SalesOrderStatusCode.CANCELLED,
+            ]
           );
         }
       }

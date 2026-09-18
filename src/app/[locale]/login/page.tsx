@@ -161,7 +161,7 @@ export default function LoginPage() {
   const ts = useTranslations('Common');
   const router = useRouter();
   const { login, isAuthenticated, isLoading } = useAuth();
-  const { companyName } = useCompanyName();
+  const { companyName, logoUrl } = useCompanyName();
   const t = useTranslations('Auth');
   const tc = useTranslations('Common');
   const [mounted, setMounted] = useState(false);
@@ -389,7 +389,7 @@ export default function LoginPage() {
         <div className="relative z-20">
           <div className="flex items-center gap-3 text-lg font-semibold">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/loginlogo.png" alt={companyName} className="h-10 w-auto" />
+            <img src={logoUrl} alt={companyName} className="h-10 w-auto" />
             <span>{companyName}</span>
           </div>
         </div>
@@ -684,7 +684,7 @@ export default function LoginPage() {
 
         <div className="relative z-20 flex items-center gap-8 text-sm text-primary-foreground/60">
           <span>{companyName}</span>
-          <span>{tc('footerCopyright')}</span>
+          <span>{tc('footerCopyright', { company: companyName })}</span>
         </div>
 
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
@@ -696,7 +696,7 @@ export default function LoginPage() {
         <div className="w-full max-w-[420px]">
           <div className="lg:hidden flex items-center justify-center gap-3 text-lg font-semibold mb-12">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/loginlogo.png" alt={companyName} className="h-10 w-auto" />
+            <img src={logoUrl} alt={companyName} className="h-10 w-auto" />
             <span>{companyName}</span>
           </div>
 

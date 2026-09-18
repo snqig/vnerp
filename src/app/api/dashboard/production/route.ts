@@ -10,7 +10,7 @@ import type { DbRow } from '@/types/db';
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
   try {
-    let orderStats: unknown = { total_orders: 0, active_orders: 0, completed_today: 0 };
+    let orderStats: Record<string, unknown> = { total_orders: 0, active_orders: 0, completed_today: 0 };
     try {
       const rows = await query(`
         SELECT
@@ -26,7 +26,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let equipStats: unknown = { total: 0, running: 0, idle: 0, maintenance: 0, error_count: 0 };
+    let equipStats: Record<string, unknown> = { total: 0, running: 0, idle: 0, maintenance: 0, error_count: 0 };
     try {
       const rows = await query(`
         SELECT
@@ -44,7 +44,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let equipmentList: SqlValue[] = [];
+    let equipmentList: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT
@@ -78,7 +78,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let recentOrders: SqlValue[] = [];
+    let recentOrders: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT
@@ -97,7 +97,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let inkStats: unknown = { total_opened: 0, in_use: 0, expired: 0, expiring_soon: 0 };
+    let inkStats: Record<string, unknown> = { total_opened: 0, in_use: 0, expired: 0, expiring_soon: 0 };
     try {
       const rows = await query(`
         SELECT
@@ -114,7 +114,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    const dieStats: unknown = { total: 0, normal: 0, warning: 0, locked: 0, scrapped: 0 };
+    const dieStats: { total: number; normal: number; warning: number; locked: number; scrapped: number } = { total: 0, normal: 0, warning: 0, locked: 0, scrapped: 0 };
     try {
       const rows = await query(`
         SELECT

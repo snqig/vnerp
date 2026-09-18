@@ -8,6 +8,7 @@
  */
 
 import type { ResultSetHeader, PoolConnection } from 'mysql2/promise';
+import type { DbConnection } from '@/types/db';
 import type { SqlValue } from '@/lib/db';
 
 export type { SqlValue, ResultSetHeader, PoolConnection };
@@ -47,5 +48,5 @@ export interface DbExecutor {
    * @param callback - 事务回调函数，接收数据库连接作为参数
    * @returns 回调函数的返回值
    */
-  transaction<T>(callback: (connection: PoolConnection) => Promise<T>): Promise<T>;
+  transaction<T>(callback: (connection: DbConnection) => Promise<T>): Promise<T>;
 }

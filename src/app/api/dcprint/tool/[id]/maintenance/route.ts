@@ -42,7 +42,7 @@ export const POST = withPermission(
         toolId: Number(id),
         maintenanceType: body.maintenanceType,
         description: body.description,
-        operatorId: userInfo?.id,
+        operatorId: userInfo.userId,
         operatorName: userInfo?.username,
         remark: body.remark,
       });

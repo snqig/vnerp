@@ -39,9 +39,23 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return commonErrors.notFound(ts('k_lrx46w'));
   }
 
-  const permissions: ButtonPermission[] = existingRole.permissions
-    ? JSON.parse(existingRole.permissions)
-    : [];
+  // 注意：sys_role.permissions 是 MySQL JSON 列，mysql2 会自动解析为 JS 数组，
+  // 此时再 JSON.parse 会抛 SyntaxError（500）。需同时兼容「已是数组」与「仍是 JSON 字符串」两种形态。
+  const raw = existingRole.permissions;
+  let permissions: string[] = [];
+  if (Array.isArray(raw)) {
+    permissions = raw as string[];
+  } else if (typeof raw === 'string' && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw);
+      permissions = Array.isArray(parsed) ? parsed : [parsed as unknown as string];
+    } catch {
+      permissions = raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+  }
 
   return successResponse(permissions);
 });

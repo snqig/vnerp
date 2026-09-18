@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 ;
 import { NextRequest } from 'next/server';
 import { query, SqlValue } from '@/lib/db';
+import type { DbRow } from '@/types/db';
 import { successResponse } from '@/lib/api-response';
 import { CalcParamService } from '@/lib/calc-param-service';
 
@@ -66,7 +67,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   );
   const total = countResult[0]?.total || 0;
 
-  const varianceDetails: SqlValue[] = [];
+  const varianceDetails: DbRow[] = [];
 
   for (const wo of workOrders) {
     const materialCostRows = await query(
@@ -139,7 +140,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     const totalCompleted = Number(scrapRows[0]?.total_completed || 0);
     const scrapRate = totalCompleted > 0 ? (totalScrap / (totalCompleted + totalScrap)) * 100 : 0;
 
-    const detail: unknown = {
+    const detail: Record<string, unknown> = {
       work_order_id: wo.id,
       work_order_no: wo.work_order_no,
       product_name: wo.product_name,

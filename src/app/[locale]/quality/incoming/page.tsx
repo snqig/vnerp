@@ -4,6 +4,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { useTranslations } from 'next-intl';
 import { authFetch } from '@/lib/auth-fetch';
+import { useRowSelection } from '@/lib/useRowSelection';
 import {
   Search,
   Plus,
@@ -165,7 +166,6 @@ export default function IncomingInspectionPage() {
   useEffect(() => {
     fetchInspections();
   }, [fetchInspections]);
-  const [selectedInspections, setSelectedInspections] = useState<string[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -232,7 +232,7 @@ export default function IncomingInspectionPage() {
   const handleReset = useCallback(() => {
     setSearchQuery('');
     setStatusFilter('all');
-    setSelectedInspections([]);
+    clearSelection();
     toast.success(tc('filterReset'));
   }, []);
 
@@ -375,21 +375,15 @@ export default function IncomingInspectionPage() {
     }
   };
 
-  const toggleSelectInspection = (inspectionId: string) => {
-    setSelectedInspections((prev) =>
-      prev.includes(inspectionId)
-        ? prev.filter((id) => id !== inspectionId)
-        : [...prev, inspectionId]
-    );
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedInspections.length === sortedData.length) {
-      setSelectedInspections([]);
-    } else {
-      setSelectedInspections(sortedData.map((i) => i.id));
-    }
-  };
+  const {
+    selected,
+    isSelected,
+    allSelected,
+    toggle,
+    toggleAll,
+    clear: clearSelection,
+    selectAllRef,
+  } = useRowSelection(sortedData, (i) => String(i.id));
 
   const totalInspectionsToday = incomingInspections.filter(
     (i) => i.date === new Date().toISOString().slice(0, 10)
@@ -688,11 +682,7 @@ export default function IncomingInspectionPage() {
                 },
                 { key: 'inspector', label: t('inspector'), width: 10 },
               ]}
-              data={
-                selectedInspections.length > 0
-                  ? sortedData.filter((i) => selectedInspections.includes(i.id))
-                  : sortedData
-              }
+              data={selected.size > 0 ? sortedData.filter((i) => selected.has(String(i.id))) : sortedData}
             />
           </div>
         </div>
@@ -768,11 +758,13 @@ export default function IncomingInspectionPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
-                    <Checkbox
-                      checked={
-                        selectedInspections.length === sortedData.length && sortedData.length > 0
-                      }
-                      onCheckedChange={toggleSelectAll}
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      className="h-4 w-4 cursor-pointer accent-blue-600"
+                      checked={allSelected}
+                      onChange={toggleAll}
+                      aria-label={tc('selectAll')}
                     />
                   </TableHead>
                   <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
@@ -829,8 +821,8 @@ export default function IncomingInspectionPage() {
                   <TableRow key={inspection.id}>
                     <TableCell>
                       <Checkbox
-                        checked={selectedInspections.includes(inspection.id)}
-                        onCheckedChange={() => toggleSelectInspection(inspection.id)}
+                        checked={isSelected(String(inspection.id))}
+                        onCheckedChange={() => toggle(String(inspection.id))}
                       />
                     </TableCell>
                     <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
