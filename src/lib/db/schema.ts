@@ -158,11 +158,8 @@ export {
 } from './schemas/_gen_eqp';
 // hr_ 域补全（由 scripts/_audit/gen_misc.cjs 生成）
 export {
-  hrCertificates,
   hrMesSync,
   hrOrganization,
-  hrSchedules,
-  hrShifts,
   hrSkills,
 } from './schemas/_gen_hr';
 // ink_ 域补全（由 scripts/_audit/gen_misc.cjs 生成）

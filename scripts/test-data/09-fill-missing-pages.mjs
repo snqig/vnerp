@@ -211,35 +211,6 @@ async function main() {
       )
     `);
 
-    // HR班次
-    await conn.execute(`
-      CREATE TABLE IF NOT EXISTS hr_shifts (
-        id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-        shift_code VARCHAR(20) NOT NULL,
-        shift_name VARCHAR(50) NOT NULL,
-        start_time TIME NOT NULL,
-        end_time TIME NOT NULL,
-        duration DECIMAL(4,1),
-        status TINYINT DEFAULT 1,
-        create_time DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // HR排班
-    await conn.execute(`
-      CREATE TABLE IF NOT EXISTS hr_schedules (
-        id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-        schedule_date DATE NOT NULL,
-        employee_id BIGINT UNSIGNED NOT NULL,
-        employee_name VARCHAR(50),
-        shift_id BIGINT UNSIGNED NOT NULL,
-        shift_code VARCHAR(20),
-        shift_name VARCHAR(50),
-        status TINYINT DEFAULT 1,
-        create_time DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
     // HR技能
     await conn.execute(`
       CREATE TABLE IF NOT EXISTS hr_skills (
@@ -248,21 +219,6 @@ async function main() {
         skill_name VARCHAR(100) NOT NULL,
         skill_type VARCHAR(20),
         description VARCHAR(255),
-        status TINYINT DEFAULT 1,
-        create_time DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // HR证书
-    await conn.execute(`
-      CREATE TABLE IF NOT EXISTS hr_certificates (
-        id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-        employee_id BIGINT UNSIGNED NOT NULL,
-        employee_name VARCHAR(50),
-        cert_name VARCHAR(100) NOT NULL,
-        cert_no VARCHAR(50),
-        issue_date DATE,
-        expire_date DATE,
         status TINYINT DEFAULT 1,
         create_time DATETIME DEFAULT CURRENT_TIMESTAMP
       )
@@ -535,22 +491,22 @@ async function main() {
     // ═══════════════════════════════════════════════
     // 18. HR班次 /hr/shifts
     // ═══════════════════════════════════════════════
-    console.log('━━━ hr_shifts (班次) ━━━');
-    await conn.execute('INSERT IGNORE INTO hr_shifts (shift_code, shift_name, start_time, end_time, duration, status) VALUES (?, ?, ?, ?, ?, ?)', ['S1', '早班', '08:00:00', '16:00:00', 8, 1]);
-    await conn.execute('INSERT IGNORE INTO hr_shifts (shift_code, shift_name, start_time, end_time, duration, status) VALUES (?, ?, ?, ?, ?, ?)', ['S2', '中班', '16:00:00', '24:00:00', 8, 1]);
-    await conn.execute('INSERT IGNORE INTO hr_shifts (shift_code, shift_name, start_time, end_time, duration, status) VALUES (?, ?, ?, ?, ?, ?)', ['S3', '夜班', '00:00:00', '08:00:00', 8, 1]);
+    console.log('━━━ hr_shift (班次) ━━━');
+    await conn.execute('INSERT IGNORE INTO hr_shift (shift_name, start_time, end_time, working_hours, status) VALUES (?, ?, ?, ?, ?)', ['早班', '08:00', '16:00', 8, 1]);
+    await conn.execute('INSERT IGNORE INTO hr_shift (shift_name, start_time, end_time, working_hours, status) VALUES (?, ?, ?, ?, ?)', ['中班', '16:00', '24:00', 8, 1]);
+    await conn.execute('INSERT IGNORE INTO hr_shift (shift_name, start_time, end_time, working_hours, status) VALUES (?, ?, ?, ?, ?)', ['夜班', '00:00', '08:00', 8, 1]);
 
     // ═══════════════════════════════════════════════
     // 19. HR排班 /hr/schedules
     // ═══════════════════════════════════════════════
-    console.log('━━━ hr_schedules (排班) ━━━');
-    const [shifts] = await conn.execute('SELECT id, shift_code FROM hr_shifts');
+    console.log('━━━ hr_schedule (排班) ━━━');
+    const [shifts] = await conn.execute('SELECT id, shift_name FROM hr_shift');
     for (let i = 0; i < 3; i++) {
       const date = new Date();
       date.setDate(date.getDate() + i);
       for (let j = 0; j < employees.length && j < 3; j++) {
         const shift = shifts[j % shifts.length];
-        await conn.execute('INSERT IGNORE INTO hr_schedules (schedule_date, employee_id, employee_name, shift_id, shift_code, shift_name, status) VALUES (?, ?, ?, ?, ?, ?, ?)', [date.toISOString().slice(0, 10), employees[j].id, employees[j].name, shift.id, shift.shift_code, shift.shift_code === 'S1' ? '早班' : shift.shift_code === 'S2' ? '中班' : '夜班', 1]);
+        await conn.execute('INSERT IGNORE INTO hr_schedule (schedule_date, employee_id, shift_id, schedule_type, source, status) VALUES (?, ?, ?, ?, ?, ?)', [date.toISOString().slice(0, 10), employees[j].id, shift.id, 'normal', 'manual', 1]);
       }
     }
 
@@ -565,9 +521,9 @@ async function main() {
     // ═══════════════════════════════════════════════
     // 21. HR证书 /hr/certificates
     // ═══════════════════════════════════════════════
-    console.log('━━━ hr_certificates (证书) ━━━');
+    console.log('━━━ hr_certificate (证书) ━━━');
     for (let i = 0; i < employees.length && i < 3; i++) {
-      await conn.execute('INSERT IGNORE INTO hr_certificates (employee_id, employee_name, cert_name, cert_no, issue_date, expire_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)', [employees[i].id, employees[i].name, '印刷操作工证', 'CERT-' + String(i + 1).padStart(6, '0'), '2026-01-01', '2031-01-01', 1]);
+      await conn.execute('INSERT IGNORE INTO hr_certificate (employee_id, cert_name, cert_code, cert_type, issue_date, expiry_date, remind_days, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [employees[i].id, '印刷操作工证', 'CERT-' + String(i + 1).padStart(6, '0'), '职业资格', '2026-01-01', '2031-01-01', 30, 1]);
     }
 
     // ═══════════════════════════════════════════════
@@ -632,8 +588,8 @@ async function main() {
       'inv_sales_outbound', 'inv_sales_outbound_item',
       'qms_sgs_cert', 'qms_sgs_cert_item', 'qms_complaint', 'qms_lab_test', 'qms_supplier_audit',
       'qr_code_record', 'fin_receivable_line',
-      'hr_training_participant', 'hr_organization', 'hr_shifts', 'hr_schedules',
-      'hr_skills', 'hr_certificates', 'hr_payroll_snapshot', 'hr_piece_work_detail',
+      'hr_training_participant', 'hr_organization', 'hr_shift', 'hr_schedule',
+      'hr_skills', 'hr_certificate', 'hr_payroll_snapshot', 'hr_piece_work_detail',
       'hr_salary_calculation', 'hr_salary_profile', 'hr_mes_sync'
     ];
 

@@ -5,6 +5,7 @@ import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
 
 interface InventoryRow extends RowDataPacket {
   id: number;
+  material_id: number;
   quantity: string | number;
   unit_cost: string | number;
   total_cost: string | number;
@@ -34,7 +35,7 @@ export class InventoryCostService {
     if (inboundQty <= 0 || inboundUnitPrice < 0) return null;
 
     const [rows] = await conn.execute<InventoryRow[]>(
-      'SELECT id, quantity, unit_cost, total_cost FROM inv_inventory WHERE id = ? AND deleted = 0 FOR UPDATE',
+      'SELECT id, material_id, quantity, unit_cost, total_cost FROM inv_inventory WHERE id = ? AND deleted = 0 FOR UPDATE',
       [inventoryId]
     );
     if (rows.length === 0) return null;
@@ -56,6 +57,9 @@ export class InventoryCostService {
       'UPDATE inv_inventory SET unit_cost = ?, total_cost = ?, update_time = NOW() WHERE id = ?',
       [result.newCostPrice, result.newTotalAmount, inventoryId]
     );
+
+    // 物料级成本同步（MaterialCostProvider 读 inv_material.weighted_avg_cost）
+    await this.syncMaterialWeightedAvgCost(conn, Number(inv.material_id));
 
     secureLog('debug', 'Inventory cost recalculated (inbound)', {
       inventoryId,
@@ -119,7 +123,7 @@ export class InventoryCostService {
     if (rollbackQty <= 0) return null;
 
     const [rows] = await conn.execute<InventoryRow[]>(
-      'SELECT id, quantity, unit_cost, total_cost FROM inv_inventory WHERE id = ? AND deleted = 0 FOR UPDATE',
+      'SELECT id, material_id, quantity, unit_cost, total_cost FROM inv_inventory WHERE id = ? AND deleted = 0 FOR UPDATE',
       [inventoryId]
     );
     if (rows.length === 0) return null;
@@ -138,6 +142,9 @@ export class InventoryCostService {
       'UPDATE inv_inventory SET unit_cost = ?, total_cost = ?, quantity = ?, update_time = NOW() WHERE id = ?',
       [newCostPrice, newTotalAmount, newQty, inventoryId]
     );
+
+    // 物料级成本同步（反审核同样需要重算）
+    await this.syncMaterialWeightedAvgCost(conn, Number(inv.material_id));
 
     secureLog('debug', 'Inventory cost recalculated (rollback)', {
       inventoryId,
@@ -158,5 +165,47 @@ export class InventoryCostService {
           ? Number(((newCostPrice - currentCostPrice) / currentCostPrice).toFixed(4))
           : 0,
     };
+  }
+
+  /**
+   * 同步物料级移动加权平均成本（inv_material.weighted_avg_cost）
+   *
+   * 为什么需要：`MaterialCostProvider`（配方/油墨成本的第一来源）读的是
+   * `inv_material.weighted_avg_cost`，而本服务重算的是 `inv_inventory.unit_cost`
+   * （仓库 × 物料粒度）。两者口径一致（数量加权平均）但粒度不同，
+   * 故在库存成本变动后按物料重新聚合回写，避免该列陈旧。
+   *
+   * 聚合口径与 CostEngine('moving_average') 一致：仓库间按数量加权；
+   * 所有仓库数量合计为 0 时退化为简单平均，避免除零。
+   *
+   * 仅处理非 TEST 物料；无有效成本时不写入（保持 NULL，交由调用方降级处理）。
+   */
+  private async syncMaterialWeightedAvgCost(
+    conn: DbConnection,
+    materialId: number
+  ): Promise<void> {
+    if (!Number.isInteger(materialId) || materialId <= 0) return;
+
+    await conn.execute(
+      `UPDATE inv_material im
+       JOIN (
+         SELECT material_id,
+                CASE
+                  WHEN SUM(CASE WHEN unit_cost > 0 THEN quantity ELSE 0 END) > 0
+                    THEN SUM(CASE WHEN unit_cost > 0 THEN unit_cost * quantity ELSE 0 END)
+                         / SUM(CASE WHEN unit_cost > 0 THEN quantity ELSE 0 END)
+                  ELSE AVG(CASE WHEN unit_cost > 0 THEN unit_cost END)
+                END AS wac
+           FROM inv_inventory
+          WHERE material_id = ? AND deleted = 0 AND unit_cost > 0
+          GROUP BY material_id
+       ) agg ON agg.material_id = im.id
+          SET im.weighted_avg_cost = ROUND(agg.wac, 4),
+              im.update_time = NOW()
+        WHERE im.deleted = 0
+          AND im.material_code NOT LIKE 'TEST%'
+          AND agg.wac > 0`,
+      [materialId]
+    );
   }
 }

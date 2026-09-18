@@ -45,10 +45,10 @@ const missingTables = [
   
   // HR
   'hr_organization',
-  'hr_shifts',
-  'hr_schedules',
+  'hr_shift',
+  'hr_schedule',
   'hr_skills',
-  'hr_certificates',
+  'hr_certificate',
   'hr_mes_sync',
   'hr_payroll_snapshot',
   'hr_piece_work_detail',
