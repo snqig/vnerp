@@ -117,6 +117,9 @@ export async function proxy(request: NextRequest) {
       '/api/auth/reset-lock',
       '/api/health',
       '/api/migrations',
+      // 品牌信息（公司名 / LOGO）供**登录页**使用，而登录页必然是未登录状态，
+      // 因此该接口不能要求 token —— 只返回展示型字段，详见路由内注释。
+      '/api/public/',
     ].some((p) => pathname.startsWith(p));
 
     if (!isPublicApi) {

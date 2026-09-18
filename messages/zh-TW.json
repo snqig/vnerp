@@ -880,7 +880,7 @@
     "materialAvailabilityLabel": "物料供應狀況",
     "saveReview": "儲存評審",
     "erpIntroTitle": " — 網版印刷數位化管理平台",
-    "footerCopyright": "版權所有 © 越南達昌科技有限公司",
+    "footerCopyright": "版權所有 © {company}",
     "percentSign": "筆 (",
     "foreignKeyCountSuffix": " 條外鍵關聯",
     "returnManagementDesc": "管理採購退貨單，處理品質問題、數量差異等退貨業務",

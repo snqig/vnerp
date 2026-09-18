@@ -684,7 +684,7 @@ export default function LoginPage() {
 
         <div className="relative z-20 flex items-center gap-8 text-sm text-primary-foreground/60">
           <span>{companyName}</span>
-          <span>{tc('footerCopyright')}</span>
+          <span>{tc('footerCopyright', { company: companyName })}</span>
         </div>
 
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />

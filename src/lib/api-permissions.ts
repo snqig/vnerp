@@ -870,6 +870,8 @@ export const PUBLIC_ROUTES = [
   '/api/auth/reset-lock',
   '/api/linkage/',
   '/api/document-number',
+  // 对外可见的品牌信息（公司名 / LOGO），登录页在未登录状态下也要渲染
+  '/api/public/',
 ];
 
 /**

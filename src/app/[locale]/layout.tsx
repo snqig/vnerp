@@ -13,6 +13,7 @@ import SystemConfigInitializer from '@/components/SystemConfigInitializer';
 import { HtmlLangSetter } from '@/components/HtmlLangSetter';
 import { getMenusByToken } from '@/lib/menu-service';
 import { getCompanyProfile, resolveCompanyDisplayName } from '@/lib/company-profile';
+import { CompanyProfileProvider } from '@/components/providers/company-profile-provider';
 
 async function getMessagesByLocale(locale: string) {
   try {
@@ -99,19 +100,29 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
   const initialAuth = await prefetchMenus();
+  // 公司档案（`sys_company`）：`generateMetadata` 已读取过，此处命中同一进程内缓存，
+  // 不会有额外查询。透传给客户端用于播种，使首帧即显示真实公司名 / LOGO ——
+  // 登录页处于未登录状态，无法由客户端接口在首帧前取到品牌信息。
+  const profile = await getCompanyProfile();
 
   return (
     <>
       <HtmlLangSetter locale={locale} />
       <IntlProvider locale={locale} messages={messages}>
-        <SnowAdminThemeProvider>
-          <AuthProvider initialAuth={initialAuth}>
-            <SystemConfigInitializer />
-            <ToastProviderComponent>
-              <AuthGuard>{children}</AuthGuard>
-            </ToastProviderComponent>
-          </AuthProvider>
-        </SnowAdminThemeProvider>
+        <CompanyProfileProvider
+          fullName={profile.fullName}
+          shortName={profile.shortName}
+          logo={profile.logo}
+        >
+          <SnowAdminThemeProvider>
+            <AuthProvider initialAuth={initialAuth}>
+              <SystemConfigInitializer />
+              <ToastProviderComponent>
+                <AuthGuard>{children}</AuthGuard>
+              </ToastProviderComponent>
+            </AuthProvider>
+          </SnowAdminThemeProvider>
+        </CompanyProfileProvider>
       </IntlProvider>
     </>
   );

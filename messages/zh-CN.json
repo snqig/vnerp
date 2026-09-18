@@ -898,7 +898,7 @@
     "materialAvailabilityLabel": "物料供应状况",
     "saveReview": "保存评审",
     "erpIntroTitle": " — 丝网印刷数字化管理平台",
-    "footerCopyright": "版权所有 © 越南达昌科技有限公司",
+    "footerCopyright": "版权所有 © {company}",
     "percentSign": "笔 (",
     "foreignKeyCountSuffix": " 条外键关联",
     "returnManagementDesc": "管理采购退货单，处理质量问题、数量差异等退货业务",

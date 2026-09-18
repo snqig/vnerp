@@ -5,8 +5,10 @@ import { renderHook, act } from '@testing-library/react';
  * `useCompanyName` 单测。
  *
  * 数据源口径（2026-09 统一后）：
- *   公司名称与 LOGO 均取自 `sys_company`（`/api/organization?type=company`），
- *   即 `settings/organization` 页面编辑的那条记录 —— 不再优先读 `sys_config`。
+ *   公司名称与 LOGO 均取自 `sys_company`，经**免鉴权**接口
+ *   `/api/public/company-branding` 读取 —— 该接口只返回展示型字段，
+ *   因此登录页（未登录）与业务页（已登录）拿到的是同一份品牌信息，
+ *   不再出现「登录页显示 i18n 占位符 公司名称」的问题。
  *
  * 注意：Hook 内含**模块级缓存**，测试之间必须 `vi.resetModules()` 重新加载模块，
  * 否则前一个用例写入的缓存会污染后续断言。
@@ -16,6 +18,7 @@ type CompanyHookModule = typeof import('./useCompanyName');
 
 const DEFAULT_NAME = '公司名称';
 const DEFAULT_LOGO = '/loginlogo.png';
+const ENDPOINT = '/api/public/company-branding';
 
 /** 构造符合 authFetch 校验（res.ok / res.status / res.headers）的响应 */
 const mockJsonResponse = (data: unknown, opts: { ok?: boolean; status?: number } = {}) => ({
@@ -65,12 +68,26 @@ describe('useCompanyName Hook测试', () => {
 
     expect(state.companyName).toBe('丝网印刷管理系统');
     expect(state.loading).toBe(false);
-    // 只请求组织档案接口，不再请求 /api/system/config
+    // 只请求免鉴权品牌接口，不再请求需登录的 /api/organization
     expect(mockFetch).toHaveBeenCalledTimes(1);
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/organization?type=company',
-      expect.anything()
+    expect(mockFetch).toHaveBeenCalledWith(ENDPOINT, expect.anything());
+  });
+
+  it('匿名访客（登录页）也应能取到真实品牌信息', async () => {
+    // 公开接口无需 token：authFetch 不附带凭据也应正常返回
+    const mockFetch = vi.fn().mockResolvedValue(
+      mockJsonResponse({
+        success: true,
+        data: { full_name: '越南达昌科技有限公司', logo: '/uploads/company/logo.png' },
+      })
     );
+    global.fetch = mockFetch;
+
+    const mod = await freshModule();
+    const state = await renderCompanyHook(mod);
+
+    expect(state.companyName).toBe('越南达昌科技有限公司');
+    expect(state.logoUrl).toBe('/uploads/company/logo.png');
   });
 
   it('全称为空时应回退到简称', async () => {
@@ -124,8 +141,8 @@ describe('useCompanyName Hook测试', () => {
     expect(state.logoUrl).toBe('/uploads/company/x.png');
   });
 
-  it('401 响应应保持 i18n 默认名与默认 LOGO', async () => {
-    global.fetch = vi.fn().mockResolvedValue(mockJsonResponse({}, { status: 401, ok: false }));
+  it('接口返回非成功响应时应保持 i18n 默认名与默认 LOGO', async () => {
+    global.fetch = vi.fn().mockResolvedValue(mockJsonResponse({}, { status: 500, ok: false }));
 
     const mod = await freshModule();
     const state = await renderCompanyHook(mod);
@@ -155,6 +172,39 @@ describe('useCompanyName Hook测试', () => {
     expect(state.loading).toBe(false);
     expect(state.companyName).toBe(DEFAULT_NAME);
     expect(state.logoUrl).toBe(DEFAULT_LOGO);
+  });
+
+  it('seedCompanyProfile 播种后首帧即为真实品牌信息且不再发请求', async () => {
+    // 模拟 [locale]/layout.tsx 服务端读取后由 CompanyProfileProvider 播种
+    const mockFetch = vi.fn();
+    global.fetch = mockFetch;
+
+    const mod = await freshModule();
+    mod.seedCompanyProfile({
+      companyName: '播种公司',
+      logoUrl: '/uploads/company/seeded.png',
+    });
+
+    const { result } = renderHook(() => mod.useCompanyName());
+
+    // 首帧（未推进定时器、未等待异步）即是播种值 —— 消除「先占位后替换」闪烁
+    expect(result.current.companyName).toBe('播种公司');
+    expect(result.current.logoUrl).toBe('/uploads/company/seeded.png');
+    // 缓存已就绪 → 不应产生任何请求
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('seedCompanyProfile 传 null 时不应覆盖已有缓存或写入空值', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(mockJsonResponse({ success: true, data: { full_name: '达昌印刷' } }));
+
+    const mod = await freshModule();
+    mod.seedCompanyProfile(null);
+
+    const state = await renderCompanyHook(mod);
+
+    expect(state.companyName).toBe('达昌印刷');
   });
 
   it('updateCompanyProfile 应广播给已挂载组件（上传 LOGO 后即时生效）', async () => {

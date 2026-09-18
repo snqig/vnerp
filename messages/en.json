@@ -893,7 +893,7 @@
     "materialAvailabilityLabel": "Material Availability",
     "saveReview": "Save Review",
     "erpIntroTitle": " — Screen Printing Digital Management Platform",
-    "footerCopyright": "Copyright © Vietnam Dachang Technology Co., Ltd.",
+    "footerCopyright": "Copyright © {company}",
     "percentSign": " (",
     "foreignKeyCountSuffix": " foreign key relations",
     "spcXbarRDesc": "Configure analysis parameters for the Xbar-R control chart: select material, inspection type and subgroup size",

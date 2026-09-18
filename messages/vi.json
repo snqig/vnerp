@@ -880,7 +880,7 @@
     "materialAvailabilityLabel": "Tình trạng cung ứng vật tư",
     "saveReview": "Lưu đánh giá",
     "erpIntroTitle": " — Nền tảng quản lý số hóa in lụa",
-    "footerCopyright": "Bản quyền © Công ty TNHH Công nghệ Dachang Việt Nam",
+    "footerCopyright": "Bản quyền © {company}",
     "percentSign": " (",
     "foreignKeyCountSuffix": " quan hệ khóa ngoại",
     "spcXbarRDesc": "Cấu hình tham số phân tích cho biểu đồ kiểm soát Xbar-R: chọn vật liệu, loại kiểm tra và kích thước nhóm con",
