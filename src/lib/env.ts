@@ -57,12 +57,18 @@ function loadEnv(): Env {
   }
 
   // SECURITY: demo 凭据回退仅允许在以下情况生效：
-  // 1. 非生产环境 + DEMO_MODE=true
+  // 1. DEMO_MODE=true（显式开启演示模式）
   // 2. Vercel 预览/生产部署但缺少数据库配置（自动降级为只读演示模式）
-  const isVercelPreview = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+  //    检测多个 Vercel 特有环境变量以确保可靠识别
+  const isVercelEnv = !!(
+    process.env.VERCEL ||
+    process.env.VERCEL_ENV ||
+    process.env.VERCEL_URL ||
+    process.env.NEXT_PUBLIC_VERCEL_URL
+  );
   const hasDbConfig = !!(process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASSWORD && process.env.DB_NAME);
 
-  if (process.env.DEMO_MODE === 'true' || (isVercelPreview && !hasDbConfig)) {
+  if (process.env.DEMO_MODE === 'true' || (isVercelEnv && !hasDbConfig)) {
     return {
       DB_HOST: process.env.DB_HOST || 'localhost',
       DB_PORT: Number(process.env.DB_PORT) || 3306,
