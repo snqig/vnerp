@@ -124,6 +124,7 @@ function PrintPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tc = useTranslations('Common');
+  const tsc = useTranslations('Sample.StandardCard');
   const printRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -270,7 +271,7 @@ function PrintPageContent() {
     printWindow.document.write(`
       <html>
         <head>
-          <title>标准卡打印</title>
+          <title>${tsc('cardFormTitle')}</title>
           <style>
             @page { size: A4 landscape; margin: 0; }
             body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: white; }
