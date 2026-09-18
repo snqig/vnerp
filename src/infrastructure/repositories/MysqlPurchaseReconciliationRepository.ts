@@ -207,7 +207,7 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
           currency, exchange_rate, base_receipt_amount, base_return_amount,
           base_net_amount, base_discount_amount, base_paid_amount, base_balance_amount,
           remark, create_by, create_time, update_time, deleted)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
         [
           reconciliationNo,
           recon.status.value,

@@ -153,31 +153,17 @@ export default function InkOpeningPage() {
     }
   }, [keyword, statusFilter, inkTypeFilter]);
 
-  const MOCK_MATERIALS: Loose[] = [
-    { id: 1, material_code: 'MAT006', material_name: ts('k_133reaf'), specification: ts('k_mumo5t'), unit: 'kg', status: 1 },
-    { id: 2, material_code: 'MAT007', material_name: ts('k_l9kfgb'), specification: ts('k_mumo5t'), unit: 'kg', status: 1 },
-    { id: 3, material_code: 'MAT008', material_name: ts('k_aagok0'), specification: ts('k_mumo5t'), unit: 'kg', status: 1 },
-    { id: 4, material_code: 'MAT009', material_name: ts('k_1irsna3'), specification: ts('k_mumo5t'), unit: 'kg', status: 1 },
-    { id: 5, material_code: 'MAT010', material_name: ts('k_vxbgrq'), specification: ts('k_mumo5t'), unit: 'kg', status: 1 },
-    { id: 6, material_code: 'MAT011', material_name: ts('k_76g1oh'), specification: ts('k_chjqhm'), unit: 'kg', status: 1 },
-    { id: 7, material_code: 'MAT012', material_name: ts('k_8ozpu5'), specification: ts('k_chjqhm'), unit: 'kg', status: 1 },
-    { id: 8, material_code: 'MAT013', material_name: ts('k_l9y2ij'), specification: ts('k_mumo5t'), unit: 'kg', status: 1 },
-    { id: 9, material_code: 'MAT014', material_name: ts('k_59pmqr'), specification: ts('k_mumo5t'), unit: 'kg', status: 1 },
-    { id: 10, material_code: 'MAT015', material_name: ts('k_6gy97h'), specification: ts('k_mumo5t'), unit: 'kg', status: 1 },
-  ];
-
   const fetchMaterials = async () => {
     try {
       const res = await authFetch('/api/inventory/materials?category=ink&pageSize=100');
       const data = await res.json();
       if (data.success) {
-        const list = data.data?.list || data.data || [];
-        setMaterials(list.length > 0 ? list : MOCK_MATERIALS);
+        setMaterials(data.data?.list || data.data || []);
       } else {
-        setMaterials(MOCK_MATERIALS);
+        setMaterials([]);
       }
     } catch {
-      setMaterials(MOCK_MATERIALS);
+      setMaterials([]);
     }
   };
 

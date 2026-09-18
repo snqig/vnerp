@@ -32,7 +32,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   // 详情查询
   if (id) {
-    const rc = await queryOne<unknown>(
+    const rc = await queryOne(
       `SELECT id, reconciliation_no, status, supplier_id, supplier_name,
         period_start, period_end,
         currency, exchange_rate,
@@ -49,7 +49,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     );
     if (!rc) return commonErrors.notFound(ts('k_ep1cls'));
 
-    const writeOffs = await query<unknown>(
+    const writeOffs = await query(
       `SELECT id, reconciliation_id, payable_id, amount, write_off_date, remark, create_time
        FROM pur_purchase_reconciliation_writeoff
        WHERE reconciliation_id = ?
@@ -88,14 +88,14 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   const whereClause = where.join(' AND ');
 
-  const countResult = (await queryOne<unknown>(
+  const countResult = (await queryOne(
     `SELECT COUNT(*) as total FROM pur_purchase_reconciliation r WHERE ${whereClause}`,
     values
   )) as DbRow;
   const total = countResult?.total || 0;
   const totalPages = Math.ceil(total / pageSize) || 0;
 
-  const list = await query<unknown>(
+  const list = await query(
     `SELECT r.id, r.reconciliation_no, r.status, r.supplier_id, r.supplier_name,
        r.period_start, r.period_end,
        r.currency, r.exchange_rate,
@@ -137,7 +137,7 @@ export const POST = withPermission(
     } = body;
 
     // 聚合收货金额：取已收货（status>=40）的采购单，按行累计 received_qty * unit_price
-    const receipts = (await query<unknown>(
+    const receipts = (await query(
       `SELECT po.id, po.po_no, po.order_date,
        COALESCE(SUM(l.received_qty * l.unit_price), 0) AS received_amount
      FROM pur_purchase_order po
@@ -151,7 +151,7 @@ export const POST = withPermission(
     )) as DbRow[];
 
     // 聚合退货金额：取已完成（status>=3）的采购退货单
-    const returns = (await query<unknown>(
+    const returns = (await query(
       `SELECT id, return_no, return_date, total_amount
      FROM pur_purchase_return
      WHERE supplier_id = ? AND return_date BETWEEN ? AND ?

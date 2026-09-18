@@ -10,35 +10,13 @@
  *   - 通过 API 响应与页面导航验证关键数据
  */
 
-import { test, expect, type Page, type APIResponse } from '@playwright/test';
-
-const TEST_USER = {
-  username: 'admin',
-  password: 'admin123',
-};
+import { test, expect, type APIResponse } from '@playwright/test';
+import { login } from '../utils/api-auth';
 
 /** 测试用色号 ID — 若环境无此色号，相关用例将安全跳过 */
 const TEST_COLOR_ID = Number(process.env.E2E_FORMULA_COLOR_ID || 1);
 /** 测试用物料 ID — 配方明细使用 */
 const TEST_MATERIAL_ID = Number(process.env.E2E_FORMULA_MATERIAL_ID || 1);
-
-async function login(page: Page): Promise<void> {
-  // 重置登录锁定状态（与 global-setup 一致）
-  await fetch('/api/auth/reset-lock', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'admin' }),
-  }).catch(() => {});
-
-  await page.goto('/en/login', { waitUntil: 'domcontentloaded' });
-  await page.waitForLoadState('networkidle');
-  await page.waitForSelector('input#username', { timeout: 60000 });
-  await page.fill('input#username', TEST_USER.username);
-  await page.fill('input#password', TEST_USER.password);
-  await page.getByRole('button', { name: 'Login' }).click();
-  await page.waitForURL('**/en/dashboard', { timeout: 60000 });
-  await page.waitForTimeout(1500);
-}
 
 /** 解析 API 响应体 */
 async function parseJson(resp: APIResponse): Promise<Loose> {
@@ -92,7 +70,7 @@ test.describe('印前模块：油墨配方版本迭代', () => {
     expect(detailResp.ok()).toBeTruthy();
     expect(detailBody.data).toBeTruthy();
     // 草稿版本 status 应为 draft
-    expect(['draft', 'DRAFT', 0, '0']).toContain(detailBody.data.status);
+    expect(['draft', 'DRAFT', 1, '1']).toContain(detailBody.data.status);
   });
 
   /**
@@ -125,13 +103,18 @@ test.describe('印前模块：油墨配方版本迭代', () => {
     );
     const detailBody = await parseJson(detailResp);
     expect(detailResp.ok()).toBeTruthy();
-    expect(['active', 'ACTIVE', 1, '1']).toContain(detailBody.data.status);
+    expect(['active', 'ACTIVE', 2, '2']).toContain(detailBody.data.status);
   });
 
   /**
    * TC-FORMULA-003: 版本作废
+   *
+   * 状态机权威定义（src/domain/dcprint/value-objects/FormulaStatus.ts）：
+   *   DRAFT(1) → ACTIVE(2) → CANCELLED(3)，CANCELLED 为终态。
+   * 草稿不可直接作废，必须先生效；产品以 400「状态流转不合法」拒绝，
+   * 故本用例覆盖两段契约：① 非法流转被拒 ② 合法路径作废后状态为 cancelled。
    */
-  test('TC-FORMULA-003: 草稿版本作废后状态变为 cancelled', async ({ page }) => {
+  test('TC-FORMULA-003: 版本作废后状态变为 cancelled（草稿需先生效）', async ({ page }) => {
     // 1. 创建草稿版本
     const createResp = await page.request.post('/api/dcprint/formula/version', {
       data: buildDraftVersionBody(TEST_COLOR_ID, TEST_MATERIAL_ID),
@@ -140,7 +123,27 @@ test.describe('印前模块：油墨配方版本迭代', () => {
     test.skip(!createResp.ok() || !createBody.data?.id, '前置条件失败：无法创建草稿版本');
     const versionId = createBody.data.id;
 
-    // 2. 作废
+    // 2. 状态机约束：草稿不可直接作废
+    const illegalCancelResp = await page.request.post(
+      `/api/dcprint/formula/version/${versionId}/cancel`,
+      { data: { reason: 'E2E自动化测试-非法流转' } }
+    );
+    const illegalBody = await parseJson(illegalCancelResp);
+    expect(
+      illegalCancelResp.status(),
+      `草稿直接作废应被状态机拒绝(400)，实际: ${illegalCancelResp.status()} ${JSON.stringify(illegalBody)}`
+    ).toBe(400);
+
+    // 3. 先生效进入 ACTIVE
+    const activateResp = await page.request.post(
+      `/api/dcprint/formula/version/${versionId}/activate`
+    );
+    expect(
+      activateResp.ok(),
+      `生效失败，合法作废路径不可达: ${activateResp.status()}`
+    ).toBeTruthy();
+
+    // 4. 再作废（合法路径）
     const cancelResp = await page.request.post(
       `/api/dcprint/formula/version/${versionId}/cancel`,
       { data: { reason: 'E2E自动化测试-作废' } }
@@ -152,7 +155,7 @@ test.describe('印前模块：油墨配方版本迭代', () => {
     ).toBeTruthy();
     expect(cancelBody.success).toBe(true);
 
-    // 3. 验证状态
+    // 5. 验证状态
     const detailResp = await page.request.get(
       `/api/dcprint/formula/version?id=${versionId}`
     );
@@ -199,7 +202,7 @@ test.describe('印前模块：油墨配方版本迭代', () => {
     );
     const detailBody = await parseJson(detailResp);
     expect(detailResp.ok()).toBeTruthy();
-    expect(['draft', 'DRAFT', 0, '0']).toContain(detailBody.data.status);
+    expect(['draft', 'DRAFT', 1, '1']).toContain(detailBody.data.status);
   });
 
   /**
@@ -218,7 +221,7 @@ test.describe('印前模块：油墨配方版本迭代', () => {
     const detail1 = await parseJson(
       await page.request.get(`/api/dcprint/formula/version?id=${v1Id}`)
     );
-    expect(['draft', 'DRAFT', 0, '0']).toContain(detail1.data.status);
+    expect(['draft', 'DRAFT', 1, '1']).toContain(detail1.data.status);
 
     // Step 2: 生效
     const activateResp = await page.request.post(
@@ -229,7 +232,7 @@ test.describe('印前模块：油墨配方版本迭代', () => {
     const detail2 = await parseJson(
       await page.request.get(`/api/dcprint/formula/version?id=${v1Id}`)
     );
-    expect(['active', 'ACTIVE', 1, '1']).toContain(detail2.data.status);
+    expect(['active', 'ACTIVE', 2, '2']).toContain(detail2.data.status);
 
     // Step 3: 作废
     const cancelResp = await page.request.post(
@@ -255,7 +258,7 @@ test.describe('印前模块：油墨配方版本迭代', () => {
     const detail4 = await parseJson(
       await page.request.get(`/api/dcprint/formula/version?id=${dupBody.data.id}`)
     );
-    expect(['draft', 'DRAFT', 0, '0']).toContain(detail4.data.status);
+    expect(['draft', 'DRAFT', 1, '1']).toContain(detail4.data.status);
 
     // Step 5: 新版本可再次生效（形成版本迭代闭环）
     const reActivateResp = await page.request.post(
@@ -278,7 +281,7 @@ test.describe('印前模块：油墨配方版本迭代', () => {
 
     const beforeList = listBody.data?.list || [];
     const beforeActiveCount = beforeList.filter(
-      (v: Loose) => v.status === 'active' || v.status === 'ACTIVE' || v.status === 1
+      (v: Loose) => v.status === 'active' || v.status === 'ACTIVE' || v.status === 2
     ).length;
 
     // 2. 创建并生效一个新版本
@@ -300,15 +303,17 @@ test.describe('印前模块：油墨配方版本迭代', () => {
     const listAfterBody = await parseJson(listAfterResp);
     const afterList = listAfterBody.data?.list || [];
     const afterActiveCount = afterList.filter(
-      (v: Loose) => v.status === 'active' || v.status === 'ACTIVE' || v.status === 1
+      (v: Loose) => v.status === 'active' || v.status === 'ACTIVE' || v.status === 2
     ).length;
 
     // 同一色号下只能有一个 active 版本
     expect(afterActiveCount).toBe(1);
-    // 如果之前已有 active 版本，旧版本应已变为 archived
+    // 如果之前已有 active 版本，旧版本应已被自动归档
+    // 归档语义（MysqlFormulaVersionRepository.archiveOtherActiveVersions）：
+    //   status = 3（CANCELLED，cancel_reason='新版本生效自动归档'），产品侧无独立 ARCHIVED 状态
     if (beforeActiveCount === 1) {
       const archivedCount = afterList.filter(
-        (v: Loose) => v.status === 'archived' || v.status === 'ARCHIVED' || v.status === 2
+        (v: Loose) => v.status === 'cancelled' || v.status === 'CANCELLED' || v.status === 3
       ).length;
       expect(archivedCount).toBeGreaterThanOrEqual(1);
     }

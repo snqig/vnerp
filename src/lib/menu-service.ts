@@ -8,6 +8,7 @@
 import { query } from '@/lib/db';
 import { getCachedPermissions, setCachedPermissions } from '@/lib/auth-cache';
 import { verifyTokenLight } from '@/lib/auth';
+import { isTokenRevoked, isUserTokensRevoked } from '@/lib/token-blacklist';
 import { buildMenuTree, extractPermissions } from '@/lib/menu-tree';
 import type { MenuTreeNode, MenuRow } from '@/lib/menu-tree';
 
@@ -95,6 +96,11 @@ export async function getMenusByUserId(userId: number): Promise<{
  * 根据访问令牌获取菜单（先轻量级校验 JWT 拿到 userId，再查询菜单）。
  *
  * 用于 SSR 预取场景：token 无效或过期时返回 null，调用方应降级到客户端 fetch。
+ *
+ * 撤销检查（与 api-auth.ts 的 API 侧防线对齐，修掉「已登出 token 残留 cookie 时
+ * SSR 仍渲染完整认证外壳」的缺口）：
+ * - isTokenRevoked：登出时加入的单 token 黑名单（key 与 logout 路由完全一致）
+ * - isUserTokensRevoked：改密/锁定时的用户级撤销
  */
 export async function getMenusByToken(token: string): Promise<{
   menus: MenuTreeNode[];
@@ -102,5 +108,13 @@ export async function getMenusByToken(token: string): Promise<{
 } | null> {
   const payload = await verifyTokenLight(token);
   if (!payload) return null;
+
+  if (await isTokenRevoked(`token:${payload.userId}:${token.slice(-20)}`)) {
+    return null;
+  }
+  if (payload.iat && (await isUserTokensRevoked(payload.userId, payload.iat * 1000))) {
+    return null;
+  }
+
   return await getMenusByUserId(payload.userId);
 }

@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
@@ -196,6 +197,10 @@ export default function SupplierEvalPage() {
   const { companyName } = useCompanyName();
   const { toast } = useToast();
   const [records, setRecords] = useState<EvalRecord[]>([]);
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    records,
+    (r) => String(r.id)
+  );
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchName, setSearchName] = useState('');
@@ -224,7 +229,6 @@ export default function SupplierEvalPage() {
     remark: '',
   });
   const [formItems, setFormItems] = useState<EvalItem[]>([...defaultItems]);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const fetchData = async () => {
     try {
@@ -351,21 +355,13 @@ export default function SupplierEvalPage() {
     setFormItems(newItems);
   };
 
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
-  };
+  const toggleSelect = (id: number) => toggle(String(id));
 
-  const toggleSelectAll = () => {
-    if (selectedIds.length === records.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(records.map((r) => r.id!).filter(Boolean) as number[]);
-    }
-  };
+  const toggleSelectAll = () => toggleAll();;
 
   const handlePrint = () => {
     const recordsToPrint =
-      selectedIds.length > 0 ? records.filter((r) => selectedIds.includes(r.id!)) : records;
+      selectedCount > 0 ? records.filter((r) => isSelected(String(r.id))) : records;
     if (recordsToPrint.length === 0) {
       toast({ title: t('noPrintData'), variant: 'destructive' });
       return;
@@ -419,7 +415,7 @@ export default function SupplierEvalPage() {
 
   const _handleExportXLS = () => {
     const recordsToExport =
-      selectedIds.length > 0 ? records.filter((r) => selectedIds.includes(r.id!)) : records;
+      selectedCount > 0 ? records.filter((r) => isSelected(String(r.id))) : records;
     if (recordsToExport.length === 0) {
       toast({ title: t('noExportData'), variant: 'destructive' });
       return;
@@ -462,7 +458,7 @@ export default function SupplierEvalPage() {
 
   const _handleExportPDF = () => {
     const recordsToExport =
-      selectedIds.length > 0 ? records.filter((r) => selectedIds.includes(r.id!)) : records;
+      selectedCount > 0 ? records.filter((r) => isSelected(String(r.id))) : records;
     if (recordsToExport.length === 0) {
       toast({ title: t('noExportData'), variant: 'destructive' });
       return;
@@ -563,8 +559,8 @@ export default function SupplierEvalPage() {
                 },
               ]}
               data={
-                selectedIds.length > 0
-                  ? records.filter((r) => r.id && selectedIds.includes(r.id))
+                selectedCount > 0
+                  ? records.filter((r) => r.id && isSelected(String(r.id)))
                   : records
               }
             />
@@ -604,7 +600,7 @@ export default function SupplierEvalPage() {
                 <TableRow>
                   <TableHead className="w-12">
                     <Checkbox
-                      checked={records.length > 0 && selectedIds.length === records.length}
+                      checked={allSelected}
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
@@ -626,7 +622,7 @@ export default function SupplierEvalPage() {
                   <TableRow key={r.id}>
                     <TableCell>
                       <Checkbox
-                        checked={selectedIds.includes(r.id!)}
+                        checked={isSelected(String(r.id))}
                         onCheckedChange={() => toggleSelect(r.id!)}
                       />
                     </TableCell>

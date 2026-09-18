@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef as _useRef } from 'react';
 import { Link, usePathname } from '@/i18n/navigation';
+import type { DbRow } from '@/types/db';
 import {
   Bell,
   User,

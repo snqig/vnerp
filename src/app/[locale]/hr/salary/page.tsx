@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useRef } from 'react';
@@ -142,7 +143,6 @@ export default function HRSalaryPage() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [selectedSalary, setSelectedSalary] = useState<Salary | null>(null);
   const [loading, setLoading] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [sortField, setSortField] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const printRef = useRef<HTMLDivElement>(null);
@@ -264,6 +264,10 @@ export default function HRSalaryPage() {
     }
     return true;
   });
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    filteredSalaries,
+    (r) => String(r.id)
+  );
 
   const sortedSalaries = (() => {
     if (!sortField) return filteredSalaries;
@@ -311,17 +315,9 @@ export default function HRSalaryPage() {
     }
   };
 
-  const toggleSelectAll = () => {
-    if (selectedIds.length === filteredSalaries.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(filteredSalaries.map((s) => s.id));
-    }
-  };
+  const toggleSelectAll = () => toggleAll();;
 
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
-  };
+  const toggleSelect = (id: number) => toggle(String(id));
 
   const SortableHeader = ({
     field,
@@ -654,8 +650,8 @@ export default function HRSalaryPage() {
                     { key: 'remark', label: tc('remark'), width: 15 },
                   ]}
                   data={
-                    selectedIds.length > 0
-                      ? filteredSalaries.filter((s) => selectedIds.includes(s.id))
+                    selectedCount > 0
+                      ? filteredSalaries.filter((s) => isSelected(String(s.id)))
                       : filteredSalaries
                   }
                 />
@@ -672,10 +668,7 @@ export default function HRSalaryPage() {
                 <TableRow>
                   <TableHead className="w-12 text-center">
                     <Checkbox
-                      checked={
-                        selectedIds.length === filteredSalaries.length &&
-                        filteredSalaries.length > 0
-                      }
+                      checked={allSelected}
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
@@ -699,7 +692,7 @@ export default function HRSalaryPage() {
                   <TableRow key={salary.id}>
                     <TableCell className="text-center">
                       <Checkbox
-                        checked={selectedIds.includes(salary.id)}
+                        checked={isSelected(String(salary.id))}
                         onCheckedChange={() => toggleSelect(salary.id)}
                       />
                     </TableCell>

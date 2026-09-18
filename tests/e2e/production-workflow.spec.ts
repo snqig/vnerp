@@ -17,22 +17,26 @@
  */
 
 import { test, expect, type Page, type APIResponse } from '@playwright/test';
+import { login } from '../utils/api-auth';
 
-const TEST_USER = {
-  username: 'admin',
-  password: 'admin123',
-};
-
-/** 工单状态（生产模块使用数值状态） */
+/**
+ * 工单状态 —— prod_work_order.status 真实类型为 varchar(20)，
+ * 取值与 src/lib/constants.ts 的 WorkOrderStatus 一致。
+ * （历史缺陷：本 spec 曾按数值 10/20/40/50/90 过滤，'confirmed' → NaN → 恒不匹配，
+ *   致使整个文件 24 个用例全部 test.skip。）
+ */
 const WO_STATUS = {
-  PENDING: 10, // 待审核（对应字符串 'pending'）
-  CONFIRMED: 20, // 已审核
-  PRODUCING: 40, // 生产中
-  COMPLETED: 50, // 完工
-  CLOSED: 90, // 已关闭
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  PRODUCING: 'producing',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
 } as const;
 
-/** 入库单/领料单状态 */
+/** 视为「已审核、可用于领料 / 报工 / 完工入库」的状态集合 */
+const WO_ACTIVE_STATUSES: readonly string[] = [WO_STATUS.CONFIRMED, WO_STATUS.PRODUCING];
+
+/** 完工入库单状态（inv_production_inbound.status 为数值：1 草稿 / 3 已过账） */
 const DOC_STATUS = {
   DRAFT: 1, // 草稿
   POSTED: 3, // 已过账
@@ -42,23 +46,6 @@ const DOC_STATUS = {
 const TEST_WAREHOUSE_ID = Number(process.env.E2E_WAREHOUSE_ID || 1);
 const TEST_MATERIAL_ID = Number(process.env.E2E_MATERIAL_ID || 1);
 const TEST_SALES_ORDER_NO = process.env.E2E_SALES_ORDER_NO || '';
-
-async function login(page: Page): Promise<void> {
-  await fetch('/api/auth/reset-lock', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'admin' }),
-  }).catch(() => {});
-
-  await page.goto('/en/login', { waitUntil: 'domcontentloaded' });
-  await page.waitForLoadState('networkidle');
-  await page.waitForSelector('input#username', { timeout: 60000 });
-  await page.fill('input#username', TEST_USER.username);
-  await page.fill('input#password', TEST_USER.password);
-  await page.getByRole('button', { name: 'Login' }).click();
-  await page.waitForURL('**/en/dashboard', { timeout: 60000 });
-  await page.waitForTimeout(1500);
-}
 
 async function parseJson(resp: APIResponse): Promise<Loose> {
   return (await resp.json()) as Loose;
@@ -75,17 +62,17 @@ async function findAvailableSalesOrderNo(page: Page): Promise<string | null> {
   if (!resp.ok()) return null;
   const body = await parseJson(resp);
   const list = body.data?.list || [];
-  // 找一个未取消的订单
+  // 找一个未取消的订单（兼容字符串（当前领域模型）与数值（历史）两种状态表示）
   const available = list.find((o: Loose) => {
-    const status = Number(o.status);
-    // status 1=草稿 2=确认 3=生产中 4=完成 5=取消
-    return status !== 5 && o.order_no;
+    const raw = o.status;
+    const cancelled = raw === 'cancelled' || Number(raw) === 5;
+    return !cancelled && o.order_no;
   });
   return available?.order_no || null;
 }
 
 /**
- * 查询可用工单（status >= 20 且 < 90）用于领料/报工/入库测试。
+ * 查询可用工单（已审核 confirmed / 生产中 producing）用于领料/报工/入库测试。
  */
 async function findAvailableWorkOrder(page: Page): Promise<Loose | null> {
   const resp = await page.request.get('/api/production/work-orders?page=1&page_size=20');
@@ -94,8 +81,8 @@ async function findAvailableWorkOrder(page: Page): Promise<Loose | null> {
   const list = body.data?.list || [];
   // 找一个已审核但未关闭的工单
   const available = list.find((wo: Loose) => {
-    const status = Number(wo.status);
-    return status >= WO_STATUS.CONFIRMED && status < WO_STATUS.CLOSED;
+    const status = String(wo.status ?? '');
+    return WO_ACTIVE_STATUSES.includes(status);
   });
   return available || null;
 }
@@ -392,9 +379,9 @@ test.describe('生产模块：FinishOrderApprovedEvent 完整链路（重点）'
     const completedQtyAfter = Number(woAfterBody.data?.completed_qty || 0);
     expect(completedQtyAfter).toBeGreaterThanOrEqual(completedQtyBefore + 30);
 
-    // 7. 验证工单状态已流转（>= 40 生产中 或 >= 50 完工）
-    const woStatusAfter = Number(woAfterBody.data?.status || 0);
-    expect(woStatusAfter).toBeGreaterThanOrEqual(WO_STATUS.PRODUCING);
+    // 7. 验证工单状态已流转（producing 生产中 或 completed 完工）
+    const woStatusAfter = String(woAfterBody.data?.status ?? '');
+    expect([WO_STATUS.PRODUCING, WO_STATUS.COMPLETED]).toContain(woStatusAfter);
   });
 
   /**
@@ -643,8 +630,8 @@ test.describe('生产模块：工单全流程串联（E2E 闭环）', () => {
     const woFinalBody = await parseJson(woFinalResp);
     expect(Number(woFinalBody.data?.completed_qty || 0)).toBeGreaterThanOrEqual(78);
 
-    // Step 10: 验证工单状态已流转到生产中(40)或完工(50)
-    const finalStatus = Number(woFinalBody.data?.status || 0);
-    expect(finalStatus).toBeGreaterThanOrEqual(WO_STATUS.PRODUCING);
+    // Step 10: 验证工单状态已流转到 producing（生产中）或 completed（完工）
+    const finalStatus = String(woFinalBody.data?.status ?? '');
+    expect([WO_STATUS.PRODUCING, WO_STATUS.COMPLETED]).toContain(finalStatus);
   });
 });

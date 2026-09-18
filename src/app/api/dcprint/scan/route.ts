@@ -18,7 +18,7 @@ export const POST = withPermission(
       return errorResponse(ts('k_15lo7aw'), 400, 400);
     }
 
-    let qrData: unknown;
+    let qrData: Record<string, any>;
     try {
       qrData = JSON.parse(qrContent);
     } catch {
@@ -37,7 +37,7 @@ export const POST = withPermission(
     await logScan(scanType, qrContent, labelNo, operatorId, operatorName, 'scanning');
 
     // 根据类型查询不同信息
-    let result: unknown = null;
+    let result: DbRow | null = null;
 
     switch (type) {
       case '0': // 母材标签
@@ -84,7 +84,7 @@ export const POST = withPermission(
 
 // 查询物料标签
 async function queryMaterialLabel(labelNo: string) {
-  const label = await queryOne<unknown>(
+  const label = await queryOne(
     `SELECT
       l.id,
       l.label_no as labelNo,
@@ -170,7 +170,7 @@ async function queryMaterialLabel(labelNo: string) {
 
 // 查询工单
 async function queryWorkOrder(workOrderNo: string) {
-  const workOrder = await queryOne<unknown>(
+  const workOrder = await queryOne(
     `SELECT
       wo.id,
       wo.order_no as orderNo,
@@ -216,7 +216,7 @@ async function queryWorkOrder(workOrderNo: string) {
 
 // 查询流程卡
 async function queryProcessCard(cardNo: string) {
-  const card = await queryOne<unknown>(
+  const card = await queryOne(
     `SELECT
       c.id,
       c.card_no as cardNo,

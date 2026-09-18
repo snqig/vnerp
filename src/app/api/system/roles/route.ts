@@ -21,7 +21,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   );
 
   // 解析权限JSON
-  const list = rows.map((row: DbRow) => ({
+  const list: DbRow[] = rows.map((row: DbRow) => ({
     ...row,
     permissions:
       typeof row.permissions === 'string'

@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useCompanyName } from '@/hooks/useCompanyName';
@@ -354,7 +355,6 @@ export default function OutboundManagementPage() {
 
   // 数据状态
   const [outboundRecords, setOutboundRecords] = useState<OutboundRecord[]>([]);
-  const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
   const [warehouses, setWarehouses] = useState<DbRow[]>([]);
 
   // 对话框状态
@@ -454,7 +454,7 @@ export default function OutboundManagementPage() {
     setSearchQuery('');
     setStatusFilter('all');
     setDateRange('all');
-    setSelectedRecords([]);
+    clear();
     toast.success(t('filterReset'));
   }, []);
 
@@ -472,6 +472,10 @@ export default function OutboundManagementPage() {
       return matchesSearch && matchesStatus;
     });
   }, [outboundRecords, searchQuery, statusFilter]);
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll, clear } = useRowSelection(
+    filteredRecords,
+    (r) => String(r.id)
+  );
 
   // 新增出库单
   // 输入物料编码 + 选择仓库后，自动查询该物料在当前仓库的可用库存
@@ -874,8 +878,8 @@ export default function OutboundManagementPage() {
   // 列印：新窗口渲染 A4 报表并唤起浏览器打印（选中行优先，未选则列印当前筛选结果）
   const handlePrint = () => {
     const dataToPrint =
-      selectedRecords.length > 0
-        ? filteredRecords.filter((r) => selectedRecords.includes(r.id))
+      selectedCount > 0
+        ? filteredRecords.filter((r) => isSelected(String(r.id)))
         : filteredRecords;
 
     if (dataToPrint.length === 0) {
@@ -946,20 +950,10 @@ export default function OutboundManagementPage() {
   };
 
   // 选择记录
-  const toggleSelectRecord = (recordId: string) => {
-    setSelectedRecords((prev) =>
-      prev.includes(recordId) ? prev.filter((id) => id !== recordId) : [...prev, recordId]
-    );
-  };
+  const toggleSelectRecord = (recordId: string) => toggle(String(recordId));
 
   // 全选
-  const toggleSelectAll = () => {
-    if (selectedRecords.length === filteredRecords.length) {
-      setSelectedRecords([]);
-    } else {
-      setSelectedRecords(filteredRecords.map((r) => r.id));
-    }
-  };
+  const toggleSelectAll = () => toggleAll();;
 
   // 计算统计数据
   const totalOutboundToday = outboundRecords
@@ -1077,9 +1071,9 @@ export default function OutboundManagementPage() {
             </Select>
           </div>
 
-          {selectedRecords.length > 0 && (
+          {selectedCount > 0 && (
             <Badge variant="secondary" className="ml-auto">
-              {t('selectedRecordsCount', { count: selectedRecords.length })}
+              {t('selectedRecordsCount', { count: selectedCount })}
             </Badge>
           )}
         </motion.div>
@@ -1207,10 +1201,7 @@ export default function OutboundManagementPage() {
                     <TableRow>
                       <TableHead className="w-12">
                         <Checkbox
-                          checked={
-                            selectedRecords.length === filteredRecords.length &&
-                            filteredRecords.length > 0
-                          }
+                          checked={allSelected}
                           onCheckedChange={toggleSelectAll}
                         />
                       </TableHead>
@@ -1237,7 +1228,7 @@ export default function OutboundManagementPage() {
                         <TableRow key={record.id} className="hover:bg-muted/50">
                           <TableCell>
                             <Checkbox
-                              checked={selectedRecords.includes(record.id)}
+                              checked={isSelected(String(record.id))}
                               onCheckedChange={() => toggleSelectRecord(record.id)}
                             />
                           </TableCell>

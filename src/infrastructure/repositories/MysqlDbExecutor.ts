@@ -8,6 +8,7 @@
  */
 
 import { query, execute, queryOne, transaction } from '@/lib/db';
+import type { DbConnection } from '@/types/db';
 import type { DbExecutor, ResultSetHeader, PoolConnection, SqlValue } from './DbExecutor';
 
 export class MysqlDbExecutor implements DbExecutor {
@@ -23,7 +24,7 @@ export class MysqlDbExecutor implements DbExecutor {
     return queryOne<T>(sql, params);
   }
 
-  async transaction<T>(callback: (connection: PoolConnection) => Promise<T>): Promise<T> {
+  async transaction<T>(callback: (connection: DbConnection) => Promise<T>): Promise<T> {
     return transaction<T>(callback);
   }
 }

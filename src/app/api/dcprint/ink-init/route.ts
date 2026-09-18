@@ -1,8 +1,9 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbRow } from '@/types/db';
 
 ;
 import { NextRequest } from 'next/server';
-import { execute, SqlValue } from '@/lib/db';
+import { execute, query, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
@@ -18,7 +19,7 @@ async function safeCreateTable(tableName: string, sql: string) {
 export const POST = withPermission(
   async (_request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
-    const results: SqlValue[] = [];
+    const results: DbRow[] = [];
 
     results.push(
       await safeCreateTable(
@@ -63,7 +64,7 @@ export const POST = withPermission(
     );
 
     try {
-      const [cols] = await execute("SHOW COLUMNS FROM ink_opening_record LIKE 'workorder_id'");
+      const cols = await query("SHOW COLUMNS FROM ink_opening_record LIKE 'workorder_id'");
       if (cols.length === 0) {
         await execute(
           ts('k_1bf4t44')
@@ -87,7 +88,7 @@ export const POST = withPermission(
     }
 
     try {
-      const [cols] = await execute("SHOW COLUMNS FROM inv_inventory_batch LIKE 'inspection_id'");
+      const cols = await query("SHOW COLUMNS FROM inv_inventory_batch LIKE 'inspection_id'");
       if (cols.length === 0) {
         await execute(
           ts('k_1qspozm')
@@ -108,7 +109,7 @@ export const POST = withPermission(
     }
 
     try {
-      const [cols] = await execute("SHOW COLUMNS FROM inv_scan_log LIKE 'batch_no'");
+      const cols = await query("SHOW COLUMNS FROM inv_scan_log LIKE 'batch_no'");
       if (cols.length === 0) {
         await execute(
           ts('k_xykevy')

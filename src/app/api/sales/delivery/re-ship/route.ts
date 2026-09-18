@@ -23,7 +23,7 @@ export const POST = withPermission(
     }
 
     // 查询原发货单
-    const parentShipment = await queryOne<unknown>(
+    const parentShipment = await queryOne(
       `SELECT * FROM shipments WHERE id = ? AND deleted = 0`,
       [parent_shipment_id]
     );
@@ -55,7 +55,7 @@ export const POST = withPermission(
     );
 
     // 复制原发货单的明细到补发单
-    const parentItems = await query<unknown>(`SELECT * FROM shipment_items WHERE shipment_id = ?`, [
+    const parentItems = await query(`SELECT * FROM shipment_items WHERE shipment_id = ?`, [
       parent_shipment_id,
     ]);
 

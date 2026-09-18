@@ -403,10 +403,13 @@ describe('工单 API 集成测试', () => {
       const { status } = await parseResponse(await PUT(req as any));
 
       expect(status).toBe(200);
-      expect(mockConnection.execute).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE sal_order SET status = 2'),
-        ['SO001']
+      // 断言「行为契约」而非 SQL 字面量：最后一个活动工单被取消后，
+      // 销售订单应回到契约码 2（已确认），且不得把已取消(5)的订单「复活」。
+      const linkCall = mockConnection.execute.mock.calls.find(
+        (c: unknown[]) => typeof c[0] === 'string' && c[0].includes('UPDATE sal_order SET status')
       );
+      expect(linkCall).toBeDefined();
+      expect((linkCall as unknown[])[1]).toEqual([2, 'SO001', 5]);
     });
   });
 

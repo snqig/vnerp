@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { logger } from '@/lib/logger';
 import { useEffect, useState } from 'react';
 
 // Swagger UI 依赖浏览器 API，必须 ssr: false
@@ -18,7 +19,7 @@ export default function ApiDocsPage() {
     fetch('/api/openapi.json')
       .then((res) => res.json())
       .then((data) => setSpec(data))
-      .catch((err) => console.error('Failed to load OpenAPI spec:', err));
+      .catch((err) => logger.error('Failed to load OpenAPI spec:', err));
   }, []);
 
   if (!spec) {

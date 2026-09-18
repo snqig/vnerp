@@ -32,7 +32,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   if (expired.length > 0) {
-    const ids = expired.map((r: DbRow) => r.id);
+    const ids = expired.map((r: any) => r.id);
     await execute(
       `UPDATE qms_sgs_cert SET status = 3 WHERE id IN (${ids.map(() => '?').join(',')}) AND status = 1`,
       ids

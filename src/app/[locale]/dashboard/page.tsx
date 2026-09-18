@@ -1,7 +1,8 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useCompanyName } from '@/hooks/useCompanyName';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +29,8 @@ import {
   DollarSign,
   ArrowRight,
   RefreshCw,
+  Maximize,
+  Minimize,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
@@ -84,6 +87,25 @@ export default function DashboardPage() {
     orderStats: [],
   });
   const [loading, setLoading] = useState(true);
+  const { companyName } = useCompanyName();
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      dashboardRef.current?.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   const s = data.stats;
 
@@ -134,24 +156,60 @@ export default function DashboardPage() {
 
   return (
     <MainLayout title={t('title')}>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">{t('title')}</h2>
-            <p className="text-muted-foreground mt-1">{t('welcome', { time: currentTime })}</p>
+      <div ref={dashboardRef} className="space-y-6">
+        <div
+          className="relative rounded-xl overflow-hidden px-4 pt-6 pb-4"
+          style={{ background: 'linear-gradient(135deg, #091637 0%, #010205 100%)' }}
+        >
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-0 left-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl animate-blob" />
+            <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-blob animation-delay-2000" />
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            data-testid="dashboard-refresh"
-            onClick={() => {
-              setLoading(true);
-              fetchDashboard();
-            }}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            {tc('refresh')}
-          </Button>
+          <div className="absolute inset-0 tech-grid-bg pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col items-center">
+            <div className="tech-title-wrapper">
+              <div className="tech-title-row">
+                <div className="tech-title-line-left" />
+                <div>
+                  <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
+                    {companyName}
+                  </h1>
+                  <p className="text-[10px] text-white/50">{t('title')}</p>
+                </div>
+                <div className="tech-title-line-right" />
+              </div>
+              <div className="tech-title-bottom-line" />
+            </div>
+            <div className="flex items-center gap-3 mt-1.5">
+              <div className="text-sm font-mono font-bold text-cyan-400">{currentTime}</div>
+              <button
+                onClick={toggleFullscreen}
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
+              >
+                {isFullscreen ? (
+                  <Minimize className="h-3.5 w-3.5 text-cyan-400" />
+                ) : (
+                  <Maximize className="h-3.5 w-3.5 text-cyan-400" />
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setLoading(true);
+                  fetchDashboard();
+                }}
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                data-testid="dashboard-refresh"
+                title={tc('refresh')}
+              >
+                <RefreshCw className="h-3.5 w-3.5 text-cyan-400" />
+              </button>
+              <div className="px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-[10px] text-cyan-300">
+                {loading ? tc('loading') : '● ' + t('realtime')}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

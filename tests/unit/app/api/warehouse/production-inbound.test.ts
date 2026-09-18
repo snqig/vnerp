@@ -150,7 +150,7 @@ describe('production-inbound POST — 创建入库单', () => {
 
   it('有工单关联且工单已审核：写入工单号', async () => {
     mocks.mockConn.execute
-      .mockResolvedValueOnce(mockSelectReturn([{ id: 50, status: 30 }])) // SELECT 工单
+      .mockResolvedValueOnce(mockSelectReturn([{ id: 50, status: 'confirmed' }])) // SELECT 工单（已确认，允许建完工入库单）
       .mockResolvedValueOnce(mockExecReturn({ insertId: 101 })) // INSERT 主表
       .mockResolvedValueOnce(mockExecReturn()); // INSERT 明细
 
@@ -204,8 +204,8 @@ describe('production-inbound POST — 创建入库单', () => {
     expect(res.data.message).toContain('工单未审核');
   });
 
-  it('工单已关闭（status>=90）时抛错', async () => {
-    mocks.mockConn.execute.mockResolvedValueOnce(mockSelectReturn([{ id: 50, status: 90 }]));
+  it('工单已取消（cancelled）时抛错', async () => {
+    mocks.mockConn.execute.mockResolvedValueOnce(mockSelectReturn([{ id: 50, status: 'cancelled' }]));
 
     const res = await parseResponse(
       await POST(makeRequest({

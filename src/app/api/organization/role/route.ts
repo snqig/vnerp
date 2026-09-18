@@ -61,21 +61,19 @@ function buildQueryConditions(params: { keyword: string; status: string | null }
 // 格式化角色数据
 function formatRole(role: DbRow) {
   let permissions: string[] = [];
-  if (role.permissions) {
+  const raw = role.permissions;
+  if (raw == null) {
+    permissions = [];
+  } else if (Array.isArray(raw)) {
+    // mysql2 已自动解析 JSON 列，raw 直接是数组
+    permissions = raw as string[];
+  } else if (typeof raw === 'string') {
     try {
-      if (typeof role.permissions === 'string') {
-        // 尝试解析JSON字符串
-        const parsed = JSON.parse(role.permissions);
-        permissions = Array.isArray(parsed) ? parsed : [parsed];
-      } else if (Array.isArray(role.permissions)) {
-        // 如果已经是数组
-        permissions = role.permissions;
-      }
+      const parsed = JSON.parse(raw);
+      permissions = Array.isArray(parsed) ? parsed : [parsed as unknown as string];
     } catch {
-      // 如果不是JSON，可能是逗号分隔的字符串
-      if (typeof role.permissions === 'string') {
-        permissions = role.permissions.split(',').filter((p: string) => p.trim());
-      }
+      // 非 JSON，按逗号分隔处理
+      permissions = raw.split(',').filter((p: string) => p.trim());
     }
   }
   return {

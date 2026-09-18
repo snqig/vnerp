@@ -42,7 +42,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     product_name: order.product_name,
     // prod_work_order 无 material_id 外键，MRP 工单「品名」列以生产产品名(产成品)填充，避免空白
     material_name: order.product_name,
-    plan_qty: parseFloat(order.plan_qty || '0'),
+    // prod_work_order 无 plan_qty 列（上面是 SELECT wo.*）：
+    // 原写法 parseFloat(undefined || '0') 恒为 0 → 列表「计划数量」整列显示 0。
+    plan_qty: parseFloat(String(order.quantity ?? '0')) || 0,
     unit: order.unit,
     status: order.status,
     priority: order.priority,

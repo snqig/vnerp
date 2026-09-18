@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/select';
 import { Calendar, Plus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useRowSelection } from '@/lib/useRowSelection';
+import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
 interface Schedule {
   id: number;
@@ -115,6 +117,30 @@ export default function SchedulesPage() {
     !search || s.employeeName?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
+    useRowSelection(filtered, (r) => String(r.id));
+  const [deleting, setDeleting] = useState(false);
+
+  const handleBatchDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
+    setDeleting(true);
+    let okCount = 0; let failMsg = '';
+    for (const id of ids) {
+      try {
+        const res = await authFetch(`/api/hr/schedules?id=${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.code === 200) okCount++; else failMsg = data.message || failMsg;
+      } catch { failMsg = tc('error'); }
+    }
+    setDeleting(false);
+    if (okCount > 0) toast.success(tc('batchDeleteSuccess', { count: okCount }));
+    if (failMsg) toast.error(failMsg);
+    clear();
+    fetchSchedules();
+  };
+
   const monthLabel = currentMonth;
 
   return (
@@ -158,9 +184,13 @@ export default function SchedulesPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
+            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
+                  </TableHead>
                   <TableHead>{t('employeeName')}</TableHead>
                   <TableHead>{t('shiftName')}</TableHead>
                   <TableHead>{t('startDate')}</TableHead>
@@ -171,6 +201,9 @@ export default function SchedulesPage() {
               <TableBody>
                 {filtered.map((s) => (
                   <TableRow key={s.id}>
+                    <TableCell>
+                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(s.id))} onChange={() => toggle(String(s.id))} aria-label={tc('selectRow', { id: s.id })} />
+                    </TableCell>
                     <TableCell className="font-medium">{s.employeeName}</TableCell>
                     <TableCell>{s.shiftName}</TableCell>
                     <TableCell>{s.startDate}</TableCell>
@@ -186,7 +219,7 @@ export default function SchedulesPage() {
                 ))}
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       {loading ? tc('loading') : t('noData')}
                     </TableCell>
                   </TableRow>

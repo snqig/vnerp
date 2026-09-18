@@ -38,6 +38,30 @@ export function maskSensitiveData<T>(data: T): T {
   return clone;
 }
 
+export type LooseLogFn = (...args: unknown[]) => void;
+
+export interface AppLogger {
+  trace: LooseLogFn;
+  debug: LooseLogFn;
+  info: LooseLogFn;
+  warn: LooseLogFn;
+  error: LooseLogFn;
+  fatal: LooseLogFn;
+  stepStart: (ctx: Record<string, unknown>, stepName: string, data?: Record<string, unknown>) => void;
+  stepEnd: (ctx: Record<string, unknown>, stepName: string, data?: Record<string, unknown>) => void;
+  db: (ctx: Record<string, unknown>, operation: string, table: string, data?: Record<string, unknown>) => void;
+  branch: (
+    ctx: Record<string, unknown>,
+    branchName: string,
+    condition: string,
+    result: boolean,
+    data?: Record<string, unknown>
+  ) => void;
+  child: (...args: unknown[]) => AppLogger;
+  level: string | number;
+  [key: string]: unknown;
+}
+
 export const logger = pino({
   level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
   transport:
@@ -47,7 +71,7 @@ export const logger = pino({
           target: 'pino-pretty',
           options: { colorize: true, translateTime: 'SYS:standard', ignore: 'pid,hostname' },
         },
-});
+}) as unknown as AppLogger;
 
 export function secureLog(level: string, message: string, data?: Record<string, unknown>) {
   (logger as unknown as Record<string, (obj: unknown, msg?: string) => void>)[level](

@@ -55,7 +55,7 @@ async function tblExists(c, t) {
   const note = (m) => { log.push(m); };
 
   // ---- 主数据锚点 ----
-  const [cust] = await c.query('SELECT id, customer_name FROM crm_customer WHERE deleted=0');
+  const [cust] = await c.query('SELECT id, customer_code, customer_name FROM crm_customer WHERE deleted=0');
   const [sup] = await c.query('SELECT id, supplier_name, supplier_code FROM pur_supplier WHERE deleted=0');
   const [prod] = await c.query('SELECT id, product_code, product_name FROM mdm_product WHERE deleted=0');
   const [rawMat] = await c.query('SELECT id, material_code, material_name, specification, unit FROM inv_material WHERE deleted=0 LIMIT 8');
@@ -111,9 +111,10 @@ async function tblExists(c, t) {
         [[sampleNo, cc.id, cc.customer_name, pp.product_name, pp.product_code, prodQty, DAY, 'completed', 'completed', `${DAY} 09:30:00`, 0]]));
       const [sampleRow] = await c.query('SELECT id FROM sal_sample_order WHERE order_no=?', [sampleNo]);
       const cardNo = `SC-${DAY}-${g2}`;
+      const cardStatus = [3, 2, 1, 3, 2][(g - 1) % 5]; // confirmed/reviewed/draft 混合，避免全 invalid
       await c.query(...ins('prd_standard_card',
-        ['card_no','name','type','customer_id','customer_name','product_name','status','create_by','create_time','deleted'],
-        [[cardNo, `标准卡${g2}`, 'process', cc.id, cc.customer_name, pp.product_name, 4, 1, `${DAY} 10:00:00`, 0]]));
+        ['card_no','name','type','customer_id','customer_code','customer_name','product_name','material_id','material_name','material_type','version','finished_size','print_type','status','create_by','create_time','deleted'],
+        [[cardNo, `标准卡${g2}`, 'process', cc.id, cc.customer_code, cc.customer_name, pp.product_name, rm.id, rm.material_name, rm.material_type, 'V1.0', '100x150mm', '轮转印刷', cardStatus, 1, `${DAY} 10:00:00`, 0]]));
       const [cardRow] = await c.query('SELECT id FROM prd_standard_card WHERE card_no=?', [cardNo]);
 
       // 3) 生产工单（正确关联 sal_order + product）
@@ -298,6 +299,89 @@ async function tblExists(c, t) {
       okGroups++;
     } catch (e) {
       note(`⚠️ 第 ${g} 组失败: ${e.message}`);
+    }
+  }
+
+  // ---- 14) 流程卡主材标签（inv_material_label）+ prd_process_card.main_label_id 回填 ----
+  // 背景：/dcprint/trace 的「主材信息」依赖 inv_trace_record.main_label_id → inv_material_label.id；
+  //       inv_material_label 为空会让追溯主材字段（material_code/name/batch/supplier）全为 null，
+  //       prd_process_card.main_label_id 也应指向真实标签行（该列有 FK）。
+  // 幂等：以 label_no 唯一键 UPSERT；prd_process_card 无数据时自动跳过。
+  {
+    try {
+      const [subs] = await c.query(
+        "SELECT material_code, material_name, specification, unit FROM inv_material WHERE deleted=0 AND (material_name LIKE '%薄膜%' OR material_name LIKE '%不干胶%') ORDER BY id LIMIT 12"
+      );
+      const pool = subs.length ? subs : rawMat;
+      const [cards] = await c.query(
+        'SELECT id, main_label_no FROM prd_process_card WHERE deleted=0 AND main_label_no IS NOT NULL ORDER BY id'
+      );
+      let labelN = 0;
+      for (let i = 0; i < cards.length; i++) {
+        const m = pool[i % pool.length];
+        const recv = `2026-0${7 + (i % 2)}-${String((i % 27) + 1).padStart(2, '0')}`;
+        const batch = `MLB${recv.replace(/-/g, '')}-${String(i + 1).padStart(2, '0')}`;
+        const supName = sup[i % sup.length].supplier_name;
+        await c.query(
+          `INSERT INTO inv_material_label
+             (label_no, qr_code, purchase_order_no, supplier_name, receive_date, material_code, material_name,
+              specification, unit, batch_no, quantity, warehouse_id, location_id, is_main_material, is_used, is_cut,
+              parent_label_id, label_type, status, deleted)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 1, 0, 0, NULL, '1', 1, 0)
+           ON DUPLICATE KEY UPDATE material_code=VALUES(material_code), material_name=VALUES(material_name),
+             specification=VALUES(specification), unit=VALUES(unit), batch_no=VALUES(batch_no),
+             supplier_name=VALUES(supplier_name), receive_date=VALUES(receive_date), quantity=VALUES(quantity),
+             warehouse_id=VALUES(warehouse_id), is_main_material=1, deleted=0`,
+          [
+            cards[i].main_label_no,
+            JSON.stringify({ ID: cards[i].main_label_no, TYPE: '1', WLDH: m.material_code, WLPH: batch }),
+            `PO${recv.replace(/-/g, '')}${String(i + 1).padStart(3, '0')}`,
+            supName,
+            recv,
+            m.material_code,
+            m.material_name,
+            m.specification || null,
+            m.unit || null,
+            batch,
+            500 + (i % 8) * 100,
+            wh[0].id,
+          ]
+        );
+        labelN++;
+      }
+      // 回填主材引用（main_label_id 有 FK 指向 inv_material_label.id）
+      const [upd] = await c.query(
+        `UPDATE prd_process_card c JOIN inv_material_label l ON l.label_no = c.main_label_no
+         SET c.main_label_id = l.id
+         WHERE c.main_label_no IS NOT NULL AND c.main_label_no <> ''`
+      );
+      // 补齐 prd_process_card_material 已引用但标签缺失的行（label_id 有 FK 语义），避免追溯明细 dangling
+      const [danglingMat] = await c.query(
+        `SELECT DISTINCT m.label_id, m.label_no, m.material_code
+         FROM prd_process_card_material m
+         LEFT JOIN inv_material_label l ON m.label_id = l.id
+         WHERE l.id IS NULL AND m.label_no IS NOT NULL`
+      );
+      for (const d of danglingMat) {
+        const [mi] = await c.query(
+          'SELECT material_name, specification, unit FROM inv_material WHERE material_code=? LIMIT 1',
+          [d.material_code]
+        );
+        const mm = mi[0] || { material_name: d.material_code, specification: null, unit: null };
+        await c.query(
+          `INSERT INTO inv_material_label
+             (id, label_no, material_code, material_name, specification, unit, batch_no,
+              warehouse_id, location_id, is_main_material, parent_label_id, label_type, status, deleted)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, 1, NULL, '1', 1, 0)
+           ON DUPLICATE KEY UPDATE material_name=VALUES(material_name), deleted=0`,
+          [d.label_id, d.label_no, d.material_code, mm.material_name, mm.specification, mm.unit, d.label_no, wh[0].id]
+        );
+      }
+      note(
+        `流程卡主材标签: UPSERT ${labelN} 条(main_label_no) + 补齐悬空引用 ${danglingMat.length} 条; 回填 main_label_id ${upd.affectedRows} 行`
+      );
+    } catch (e) {
+      note(`⚠️ 流程卡主材标签种子失败: ${e.message}`);
     }
   }
 

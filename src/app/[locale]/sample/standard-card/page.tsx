@@ -1,4 +1,6 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
+import { logger } from '@/lib/logger';
 
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -62,6 +64,10 @@ function StandardCardPageContent() {
   const isEdit = searchParams.get('edit') === 'true';
 
   const [list, setList] = useState<Loose[]>([]);
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll, selected, clear } = useRowSelection(
+    list,
+    (r) => String(r.id)
+  );
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
@@ -72,7 +78,6 @@ function StandardCardPageContent() {
 
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   // URL mode 参数变化时同步组件状态（含显式 mode=list，回列表时也要切回列表视图）
   useEffect(() => {
@@ -109,7 +114,7 @@ function StandardCardPageContent() {
         toast({ title: result.message || t('getListFailed'), variant: 'destructive' });
       }
     } catch (e) {
-      console.error('fetchList error:', e);
+      logger.error('fetchList error:', e);
       toast({ title: t('getListFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -139,40 +144,32 @@ function StandardCardPageContent() {
         toast({ title: result.message || tc('deleteFailed'), variant: 'destructive' });
       }
     } catch (e) {
-      console.error('delete error:', e);
+      logger.error('delete error:', e);
       toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
-  const handleToggle = (id: number) => {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  };
+  const handleToggle = (id: number) => toggle(String(id));
 
-  const handleToggleAll = () => {
-    if (selectedIds.length === list.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(list.map((i) => i.id));
-    }
-  };
+  const handleToggleAll = () => toggleAll();;
 
   const handleBatchDelete = async () => {
-    if (selectedIds.length === 0) return;
-    if (!window.confirm(`确认删除选中的 ${selectedIds.length} 条标准卡吗？`)) return;
+    if (selectedCount === 0) return;
+    if (!window.confirm(`确认删除选中的 ${selectedCount} 条标准卡吗？`)) return;
     try {
-      const response = await authFetch(`/api/standard-cards?id=${selectedIds.join(',')}`, {
+      const response = await authFetch(`/api/standard-cards?id=${[...selected].join(',')}`, {
         method: 'DELETE',
       });
       const result = await response.json();
       if (result.success) {
-        toast({ title: `已删除 ${selectedIds.length} 条记录` });
-        setSelectedIds([]);
+        toast({ title: `已删除 ${selectedCount} 条记录` });
+        clear();
         fetchList();
       } else {
         toast({ title: result.message || ts('k_1izxzmz'), variant: 'destructive' });
       }
     } catch (e) {
-      console.error('batch delete error:', e);
+      logger.error('batch delete error:', e);
       toast({ title: ts('k_1izxzmz'), variant: 'destructive' });
     }
   };
@@ -232,7 +229,7 @@ function StandardCardPageContent() {
       });
       fetchList();
     } catch (err) {
-      console.error('import error:', err);
+      logger.error('import error:', err);
       toast({ title: t('importParseError'), variant: 'destructive' });
     } finally {
       setImporting(false);
@@ -267,7 +264,7 @@ function StandardCardPageContent() {
         toast({ title: result.message || tc('exportFailed'), variant: 'destructive' });
       }
     } catch (err) {
-      console.error('export error:', err);
+      logger.error('export error:', err);
       toast({ title: tc('exportFailed'), variant: 'destructive' });
     }
   };
@@ -367,10 +364,10 @@ function StandardCardPageContent() {
             <LayoutGrid className="h-4 w-4 mr-2" />
             {t('traditionalInput')}
           </Button>
-          {selectedIds.length > 0 && (
+          {selectedCount > 0 && (
             <Button variant="destructive" onClick={handleBatchDelete} className="ml-auto">
               <Trash2 className="h-4 w-4 mr-2" />
-              {ts('k_tfzlxh')}{selectedIds.length})
+              {ts('k_tfzlxh')}{selectedCount})
             </Button>
           )}
         </div>
@@ -428,7 +425,7 @@ function StandardCardPageContent() {
                         <input
                           type="checkbox"
                           className="w-4 h-4 cursor-pointer"
-                          checked={list.length > 0 && selectedIds.length === list.length}
+                          checked={allSelected}
                           onChange={handleToggleAll}
                           aria-label={ts('k_1yb2sje')}
                         />
@@ -478,7 +475,7 @@ function StandardCardPageContent() {
                           <input
                             type="checkbox"
                             className="w-4 h-4 cursor-pointer"
-                            checked={selectedIds.includes(item.id)}
+                            checked={isSelected(String(item.id))}
                             onChange={() => handleToggle(item.id)}
                             aria-label={`选择 ${item.card_no}`}
                           />

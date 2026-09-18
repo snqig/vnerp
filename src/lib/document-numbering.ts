@@ -1,4 +1,5 @@
 import { query, transaction, type SqlValue } from './db';
+import type { DbConnection } from '@/types/db';
 import type { DbRow } from '@/types/db';
 import type mysql from 'mysql2/promise';
 
@@ -167,6 +168,7 @@ const DOCUMENT_PREFIX_MAP: Partial<Record<DocumentType, keyof DocumentNumberingC
   delivery: 'delivery_prefix',
   return_order: 'return_prefix',
   reconciliation: 'reconciliation_prefix',
+  purchase_reconcile: 'reconciliation_prefix',
 };
 
 const DOCUMENT_TABLE_MAP: Partial<Record<DocumentType, { table: string; field: string }>> = {
@@ -187,6 +189,8 @@ const DOCUMENT_TABLE_MAP: Partial<Record<DocumentType, { table: string; field: s
   delivery: { table: 'sal_delivery', field: 'delivery_no' },
   return_order: { table: 'sal_return', field: 'return_no' },
   reconciliation: { table: 'sal_reconciliation', field: 'reconciliation_no' },
+  // 采购对账单：与销售对账共用 reconciliation_prefix 配置，但各自扫自己的表取最大流水号
+  purchase_reconcile: { table: 'pur_purchase_reconciliation', field: 'reconciliation_no' },
 };
 
 export function validateDocumentNoFormat(
@@ -286,7 +290,7 @@ export async function validateDocumentNo(
  */
 export async function generateDocumentNo(
   docType: DocumentType,
-  conn?: mysql.PoolConnection
+  conn?: DbConnection
 ): Promise<string> {
   const config = await getNumberingConfig();
   const prefixKey = DOCUMENT_PREFIX_MAP[docType];
@@ -301,7 +305,7 @@ export async function generateDocumentNo(
   // 命名锁名：单据类型 + 日期，串行化同日同类型编号生成
   const lockName = `doc_no:${docType}:${dateStr}`;
 
-  const generateWithLock = async (c: mysql.PoolConnection) => {
+  const generateWithLock = async (c: DbConnection) => {
     // 获取命名锁（最多等待 10 秒），锁在连接级别生效，与事务提交/回滚独立
     const [lockRows] = await c.query<mysql.RowDataPacket[]>(
       'SELECT GET_LOCK(?, 10) AS locked',

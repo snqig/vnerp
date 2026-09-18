@@ -166,8 +166,10 @@ export class SalesApplicationService {
     order.approve(auditBy);
 
     await transaction(async (conn) => {
+      // ⚠️ sal_order 没有 audit_by / audit_time 列，原 SQL 必然 Unknown column 报错；
+      // 审核人改写进既有的 update_by 列（BUG-ORD-002 连带缺陷）。
       const [result] = (await conn.execute(
-        'UPDATE sal_order SET status = ?, audit_by = ?, audit_time = NOW(), update_time = NOW() WHERE id = ? AND status = ?',
+        'UPDATE sal_order SET status = ?, update_by = ?, update_time = NOW() WHERE id = ? AND status = ?',
         [order.status.toDbCode(), auditBy, id, SalesOrderStatus.from(previousStatus).toDbCode()]
       )) as [ResultSetHeader, any];
       if (result.affectedRows === 0) throw new VersionConflictError();

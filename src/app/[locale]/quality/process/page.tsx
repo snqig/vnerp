@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useRef } from 'react';
@@ -103,8 +104,7 @@ interface InspectRecord {
   id: number;
   inspectNo: string;
   inspectType: string;
-  // eslint-disable-next-line i18n/no-chinese-hardcode
-  result: '合格' | '不合格';
+  result: string;
   inspector: string;
   inspectTime: string;
   remark?: string;
@@ -170,7 +170,6 @@ export default function QualityProcessPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const fetchProcesses = async () => {
     logger.info({ module: 'Quality', action: 'fetchProcesses' }, ts('k_1e3gk2g'));
@@ -309,6 +308,10 @@ export default function QualityProcessPage() {
     handleSort,
     sortedData: _sortedProcesses,
   } = useTableSort(filteredProcesses, 'id');
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    filteredProcesses,
+    (r) => String(r.id)
+  );
 
   // 查看详情
   const handleViewDetail = (process: QualityProcess) => {
@@ -537,8 +540,8 @@ export default function QualityProcessPage() {
                     },
                   ]}
                   data={
-                    selectedIds.length > 0
-                      ? filteredProcesses.filter((p) => selectedIds.includes(p.id))
+                    selectedCount > 0
+                      ? filteredProcesses.filter((p) => isSelected(String(p.id)))
                       : filteredProcesses
                   }
                 />
@@ -571,19 +574,7 @@ export default function QualityProcessPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        <Checkbox
-                          checked={
-                            selectedIds.length === filteredProcesses.length &&
-                            filteredProcesses.length > 0
-                          }
-                          onCheckedChange={() => {
-                            if (selectedIds.length === filteredProcesses.length) {
-                              setSelectedIds([]);
-                            } else {
-                              setSelectedIds(filteredProcesses.map((p) => p.id));
-                            }
-                          }}
-                        />
+                        <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                       </TableHead>
                       <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
                       <SortableTableHeader
@@ -622,14 +613,8 @@ export default function QualityProcessPage() {
                       <TableRow key={process.id}>
                         <TableCell>
                           <Checkbox
-                            checked={selectedIds.includes(process.id)}
-                            onCheckedChange={() =>
-                              setSelectedIds((prev) =>
-                                prev.includes(process.id)
-                                  ? prev.filter((i) => i !== process.id)
-                                  : [...prev, process.id]
-                              )
-                            }
+                            checked={isSelected(String(process.id))}
+                            onCheckedChange={() => toggle(String(process.id))}
                           />
                         </TableCell>
                         <TableCell className="text-center text-muted-foreground">

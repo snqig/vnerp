@@ -37,7 +37,14 @@ export default defineConfig({
   use: {
     /* 基础URL */
     baseURL: 'http://localhost:5000',
-    
+
+    /* 浏览器语言环境。
+     * next-intl 按 Accept-Language 协商 locale，而 Playwright 默认 en-US，
+     * 会导致未带 locale 前缀的路径（如 /login、/orders/sales）渲染成英文，
+     * 使断言中文文案的用例（欢迎回来 / 今日订单 / 仪表盘 …）全部失败。
+     * 固定为项目 defaultLocale（src/i18n/locales.ts = zh-CN）以保证可复现。 */
+    locale: 'zh-CN',
+
     /* 收集所有跟踪信息 */
     trace: 'on-first-retry',
     

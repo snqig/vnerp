@@ -685,9 +685,18 @@ export const ROUTE_PERMISSIONS: Record<
   '/api/audit/logs': { GET: API_PERMISSIONS.AUDIT_VIEW },
 
   // === 设置 ===
+  // 注意：/api/settings/system 读写全量系统配置（含 sys.default.password 等敏感键），
+  // 必须与 /api/system/config 同权限保护，否则任意已登录用户可读写全部配置。
+  '/api/settings/system': {
+    GET: API_PERMISSIONS.SYSTEM_CONFIG,
+    POST: API_PERMISSIONS.SYSTEM_CONFIG,
+    PUT: API_PERMISSIONS.SYSTEM_CONFIG,
+  },
   '/api/settings/change-approval': {
     GET: API_PERMISSIONS.SETTINGS_APPROVAL,
     POST: API_PERMISSIONS.SETTINGS_APPROVAL,
+    // 审批动作（approve/reject）同样需要审批权限，原缺失导致任意登录用户可审批配置变更
+    PUT: API_PERMISSIONS.SETTINGS_APPROVAL,
   },
   '/api/settings/category-linkage': {
     GET: API_PERMISSIONS.SETTINGS_LINKAGE,

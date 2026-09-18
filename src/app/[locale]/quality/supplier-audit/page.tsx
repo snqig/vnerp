@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
@@ -103,8 +104,11 @@ export default function SupplierAuditPage() {
   const [searchType, setSearchType] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<SupplierAuditRecord>>({});
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'audit_no');
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    sortedData,
+    (r) => String(r.id)
+  );
 
   const fetchData = async () => {
     try {
@@ -241,8 +245,8 @@ export default function SupplierAuditPage() {
                   { key: 'audit_result', label: tc('result'), width: 12 },
                 ]}
                 data={
-                  selectedIds.length > 0
-                    ? sortedData.filter((i) => i.id && selectedIds.includes(i.id))
+                  selectedCount > 0
+                    ? sortedData.filter((i) => i.id && isSelected(String(i.id)))
                     : sortedData
                 }
               />
@@ -252,16 +256,7 @@ export default function SupplierAuditPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedIds.length === sortedData.length && sortedData.length > 0}
-                      onCheckedChange={() =>
-                        setSelectedIds(
-                          selectedIds.length === sortedData.length
-                            ? []
-                            : sortedData.filter((i) => i.id).map((i) => i.id!)
-                        )
-                      }
-                    />
+                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                   </TableHead>
                   <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
                   <SortableTableHeader
@@ -296,15 +291,8 @@ export default function SupplierAuditPage() {
                   <TableRow key={item.id}>
                     <TableCell>
                       <Checkbox
-                        checked={item.id ? selectedIds.includes(item.id) : false}
-                        onCheckedChange={() => {
-                          if (item.id)
-                            setSelectedIds((prev) =>
-                              prev.includes(item.id!)
-                                ? prev.filter((i) => i !== item.id!)
-                                : [...prev, item.id!]
-                            );
-                        }}
+                        checked={isSelected(String(item.id))}
+                        onCheckedChange={() => toggle(String(item.id))}
                       />
                     </TableCell>
                     <TableCell className="text-center text-muted-foreground">

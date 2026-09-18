@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import type { PoolConnection } from 'mysql2/promise';
+import type { DbConnection } from '@/types/db';
 import type { DomainEvent } from '@/domain/shared/DomainTypes';
 import type {
   IDomainEventOutboxRepository,
@@ -21,7 +22,7 @@ import type {
  */
 export class MemoryDomainEventOutbox implements IDomainEventOutboxRepository {
   async saveEvents(
-    _conn: PoolConnection,
+    _conn: DbConnection,
     _aggregateType: string,
     _aggregateId: number,
     _events: DomainEvent[]

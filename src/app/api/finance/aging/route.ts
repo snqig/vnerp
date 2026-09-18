@@ -57,7 +57,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     [asOfDate]
   );
 
-  const partnerSummary: Record<string, unknown> = {};
+  const partnerSummary: Record<string, any> = {};
 
   for (const row of rows) {
     const partnerId = row.partner_id || 0;

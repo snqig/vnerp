@@ -376,15 +376,48 @@ export class InkFormulaVersion {
 
   /**
    * 根据已有版本列表生成新版本号
-   * 如果有色号下已有版本，取最新版本号 +1
+   *
+   * 取「数值最大的版本号」+1，而不是数组末位。
+   *
+   * 历史缺陷（E2E TC-FORMULA-001 暴露）：仓储 getVersionNos 以 `ORDER BY id DESC`
+   * 返回（最新版本在前），此处却取 `[length - 1]`（即最旧版本）。于是同一色号
+   * 已有 2 个及以上版本后，每次新建都会算出同一个版本号：
+   *   [V1.1, V1.0] → 取 V1.0 → 生成 V1.1 → 撞唯一键 uk_color_version(color_id, version_no)
+   * 实测色号 1 已有 V1.0/V1.1 时，再建版本必然报
+   *   Duplicate entry '1-V1.1' for key 'dcprint_ink_formula_version.uk_color_version'
+   *
+   * 改为按 (major, minor) 数值取最大，同时免疫仓储排序方向的变化。
    */
   static generateVersionNo(existingVersionNos: string[]): string {
     if (existingVersionNos.length === 0) {
       return 'V1.0';
     }
-    // 取最后一个版本号
-    const last = existingVersionNos[existingVersionNos.length - 1];
-    return this.generateNextVersionNo(last, false);
+
+    let latest: string | null = null;
+    let latestMajor = -1;
+    let latestMinor = -1;
+
+    for (const versionNo of existingVersionNos) {
+      const match = versionNo.match(/^V(\d+)\.(\d+)$/);
+      if (!match) continue;
+      const major = parseInt(match[1], 10);
+      const minor = parseInt(match[2], 10);
+      if (major > latestMajor || (major === latestMajor && minor > latestMinor)) {
+        latestMajor = major;
+        latestMinor = minor;
+        latest = versionNo;
+      }
+    }
+
+    if (latest === null) {
+      // 没有可解析的版本号（脏数据）：回退为原行为，最终由唯一键兜底
+      return this.generateNextVersionNo(
+        existingVersionNos[existingVersionNos.length - 1],
+        false
+      );
+    }
+
+    return this.generateNextVersionNo(latest, false);
   }
 
   // ===== 工厂方法 =====

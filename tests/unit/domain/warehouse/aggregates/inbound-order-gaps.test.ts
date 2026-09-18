@@ -96,7 +96,7 @@ describe('入库聚合根 - 文档缺口补充', () => {
       const evt = order.getDomainEvents().find((e) => e.eventType === 'inbound.approved');
       expect(evt).toBeTruthy();
       expect(evt!.payload.items).toHaveLength(1);
-      expect(evt!.payload.items[0]).toMatchObject({
+      expect((evt!.payload as any).items[0]).toMatchObject({
         materialId: 1,
         quantity: 7,
         unitPrice: 12,

@@ -75,9 +75,9 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     roleIds
   );
 
-  const menuTree = buildMenuTree(menus as DbRow[]);
+  const menuTree = buildMenuTree(menus);
 
-  const permissions = extractPermissions(menus as DbRow[]);
+  const permissions = extractPermissions(menus);
 
   setCachedPermissions(userInfo.userId, permissions, menuTree);
 

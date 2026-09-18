@@ -1,4 +1,5 @@
-'use client';
+'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
@@ -113,8 +114,11 @@ export default function UnqualifiedPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [actionMode, setActionMode] = useState<ActionMode>('create');
   const [editItem, setEditItem] = useState<Partial<Item>>({});
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'handle_no');
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    sortedData,
+    (r) => String(r.id)
+  );
 
   // start/complete 表单状态
   const [startForm, setStartForm] = useState({
@@ -319,8 +323,8 @@ export default function UnqualifiedPage() {
                 },
               ]}
               data={
-                selectedIds.length > 0
-                  ? displayList.filter((i) => selectedIds.includes(i.id))
+                selectedCount > 0
+                  ? displayList.filter((i) => isSelected(String(i.id)))
                   : displayList
               }
             />
@@ -332,16 +336,7 @@ export default function UnqualifiedPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedIds.length === displayList.length && displayList.length > 0}
-                      onCheckedChange={() =>
-                        setSelectedIds(
-                          selectedIds.length === displayList.length
-                            ? []
-                            : displayList.map((i) => i.id)
-                        )
-                      }
-                    />
+                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                   </TableHead>
                   <TableHead className="text-xs w-12 text-center">{tc('serialNo')}</TableHead>
                   <SortableTableHeader
@@ -385,15 +380,9 @@ export default function UnqualifiedPage() {
                   return (
                     <TableRow key={item.id}>
                       <TableCell>
-                        <Checkbox
-                          checked={selectedIds.includes(item.id)}
-                          onCheckedChange={() =>
-                            setSelectedIds((prev) =>
-                              prev.includes(item.id)
-                                ? prev.filter((i) => i !== item.id)
-                                : [...prev, item.id]
-                            )
-                          }
+                        <Checkbox
+                          checked={isSelected(String(item.id))}
+                          onCheckedChange={() => toggle(String(item.id))}
                         />
                       </TableCell>
                       <TableCell className="text-xs text-center text-muted-foreground">
@@ -463,7 +452,7 @@ export default function UnqualifiedPage() {
         </Card>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
-            {tc('totalRecords', { total })}
+            {tc('totalRecords', { count: total })}
           </span>
           <div className="flex gap-2">
             <Button

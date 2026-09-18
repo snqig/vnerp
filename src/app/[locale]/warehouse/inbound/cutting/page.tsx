@@ -1,4 +1,6 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
+import { logger } from '@/lib/logger';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect } from 'react';
@@ -73,13 +75,16 @@ export default function CuttingRecordsPage() {
 
   const { user: _user } = useAuth();
   const [records, setRecords] = useState<CuttingRecord[]>([]);
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    records,
+    (r) => String(r.id)
+  );
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');
   const [sourceLabelNo, setSourceLabelNo] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const _exportColumns = [
     { key: 'recordNo', header: t('recordNoCol') },
@@ -145,7 +150,7 @@ export default function CuttingRecordsPage() {
       } catch (error) {
         // AbortError 是组件卸载/依赖变化时主动取消请求，静默忽略
         if ((error as Error).name !== 'AbortError') {
-          console.error(ts('k_29ma58'), error);
+          logger.error(ts('k_29ma58'), error);
         }
       } finally {
         setLoading(false);
@@ -258,7 +263,7 @@ export default function CuttingRecordsPage() {
                     },
                   ]}
                   data={
-                    selectedIds.size > 0 ? records.filter((r) => selectedIds.has(r.id)) : records
+                    selectedCount > 0 ? records.filter((r) => isSelected(String(r.id))) : records
                   }
                 />
                 <Button variant="outline" onClick={() => setPage((prevPage) => prevPage)}>
@@ -274,13 +279,7 @@ export default function CuttingRecordsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[40px]">
-                      <Checkbox
-                        checked={selectedIds.size > 0 && selectedIds.size === records.length}
-                        onCheckedChange={(checked) => {
-                          if (checked) setSelectedIds(new Set(records.map((r) => r.id)));
-                          else setSelectedIds(new Set());
-                        }}
-                      />
+                      <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                     </TableHead>
                     <TableHead>{t('recordNoCol')}</TableHead>
                     <TableHead>{t('sourceLabelNoCol')}</TableHead>
@@ -312,13 +311,8 @@ export default function CuttingRecordsPage() {
                       <TableRow key={record.id}>
                         <TableCell>
                           <Checkbox
-                            checked={selectedIds.has(record.id)}
-                            onCheckedChange={(checked) => {
-                              const next = new Set(selectedIds);
-                              if (checked) next.add(record.id);
-                              else next.delete(record.id);
-                              setSelectedIds(next);
-                            }}
+                            checked={isSelected(String(record.id))}
+                            onCheckedChange={() => toggle(String(record.id))}
                           />
                         </TableCell>
                         <TableCell className="font-medium">{record.recordNo}</TableCell>

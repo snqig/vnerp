@@ -1,7 +1,8 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useRowSelection } from '@/lib/useRowSelection';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { formatDate } from '@/lib/date-utils';
@@ -253,35 +254,19 @@ export default function WorkOrderPage() {
     }[];
   } | null>(null);
 
-  const [selectedWo, setSelectedWo] = useState<Set<string>>(new Set());
-
-  const allSelected =
-    sortedWorkOrders.length > 0 &&
-    sortedWorkOrders.every((o) => selectedWo.has(o.work_order_no));
-  const someSelected = sortedWorkOrders.some((o) => selectedWo.has(o.work_order_no));
-  const selectAllRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (selectAllRef.current) {
-      selectAllRef.current.indeterminate = someSelected && !allSelected;
-    }
-  }, [someSelected, allSelected]);
-
-  const toggleSelect = (no: string) => {
-    setSelectedWo((prev) => {
-      const next = new Set(prev);
-      if (next.has(no)) next.delete(no);
-      else next.add(no);
-      return next;
-    });
-  };
-
-  const toggleSelectAll = () => {
-    if (allSelected) setSelectedWo(new Set());
-    else setSelectedWo(new Set(sortedWorkOrders.map((o) => o.work_order_no)));
-  };
+  const {
+    selected,
+    selectedCount,
+    isSelected,
+    allSelected,
+    toggle,
+    toggleAll,
+    clear,
+    selectAllRef,
+  } = useRowSelection(sortedWorkOrders, (o) => o.work_order_no);
 
   const handleBatchDelete = async () => {
-    const nos = Array.from(selectedWo);
+    const nos = [...selected];
     if (nos.length === 0) return;
     if (!confirm(t('confirmBatchDelete', { count: nos.length }))) return;
     let okCount = 0;
@@ -302,7 +287,7 @@ export default function WorkOrderPage() {
     if (failMsg) {
       toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
     }
-    setSelectedWo(new Set());
+    clear();
     fetchWorkOrders();
   };
 
@@ -929,13 +914,13 @@ export default function WorkOrderPage() {
           <TabsContent value={activeTab} className="mt-4">
             <Card>
               <CardContent className="p-0">
-                {selectedWo.size > 0 && (
+                {selectedCount > 0 && (
                   <div className="flex items-center justify-between gap-2 border-b bg-muted/40 px-4 py-2 text-sm">
                     <span className="font-medium">
-                      {t('selectedCount', { count: selectedWo.size })}
+                      {t('selectedCount', { count: selectedCount })}
                     </span>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => setSelectedWo(new Set())}>
+                      <Button variant="ghost" size="sm" onClick={clear}>
                         {tc('clear')}
                       </Button>
                       <Button variant="destructive" size="sm" onClick={handleBatchDelete}>
@@ -962,7 +947,7 @@ export default function WorkOrderPage() {
                             type="checkbox"
                             className="h-4 w-4 cursor-pointer accent-blue-600"
                             checked={allSelected}
-                            onChange={toggleSelectAll}
+                            onChange={toggleAll}
                             aria-label={t('select')}
                           />
                         </TableHead>
@@ -1039,8 +1024,8 @@ export default function WorkOrderPage() {
                             <input
                               type="checkbox"
                               className="h-4 w-4 cursor-pointer accent-blue-600"
-                              checked={selectedWo.has(order.work_order_no)}
-                              onChange={() => toggleSelect(order.work_order_no)}
+                              checked={isSelected(order.work_order_no)}
+                              onChange={() => toggle(order.work_order_no)}
                               aria-label={t('select')}
                             />
                           </TableCell>

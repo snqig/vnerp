@@ -57,7 +57,7 @@ function buildQueryConditions(params: {
   type?: string;
   status?: string;
   categoryId?: string;
-}): { sql: string; values: DbRow[] } {
+}): { sql: string; values: SqlValue[] } {
   let sql = `
     SELECT
       inv_warehouse.id,
@@ -119,6 +119,8 @@ function buildQueryConditions(params: {
 function formatWarehouse(warehouse: DbRow): Warehouse {
   return {
     ...warehouse,
+    code: warehouse.code,
+    name: warehouse.name,
     type: warehouseTypeReverseMap[warehouse.warehouse_type] || 'other',
     status: warehouse.status === 1 ? 'active' : 'inactive',
     nature: warehouse.nature || '',

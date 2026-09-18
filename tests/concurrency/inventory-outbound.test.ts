@@ -297,7 +297,7 @@ describe('库存出库并发测试', () => {
 
             await conn.execute(
               `INSERT INTO inv_outbound_item (
-                order_id, material_id, material_name, material_spec, qty, unit, batch_no, create_time, deleted
+                order_id, material_id, material_name, material_spec, quantity, unit, batch_no, create_time, deleted
               ) VALUES (?, ?, ?, '', ?, '个', ?, NOW(), 0)`,
               [
                 orderId,
@@ -384,11 +384,13 @@ describe('库存出库并发测试', () => {
       );
       expect(notNegativeCheck.valid).toBe(true);
 
-      console.log(`\n结果分析:`);
-      console.log(`- 成功数量: ${report.successCount}`);
-      console.log(`- 失败数量: ${report.failureCount}`);
-      console.log(`- 最终库存: ${notNegativeCheck.quantity}`);
-      console.log(`- 库存不为负: ${notNegativeCheck.valid ? '是' : '否'}`);
+      // 断言修复：原用例插入列名笔误（qty，正确为 quantity），5/5 全部因
+      // "Unknown column 'qty'" 报 SQL 错误失败，却因断言过弱（仅查库存非负）被判"通过"（假绿灯）。
+      // 场景：初始可用 100，5 路并发各出库 30 → 恰好 3 单成功（90 ≤ 100），
+      // 其余 2 单必须因「库存不足」被拒，且拒绝原因不得是 SQL 错误。
+      expect(report.successCount).toBe(3);
+      expect(report.failureCount).toBe(2);
+      expect(report.errors.every((e) => /库存不足/.test(e.error))).toBe(true);
 
       // 清理
       await cleanupTestMaterial(lowStockMaterial.id);

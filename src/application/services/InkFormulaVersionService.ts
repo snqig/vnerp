@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbConnection } from '@/types/db';
 
 /**
  * 油墨配方版本管理 — 应用服务
@@ -600,7 +601,7 @@ export async function compareVersions(leftId: number, rightId: number): Promise<
  * 理论成本 = Σ (配比比例% × 原料单位成本)
  * 成本取值：优先 inv_material.weighted_avg_cost，降级 base_ink.unit_price
  */
-async function calculateAndSnapshotCost(conn: PoolConnection, versionId: number): Promise<void> {
+async function calculateAndSnapshotCost(conn: DbConnection, versionId: number): Promise<void> {
   const items = await query(
     `SELECT fi.*, bi.unit_price
      FROM dcprint_ink_formula_item fi

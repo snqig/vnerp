@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useMemo, useRef } from 'react';
@@ -126,7 +127,6 @@ export default function CustomersPage() {
   const [editForm, setEditForm] = useState<Record<string, string>>({});
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   // 从数据库加载客户数据
   useEffect(() => {
@@ -415,6 +415,10 @@ export default function CustomersPage() {
       return 0;
     });
   }, [customers, sortField, sortOrder]);
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    filteredCustomers,
+    (r) => String(r.id)
+  );
 
   return (
     <MainLayout title={t('customerArchive')}>
@@ -581,8 +585,8 @@ export default function CustomersPage() {
                 },
               ]}
               data={
-                selectedIds.size > 0
-                  ? filteredCustomers.filter((c) => selectedIds.has(c.id))
+                selectedCount > 0
+                  ? filteredCustomers.filter((c) => isSelected(String(c.id)))
                   : filteredCustomers
               }
             />
@@ -593,15 +597,7 @@ export default function CustomersPage() {
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
                     <TableHead className="w-[40px]">
-                      <Checkbox
-                        checked={
-                          selectedIds.size > 0 && selectedIds.size === filteredCustomers.length
-                        }
-                        onCheckedChange={(checked) => {
-                          if (checked) setSelectedIds(new Set(filteredCustomers.map((c) => c.id)));
-                          else setSelectedIds(new Set());
-                        }}
-                      />
+                      <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                     </TableHead>
                     <TableHead
                       className="w-[100px] cursor-pointer select-none hover:bg-muted"
@@ -699,13 +695,8 @@ export default function CustomersPage() {
                       <TableRow key={customer.id} className="group hover:bg-muted/30">
                         <TableCell>
                           <Checkbox
-                            checked={selectedIds.has(customer.id)}
-                            onCheckedChange={(checked) => {
-                              const next = new Set(selectedIds);
-                              if (checked) next.add(customer.id);
-                              else next.delete(customer.id);
-                              setSelectedIds(next);
-                            }}
+                            checked={isSelected(String(customer.id))}
+                            onCheckedChange={() => toggle(String(customer.id))}
                           />
                         </TableCell>
                         <TableCell className="font-mono text-sm">{customer.customerCode}</TableCell>

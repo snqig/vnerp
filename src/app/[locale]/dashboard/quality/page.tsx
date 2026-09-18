@@ -1,5 +1,6 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
 import { useCompanyName } from '@/hooks/useCompanyName';
@@ -18,10 +19,6 @@ import {
   AlertCircle,
   ClipboardCheck,
   Calendar,
-  Factory,
-  ShoppingCart as _ShoppingCart,
-  Truck as _Truck,
-  Package as _Package,
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 
@@ -282,7 +279,7 @@ export default function QualityDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/dashboard/quality');
+        const res = await authFetch('/api/dashboard/quality');
         const result = await res.json();
         if (result.success && result.data) setData(result.data);
       } catch {
@@ -346,101 +343,40 @@ export default function QualityDashboard() {
         </div>
         <div className="absolute inset-0 tech-grid-bg pointer-events-none" />
 
-        <header
-          className="relative z-20 flex items-center justify-between px-6 h-14 mb-6"
-          style={{ borderBottom: '1px solid rgba(192,208,224,0.15)' }}
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center"
-              style={{
-                background: 'linear-gradient(135deg, #22d3ee, #3b82f6)',
-                boxShadow: '0 0 20px rgba(34,211,238,0.25)',
-              }}
-            >
-              <Factory className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-base font-bold tracking-wide" style={{ color: '#C0D0E0' }}>
-                {companyName}
-              </h1>
-              <p className="text-[10px]" style={{ color: 'rgba(192,208,224,0.4)' }}>
-                {ts('k_1j3qayw')}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-6">
-            {[
-              {
-                icon: ClipboardCheck,
-                label: t('totalInspections'),
-                val: data.overview.totalInspections,
-                color: '#22d3ee',
-              },
-              {
-                icon: CheckCircle,
-                label: t('overallPassRate'),
-                val: `${data.overview.passRate}%`,
-                color: '#22c55e',
-              },
-              {
-                icon: AlertTriangle,
-                label: t('defectRate'),
-                val: `${data.overview.defectRate}%`,
-                color: '#f59e0b',
-              },
-              {
-                icon: Calendar,
-                label: t('todayInspections'),
-                val: data.overview.todayInspections,
-                color: '#FF6B35',
-              },
-            ].map((m, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <m.icon className="h-4 w-4" style={{ color: m.color }} />
-                <span className="text-xs" style={{ color: 'rgba(192,208,224,0.6)' }}>
-                  {m.label}
-                </span>
-                <span className="text-sm font-bold" style={{ color: m.color }}>
-                  {m.val}
-                </span>
+        <div className="relative z-10 flex flex-col items-center mb-3">
+          <div className="tech-title-wrapper">
+            <div className="tech-title-row">
+              <div className="tech-title-line-left" />
+              <div>
+                <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
+                  {companyName}
+                </h1>
+                <p className="text-[10px] text-white/50">{ts('k_1j3qayw')}</p>
               </div>
-            ))}
+              <div className="tech-title-line-right" />
+            </div>
+            <div className="tech-title-bottom-line" />
           </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <div
-                className="w-2 h-2 rounded-full animate-pulse"
-                style={{ background: '#22c55e', boxShadow: '0 0 6px #22c55e' }}
-              />
-              <span className="text-xs" style={{ color: '#22c55e' }}>
-                {ts('k_da4gt1')}</span>
+          <div className="flex items-center gap-3 mt-1.5">
+            <div className="text-sm font-mono font-bold text-cyan-400">
+              {currentTime && _formatTime(currentTime)}
             </div>
             <button
               onClick={toggleFullscreen}
-              className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+              title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
             >
               {isFullscreen ? (
-                <Minimize className="h-4 w-4" style={{ color: '#22d3ee' }} />
+                <Minimize className="h-3.5 w-3.5 text-cyan-400" />
               ) : (
-                <Maximize className="h-4 w-4" style={{ color: '#22d3ee' }} />
+                <Maximize className="h-3.5 w-3.5 text-cyan-400" />
               )}
             </button>
-            <div className="text-right">
-              {currentTime && (
-                <>
-                  <div className="text-base font-mono font-bold" style={{ color: '#22d3ee' }}>
-                    {currentTime.toLocaleTimeString(locale)}
-                  </div>
-                  <div className="text-xs font-mono" style={{ color: 'rgba(192,208,224,0.4)' }}>
-                    {currentTime.toLocaleDateString(locale)}
-                  </div>
-                </>
-              )}
+            <div className="px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-[10px] text-cyan-300">
+              {_loading ? tc('loading') : '● ' + ts('k_da4gt1')}
             </div>
           </div>
-        </header>
+        </div>
 
         <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[

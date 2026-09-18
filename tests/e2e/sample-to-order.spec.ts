@@ -16,11 +16,7 @@
  */
 
 import { test, expect, type Page, type APIResponse } from '@playwright/test';
-
-const TEST_USER = {
-  username: 'admin',
-  password: 'admin123',
-};
+import { login } from '../utils/api-auth';
 
 /** 打样单状态（与 SampleOrderStatus.ts 对齐） */
 const SAMPLE_STATUS = {
@@ -34,24 +30,48 @@ const SAMPLE_STATUS = {
 } as const;
 
 /** 测试数据 — 可通过环境变量覆盖 */
-const TEST_CUSTOMER_ID = Number(process.env.E2E_SAMPLE_CUSTOMER_ID || 1);
-const TEST_MATERIAL_NO = process.env.E2E_SAMPLE_MATERIAL_NO || 'M-E2E-001';
+/** 客户 ID / 物料编码在 beforeEach 中动态解析（见下方 findAvailable*） */
+let TEST_CUSTOMER_ID = Number(process.env.E2E_SAMPLE_CUSTOMER_ID || 0);
+let TEST_MATERIAL_NO = process.env.E2E_SAMPLE_MATERIAL_NO || '';
 
-async function login(page: Page): Promise<void> {
-  await fetch('/api/auth/reset-lock', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'admin' }),
-  }).catch(() => {});
+/**
+ * 解析一个真实存在的客户 ID。
+ *
+ * 历史缺陷：原实现硬编码默认值 1，而 crm_customer 的 ID 从 61 起（1 无对应记录），
+ * 导致创建打样单恒返回 400「指定的客户不存在或已删除（ID=1）」，
+ * 并级联使后续 8 个用例全部 test.skip。
+ * 现改为：环境变量优先，否则从客户列表 API 动态取第一条。
+ */
+async function findAvailableCustomerId(page: Page): Promise<number | null> {
+  if (process.env.E2E_SAMPLE_CUSTOMER_ID) {
+    return Number(process.env.E2E_SAMPLE_CUSTOMER_ID);
+  }
+  const resp = await page.request.get('/api/customers?page=1&pageSize=1');
+  if (!resp.ok()) return null;
+  const body = (await resp.json()) as Loose;
+  // 兼容三种列表契约：data.list / data.records / data.items
+  const list = body.data?.list || body.data?.records || body.data?.items || [];
+  const id = Number(list[0]?.id);
+  return Number.isFinite(id) && id > 0 ? id : null;
+}
 
-  await page.goto('/en/login', { waitUntil: 'domcontentloaded' });
-  await page.waitForLoadState('networkidle');
-  await page.waitForSelector('input#username', { timeout: 60000 });
-  await page.fill('input#username', TEST_USER.username);
-  await page.fill('input#password', TEST_USER.password);
-  await page.getByRole('button', { name: 'Login' }).click();
-  await page.waitForURL('**/en/dashboard', { timeout: 60000 });
-  await page.waitForTimeout(1500);
+/**
+ * 解析一个真实存在的物料编码。
+ *
+ * 历史缺陷：原实现硬编码默认值 'M-E2E-001'，而 inv_material 的编码形如 MAT001，
+ * 导致创建打样单返回 400「指定的物料编码不存在或已删除：M-E2E-001」。
+ * 现改为：环境变量优先，否则从物料列表 API 动态取第一条。
+ */
+async function findAvailableMaterialNo(page: Page): Promise<string | null> {
+  if (process.env.E2E_SAMPLE_MATERIAL_NO) {
+    return process.env.E2E_SAMPLE_MATERIAL_NO;
+  }
+  const resp = await page.request.get('/api/materials?page=1&pageSize=1');
+  if (!resp.ok()) return null;
+  const body = (await resp.json()) as Loose;
+  const list = body.data?.list || body.data?.records || body.data?.items || [];
+  const code = list[0]?.material_code || list[0]?.materialCode;
+  return typeof code === 'string' && code.length > 0 ? code : null;
 }
 
 async function parseJson(resp: APIResponse): Promise<Loose> {
@@ -96,11 +116,19 @@ async function changeStatus(
   return { resp, body };
 }
 
-/** 获取打样单详情（通过列表查询） */
+/**
+ * 获取打样单详情。
+ *
+ * 历史缺陷：原实现用 `keyword=<数字 id>` 查询，但 /api/sample/orders 的 keyword
+ * 只匹配 order_no / customer_name / product_name / material_no
+ * （见 MysqlSampleOrderRepository.findMany），永不匹配 id →
+ * 恒返回 null → 依赖该断言的用例被 test.skip 静默吞掉
+ * （TC-SAMPLE-001~005/007/009 表现为「跳过」而非失败，掩盖了真实覆盖率）。
+ *
+ * 现改为：按创建时间倒序取一页（新建的单必在页首），再按 id 精确匹配。
+ */
 async function getSampleOrder(page: Page, orderId: number): Promise<Loose | null> {
-  const resp = await page.request.get(
-    `/api/sample/orders?keyword=${orderId}&page=1&pageSize=10`
-  );
+  const resp = await page.request.get('/api/sample/orders?page=1&pageSize=100');
   if (!resp.ok()) return null;
   const body = await parseJson(resp);
   const list = body.data?.list || [];
@@ -110,6 +138,21 @@ async function getSampleOrder(page: Page, orderId: number): Promise<Loose | null
 test.describe('打样模块：打样申请到转大货全链路', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
+    // 主数据（客户 / 物料）动态解析，仅首次；环境变量 E2E_SAMPLE_* 优先
+    if (!TEST_CUSTOMER_ID) {
+      TEST_CUSTOMER_ID = (await findAvailableCustomerId(page)) ?? 0;
+      test.skip(
+        !TEST_CUSTOMER_ID,
+        '环境无可用客户（crm_customer 无未删除记录），跳过打样链路'
+      );
+    }
+    if (!TEST_MATERIAL_NO) {
+      TEST_MATERIAL_NO = (await findAvailableMaterialNo(page)) ?? '';
+      test.skip(
+        !TEST_MATERIAL_NO,
+        '环境无可用物料（inv_material 无未删除记录），跳过打样链路'
+      );
+    }
   });
 
   /**
@@ -395,6 +438,21 @@ test.describe('打样模块：打样申请到转大货全链路', () => {
 test.describe('打样模块：工艺卡生成与转工单', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
+    // 主数据（客户 / 物料）动态解析，仅首次；环境变量 E2E_SAMPLE_* 优先
+    if (!TEST_CUSTOMER_ID) {
+      TEST_CUSTOMER_ID = (await findAvailableCustomerId(page)) ?? 0;
+      test.skip(
+        !TEST_CUSTOMER_ID,
+        '环境无可用客户（crm_customer 无未删除记录），跳过打样链路'
+      );
+    }
+    if (!TEST_MATERIAL_NO) {
+      TEST_MATERIAL_NO = (await findAvailableMaterialNo(page)) ?? '';
+      test.skip(
+        !TEST_MATERIAL_NO,
+        '环境无可用物料（inv_material 无未删除记录），跳过打样链路'
+      );
+    }
   });
 
   /**
@@ -402,30 +460,36 @@ test.describe('打样模块：工艺卡生成与转工单', () => {
    *    验证可创建打样工艺卡。
    */
   test('TC-SAMPLE-010: 打样工艺卡创建成功', async ({ page }) => {
+    // 字段名必须与 src/lib/validators/sample-card.schema.ts 的
+    // sampleProcessCardSchema 一致（snake_case）：
+    //   历史缺陷：本用例曾用 camelCase（sampleName/customerId/printColor/…），
+    //   Zod 默认 strip 未知键 → sample_name 缺失 → 恒 400
+    //   「sample_name: 打样名称不能为空」；而紧跟其后的
+    //   `test.skip(true, ...)` 把该 400 静默转成「跳过」，掩盖了真实失败。
     const resp = await page.request.post('/api/dcprint/sample-card', {
       data: {
-        sampleName: `E2E测试工艺卡-${Date.now()}`,
-        customerId: TEST_CUSTOMER_ID,
-        customerName: 'E2E测试客户',
-        productName: 'E2E测试产品',
+        sample_name: `E2E测试工艺卡-${Date.now()}`,
+        customer_id: TEST_CUSTOMER_ID,
+        customer_name: 'E2E测试客户',
+        product_name: 'E2E测试产品',
         spec: '100x200mm',
-        printColor: '四色',
+        print_color: '四色',
         status: 1,
         items: [
           {
-            itemType: 1,
-            materialCode: TEST_MATERIAL_NO,
-            materialName: 'E2E测试材料',
-            unitDosage: 0.5,
+            item_type: 1,
+            material_code: TEST_MATERIAL_NO,
+            material_name: 'E2E测试材料',
+            unit_dosage: 0.5,
             unit: 'kg',
-            unitCost: 50,
+            unit_cost: 50,
           },
         ],
         steps: [
           {
-            processName: 'E2E测试工序-印刷',
-            workHour: 2,
-            hourlyRate: 100,
+            process_name: 'E2E测试工序-印刷',
+            work_hour: 2,
+            hourly_rate: 100,
             sort: 1,
           },
         ],
@@ -434,11 +498,10 @@ test.describe('打样模块：工艺卡生成与转工单', () => {
     });
     const body = await parseJson(resp);
 
-    if (!resp.ok()) {
-      // 校验失败时跳过（可能是测试数据不完整）
-      test.skip(true, `工艺卡创建跳过: ${body.message || resp.status()}`);
-    }
-    expect(resp.ok(), `创建失败: ${JSON.stringify(body)}`).toBeTruthy();
+    expect(
+      resp.ok(),
+      `工艺卡创建失败: ${resp.status()} ${JSON.stringify(body)}`
+    ).toBeTruthy();
     expect(body.data.id).toBeTruthy();
   });
 

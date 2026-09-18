@@ -466,24 +466,31 @@ describe('SalesOrder Aggregate', () => {
 
 describe('SalesOrderStatus Value Object', () => {
   describe('fromDbCode() / toDbCode()', () => {
-    it('应正确映射状态码', () => {
-      expect(SalesOrderStatus.draft().toDbCode()).toBe(0);
-      expect(SalesOrderStatus.submitted().toDbCode()).toBe(1);
+    it('应正确映射状态码（契约码 1..5，BUG-ORD-002）', () => {
+      // 契约：1-待确认 2-已确认 3-部分发货 4-已完成 5-已取消
+      expect(SalesOrderStatus.draft().toDbCode()).toBe(1);
+      expect(SalesOrderStatus.submitted().toDbCode()).toBe(2);
+      // 契约无独立"已审核"态 → 折叠为 2。修复前写 2 之外的值，界面会显示成「部分发货」
       expect(SalesOrderStatus.approved().toDbCode()).toBe(2);
       expect(SalesOrderStatus.partiallyShipped().toDbCode()).toBe(3);
       expect(SalesOrderStatus.completed().toDbCode()).toBe(4);
-      expect(SalesOrderStatus.voided().toDbCode()).toBe(6);
-      expect(SalesOrderStatus.closed().toDbCode()).toBe(9);
+      // 契约无独立"已关闭"态 → 折叠为 4
+      expect(SalesOrderStatus.closed().toDbCode()).toBe(4);
+      expect(SalesOrderStatus.voided().toDbCode()).toBe(5);
     });
 
-    it('应从数据库码恢复状态', () => {
-      expect(SalesOrderStatus.fromDbCode(0).value).toBe('draft');
-      expect(SalesOrderStatus.fromDbCode(1).value).toBe('submitted');
-      expect(SalesOrderStatus.fromDbCode(2).value).toBe('approved');
+    it('应从数据库码恢复状态（契约码 1..5）', () => {
+      expect(SalesOrderStatus.fromDbCode(1).value).toBe('draft');
+      expect(SalesOrderStatus.fromDbCode(2).value).toBe('submitted');
       expect(SalesOrderStatus.fromDbCode(3).value).toBe('partially_shipped');
       expect(SalesOrderStatus.fromDbCode(4).value).toBe('completed');
-      expect(SalesOrderStatus.fromDbCode(6).value).toBe('voided');
-      expect(SalesOrderStatus.fromDbCode(9).value).toBe('closed');
+      expect(SalesOrderStatus.fromDbCode(5).value).toBe('voided');
+    });
+
+    it('历史码应被归一兼容（只读，不再抛错）', () => {
+      expect(SalesOrderStatus.fromDbCode(0).value).toBe('draft'); // 旧 draft
+      expect(SalesOrderStatus.fromDbCode(6).value).toBe('voided'); // 旧 voided
+      expect(SalesOrderStatus.fromDbCode(9).value).toBe('completed'); // 旧 closed
     });
 
     it('无效状态码应抛出DomainError', () => {

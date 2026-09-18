@@ -32,7 +32,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: 准时交付订单数 / 总应交付订单数 × 100%
   //    数据来源: sal_order.delivery_date vs 实际出库时间
   // ========================================
-  const otd: unknown = { rate: 0, totalOrders: 0, onTimeOrders: 0, lateOrders: 0, details: [] };
+  const otd: Record<string, any> = { rate: 0, totalOrders: 0, onTimeOrders: 0, lateOrders: 0, details: [] };
   try {
     const otdRows = await query(
       `
@@ -68,7 +68,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: 销售成本 / 平均库存价值
   //    数据来源: fin_voucher(出库成本) / inv_inventory_batch(库存价值)
   // ========================================
-  const inventoryTurnover: unknown = {
+  const inventoryTurnover: Record<string, any> = {
     rate: 0,
     costOfGoods: 0,
     avgInventoryValue: 0,
@@ -110,7 +110,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: OEE = 可用率(A) × 表现率(P) × 质量率(Q)
   //    数据来源: eqp_equipment + 生产报工 + 质检记录
   // ========================================
-  const oee: unknown = {
+  const oee: Record<string, any> = {
     overall: 0,
     availability: 0,
     performance: 0,
@@ -167,7 +167,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: 合格批次数 / 总检验批次数 × 100%
   //    数据来源: qc_incoming_inspection + qc_process_inspection + qc_final_inspection
   // ========================================
-  const qualityRate: unknown = {
+  const qualityRate: Record<string, any> = {
     overall: 0,
     incoming: 0,
     process: 0,
@@ -260,7 +260,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: 质量40% + 交付30% + 价格30%
   //    数据来源: pur_supplier + 质检/交付/采购数据
   // ========================================
-  let supplierScores: SqlValue[] = [];
+  let supplierScores: DbRow[] = [];
   try {
     const supplierRows = await query(`
       SELECT
@@ -293,7 +293,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 6. 客户信用额度使用率
   //    数据来源: crm_customer + sal_order
   // ========================================
-  let customerCredit: SqlValue[] = [];
+  let customerCredit: DbRow[] = [];
   try {
     const creditRows = await query(`
       SELECT
@@ -326,7 +326,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: 遵循FIFO的出库次数 / 总出库次数 × 100%
   //    数据来源: inv_fifo_override_log
   // ========================================
-  const fifoCompliance: unknown = {
+  const fifoCompliance: Record<string, any> = {
     rate: 0,
     totalOutbound: 0,
     fifoFollowed: 0,
@@ -372,7 +372,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 8. 部门协作效率
   //    数据来源: 合同评审耗时 / 打样转量产耗时
   // ========================================
-  const departmentEfficiency: unknown = {
+  const departmentEfficiency: Record<string, any> = {
     contractReviewAvgDays: 0,
     sampleToMassAvgDays: 0,
     reviewCount: 0,
@@ -425,7 +425,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: 实际油墨消耗量 / 理论消耗量 × 100%
   //    数据来源: dcprint_ink_usage + 配方理论用量
   // ========================================
-  const inkConsumptionRate: unknown = {
+  const inkConsumptionRate: Record<string, any> = {
     rate: 0,
     actualUsage: 0,
     theoreticalUsage: 0,
@@ -489,7 +489,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //     公式: 合格品数量 / 投入纸张数量 × 100%
   //     数据来源: prd_work_report + 物料出库
   // ========================================
-  const paperUtilizationRate: unknown = {
+  const paperUtilizationRate: Record<string, any> = {
     rate: 0,
     inputQty: 0,
     outputQty: 0,
@@ -554,7 +554,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //     公式: 再利用余墨量 / 总余墨退回量 × 100%
   //     数据来源: dcprint_ink_surplus + ink_dispatch
   // ========================================
-  const surplusInkReuseRate: unknown = {
+  const surplusInkReuseRate: Record<string, any> = {
     rate: 0,
     totalReturned: 0,
     totalReused: 0,
@@ -588,7 +588,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //     公式: 平均换版时间 = 总换版时间 / 换版次数
   //     数据来源: prd_work_report (工序间隔) + 设备状态
   // ========================================
-  const setupTime: unknown = {
+  const setupTime: Record<string, any> = {
     avgMinutes: 0,
     totalSetups: 0,
     totalMinutes: 0,
@@ -652,7 +652,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //     公式: 首检合格次数 / 总首检次数 × 100%
   //     数据来源: prd_work_report (is_first_piece + first_piece_status)
   // ========================================
-  const ftq: unknown = { rate: 0, totalFirstPiece: 0, passedFirstPiece: 0, failedFirstPiece: 0 };
+  const ftq: Record<string, any> = { rate: 0, totalFirstPiece: 0, passedFirstPiece: 0, failedFirstPiece: 0 };
   try {
     const ftqRows = await query(
       `
@@ -683,7 +683,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //     公式: 过期/冻结批次价值 / 总库存价值 × 100%
   //     数据来源: inv_inventory_batch
   // ========================================
-  const staleInventoryRate: unknown = {
+  const staleInventoryRate: Record<string, any> = {
     rate: 0,
     totalInventoryValue: 0,
     staleValue: 0,
@@ -724,7 +724,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 15. OEE 六大损失分类
   //     数据来源: 设备故障/设置调整/闲置/小停机/速度损失/废品
   // ========================================
-  const oeeLossAnalysis: unknown = {
+  const oeeLossAnalysis: Record<string, any> = {
     breakdownLoss: 0,
     setupLoss: 0,
     idleLoss: 0,

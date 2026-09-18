@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbRow } from '@/types/db';
 
 ;
 import { NextRequest } from 'next/server';
@@ -45,7 +46,7 @@ export const POST = withPermission(
     }
 
     // 计算偏差
-    const deviations: SqlValue[] = [];
+    const deviations: DbRow[] = [];
     let hasDeviation = false;
     let warningLevel = 'success';
 

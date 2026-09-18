@@ -7,6 +7,11 @@ import { successResponse, errorResponse, commonErrors } from '@/lib/api-response
 import { generateDocumentNo } from '@/lib/document-numbering';
 
 import { withPermission } from '@/lib/api-permissions';
+import {
+  SalesOrderStatusCode,
+  isTerminalSalesOrderStatus,
+  normalizeSalesOrderStatus,
+} from '@/lib/order-status';
 import type { DbRow } from '@/types/db';
 // GET - 获取订单列表/详情
 export const GET = withPermission(
@@ -35,7 +40,7 @@ export const GET = withPermission(
 
       if (!items || (items as DbRow[]).length === 0) {
         items = await query(
-          `SELECT od.material_id, od.material_code, m.material_name, od.quantity, od.unit, od.unit_price, od.total_amount as total_price
+          `SELECT od.material_id, m.material_code, m.material_name, od.quantity, od.unit, od.unit_price, od.total_amount as total_price
          FROM sal_order_detail od
          LEFT JOIN inv_material m ON od.material_id = m.id
          WHERE od.order_id = ?`,
@@ -288,7 +293,8 @@ export const DELETE = withPermission(
 
     const order = (orders as DbRow[])[0];
 
-    if (order.status === 'completed') {
+    // 同上：改为按契约码比较（仅「已完成」不可删除，保持原语义）
+    if (normalizeSalesOrderStatus(order.status) === SalesOrderStatusCode.COMPLETED) {
       return errorResponse(ts('k_jzbcvs'), 400, 400);
     }
 

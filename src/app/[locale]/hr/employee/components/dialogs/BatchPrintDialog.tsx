@@ -71,7 +71,7 @@ interface BatchPrintDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   employees: Employee[];
-  selectedEmployees: number[];
+  selectedEmployees: string[];
   onPrintAll: () => void;
 }
 
@@ -96,7 +96,7 @@ export function BatchPrintDialog({
         <div className="py-4">
           <div className="grid grid-cols-2 gap-4">
             {employees
-              .filter((emp) => selectedEmployees.includes(emp.id))
+              .filter((emp) => selectedEmployees.includes(String(emp.id)))
               .map((emp, index) => (
                 <BatchPrintCard key={emp.id} employee={emp} index={index} />
               ))}

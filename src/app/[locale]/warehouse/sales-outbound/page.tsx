@@ -33,6 +33,8 @@ import {
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { useRowSelection } from '@/lib/useRowSelection';
+import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
 
 interface Item {
@@ -75,6 +77,30 @@ export default function SalesOutboundPage() {
   const [customers, setCustomers] = useState<
     { id: number; customer_name: string; customer_code: string }[]
   >([]);
+
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
+    useRowSelection(list, (r) => String(r.id));
+  const [deleting, setDeleting] = useState(false);
+
+  const handleBatchDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
+    setDeleting(true);
+    let okCount = 0; let failMsg = '';
+    for (const id of ids) {
+      try {
+        const res = await authFetch(`/api/warehouse/sales-outbound?id=${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) okCount++; else failMsg = data.message || failMsg;
+      } catch { failMsg = tc('error'); }
+    }
+    setDeleting(false);
+    if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
+    if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
+    clear();
+    fetchData();
+  };
 
   const fetchData = async () => {
     try {
@@ -190,9 +216,13 @@ export default function SalesOutboundPage() {
         </div>
         <Card>
           <CardContent className="p-0">
+            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
+                  </TableHead>
                   <TableHead className="text-xs">{ts('k_1bwocym')}</TableHead>
                   <TableHead className="text-xs">{ts('k_m6144y')}</TableHead>
                   <TableHead className="text-xs">{tc('customer')}</TableHead>
@@ -208,6 +238,9 @@ export default function SalesOutboundPage() {
                   const st = statusMap[item.status] || statusMap[1];
                   return (
                     <TableRow key={item.id}>
+                      <TableCell>
+                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(item.id))} onChange={() => toggle(String(item.id))} aria-label={tc('selectRow', { id: item.id })} />
+                      </TableCell>
                       <TableCell className="text-xs font-mono">{item.outbound_no}</TableCell>
                       <TableCell className="text-xs">{item.order_no || '-'}</TableCell>
                       <TableCell className="text-xs">{item.customer_name || '-'}</TableCell>
@@ -256,7 +289,7 @@ export default function SalesOutboundPage() {
                 })}
                 {list.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                       {t('noRecords')}
                     </TableCell>
                   </TableRow>

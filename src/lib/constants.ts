@@ -22,13 +22,29 @@ export const OrderStatusLabel: Record<string, string> = {
 // ==================== 工单状态 ====================
 export const WorkOrderStatus = {
   PENDING: 'pending',
+  CONFIRMED: 'confirmed',
   PRODUCING: 'producing',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
 } as const;
 
+/**
+ * 可创建「完工入库单 / 领料单」的工单状态白名单。
+ *
+ * 未确认（pending）与已取消（cancelled）必须被拦截，未知状态兜底拒绝。
+ * ⚠️ 历史上这两处校验写成 `wo.status < 20` / `>= 90`，而 prod_work_order.status 是
+ * varchar 状态机（'pending'/'confirmed'/…），JS 中 `'pending' < 20` → NaN → 恒 false，
+ * 导致状态校验与流转双双失效（NEW-P0-1 修好 FK 后会变为可利用漏洞）。务必用白名单。
+ */
+export const WORK_ORDER_STATUSES_ALLOW_INBOUND: readonly string[] = [
+  WorkOrderStatus.CONFIRMED,
+  WorkOrderStatus.PRODUCING,
+  WorkOrderStatus.COMPLETED,
+];
+
 export const WorkOrderStatusLabel: Record<string, string> = {
   [WorkOrderStatus.PENDING]: '待生产',
+  [WorkOrderStatus.CONFIRMED]: '已确认',
   [WorkOrderStatus.PRODUCING]: '生产中',
   [WorkOrderStatus.COMPLETED]: '已完成',
   [WorkOrderStatus.CANCELLED]: '已取消',

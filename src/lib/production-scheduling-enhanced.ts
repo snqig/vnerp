@@ -186,7 +186,7 @@ export async function getAvailableEquipment(workshop?: string): Promise<Equipmen
   sql += ' ORDER BY workshop_id, equipment_type, equipment_code';
 
   const rows = await query<DbRow>(sql, params);
-  return rows;
+  return rows as Equipment[];
 }
 
 /**
@@ -205,7 +205,7 @@ export async function getWorkOrderColorSequences(workOrderId: number): Promise<C
      ORDER BY seq_no`,
     [workOrderId]
   );
-  return rows;
+  return rows as ColorSequence[];
 }
 
 /**

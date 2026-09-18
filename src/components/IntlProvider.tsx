@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { setErrorTranslator } from '@/lib/error-handler';
 import { getApiErrorMessage } from '@/lib/api-error-i18n';
+import { logger } from '@/lib/logger';
 
 interface IntlProviderProps {
   locale: string;
@@ -41,7 +42,7 @@ export function IntlProvider({ locale, messages, children }: IntlProviderProps) 
           const uniqueKey = `${locale}:${namespace}.${key}`;
           if (seenMissingKeys.has(uniqueKey)) return;
           seenMissingKeys.add(uniqueKey);
-          console.warn(
+          logger.warn(
             `[i18n] Missing translation key: "${namespace}.${key}" (locale: ${locale}). ` +
             `Run: node scripts/debug-perf/diagnose_i18n_keys.mjs to find all missing keys.`
           );

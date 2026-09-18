@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbConnection } from '@/types/db';
 
 /**
  * 配方版本仓储 — MySQL 实现
@@ -288,7 +289,7 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
   }
 
   private async saveItems(
-    conn: PoolConnection,
+    conn: DbConnection,
     versionId: number,
     items: FormulaItemVO[]
   ): Promise<void> {

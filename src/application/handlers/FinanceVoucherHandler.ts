@@ -1,7 +1,7 @@
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { InboundOrderApprovedEvent } from '@/domain/warehouse/events/InboundOrderEvents';
 import { WorkOrderCompletedEvent } from '@/domain/production/events/WorkOrderEvents';
-import { transaction, execute } from '@/lib/db';
+import { transaction, execute, query } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import type { DbResult } from '@/types/db';
 
@@ -35,11 +35,11 @@ export class FinanceVoucherHandler implements EventHandler<FinanceEvent> {
 
     if (event.eventType === 'workorder.completed') {
       const payload = (event as WorkOrderCompletedEvent).payload;
-      const [workOrderItems] = (await execute(
+      const workOrderItems = await query(
         'SELECT SUM(total_price) as total_cost FROM prod_work_order_item WHERE work_order_id = ?',
         [payload.workOrderId]
-      )) as DbResult;
-      totalAmount = Number((workOrderItems[0] as any)?.total_cost || 0);
+      );
+      totalAmount = Number((workOrderItems[0] as Record<string, unknown>)?.total_cost || 0);
     }
 
     if (totalAmount <= 0) {

@@ -231,7 +231,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
         for (const item of diffItems) {
           // 检查是否会产生负库存
-          const currentStock: unknown = await conn
+          const currentStock = await conn
             .execute(
               `SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
               [item.material_id, check.warehouse_id]

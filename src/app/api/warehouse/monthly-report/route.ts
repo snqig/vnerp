@@ -100,7 +100,7 @@ export const GET = withPermission(
 
     const rows = (await query(dailySql, queryParams)) as DbRow[];
 
-    const grouped: Record<string, unknown> = {};
+    const grouped: Record<string, DbRow> = {};
     for (const row of rows) {
       const key = `${row.material_id}_${row.warehouse_id || 0}`;
       if (!grouped[key]) {

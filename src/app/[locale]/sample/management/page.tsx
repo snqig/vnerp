@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useCallback, useEffect } from 'react';
@@ -142,7 +143,6 @@ export default function SampleManagementPage() {
   const [keyword, setKeyword] = useState('');
   const debouncedKeyword = useDebounce(keyword, 300);
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [detailItem, setDetailItem] = useState<SampleOrder | null>(null);
@@ -187,6 +187,10 @@ export default function SampleManagementPage() {
     }
     return sortDir === 'asc' ? cmp : -cmp;
   });
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    sortedList,
+    (r) => String(r.id)
+  );
 
   const getStatusBadge = (item: SampleOrder) => {
     // 状态标签渲染（中文映射，不依赖 i18n）
@@ -322,16 +326,8 @@ export default function SampleManagementPage() {
       delivery_status: t(statusLabelMap[s.delivery_status] || s.delivery_status),
     }));
 
-  const toggleSelect = (id: number) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedIds(next);
-  };
-  const toggleSelectAll = () => {
-    if (selectedIds.size === sortedList.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(sortedList.map((s) => s.id)));
-  };
+  const toggleSelect = (id: number) => toggle(String(id));
+  const toggleSelectAll = () => toggleAll();;
 
   return (
     <MainLayout title={t('sampleManagement')}>
@@ -395,8 +391,8 @@ export default function SampleManagementPage() {
                     },
                   ]}
                   data={
-                    selectedIds.size > 0
-                      ? sortedList.filter((s) => selectedIds.has(s.id))
+                    selectedCount > 0
+                      ? sortedList.filter((s) => isSelected(String(s.id)))
                       : sortedList
                   }
                 />
@@ -431,7 +427,7 @@ export default function SampleManagementPage() {
                     <tr className="border-b bg-muted/50">
                       <th className="h-12 px-4 text-left align-middle font-medium w-[40px]">
                         <Checkbox
-                          checked={selectedIds.size > 0 && selectedIds.size === sortedList.length}
+                          checked={allSelected}
                           onCheckedChange={toggleSelectAll}
                         />
                       </th>
@@ -507,11 +503,11 @@ export default function SampleManagementPage() {
                     {sortedList.map((item, index) => (
                       <tr
                         key={item.id}
-                        className={`border-b transition-colors hover:bg-muted/50 ${selectedIds.has(item.id) ? 'bg-primary/5' : ''}`}
+                        className={`border-b transition-colors hover:bg-muted/50 ${isSelected(String(item.id)) ? 'bg-primary/5' : ''}`}
                       >
                         <td className="p-4">
                           <Checkbox
-                            checked={selectedIds.has(item.id)}
+                            checked={isSelected(String(item.id))}
                             onCheckedChange={() => toggleSelect(item.id)}
                           />
                         </td>

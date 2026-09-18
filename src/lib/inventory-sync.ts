@@ -1,4 +1,5 @@
 import { query, transaction } from '@/lib/db';
+import type { DbConnection } from '@/types/db';
 import { secureLog } from '@/lib/logger';
 import { logInventoryChange } from './audit-logger';
 import { appendInventoryLog } from './inventory-ledger';
@@ -32,7 +33,7 @@ export async function checkInventoryAvailability(
   warehouseId: number,
   requiredQty: number,
   batchNo?: string,
-  conn?: mysql.PoolConnection
+  conn?: DbConnection
 ): Promise<InventoryCheckResult> {
   try {
     let sql = `
@@ -103,7 +104,7 @@ export async function checkInventoryAvailability(
  */
 export async function adjustInventory(
   adjustment: InventoryAdjustment,
-  conn?: mysql.PoolConnection
+  conn?: DbConnection
 ): Promise<InventoryCheckResult> {
   const {
     materialId,
@@ -135,7 +136,7 @@ export async function adjustInventory(
     // 若外层已传入事务连接，直接复用（不自行 begin/commit，回滚随外层）；
     // 否则独立开启事务（保持向后兼容）。
     const runInTransaction = <T,>(
-      cb: (c: mysql.PoolConnection) => Promise<T>
+      cb: (c: DbConnection) => Promise<T>
     ): Promise<T> => (conn ? cb(conn) : transaction(cb));
 
     const result = await runInTransaction(async (txConn) => {

@@ -4,28 +4,10 @@
  */
 
 import { test, expect } from '@playwright/test';
-
-const TEST_USER = {
-  username: 'admin',
-  password: 'admin123',
-};
-
-async function login(page: import('@playwright/test').Page) {
-  await fetch('/api/auth/reset-lock', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'admin' }),
-  }).catch(() => {});
-
-  await page.goto('/en/login', { waitUntil: 'domcontentloaded' });
-  await page.waitForLoadState('networkidle');
-  await page.waitForSelector('input#username', { timeout: 60000 });
-  await page.fill('input#username', TEST_USER.username);
-  await page.fill('input#password', TEST_USER.password);
-  await page.getByRole('button', { name: 'Login' }).click();
-  await page.waitForURL('**/en/dashboard', { timeout: 60000 });
-  await page.waitForTimeout(2000);
-}
+// BUG-003/004：统一走共享认证 helper。
+// 原实现有两处缺陷：① `fetch('/api/auth/reset-lock')` 用相对 URL，Node 环境必抛
+// TypeError 并被 .catch 静默吞掉（reset-lock 从未生效）；② 硬编码凭据/跳转断言分散在多个 spec。
+import { login } from './utils/api-auth';
 
 test.describe('入库管理测试', () => {
 

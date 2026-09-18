@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
@@ -107,7 +108,6 @@ export default function InkManagementPage() {
   const [editItem, setEditItem] = useState<Partial<Item>>({});
   const [sortField, setSortField] = useState<SortField>('ink_code');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const fetchData = useCallback(async () => {
     try {
@@ -155,18 +155,14 @@ export default function InkManagementPage() {
     }
     return sortDir === 'asc' ? cmp : -cmp;
   });
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    sortedList,
+    (r) => String(r.id)
+  );
 
-  const toggleSelect = (id: number) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedIds(next);
-  };
+  const toggleSelect = (id: number) => toggle(String(id));
 
-  const toggleSelectAll = () => {
-    if (selectedIds.size === sortedList.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(sortedList.map((s) => s.id)));
-  };
+  const toggleSelectAll = () => toggleAll();
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
@@ -335,8 +331,8 @@ export default function InkManagementPage() {
                     },
                   ]}
                   data={
-                    selectedIds.size > 0
-                      ? sortedList.filter((i) => selectedIds.has(i.id))
+                    selectedCount > 0
+                      ? sortedList.filter((i) => isSelected(String(i.id)))
                       : sortedList
                   }
                 />
@@ -348,7 +344,7 @@ export default function InkManagementPage() {
                 <TableRow>
                   <TableHead className="w-[40px]">
                     <Checkbox
-                      checked={selectedIds.size > 0 && selectedIds.size === sortedList.length}
+                      checked={allSelected}
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
@@ -421,7 +417,7 @@ export default function InkManagementPage() {
                     <TableRow key={item.id}>
                       <TableCell>
                         <Checkbox
-                          checked={selectedIds.has(item.id)}
+                          checked={isSelected(String(item.id))}
                           onCheckedChange={() => toggleSelect(item.id)}
                         />
                       </TableCell>

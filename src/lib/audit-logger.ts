@@ -7,7 +7,7 @@
 import { NextRequest } from 'next/server';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { query, execute, type SqlValue } from '@/lib/db';
-import { maskSensitiveData } from '@/lib/logger';
+import {maskSensitiveData, logger} from '@/lib/logger';
 
 // ============================================================
 // 类型定义
@@ -163,7 +163,7 @@ function safeJsonStringify(data: unknown): string | null {
   try {
     return JSON.stringify(maskSensitiveData(data));
   } catch (error) {
-    console.error('[audit-logger] safeJsonStringify failed:', error);
+    logger.error('[audit-logger] safeJsonStringify failed:', error);
     return null;
   }
 }
@@ -219,7 +219,7 @@ export async function logOperation(entry: AuditLogEntry, request?: NextRequest):
       ]
     );
   } catch (error) {
-    console.error('[audit-logger] logging failed:', error);
+    logger.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -270,7 +270,7 @@ export async function logLogin(
       await checkAbnormalLogin(username, ip, errorMsg || '登录失败');
     }
   } catch (error) {
-    console.error('[audit-logger] logging failed:', error);
+    logger.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -327,7 +327,7 @@ async function checkAbnormalLogin(
       );
     }
   } catch (error) {
-    console.error('[audit-logger] logging failed:', error);
+    logger.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -373,7 +373,7 @@ export async function logStockFlow(entry: StockFlowEntry): Promise<void> {
       ]
     );
   } catch (error) {
-    console.error('[audit-logger] logging failed:', error);
+    logger.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -419,7 +419,7 @@ export async function logFinanceFlow(entry: FinanceFlowEntry): Promise<void> {
       ]
     );
   } catch (error) {
-    console.error('[audit-logger] logging failed:', error);
+    logger.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -452,7 +452,7 @@ export async function logDataChange(entry: DataChangeEntry): Promise<void> {
       ]
     );
   } catch (error) {
-    console.error('[audit-logger] logging failed:', error);
+    logger.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -493,7 +493,7 @@ export async function logDocumentCancel(entry: DocumentCancelEntry): Promise<voi
       status: 1,
     });
   } catch (error) {
-    console.error('[audit-logger] logging failed:', error);
+    logger.error('[audit-logger] logging failed:', error);
   }
 }
 
@@ -639,7 +639,7 @@ export async function logInventoryChange(params: {
       remark: `${params.operationType}: ${params.quantity}`,
     });
   } catch (error) {
-    console.error('[audit-logger] logging failed:', error);
+    logger.error('[audit-logger] logging failed:', error);
   }
 }
 

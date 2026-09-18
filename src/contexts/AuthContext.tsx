@@ -1,5 +1,6 @@
 'use client';
 import { useTranslations } from 'next-intl';
+import { logger } from '@/lib/logger';
 
 import {
   createContext,
@@ -122,7 +123,7 @@ function saveCachedMenus(
     localStorage.setItem(MENU_CACHE_TS_KEY, String(Date.now()));
   } catch (error) {
     // localStorage 满了或不可用，静默忽略
-    console.error(ts('k_ppycqp'), error);
+    logger.error(ts('k_ppycqp'), error);
   }
 }
 
@@ -138,16 +139,20 @@ export function AuthProvider({
   //   - isLoading = false（无需等首次 fetch）
   //   - user / isAuthenticated 仍由 useEffect 从 localStorage 恢复（避免 SSR 读取 localStorage）
   // 无 initialAuth 时（未登录 / SSR 预取失败）：保持原有行为，isLoading=true 显示骨架屏。
+  const ssrAuthenticated = !!(initialAuth && initialAuth.menus.length > 0);
   const [state, setState] = useState<AuthState>({
     user: null,
     menus: initialAuth?.menus ?? [],
     permissions: initialAuth?.permissions ?? [],
-    isAuthenticated: false,
-    isLoading: !(initialAuth && initialAuth.menus.length > 0),
+    isAuthenticated: ssrAuthenticated,
+    isLoading: !ssrAuthenticated,
   });
 
   const [isHydrated, setIsHydrated] = useState(false);
-  const [authResolved, setAuthResolved] = useState(false);
+  // 认证判定初值：SSR 已拿到菜单 ⇒ 已知登录，直接置为已解析，无需等客户端 async initAuth。
+  // 否则 SSR/首帧会先渲染 spinner；若客户端 initAuth 因 storage 与 cookie 错配
+  // （如清过站点数据 / 跨标签页 sessionStorage 不共享）而未能置位，就会永久转圈（实测必现）。
+  const [authResolved, setAuthResolved] = useState(ssrAuthenticated);
 
   // 在组件渲染阶段调用 useTranslations（而非事件回调/普通函数内），避免 "Invalid hook call"
   const ts = useTranslations('Common');
@@ -237,6 +242,9 @@ export function AuthProvider({
             permissions: permissions,
             isLoading: false,
           }));
+        } else {
+          // 响应 200 但 success=false：不能把 isLoading 悬在 true，否则 AuthGuard 永久转圈。
+          setState((prev) => ({ ...prev, isLoading: false }));
         }
       } catch (error: unknown) {
         if (error instanceof Error && error.name === 'AbortError') {
@@ -319,7 +327,7 @@ export function AuthProvider({
         const response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
+          body: JSON.stringify({ username, password, rememberMe }),
         });
 
         const result = await response.json();
@@ -364,7 +372,7 @@ export function AuthProvider({
       await authFetch('/api/auth/logout', { method: 'POST' });
     } catch (error) {
       // ignore：网络错误等，继续清除本地状态
-      console.error(ts('k_1lknuvq'), error);
+      logger.error(ts('k_1lknuvq'), error);
     }
 
     localStorage.removeItem('token');
@@ -457,4 +465,25 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+/**
+ * 认证闸门状态，供「全局副作用」类 hook 使用。
+ *
+ * - `no-provider`   不在 AuthProvider 内（例如被单测独立渲染）→ 调用方按原行为处理
+ * - `pending`       在 Provider 内、认证检查尚未结束 → 调用方应等待，不要抢跑
+ * - `authenticated` 在 Provider 内且已登录
+ * - `anonymous`     在 Provider 内且未登录（如 /login）→ 调用方应短路受保护请求
+ *
+ * 与 useAuth() 的区别：不抛错，且把「尚未解析」与「已解析为未登录」区分开。
+ * 后者是 BUG-005 的关键：登录页处于未登录态，若仍发起 /api/system/config 等
+ * 受保护请求，会产生 401 控制台噪音（功能无影响，但污染回归结果）。
+ */
+export type AuthGate = 'no-provider' | 'pending' | 'authenticated' | 'anonymous';
+
+export function useAuthGate(): AuthGate {
+  const context = useContext(AuthContext);
+  if (!context) return 'no-provider';
+  if (!context.authResolved) return 'pending';
+  return context.isAuthenticated ? 'authenticated' : 'anonymous';
 }

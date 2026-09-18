@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 type JobStatus = 'pending' | 'running' | 'done' | 'failed';
 
 interface PrintJob<T = unknown> {
@@ -113,6 +114,6 @@ export const labelPrintQueue = new PrintJobQueue<unknown>({
     await new Promise((resolve) => setTimeout(resolve, 300));
   },
   onError(job: PrintJob<unknown>, error: Error) {
-    console.error(`[PrintQueue] job=${job.id} failed:`, error.message);
+    logger.error(`[PrintQueue] job=${job.id} failed:`, error.message);
   },
 });

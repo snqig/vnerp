@@ -12,11 +12,12 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   try {
     let todayOrders = 0,
       pendingOrders = 0,
-      producingOrders = 0;
-    const orderChange = 0;
-    let completedToday = 0,
-      totalCustomers = 0;
-    const todayProduction = 0,
+      producingOrders = 0,
+      yesterdayOrders = 0,
+      orderChange = 0,
+      completedToday = 0,
+      totalCustomers = 0,
+      todayProduction = 0,
       productionChange = 0;
 
     try {
@@ -24,16 +25,26 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
         SELECT
           COUNT(*) as total,
           SUM(CASE WHEN DATE(create_time) = CURDATE() THEN 1 ELSE 0 END) as today,
+          SUM(CASE WHEN DATE(create_time) = CURDATE() - INTERVAL 1 DAY THEN 1 ELSE 0 END) as yesterday,
           SUM(CASE WHEN burdening_status = 0 THEN 1 ELSE 0 END) as pending,
           SUM(CASE WHEN burdening_status = 2 THEN 1 ELSE 0 END) as producing,
-          SUM(CASE WHEN burdening_status = 3 AND DATE(update_time) = CURDATE() THEN 1 ELSE 0 END) as completed_today
+          SUM(CASE WHEN burdening_status = 3 AND DATE(update_time) = CURDATE() THEN 1 ELSE 0 END) as completed_today,
+          COALESCE(SUM(CASE WHEN burdening_status = 3 AND DATE(update_time) = CURDATE() THEN plan_qty ELSE 0 END), 0) as prod_today,
+          COALESCE(SUM(CASE WHEN burdening_status = 3 AND DATE(update_time) = CURDATE() - INTERVAL 1 DAY THEN plan_qty ELSE 0 END), 0) as prod_yesterday
         FROM prd_process_card WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) {
         todayOrders = Number(rows[0].today || 0);
+        yesterdayOrders = Number(rows[0].yesterday || 0);
         pendingOrders = Number(rows[0].pending || 0);
         producingOrders = Number(rows[0].producing || 0);
         completedToday = Number(rows[0].completed_today || 0);
+        todayProduction = Number(rows[0].prod_today || 0);
+        const prodYesterday = Number(rows[0].prod_yesterday || 0);
+        const pct = (cur: number, prev: number) =>
+          prev === 0 ? (cur > 0 ? 100 : 0) : Math.round(((cur - prev) / prev) * 100);
+        orderChange = pct(todayOrders, yesterdayOrders);
+        productionChange = pct(todayProduction, prodYesterday);
       }
     } catch (e) {
       logger.error({ module: 'dashboard', action: 'overview' }, 'Dashboard query failed', {
@@ -89,7 +100,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let recentOrders: SqlValue[] = [];
+    let recentOrders: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT pc.id, pc.card_no, pc.work_order_no, pc.product_name, pc.plan_qty,
@@ -105,7 +116,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    const alerts: SqlValue[] = [];
+    const alerts: DbRow[] = [];
     try {
       const inkRows = await query(`
         SELECT COUNT(*) as total FROM ink_opening_record WHERE deleted = 0 AND status = 1 AND DATEDIFF(expire_time, NOW()) <= 1
@@ -146,7 +157,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let orderStats: SqlValue[] = [];
+    let orderStats: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT DATE(create_time) as date, COUNT(*) as count

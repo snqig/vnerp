@@ -138,7 +138,7 @@ describe('分切单审核 - R3 母批版本守护', () => {
   });
 
   it('R3: 母批扣减使用 batch_version（=5），而非 split_order.version（=3）', async () => {
-    const res = await PATCH(makeRequest());
+    const res = await PATCH(makeRequest() as any);
     expect(res.status).toBe(200);
 
     const mother = mocks.motherCalls.find((c) => c.sql.includes('inv_inventory_batch SET'));
@@ -152,7 +152,7 @@ describe('分切单审核 - R3 母批版本守护', () => {
 
   it('R3: 母批扣减 affectedRows=0（版本冲突）时抛「批次版本冲突」并回 500', async () => {
     state.motherAffectedRows = 0; // 模拟乐观锁冲突
-    const res = await PATCH(makeRequest());
+    const res = await PATCH(makeRequest() as any);
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.success).toBe(false);

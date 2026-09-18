@@ -1,4 +1,7 @@
 import { z } from 'zod';
+// 注意：本模块在 next.config 加载期被 Node 直接 require，tsconfig 的 `@/` 别名不会被解析，
+// 必须用相对路径，否则会被 config-loader 错写成 `./src/lib/logger` 而 MODULE_NOT_FOUND。
+import { logger } from './logger';
 
 /**
  * 环境变量 Schema 校验
@@ -79,7 +82,7 @@ function loadEnv(): Env {
 
   if (process.env.NODE_ENV === 'production') {
     // SECURITY: 生产环境配置缺失必须 fail-fast，绝不静默降级到弱默认值/空密码。
-    console.error(
+    logger.error(
       '[env] Environment variable validation failed:\n' +
         result.error.issues.map((issue) => `  ${issue.path.join('.')}: ${issue.message}`).join('\n')
     );

@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbConnection } from '@/types/db';
 
 /**
  * @module 工艺卡标准卡服务
@@ -244,7 +245,7 @@ function incrementVersion(currentVersion: string, isMajor: boolean): string {
  * @throws 当数据库操作失败时抛出异常
  */
 export async function createCardWithVersion(
-  conn: PoolConnection,
+  conn: DbConnection,
   cardData: CreateCardInput,
   templateId?: number,
   copyFromId?: number,
@@ -346,7 +347,7 @@ export async function createCardWithVersion(
  * @throws 当工艺卡不存在时抛出 "工艺卡不存在" 异常
  */
 export async function updateCardWithVersion(
-  conn: PoolConnection,
+  conn: DbConnection,
   cardId: number,
   updates: UpdateCardInput,
   operatorName: string = 'system',
@@ -437,7 +438,7 @@ export async function updateCardWithVersion(
  * @param cardId - 工艺卡 ID
  * @returns 版本历史数组，按创建时间从早到晚排列；若无记录则返回空数组
  */
-export async function getVersionHistory(conn: PoolConnection, cardId: number): Promise<CardVersion[]> {
+export async function getVersionHistory(conn: DbConnection, cardId: number): Promise<CardVersion[]> {
   const [auditRows] = await conn.query<RowDataPacket[]>(
     `SELECT id, card_id, version, action, operator, change_description, tech_params, create_time
      FROM prd_process_card_audit
@@ -513,7 +514,7 @@ export async function getVersionHistory(conn: PoolConnection, cardId: number): P
  * @throws 当版本号不匹配时抛出 "版本不匹配" 异常
  */
 export async function approveCardVersion(
-  conn: PoolConnection,
+  conn: DbConnection,
   cardId: number,
   version: string,
   approverName: string
@@ -554,7 +555,7 @@ export async function approveCardVersion(
  * @param category - 可选的分类名称，用于筛选特定类别的模板
  * @returns 模板数组；查询失败或无数据时返回空数组
  */
-export async function getTemplates(conn: PoolConnection, category?: string): Promise<ProcessCardTemplate[]> {
+export async function getTemplates(conn: DbConnection, category?: string): Promise<ProcessCardTemplate[]> {
   try {
     let sql = `SELECT id, name, category, tech_params, description FROM prd_process_card_templates WHERE deleted = 0`;
     const params: SqlValue[] = [];
@@ -608,7 +609,7 @@ export async function getTemplates(conn: PoolConnection, category?: string): Pro
  * @throws 当样品工艺卡不存在时抛出 "样品工艺卡不存在" 异常
  */
 export async function convertSampleToMass(
-  conn: PoolConnection,
+  conn: DbConnection,
   sampleCardId: number,
   adjustments: Partial<TechParams>,
   operatorName: string = 'system'

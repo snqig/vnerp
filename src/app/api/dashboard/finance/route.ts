@@ -16,7 +16,15 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     const aging60Days = Number(getConfig('aging_60_days') || 60);
     const aging90Days = Number(getConfig('aging_90_days') || 90);
 
-    const overview: unknown = {
+    const overview: {
+      totalReceivable: number;
+      totalPayable: number;
+      monthRevenue: number;
+      monthExpense: number;
+      revenueChange: number;
+      expenseChange: number;
+      netProfit: number;
+    } = {
       totalReceivable: 0,
       totalPayable: 0,
       monthRevenue: 0,
@@ -60,7 +68,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let revenueTrend: SqlValue[] = [];
+    let revenueTrend: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT DATE(receipt_date) as date, COALESCE(SUM(amount), 0) as amount
@@ -74,7 +82,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let expenseTrend: SqlValue[] = [];
+    let expenseTrend: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT DATE(payment_date) as date, COALESCE(SUM(amount), 0) as amount
@@ -88,7 +96,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let receivableAging: SqlValue[] = [];
+    let receivableAging: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT
@@ -109,7 +117,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let recentTransactions: SqlValue[] = [];
+    let recentTransactions: DbRow[] = [];
     try {
       const recRows = await query(`
         SELECT 'receipt' as type, id, amount, receipt_date as date, remark FROM fin_receipt_record WHERE deleted = 0 ORDER BY receipt_date DESC LIMIT 5
@@ -128,7 +136,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let topPayables: SqlValue[] = [];
+    let topPayables: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT s.supplier_name, COALESCE(SUM(p.amount), 0) as total, COUNT(*) as count

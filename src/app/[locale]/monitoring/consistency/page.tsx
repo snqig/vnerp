@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { logger } from '@/lib/logger';
 import { useEffect, useState, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -160,7 +161,7 @@ export default function ConsistencyMonitorPage() {
         });
       }
     } catch (err) {
-      console.error(ts('k_vkgu8y'), err);
+      logger.error(ts('k_vkgu8y'), err);
     } finally {
       if (fetchId === fetchIdRef.current) {
         setLoading(false);

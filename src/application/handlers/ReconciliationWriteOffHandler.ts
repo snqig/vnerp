@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { ReconciliationWrittenOffEvent } from '@/domain/sales/events/ReconciliationEvents';
 import { transaction } from '@/lib/db';
+import type { DbResult } from '@/types/db';
 import { logger, secureLog } from '@/lib/logger';
 
 /**

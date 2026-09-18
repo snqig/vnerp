@@ -22,20 +22,12 @@ interface SyncRecord {
   errorMessage?: string;
 }
 
-const mockSyncHistory: SyncRecord[] = [
-  { id: 1, syncType: 'pieceWork', status: 'synced', syncTime: '2024-03-15 10:30:00', recordCount: 156 },
-  { id: 2, syncType: 'pieceWork', status: 'synced', syncTime: '2024-03-15 09:00:00', recordCount: 142 },
-  { id: 3, syncType: 'quality', status: 'synced', syncTime: '2024-03-15 08:30:00', recordCount: 89 },
-  { id: 4, syncType: 'pieceWork', status: 'failed', syncTime: '2024-03-14 17:00:00', recordCount: 0, errorMessage: '连接超时' },
-  { id: 5, syncType: 'quality', status: 'pending', syncTime: '2024-03-14 16:00:00', recordCount: 0 },
-];
-
 const syncTypeLabels: Record<string, string> = {
   pieceWork: 'syncTypePieceWork',
   quality: 'syncTypeQuality',
 };
 
-const typeIcons: Record<string, React.ComponentType<any>> = {
+const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   pieceWork: Database,
   quality: CheckCircle2,
 };
@@ -65,18 +57,26 @@ export default function MesSyncPage() {
       const json = await res.json();
       if (json.code === 200) {
         const list = Array.isArray(json.data) ? json.data : json.data?.list || [];
-        setRecords(list);
-        const synced = list.filter((r: SyncRecord) => r.status === 'synced');
+        // hr_piece_work_detail 行 → SyncRecord 映射（GET 已过滤 sync_status>0，均为已同步）
+        const mapped: SyncRecord[] = (list as Record<string, unknown>[]).map((r) => ({
+          id: Number(r.id),
+          syncType: 'pieceWork',
+          status: 'synced',
+          syncTime: String(r.create_time ?? ''),
+          recordCount: Number(r.quantity) || 0,
+        }));
+        setRecords(mapped);
+        const synced = mapped.filter((r) => r.status === 'synced');
         if (synced.length > 0) {
           setLastSyncTime(synced[0].syncTime);
         }
-        setPieceWorkCount(list.filter((r: SyncRecord) => r.syncType === 'pieceWork').length);
-        setQualityCount(list.filter((r: SyncRecord) => r.syncType === 'quality').length);
+        setPieceWorkCount(mapped.filter((r) => r.syncType === 'pieceWork').length);
+        setQualityCount(mapped.filter((r) => r.syncType === 'quality').length);
       } else {
-        setRecords(mockSyncHistory);
+        setRecords([]);
       }
     } catch {
-      setRecords(mockSyncHistory);
+      setRecords([]);
     } finally {
       setLoading(false);
     }

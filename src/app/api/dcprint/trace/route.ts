@@ -2,13 +2,14 @@ import { getTranslations } from 'next-intl/server';
 
 ;
 ﻿import { NextRequest } from 'next/server';
-import { query, execute, queryOne, SqlValue } from '@/lib/db';
+import { query, queryOne, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 
 // 物料项接口
 interface MaterialItem {
+  labelId?: number | null;
   labelNo: string;
   materialType: string;
   materialCode?: string;
@@ -39,12 +40,13 @@ interface TraceDetail {
 }
 
 // 生成追溯单号
+// 备注：随机位由 4 位扩到 6 位（每天 100 万组合），降低批量追溯时 uk_trace_no 唯一约束碰撞概率
 function generateTraceNo(): string {
   const date = new Date();
   const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-  const random = Math.floor(Math.random() * 10000)
+  const random = Math.floor(Math.random() * 1000000)
     .toString()
-    .padStart(4, '0');
+    .padStart(6, '0');
   return `TR${dateStr}${random}`;
 }
 
@@ -145,7 +147,7 @@ export const POST = withPermission(
     }
 
     // 查询流程卡信息
-    const card = await queryOne<unknown>(
+    const card = await queryOne(
       `SELECT
       c.id, c.card_no, c.work_order_no, c.product_code, c.product_name,
       c.main_label_id, c.main_label_no,
@@ -155,7 +157,6 @@ export const POST = withPermission(
       l.batch_no as main_batch_no,
       l.supplier_name as main_supplier_name,
       l.receive_date as main_receive_date,
-      l.purchase_order_no as main_purchase_order_no,
       l.purchase_order_no as main_purchase_order_no
     FROM prd_process_card c
     LEFT JOIN inv_material_label l ON c.main_label_id = l.id
@@ -170,6 +171,7 @@ export const POST = withPermission(
     // 查询流程卡关联的所有物料
     const materials = await query<MaterialItem>(
       `SELECT
+      m.label_id as labelId,
       m.label_no as labelNo,
       m.material_type as materialType,
       m.material_code as materialCode,
@@ -190,55 +192,64 @@ export const POST = withPermission(
       [card.id]
     );
 
-    // 生成追溯单号并记录
+    // 生成追溯单号，事务内原子写入「主记录 + 明细」，避免明细失败留下孤儿主记录
     const traceNo = generateTraceNo();
+    // material_type 在库中为 tinyint（1=主材，2=辅材）；前端与打印视图按 'main'/'auxiliary' 判断，
+    // 故在此统一映射，并保留数值码供写库使用，避免「数值 vs 字符串」比较恒为 false。
+    const materialList = (materials || []).map((m) => ({
+      ...m,
+      materialTypeCode: Number(m.materialType),
+      materialType: Number(m.materialType) === 1 ? 'main' : 'auxiliary',
+    }));
+    const traceRemark = `追溯查询: ${traceType === 'forward' ? ts('k_1yh2yft') : ts('k_19f7liv')}`;
 
-    await execute(
-      `INSERT INTO inv_trace_record (
-      trace_no, card_id, card_no, work_order_no, product_code, main_label_id,
-      trace_type, operator_id, operator_name, remark, deleted
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
-      [
-        traceNo,
-        card.id,
-        card.card_no,
-        card.work_order_no,
-        card.product_code,
-        card.main_label_id,
-        traceType,
-        operatorId,
-        operatorName,
-        `追溯查询: ${traceType === 'forward' ? ts('k_1yh2yft') : ts('k_19f7liv')}`,
-      ]
-    );
-
-    // 添加追溯明细
-    const materialList = materials || [];
-    for (const material of materialList) {
-      await execute(
-        `INSERT INTO inv_trace_detail (
-        trace_id, label_id, label_no, material_code, material_name,
-        specification, batch_no, supplier_name, receive_date, material_type, remark
-      ) VALUES (
-        (SELECT id FROM inv_trace_record WHERE trace_no = ?),
-        (SELECT id FROM inv_material_label WHERE label_no = ?),
-        ?, ?, ?, ?, ?, ?, ?, ?, ?
-      )`,
+    await transaction(async (conn) => {
+      const [record] = await conn.execute<DbResultSetHeader>(
+        `INSERT INTO inv_trace_record (
+        trace_no, card_id, card_no, work_order_no, product_code, main_label_id,
+        trace_type, operator_id, operator_name, remark, deleted
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
         [
           traceNo,
-          material.labelNo,
-          material.labelNo,
-          material.materialCode || '',
-          material.materialName || '',
-          material.specification || '',
-          material.batchNo || '',
-          material.supplierName || '',
-          material.receiveDate || '',
-          material.materialType,
-          material.remark || '',
+          card.id,
+          card.card_no,
+          card.work_order_no,
+          card.product_code,
+          card.main_label_id,
+          traceType,
+          operatorId,
+          operatorName,
+          traceRemark,
         ]
       );
-    }
+      const traceId = record.insertId;
+
+      for (const material of materialList) {
+        // label_id 为 NOT NULL 且无外键约束：优先取物料自身 label_id，缺失则跳过该条，
+        // 避免依赖 inv_material_label 子查询（空表会返回 NULL 导致整单失败）
+        const labelId = material.labelId ?? null;
+        if (labelId == null) continue;
+        await conn.execute(
+          `INSERT INTO inv_trace_detail (
+          trace_id, label_id, label_no, material_code, material_name,
+          specification, batch_no, supplier_name, receive_date, material_type, remark
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            traceId,
+            labelId,
+            material.labelNo,
+            material.materialCode || '',
+            material.materialName || '',
+            material.specification || '',
+            material.batchNo || '',
+            material.supplierName || '',
+            material.receiveDate || null,
+            material.materialTypeCode ?? 2,
+            material.remark || '',
+          ]
+        );
+      }
+    });
 
     return successResponse(
       {
@@ -259,9 +270,9 @@ export const POST = withPermission(
           receiveDate: card.main_receive_date,
           purchaseOrderNo: card.main_purchase_order_no || '',
         },
-        materials: materials || [],
-        mainMaterials: materials?.filter((m) => m.materialType === 'main') || [],
-        auxiliaryMaterials: materials?.filter((m) => m.materialType === 'auxiliary') || [],
+        materials: materialList,
+        mainMaterials: materialList.filter((m) => m.materialType === 'main'),
+        auxiliaryMaterials: materialList.filter((m) => m.materialType === 'auxiliary'),
       },
       ts('k_3oe1k7')
     );
@@ -279,7 +290,7 @@ export const detail = withPermission(async (request: NextRequest, _userInfo) => 
     return errorResponse(ts('k_6xqqgv'), 400, 400);
   }
 
-  const trace = await queryOne<unknown>(
+  const trace = await queryOne(
     `SELECT
       t.id,
       t.trace_no as traceNo,
@@ -322,11 +333,17 @@ export const detail = withPermission(async (request: NextRequest, _userInfo) => 
     [trace.id]
   );
 
+  // 与 POST 一致：detail.material_type 为 tinyint（1=主材/2=辅材），统一映射为字符串
+  const detailList = (details || []).map((d) => ({
+    ...d,
+    materialType: Number(d.materialType) === 1 ? 'main' : 'auxiliary',
+  }));
+
   return successResponse({
     ...trace,
-    details: details || [],
-    mainMaterials: details?.filter((d) => d.materialType === 'main') || [],
-    auxiliaryMaterials: details?.filter((d) => d.materialType === 'auxiliary') || [],
+    details: detailList,
+    mainMaterials: detailList.filter((d) => d.materialType === 'main'),
+    auxiliaryMaterials: detailList.filter((d) => d.materialType === 'auxiliary'),
   });
 });
 
@@ -334,14 +351,14 @@ export const detail = withPermission(async (request: NextRequest, _userInfo) => 
 async function queryPaginated(
   sql: string,
   countSql: string,
-  params: DbRow[],
+  params: SqlValue[],
   pagination: { page: number; pageSize: number }
 ) {
   const { page, pageSize } = pagination;
   const offset = (page - 1) * pageSize;
 
   const [data, countResult] = await Promise.all([
-    query<unknown[]>(`${sql} LIMIT ? OFFSET ?`, [...params, pageSize, offset]),
+    query(`${sql} LIMIT ? OFFSET ?`, [...params, pageSize, offset]),
     queryOne<{ total: number }>(countSql, params),
   ]);
 

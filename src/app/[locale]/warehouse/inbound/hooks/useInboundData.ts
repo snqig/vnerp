@@ -108,7 +108,7 @@ export function useInboundData() {
         logger.warn(ctx, ts('k_oq4t0s'), { message: result.message });
       }
     } catch (error) {
-      logger.error(ctx, tc('categoryFetchFailed'), { error: (error as Error).message });
+      logger.error(ctx, ts('categoryFetchFailed'), { error: (error as Error).message });
     }
   }, []);
 

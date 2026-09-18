@@ -159,7 +159,7 @@ export const POST = withPermission(
         );
       }
 
-      const material = await queryOne<unknown>(
+      const material = await queryOne(
         'SELECT id, material_name, material_code, unit, purchase_price FROM inv_material WHERE id = ? AND deleted = 0',
         [materialId]
       );
@@ -167,7 +167,7 @@ export const POST = withPermission(
         return commonErrors.notFound(ts('k_130k5ym'));
       }
 
-      const warehouse = await queryOne<unknown>(
+      const warehouse = await queryOne(
         'SELECT id, warehouse_name FROM inv_warehouse WHERE id = ? AND deleted = 0',
         [warehouseId]
       );
@@ -426,7 +426,7 @@ export const POST = withPermission(
             );
           }
 
-          const material = await queryOne<unknown>(
+          const material = await queryOne(
             'SELECT id, material_name, material_code, unit FROM inv_material WHERE id = ? AND deleted = 0',
             [materialId]
           );
@@ -434,7 +434,7 @@ export const POST = withPermission(
             return commonErrors.notFound(ts('k_130k5ym'));
           }
 
-          const warehouse = await queryOne<unknown>(
+          const warehouse = await queryOne(
             'SELECT id, warehouse_name, warehouse_code FROM inv_warehouse WHERE id = ? AND deleted = 0',
             [warehouseId]
           );

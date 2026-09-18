@@ -1,4 +1,5 @@
 import { t } from '@/lib/server-translate';
+import { logger } from '@/lib/logger';
 import { getTranslations } from 'next-intl/server';
 
 /**
@@ -55,7 +56,7 @@ function logOp(
 ) {
   // 调试日志：生产环境关闭，且绝不打印 PARAMS/RESULT（含客户联系方式等 PII）
   if (process.env.NODE_ENV === 'production') return;
-  console.debug(
+  logger.debug(
     `[DrizzleSalesRepo] ${method} (${durationMs}ms) TABLE: ${table} CONDITIONS: ${conditions} SQL: ${sqlDesc}`
   );
 }

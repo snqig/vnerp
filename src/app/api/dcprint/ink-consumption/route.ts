@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import type { DbRow } from '@/types/db';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -28,7 +29,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     dateFilter = 'AND u.usage_time >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)';
   }
 
-  let workorderAnalysis: SqlValue[] = [];
+  let workorderAnalysis: DbRow[] = [];
   try {
     workorderAnalysis = await query(
       `
@@ -60,7 +61,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     });
   }
 
-  let inkTypeSummary: SqlValue[] = [];
+  let inkTypeSummary: DbRow[] = [];
   try {
     inkTypeSummary = await query(
       `
@@ -86,7 +87,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     });
   }
 
-  let topWasteItems: SqlValue[] = [];
+  let topWasteItems: DbRow[] = [];
   try {
     topWasteItems = await query(
       `
@@ -115,7 +116,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     });
   }
 
-  let dailyTrend: SqlValue[] = [];
+  let dailyTrend: DbRow[] = [];
   try {
     dailyTrend = await query(
       `
@@ -138,7 +139,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     });
   }
 
-  const summary: unknown = {
+  const summary: Record<string, any> = {
     total_dispatch: 0,
     total_consumed: 0,
     total_returned: 0,

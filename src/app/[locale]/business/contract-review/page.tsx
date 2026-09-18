@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
@@ -112,6 +113,10 @@ export default function ContractReviewPage() {
 
   const { toast } = useToast();
   const [list, setList] = useState<ContractReviewRecord[]>([]);
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    list,
+    (r) => String(r.id)
+  );
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchCustomer, setSearchCustomer] = useState('');
@@ -121,7 +126,6 @@ export default function ContractReviewPage() {
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<ContractReviewRecord>>({});
   const [activeReviewTab, setActiveReviewTab] = useState('biz');
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [attachments, setAttachments] = useState<{ name: string; url: string }[]>([]);
@@ -148,22 +152,9 @@ export default function ContractReviewPage() {
     fetchData();
   }, [fetchData]);
 
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const toggleSelect = (id: number) => toggle(String(id));
 
-  const toggleSelectAll = () => {
-    if (selectedIds.size === list.length && list.length > 0) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(list.map((i) => i.id!)));
-    }
-  };
+  const toggleSelectAll = () => toggleAll();
 
   const getExportData = () =>
     list.map((item) => ({
@@ -342,7 +333,7 @@ export default function ContractReviewPage() {
                     },
                   ]}
                   data={
-                    selectedIds.size > 0 ? list.filter((i) => i.id && selectedIds.has(i.id)) : list
+                    selectedCount > 0 ? list.filter((i) => i.id && isSelected(String(i.id))) : list
                   }
                 />
                 <Button
@@ -362,7 +353,7 @@ export default function ContractReviewPage() {
                 <TableRow>
                   <TableHead className="w-10">
                     <Checkbox
-                      checked={list.length > 0 && selectedIds.size === list.length}
+                      checked={allSelected}
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
@@ -380,10 +371,10 @@ export default function ContractReviewPage() {
               </TableHeader>
               <TableBody>
                 {list.map((item) => (
-                  <TableRow key={item.id} className={selectedIds.has(item.id!) ? 'bg-blue-50' : ''}>
+                  <TableRow key={item.id} className={isSelected(String(item.id)) ? 'bg-blue-50' : ''}>
                     <TableCell>
                       <Checkbox
-                        checked={selectedIds.has(item.id!)}
+                        checked={isSelected(String(item.id))}
                         onCheckedChange={() => toggleSelect(item.id!)}
                       />
                     </TableCell>
@@ -438,7 +429,7 @@ export default function ContractReviewPage() {
 
             <div className="flex items-center justify-between mt-4">
               <span className="text-sm text-muted-foreground">
-                {ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}{selectedIds.size > 0 && `，已选 ${selectedIds.size} 条`}
+                {ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}{selectedCount > 0 && `，已选 ${selectedCount} 条`}
               </span>
               <div className="flex gap-2">
                 <Button

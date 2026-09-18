@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { STOCKTAKING_TYPE_LABEL, SPLIT_FLAG_LABEL } from '@/lib/status-labels';
@@ -103,12 +104,15 @@ export default function StocktakingPage() {
 
   const { toast } = useToast();
   const [list, setList] = useState<InventoryCheck[]>([]);
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    list,
+    (r) => String(r.id)
+  );
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<InventoryCheck>>({});
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const [showScanDialog, setShowScanDialog] = useState(false);
   const [currentCheckId, setCurrentCheckId] = useState<number | null>(null);
@@ -317,7 +321,7 @@ export default function StocktakingPage() {
                   formatter: (v) => STATUS_MAP[v]?.label || '-',
                 },
               ]}
-              data={selectedIds.size > 0 ? list.filter((i) => selectedIds.has(i.id)) : list}
+              data={selectedCount > 0 ? list.filter((i) => isSelected(String(i.id))) : list}
             />
             <Button
               size="sm"
@@ -338,13 +342,7 @@ export default function StocktakingPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[40px]">
-                    <Checkbox
-                      checked={selectedIds.size > 0 && selectedIds.size === list.length}
-                      onCheckedChange={(checked) => {
-                        if (checked) setSelectedIds(new Set(list.map((i) => i.id)));
-                        else setSelectedIds(new Set());
-                      }}
-                    />
+                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                   </TableHead>
                   <TableHead className="text-xs">{t('checkNo')}</TableHead>
                   <TableHead className="text-xs">{tc('warehouse')}</TableHead>
@@ -363,13 +361,8 @@ export default function StocktakingPage() {
                     <TableRow key={item.id}>
                       <TableCell>
                         <Checkbox
-                          checked={selectedIds.has(item.id)}
-                          onCheckedChange={(checked) => {
-                            const next = new Set(selectedIds);
-                            if (checked) next.add(item.id);
-                            else next.delete(item.id);
-                            setSelectedIds(next);
-                          }}
+                          checked={isSelected(String(item.id))}
+                          onCheckedChange={() => toggle(String(item.id))}
                         />
                       </TableCell>
                       <TableCell className="text-xs font-mono">{item.check_no}</TableCell>
