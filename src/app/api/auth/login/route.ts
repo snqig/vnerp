@@ -10,6 +10,7 @@ import { storeRefreshToken } from '@/lib/token-blacklist';
 import { logger, generateTraceId } from '@/lib/logger';
 import { generateCsrfToken, setCsrfCookie } from '@/lib/csrf';
 import { getSecretKey } from '@/lib/auth';
+import { INSERT_INTO_SYS_NOTIFICATION } from '@/lib/db/ddl/auth-login';
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = Number(process.env.LOGIN_LOCKOUT_MINUTES || 15);
@@ -261,7 +262,7 @@ export async function POST(request: NextRequest) {
           logger.branch(ctx, ts('k_13wi72j'), ts('k_8auxi6'), true, { lastIP, currentIP });
           // 记录异地登录告警
           await execute(
-            ts('k_3hp2m1'),
+            INSERT_INTO_SYS_NOTIFICATION,
             [
               `您的账号 ${username} 在新IP地址 ${currentIP} 登录，上次登录IP为 ${lastIP}。如非本人操作，请立即修改密码。`,
               user.id,

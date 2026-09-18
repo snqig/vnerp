@@ -1,15 +1,12 @@
-import { getTranslations } from 'next-intl/server';
-
-;
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
 import { successResponse } from '@/lib/api-response';
 import type { DbRow } from '@/types/db';
+import { SELECT_STMT } from '@/lib/db/ddl/hr-reports-turnover';
 
 export const GET = withPermission(
   async (_request: NextRequest) => {
-  const ts = await getTranslations('Common');
     const [totals] = await query<DbRow>(
       `SELECT
         COUNT(*) as totalEmployees,
@@ -29,7 +26,7 @@ export const GET = withPermission(
     );
 
     const deptRows = await query<DbRow>(
-      ts('k_1abh1xt')
+      SELECT_STMT
     );
 
     const [tenure] = await query<DbRow>(

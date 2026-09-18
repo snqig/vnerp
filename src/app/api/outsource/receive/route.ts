@@ -6,6 +6,7 @@ import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { recomputeInventorySummary } from '@/lib/inventory-ledger';
+import { INSERT_INTO_INV_INVENTORY_TRANSACTION } from '@/lib/db/ddl/outsource-receive';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -145,7 +146,7 @@ export const PUT = withPermission(
         // 3) 财务级流水（保留原 raw INSERT 含 account_dr/cr，财务列治理归 T-INV-6）
         const transNo = 'TRX' + Date.now() + String(id).slice(-4);
         await conn.execute(
-          ts('k_1guz0ae'),
+          INSERT_INTO_INV_INVENTORY_TRANSACTION,
           [
             transNo,
             id,

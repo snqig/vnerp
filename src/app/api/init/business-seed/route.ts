@@ -6,6 +6,7 @@ import { transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
+import { INSERT_INTO_PRD_BOM_DETAIL, INSERT_INTO_SAL_ORDER_ITEM, INSERT_INTO_INV_INBOUND_ITEM } from '@/lib/db/ddl/init-business-seed';
 export const POST = withPermission(async (_request: NextRequest) => {
   const ts = await getTranslations('Common');
   const result = await transaction(async (conn) => {
@@ -248,7 +249,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       if (!orderId) continue;
 
       await safeInsert(
-        ts('k_1yvgu6j'),
+        INSERT_INTO_SAL_ORDER_ITEM,
         [orderId]
       );
     }
@@ -748,7 +749,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       if (!orderId) continue;
 
       await safeInsert(
-        ts('k_9l58zs'),
+        INSERT_INTO_INV_INBOUND_ITEM,
         [orderId, order.material, order.quantity, order.quantity * 10]
       );
     }
@@ -982,7 +983,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       for (let i = 0; i < Math.min(3, matList.length); i++) {
         const mat = matList[i];
         await safeInsert(
-          ts('k_1hfeni2'),
+          INSERT_INTO_PRD_BOM_DETAIL,
           [bomId, mat.id, mat.material_name, 100 + i * 50]
         );
       }

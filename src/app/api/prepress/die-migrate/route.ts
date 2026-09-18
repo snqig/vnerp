@@ -6,6 +6,7 @@ import { NextRequest } from 'next/server';
 import { execute, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { ALTER_TABLE_PRD_DIE_TEMPLATE, CREATE_TABLE_PRD_DIE_MAINTENANCE, ALTER_TABLE_PRD_DIE_TEMPLATE_2, ALTER_TABLE_PRD_DIE_TEMPLATE_3, ALTER_TABLE_PRD_DIE_TEMPLATE_4, ALTER_TABLE_PRD_DIE_TEMPLATE_5, ALTER_TABLE_PRD_DIE_TEMPLATE_6, CREATE_TABLE_PRD_DIE_USAGE_LOG, ALTER_TABLE_PRD_DIE_TEMPLATE_7, ALTER_TABLE_PRD_DIE_TEMPLATE_8, ALTER_TABLE_PRD_DIE_TEMPLATE_9, ALTER_TABLE_PRD_DIE_TEMPLATE_10, ALTER_TABLE_PRD_DIE_TEMPLATE_11, ALTER_TABLE_PRD_DIE_TEMPLATE_12, ALTER_TABLE_PRD_DIE_TEMPLATE_13, ALTER_TABLE_PRD_DIE_TEMPLATE_14 } from '@/lib/db/ddl/prepress-die-migrate';
 
 async function safeAlterTable(tableName: string, sql: string) {
   try {
@@ -36,112 +37,112 @@ export const POST = withPermission(
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_1gzpyyh')
+        ALTER_TABLE_PRD_DIE_TEMPLATE_4
       )
     );
 
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_10y2xau')
+        ALTER_TABLE_PRD_DIE_TEMPLATE
       )
     );
 
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_rnxn9n')
+        ALTER_TABLE_PRD_DIE_TEMPLATE_11
       )
     );
 
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_1nw9fwb')
+        ALTER_TABLE_PRD_DIE_TEMPLATE_6
       )
     );
 
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_8xz2jk')
+        ALTER_TABLE_PRD_DIE_TEMPLATE_9
       )
     );
 
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_1c12lj9')
+        ALTER_TABLE_PRD_DIE_TEMPLATE_3
       )
     );
 
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_1khznlf')
+        ALTER_TABLE_PRD_DIE_TEMPLATE_5
       )
     );
 
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_z5zcfw')
+        ALTER_TABLE_PRD_DIE_TEMPLATE_14
       )
     );
 
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_18qmaej')
+        ALTER_TABLE_PRD_DIE_TEMPLATE_2
       )
     );
 
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_rzldfw')
+        ALTER_TABLE_PRD_DIE_TEMPLATE_12
       )
     );
 
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_1q1zkqq')
+        ALTER_TABLE_PRD_DIE_TEMPLATE_7
       )
     );
 
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_v37o1g')
+        ALTER_TABLE_PRD_DIE_TEMPLATE_13
       )
     );
 
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_1xs9oez')
+        ALTER_TABLE_PRD_DIE_TEMPLATE_8
       )
     );
 
     results.push(
       await safeAlterTable(
         'prd_die_template',
-        ts('k_aabqae')
+        ALTER_TABLE_PRD_DIE_TEMPLATE_10
       )
     );
 
     results.push(
       await safeCreateTable(
         'prd_die_usage_log',
-        ts('k_1pdbuuv')
+        CREATE_TABLE_PRD_DIE_USAGE_LOG
       )
     );
 
     results.push(
       await safeCreateTable(
         'prd_die_maintenance',
-        ts('k_189son5')
+        CREATE_TABLE_PRD_DIE_MAINTENANCE
       )
     );
 

@@ -6,6 +6,7 @@ import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
+import { INSERT_INTO_INV_INVENTORY_TRANSACTION } from '@/lib/db/ddl/warehouse-ink-mixing';
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
@@ -131,7 +132,7 @@ export const POST = withPermission(async (request: NextRequest) => {
 
       const transNo = 'TRX' + Date.now() + String(detail.source_batch_no).slice(-4);
       await conn.execute(
-        ts('k_1x8q1vb'),
+        INSERT_INTO_INV_INVENTORY_TRANSACTION,
         [transNo, mixedBatchId, -detail.used_qty, detail.used_qty, sourceBatch.id]
       );
     }

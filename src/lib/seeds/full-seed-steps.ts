@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 
 import type { DbConnection, DbRow } from '@/types/db';
+import { INSERT_INTO_INV_INBOUND_ORDER, INSERT_INTO_PRD_WORK_REPORT } from '@/lib/db/ddl/lib-seeds-full-seed-steps';
 
 export async function seedMasterData(
   conn: DbConnection,
@@ -1884,7 +1885,7 @@ export async function seedProductionData(
   ];
   for (const wr of workReports) {
     await conn.execute(
-      ts('k_zu8nd7'),
+      INSERT_INTO_PRD_WORK_REPORT,
       [
         wr.no,
         wr.woid || 1,
@@ -2247,7 +2248,7 @@ export async function seedInventoryData(
       totalAmt += item.qty * item.price;
     }
     await conn.execute(
-      ts('k_1ti4wo'),
+      INSERT_INTO_INV_INBOUND_ORDER,
       [io.no, io.supplier, io.date, io.wh, io.poId, io.poNo, totalQty, totalAmt]
     );
     const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];

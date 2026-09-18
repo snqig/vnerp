@@ -15,6 +15,7 @@ import {
   InkColor,
 } from '@/domain/dcprint/repositories/IFormulaVersionRepository';
 import type { ResultSetHeader, PoolConnection } from 'mysql2/promise';
+import { UPDATE_STMT } from '@/lib/db/ddl/infrastructure-repositories-MysqlFormulaVersionRepository';
 
 interface FormulaVersionRow {
   id: number;
@@ -266,7 +267,7 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
   ): Promise<void> {
   const ts = await getTranslations('Common');
     await execute(
-      ts('k_2xpt3x'),
+      UPDATE_STMT,
       [operatorId, operatorId, colorId, excludeVersionId]
     );
   }

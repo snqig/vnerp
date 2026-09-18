@@ -7,6 +7,7 @@ import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { CREATE_TABLE_STD_BOM_HEADER, CREATE_TABLE_STD_PURCHASE_ORDER, CREATE_TABLE_STD_BOM_LINE, CREATE_TABLE_STD_PURCHASE_ORDER_LINE, CREATE_TABLE_STD_MATERIAL, CREATE_TABLE_HR_ATTENDANCE, CREATE_TABLE_INV_OUTBOUND_BATCH_ALLOCATION } from '@/lib/db/ddl/migrations-six-critical-fixes';
 async function tableExists(name: string): Promise<boolean> {
   const rows = await query(
     `SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
@@ -61,14 +62,14 @@ export const GET = withPermission(
       results.push(ts('k_m0i19z'));
 
       if (!(await tableExists('std_purchase_order'))) {
-        await execute(ts('k_1punx6o'));
+        await execute(CREATE_TABLE_STD_PURCHASE_ORDER);
         results.push('Created std_purchase_order');
       } else {
         results.push('Already exists: std_purchase_order');
       }
 
       if (!(await tableExists('std_purchase_order_line'))) {
-        await execute(ts('k_644962'));
+        await execute(CREATE_TABLE_STD_PURCHASE_ORDER_LINE);
         results.push('Created std_purchase_order_line');
       } else {
         results.push('Already exists: std_purchase_order_line');
@@ -157,14 +158,14 @@ export const GET = withPermission(
       results.push(ts('k_11zwhk7'));
 
       if (!(await tableExists('std_bom_header'))) {
-        await execute(ts('k_12xry1e'));
+        await execute(CREATE_TABLE_STD_BOM_HEADER);
         results.push('Created std_bom_header');
       } else {
         results.push('Already exists: std_bom_header');
       }
 
       if (!(await tableExists('std_bom_line'))) {
-        await execute(ts('k_4bd1me'));
+        await execute(CREATE_TABLE_STD_BOM_LINE);
         results.push('Created std_bom_line');
       } else {
         results.push('Already exists: std_bom_line');
@@ -262,7 +263,7 @@ export const GET = withPermission(
       results.push(ts('k_128x0p4'));
 
       if (!(await tableExists('std_material'))) {
-        await execute(ts('k_88yie0'));
+        await execute(CREATE_TABLE_STD_MATERIAL);
         results.push('Created std_material');
       } else {
         results.push('Already exists: std_material');
@@ -322,7 +323,7 @@ export const GET = withPermission(
       results.push(ts('k_1sud5h'));
 
       if (!(await tableExists('hr_attendance'))) {
-        await execute(ts('k_hvyn8j'));
+        await execute(CREATE_TABLE_HR_ATTENDANCE);
         results.push('Created hr_attendance with employee_id_int');
       } else {
         try {
@@ -370,7 +371,7 @@ export const GET = withPermission(
       results.push(ts('k_10kj6m6'));
 
       if (!(await tableExists('inv_outbound_batch_allocation'))) {
-        await execute(ts('k_nlygmm'));
+        await execute(CREATE_TABLE_INV_OUTBOUND_BATCH_ALLOCATION);
         results.push('Created inv_outbound_batch_allocation');
       } else {
         results.push('Already exists: inv_outbound_batch_allocation');

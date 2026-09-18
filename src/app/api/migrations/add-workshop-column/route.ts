@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
+import { CREATE_TABLE_PRD_SCHEDULE_DETAIL, CREATE_TABLE_PRD_WORK_ORDER_COLOR_SEQ } from '@/lib/db/ddl/migrations-add-workshop-column';
 
 async function addColumnIfNotExists(table: string, column: string, definition: string) {
   const result = await query(
@@ -73,7 +74,7 @@ export const POST = withPermission(async () => {
        AND TABLE_NAME = 'prd_work_order_color_seq'
     `);
     if (colorSeqExists[0]?.cnt === 0) {
-      await query(ts('k_rszvqc'));
+      await query(CREATE_TABLE_PRD_WORK_ORDER_COLOR_SEQ);
       results.push(ts('k_pxmjhl'));
     } else {
       results.push(ts('k_1o6y5e2'));
@@ -85,7 +86,7 @@ export const POST = withPermission(async () => {
       AND TABLE_NAME = 'prd_schedule_detail'
     `);
     if (scheduleDetailExists[0]?.cnt === 0) {
-      await query(ts('k_1f7vnf'));
+      await query(CREATE_TABLE_PRD_SCHEDULE_DETAIL);
       results.push(ts('k_zp7hsu'));
     } else {
       results.push(ts('k_1so7mzt'));

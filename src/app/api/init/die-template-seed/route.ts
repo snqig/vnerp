@@ -6,15 +6,16 @@ import { queryOne, transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
+import { CREATE_TABLE_PRD_DIE_MAINTENANCE, CREATE_TABLE_PRD_DIE_USAGE_LOG } from '@/lib/db/ddl/init-die-template-seed';
 export const POST = withPermission(
   async (_request: NextRequest) => {
   const ts = await getTranslations('Common');
     const result = await transaction(async (conn) => {
       const stats: Record<string, number> = {};
 
-      await conn.execute(ts('k_1gfpvfw'));
+      await conn.execute(CREATE_TABLE_PRD_DIE_MAINTENANCE);
 
-      await conn.execute(ts('k_eo9c2d'));
+      await conn.execute(CREATE_TABLE_PRD_DIE_USAGE_LOG);
 
       await conn.execute('DELETE FROM prd_die_usage_log');
       await conn.execute('ALTER TABLE prd_die_usage_log AUTO_INCREMENT = 1');

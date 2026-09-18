@@ -7,6 +7,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { recomputeInventorySummary } from '@/lib/inventory-ledger';
 import type { DbRow } from '@/types/db';
+import { INSERT_INTO_INV_INVENTORY_TRANSACTION } from '@/lib/db/ddl/outsource-issue';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -175,7 +176,7 @@ export const PUT = withPermission(
           )) as any;
           const matCode = matRows.length > 0 ? matRows[0].material_code : '';
           await conn.execute(
-            ts('k_jku422'),
+            INSERT_INTO_INV_INVENTORY_TRANSACTION,
             [
               transNo,
               id,

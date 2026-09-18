@@ -6,6 +6,7 @@ import { query, queryOne, transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
+import { ALTER_TABLE_INV_WAREHOUSE } from '@/lib/db/ddl/init-warehouse-category';
 // 仓库分类关联接口
 interface WarehouseCategoryLink {
   id: number;
@@ -24,7 +25,7 @@ export const POST = withPermission(
     await transaction(async (connection) => {
       // 直接添加 category_id 字段（如果不存在会报错，但我们可以忽略）
       try {
-        await connection.execute(ts('k_vadusm'));
+        await connection.execute(ALTER_TABLE_INV_WAREHOUSE);
       } catch {
         // 字段可能已存在，忽略错误
       }

@@ -6,6 +6,7 @@ import { transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
+import { CREATE_TABLE_BOM_LINE, CREATE_TABLE_BOM_HEADER } from '@/lib/db/ddl/init-migrate';
 export const POST = withPermission(async (_request: NextRequest) => {
   const ts = await getTranslations('Common');
   const result = await transaction(async (conn) => {
@@ -113,11 +114,11 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const createTables: { name: string; sql: string }[] = [
       {
         name: 'bom_header',
-        sql: ts('k_hq1ib4'),
+        sql: CREATE_TABLE_BOM_HEADER,
       },
       {
         name: 'bom_line',
-        sql: ts('k_8vkbcl'),
+        sql: CREATE_TABLE_BOM_LINE,
       },
     ];
 

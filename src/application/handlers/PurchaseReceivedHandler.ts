@@ -1,22 +1,20 @@
-import { getTranslations } from 'next-intl/server';
-
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { PurchaseOrderReceivedEvent } from '@/domain/purchase/events/PurchaseOrderEvents';
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { INSERT_INTO_INV_INVENTORY } from '@/lib/db/ddl/application-handlers-PurchaseReceivedHandler';
 
 export class PurchaseReceivedHandler implements EventHandler<PurchaseOrderReceivedEvent> {
   async handle(event: PurchaseOrderReceivedEvent): Promise<void> {
     const { orderId, orderNo, receivedItems, totalReceivedAmount } = event.payload;
 
     await transaction(async (conn) => {
-  const ts = await getTranslations('Common');
       for (const item of receivedItems) {
         // R4 修复：uk_material_warehouse 唯一键不含 deleted，软删行仍占位。
         // 原「SELECT deleted=0 后 INSERT」遇软删行会撞 Duplicate entry 导致整事务回滚，
         // 改为原子 UPSERT，同时覆盖 新建 / 累加 / 软删行复活 三种场景。
         await conn.execute(
-          ts('k_1g9yxif'),
+          INSERT_INTO_INV_INVENTORY,
           [item.materialId, item.materialCode, item.materialName, item.warehouseId, item.quantity]
         );
 

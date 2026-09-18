@@ -7,6 +7,7 @@ import type { NextRequest } from 'next/server';
 
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { CREATE_TABLE_HR_ATTENDANCE, CREATE_TABLE_INV_OUTBOUND_BATCH_ALLOCATION, CREATE_TABLE_PUR_ORDER_LINE_STD, CREATE_TABLE_PUR_ORDER_STD, CREATE_TABLE_PRD_BOM_STD, CREATE_TABLE_INV_MATERIAL_STD, CREATE_TABLE_SYS_DAILY_CHECK_LOG, CREATE_TABLE_PRD_BOM_LINE_STD } from '@/lib/db/ddl/migrations-readmd-fixes';
 async function tableExists(name: string): Promise<boolean> {
   const rows = await query(
     `SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
@@ -60,7 +61,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     results.push(ts('k_1wj3wm1'));
 
     if (!(await tableExists('inv_material_std'))) {
-      await execute(ts('k_1ub4ibq'));
+      await execute(CREATE_TABLE_INV_MATERIAL_STD);
       results.push('Created inv_material_std');
     } else {
       results.push('Already exists: inv_material_std');
@@ -93,14 +94,14 @@ export const GET = withPermission(async (request: NextRequest) => {
     results.push(ts('k_1byl4d9'));
 
     if (!(await tableExists('prd_bom_std'))) {
-      await execute(ts('k_1cbfjnx'));
+      await execute(CREATE_TABLE_PRD_BOM_STD);
       results.push('Created prd_bom_std');
     } else {
       results.push('Already exists: prd_bom_std');
     }
 
     if (!(await tableExists('prd_bom_line_std'))) {
-      await execute(ts('k_3zicj'));
+      await execute(CREATE_TABLE_PRD_BOM_LINE_STD);
       results.push('Created prd_bom_line_std');
     } else {
       results.push('Already exists: prd_bom_line_std');
@@ -219,14 +220,14 @@ export const GET = withPermission(async (request: NextRequest) => {
     results.push(ts('k_y7gdlr'));
 
     if (!(await tableExists('pur_order_std'))) {
-      await execute(ts('k_1c5epkb'));
+      await execute(CREATE_TABLE_PUR_ORDER_STD);
       results.push('Created pur_order_std');
     } else {
       results.push('Already exists: pur_order_std');
     }
 
     if (!(await tableExists('pur_order_line_std'))) {
-      await execute(ts('k_18q9fax'));
+      await execute(CREATE_TABLE_PUR_ORDER_LINE_STD);
       results.push('Created pur_order_line_std');
     } else {
       results.push('Already exists: pur_order_line_std');
@@ -378,7 +379,7 @@ export const GET = withPermission(async (request: NextRequest) => {
       const r2 = await addIndexSafe('hr_attendance', 'idx_hr_attendance_emp_id', 'emp_id');
       results.push(r2);
     } else {
-      await execute(ts('k_16dlhys'));
+      await execute(CREATE_TABLE_HR_ATTENDANCE);
       results.push('Created hr_attendance with emp_id');
     }
   }
@@ -390,7 +391,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     results.push(ts('k_o3rxxd'));
 
     if (!(await tableExists('inv_outbound_batch_allocation'))) {
-      await execute(ts('k_16od12'));
+      await execute(CREATE_TABLE_INV_OUTBOUND_BATCH_ALLOCATION);
       results.push('Created inv_outbound_batch_allocation');
     } else {
       results.push('Already exists: inv_outbound_batch_allocation');
@@ -404,7 +405,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     results.push(ts('k_m3ulav'));
 
     if (!(await tableExists('sys_daily_check_log'))) {
-      await execute(ts('k_1y4cwve'));
+      await execute(CREATE_TABLE_SYS_DAILY_CHECK_LOG);
       results.push('Created sys_daily_check_log');
     } else {
       results.push('Already exists: sys_daily_check_log');

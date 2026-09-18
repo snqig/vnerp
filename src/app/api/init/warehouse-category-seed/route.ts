@@ -6,6 +6,7 @@ import { query, queryOne, transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
+import { ALTER_TABLE_INV_INVENTORY, ALTER_TABLE_INV_INVENTORY_2, ALTER_TABLE_INV_WAREHOUSE, ALTER_TABLE_INV_INVENTORY_3 } from '@/lib/db/ddl/init-warehouse-category-seed';
 export const POST = withPermission(
   async (_request: NextRequest) => {
   const ts = await getTranslations('Common');
@@ -14,7 +15,7 @@ export const POST = withPermission(
 
       try {
         await conn.execute(
-          ts('k_1mtj8gx')
+          ALTER_TABLE_INV_WAREHOUSE
         );
       } catch (_e) {}
       try {
@@ -23,17 +24,17 @@ export const POST = withPermission(
 
       try {
         await conn.execute(
-          ts('k_10wmnf1')
+          ALTER_TABLE_INV_INVENTORY
         );
       } catch (_e) {}
       try {
         await conn.execute(
-          ts('k_1lvfpxw')
+          ALTER_TABLE_INV_INVENTORY_2
         );
       } catch (_e) {}
       try {
         await conn.execute(
-          ts('k_sq3k7j')
+          ALTER_TABLE_INV_INVENTORY_3
         );
       } catch (_e) {}
 

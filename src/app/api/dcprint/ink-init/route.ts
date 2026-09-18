@@ -6,6 +6,7 @@ import { NextRequest } from 'next/server';
 import { execute, query, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { ALTER_TABLE_INK_OPENING_RECORD, CREATE_TABLE_INK_DISPATCH_ITEM, CREATE_TABLE_INK_FORMULA_WORKORDER, ALTER_TABLE_INV_INVENTORY_BATCH, ALTER_TABLE_INK_OPENING_RECORD_2, CREATE_TABLE_INK_DISPATCH, CREATE_TABLE_INK_FORMULA_ITEM, CREATE_TABLE_INK_FORMULA, CREATE_TABLE_INK_USAGE, ALTER_TABLE_INV_SCAN_LOG } from '@/lib/db/ddl/dcprint-ink-init';
 
 async function safeCreateTable(tableName: string, sql: string) {
   try {
@@ -24,42 +25,42 @@ export const POST = withPermission(
     results.push(
       await safeCreateTable(
         'ink_formula',
-        ts('k_ewnh68')
+        CREATE_TABLE_INK_FORMULA
       )
     );
 
     results.push(
       await safeCreateTable(
         'ink_formula_item',
-        ts('k_eu68ll')
+        CREATE_TABLE_INK_FORMULA_ITEM
       )
     );
 
     results.push(
       await safeCreateTable(
         'ink_formula_workorder',
-        ts('k_1p19ht1')
+        CREATE_TABLE_INK_FORMULA_WORKORDER
       )
     );
 
     results.push(
       await safeCreateTable(
         'ink_dispatch',
-        ts('k_abez5h')
+        CREATE_TABLE_INK_DISPATCH
       )
     );
 
     results.push(
       await safeCreateTable(
         'ink_dispatch_item',
-        ts('k_1f6xsay')
+        CREATE_TABLE_INK_DISPATCH_ITEM
       )
     );
 
     results.push(
       await safeCreateTable(
         'ink_usage',
-        ts('k_n07ykg')
+        CREATE_TABLE_INK_USAGE
       )
     );
 
@@ -67,10 +68,10 @@ export const POST = withPermission(
       const cols = await query("SHOW COLUMNS FROM ink_opening_record LIKE 'workorder_id'");
       if (cols.length === 0) {
         await execute(
-          ts('k_1bf4t44')
+          ALTER_TABLE_INK_OPENING_RECORD
         );
         await execute(
-          ts('k_1t4b2fu')
+          ALTER_TABLE_INK_OPENING_RECORD_2
         );
         results.push({
           table: 'ink_opening_record',
@@ -91,7 +92,7 @@ export const POST = withPermission(
       const cols = await query("SHOW COLUMNS FROM inv_inventory_batch LIKE 'inspection_id'");
       if (cols.length === 0) {
         await execute(
-          ts('k_1qspozm')
+          ALTER_TABLE_INV_INVENTORY_BATCH
         );
         results.push({
           table: 'inv_inventory_batch',
@@ -112,7 +113,7 @@ export const POST = withPermission(
       const cols = await query("SHOW COLUMNS FROM inv_scan_log LIKE 'batch_no'");
       if (cols.length === 0) {
         await execute(
-          ts('k_xykevy')
+          ALTER_TABLE_INV_SCAN_LOG
         );
         results.push({ table: 'inv_scan_log', action: 'add_column', column: 'batch_no' });
       }

@@ -6,6 +6,7 @@ import { query, execute, type SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { clearSystemConfigCache } from '@/lib/system-config';
 import { withPermission } from '@/lib/api-permissions';
+import { CREATE_TABLE_SYS_CONFIG } from '@/lib/db/ddl/system-config';
 
 const DEFAULT_CONFIGS: {
   config_name: string;
@@ -299,7 +300,7 @@ const DEFAULT_CONFIGS: {
 async function ensureConfigTable(): Promise<boolean> {
   const ts = await getTranslations('Common');
   try {
-    await execute(ts('k_1ewoe7r'));
+    await execute(CREATE_TABLE_SYS_CONFIG);
     return true;
   } catch {
     return false;

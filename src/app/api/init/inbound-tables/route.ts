@@ -7,6 +7,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { INSERT_INTO_INV_INBOUND_ITEM, INSERT_INTO_INV_INBOUND_ORDER, CREATE_TABLE_INV_INBOUND_ITEM, INSERT_INTO_INV_INVENTORY_BATCH, CREATE_TABLE_INV_INBOUND_ORDER, CREATE_TABLE_INV_INVENTORY_BATCH } from '@/lib/db/ddl/init-inbound-tables';
 // 创建入库管理相关表
 const _CREATE_TABLES_SQL = `
 -- 1. 入库订单主表
@@ -101,7 +102,7 @@ export const GET = withPermission(
 
       // 创建入库订单主表
       if (!existingTables.includes('inv_inbound_order')) {
-        await query(ts('k_1yw7bpa'));
+        await query(CREATE_TABLE_INV_INBOUND_ORDER);
         results.push(ts('k_fxzb49'));
       } else {
         results.push(ts('k_1xl8dn8'));
@@ -109,7 +110,7 @@ export const GET = withPermission(
 
       // 创建入库订单明细表
       if (!existingTables.includes('inv_inbound_item')) {
-        await query(ts('k_1kkze5m'));
+        await query(CREATE_TABLE_INV_INBOUND_ITEM);
         results.push(ts('k_1ubdjbk'));
       } else {
         results.push(ts('k_1idsunn'));
@@ -117,7 +118,7 @@ export const GET = withPermission(
 
       // 创建库存批次表
       if (!existingTables.includes('inv_inventory_batch')) {
-        await query(ts('k_rdgv2l'));
+        await query(CREATE_TABLE_INV_INVENTORY_BATCH);
         results.push(ts('k_1u7a4kc'));
       } else {
         results.push(ts('k_18r5tqt'));
@@ -129,13 +130,13 @@ export const GET = withPermission(
       );
       if ((orderCount as DbRow[])[0].count === 0) {
         // 添加入库订单测试数据
-        await query(ts('k_1ecjvlf'));
+        await query(INSERT_INTO_INV_INBOUND_ORDER);
 
         // 添加入库明细
-        await query(ts('k_15udk0b'));
+        await query(INSERT_INTO_INV_INBOUND_ITEM);
 
         // 添加库存批次
-        await query(ts('k_1nqnq8z'));
+        await query(INSERT_INTO_INV_INVENTORY_BATCH);
 
         results.push(ts('k_1hua2zz'));
       } else {

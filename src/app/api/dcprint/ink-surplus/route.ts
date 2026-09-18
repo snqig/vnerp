@@ -6,6 +6,7 @@ import { query, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { SELECT_STMT } from '@/lib/db/ddl/dcprint-ink-surplus';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
@@ -86,7 +87,7 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
   const ts = await getTranslations('Common');
   const recommendations: DbRow[] = [];
 
-  const surplusInks = await query(ts('k_lkk34o'));
+  const surplusInks = await query(SELECT_STMT);
 
   for (const ink of surplusInks) {
     let matchScore = 0;

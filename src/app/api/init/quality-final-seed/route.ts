@@ -7,13 +7,14 @@ import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { CREATE_TABLE_QC_FINAL_INSPECTION } from '@/lib/db/ddl/init-quality-final-seed';
 export const POST = withPermission(
   async (_request: NextRequest) => {
   const ts = await getTranslations('Common');
     const result = await transaction(async (conn) => {
       const stats: Record<string, number> = {};
 
-      await conn.execute(ts('k_1v4epp2'));
+      await conn.execute(CREATE_TABLE_QC_FINAL_INSPECTION);
 
       await conn.execute('DELETE FROM qc_final_inspection');
       await conn.execute('ALTER TABLE qc_final_inspection AUTO_INCREMENT = 1');

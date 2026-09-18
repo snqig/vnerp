@@ -5,6 +5,7 @@ import { query, execute, transaction, queryOne } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import type { PoolConnection } from 'mysql2/promise';
 import type { ResultSetHeader } from 'mysql2';
+import { SELECT_STMT } from '@/lib/db/ddl/application-workflow-WorkflowEngine';
 
 export interface WorkflowNode {
   id: number;
@@ -516,7 +517,7 @@ export class WorkflowEngine {
   private async getDepartmentHead(): Promise<{ id: number; name: string } | null> {
   const ts = await getTranslations('Common');
     const rows = await query<{ id: number; name: string }>(
-      ts('k_iwz1j7')
+      SELECT_STMT
     );
 
     return rows.length > 0 ? rows[0] : null;

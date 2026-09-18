@@ -6,6 +6,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import type { NextRequest } from 'next/server';
 import type { DbRow } from '@/types/db';
+import { INSERT_INTO_SCREEN_PLATE_HISTORY, INSERT_INTO_SCREEN_PLATE_HISTORY_2 } from '@/lib/db/ddl/screen-plates';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
@@ -144,7 +145,7 @@ export const POST = withPermission(
     const plateId = (result as DbRow).insertId;
 
     await execute(
-      ts('k_1gekhst'),
+      INSERT_INTO_SCREEN_PLATE_HISTORY,
       [plateId, body.operatorName || ts('k_p0ysv3')]
     );
 
@@ -219,7 +220,7 @@ export const DELETE = withPermission(
     ]);
 
     await execute(
-      ts('k_fbyvk4'),
+      INSERT_INTO_SCREEN_PLATE_HISTORY_2,
       [id, ts('k_p0ysv3')]
     );
 

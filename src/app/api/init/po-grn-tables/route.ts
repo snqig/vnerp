@@ -6,6 +6,7 @@ import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { CREATE_TABLE_PUR_SUPPLIER, CREATE_TABLE_PUR_PURCHASE_ORDER, INSERT_INTO_PUR_PURCHASE_ORDER_LINE, CREATE_TABLE_PUR_PURCHASE_ORDER_LINE, INSERT_INTO_PUR_PURCHASE_ORDER, INSERT_INTO_PUR_SUPPLIER, CREATE_TABLE_INV_INVENTORY_TRANSACTION, INSERT_INTO_PUR_PURCHASE_ORDER_LINE_2, CREATE_TABLE_PUR_RETURN_ORDER } from '@/lib/db/ddl/init-po-grn-tables';
 
 // 辅助函数：检查列是否存在
 async function columnExists(tableName: string, columnName: string): Promise<boolean> {
@@ -44,7 +45,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((poTableExists as DbRow[]).length === 0) {
-      await query(ts('k_6hiv9u'));
+      await query(CREATE_TABLE_PUR_PURCHASE_ORDER);
       results.push(ts('k_3kiwih'));
     } else {
       results.push(ts('k_1piy5f6'));
@@ -57,7 +58,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((poLineTableExists as DbRow[]).length === 0) {
-      await query(ts('k_k73gq2'));
+      await query(CREATE_TABLE_PUR_PURCHASE_ORDER_LINE);
       results.push(ts('k_1jdpm3k'));
     } else {
       results.push(ts('k_1n7c8v9'));
@@ -70,7 +71,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((transTableExists as DbRow[]).length === 0) {
-      await query(ts('k_tf3n8h'));
+      await query(CREATE_TABLE_INV_INVENTORY_TRANSACTION);
       results.push(ts('k_u1ou9o'));
     } else {
       results.push(ts('k_12ep7ed'));
@@ -83,7 +84,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((rtvTableExists as DbRow[]).length === 0) {
-      await query(ts('k_v9tslq'));
+      await query(CREATE_TABLE_PUR_RETURN_ORDER);
       results.push(ts('k_1hprfi0'));
     } else {
       results.push(ts('k_ioekoj'));
@@ -96,7 +97,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((supplierTableExists as DbRow[]).length === 0) {
-      await query(ts('k_1db21hy'));
+      await query(CREATE_TABLE_PUR_SUPPLIER);
       results.push(ts('k_1dff021'));
     } else {
       results.push(ts('k_ekjdze'));
@@ -201,7 +202,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       `SELECT COUNT(*) as count FROM pur_supplier WHERE deleted = 0`
     );
     if ((supplierCount as DbRow[])[0].count === 0) {
-      await query(ts('k_skvew0'));
+      await query(INSERT_INTO_PUR_SUPPLIER);
       results.push(ts('k_ulu823'));
     }
 
@@ -210,12 +211,12 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
     if ((poCount as DbRow[])[0].count === 0) {
       // 创建测试采购单
-      await query(ts('k_nrst9x'));
+      await query(INSERT_INTO_PUR_PURCHASE_ORDER);
 
       // 创建采购单行
-      await query(ts('k_uqz0gj'));
+      await query(INSERT_INTO_PUR_PURCHASE_ORDER_LINE_2);
 
-      await query(ts('k_aftwzy'));
+      await query(INSERT_INTO_PUR_PURCHASE_ORDER_LINE);
 
       results.push(ts('k_bzo0yc'));
     }

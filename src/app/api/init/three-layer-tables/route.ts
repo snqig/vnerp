@@ -6,6 +6,7 @@ import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { CREATE_TABLE_PUR_REQUEST_LINE, CREATE_TABLE_PUR_REQUEST, CREATE_TABLE_BIZ_CONSUMPTION, CREATE_TABLE_BIZ_ORDER_HEADER, CREATE_TABLE_ORDER_STATUS_HISTORY, CREATE_TABLE_LINK_ORDER_PO, CREATE_TABLE_BIZ_ORDER_LINE, INSERT_INTO_BIZ_ORDER_HEADER, INSERT_INTO_BIZ_ORDER_LINE, CREATE_TABLE_ORDER_TOLERANCE_CONFIG } from '@/lib/db/ddl/init-three-layer-tables';
 
 // 辅助函数：检查列是否存在
 async function columnExists(tableName: string, columnName: string): Promise<boolean> {
@@ -43,7 +44,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((bizOrderExists as DbRow[]).length === 0) {
-      await query(ts('k_1vsa825'));
+      await query(CREATE_TABLE_BIZ_ORDER_HEADER);
       results.push(ts('k_u417bb'));
     } else {
       results.push(ts('k_xa5juk'));
@@ -56,7 +57,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((bizOrderLineExists as DbRow[]).length === 0) {
-      await query(ts('k_f1az'));
+      await query(CREATE_TABLE_BIZ_ORDER_LINE);
       results.push(ts('k_1bxq2x8'));
     } else {
       results.push(ts('k_1nit3yr'));
@@ -69,7 +70,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((prExists as DbRow[]).length === 0) {
-      await query(ts('k_1kb3llx'));
+      await query(CREATE_TABLE_PUR_REQUEST);
       results.push(ts('k_suarw2'));
     } else {
       results.push(ts('k_uahgiv'));
@@ -82,7 +83,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((prLineExists as DbRow[]).length === 0) {
-      await query(ts('k_1d47dau'));
+      await query(CREATE_TABLE_PUR_REQUEST_LINE);
       results.push(ts('k_166bol'));
     } else {
       results.push(ts('k_g2yiqa'));
@@ -184,7 +185,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((linkExists as DbRow[]).length === 0) {
-      await query(ts('k_bfmq01'));
+      await query(CREATE_TABLE_LINK_ORDER_PO);
       results.push(ts('k_fjti42'));
     } else {
       results.push(ts('k_idqi7n'));
@@ -197,7 +198,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((consumptionExists as DbRow[]).length === 0) {
-      await query(ts('k_1p8w1j3'));
+      await query(CREATE_TABLE_BIZ_CONSUMPTION);
       results.push(ts('k_1tgo152'));
     } else {
       results.push(ts('k_1hfapej'));
@@ -210,7 +211,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((toleranceExists as DbRow[]).length === 0) {
-      await query(ts('k_yvhuc9'));
+      await query(CREATE_TABLE_ORDER_TOLERANCE_CONFIG);
       results.push(ts('k_azljuq'));
     } else {
       results.push(ts('k_136ktv5'));
@@ -223,7 +224,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((historyExists as DbRow[]).length === 0) {
-      await query(ts('k_asz8vt'));
+      await query(CREATE_TABLE_ORDER_STATUS_HISTORY);
       results.push(ts('k_edeyx1'));
     } else {
       results.push(ts('k_h1miua'));
@@ -234,9 +235,9 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       `SELECT COUNT(*) as count FROM biz_order_header WHERE deleted = 0`
     );
     if ((orderCount as DbRow[])[0].count === 0) {
-      await query(ts('k_h7yw64'));
+      await query(INSERT_INTO_BIZ_ORDER_HEADER);
 
-      await query(ts('k_pk7ipa'));
+      await query(INSERT_INTO_BIZ_ORDER_LINE);
 
       results.push(ts('k_kl3aqa'));
     }

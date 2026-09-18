@@ -6,6 +6,7 @@ import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { INSERT_INTO_BOM_MATERIAL, INSERT_INTO_BOM_MATERIAL_CATEGORY, CREATE_TABLE_BOM_ALTERNATIVE, CREATE_TABLE_BOM_HEADER, CREATE_TABLE_BOM_MATERIAL, CREATE_TABLE_BOM_LINE, CREATE_TABLE_BOM_VERSION_HISTORY, CREATE_TABLE_BOM_MATERIAL_CATEGORY, INSERT_INTO_BOM_HEADER } from '@/lib/db/ddl/init-bom-tables';
 
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
@@ -29,7 +30,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((bomHeaderExists as DbRow[]).length === 0) {
-      await safeExec(ts('k_vyxf08'), ts('k_1p0t81o'));
+      await safeExec(ts('k_vyxf08'), CREATE_TABLE_BOM_HEADER);
     } else {
       results.push(ts('k_jx6gzs'));
     }
@@ -41,7 +42,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((bomLineExists as DbRow[]).length === 0) {
-      await safeExec(ts('k_1ngkpb3'), ts('k_gj132e'));
+      await safeExec(ts('k_1ngkpb3'), CREATE_TABLE_BOM_LINE);
     } else {
       results.push(ts('k_10wjfrj'));
     }
@@ -53,7 +54,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((bomAltExists as DbRow[]).length === 0) {
-      await safeExec(ts('k_4uy20g'), ts('k_1ikst2h'));
+      await safeExec(ts('k_4uy20g'), CREATE_TABLE_BOM_ALTERNATIVE);
     } else {
       results.push(ts('k_1qdlog0'));
     }
@@ -65,7 +66,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((bomHistoryExists as DbRow[]).length === 0) {
-      await safeExec(ts('k_8m4ltk'), ts('k_s5guoi'));
+      await safeExec(ts('k_8m4ltk'), CREATE_TABLE_BOM_VERSION_HISTORY);
     } else {
       results.push(ts('k_1lry2q0'));
     }
@@ -77,7 +78,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((materialExists as DbRow[]).length === 0) {
-      await safeExec(ts('k_18aj8bc'), ts('k_1x8tuw6'));
+      await safeExec(ts('k_18aj8bc'), CREATE_TABLE_BOM_MATERIAL);
     } else {
       results.push(ts('k_1a9g45k'));
     }
@@ -89,7 +90,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     );
 
     if ((categoryExists as DbRow[]).length === 0) {
-      await safeExec(ts('k_vn4uup'), ts('k_uidc74'));
+      await safeExec(ts('k_vn4uup'), CREATE_TABLE_BOM_MATERIAL_CATEGORY);
     } else {
       results.push(ts('k_1y6jm69'));
     }
@@ -107,21 +108,21 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     if ((await countOf('bom_material_category')) === 0) {
       await safeExec(
         ts('k_t1ltil'),
-        ts('k_181pcnp')
+        INSERT_INTO_BOM_MATERIAL_CATEGORY
       );
     }
 
     if ((await countOf('bom_material', 'WHERE deleted = 0')) === 0) {
       await safeExec(
         ts('k_15n373e'),
-        ts('k_14u4v5z')
+        INSERT_INTO_BOM_MATERIAL
       );
     }
 
     if ((await countOf('bom_header', 'WHERE deleted = 0')) === 0) {
       await safeExec(
         ts('k_1w1rtjy'),
-        ts('k_wif843')
+        INSERT_INTO_BOM_HEADER
       );
 
       const bomLineSeeds: Array<[number, string, number, number, number, number, number, number, string, number]> = [

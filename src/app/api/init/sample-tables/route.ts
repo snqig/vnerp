@@ -6,6 +6,7 @@ import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { CREATE_TABLE_SAL_SAMPLE_ORDER_HISTORY, CREATE_TABLE_SAL_SAMPLE_ORDER, INSERT_INTO_SAL_SAMPLE_ORDER } from '@/lib/db/ddl/init-sample-tables';
 
 // 创建打样订单管理相关表
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
@@ -25,7 +26,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
 
     // 1. 创建打样订单主表
     if (!existingTables.includes('sal_sample_order')) {
-      await query(ts('k_1wh52ri'));
+      await query(CREATE_TABLE_SAL_SAMPLE_ORDER);
       results.push(ts('k_1ke8yed'));
     } else {
       results.push(ts('k_vsiyca'));
@@ -33,7 +34,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
 
     // 2. 创建打样订单状态历史表
     if (!existingTables.includes('sal_sample_order_history')) {
-      await query(ts('k_1u7c57c'));
+      await query(CREATE_TABLE_SAL_SAMPLE_ORDER_HISTORY);
       results.push(ts('k_1dapgva'));
     } else {
       results.push(ts('k_18yi0ld'));
@@ -45,7 +46,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
     `);
 
     if ((testDataCount as DbRow[])[0].count === 0) {
-      await query(ts('k_7wojh4'));
+      await query(INSERT_INTO_SAL_SAMPLE_ORDER);
       results.push(ts('k_1qt161c'));
     } else {
       results.push(`✓ 测试数据已存在: ${(testDataCount as DbRow[])[0].count}条`);

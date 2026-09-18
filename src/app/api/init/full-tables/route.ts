@@ -5,6 +5,7 @@ import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { CREATE_TABLE_PUR_PURCHASE_ORDER_LINE, CREATE_TABLE_SAL_ORDER_ITEM, CREATE_TABLE_PUR_SUPPLIER, CREATE_TABLE_SAL_DELIVERY, CREATE_TABLE_FIN_PAYABLE, CREATE_TABLE_FIN_RECEIPT_RECORD, CREATE_TABLE_SAL_ORDER_DETAIL, CREATE_TABLE_SYS_DICT_DATA, CREATE_TABLE_CRM_CUSTOMER_CONTACT, CREATE_TABLE_SAL_RECONCILIATION_LINE, CREATE_TABLE_SAL_DELIVERY_DETAIL, CREATE_TABLE_EQP_EQUIPMENT, CREATE_TABLE_PRD_PROCESS_ROUTE, CREATE_TABLE_INV_INBOUND_ORDER, CREATE_TABLE_PRD_PROCESS_ROUTE_STEP, CREATE_TABLE_SAL_RECONCILIATION_WRITEOFF, CREATE_TABLE_INV_LOCATION, CREATE_TABLE_FIN_RECEIVABLE, CREATE_TABLE_PUR_PURCHASE_ORDER, CREATE_TABLE_INV_INVENTORY_TRANSACTION, CREATE_TABLE_PROD_WORK_ORDER, CREATE_TABLE_PUR_ORDER_DETAIL, CREATE_TABLE_QC_INSPECTION, CREATE_TABLE_INV_MATERIAL, CREATE_TABLE_PRD_BOM, CREATE_TABLE_PUR_REQUEST, CREATE_TABLE_INV_SCAN_LOG, CREATE_TABLE_PROD_WORK_ORDER_ITEM, CREATE_TABLE_PRD_PROCESS_CARD_MATERIAL, CREATE_TABLE_SYS_OPER_LOG, CREATE_TABLE_PUR_REQUEST_ITEM, CREATE_TABLE_PRD_WORK_REPORT, CREATE_TABLE_INV_TRACE_RECORD, CREATE_TABLE_INV_CUTTING_RECORD, CREATE_TABLE_EQP_MAINTENANCE_RECORD, CREATE_TABLE_INV_MATERIAL_LABEL, CREATE_TABLE_BASE_INK, CREATE_TABLE_SYS_DICT_TYPE, CREATE_TABLE_INV_INVENTORY, CREATE_TABLE_SAL_ORDER, CREATE_TABLE_INV_INBOUND_ITEM, CREATE_TABLE_PROD_WORK_ORDER_MATERIAL_REQ, CREATE_TABLE_SAL_SAMPLE_ORDER, CREATE_TABLE_INV_TRACE_DETAIL, CREATE_TABLE_FIN_PAYMENT_RECORD, CREATE_TABLE_SAL_RETURN, CREATE_TABLE_PRD_BOM_DETAIL, CREATE_TABLE_INV_WAREHOUSE, CREATE_TABLE_CRM_CUSTOMER, CREATE_TABLE_SAL_RECONCILIATION, CREATE_TABLE_SYS_NOTICE, CREATE_TABLE_INV_OUTBOUND_ITEM, CREATE_TABLE_QC_UNQUALIFIED, CREATE_TABLE_INV_INVENTORY_LOG, CREATE_TABLE_SYS_LOGIN_LOG, CREATE_TABLE_SYS_CONFIG, CREATE_TABLE_SAL_RETURN_DETAIL, CREATE_TABLE_INK_MIXED_RECORD, CREATE_TABLE_PUR_ORDER, CREATE_TABLE_INV_OUTBOUND_ORDER, CREATE_TABLE_INV_CUTTING_DETAIL, CREATE_TABLE_INV_INVENTORY_BATCH, CREATE_TABLE_PRD_PROCESS_CARD, CREATE_TABLE_INK_OPENING_RECORD, CREATE_TABLE_PRD_DIE_TEMPLATE, CREATE_TABLE_EQP_MAINTENANCE_PLAN } from '@/lib/db/ddl/init-full-tables';
 
 export const POST = withPermission(
   async (_request: NextRequest, _userInfo) => {
@@ -89,274 +90,274 @@ export const POST = withPermission(
       // ========================================
       // 1. 核心基础表
       // ========================================
-      await conn.execute(ts('k_jjz4t9'));
+      await conn.execute(CREATE_TABLE_INV_WAREHOUSE);
       results.push('inv_warehouse');
 
-      await conn.execute(ts('k_16gfgmx'));
+      await conn.execute(CREATE_TABLE_PUR_SUPPLIER);
       results.push('pur_supplier');
 
-      await conn.execute(ts('k_kocni7'));
+      await conn.execute(CREATE_TABLE_CRM_CUSTOMER);
       results.push('crm_customer');
 
-      await conn.execute(ts('k_1uv4c89'));
+      await conn.execute(CREATE_TABLE_INV_MATERIAL);
       results.push('inv_material');
 
-      await conn.execute(ts('k_dejeui'));
+      await conn.execute(CREATE_TABLE_SAL_ORDER);
       results.push('sal_order');
 
-      await conn.execute(ts('k_1be563s'));
+      await conn.execute(CREATE_TABLE_SAL_ORDER_DETAIL);
       results.push('sal_order_detail');
 
-      await conn.execute(ts('k_1515qlp'));
+      await conn.execute(CREATE_TABLE_SAL_ORDER_ITEM);
       results.push('sal_order_item');
 
-      await conn.execute(ts('k_t81rav'));
+      await conn.execute(CREATE_TABLE_PUR_ORDER);
       results.push('pur_order');
 
-      await conn.execute(ts('k_1sem167'));
+      await conn.execute(CREATE_TABLE_PUR_ORDER_DETAIL);
       results.push('pur_order_detail');
 
-      await conn.execute(ts('k_1nyox0a'));
+      await conn.execute(CREATE_TABLE_PUR_PURCHASE_ORDER);
       results.push('pur_purchase_order');
 
-      await conn.execute(ts('k_134ne9e'));
+      await conn.execute(CREATE_TABLE_PUR_PURCHASE_ORDER_LINE);
       results.push('pur_purchase_order_line');
 
-      await conn.execute(ts('k_1vo1940'));
+      await conn.execute(CREATE_TABLE_PUR_REQUEST);
       results.push('pur_request');
 
-      await conn.execute(ts('k_1xeqdu3'));
+      await conn.execute(CREATE_TABLE_PUR_REQUEST_ITEM);
       results.push('pur_request_item');
 
-      await conn.execute(ts('k_1krom0a'));
+      await conn.execute(CREATE_TABLE_INV_INBOUND_ORDER);
       results.push('inv_inbound_order');
 
-      await conn.execute(ts('k_f90mfz'));
+      await conn.execute(CREATE_TABLE_INV_INBOUND_ITEM);
       results.push('inv_inbound_item');
 
       // ========================================
       // 1. 送货单表
       // ========================================
-      await conn.execute(ts('k_18ely72'));
+      await conn.execute(CREATE_TABLE_SAL_DELIVERY);
       results.push('sal_delivery');
 
-      await conn.execute(ts('k_1hawuvm'));
+      await conn.execute(CREATE_TABLE_SAL_DELIVERY_DETAIL);
       results.push('sal_delivery_detail');
 
       // ========================================
       // 2. 退货单表
       // ========================================
-      await conn.execute(ts('k_ik94k5'));
+      await conn.execute(CREATE_TABLE_SAL_RETURN);
       results.push('sal_return');
 
-      await conn.execute(ts('k_rt9wtn'));
+      await conn.execute(CREATE_TABLE_SAL_RETURN_DETAIL);
       results.push('sal_return_detail');
 
       // ========================================
       // 3. 销售对账表
       // ========================================
-      await conn.execute(ts('k_lteu6g'));
+      await conn.execute(CREATE_TABLE_SAL_RECONCILIATION);
       results.push('sal_reconciliation');
 
-      await conn.execute(ts('k_1h0cbbv'));
+      await conn.execute(CREATE_TABLE_SAL_RECONCILIATION_LINE);
       results.push('sal_reconciliation_line');
 
-      await conn.execute(ts('k_1lier7j'));
+      await conn.execute(CREATE_TABLE_SAL_RECONCILIATION_WRITEOFF);
       results.push('sal_reconciliation_writeoff');
 
       // ========================================
       // 4. 设备管理表
       // ========================================
-      await conn.execute(ts('k_1jtzu7v'));
+      await conn.execute(CREATE_TABLE_EQP_EQUIPMENT);
       results.push('eqp_equipment');
 
-      await conn.execute(ts('k_ysaln8'));
+      await conn.execute(CREATE_TABLE_EQP_MAINTENANCE_PLAN);
       results.push('eqp_maintenance_plan');
 
-      await conn.execute(ts('k_6b1t81'));
+      await conn.execute(CREATE_TABLE_EQP_MAINTENANCE_RECORD);
       results.push('eqp_maintenance_record');
 
       // ========================================
       // 5. 印前管理表
       // ========================================
-      await conn.execute(ts('k_vyjz8t'));
+      await conn.execute(CREATE_TABLE_PRD_DIE_TEMPLATE);
       results.push('prd_die_template');
 
       // ========================================
       // 6. 生产报工表
       // ========================================
-      await conn.execute(ts('k_2gux6l'));
+      await conn.execute(CREATE_TABLE_PRD_WORK_REPORT);
       results.push('prd_work_report');
 
       // ========================================
       // 7. 工艺路线表
       // ========================================
-      await conn.execute(ts('k_1jy9lgl'));
+      await conn.execute(CREATE_TABLE_PRD_PROCESS_ROUTE);
       results.push('prd_process_route');
 
-      await conn.execute(ts('k_1l27718'));
+      await conn.execute(CREATE_TABLE_PRD_PROCESS_ROUTE_STEP);
       results.push('prd_process_route_step');
 
       // ========================================
       // 8. 生产工单表
       // ========================================
-      await conn.execute(ts('k_1pa0x8h'));
+      await conn.execute(CREATE_TABLE_PROD_WORK_ORDER);
       results.push('prod_work_order');
 
-      await conn.execute(ts('k_1vx14c4'));
+      await conn.execute(CREATE_TABLE_PROD_WORK_ORDER_ITEM);
       results.push('prod_work_order_item');
 
-      await conn.execute(ts('k_feqlh2'));
+      await conn.execute(CREATE_TABLE_PROD_WORK_ORDER_MATERIAL_REQ);
       results.push('prod_work_order_material_req');
 
       // ========================================
       // 9. 库存表
       // ========================================
-      await conn.execute(ts('k_d8sc06'));
+      await conn.execute(CREATE_TABLE_INV_INVENTORY);
       results.push('inv_inventory');
 
-      await conn.execute(ts('k_upjq15'));
+      await conn.execute(CREATE_TABLE_INV_INVENTORY_BATCH);
       results.push('inv_inventory_batch');
 
-      await conn.execute(ts('k_ov1iog'));
+      await conn.execute(CREATE_TABLE_INV_INVENTORY_LOG);
       results.push('inv_inventory_log');
 
       // ========================================
       // 10. 出库单表
       // ========================================
-      await conn.execute(ts('k_torr33'));
+      await conn.execute(CREATE_TABLE_INV_OUTBOUND_ORDER);
       results.push('inv_outbound_order');
 
-      await conn.execute(ts('k_mi92io'));
+      await conn.execute(CREATE_TABLE_INV_OUTBOUND_ITEM);
       results.push('inv_outbound_item');
 
       // ========================================
       // 11. 库存事务表
       // ========================================
-      await conn.execute(ts('k_1ojuyfc'));
+      await conn.execute(CREATE_TABLE_INV_INVENTORY_TRANSACTION);
       results.push('inv_inventory_transaction');
 
       // ========================================
       // 12. 质检表
       // ========================================
-      await conn.execute(ts('k_1ufvyzy'));
+      await conn.execute(CREATE_TABLE_QC_INSPECTION);
       results.push('qc_inspection');
 
-      await conn.execute(ts('k_o2m3on'));
+      await conn.execute(CREATE_TABLE_QC_UNQUALIFIED);
       results.push('qc_unqualified');
 
       // ========================================
       // 13. 财务应收/应付表
       // ========================================
-      await conn.execute(ts('k_1n6w2yk'));
+      await conn.execute(CREATE_TABLE_FIN_RECEIVABLE);
       results.push('fin_receivable');
 
-      await conn.execute(ts('k_18vdddh'));
+      await conn.execute(CREATE_TABLE_FIN_PAYABLE);
       results.push('fin_payable');
 
-      await conn.execute(ts('k_1b549lk'));
+      await conn.execute(CREATE_TABLE_FIN_RECEIPT_RECORD);
       results.push('fin_receipt_record');
 
-      await conn.execute(ts('k_icy93o'));
+      await conn.execute(CREATE_TABLE_FIN_PAYMENT_RECORD);
       results.push('fin_payment_record');
 
-      await conn.execute(ts('k_1vdcqgt'));
+      await conn.execute(CREATE_TABLE_PRD_BOM);
       results.push('prd_bom');
 
-      await conn.execute(ts('k_isbwrh'));
+      await conn.execute(CREATE_TABLE_PRD_BOM_DETAIL);
       results.push('prd_bom_detail');
 
-      await conn.execute(ts('k_fpg9tl'));
+      await conn.execute(CREATE_TABLE_SAL_SAMPLE_ORDER);
       results.push('sal_sample_order');
 
       // ========================================
       // 库位表
       // ========================================
-      await conn.execute(ts('k_1lwpkf1'));
+      await conn.execute(CREATE_TABLE_INV_LOCATION);
       results.push('inv_location');
 
       // ========================================
       // 客户联系人表
       // ========================================
-      await conn.execute(ts('k_1ei2pk8'));
+      await conn.execute(CREATE_TABLE_CRM_CUSTOMER_CONTACT);
       results.push('crm_customer_contact');
 
       // ========================================
       // 物料标签表（二维码追溯核心）
       // ========================================
-      await conn.execute(ts('k_71n9l1'));
+      await conn.execute(CREATE_TABLE_INV_MATERIAL_LABEL);
       results.push('inv_material_label');
 
       // ========================================
       // 分切记录表
       // ========================================
-      await conn.execute(ts('k_4u3fsj'));
+      await conn.execute(CREATE_TABLE_INV_CUTTING_RECORD);
       results.push('inv_cutting_record');
 
       // ========================================
       // 分切明细表
       // ========================================
-      await conn.execute(ts('k_unp12q'));
+      await conn.execute(CREATE_TABLE_INV_CUTTING_DETAIL);
       results.push('inv_cutting_detail');
 
       // ========================================
       // 生产流程卡表
       // ========================================
-      await conn.execute(ts('k_utjzo3'));
+      await conn.execute(CREATE_TABLE_PRD_PROCESS_CARD);
       results.push('prd_process_card');
 
       // ========================================
       // 流程卡物料关联表
       // ========================================
-      await conn.execute(ts('k_1x51dsd'));
+      await conn.execute(CREATE_TABLE_PRD_PROCESS_CARD_MATERIAL);
       results.push('prd_process_card_material');
 
       // ========================================
       // 追溯记录表
       // ========================================
-      await conn.execute(ts('k_428k7i'));
+      await conn.execute(CREATE_TABLE_INV_TRACE_RECORD);
       results.push('inv_trace_record');
 
       // ========================================
       // 追溯明细表
       // ========================================
-      await conn.execute(ts('k_ho3b6k'));
+      await conn.execute(CREATE_TABLE_INV_TRACE_DETAIL);
       results.push('inv_trace_detail');
 
       // ========================================
       // 扫码操作日志表
       // ========================================
-      await conn.execute(ts('k_1vpijoa'));
+      await conn.execute(CREATE_TABLE_INV_SCAN_LOG);
       results.push('inv_scan_log');
 
       // ========================================
       // 油墨开罐记录表
       // ========================================
-      await conn.execute(ts('k_vmklcp'));
+      await conn.execute(CREATE_TABLE_INK_OPENING_RECORD);
       results.push('ink_opening_record');
 
-      await conn.execute(ts('k_b3ratl'));
+      await conn.execute(CREATE_TABLE_SYS_DICT_TYPE);
       results.push('sys_dict_type');
 
-      await conn.execute(ts('k_1cyithy'));
+      await conn.execute(CREATE_TABLE_SYS_DICT_DATA);
       results.push('sys_dict_data');
 
-      await conn.execute(ts('k_piqkeq'));
+      await conn.execute(CREATE_TABLE_SYS_CONFIG);
       results.push('sys_config');
 
-      await conn.execute(ts('k_1xcgg01'));
+      await conn.execute(CREATE_TABLE_SYS_OPER_LOG);
       results.push('sys_oper_log');
 
-      await conn.execute(ts('k_p4sugp'));
+      await conn.execute(CREATE_TABLE_SYS_LOGIN_LOG);
       results.push('sys_login_log');
 
-      await conn.execute(ts('k_mb31su'));
+      await conn.execute(CREATE_TABLE_SYS_NOTICE);
       results.push('sys_notice');
 
-      await conn.execute(ts('k_sg18ks'));
+      await conn.execute(CREATE_TABLE_INK_MIXED_RECORD);
       results.push('ink_mixed_record');
 
-      await conn.execute(ts('k_8pdzru'));
+      await conn.execute(CREATE_TABLE_BASE_INK);
       results.push('base_ink');
 
       return { tablesCreated: true, tables: results };

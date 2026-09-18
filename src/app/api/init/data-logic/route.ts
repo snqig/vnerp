@@ -5,6 +5,7 @@ import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { ALTER_TABLE_EQP_EQUIPMENT, CREATE_TABLE_INK_MIXED_BATCH_DETAIL, ALTER_TABLE_INV_OUTBOUND_ORDER, CREATE_TABLE_BIZ_CONTRACT_REVIEW, CREATE_TABLE_FIN_VOUCHER, ALTER_TABLE_INV_MATERIAL, CREATE_TABLE_ENG_SAMPLE_TO_MASS, ALTER_TABLE_INV_INBOUND_ORDER, ALTER_TABLE_PROD_WORK_ORDER, ALTER_TABLE_EQP_EQUIPMENT_2, ALTER_TABLE_INV_SALES_OUTBOUND, ALTER_TABLE_PUR_SUPPLIER, ALTER_TABLE_PROD_WORK_ORDER_2, ALTER_TABLE_INV_INBOUND_ORDER_2, ALTER_TABLE_PUR_SUPPLIER_2, ALTER_TABLE_PROD_WORK_ORDER_3, CREATE_TABLE_INK_OPENING_RECORD, ALTER_TABLE_CRM_CUSTOMER, ALTER_TABLE_INV_OUTBOUND_ORDER_2, ALTER_TABLE_INV_MATERIAL_LABEL, ALTER_TABLE_PUR_SUPPLIER_3, ALTER_TABLE_INV_SALES_OUTBOUND_2, ALTER_TABLE_INV_INBOUND_ORDER_3, ALTER_TABLE_INV_INBOUND_ORDER_4, ALTER_TABLE_INV_INVENTORY_BATCH, ALTER_TABLE_INV_INBOUND_ORDER_5, ALTER_TABLE_EQP_EQUIPMENT_3, CREATE_TABLE_INV_SCAN_LOG, ALTER_TABLE_PUR_SUPPLIER_4, ALTER_TABLE_PROD_WORK_ORDER_4, CREATE_TABLE_PRD_PRODUCT_TRACE_LINK, CREATE_TABLE_INV_FIFO_OVERRIDE_LOG, ALTER_TABLE_INV_MATERIAL_2, ALTER_TABLE_EQP_EQUIPMENT_4, ALTER_TABLE_INV_INVENTORY_BATCH_2, CREATE_TABLE_INK_MIXED_BATCH, ALTER_TABLE_CRM_CUSTOMER_2, ALTER_TABLE_INV_INBOUND_ORDER_6 } from '@/lib/db/ddl/init-data-logic';
 
 export const POST = withPermission(
   async (_request: NextRequest, _userInfo) => {
@@ -47,7 +48,7 @@ export const POST = withPermission(
       // ========================================
       await safeCreateTable(
         'prd_product_trace_link',
-        ts('k_ocwhvg')
+        CREATE_TABLE_PRD_PRODUCT_TRACE_LINK
       );
 
       // ========================================
@@ -56,7 +57,7 @@ export const POST = withPermission(
       // ========================================
       await safeCreateTable(
         'inv_fifo_override_log',
-        ts('k_paqsh8')
+        CREATE_TABLE_INV_FIFO_OVERRIDE_LOG
       );
 
       // ========================================
@@ -65,7 +66,7 @@ export const POST = withPermission(
       // ========================================
       await safeCreateTable(
         'fin_voucher',
-        ts('k_1cy8y0k')
+        CREATE_TABLE_FIN_VOUCHER
       );
 
       // ========================================
@@ -74,7 +75,7 @@ export const POST = withPermission(
       // ========================================
       await safeCreateTable(
         'biz_contract_review',
-        ts('k_1cn57tk')
+        CREATE_TABLE_BIZ_CONTRACT_REVIEW
       );
 
       // ========================================
@@ -83,7 +84,7 @@ export const POST = withPermission(
       // ========================================
       await safeCreateTable(
         'eng_sample_to_mass',
-        ts('k_1dov2am')
+        CREATE_TABLE_ENG_SAMPLE_TO_MASS
       );
 
       // ========================================
@@ -92,7 +93,7 @@ export const POST = withPermission(
       // ========================================
       await safeCreateTable(
         'ink_opening_record',
-        ts('k_5r3nnl')
+        CREATE_TABLE_INK_OPENING_RECORD
       );
 
       // ========================================
@@ -101,12 +102,12 @@ export const POST = withPermission(
       // ========================================
       await safeCreateTable(
         'ink_mixed_batch',
-        ts('k_xurrom')
+        CREATE_TABLE_INK_MIXED_BATCH
       );
 
       await safeCreateTable(
         'ink_mixed_batch_detail',
-        ts('k_1a54q7l')
+        CREATE_TABLE_INK_MIXED_BATCH_DETAIL
       );
 
       // ========================================
@@ -115,7 +116,7 @@ export const POST = withPermission(
       // ========================================
       await safeCreateTable(
         'inv_scan_log',
-        ts('k_lmkvus')
+        CREATE_TABLE_INV_SCAN_LOG
       );
 
       // ========================================
@@ -124,143 +125,143 @@ export const POST = withPermission(
 
       // 入库单添加采购订单关联
       await safeExecute(
-        ts('k_1fh6ii3'),
+        ALTER_TABLE_INV_INBOUND_ORDER,
         'inv_inbound_order.purchase_order_id'
       );
       await safeExecute(
-        ts('k_jkfytc'),
+        ALTER_TABLE_INV_INBOUND_ORDER_5,
         'inv_inbound_order.purchase_order_no'
       );
 
       // 入库单添加质检状态
       await safeExecute(
-        ts('k_1shvby5'),
+        ALTER_TABLE_INV_INBOUND_ORDER_2,
         'inv_inbound_order.inspection_status'
       );
       await safeExecute(
-        ts('k_fbqc7'),
+        ALTER_TABLE_INV_INBOUND_ORDER_4,
         'inv_inbound_order.inspection_id'
       );
 
       // 出库单添加财务过账状态
       await safeExecute(
-        ts('k_823ilh'),
+        ALTER_TABLE_INV_OUTBOUND_ORDER_2,
         'inv_outbound_order.finance_posted'
       );
       await safeExecute(
-        ts('k_1cho61n'),
+        ALTER_TABLE_INV_OUTBOUND_ORDER,
         'inv_outbound_order.voucher_no'
       );
 
       // 销售出库添加销售订单关联
       await safeExecute(
-        ts('k_c8pzrz'),
+        ALTER_TABLE_INV_SALES_OUTBOUND_2,
         'inv_sales_outbound.finance_posted'
       );
       await safeExecute(
-        ts('k_1oooyst'),
+        ALTER_TABLE_INV_SALES_OUTBOUND,
         'inv_sales_outbound.voucher_no'
       );
 
       // 入库单添加财务过账状态
       await safeExecute(
-        ts('k_f6heng'),
+        ALTER_TABLE_INV_INBOUND_ORDER_3,
         'inv_inbound_order.finance_posted'
       );
       await safeExecute(
-        ts('k_zdksgc'),
+        ALTER_TABLE_INV_INBOUND_ORDER_6,
         'inv_inbound_order.voucher_no'
       );
 
       // 批次库存添加冻结状态
       await safeExecute(
-        ts('k_ghrsfu'),
+        ALTER_TABLE_INV_INVENTORY_BATCH,
         'inv_inventory_batch.freeze_reason'
       );
       await safeExecute(
-        ts('k_wet19q'),
+        ALTER_TABLE_INV_INVENTORY_BATCH_2,
         'inv_inventory_batch.inspection_id'
       );
 
       // 生产工单添加销售订单关联
       await safeExecute(
-        ts('k_nim1rg'),
+        ALTER_TABLE_PROD_WORK_ORDER_4,
         'prod_work_order.sales_order_id'
       );
       await safeExecute(
-        ts('k_1iy4kv5'),
+        ALTER_TABLE_PROD_WORK_ORDER,
         'prod_work_order.sales_order_no'
       );
 
       // 生产工单添加标准卡/流程卡关联
       await safeExecute(
-        ts('k_3kpm9u'),
+        ALTER_TABLE_PROD_WORK_ORDER_3,
         'prod_work_order.standard_card_id'
       );
       await safeExecute(
-        ts('k_1q8vgyz'),
+        ALTER_TABLE_PROD_WORK_ORDER_2,
         'prod_work_order.process_card_id'
       );
 
       // 物料标签添加追溯链关联
       await safeExecute(
-        ts('k_88ht0c'),
+        ALTER_TABLE_INV_MATERIAL_LABEL,
         'inv_material_label.trace_link_id'
       );
 
       // 供应商添加质量评估分数
       await safeExecute(
-        ts('k_1ot9rmt'),
+        ALTER_TABLE_PUR_SUPPLIER,
         'pur_supplier.quality_score'
       );
       await safeExecute(
-        ts('k_2kphr'),
+        ALTER_TABLE_PUR_SUPPLIER_2,
         'pur_supplier.delivery_score'
       );
       await safeExecute(
-        ts('k_mzmybb'),
+        ALTER_TABLE_PUR_SUPPLIER_4,
         'pur_supplier.price_score'
       );
       await safeExecute(
-        ts('k_bkzsc'),
+        ALTER_TABLE_PUR_SUPPLIER_3,
         'pur_supplier.overall_score'
       );
 
       // 客户添加信用额度
       await safeExecute(
-        ts('k_y65vzx'),
+        ALTER_TABLE_CRM_CUSTOMER_2,
         'crm_customer.credit_limit'
       );
       await safeExecute(
-        ts('k_745htn'),
+        ALTER_TABLE_CRM_CUSTOMER,
         'crm_customer.credit_used'
       );
 
       // 设备添加OEE字段
       await safeExecute(
-        ts('k_w4i5a1'),
+        ALTER_TABLE_EQP_EQUIPMENT_4,
         'eqp_equipment.oee_availability'
       );
       await safeExecute(
-        ts('k_kx0tfk'),
+        ALTER_TABLE_EQP_EQUIPMENT_3,
         'eqp_equipment.oee_performance'
       );
       await safeExecute(
-        ts('k_11w1kwn'),
+        ALTER_TABLE_EQP_EQUIPMENT,
         'eqp_equipment.oee_quality'
       );
       await safeExecute(
-        ts('k_1l9v6u7'),
+        ALTER_TABLE_EQP_EQUIPMENT_2,
         'eqp_equipment.oee_overall'
       );
 
       // 物料添加SGS认证关联
       await safeExecute(
-        ts('k_1dm98p9'),
+        ALTER_TABLE_INV_MATERIAL,
         'inv_material.sgs_cert_required'
       );
       await safeExecute(
-        ts('k_vtvqkd'),
+        ALTER_TABLE_INV_MATERIAL_2,
         'inv_material.sgs_cert_id'
       );
 

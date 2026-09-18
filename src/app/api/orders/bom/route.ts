@@ -11,6 +11,7 @@ import {
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { INSERT_INTO_BOM_VERSION_HISTORY } from '@/lib/db/ddl/orders-bom';
 
 // BOM状态常量
 const BOM_STATUS = {
@@ -383,7 +384,7 @@ export const DELETE = withPermission(
       );
 
       await connection.execute(
-        ts('k_12iriee'),
+        INSERT_INTO_BOM_VERSION_HISTORY,
         [id, bomData.version]
       );
     });

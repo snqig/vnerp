@@ -7,6 +7,7 @@ import type { NextRequest } from 'next/server';
 
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { CREATE_TABLE_SCREEN_PLATE_HISTORY, CREATE_TABLE_INK_USAGE } from '@/lib/db/ddl/migrations-foreign-keys';
 async function tableExists(name: string): Promise<boolean> {
   const rows = await query(
     `SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
@@ -415,7 +416,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     results.push(ts('k_1jfh8p6'));
 
     if (!(await tableExists('screen_plate_history'))) {
-      await execute(ts('k_10lvcx'));
+      await execute(CREATE_TABLE_SCREEN_PLATE_HISTORY);
       results.push('Created screen_plate_history');
     } else {
       results.push('Already exists: screen_plate_history');
@@ -429,7 +430,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     results.push(ts('k_62q0b3'));
 
     if (!(await tableExists('ink_usage'))) {
-      await execute(ts('k_v9uxuo'));
+      await execute(CREATE_TABLE_INK_USAGE);
       results.push('Created ink_usage');
     } else {
       results.push('Already exists: ink_usage');

@@ -1,13 +1,10 @@
-import { getTranslations } from 'next-intl/server';
-
-;
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { SELECT_STMT } from '@/lib/db/ddl/reports-prepress-tool';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
-  const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const period = searchParams.get('period') || '30';
   const days = parseInt(period);
@@ -43,7 +40,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   const recentActivities = await query(
-    ts('k_8vocol'),
+    SELECT_STMT,
     [startDateStr]
   );
 

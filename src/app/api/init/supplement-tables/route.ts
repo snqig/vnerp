@@ -6,6 +6,7 @@ import { transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
+import { CREATE_TABLE_HR_TRAINING, CREATE_TABLE_SYS_OPERATION_LOG, CREATE_TABLE_LABEL_TEMPLATE, CREATE_TABLE_QMS_SGS_CERT_ITEM, CREATE_TABLE_SRM_SUPPLIER_EVAL_ITEM, CREATE_TABLE_ENG_SOP, CREATE_TABLE_QC_INCOMING_INSPECTION_ITEM, CREATE_TABLE_QRCODE_SCAN_LOG, CREATE_TABLE_INV_SALES_OUTBOUND_ITEM, CREATE_TABLE_OUTSOURCE_ISSUE_ITEM, CREATE_TABLE_INV_MATERIAL_CATEGORY, CREATE_TABLE_HR_TRAINING_PARTICIPANT, CREATE_TABLE_PRD_PRODUCT_LABEL, CREATE_TABLE_INV_PRODUCTION_INBOUND_ITEM, CREATE_TABLE_PRD_DIE, CREATE_TABLE_PRD_SCREEN_PLATE, CREATE_TABLE_QC_PROCESS_INSPECTION, CREATE_TABLE_EQP_CALIBRATION, CREATE_TABLE_CRM_FOLLOW_RECORD, CREATE_TABLE_OUTSOURCE_ORDER, CREATE_TABLE_PRINT_LOG, CREATE_TABLE_PLM_PRODUCT_LIFECYCLE, CREATE_TABLE_INV_PRODUCTION_INBOUND, CREATE_TABLE_PRD_SCHEDULE, CREATE_TABLE_OUTSOURCE_RECEIVE, CREATE_TABLE_QMS_SGS_CERT, CREATE_TABLE_PRD_MATERIAL_RETURN, CREATE_TABLE_CRM_CUSTOMER_ANALYSIS, CREATE_TABLE_PLM_ECO, CREATE_TABLE_QC_FINAL_INSPECTION, CREATE_TABLE_INV_STOCKTAKING, CREATE_TABLE_PRD_INK, CREATE_TABLE_INV_STOCKTAKING_ITEM, CREATE_TABLE_INV_TRANSFER_ITEM, CREATE_TABLE_SRM_SUPPLIER_EVAL, CREATE_TABLE_INV_STOCK_ADJUST_ITEM, CREATE_TABLE_QMS_LAB_TEST, CREATE_TABLE_PRD_MATERIAL_ISSUE, CREATE_TABLE_OUTSOURCE_SETTLEMENT, CREATE_TABLE_FIN_COST_RECORD, CREATE_TABLE_INV_TRANSFER_ORDER, CREATE_TABLE_QMS_COMPLAINT, CREATE_TABLE_QC_INCOMING_INSPECTION, CREATE_TABLE_ENG_SAMPLE_TO_MASS, CREATE_TABLE_INV_SALES_OUTBOUND, CREATE_TABLE_PRD_MATERIAL_RETURN_ITEM, CREATE_TABLE_BIZ_CONTRACT_REVIEW, CREATE_TABLE_EQP_SCRAP, CREATE_TABLE_QMS_SUPPLIER_AUDIT, CREATE_TABLE_QRCODE_RECORD, CREATE_TABLE_OUTSOURCE_ISSUE, CREATE_TABLE_PRD_MATERIAL_ISSUE_ITEM, CREATE_TABLE_EQP_REPAIR, CREATE_TABLE_INV_STOCK_ADJUST } from '@/lib/db/ddl/init-supplement-tables';
 export const POST = withPermission(async (_request: NextRequest) => {
   const tc = await getTranslations('Common');
   const ts = await getTranslations('Common');
@@ -27,187 +28,187 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     await createTable(
       'inv_material_category',
-      ts('k_19ypidn')
+      CREATE_TABLE_INV_MATERIAL_CATEGORY
     );
 
     await createTable(
       'inv_transfer_order',
-      ts('k_d86vae')
+      CREATE_TABLE_INV_TRANSFER_ORDER
     );
 
     await createTable(
       'inv_transfer_item',
-      ts('k_6nn4sa')
+      CREATE_TABLE_INV_TRANSFER_ITEM
     );
 
     await createTable(
       'inv_stocktaking',
-      ts('k_3wwj2v')
+      CREATE_TABLE_INV_STOCKTAKING
     );
 
     await createTable(
       'inv_stocktaking_item',
-      ts('k_6k35wf')
+      CREATE_TABLE_INV_STOCKTAKING_ITEM
     );
 
     await createTable(
       'inv_stock_adjust',
-      ts('k_zgrf65')
+      CREATE_TABLE_INV_STOCK_ADJUST
     );
 
     await createTable(
       'inv_stock_adjust_item',
-      ts('k_71kv7l')
+      CREATE_TABLE_INV_STOCK_ADJUST_ITEM
     );
 
     await createTable(
       'prd_material_issue',
-      ts('k_9o99az')
+      CREATE_TABLE_PRD_MATERIAL_ISSUE
     );
 
     await createTable(
       'prd_material_issue_item',
-      ts('k_tfch7v')
+      CREATE_TABLE_PRD_MATERIAL_ISSUE_ITEM
     );
 
     await createTable(
       'prd_material_return',
-      ts('k_1xuibv4')
+      CREATE_TABLE_PRD_MATERIAL_RETURN
     );
 
     await createTable(
       'prd_material_return_item',
-      ts('k_jz4i3g')
+      CREATE_TABLE_PRD_MATERIAL_RETURN_ITEM
     );
 
     await createTable(
       'prd_product_label',
-      ts('k_1g156v8')
+      CREATE_TABLE_PRD_PRODUCT_LABEL
     );
 
     await createTable(
       'qc_incoming_inspection',
-      ts('k_ed5jfn')
+      CREATE_TABLE_QC_INCOMING_INSPECTION
     );
 
     await createTable(
       'qc_incoming_inspection_item',
-      ts('k_18d1h3k')
+      CREATE_TABLE_QC_INCOMING_INSPECTION_ITEM
     );
 
     await createTable(
       'qc_process_inspection',
-      ts('k_1j0evfd')
+      CREATE_TABLE_QC_PROCESS_INSPECTION
     );
 
     await createTable(
       'qc_final_inspection',
-      ts('k_3sefh5')
+      CREATE_TABLE_QC_FINAL_INSPECTION
     );
 
     await createTable(
       'eqp_repair',
-      ts('k_x7qa4p')
+      CREATE_TABLE_EQP_REPAIR
     );
 
     await createTable(
       'eqp_calibration',
-      ts('k_1lhurm5')
+      CREATE_TABLE_EQP_CALIBRATION
     );
 
     await createTable(
       'eqp_scrap',
-      ts('k_qgbmhm')
+      CREATE_TABLE_EQP_SCRAP
     );
 
     await createTable(
       'prd_ink',
-      ts('k_5067bi')
+      CREATE_TABLE_PRD_INK
     );
 
     await createTable(
       'prd_screen_plate',
-      ts('k_1ia2vxr')
+      CREATE_TABLE_PRD_SCREEN_PLATE
     );
 
     await createTable(
       'prd_die',
-      ts('k_1h3fj10')
+      CREATE_TABLE_PRD_DIE
     );
 
     await createTable(
       'hr_training',
-      ts('k_10sf2fq')
+      CREATE_TABLE_HR_TRAINING
     );
 
     await createTable(
       'hr_training_participant',
-      ts('k_1er0fa6')
+      CREATE_TABLE_HR_TRAINING_PARTICIPANT
     );
 
     await createTable(
       'inv_production_inbound',
-      ts('k_1u20uhc')
+      CREATE_TABLE_INV_PRODUCTION_INBOUND
     );
 
     await createTable(
       'inv_production_inbound_item',
-      ts('k_1g1hisq')
+      CREATE_TABLE_INV_PRODUCTION_INBOUND_ITEM
     );
 
     await createTable(
       'inv_sales_outbound',
-      ts('k_i0oj0w')
+      CREATE_TABLE_INV_SALES_OUTBOUND
     );
 
     await createTable(
       'inv_sales_outbound_item',
-      ts('k_19eh66y')
+      CREATE_TABLE_INV_SALES_OUTBOUND_ITEM
     );
 
     await createTable(
       'outsource_order',
-      ts('k_1n3gskt')
+      CREATE_TABLE_OUTSOURCE_ORDER
     );
 
     await createTable(
       'outsource_issue',
-      ts('k_t70a7c')
+      CREATE_TABLE_OUTSOURCE_ISSUE
     );
 
     await createTable(
       'outsource_issue_item',
-      ts('k_19fm5ic')
+      CREATE_TABLE_OUTSOURCE_ISSUE_ITEM
     );
 
     await createTable(
       'outsource_receive',
-      ts('k_1wiqc52')
+      CREATE_TABLE_OUTSOURCE_RECEIVE
     );
 
     await createTable(
       'outsource_settlement',
-      ts('k_9pcuwp')
+      CREATE_TABLE_OUTSOURCE_SETTLEMENT
     );
 
     await createTable(
       'fin_cost_record',
-      ts('k_bxfu2u')
+      CREATE_TABLE_FIN_COST_RECORD
     );
 
     await createTable(
       'qrcode_record',
-      ts('k_rmd1s2')
+      CREATE_TABLE_QRCODE_RECORD
     );
 
     await createTable(
       'qrcode_scan_log',
-      ts('k_18fhdk0')
+      CREATE_TABLE_QRCODE_SCAN_LOG
     );
 
     await createTable(
       'sys_operation_log',
-      ts('k_130c5y9')
+      CREATE_TABLE_SYS_OPERATION_LOG
     );
 
     const addColumn = async (table: string, column: string, definition: string) => {
@@ -340,12 +341,12 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     await createTable(
       'qms_sgs_cert',
-      ts('k_1wn8upb')
+      CREATE_TABLE_QMS_SGS_CERT
     );
 
     await createTable(
       'qms_sgs_cert_item',
-      ts('k_154qbh9')
+      CREATE_TABLE_QMS_SGS_CERT_ITEM
     );
 
     const seedCategories = async () => {
@@ -414,77 +415,77 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     await createTable(
       'plm_product_lifecycle',
-      ts('k_1sr6bbv')
+      CREATE_TABLE_PLM_PRODUCT_LIFECYCLE
     );
 
     await createTable(
       'plm_eco',
-      ts('k_3pwmwy')
+      CREATE_TABLE_PLM_ECO
     );
 
     await createTable(
       'crm_follow_record',
-      ts('k_1lqpbwq')
+      CREATE_TABLE_CRM_FOLLOW_RECORD
     );
 
     await createTable(
       'crm_customer_analysis',
-      ts('k_1yfmg5y')
+      CREATE_TABLE_CRM_CUSTOMER_ANALYSIS
     );
 
     await createTable(
       'srm_supplier_eval',
-      ts('k_70ymx8')
+      CREATE_TABLE_SRM_SUPPLIER_EVAL
     );
 
     await createTable(
       'srm_supplier_eval_item',
-      ts('k_15m2tup')
+      CREATE_TABLE_SRM_SUPPLIER_EVAL_ITEM
     );
 
     await createTable(
       'eng_sample_to_mass',
-      ts('k_hxv8f')
+      CREATE_TABLE_ENG_SAMPLE_TO_MASS
     );
 
     await createTable(
       'eng_sop',
-      ts('k_16s2cww')
+      CREATE_TABLE_ENG_SOP
     );
 
     await createTable(
       'prd_schedule',
-      ts('k_1uu2zar')
+      CREATE_TABLE_PRD_SCHEDULE
     );
 
     await createTable(
       'qms_complaint',
-      ts('k_ddgnw5')
+      CREATE_TABLE_QMS_COMPLAINT
     );
 
     await createTable(
       'qms_lab_test',
-      ts('k_8qzq4k')
+      CREATE_TABLE_QMS_LAB_TEST
     );
 
     await createTable(
       'qms_supplier_audit',
-      ts('k_r9oh3c')
+      CREATE_TABLE_QMS_SUPPLIER_AUDIT
     );
 
     await createTable(
       'biz_contract_review',
-      ts('k_lms03k')
+      CREATE_TABLE_BIZ_CONTRACT_REVIEW
     );
 
     await createTable(
       'print_log',
-      ts('k_1nxr3b7')
+      CREATE_TABLE_PRINT_LOG
     );
 
     await createTable(
       'label_template',
-      ts('k_13n8wl8')
+      CREATE_TABLE_LABEL_TEMPLATE
     );
 
     await createTable(

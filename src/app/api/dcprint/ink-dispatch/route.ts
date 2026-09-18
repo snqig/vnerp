@@ -6,6 +6,7 @@ import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { randomUUID } from 'crypto';
+import { SELECT_STMT } from '@/lib/db/ddl/dcprint-ink-dispatch';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -196,7 +197,7 @@ export const POST = withPermission(
       );
 
       const [whRows] = await conn.execute(
-        ts('k_rtrnf6')
+        SELECT_STMT
       );
       const warehouseId = whRows.length > 0 ? whRows[0].id : null;
 

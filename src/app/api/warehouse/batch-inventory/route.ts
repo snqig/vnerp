@@ -7,6 +7,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { INSERT_INTO_INV_PRODUCTION_INBOUND } from '@/lib/db/ddl/warehouse-batch-inventory';
 // 获取批次库存列表
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -137,7 +138,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
   return await transaction(async (conn) => {
     // 1. 创建入库单
     const [orderResult] = await conn.execute(
-      ts('k_1weiu17'),
+      INSERT_INTO_INV_PRODUCTION_INBOUND,
       [
         inbound_no || `IN${Date.now()}`,
         warehouse_id,

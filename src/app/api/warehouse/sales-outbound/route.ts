@@ -11,6 +11,7 @@ import { checkMaterialsCategorized } from '@/lib/category-validation';
 import { secureLog } from '@/lib/logger';
 import { appendInventoryTransaction } from '@/lib/inventory-ledger';
 import type { DbRow } from '@/types/db';
+import { INSERT_INTO_INV_FIFO_OVERRIDE_LOG, INSERT_INTO_FIN_VOUCHER } from '@/lib/db/ddl/warehouse-sales-outbound';
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
@@ -270,7 +271,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
         if (usedBatch && fifoRecommended && usedBatch !== fifoRecommended) {
           try {
             await conn.execute(
-              ts('k_1xstgvz'),
+              INSERT_INTO_INV_FIFO_OVERRIDE_LOG,
               [
                 id,
                 outbound.outbound_no,
@@ -320,7 +321,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
           const voucherNo = 'FV' + Date.now() + String(item.id).slice(-4);
           const avgCost = item.quantity ? totalCost / item.quantity : 0;
           await conn.execute(
-            ts('k_50povp'),
+            INSERT_INTO_FIN_VOUCHER,
             [
               voucherNo,
               id,

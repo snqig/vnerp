@@ -6,6 +6,7 @@ import { query, execute, queryOne, transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
+import { ALTER_TABLE_INV_WAREHOUSE } from '@/lib/db/ddl/init-warehouse';
 // 仓库初始化数据
 const warehouseData = [
   {
@@ -104,7 +105,7 @@ export const POST = withPermission(
 
     if (checkColumn && checkColumn.count === 0) {
       await execute(
-        ts('k_gup3wx')
+        ALTER_TABLE_INV_WAREHOUSE
       );
       await execute('ALTER TABLE inv_warehouse ADD KEY idx_category_id (category_id)');
     }
