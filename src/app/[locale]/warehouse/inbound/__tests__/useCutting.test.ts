@@ -30,6 +30,7 @@ vi.mock('@/lib/logger', () => ({
 import { useCutting } from '../hooks/useCutting';
 import { authFetch } from '@/lib/auth-fetch';
 import { toast } from 'sonner';
+import { t } from '@test/i18n-test-helpers';
 
 const mockJsonResponse = (data: unknown, ok = true) =>
   ({
@@ -99,7 +100,7 @@ describe('useCutting', () => {
     await act(async () => {
       await result.current.handleCutting();
     });
-    expect(toast.error).toHaveBeenCalledWith('selectCutLabel');
+    expect(toast.error).toHaveBeenCalledWith(t('selectCutLabel'));
     expect(authFetch).not.toHaveBeenCalled();
   });
 
@@ -113,7 +114,7 @@ describe('useCutting', () => {
     await act(async () => {
       await result.current.handleCutting();
     });
-    expect(toast.error).toHaveBeenCalledWith('materialNotCuttable');
+    expect(toast.error).toHaveBeenCalledWith(t('materialNotCuttable'));
     expect(authFetch).not.toHaveBeenCalled();
   });
 
@@ -122,7 +123,7 @@ describe('useCutting', () => {
     await act(async () => {
       await result.current.handleCutting();
     });
-    expect(toast.error).toHaveBeenCalledWith('inputCutWidth');
+    expect(toast.error).toHaveBeenCalledWith(t('inputCutWidth'));
     expect(authFetch).not.toHaveBeenCalled();
   });
 
@@ -138,7 +139,7 @@ describe('useCutting', () => {
     await act(async () => {
       await result.current.handleCutting();
     });
-    expect(toast.error).toHaveBeenCalledWith('specParseFailed');
+    expect(toast.error).toHaveBeenCalledWith(t('specParseFailed'));
     expect(authFetch).not.toHaveBeenCalled();
   });
 
@@ -179,7 +180,7 @@ describe('useCutting', () => {
     });
 
     expect(authFetch).toHaveBeenCalledWith('/api/warehouse/inbound/cutting', expect.objectContaining({ method: 'POST' }));
-    expect(toast.success).toHaveBeenCalledWith('cutSuccess');
+    expect(toast.success).toHaveBeenCalledWith(t('cutSuccess', { count: 3 }));
     expect(setIsCuttingDialogOpen).toHaveBeenCalledWith(false);
     expect(fetchInboundRecords).toHaveBeenCalled();
     expect(setPrintLabels).toHaveBeenCalled();
@@ -229,7 +230,7 @@ describe('useCutting', () => {
       await result.current.handleCutting();
     });
 
-    expect(toast.error).toHaveBeenCalledWith('cutFailed');
+    expect(toast.error).toHaveBeenCalledWith(t('cutFailed'));
   });
 
   it('成功后清空 cutWidths 和 remark', async () => {
@@ -420,8 +421,8 @@ describe('useCutting', () => {
     expect(mapped[0].isRemainder).toBe(false);
     expect(mapped[0].materialName).toBe('PET薄膜');
     expect(mapped[1].isRemainder).toBe(true);
-    // 余料标签的 materialName 应包含 remainderMaterial key（mock t() 返回 key 本身）
-    expect(mapped[1].materialName).toContain('remainderMaterial');
+    // 余料标签的 materialName 应包含 remainderMaterial 译文前缀
+    expect(mapped[1].materialName).toContain(t('remainderMaterial'));
     expect(mapped[1].materialName).toContain('PET薄膜');
   });
 
@@ -567,7 +568,7 @@ describe('useCutting', () => {
       await result.current.handleCutting();
     });
 
-    expect(toast.error).toHaveBeenCalledWith('cutFailed');
+    expect(toast.error).toHaveBeenCalledWith(t('cutFailed'));
   });
 
   it('user 为 null 且表单为空时请求体 operatorId/operatorName 回退到默认值', async () => {

@@ -44,6 +44,7 @@ const mocks = vi.hoisted(() => {
               out_qty: 0,
               version: 3,
               batch_version: 5,
+              is_splittable: 1,
             },
           ],
         ];

@@ -143,14 +143,22 @@ describe('StateMachineValidator', () => {
   });
 
   describe('getAllowedInspectTransitions', () => {
-    it('returns [inspecting] for pending', () => {
-      expect(StateMachineValidator.getAllowedInspectTransitions('pending')).toEqual(['inspecting']);
+    it('returns all allowed transitions for pending', () => {
+      expect(StateMachineValidator.getAllowedInspectTransitions('pending')).toEqual([
+        'inspecting',
+        'pass',
+        'fail',
+        'concession',
+        'rework',
+        'scrap',
+      ]);
     });
 
-    it('returns [pass, fail] for inspecting', () => {
+    it('returns [pass, fail, concession] for inspecting', () => {
       expect(StateMachineValidator.getAllowedInspectTransitions('inspecting')).toEqual([
         'pass',
         'fail',
+        'concession',
       ]);
     });
 

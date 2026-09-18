@@ -38,6 +38,9 @@ describe('系统配置API测试', () => {
       ];
 
       vi.mocked(query)
+        // GET 先执行 seedDefaultConfigs 的 COUNT 查询（非 0 即跳过种子数据），
+        // 随后才是列表 COUNT 与列表数据查询
+        .mockResolvedValueOnce([{ total: 1 }])
         .mockResolvedValueOnce([{ total: 2 }])
         .mockResolvedValueOnce(mockConfigs);
 

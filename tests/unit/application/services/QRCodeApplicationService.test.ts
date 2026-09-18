@@ -163,8 +163,8 @@ describe('QRCodeApplicationService.recordScan', () => {
 
     await service.recordScan('QR-001', '张三', '仓库A');
 
-    expect(mocks.mockConn.execute).toHaveBeenCalledTimes(2);
-    const insertCall = (mocks.mockConn.execute as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(mocks.mockConn.execute).toHaveBeenCalledTimes(3);
+    const insertCall = (mocks.mockConn.execute as ReturnType<typeof vi.fn>).mock.calls[1];
     expect(insertCall[1][0]).toBe('QR-001');
     expect(insertCall[1][3]).toBe('张三');
     expect(mocks.mockOutbox.saveEvents).toHaveBeenCalled();

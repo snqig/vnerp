@@ -29,6 +29,7 @@ vi.mock('@/lib/logger', () => ({
 import { useInboundData } from '../hooks/useInboundData';
 import { authFetch } from '@/lib/auth-fetch';
 import { toast } from 'sonner';
+import { t } from '@test/i18n-test-helpers';
 
 const mockJsonResponse = (data: unknown, ok = true) =>
   ({
@@ -138,7 +139,7 @@ describe('useInboundData', () => {
     });
 
     expect(result.current.isLoading).toBe(false);
-    expect(toast.success).toHaveBeenCalledWith('dataRefreshed');
+    expect(toast.success).toHaveBeenCalledWith(t('dataRefreshed'));
     await waitFor(() => expect(result.current.inboundRecords).toHaveLength(2));
   });
 

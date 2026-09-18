@@ -45,31 +45,37 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   render() {
-  const tc = useTranslations('Common');
-  const ts = useTranslations('Common');
     if (this.state.hasError) {
       return (
-        <MainLayout>
-          <div className="container mx-auto py-6">
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-              <AlertCircle className="h-16 w-16 mb-4 text-red-500" />
-              <p className="text-lg font-medium text-red-500">{ts('k_dte5kz')}</p>
-              <p className="text-sm mt-2 text-muted-foreground">
-                {this.state.error?.message || ts('k_1gs61y0')}
-              </p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => this.setState({ hasError: false })}
-              >
-                {tc('retry')}</Button>
-            </div>
-          </div>
-        </MainLayout>
+        <ErrorFallback
+          error={this.state.error}
+          onRetry={() => this.setState({ hasError: false })}
+        />
       );
     }
     return this.props.children;
   }
+}
+
+function ErrorFallback({ error, onRetry }: { error?: Error; onRetry: () => void }) {
+  const ts = useTranslations('Common');
+  const tc = useTranslations('Common');
+  return (
+    <MainLayout>
+      <div className="container mx-auto py-6">
+        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+          <AlertCircle className="h-16 w-16 mb-4 text-red-500" />
+          <p className="text-lg font-medium text-red-500">{ts('k_dte5kz')}</p>
+          <p className="text-sm mt-2 text-muted-foreground">
+            {error?.message || ts('k_1gs61y0')}
+          </p>
+          <Button variant="outline" className="mt-4" onClick={onRetry}>
+            {tc('retry')}
+          </Button>
+        </div>
+      </div>
+    </MainLayout>
+  );
 }
 
 interface LaborCostData {

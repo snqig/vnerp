@@ -188,9 +188,17 @@ test_endpoints.js
 extract_tables*.js
 tmp_*.mjs
 
-# i18n / eslint 诊断报告（非源码，CI 自动生成）
-i18n-*
-eslint-baseline*
+# i18n / eslint 诊断报告（本地产物，不入仓）
+# 必须用根锚定 `/i18n-*`。裸 `i18n-*` 会连 `scripts/i18n-key-check.mjs` /
+# `scripts/i18n-extract.mjs` 等 i18n 工具脚本一起忽略，它们一旦从 index 移除，
+# 就再也 `git add` 不回来 —— 2026-09-18 排障确认：commit ece73ced「目录清理」
+# 正是这样丢掉了 README.md / package.json 仍在引用的两个 i18n 卡点脚本。
+/i18n-*
+# 注意：eslint-baseline.json 是 i18n 硬编码「债务冻结线快照」，必须入库。
+# scripts/lint-gate.mjs 依赖它做增量比对（CI 中不会重新生成）；若被忽略 →
+# lint-gate 找不到基线 → fail-closed 退出码 2 → CI 恒失败。
+# 仅当批量收敛了硬编码后，用 `pnpm lint:baseline` 显式刷新并提交。
+eslint-baseline-*.json
 eslint-stdout.txt
 eslint-unused-vars-output.txt
 

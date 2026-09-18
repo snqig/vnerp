@@ -13,29 +13,29 @@ interface SalaryStructureChartProps {
   data: SalaryStructureData[];
 }
 
-function renderCenterLabel(t: (key: string) => string, total: number) {
-  const ts = useTranslations('Common');
-  function CenterLabel({ viewBox }: { viewBox?: { cx: number; cy: number } }) {
-  
-    if (!viewBox) return null;
-    const { cx, cy } = viewBox;
-    return (
-      <g>
-        <text x={cx} y={cy - 8} textAnchor="middle" className="fill-muted-foreground text-xs">
-          {t('total') || ts('k_byap0k')}
-        </text>
-        <text x={cx} y={cy + 16} textAnchor="middle" className="fill-foreground text-lg font-bold">
-          ¥{total.toLocaleString()}
-        </text>
-      </g>
-    );
-  }
-  return CenterLabel;
-}
+// renderCenterLabel 已移入 SalaryStructureChart 组件内部（避免在非组件函数中调用 hook）
 
 export function SalaryStructureChart({ data }: SalaryStructureChartProps) {
   const ts = useTranslations('Common');
   const t = useTranslations('Hr');
+
+  const renderCenterLabel = (t: (key: string) => string, total: number) => {
+    function CenterLabel({ viewBox }: { viewBox?: { cx: number; cy: number } }) {
+      if (!viewBox) return null;
+      const { cx, cy } = viewBox;
+      return (
+        <g>
+          <text x={cx} y={cy - 8} textAnchor="middle" className="fill-muted-foreground text-xs">
+            {t('total') || ts('k_byap0k')}
+          </text>
+          <text x={cx} y={cy + 16} textAnchor="middle" className="fill-foreground text-lg font-bold">
+            ¥{total.toLocaleString()}
+          </text>
+        </g>
+      );
+    }
+    return CenterLabel;
+  };
 
   const labelMap: Record<string, string> = {
     baseSalary: t('baseSalary') || ts('k_60tcky'),

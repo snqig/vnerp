@@ -19,7 +19,7 @@ vi.mock('@/lib/hr/insurance-calculator', () => ({
 }));
 vi.mock('@/lib/hr/tax-calculator', () => ({ calculateMonthlyTax: vi.fn() }));
 
-vi.mock('@/domain/hr/infrastructure/SalaryCalculationRepository', () => ({
+vi.mock('@/infrastructure/repositories/SalaryCalculationRepository', () => ({
   SalaryCalculationRepository: class {
     save = vi.fn();
     findByEmployeeMonth = vi.fn();

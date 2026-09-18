@@ -153,7 +153,7 @@ export class QRCodeApplicationService {
     await transaction(async (conn) => {
       // P0 幂等：同一二维码+操作员+位置在 10 秒内重复调用（如 Pad 离线队列网络重试）
       // 视为同一笔扫码，跳过写流水与计数，避免重复扫码记录 + 虚增 scan_count
-      const [recent] = await conn.query(
+      const [recent] = await conn.execute(
         `SELECT id FROM qrcode_scan_log
          WHERE qr_code = ? AND operator_name = ? AND scan_message = ? AND create_time >= NOW() - INTERVAL 10 SECOND
          LIMIT 1`,
