@@ -55,6 +55,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0 —— lint-gate 需要解析基线 ref（origin/main）来算改动集合。
+          # 默认 fetch-depth: 1 会让基线不可解析 → 红线检查静默放行（或退出 2 失败关闭）。
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
