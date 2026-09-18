@@ -37,6 +37,14 @@ import { execFileSync } from 'node:child_process';
 const ROOT = process.cwd();
 const BASELINE_PATH = join(ROOT, 'eslint-baseline.json');
 
+// 冻结线 key：**仓库相对路径 + POSIX 分隔符**。
+// 绝不存绝对路径 —— 冻结线要跨机器（本地 Windows / CI Linux runner）使用，
+// 绝对路径一换环境就对不上，会让每个改动文件都被当成新文件 → 整片误报。
+function toRelKey(p) {
+  const r = relative(ROOT, resolve(ROOT, p));
+  return (r.startsWith('..') ? p : r).replace(/\\/g, '/');
+}
+
 // 从规则消息中提取「被硬编码的中文文本」
 // 格式：禁止[在JSX中]硬编码中文(文本|参数): "文本"。建议使用: {tc('...')}
 const TEXT_RES = [
@@ -51,7 +59,7 @@ function extractText(msg) {
   return null;
 }
 
-// 基线：file(绝对路径) -> Map(中文文本 -> 出现次数)
+// 基线：file(仓库相对路径，POSIX 分隔符) -> Map(中文文本 -> 出现次数)
 function buildBaseline() {
   if (!existsSync(BASELINE_PATH)) {
     console.error(
@@ -68,7 +76,8 @@ function buildBaseline() {
       const t = extractText(m.message);
       if (t) counts.set(t, (counts.get(t) || 0) + 1);
     }
-    if (counts.size) map.set(f.filePath, counts);
+    // toRelKey 同时兼容历史遗留的绝对路径条目（会归一成相对路径）
+    if (counts.size) map.set(toRelKey(f.filePath), counts);
   }
   return map;
 }
@@ -125,7 +134,7 @@ async function updateBaseline() {
       }
     }
     if (messages.length) {
-      out.push({ filePath: abs, messages });
+      out.push({ filePath: toRelKey(abs), messages });
       total += messages.length;
     }
   }
@@ -267,7 +276,7 @@ async function main() {
   for (const rel of targets) {
     const abs = join(ROOT, rel);
     const cur = await lintFile(eslint, abs);
-    const base = baseline.get(abs) || baseline.get(rel) || new Map();
+    const base = baseline.get(toRelKey(rel)) || new Map();
     for (const [text, cnt] of cur) {
       const baseCnt = base.get(text) || 0;
       if (cnt > baseCnt) {

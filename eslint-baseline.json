@@ -1,6 +1,6 @@
 [
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\base-data\\material-category\\route.ts",
+    "filePath": "src/app/api/base-data/material-category/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -53,7 +53,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\dcprint\\process-cards\\detail\\route.ts",
+    "filePath": "src/app/api/dcprint/process-cards/detail/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -66,7 +66,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\hr\\mes-sync\\sync\\route.ts",
+    "filePath": "src/app/api/hr/mes-sync/sync/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -75,7 +75,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\hr\\performance\\route.ts",
+    "filePath": "src/app/api/hr/performance/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -88,7 +88,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\init\\department\\route.ts",
+    "filePath": "src/app/api/init/department/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -137,7 +137,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\init\\die-template-seed\\route.ts",
+    "filePath": "src/app/api/init/die-template-seed/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -154,7 +154,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\init\\inbound-tables\\route.ts",
+    "filePath": "src/app/api/init/inbound-tables/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -163,7 +163,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\init\\ink-seed\\route.ts",
+    "filePath": "src/app/api/init/ink-seed/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -172,7 +172,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\init\\quality-final-seed\\route.ts",
+    "filePath": "src/app/api/init/quality-final-seed/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -197,7 +197,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\init\\sample-seed\\route.ts",
+    "filePath": "src/app/api/init/sample-seed/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -206,7 +206,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\init\\warehouse\\route.ts",
+    "filePath": "src/app/api/init/warehouse/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -311,7 +311,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\init\\warehouse-category-seed\\route.ts",
+    "filePath": "src/app/api/init/warehouse-category-seed/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -360,7 +360,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\inventory\\materials\\route.ts",
+    "filePath": "src/app/api/inventory/materials/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -429,7 +429,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\material-labels\\route.ts",
+    "filePath": "src/app/api/material-labels/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -446,7 +446,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\settings\\category-linkage\\route.ts",
+    "filePath": "src/app/api/settings/category-linkage/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -499,7 +499,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\settings\\change-approval\\route.ts",
+    "filePath": "src/app/api/settings/change-approval/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -520,7 +520,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\system\\config\\route.ts",
+    "filePath": "src/app/api/system/config/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -849,7 +849,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\system\\monitor\\route.ts",
+    "filePath": "src/app/api/system/monitor/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -878,7 +878,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\system\\scheduler\\route.ts",
+    "filePath": "src/app/api/system/scheduler/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -899,7 +899,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\system\\user\\fix-names\\route.ts",
+    "filePath": "src/app/api/system/user/fix-names/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1048,7 +1048,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\warehouse\\alert-push\\route.ts",
+    "filePath": "src/app/api/warehouse/alert-push/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1089,7 +1089,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\warehouse\\inbound\\labels\\[id]\\qrcode\\route.ts",
+    "filePath": "src/app/api/warehouse/inbound/labels/[id]/qrcode/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1102,7 +1102,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\warehouse\\locations\\route.ts",
+    "filePath": "src/app/api/warehouse/locations/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1111,7 +1111,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\warehouse\\monthly-report\\route.ts",
+    "filePath": "src/app/api/warehouse/monthly-report/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1176,7 +1176,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\api\\warehouse\\split-order\\detail\\route.ts",
+    "filePath": "src/app/api/warehouse/split-order/detail/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1185,7 +1185,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\dcprint\\die\\page.tsx",
+    "filePath": "src/app/[locale]/dcprint/die/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1222,7 +1222,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\dcprint\\ink-formula\\page.tsx",
+    "filePath": "src/app/[locale]/dcprint/ink-formula/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1239,7 +1239,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\dcprint\\ink-mixed\\page.tsx",
+    "filePath": "src/app/[locale]/dcprint/ink-mixed/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1256,7 +1256,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\dcprint\\ink-opening\\page.tsx",
+    "filePath": "src/app/[locale]/dcprint/ink-opening/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1293,7 +1293,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\dcprint\\page.tsx",
+    "filePath": "src/app/[locale]/dcprint/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1378,7 +1378,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\dcprint\\screen-plate\\page.tsx",
+    "filePath": "src/app/[locale]/dcprint/screen-plate/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1459,7 +1459,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\equipment\\calibration\\page.tsx",
+    "filePath": "src/app/[locale]/equipment/calibration/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1480,7 +1480,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\equipment\\maintenance\\page.tsx",
+    "filePath": "src/app/[locale]/equipment/maintenance/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1521,7 +1521,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\equipment\\repair\\page.tsx",
+    "filePath": "src/app/[locale]/equipment/repair/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1538,7 +1538,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\hr\\attendance\\page.tsx",
+    "filePath": "src/app/[locale]/hr/attendance/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1583,7 +1583,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\hr\\salary\\bank-report\\page.tsx",
+    "filePath": "src/app/[locale]/hr/salary/bank-report/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1612,7 +1612,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\hr\\salary\\payslips\\page.tsx",
+    "filePath": "src/app/[locale]/hr/salary/payslips/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1629,7 +1629,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\hr\\salary\\piece-work\\page.tsx",
+    "filePath": "src/app/[locale]/hr/salary/piece-work/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1650,7 +1650,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\modules\\page.tsx",
+    "filePath": "src/app/[locale]/modules/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -2151,7 +2151,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\orders\\bom\\create\\page.tsx",
+    "filePath": "src/app/[locale]/orders/bom/create/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -2188,7 +2188,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\orders\\bom\\edit\\[id]\\page.tsx",
+    "filePath": "src/app/[locale]/orders/bom/edit/[id]/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -2225,7 +2225,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\production\\orders\\page.tsx",
+    "filePath": "src/app/[locale]/production/orders/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -2234,7 +2234,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\purchase\\request\\form\\page.tsx",
+    "filePath": "src/app/[locale]/purchase/request/form/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -2291,7 +2291,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\purchase\\return\\page.tsx",
+    "filePath": "src/app/[locale]/purchase/return/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -2312,7 +2312,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\purchase\\suppliers\\page.tsx",
+    "filePath": "src/app/[locale]/purchase/suppliers/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -2325,7 +2325,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\quality\\sgs\\page.tsx",
+    "filePath": "src/app/[locale]/quality/sgs/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -2398,7 +2398,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\sample\\management\\page.tsx",
+    "filePath": "src/app/[locale]/sample/management/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -2443,7 +2443,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\sample\\orders\\[id]\\page.tsx",
+    "filePath": "src/app/[locale]/sample/orders/[id]/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -2464,7 +2464,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\sample\\standard-card\\input\\page.tsx",
+    "filePath": "src/app/[locale]/sample/standard-card/input/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -2809,7 +2809,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\sample\\standard-card\\input-card\\page.tsx",
+    "filePath": "src/app/[locale]/sample/standard-card/input-card/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -3230,7 +3230,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\sample\\standard-card\\input-v2\\page.tsx",
+    "filePath": "src/app/[locale]/sample/standard-card/input-v2/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -3491,7 +3491,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\sample\\standard-card\\InputV2Form.tsx",
+    "filePath": "src/app/[locale]/sample/standard-card/InputV2Form.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -3980,7 +3980,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\sample\\standard-card\\page.tsx",
+    "filePath": "src/app/[locale]/sample/standard-card/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -4005,7 +4005,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\sample\\standard-card\\print\\page.tsx",
+    "filePath": "src/app/[locale]/sample/standard-card/print/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -4370,7 +4370,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\settings\\config\\page.tsx",
+    "filePath": "src/app/[locale]/settings/config/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -4923,7 +4923,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\settings\\label-template\\page.tsx",
+    "filePath": "src/app/[locale]/settings/label-template/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -4932,7 +4932,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\warehouse\\inbound\\components\\dialogs\\OutboundDialog.tsx",
+    "filePath": "src/app/[locale]/warehouse/inbound/components/dialogs/OutboundDialog.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -4965,7 +4965,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\warehouse\\inbound\\components\\InboundRecordViews.tsx",
+    "filePath": "src/app/[locale]/warehouse/inbound/components/InboundRecordViews.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -4986,7 +4986,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+    "filePath": "src/app/[locale]/warehouse/outbound/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5099,7 +5099,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\app\\[locale]\\warehouse\\split-order\\page.tsx",
+    "filePath": "src/app/[locale]/warehouse/split-order/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5116,7 +5116,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\application\\services\\InkFormulaVersionService.ts",
+    "filePath": "src/application/services/InkFormulaVersionService.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5125,7 +5125,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\components\\hr\\charts\\LaborCostChart.tsx",
+    "filePath": "src/components/hr/charts/LaborCostChart.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5150,7 +5150,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\components\\hr\\OrganizationTree.tsx",
+    "filePath": "src/components/hr/OrganizationTree.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5183,7 +5183,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\components\\theme-settings.tsx",
+    "filePath": "src/components/theme-settings.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5212,7 +5212,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\domain\\finance\\value-objects\\PayableStatus.ts",
+    "filePath": "src/domain/finance/value-objects/PayableStatus.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5229,7 +5229,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\domain\\finance\\value-objects\\ReceivableStatus.ts",
+    "filePath": "src/domain/finance/value-objects/ReceivableStatus.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5250,7 +5250,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\domain\\finance\\value-objects\\VoucherStatus.ts",
+    "filePath": "src/domain/finance/value-objects/VoucherStatus.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5275,7 +5275,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\domain\\production\\value-objects\\WorkOrderStateMachine.ts",
+    "filePath": "src/domain/production/value-objects/WorkOrderStateMachine.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5344,7 +5344,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\domain\\purchase\\value-objects\\PurchaseReconciliationStatus.ts",
+    "filePath": "src/domain/purchase/value-objects/PurchaseReconciliationStatus.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5369,7 +5369,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\domain\\purchase\\value-objects\\PurchaseReturnStatus.ts",
+    "filePath": "src/domain/purchase/value-objects/PurchaseReturnStatus.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5390,7 +5390,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\domain\\sales\\value-objects\\DeliveryStatus.ts",
+    "filePath": "src/domain/sales/value-objects/DeliveryStatus.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5411,7 +5411,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\domain\\sales\\value-objects\\ReconciliationStatus.ts",
+    "filePath": "src/domain/sales/value-objects/ReconciliationStatus.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5436,7 +5436,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\domain\\sales\\value-objects\\ReturnOrderStatus.ts",
+    "filePath": "src/domain/sales/value-objects/ReturnOrderStatus.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5457,7 +5457,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\domain\\shipment\\value-objects\\ShipmentStateMachine.ts",
+    "filePath": "src/domain/shipment/value-objects/ShipmentStateMachine.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5506,7 +5506,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\domain\\warehouse\\value-objects\\StocktakingStatus.ts",
+    "filePath": "src/domain/warehouse/value-objects/StocktakingStatus.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5531,7 +5531,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\domain\\warehouse\\value-objects\\TransferStatus.ts",
+    "filePath": "src/domain/warehouse/value-objects/TransferStatus.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5556,7 +5556,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\api-auth.ts",
+    "filePath": "src/lib/api-auth.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5593,7 +5593,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\audit-logger.ts",
+    "filePath": "src/lib/audit-logger.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5614,7 +5614,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\audit-middleware.ts",
+    "filePath": "src/lib/audit-middleware.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5739,7 +5739,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\bom-expansion.ts",
+    "filePath": "src/lib/bom-expansion.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5760,7 +5760,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\category-validation.ts",
+    "filePath": "src/lib/category-validation.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5777,7 +5777,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\data-diff.ts",
+    "filePath": "src/lib/data-diff.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5794,7 +5794,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\db\\errors.ts",
+    "filePath": "src/lib/db/errors.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5863,7 +5863,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\demo-data.ts",
+    "filePath": "src/lib/demo-data.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5956,7 +5956,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\die-matcher.ts",
+    "filePath": "src/lib/die-matcher.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -6037,7 +6037,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\error-handler.ts",
+    "filePath": "src/lib/error-handler.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -6186,7 +6186,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\fifo-allocation.ts",
+    "filePath": "src/lib/fifo-allocation.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -6219,7 +6219,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\fifo-width-slit.ts",
+    "filePath": "src/lib/fifo-width-slit.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -6228,7 +6228,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\FinanceVoucherHandler.ts",
+    "filePath": "src/lib/FinanceVoucherHandler.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -6261,7 +6261,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\global-export-service.ts",
+    "filePath": "src/lib/global-export-service.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -6298,7 +6298,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\global-import-service.ts",
+    "filePath": "src/lib/global-import-service.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -6331,7 +6331,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\hr\\performance-calculator.ts",
+    "filePath": "src/lib/hr/performance-calculator.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -6352,7 +6352,7 @@
     ]
   },
   {
-    "filePath": "D:\\dcprint\\erp-project\\src\\lib\\system-config-seed.ts",
+    "filePath": "src/lib/system-config-seed.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
