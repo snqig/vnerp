@@ -126,43 +126,43 @@ export function clearConfigCache(): void {
 }
 
 export function getWoPrefix(): string {
-  return getConfig('wo_prefix');
+  return getConfig('wo_prefix') as string;
 }
 
 export function getSamplePrefix(): string {
-  return getConfig('sample_prefix');
+  return getConfig('sample_prefix') as string;
 }
 
 export function getMrPrefix(): string {
-  return getConfig('mr_prefix');
+  return getConfig('mr_prefix') as string;
 }
 
 export function getFprPrefix(): string {
-  return getConfig('fpr_prefix');
+  return getConfig('fpr_prefix') as string;
 }
 
 export function getQiPrefix(): string {
-  return getConfig('qi_prefix') || 'QI';
+  return (getConfig('qi_prefix') as string) || 'QI';
 }
 
 export function getShPrefix(): string {
-  return getConfig('sh_prefix');
+  return getConfig('sh_prefix') as string;
 }
 
 export function getPoPrefix(): string {
-  return getConfig('po_prefix');
+  return getConfig('po_prefix') as string;
 }
 
 export function getIcPrefix(): string {
-  return getConfig('ir_prefix');
+  return getConfig('ir_prefix') as string;
 }
 
 export function getTrPrefix(): string {
-  return getConfig('tr_prefix');
+  return getConfig('tr_prefix') as string;
 }
 
 export function getWrPrefix(): string {
-  return getConfig('wr_prefix') || 'WR';
+  return (getConfig('wr_prefix') as string) || 'WR';
 }
 
 export function getMouldLifeDays(): number {
@@ -246,27 +246,27 @@ export function requireApprovalForConfigChange(): boolean {
 }
 
 export function getScPrefix(): string {
-  return getConfig('sc_prefix');
+  return getConfig('sc_prefix') as string;
 }
 
 export function getMpPrefix(): string {
-  return getConfig('mp_prefix');
+  return getConfig('mp_prefix') as string;
 }
 
 export function getBfPrefix(): string {
-  return getConfig('bf_prefix');
+  return getConfig('bf_prefix') as string;
 }
 
 export function getJdPrefix(): string {
-  return getConfig('jd_prefix');
+  return getConfig('jd_prefix') as string;
 }
 
 export function getWxPrefix(): string {
-  return getConfig('wx_prefix');
+  return getConfig('wx_prefix') as string;
 }
 
 export function getMouldScrapRule(): string {
-  return getConfig('mould_scrap_rule') || 'both';
+  return (getConfig('mould_scrap_rule') as string) || 'both';
 }
 
 export function getInkWarnDays(): number {
@@ -302,7 +302,7 @@ export function getMeshSplitLength(): number {
 }
 
 export function getDocDateFormat(): string {
-  return getConfig('doc_date_format') || 'YYYYMMDD';
+  return (getConfig('doc_date_format') as string) || 'YYYYMMDD';
 }
 
 export function getSerialNumberLength(): number {

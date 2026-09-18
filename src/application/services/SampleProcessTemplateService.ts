@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbConnection } from '@/types/db';
 
 /**
  * 标准工艺模板 — 应用服务
@@ -313,7 +314,7 @@ export class SampleProcessTemplateService {
 
   /** 私有：批量插入物料明细 */
   private async insertItems(
-    conn: PoolConnection,
+    conn: DbConnection,
     templateId: number,
     items: SampleProcessTemplateInput['items']
   ): Promise<void> {
@@ -342,7 +343,7 @@ export class SampleProcessTemplateService {
 
   /** 私有：批量插入工序明细 */
   private async insertSteps(
-    conn: PoolConnection,
+    conn: DbConnection,
     templateId: number,
     steps: SampleProcessTemplateInput['steps']
   ): Promise<void> {

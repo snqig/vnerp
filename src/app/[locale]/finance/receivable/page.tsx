@@ -332,7 +332,7 @@ export default function ReceivablePage() {
         </Card>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{tc('totalRecords', { total })}</span>
+          <span>{tc('totalRecords', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               variant="outline"

@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { logger } from '@/lib/logger';
 
 ;
 import { NextRequest } from 'next/server';
@@ -36,7 +37,7 @@ export const GET = withPermission(
 
     // 如果提供 labelNo，执行单标签校验
     if (labelNo) {
-      const label = await queryOne<unknown>(
+      const label = await queryOne(
         `SELECT * FROM inv_material_label WHERE label_no = ? AND deleted = 0`,
         [labelNo]
       );
@@ -166,10 +167,10 @@ export const POST = withPermission(
     const finalOperatorId = operatorId || '1';
     const finalOperatorName = operatorName || ts('k_1csar6s');
 
-    let sourceLabel: unknown = null;
+    let sourceLabel: DbRow | null = null;
 
     if (sourceLabelId && !isNaN(Number(sourceLabelId))) {
-      sourceLabel = await queryOne<unknown>(
+      sourceLabel = await queryOne(
         `SELECT * FROM inv_material_label WHERE id = ? AND deleted = 0`,
         [sourceLabelId]
       );
@@ -177,7 +178,7 @@ export const POST = withPermission(
 
     if (!sourceLabel) {
       const labelNoToFind = sourceLabelNo || `${orderNo}-1`;
-      sourceLabel = await queryOne<unknown>(
+      sourceLabel = await queryOne(
         `SELECT * FROM inv_material_label WHERE label_no = ? AND deleted = 0`,
         [labelNoToFind]
       );
@@ -225,7 +226,7 @@ export const POST = withPermission(
 
     // 标签缺 width/specification 时，从 inv_material 表补查
     if (originalW <= 0 && sourceLabel.material_code) {
-      const matRow = await queryOne<unknown>(
+      const matRow = await queryOne(
         `SELECT specification, width FROM inv_material WHERE material_code = ? AND deleted = 0 LIMIT 1`,
         [sourceLabel.material_code]
       );
@@ -452,7 +453,7 @@ export const POST = withPermission(
         };
       });
     } catch (txErr) {
-      console.error(ts('k_1h49xnl'), txErr);
+      logger.error(ts('k_1h49xnl'), txErr);
       return errorResponse(`分切事务失败: ${(txErr as Error).message}`, 500, 500);
     }
 
@@ -472,7 +473,7 @@ function parseSpecWidth(spec: string): number | null {
 async function queryPaginated(
   sql: string,
   countSql: string,
-  params: DbRow[],
+  params: SqlValue[],
   pagination: { page: number; pageSize: number }
 ) {
   const { page, pageSize } = pagination;
@@ -480,7 +481,7 @@ async function queryPaginated(
 
   try {
     const [data, countResult] = await Promise.all([
-      query<unknown[]>(`${sql} LIMIT ? OFFSET ?`, [...(params || []), pageSize, offset]),
+      query(`${sql} LIMIT ? OFFSET ?`, [...(params || []), pageSize, offset]),
       queryOne<{ total: number }>(countSql, params || []),
     ]);
 

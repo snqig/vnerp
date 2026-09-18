@@ -95,7 +95,7 @@ export const POST = withPermission(
         unknown[],
         unknown,
       ];
-      const codeToIdMap = new Map(allDepts.map((d: DbRow) => [d.dept_code, d.id]));
+      const codeToIdMap = new Map(allDepts.map((d: any) => [d.dept_code, d.id]));
 
       // 插入子部门
       for (const sub of subDepartmentData) {

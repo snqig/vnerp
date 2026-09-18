@@ -295,7 +295,7 @@ export const POST = withPermission(
         `CREATE OR REPLACE VIEW v_purchase_to_inbound AS
       SELECT
         po.id as purchase_id,
-        po.order_no as purchase_no,
+        po.po_no as purchase_no,
         po.supplier_id,
         ps.supplier_name,
         po.total_amount as purchase_amount,
@@ -305,9 +305,9 @@ export const POST = withPermission(
         io.status as inbound_status,
         io.inspection_status,
         io.finance_posted as inbound_posted
-      FROM pur_order po
+      FROM pur_purchase_order po
       LEFT JOIN pur_supplier ps ON po.supplier_id = ps.id
-      LEFT JOIN inv_inbound_order io ON io.purchase_order_id = po.id AND io.deleted = 0
+      LEFT JOIN inv_inbound_order io ON io.po_id = po.id AND io.deleted = 0
       WHERE po.deleted = 0`
       );
 
@@ -317,9 +317,9 @@ export const POST = withPermission(
       SELECT
         wo.id as workorder_id,
         wo.order_no as workorder_no,
-        wo.sales_order_id,
-        wo.sales_order_no,
-        wo.plan_qty,
+        wo.order_id as sales_order_id,
+        wo.order_no as sales_order_no,
+        wo.quantity as plan_qty,
         wo.status as workorder_status,
         mi.id as issue_id,
         mi.issue_no,
@@ -328,7 +328,7 @@ export const POST = withPermission(
         so2.outbound_no as sales_outbound_no
       FROM prod_work_order wo
       LEFT JOIN prd_material_issue mi ON mi.work_order_id = wo.id AND mi.deleted = 0
-      LEFT JOIN inv_sales_outbound so2 ON so2.order_id = wo.sales_order_id AND so2.deleted = 0
+      LEFT JOIN inv_sales_outbound so2 ON so2.order_id = wo.order_id AND so2.deleted = 0
       WHERE wo.deleted = 0`
       );
 

@@ -24,26 +24,9 @@
  *     新增对话框还另有 unit / supplier / currency 三个 combobox，故不能用 combobox.first()。
  *   - 普通入库提交后对话框不关闭，而是展示生成的单号与 "Complete" 按钮，需手动关闭才能看到列表。
  */
-import { test, expect, type Page } from '@playwright/test';
-
-const TEST_USER = { username: 'admin', password: 'admin123' };
-
-async function login(page: Page) {
-  await page
-    .request.post('/api/auth/reset-lock', {
-      data: { username: 'admin' },
-      headers: { 'Content-Type': 'application/json' },
-    })
-    .catch(() => {});
-
-  await page.goto('/en/login', { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('input#username', { timeout: 60000 });
-  await page.fill('input#username', TEST_USER.username);
-  await page.fill('input#password', TEST_USER.password);
-  await page.getByRole('button', { name: 'Login' }).click();
-  await page.waitForURL('**/en/dashboard', { timeout: 60000 });
-  await page.waitForTimeout(1500);
-}
+import { test, expect } from '@playwright/test';
+// BUG-003/004：统一走共享认证 helper（admin/admin123 + /dashboard 断言 + CSRF 注入）
+import { login } from './utils/api-auth';
 
 test.describe('入库管理端到端流程', () => {
   test.beforeEach(async ({ page }) => {

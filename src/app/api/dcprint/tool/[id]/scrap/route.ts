@@ -19,7 +19,7 @@ export const POST = withPermission(
       await service.scrapTool({
         toolId: Number(id),
         scrapReason: body.scrapReason,
-        scrapBy: userInfo?.id,
+        scrapBy: userInfo.userId,
       });
       return successResponse({ id }, 'Tool scrapped');
     } catch (e) {

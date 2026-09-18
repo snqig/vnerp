@@ -1,4 +1,5 @@
 import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
+import type { DbConnection } from '@/types/db';
 
 export interface CuttingInput {
   id: string;
@@ -274,7 +275,7 @@ export function calculateScrapRate(result: CuttingOptimizationResult): {
 }
 
 export async function generateCuttingPlan(
-  conn: PoolConnection,
+  conn: DbConnection,
   cuttingRecordId: number
 ): Promise<CuttingOptimizationResult> {
   const [records]: [RowDataPacket[], unknown] = await conn.query(

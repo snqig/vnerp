@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { logger } from '@/lib/logger';
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { useCompanyName } from '@/hooks/useCompanyName';
@@ -133,7 +134,7 @@ export default function WarehouseDashboard() {
         const result = await res.json();
         if (result.success && result.data) setData(result.data);
       } catch (err) {
-        console.error(ts('k_1imwg1m'), err);
+        logger.error(ts('k_1imwg1m'), err);
       } finally {
         setLoading(false);
       }

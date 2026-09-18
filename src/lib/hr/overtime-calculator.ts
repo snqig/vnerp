@@ -1,4 +1,5 @@
 import { getDrizzleDb } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { hrAttendance, hrShift } from '@/lib/db/schema';
 
@@ -90,7 +91,7 @@ export async function calculateOvertimeSalary(
 
   // 加班上限校验（每月不超过36小时）
   if (totalHours > 36) {
-    console.warn(`员工 ${employeeId} ${month} 加班 ${totalHours}h，超过法定上限36h`);
+    logger.warn(`员工 ${employeeId} ${month} 加班 ${totalHours}h，超过法定上限36h`);
   }
 
   return {

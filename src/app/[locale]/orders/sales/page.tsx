@@ -1,7 +1,13 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { useRowSelection } from '@/lib/useRowSelection';
 import { useTranslations } from 'next-intl';
+import {
+  SALES_ORDER_STATUS_CODES,
+  SALES_ORDER_STATUS_META,
+  salesOrderStatusMeta,
+} from '@/lib/order-status';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -123,129 +129,29 @@ interface Material {
   material_type?: number;
 }
 
-// 模拟物料数据（material_type=3 表示成品/可销售商品，用于销售订单下拉选择）
-const MOCK_MATERIALS: Material[] = [
-  {
-    id: 1001,
-    material_code: 'PROD001',
-    material_name: '高端画册-A4覆膜',
-    specification: '210×297mm 250g铜版纸',
-    unit: '本',
-    sale_price: 18.5,
-    material_type: 3,
-  },
-  {
-    id: 1002,
-    material_code: 'PROD002',
-    material_name: '商务名片-双面彩色',
-    specification: '90×54mm 300g哑粉纸',
-    unit: '盒',
-    sale_price: 35.0,
-    material_type: 3,
-  },
-  {
-    id: 1003,
-    material_code: 'PROD003',
-    material_name: '产品包装盒-白卡彩盒',
-    specification: '200×120×60mm',
-    unit: '个',
-    sale_price: 2.8,
-    material_type: 3,
-  },
-  {
-    id: 1004,
-    material_code: 'PROD004',
-    material_name: '海报打印-A1高光相纸',
-    specification: '594×841mm 200g光面',
-    unit: '张',
-    sale_price: 28.0,
-    material_type: 3,
-  },
-  {
-    id: 1005,
-    material_code: 'PROD005',
-    material_name: '手提袋-牛皮纸烫金',
-    specification: '320×260×100mm',
-    unit: '个',
-    sale_price: 6.5,
-    material_type: 3,
-  },
-  {
-    id: 1006,
-    material_code: 'PROD006',
-    material_name: '不干胶标签-圆形',
-    specification: '直径50mm 亮面铜版',
-    unit: '张',
-    sale_price: 0.35,
-    material_type: 3,
-  },
-  {
-    id: 1007,
-    material_code: 'PROD007',
-    material_name: '企业手册-胶装80P',
-    specification: '210×285mm 157g哑粉',
-    unit: '册',
-    sale_price: 45.0,
-    material_type: 3,
-  },
-  {
-    id: 1008,
-    material_code: 'PROD008',
-    material_name: '信封定制-5号西式',
-    specification: '220×110mm 120g米白',
-    unit: '个',
-    sale_price: 1.2,
-    material_type: 3,
-  },
-  {
-    id: 1009,
-    material_code: 'PROD009',
-    material_name: '台历定制-竖版三角',
-    specification: '210×145mm 250g',
-    unit: '本',
-    sale_price: 22.0,
-    material_type: 3,
-  },
-  {
-    id: 1010,
-    material_code: 'PROD010',
-    material_name: '挂历-双月8页',
-    specification: '420×570mm 200g光面',
-    unit: '本',
-    sale_price: 38.0,
-    material_type: 3,
-  },
-];
+/**
+ * 状态徽标映射 —— 不再手写。
+ *
+ * 本文件此前有 **4 份**互不引用的状态表（列表徽标、Excel 导出、打印、表格 formatter），
+ * 加上筛选下拉的第 5 份硬编码。它们与 /api/orders/sales 的 1/2/3、领域层的 0/1/2/3/4/6/9、
+ * 导出的 10-60 家族并存，正是 BUG-ORD-002 的界面侧表现。
+ * 现统一由 src/lib/order-status.ts 派生（契约依据：sal_order.status 列注释）。
+ */
+const STATUS_MAP: Record<number, { labelKey: string; className: string }> = Object.fromEntries(
+  Object.values(SALES_ORDER_STATUS_META).map((m) => [
+    m.code,
+    { labelKey: m.labelKey, className: m.className },
+  ])
+);
 
-const STATUS_MAP: Record<number, { labelKey: string; className: string }> = {
-  1: {
-    labelKey: 'statusPending',
-    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-  },
-  2: {
-    labelKey: 'statusConfirmed',
-    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  },
-  3: {
-    labelKey: 'statusPartialShip',
-    className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-  },
-  4: {
-    labelKey: 'statusCompleted',
-    className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-  },
-  5: {
-    labelKey: 'statusCancelled',
-    className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-  },
-};
+/** 生成「码 → 已翻译标签」表，供导出/打印/formatter 复用 */
+const buildStatusLabelMap = (t: (key: string) => string): Record<number, string> =>
+  Object.fromEntries(SALES_ORDER_STATUS_CODES.map((c) => [c, t(salesOrderStatusMeta(c).labelKey)]));
 
 const getStatusBadge = (status: number, t: (key: string) => string) => {
-  const config = STATUS_MAP[status] || {
-    labelKey: 'unknown',
-    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-  };
-  return <Badge className={config.className}>{t(config.labelKey)}</Badge>;
+  // 历史码（0/10/20/…）在此被归一后再取标签，列表不会出现空白徽标
+  const meta = salesOrderStatusMeta(status);
+  return <Badge className={meta.className}>{t(meta.labelKey)}</Badge>;
 };
 
 const formatDate = (dateStr: string | null | undefined) => {
@@ -297,7 +203,6 @@ export default function SalesOrdersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
-  const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [currency, setCurrency] = useState('CNY');
   const [orderDate, setOrderDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -317,13 +222,9 @@ export default function SalesOrdersPage() {
       const response = await authFetch('/api/inventory/materials');
       const result = await response.json();
       const list = result.data?.list || result.data || [];
-      if (list.length > 0) {
-        setMaterials(list);
-      } else {
-        setMaterials(MOCK_MATERIALS);
-      }
+      setMaterials(list);
     } catch {
-      setMaterials(MOCK_MATERIALS);
+      setMaterials([]);
     }
   };
 
@@ -424,6 +325,16 @@ export default function SalesOrdersPage() {
     return filtered;
   }, [orders, sortField, sortOrder]);
 
+  const {
+    selected,
+    selectedCount,
+    isSelected,
+    allSelected,
+    toggle,
+    toggleAll,
+    selectAllRef,
+  } = useRowSelection(filteredOrders, (o) => String(o.id));
+
   const toggleRowExpand = (orderId: number) => {
     const newExpanded = new Set(expandedRows);
     if (newExpanded.has(orderId)) {
@@ -432,18 +343,6 @@ export default function SalesOrdersPage() {
       newExpanded.add(orderId);
     }
     setExpandedRows(newExpanded);
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedOrders.length === filteredOrders.length) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(filteredOrders.map((o) => o.id));
-    }
-  };
-
-  const toggleSelect = (id: number) => {
-    setSelectedOrders((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
 
   const addOrderItem = () => {
@@ -510,12 +409,12 @@ export default function SalesOrdersPage() {
   };
 
   const handleBatchConfirm = async () => {
-    if (!selectedOrders.length) {
+    if (!selected.size) {
       toast.warning(t('selectOrderFirst'));
       return;
     }
     const pendingOrders = filteredOrders.filter(
-      (o) => selectedOrders.includes(o.id) && o.status === 1
+      (o) => selected.has(String(o.id)) && o.status === 1
     );
     if (pendingOrders.length === 0) {
       toast.warning(t('noPendingOrder'));
@@ -545,13 +444,13 @@ export default function SalesOrdersPage() {
   };
 
   const handleBatchDelete = async () => {
-    if (!selectedOrders.length) return;
-    if (!confirm(t('confirmDeleteSelected', { count: selectedOrders.length }))) return;
+    if (!selected.size) return;
+    if (!confirm(t('confirmDeleteSelected', { count: selected.size }))) return;
 
     try {
       setLoading(true);
       let successCount = 0;
-      for (const orderId of selectedOrders) {
+      for (const orderId of selected) {
         const res = await authFetch(`/api/orders?id=${orderId}`, { method: 'DELETE' });
         const data = await res.json();
         if (data.success) successCount++;
@@ -613,8 +512,8 @@ export default function SalesOrdersPage() {
 
   const _handleExport = (format: string) => {
     const dataToExport =
-      selectedOrders.length > 0
-        ? filteredOrders.filter((o) => selectedOrders.includes(o.id))
+      selected.size > 0
+        ? filteredOrders.filter((o) => selected.has(String(o.id)))
         : filteredOrders;
 
     if (dataToExport.length === 0) {
@@ -759,8 +658,8 @@ export default function SalesOrdersPage() {
 
   const handlePrintList = () => {
     const dataToPrint =
-      selectedOrders.length > 0
-        ? filteredOrders.filter((o) => selectedOrders.includes(o.id))
+      selected.size > 0
+        ? filteredOrders.filter((o) => selected.has(String(o.id)))
         : filteredOrders;
 
     if (dataToPrint.length === 0) {
@@ -768,13 +667,7 @@ export default function SalesOrdersPage() {
       return;
     }
 
-    const statusLabels: Record<number, string> = {
-      1: t('statusPending'),
-      2: t('statusConfirmed'),
-      3: t('statusPartialShip'),
-      4: t('statusCompleted'),
-      5: t('statusCancelled'),
-    };
+    const statusLabels = buildStatusLabelMap(t);
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -980,11 +873,11 @@ export default function SalesOrdersPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t('allStatus')}</SelectItem>
-                    <SelectItem value="1">{t('statusPending')}</SelectItem>
-                    <SelectItem value="2">{t('statusConfirmed')}</SelectItem>
-                    <SelectItem value="3">{t('statusPartialShip')}</SelectItem>
-                    <SelectItem value="4">{t('statusCompleted')}</SelectItem>
-                    <SelectItem value="5">{t('statusCancelled')}</SelectItem>
+                    {SALES_ORDER_STATUS_CODES.map((code) => (
+                      <SelectItem key={code} value={String(code)}>
+                        {t(salesOrderStatusMeta(code).labelKey)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <Button
@@ -1002,12 +895,12 @@ export default function SalesOrdersPage() {
                 </Button>
               </div>
               <div className="flex gap-2">
-                {selectedOrders.length > 0 && (
+                {selectedCount > 0 && (
                   <Button variant="default" onClick={handleBatchConfirm}>
                     <CheckCircle className="h-4 w-4 mr-2" />
                     {tc('confirm')}(
                     {
-                      filteredOrders.filter((o) => selectedOrders.includes(o.id) && o.status === 1)
+                      filteredOrders.filter((o) => selected.has(String(o.id)) && o.status === 1)
                         .length
                     }
                     )
@@ -1016,12 +909,12 @@ export default function SalesOrdersPage() {
                 <Button variant="outline" onClick={handlePrintList}>
                   <Printer className="h-4 w-4 mr-2" />
                   {tc('print')}
-                  {selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}
+                  {selectedCount > 0 ? `(${selectedCount})` : ''}
                 </Button>
-                {selectedOrders.length > 0 && (
+                {selectedCount > 0 && (
                   <Button variant="destructive" onClick={handleBatchDelete}>
                     <Trash2 className="h-4 w-4 mr-2" />
-                    {tc('delete')}({selectedOrders.length})
+                    {tc('delete')}({selectedCount})
                   </Button>
                 )}
                 <GlobalExportToolbar
@@ -1075,8 +968,8 @@ export default function SalesOrdersPage() {
                     },
                   ]}
                   data={
-                    selectedOrders.length > 0
-                      ? filteredOrders.filter((o) => selectedOrders.includes(o.id))
+                    selected.size > 0
+                      ? filteredOrders.filter((o) => selected.has(String(o.id)))
                       : filteredOrders
                   }
                 />
@@ -1305,12 +1198,13 @@ export default function SalesOrdersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">
-                      <Checkbox
-                        checked={
-                          filteredOrders.length > 0 &&
-                          selectedOrders.length === filteredOrders.length
-                        }
-                        onCheckedChange={toggleSelectAll}
+                      <input
+                        ref={selectAllRef}
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer accent-blue-600"
+                        checked={allSelected}
+                        onChange={toggleAll}
+                        aria-label={tc('selectAll')}
                       />
                     </TableHead>
                     <TableHead className="w-10"></TableHead>
@@ -1400,8 +1294,8 @@ export default function SalesOrdersPage() {
                         <TableRow className="hover:bg-muted/50">
                           <TableCell>
                             <Checkbox
-                              checked={selectedOrders.includes(order.id)}
-                              onCheckedChange={() => toggleSelect(order.id)}
+                              checked={isSelected(String(order.id))}
+                              onCheckedChange={() => toggle(String(order.id))}
                             />
                           </TableCell>
                           <TableCell>

@@ -18,7 +18,7 @@ import {
   OutboundStatus,
 } from '@/domain/warehouse/value-objects/WarehouseStateMachine';
 import { checkMaterialsCategorized } from '@/lib/category-validation';
-import { secureLog } from '@/lib/logger';
+import {secureLog, logger} from '@/lib/logger';
 import type { DbRow } from '@/types/db';
 
 // 获取出库单列表
@@ -256,7 +256,7 @@ export const POST = withPermission(
         return { id: orderId, orderNo };
       });
     } catch (e) {
-      console.error(ts('k_yb1ru8'), e);
+      logger.error(ts('k_yb1ru8'), e);
       secureLog('error', ts('k_19ddru2'), {
         error: (e as Error).message,
         stack: (e as Error).stack,

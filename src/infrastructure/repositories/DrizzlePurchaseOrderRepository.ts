@@ -1,4 +1,5 @@
 import { t } from '@/lib/server-translate';
+import { logger } from '@/lib/logger';
 import { getTranslations } from 'next-intl/server';
 
 /**
@@ -47,7 +48,7 @@ function logOp(
   result: unknown,
   durationMs: number
 ) {
-  console.warn(
+  logger.warn(
     `[DrizzlePurchaseRepo] ${method} (${durationMs}ms)\n` +
       `  TABLE: ${table}\n` +
       `  CONDITIONS: ${conditions}\n` +
@@ -456,7 +457,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     try {
       statusValue = PurchaseOrderStatus.fromDbCode(order.status ?? 10).value;
     } catch {
-      console.warn(
+      logger.warn(
         `[DrizzlePurchaseRepository] 未知采购单状态码 status=${order.status} (order id=${order.id}, po_no=${order.poNo})，降级为 draft`
       );
       statusValue = 'draft';

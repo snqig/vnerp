@@ -1,19 +1,13 @@
 import { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import { query, type SqlValue } from './db';
+import { hasPermissionIn } from './permission-match';
 
-export function getSecretKey(): string {
-  const key = process.env.JWT_SECRET;
-  if (key) return key;
-  if (process.env.JWT_SECRET_STATIC) return process.env.JWT_SECRET_STATIC;
-  // SECURITY: 生产环境不允许回退到 demo 弱密钥，缺失时直接抛错，避免使用可预测密钥签发 JWT。
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error(
-      'JWT_SECRET is not configured. Production environment requires a strong JWT_SECRET in env vars.'
-    );
-  }
-  return 'demo-mode-jwt-secret-key-2024';
-}
+import { getSecretKey } from './jwt-secret';
+
+// 与 Edge 层 jwt-verify-edge 共用同一把密钥，单一数据源（见 src/lib/jwt-secret.ts）。
+// 保留 re-export 以兼容既有 `import { getSecretKey } from '@/lib/auth'` 的调用方（如登录路由）。
+export { getSecretKey };
 
 // 用户信息接口
 export interface UserInfo {
@@ -131,6 +125,8 @@ export async function verifyTokenLight(token: string): Promise<{
   username: string;
   realName: string;
   roles: string[];
+  /** JWT 签发时间（秒），供调用方做用户级撤销（isUserTokensRevoked）判定 */
+  iat?: number;
 } | null> {
   try {
     const { payload } = await jwtVerify(token, new TextEncoder().encode(getSecretKey()));
@@ -139,6 +135,7 @@ export async function verifyTokenLight(token: string): Promise<{
       username: payload.username as string,
       realName: payload.realName as string,
       roles: payload.roles as string[],
+      iat: typeof payload.iat === 'number' ? payload.iat : undefined,
     };
   } catch {
     return null;
@@ -249,12 +246,18 @@ export async function getUserInfo(userId: number): Promise<UserInfo | null> {
 }
 
 // 检查用户是否有指定权限
+// 2026-09-15：接入 permission-match 的通配符展开 + 模块别名归一。
+// 此前为纯字面量 includes()，而用户 permissions 来自 sys_menu.permission（`orders:*` 通配形态）、
+// 网关校验的是 API_PERMISSIONS（`order:view` 精确形态），两套词汇表交集为 0，
+// 导致除 super_admin（靠下方角色硬绕过）外所有角色必然 403。
 export function hasPermission(userInfo: UserInfo, permission: string): boolean {
+  if (userInfo.roles.includes('admin') || userInfo.roles.includes('super_admin')) {
+    return true;
+  }
   return (
     userInfo.permissions.includes(permission) ||
     userInfo.permissions.includes('*') ||
-    userInfo.roles.includes('admin') ||
-    userInfo.roles.includes('super_admin')
+    hasPermissionIn(userInfo.permissions, permission)
   );
 }
 

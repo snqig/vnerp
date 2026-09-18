@@ -4,22 +4,19 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { resetAdminLock } from './utils/api-auth';
 
 const TEST_USERS = {
   admin: {
     username: 'admin',
-    password: '521223',
+    password: 'admin123',
   }
 };
 
 test.describe('仪表盘模块测试', () => {
 
   test.beforeEach(async ({ page }) => {
-    await fetch('/api/auth/reset-lock', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin' }),
-    }).catch(() => {});
+    await resetAdminLock();
 
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
@@ -27,7 +24,7 @@ test.describe('仪表盘模块测试', () => {
     await page.fill('input#password', TEST_USERS.admin.password);
     await page.locator('input#password').press('Enter');
 
-    await expect(page).toHaveURL('/', { timeout: 60000 });
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 60000 });
     await page.waitForTimeout(1000);
   });
 

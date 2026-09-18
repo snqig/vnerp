@@ -42,51 +42,78 @@ async function getDefaultRouteId(): Promise<number> {
 }
 
 // 惰性播种：若该工单尚无工序步骤，则按工艺路线（process_id 或默认路线）生成实例步骤
+// 并发/StrictMode 双跑下，同一工单的 ensureSteps 可能被并发调用，
+// 而原防重仅靠 SELECT COUNT(*) 在并发下会全部读到 0 → 重复插入步骤。
+// 用 module-level Promise 锁把同 work_order_id 的 ensureSteps 串行化，
+// 保证同一工单的“查重+插入”只执行一次（配合已清理的历史冗余数据，彻底防复发）。
+const ensureLocks = new Map<number, Promise<void>>();
+
 async function ensureSteps(workOrderId: number, processId: number | null, woStatus: string) {
-  const existing = (await query(
-    'SELECT COUNT(*) c FROM prod_work_order_process_step WHERE work_order_id = ? AND deleted = 0',
-    [workOrderId]
-  )) as DbRow[];
-  if (existing[0].c > 0) return;
+  const running = ensureLocks.get(workOrderId);
+  if (running) return running;
+  const p = (async () => {
+    const existing = (await query(
+      'SELECT COUNT(*) c FROM prod_work_order_process_step WHERE work_order_id = ? AND deleted = 0',
+      [workOrderId]
+    )) as DbRow[];
+    if (existing[0].c > 0) return;
 
-  const routeId = processId || (await getDefaultRouteId());
-  const steps = (await query(
-    'SELECT step_seq, step_name, step_type, standard_time, equipment_type FROM prd_process_route_step WHERE route_id = ? ORDER BY step_seq ASC',
-    [routeId]
-  )) as DbRow[];
-  if (!steps.length) return;
+    const routeId = processId || (await getDefaultRouteId());
+    const steps = (await query(
+      'SELECT step_seq, step_name, step_type, standard_time, equipment_type FROM prd_process_route_step WHERE route_id = ? ORDER BY step_seq ASC',
+      [routeId]
+    )) as DbRow[];
+    if (!steps.length) return;
 
-  for (let i = 0; i < steps.length; i++) {
-    const s = steps[i];
-    const processType = s.step_type === 2 ? 'inspection' : 'production';
-    let status: StepStatus = 'pending';
-    let startTime: Date | null = null;
-    let endTime: Date | null = null;
-    if (woStatus === 'completed') {
-      status = 'completed';
-      startTime = new Date();
-      endTime = new Date();
-    } else if (woStatus === 'producing' && i === 0) {
-      status = 'in_progress';
-      startTime = new Date();
+    for (let i = 0; i < steps.length; i++) {
+      const s = steps[i];
+      const processType = s.step_type === 2 ? 'inspection' : 'production';
+      let status: StepStatus = 'pending';
+      let startTime: Date | null = null;
+      let endTime: Date | null = null;
+      if (woStatus === 'completed') {
+        status = 'completed';
+        startTime = new Date();
+        endTime = new Date();
+      } else if (woStatus === 'producing' && i === 0) {
+        status = 'in_progress';
+        startTime = new Date();
+      }
+      try {
+        await execute(
+          `INSERT INTO prod_work_order_process_step
+            (work_order_id, step_no, step_name, process_type, estimated_duration, equipment_id, status, start_time, end_time, create_time)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          [
+            workOrderId,
+            s.step_seq,
+            s.step_name,
+            processType,
+            s.standard_time || null,
+            s.equipment_type || null,
+            status,
+            startTime,
+            endTime,
+          ]
+        );
+      } catch (insertErr: unknown) {
+        // 数据库层唯一索引 uk_wo_step_active 兜底：即使 per-工单串行锁在
+        // 进程重启的竞态窗口失效，重复插入也会被唯一索引拦下。忽略该冲突，
+        // 保证 ensureSteps 幂等、不因并发重复而抛 500。
+        const code = (insertErr as { code?: string; errno?: number })?.code;
+        const errno = (insertErr as { errno?: number })?.errno;
+        if (code === 'ER_DUP_ENTRY' || errno === 1062) continue;
+        throw insertErr;
+      }
     }
-    await execute(
-      `INSERT INTO prod_work_order_process_step
-        (work_order_id, step_no, step_name, process_type, estimated_duration, equipment_id, status, start_time, end_time, create_time)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [
-        workOrderId,
-        s.step_seq,
-        s.step_name,
-        processType,
-        s.standard_time || null,
-        s.equipment_type || null,
-        status,
-        startTime,
-        endTime,
-      ]
-    );
+  })();
+  ensureLocks.set(workOrderId, p);
+  try {
+    await p;
+  } finally {
+    ensureLocks.delete(workOrderId);
   }
+  return p;
 }
 
 async function resolveWorkOrderNo(

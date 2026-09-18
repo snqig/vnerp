@@ -17,9 +17,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Save, TrendingUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useRowSelection } from '@/lib/useRowSelection';
+import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
 interface ScoreRow {
-  id: number;
+  /** hr_performance.id，员工尚未打分时为 null */
+  perfId: number | null;
+  employeeId: number;
   employeeName: string;
   employeeNo: string;
   outputRate: number;
@@ -46,6 +50,11 @@ const calculateTotal = (row: {
   );
 };
 
+const num = (v: unknown): number => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
 export default function PerformancePage() {
   const ts = useTranslations('Common');
   const t = useTranslations('Hr');
@@ -63,27 +72,26 @@ export default function PerformancePage() {
       if (json.code === 200) {
         const list = Array.isArray(json.data) ? json.data : json.data?.list || [];
         setScores(
-          list
-            .map((item: unknown) => {
-              const i = item as Record<string, unknown>;
-              return {
-                id: i.id,
-                employeeName: i.employeeName || i.employee_name,
-                employeeNo: i.employeeNo || i.employee_no,
-                outputRate: i.outputRate ?? i.output_rate ?? 0,
-                qualityRate: i.qualityRate ?? i.quality_rate ?? 0,
-                equipmentRate: i.equipmentRate ?? i.equipment_rate ?? 0,
-                siteManagement: i.siteManagement ?? i.site_management ?? 0,
-                totalScore: 0,
-              };
-            })
-            .map((r: ScoreRow) => ({ ...r, totalScore: calculateTotal(r) }))
+          (list as Record<string, unknown>[]).map((i) => {
+            const row = {
+              perfId: i.perf_id === null || i.perf_id === undefined ? null : Number(i.perf_id),
+              employeeId: Number(i.employee_id),
+              employeeName: String(i.employee_name ?? ''),
+              employeeNo: String(i.employee_no ?? ''),
+              outputRate: num(i.output_rate),
+              qualityRate: num(i.quality_rate),
+              equipmentRate: num(i.equipment_rate),
+              siteManagement: num(i.site_management),
+              totalScore: 0,
+            };
+            return { ...row, totalScore: calculateTotal(row) };
+          })
         );
       } else {
-        setScores(mockData);
+        setScores([]);
       }
     } catch {
-      setScores(mockData);
+      setScores([]);
     } finally {
       setLoading(false);
     }
@@ -91,12 +99,13 @@ export default function PerformancePage() {
 
   useEffect(() => {
     fetchScores();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅首载拉取
   }, []);
 
-  const updateScore = (id: number, field: keyof ScoreRow, value: number) => {
+  const updateScore = (employeeId: number, field: keyof ScoreRow, value: number) => {
     setScores((prev) =>
       prev.map((r) => {
-        if (r.id !== id) return r;
+        if (r.employeeId !== employeeId) return r;
         const updated = { ...r, [field]: value };
         updated.totalScore = calculateTotal(updated);
         return updated;
@@ -108,11 +117,20 @@ export default function PerformancePage() {
     try {
       const res = await authFetch('/api/hr/performance', {
         method: 'POST',
-        body: JSON.stringify({ scores }),
+        body: JSON.stringify({
+          scores: scores.map((r) => ({
+            employeeId: r.employeeId,
+            outputRate: r.outputRate,
+            qualityRate: r.qualityRate,
+            equipmentRate: r.equipmentRate,
+            siteManagement: r.siteManagement,
+          })),
+        }),
       });
       const json = await res.json();
       if (json.code === 200) {
         toast.success(t('saveSuccess') || ts('k_16krn1'));
+        fetchScores();
       } else {
         toast.error(json.message || tc('error'));
       }
@@ -124,6 +142,36 @@ export default function PerformancePage() {
   const filtered = scores.filter(
     (r) => !search || r.employeeName?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
+    useRowSelection(filtered, (r) => String(r.employeeId));
+  const [deleting, setDeleting] = useState(false);
+
+  const handleBatchDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
+    setDeleting(true);
+    let okCount = 0;
+    let failMsg = '';
+    for (const employeeId of ids) {
+      const row = scores.find((r) => String(r.employeeId) === employeeId);
+      if (!row?.perfId) continue; // 尚未打分，无记录可删
+      try {
+        const res = await authFetch(`/api/hr/performance?id=${row.perfId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.code === 200) okCount++;
+        else failMsg = data.message || failMsg;
+      } catch {
+        failMsg = tc('error');
+      }
+    }
+    setDeleting(false);
+    if (okCount > 0) toast.success(tc('batchDeleteSuccess', { count: okCount }));
+    if (failMsg) toast.error(failMsg);
+    clear();
+    fetchScores();
+  };
 
   return (
     <MainLayout title={t('performance') || ts('k_1g8d66q')}>
@@ -154,9 +202,13 @@ export default function PerformancePage() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
+            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
+                  </TableHead>
                   <TableHead>{t('employeeName') || ts('k_10ld5dp')}</TableHead>
                   <TableHead className="text-right">
                     {t('outputRate40') || ts('k_sc91k0')}
@@ -177,7 +229,16 @@ export default function PerformancePage() {
               </TableHeader>
               <TableBody>
                 {filtered.map((r) => (
-                  <TableRow key={r.id}>
+                  <TableRow key={r.employeeId}>
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer accent-blue-600"
+                        checked={isSelected(String(r.employeeId))}
+                        onChange={() => toggle(String(r.employeeId))}
+                        aria-label={t('performance') || ts('k_1g8d66q')}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div>
                         <span className="font-medium">{r.employeeName}</span>
@@ -196,7 +257,7 @@ export default function PerformancePage() {
                           className="w-24 text-right h-8 inline-block"
                           value={r[field]}
                           onChange={(e) =>
-                            updateScore(r.id, field, parseFloat(e.target.value) || 0)
+                            updateScore(r.employeeId, field, parseFloat(e.target.value) || 0)
                           }
                         />
                       </TableCell>
@@ -210,7 +271,7 @@ export default function PerformancePage() {
                 ))}
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       {t('noData') || ts('k_6tzr61')}
                     </TableCell>
                   </TableRow>
@@ -223,56 +284,3 @@ export default function PerformancePage() {
     </MainLayout>
   );
 }
-
-const mockData: ScoreRow[] = [
-  {
-    id: 1,
-    employeeName: '张三',
-    employeeNo: 'EMP001',
-    outputRate: 95,
-    qualityRate: 98,
-    equipmentRate: 88,
-    siteManagement: 90,
-    totalScore: 0,
-  },
-  {
-    id: 2,
-    employeeName: '李四',
-    employeeNo: 'EMP002',
-    outputRate: 88,
-    qualityRate: 92,
-    equipmentRate: 85,
-    siteManagement: 82,
-    totalScore: 0,
-  },
-  {
-    id: 3,
-    employeeName: '王五',
-    employeeNo: 'EMP003',
-    outputRate: 78,
-    qualityRate: 85,
-    equipmentRate: 80,
-    siteManagement: 75,
-    totalScore: 0,
-  },
-  {
-    id: 4,
-    employeeName: '赵六',
-    employeeNo: 'EMP004',
-    outputRate: 92,
-    qualityRate: 90,
-    equipmentRate: 95,
-    siteManagement: 88,
-    totalScore: 0,
-  },
-  {
-    id: 5,
-    employeeName: '孙七',
-    employeeNo: 'EMP005',
-    outputRate: 85,
-    qualityRate: 88,
-    equipmentRate: 82,
-    siteManagement: 80,
-    totalScore: 0,
-  },
-].map((r) => ({ ...r, totalScore: calculateTotal(r) }));

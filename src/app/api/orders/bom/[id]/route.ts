@@ -45,7 +45,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo, context
   );
 
   // 查询版本历史（表可能不存在，容错处理）
-  let versionHistory: SqlValue[] = [];
+  let versionHistory: DbRow[] = [];
   try {
     versionHistory = await query(
       `SELECT version, change_type, change_content, change_reason, operator_name, operate_time
@@ -57,7 +57,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo, context
   }
 
   // 查询替代料（表可能不存在，容错处理）
-  let alternatives: SqlValue[] = [];
+  let alternatives: DbRow[] = [];
   try {
     alternatives = await query(
       `SELECT bom_line_id, priority, material_code as alt_material_code, 

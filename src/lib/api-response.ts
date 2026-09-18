@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { execute } from '@/lib/db';
 import { isUniqueViolation, mapUniqueErrorToMessage } from './db/errors';
 import { API_MESSAGE_TO_CODE } from './api-error-i18n';
@@ -132,7 +133,7 @@ export function withErrorHandler<T extends (...args: unknown[]) => Promise<NextR
             ? error.message
             : errorMessage;
       if (error instanceof Error) {
-        console.error('[withErrorHandler]', error);
+        logger.error('[withErrorHandler]', error);
       }
       return errorResponse(message, 500, 500);
     }

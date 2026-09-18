@@ -115,8 +115,12 @@ async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 function mapOrder(r: Record<string, unknown>): WorkOrder {
-  const qty = Number(r.planned_qty) || 0;
-  const done = Number(r.completed_qty) || 0;
+  // prod_work_order 同时存在 quantity/finished_qty 与 planned_qty/completed_qty 两套列,
+  // 但运行时核实(全表 28 行)只有 quantity 被写入,其余三列恒为 0。
+  // 故优先取 quantity 作为计划总量、finished_qty 作为已完工量,并各自兜底到同名列,
+  // 避免 schema 版本漂移时再次渲染成 0。DECIMAL 经 mysql2 返回字符串,需 Number() 归一。
+  const qty = Number(r.quantity) || Number(r.planned_qty) || 0;
+  const done = Number(r.finished_qty) || Number(r.completed_qty) || 0;
   const ps = r.plan_start_date ? String(r.plan_start_date) : '';
   const pe = r.plan_end_date ? String(r.plan_end_date) : '';
   return {
@@ -358,7 +362,11 @@ export default function WorkOrdersPage() {
 
   const filtered = orders.filter((o) => {
     if (statusFilter !== 'all' && o.status !== statusFilter) return false;
-    if (search && !`${o.id} ${o.product}`.toLowerCase().includes(search.toLowerCase())) return false;
+    if (
+      search &&
+      !`${o.id} ${o.product} ${o.customer}`.toLowerCase().includes(search.toLowerCase())
+    )
+      return false;
     return true;
   });
 
@@ -538,7 +546,15 @@ export default function WorkOrdersPage() {
                         </div>
                         <div>
                           <span className="text-muted-foreground">{t('priorityLabel')}：</span>
-                          <span className={PRIORITY_CLASS[order.priority] || ''}>{order.priority}</span>
+                          <span className={PRIORITY_CLASS[order.priority] || ''}>
+                            {t(
+                              order.priority === 'urgent'
+                                ? 'priorityUrgent'
+                                : order.priority === 'high'
+                                  ? 'priorityHigh'
+                                  : 'priorityNormal'
+                            )}
+                          </span>
                         </div>
                       </div>
 

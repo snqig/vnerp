@@ -21,6 +21,7 @@
  */
 
 import { MysqlInboundOrderRepository } from './repositories/MysqlInboundOrderRepository';
+import { logger } from '@/lib/logger';
 import { DrizzleInboundOrderRepository } from './repositories/DrizzleInboundOrderRepository';
 import { MysqlSalesOrderRepository } from './repositories/MysqlSalesOrderRepository';
 import { DrizzleSalesOrderRepository } from './repositories/DrizzleSalesOrderRepository';
@@ -36,7 +37,7 @@ const impl: ImplType =
   (process.env.REPOSITORY_IMPL as ImplType) === 'drizzle' ? 'drizzle' : 'mysql';
 
 // 启动时打印一次激活的实现类型，便于确认 env 是否生效
-console.warn(
+logger.warn(
   `[RepoRegistry] active impl = ${impl}` +
     (impl === 'drizzle'
       ? ' (set via REPOSITORY_IMPL=drizzle)'
@@ -44,7 +45,7 @@ console.warn(
 );
 
 function logReturn(method: string, type: string) {
-  console.warn(`[RepoRegistry] ${method}() → ${type} (${impl})`);
+  logger.warn(`[RepoRegistry] ${method}() → ${type} (${impl})`);
 }
 
 export const RepositoryRegistry = {

@@ -38,18 +38,18 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   if (id) {
-    const rc = await queryOne<unknown>(
+    const rc = await queryOne(
       'SELECT * FROM sal_reconciliation WHERE id = ? AND deleted = 0',
       [parseInt(id)]
     );
     if (!rc) return commonErrors.notFound(ts('k_6o9z58'));
 
     const [lines, writeOffs] = await Promise.all([
-      query<unknown>(
+      query(
         'SELECT * FROM sal_reconciliation_line WHERE reconciliation_id = ? ORDER BY source_type, source_date',
         [parseInt(id)]
       ),
-      query<unknown>(
+      query(
         'SELECT * FROM sal_reconciliation_writeoff WHERE reconciliation_id = ? ORDER BY write_off_date DESC',
         [parseInt(id)]
       ),
@@ -98,7 +98,7 @@ export const POST = withPermission(
 
     const { customer_id, customer_name, period_start, period_end, discount_amount, remark } = body;
 
-    const deliveries = (await query<unknown>(
+    const deliveries = (await query(
       `SELECT id, delivery_no, delivery_date, total_amount
      FROM sal_delivery
      WHERE customer_id = ? AND delivery_date BETWEEN ? AND ?
@@ -107,7 +107,7 @@ export const POST = withPermission(
       [customer_id, period_start, period_end]
     )) as DbRow[];
 
-    const returns = (await query<unknown>(
+    const returns = (await query(
       `SELECT id, return_no, return_date, total_amount
      FROM sal_return
      WHERE customer_id = ? AND return_date BETWEEN ? AND ?

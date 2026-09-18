@@ -25,7 +25,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return errorResponse(ts('k_svtypp'), 400, 400);
   }
 
-  let record: unknown = null;
+  let record: DbRow | null = null;
 
   if (qrCode) {
     record = await queryOne('SELECT * FROM qrcode_record WHERE qr_code = ? AND deleted = 0', [
@@ -68,7 +68,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     [record.ref_no, record.batch_no || '', record.material_code || '', record.qr_code]
   );
 
-  let batchInfo: unknown = null;
+  let batchInfo: DbRow | null = null;
   if (record.batch_no) {
     batchInfo = await queryOne(
       `SELECT b.*, w.warehouse_name
@@ -79,7 +79,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let inventoryInfo: unknown = null;
+  let inventoryInfo: DbRow | null = null;
   if (record.material_id) {
     inventoryInfo = await query(
       'SELECT i.*, w.warehouse_name FROM inv_inventory i LEFT JOIN inv_warehouse w ON i.warehouse_id = w.id WHERE i.material_id = ? AND i.deleted = 0',
@@ -87,7 +87,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let inboundInfo: unknown = null;
+  let inboundInfo: DbRow | null = null;
   if (record.batch_no) {
     inboundInfo = await query(
       `SELECT ii.*, io.order_no AS inbound_order_no, io.order_type AS inbound_type, io.status AS inbound_status
@@ -98,7 +98,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let productionUsage: unknown = null;
+  let productionUsage: DbRow | null = null;
   if (record.material_id && record.qr_type === 'material') {
     productionUsage = await query(
       `SELECT wo.work_order_no, wo.status AS work_order_status, wo.plan_qty, wo.completed_qty
@@ -109,7 +109,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let productQRs: unknown = null;
+  let productQRs: DbRow | null = null;
   if (record.qr_type === 'material' && record.work_order_no) {
     productQRs = await query(
       `SELECT qr.qr_code, qr.qr_type, qr.material_name, qr.quantity, qr.status, qr.create_time
@@ -120,7 +120,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let shipmentInfo: unknown = null;
+  let shipmentInfo: DbRow | null = null;
   if (record.qr_type === 'product' && record.ref_no) {
     shipmentInfo = await query(
       `SELECT sd.delivery_no, sd.delivery_date, sd.customer_name, sd.status
@@ -131,7 +131,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let orderInfo: unknown = null;
+  let orderInfo: DbRow | null = null;
   if (record.ref_no && record.ref_no.startsWith('SO')) {
     orderInfo = await queryOne('SELECT * FROM sal_order WHERE order_no = ? AND deleted = 0', [
       record.ref_no,
@@ -150,7 +150,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let qualityInfo: unknown = null;
+  let qualityInfo: DbRow | null = null;
   if (record.ref_no) {
     qualityInfo = await query(
       'SELECT * FROM qc_incoming_inspection WHERE (batch_no = ? OR material_code = ?) AND deleted = 0 ORDER BY create_time DESC LIMIT 5',

@@ -1,4 +1,5 @@
 import { execute, query, getPool } from '@/lib/db';
+import type { DbConnection } from '@/types/db';
 import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
 import type { DomainEvent } from '@/domain/shared/DomainTypes';
 import type {
@@ -37,7 +38,7 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
    * 与原 DomainEventOutbox.saveEvents 行为完全一致，保证向后兼容
    */
   async saveEvents(
-    conn: PoolConnection,
+    conn: DbConnection,
     aggregateType: string,
     aggregateId: number,
     events: DomainEvent[]

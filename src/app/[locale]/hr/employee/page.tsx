@@ -39,6 +39,7 @@ import { useCompanyName } from '@/hooks/useCompanyName';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
 import { authFetch } from '@/lib/auth-fetch';
+import { useRowSelection } from '@/lib/useRowSelection';
 import type { Employee, Department, Role } from './types';
 import { EmployeeFormDialog } from './components/dialogs/EmployeeFormDialog';
 import { PrintDialog } from './components/dialogs/PrintDialog';
@@ -68,7 +69,6 @@ export default function EmployeePage() {
   const printRef = useRef<HTMLDivElement>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedEmployees, setSelectedEmployees] = useState<number[]>([]);
   const [batchPrintDialogOpen, setBatchPrintDialogOpen] = useState(false);
 
   // 统计数据
@@ -146,6 +146,17 @@ export default function EmployeePage() {
       return 0;
     });
   }, [employees, sortConfig]);
+
+  const {
+    selected,
+    selectedCount,
+    isSelected,
+    allSelected,
+    toggle,
+    toggleAll,
+    clear,
+    selectAllRef,
+  } = useRowSelection(sortedEmployees(), (emp) => String(emp.id));
 
   // 获取员工列表
   const fetchEmployees = useCallback(async () => {
@@ -400,31 +411,14 @@ export default function EmployeePage() {
     }
   };
 
-  // 选择/取消选择员工
-  const toggleSelectEmployee = (id: number) => {
-    setSelectedEmployees((prev) =>
-      prev.includes(id) ? prev.filter((empId) => empId !== id) : [...prev, id]
-    );
-  };
-
-  // 全选/取消全选
-  const toggleSelectAll = () => {
-    if (selectedEmployees.length === employees.length) {
-      setSelectedEmployees([]);
-    } else {
-      setSelectedEmployees(employees.map((emp) => emp.id));
-    }
-  };
-
+  // 打印列表（按当前选择过滤）
   const handlePrintList = () => {
     const dataToPrint =
-      selectedEmployees.length > 0
-        ? employees.filter((emp) => selectedEmployees.includes(emp.id))
-        : employees;
+      selected.size > 0 ? employees.filter((emp) => selected.has(String(emp.id))) : employees;
 
     logger.info({ module: 'Hr', action: 'handlePrintList' }, ts('k_1slnlfj'), {
       totalCount: dataToPrint.length,
-      selectedCount: selectedEmployees.length,
+      selectedCount: selected.size,
     });
 
     if (dataToPrint.length === 0) {
@@ -500,9 +494,9 @@ export default function EmployeePage() {
   // 批量打印
   const handleBatchPrint = () => {
     logger.info({ module: 'Hr', action: 'handleBatchPrint' }, ts('k_wir0of'), {
-      selectedCount: selectedEmployees.length,
+      selectedCount: selected.size,
     });
-    if (selectedEmployees.length === 0) {
+    if (selected.size === 0) {
       logger.warn({ module: 'Hr', action: 'handleBatchPrint' }, ts('k_8mk9jk'));
       toast.error(t('selectEmployeesFirst'));
       return;
@@ -513,13 +507,11 @@ export default function EmployeePage() {
   // 导出Excel
   const exportToExcel = () => {
     const dataToExport =
-      selectedEmployees.length > 0
-        ? employees.filter((emp) => selectedEmployees.includes(emp.id))
-        : employees;
+      selected.size > 0 ? employees.filter((emp) => selected.has(String(emp.id))) : employees;
 
     logger.info({ module: 'Hr', action: 'exportToExcel' }, ts('k_1553xox'), {
       totalCount: dataToExport.length,
-      selectedCount: selectedEmployees.length,
+      selectedCount: selected.size,
     });
 
     if (dataToExport.length === 0) {
@@ -591,13 +583,11 @@ export default function EmployeePage() {
   // 导出PDF
   const exportToPDF = () => {
     const dataToExport =
-      selectedEmployees.length > 0
-        ? employees.filter((emp) => selectedEmployees.includes(emp.id))
-        : employees;
+      selected.size > 0 ? employees.filter((emp) => selected.has(String(emp.id))) : employees;
 
     logger.info({ module: 'Hr', action: 'exportToPDF' }, ts('k_22yaz8'), {
       totalCount: dataToExport.length,
-      selectedCount: selectedEmployees.length,
+      selectedCount: selected.size,
     });
 
     if (dataToExport.length === 0) {
@@ -698,7 +688,7 @@ export default function EmployeePage() {
 
   // 批量打印全部
   const handleBatchPrintAll = () => {
-    const selectedEmps = employees.filter((emp) => selectedEmployees.includes(emp.id));
+    const selectedEmps = employees.filter((emp) => selected.has(String(emp.id)));
 
     logger.info({ module: 'Hr', action: 'handleBatchPrintAll' }, ts('k_1pueq42'), {
       count: selectedEmps.length,
@@ -1155,8 +1145,8 @@ export default function EmployeePage() {
                   },
                 ]}
                 data={
-                  selectedEmployees.length > 0
-                    ? employees.filter((emp) => selectedEmployees.includes(emp.id))
+                  selected.size > 0
+                    ? employees.filter((emp) => selected.has(String(emp.id)))
                     : sortedEmployees()
                 }
               />
@@ -1247,10 +1237,10 @@ export default function EmployeePage() {
               </div>
             ) : (
               <>
-                {selectedEmployees.length > 0 && (
+                {selectedCount > 0 && (
                   <div className="flex items-center gap-2 mb-4 p-2 bg-blue-50 rounded-lg">
                     <span className="text-sm text-blue-600">
-                      {tc('selectedCount', { count: selectedEmployees.length })}
+                      {tc('selectedCount', { count: selectedCount })}
                     </span>
                     <Button variant="outline" size="sm" onClick={handleBatchPrint} className="ml-2">
                       <Printer className="w-4 h-4 mr-2" />
@@ -1267,7 +1257,7 @@ export default function EmployeePage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setSelectedEmployees([])}
+                      onClick={clear}
                       className="ml-auto text-muted-foreground"
                     >
                       {tc('clearSelection')}
@@ -1278,11 +1268,13 @@ export default function EmployeePage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        <Checkbox
-                          checked={
-                            selectedEmployees.length === employees.length && employees.length > 0
-                          }
-                          onCheckedChange={toggleSelectAll}
+                        <input
+                          ref={selectAllRef}
+                          type="checkbox"
+                          className="h-4 w-4 cursor-pointer accent-blue-600"
+                          checked={allSelected}
+                          onChange={toggleAll}
+                          aria-label={tc('selectAll')}
                         />
                       </TableHead>
                       <TableHead
@@ -1476,8 +1468,8 @@ export default function EmployeePage() {
                       <TableRow key={emp.id}>
                         <TableCell>
                           <Checkbox
-                            checked={selectedEmployees.includes(emp.id)}
-                            onCheckedChange={() => toggleSelectEmployee(emp.id)}
+                            checked={isSelected(String(emp.id))}
+                            onCheckedChange={() => toggle(String(emp.id))}
                           />
                         </TableCell>
                         <TableCell className="text-center text-muted-foreground">
@@ -1583,7 +1575,7 @@ export default function EmployeePage() {
         open={batchPrintDialogOpen}
         onOpenChange={setBatchPrintDialogOpen}
         employees={employees}
-        selectedEmployees={selectedEmployees}
+        selectedEmployees={[...selected]}
         onPrintAll={handleBatchPrintAll}
       />
     </MainLayout>

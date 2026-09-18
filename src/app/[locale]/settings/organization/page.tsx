@@ -1022,13 +1022,22 @@ export default function OrganizationPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">{tc('topDepartment')}</SelectItem>
-                  {departments
-                    .filter((d) => d.id !== deptForm.id) // 排除自己，避免循环引用
-                    .map((dept) => (
-                      <SelectItem key={dept.id} value={String(dept.id)}>
-                        {dept.dept_name}
-                      </SelectItem>
-                    ))}
+                  {(() => {
+                    // 去重兜底：若 DB 因 seed 重复执行产生同名部门，下拉只显示每个名称的第一项
+                    const seen = new Set<string>();
+                    return departments
+                      .filter((d) => d.id !== deptForm.id) // 排除自己，避免循环引用
+                      .filter((d) => {
+                        if (seen.has(d.dept_name)) return false;
+                        seen.add(d.dept_name);
+                        return true;
+                      })
+                      .map((dept) => (
+                        <SelectItem key={dept.id} value={String(dept.id)}>
+                          {dept.dept_name}
+                        </SelectItem>
+                      ));
+                  })()}
                 </SelectContent>
               </Select>
             </div>

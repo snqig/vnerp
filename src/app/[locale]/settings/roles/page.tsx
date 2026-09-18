@@ -44,7 +44,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getPermissionModules } from '@/hooks/usePermission';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useMessages } from 'next-intl';
 import { authFetch } from '@/lib/auth-fetch';
 
 // 角色接口
@@ -69,21 +69,30 @@ interface Menu {
   children?: Menu[];
 }
 
-// 数据范围选项
-const _dataScopeOptions = [
-  { value: 1, label: '全部数据' },
-  { value: 2, label: '本部门数据' },
-  { value: 3, label: '本部门及以下数据' },
-  { value: 4, label: '仅本人数据' },
-  { value: 5, label: '自定义' },
-];
-
 // 权限模块
 const permissionModules = getPermissionModules();
 
 export default function RolesPage() {
   // 翻译钩子
   const tc = useTranslations('Common');
+  // 权限目录本地化：优先取 messages 的 permModule.<id> / perm.<id>，
+  // 缺失则回退权限目录内置中文名（zh-CN/vi 未翻译时回退中文，保证不回归）。
+  const t = useTranslations();
+  const messages = useMessages();
+  const hasMsg = (fullKey: string): boolean =>
+    fullKey
+      .split('.')
+      .reduce<unknown>(
+        (acc, k) =>
+          acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[k] : undefined,
+        messages
+      ) !== undefined;
+  const moduleLabel = (m: { id: string; name: string }): string =>
+    hasMsg(`permModule.${m.id}`) ? t(`permModule.${m.id}`) : m.name;
+  const permLabel = (p: { id: string; name: string }): string => {
+    const key = `perm.${p.id.replace(/[:_-]/g, '_')}`;
+    return hasMsg(key) ? t(key) : p.name;
+  };
 
   const { toast } = useToast();
   const [roles, setRoles] = useState<Role[]>([]);
@@ -142,27 +151,30 @@ export default function RolesPage() {
 
   // 获取角色权限
   const fetchRolePermissions = async (roleId: number) => {
+    // 获取菜单权限（独立 try，失败不影响按钮权限加载）
     try {
-      // 获取菜单权限
       const menuResponse = await authFetch(`/api/role-permissions?roleId=${roleId}`);
       const menuResult = await menuResponse.json();
       if (menuResult.success) {
         setSelectedMenus(menuResult.data.map((p: Loose) => p.menu_id));
-      }
-
-      // 获取按钮权限
-      const roleResponse = await authFetch('/api/organization/role');
-      const roleResult = await roleResponse.json();
-      if (roleResult.success) {
-        const role = roleResult.data.find((r: Role) => r.id === roleId);
-        if (role && role.permissions) {
-          setSelectedPermissions(role.permissions);
-        } else {
-          setSelectedPermissions([]);
-        }
+      } else {
+        setSelectedMenus([]);
       }
     } catch {
       setSelectedMenus([]);
+    }
+
+    // 获取按钮权限（专用接口，直接返回权限码数组；注意 /api/organization/role 返回的是分页结构，
+    // 不能对其 data 直接 find，否则会抛 TypeError 并连带清空已选菜单）
+    try {
+      const btnResponse = await authFetch(`/api/role-permissions/buttons?roleId=${roleId}`);
+      const btnResult = await btnResponse.json();
+      if (btnResult.success) {
+        setSelectedPermissions(Array.isArray(btnResult.data) ? btnResult.data : []);
+      } else {
+        setSelectedPermissions([]);
+      }
+    } catch {
       setSelectedPermissions([]);
     }
   };
@@ -251,18 +263,29 @@ export default function RolesPage() {
         return;
       }
 
-      // 保存数据权限
+      // 保存数据权限（次要维度，失败仅提示不阻断；不再静默吞掉错误）
+      let dataScopeFailed = false;
       try {
-        await authFetch('/api/system/data-scope', {
+        const scopeResponse = await authFetch('/api/system/data-scope', {
           method: 'POST',
           body: JSON.stringify({
             roleId: selectedRole.id,
             scopes: dataScopeConfig,
           }),
         });
-      } catch {}
+        const scopeResult = await scopeResponse.json().catch(() => null);
+        if (!scopeResponse.ok || (scopeResult && !scopeResult.success)) {
+          dataScopeFailed = true;
+        }
+      } catch {
+        dataScopeFailed = true;
+      }
 
-      toast({ title: tc('permissionSetSuccess') });
+      if (dataScopeFailed) {
+        toast({ title: tc('dataScopeSaveFailed'), variant: 'destructive' });
+      } else {
+        toast({ title: tc('permissionSetSuccess') });
+      }
       setPermissionDialogOpen(false);
       fetchRoles();
 
@@ -314,7 +337,7 @@ export default function RolesPage() {
 
     // 加载仓库列表
     try {
-      const whRes = await authFetch('/api/warehouse/list');
+      const whRes = await authFetch('/api/warehouse?all=true');
       const whResult = await whRes.json();
       if (whResult.success) {
         setWarehouses(
@@ -338,7 +361,7 @@ export default function RolesPage() {
 
     // 加载供应商列表
     try {
-      const supRes = await authFetch('/api/suppliers');
+      const supRes = await authFetch('/api/purchase/suppliers?pageSize=500');
       const supResult = await supRes.json();
       if (supResult.success) {
         setSuppliers(
@@ -679,7 +702,7 @@ export default function RolesPage() {
                             }
                           }}
                         />
-                        <span className="font-medium text-sm">{module.name}</span>
+                        <span className="font-medium text-sm">{moduleLabel(module)}</span>
                         <span className="text-xs text-gray-400 ml-auto">
                           {
                             module.permissions.filter((p) => selectedPermissions.includes(p.id))
@@ -701,7 +724,7 @@ export default function RolesPage() {
                                 );
                               }}
                             />
-                            <span className="text-sm">{permission.name}</span>
+                            <span className="text-sm">{permLabel(permission)}</span>
                           </div>
                         ))}
                       </div>

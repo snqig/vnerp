@@ -224,11 +224,15 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
     ]);
   }
 
-  async updateAuditInfo(id: number, auditBy: number, auditTime: string): Promise<void> {
-    await execute(
-      'UPDATE sal_order SET audit_by = ?, audit_time = ?, update_time = NOW() WHERE id = ?',
-      [auditBy, auditTime, id]
-    );
+  async updateAuditInfo(id: number, auditBy: number, _auditTime: string): Promise<void> {
+    // ⚠️ sal_order **没有** audit_by / audit_time 列（DrizzleSalesOrderRepository 的注释亦已记录），
+    // 原语句 `SET audit_by = ?, audit_time = ?` 每次执行必然 Unknown column 报错，
+    // 使「记录审核人」这一动作实际从未成功过（BUG-ORD-002 连带缺陷）。
+    // 审计人改写进既有的 update_by 列。
+    await execute('UPDATE sal_order SET update_by = ?, update_time = NOW() WHERE id = ?', [
+      auditBy,
+      id,
+    ]);
   }
 
   async softDelete(id: number): Promise<void> {

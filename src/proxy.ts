@@ -8,6 +8,7 @@ import {
   validateCsrfToken,
   ensureCsrfCookie,
 } from './lib/csrf';
+import { verifyJwtSignature } from './lib/jwt-verify-edge';
 
 // 生产环境禁止访问的调试路由
 const BLOCKED_ROUTES = ['/qrcode', '/api/init', '/api/debug', '/api/diagnose'];
@@ -88,7 +89,7 @@ function isPathUnder(cleanPath: string, prefixes: string[]): boolean {
   );
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 生产环境阻止调试路由
@@ -143,23 +144,25 @@ export function proxy(request: NextRequest) {
   }
 
   // ===== 基于 access_token cookie 的页面级鉴权 =====
-  // proxy 只校验 cookie 存在性（Edge runtime，不解析 JWT），
-  // JWT 实际有效性由 SSR layout.tsx 和 API 路由的 verifyToken 校验。
+  // 边缘层校验 JWT 签名 + 过期（verifyJwtSignature 用 jose，Edge 安全，不查库），
+  // 关闭「proxy 只校验 cookie 存在性、不校验有效性」的缺口：伪造 / 过期 token 直接按未登录处理。
+  // 黑名单 / 用户级撤销（改密 / 锁号）由 API 层 withAuth 负责，这里只做粗粒度放行。
   const accessToken = request.cookies.get('access_token')?.value;
+  const tokenValid = accessToken ? await verifyJwtSignature(accessToken) : false;
   const { locale, cleanPath } = stripLocale(pathname);
 
-  // 受保护路由：无 access_token → 重定向到 /login（保留 locale 前缀）
+  // 受保护路由：无有效 token → 重定向到 /login（保留 locale 前缀）
   // 根路径 '/' 也受保护（渲染 dashboard）
   const isProtected = cleanPath === '/' || isPathUnder(cleanPath, PROTECTED_ROUTE_PREFIXES);
-  if (isProtected && !accessToken) {
+  if (isProtected && !tokenValid) {
     const loginUrl = new URL(withLocalePrefix('/login', locale), request.url);
     // 携带原始路径作为 next 参数，便于登录后回跳
     loginUrl.searchParams.set('next', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // 已登录用户访问登录/注册等公共页 → 重定向到 /dashboard
-  if (accessToken && isPathUnder(cleanPath, AUTH_PUBLIC_ROUTES)) {
+  // 已登录（token 有效）用户访问登录/注册等公共页 → 重定向到 /dashboard
+  if (tokenValid && isPathUnder(cleanPath, AUTH_PUBLIC_ROUTES)) {
     const dashboardUrl = new URL(withLocalePrefix('/dashboard', locale), request.url);
     return NextResponse.redirect(dashboardUrl);
   }

@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -165,7 +166,6 @@ export default function AttendancePage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
-  const [selectedRecords, setSelectedRecords] = useState<number[]>([]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -244,7 +244,7 @@ export default function AttendancePage() {
     setStatusFilter('all');
     setDepartmentFilter('all');
     setDateRange('all');
-    setSelectedRecords([]);
+    clear();
     toast.success(t('resetSuccess'));
   }, []);
 
@@ -491,12 +491,16 @@ export default function AttendancePage() {
   };
 
   // 打印
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll, clear } = useRowSelection(
+    filteredRecords,
+    (r) => String(r.id)
+  );
   const handlePrint = () => {
-    if (selectedRecords.length === 0) {
+    if (selectedCount === 0) {
       toast.error(t('selectToPrint'));
       return;
     }
-    const recordsToPrint = filteredRecords.filter((r) => selectedRecords.includes(r.id));
+    const recordsToPrint = filteredRecords.filter((r) => isSelected(String(r.id)));
     const statusLabels: Record<string, string> = {
       normal: tc('normal'),
       late: t('late'),
@@ -553,20 +557,10 @@ export default function AttendancePage() {
   };
 
   // 选择记录
-  const toggleSelectRecord = (recordId: number) => {
-    setSelectedRecords((prev) =>
-      prev.includes(recordId) ? prev.filter((id) => id !== recordId) : [...prev, recordId]
-    );
-  };
+  const toggleSelectRecord = (recordId: number) => toggle(String(recordId));
 
   // 全选
-  const toggleSelectAll = () => {
-    if (selectedRecords.length === filteredRecords.length) {
-      setSelectedRecords([]);
-    } else {
-      setSelectedRecords(filteredRecords.map((r) => r.id));
-    }
-  };
+  const toggleSelectAll = () => toggleAll();;
 
   // 计算统计数据
   const totalRecords = attendanceRecords.length;
@@ -674,9 +668,9 @@ export default function AttendancePage() {
             </Select>
           </div>
 
-          {selectedRecords.length > 0 && (
+          {selectedCount > 0 && (
             <Badge variant="secondary" className="ml-auto">
-              {t('selectedRecords', { count: selectedRecords.length })}
+              {t('selectedRecords', { count: selectedCount })}
             </Badge>
           )}
         </div>
@@ -759,10 +753,7 @@ export default function AttendancePage() {
                   <TableRow>
                     <TableHead className="text-center w-12">
                       <Checkbox
-                        checked={
-                          selectedRecords.length === filteredRecords.length &&
-                          filteredRecords.length > 0
-                        }
+                        checked={allSelected}
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
@@ -786,7 +777,7 @@ export default function AttendancePage() {
                       <TableRow key={record.id} className="hover:bg-accent/50 even:bg-muted/30">
                         <TableCell className="text-center">
                           <Checkbox
-                            checked={selectedRecords.includes(record.id)}
+                            checked={isSelected(String(record.id))}
                             onCheckedChange={() => toggleSelectRecord(record.id)}
                           />
                         </TableCell>

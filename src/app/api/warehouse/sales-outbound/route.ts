@@ -318,6 +318,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
         try {
           const voucherNo = 'FV' + Date.now() + String(item.id).slice(-4);
+          const avgCost = item.quantity ? totalCost / item.quantity : 0;
           await conn.execute(
             ts('k_50povp'),
             [

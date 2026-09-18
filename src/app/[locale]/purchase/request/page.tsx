@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useMemo, Fragment } from 'react';
@@ -136,6 +137,10 @@ export default function PurchaseRequestPage() {
   };
   const router = useRouter();
   const [requests, setRequests] = useState<PurchaseRequest[]>([]);
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    requests,
+    (r) => String(r.id)
+  );
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');
   const debouncedKeyword = useDebounce(keyword, 300);
@@ -143,7 +148,6 @@ export default function PurchaseRequestPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const pageSize = 10;
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
@@ -238,17 +242,9 @@ export default function PurchaseRequestPage() {
     fetchRequests();
   };
 
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
-  };
+  const toggleSelect = (id: number) => toggle(String(id));
 
-  const toggleSelectAll = () => {
-    if (selectedIds.length === requests.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(requests.map((r) => r.id));
-    }
-  };
+  const toggleSelectAll = () => toggleAll();;
 
   const toggleRowExpand = (id: number) => {
     setExpandedRows((prev) => {
@@ -261,7 +257,7 @@ export default function PurchaseRequestPage() {
 
   const handlePrint = () => {
     const recordsToPrint =
-      selectedIds.length > 0 ? requests.filter((r) => selectedIds.includes(r.id)) : requests;
+      selectedCount > 0 ? requests.filter((r) => isSelected(String(r.id))) : requests;
     if (recordsToPrint.length === 0) {
       toast.error(t('noDataToPrint'));
       return;
@@ -349,7 +345,7 @@ export default function PurchaseRequestPage() {
 
   const _handleExportXLS = () => {
     const recordsToExport =
-      selectedIds.length > 0 ? requests.filter((r) => selectedIds.includes(r.id)) : requests;
+      selectedCount > 0 ? requests.filter((r) => isSelected(String(r.id))) : requests;
     if (recordsToExport.length === 0) {
       toast.error(t('noDataToExport'));
       return;
@@ -388,7 +384,7 @@ export default function PurchaseRequestPage() {
 
   const _handleExportPDF = () => {
     const recordsToExport =
-      selectedIds.length > 0 ? requests.filter((r) => selectedIds.includes(r.id)) : requests;
+      selectedCount > 0 ? requests.filter((r) => isSelected(String(r.id))) : requests;
     if (recordsToExport.length === 0) {
       toast.error(t('noDataToExport'));
       return;
@@ -517,8 +513,8 @@ export default function PurchaseRequestPage() {
                   },
                 ]}
                 data={
-                  selectedIds.length > 0
-                    ? requests.filter((r) => selectedIds.includes(r.id))
+                  selectedCount > 0
+                    ? requests.filter((r) => isSelected(String(r.id)))
                     : sortedRequests
                 }
               />
@@ -582,7 +578,7 @@ export default function PurchaseRequestPage() {
               <TableRow>
                 <TableHead className="w-12">
                   <Checkbox
-                    checked={requests.length > 0 && selectedIds.length === requests.length}
+                    checked={allSelected}
                     onCheckedChange={toggleSelectAll}
                   />
                 </TableHead>
@@ -675,7 +671,7 @@ export default function PurchaseRequestPage() {
                       <TableRow className="hover:bg-muted/50">
                         <TableCell>
                           <Checkbox
-                            checked={selectedIds.includes(request.id)}
+                            checked={isSelected(String(request.id))}
                             onCheckedChange={() => toggleSelect(request.id)}
                           />
                         </TableCell>

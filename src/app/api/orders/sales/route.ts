@@ -13,6 +13,11 @@ import {
 } from '@/domain/sales/events/SalesOrderEvents';
 import { secureLog } from '@/lib/logger';
 import { checkMaterialsCategorized } from '@/lib/category-validation';
+import {
+  SalesOrderStatusCode,
+  isTerminalSalesOrderStatus,
+  normalizeSalesOrderStatus,
+} from '@/lib/order-status';
 import type { DbRow } from '@/types/db';
 
 export const GET = withPermission(async (request: NextRequest, _user: UserInfo) => {
@@ -141,12 +146,14 @@ export const POST = withPermission(
       order_no, customer_id, order_date, delivery_date, status,
       salesman_id, payment_terms, contract_no, remark,
       currency, create_by, create_time, update_time, deleted
-    ) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
       [
         order_no,
         customer_id,
         order_date || new Date().toISOString().slice(0, 10),
         delivery_date || null,
+        // 契约：1-待确认, 2-已确认, 3-部分发货, 4-已完成, 5-已取消（见 src/lib/order-status.ts）
+        SalesOrderStatusCode.PENDING,
         user.userId,
         payment_terms || null,
         contract_no || null,
@@ -166,7 +173,7 @@ export const POST = withPermission(
       await execute(
         `INSERT INTO sal_order_item (
         order_id, material_id, material_code, material_name,
-        quantity, unit_price, amount, unit, remark, create_time, deleted
+        quantity, unit_price, total_price, unit, remark, create_time, deleted
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0)`,
         [
           orderId,
@@ -192,7 +199,9 @@ export const POST = withPermission(
       {
         id: orderId,
         order_no,
-        status: 'draft',
+        // 契约码，与库内一致。原先返回字符串 'draft'，与库里的 tinyint 1 表达同一件事却两种类型，
+        // 调用方无法比较（BUG-ORD-002）。
+        status: SalesOrderStatusCode.PENDING,
         uncategorizedMaterials: categoryCheck.uncategorized,
       },
       categoryCheck.message ? `销售订单创建成功。${categoryCheck.message}` : ts('k_ehi1sy')
@@ -225,14 +234,19 @@ export const PUT = withPermission(
       return errorResponse(ts('k_2v2qxr'), 404, 404);
     }
 
+    // 统一按契约码判定（历史码 0/10/20/… 归一到 1..5），修复前直接与字面量比较。
+    const currentStatus = normalizeSalesOrderStatus(order.status);
+
     switch (action) {
       case 'submit':
-        if (order.status !== 1) {
+        // 待确认 → 已确认
+        if (currentStatus !== SalesOrderStatusCode.PENDING) {
           return errorResponse(ts('k_10t3a8m'), 400, 400);
         }
 
         await transaction(async (conn) => {
-          await conn.execute('UPDATE sal_order SET status = 2, update_time = NOW() WHERE id = ?', [
+          await conn.execute('UPDATE sal_order SET status = ?, update_time = NOW() WHERE id = ?', [
+            SalesOrderStatusCode.CONFIRMED,
             id,
           ]);
           await getDomainEventOutbox().saveEvents(conn, 'SalesOrder', id, [
@@ -245,10 +259,15 @@ export const PUT = withPermission(
 
         secureLog('info', 'Sales order submitted', { orderId: id, orderNo: order.order_no });
 
-        return successResponse({ status: 2 }, ts('k_1isjr5e'));
+        return successResponse({ status: SalesOrderStatusCode.CONFIRMED }, ts('k_1isjr5e'));
 
       case 'approve':
-        if (order.status !== 2) {
+        // 「审核通过」在本契约里**没有独立状态**：通过即「已确认」（2）。
+        // 修复前此处写 status = 3，而 3 的契约含义是「部分发货」——
+        // 导致审核过的订单在列表与导出里显示为「部分发货」且永远发不出货（BUG-ORD-002）。
+        // 同时修复前 UPDATE 还写了 audit_by / audit_time，而 sal_order 并不存在这两列，
+        // 语句必然报 Unknown column → 该分支 500。
+        if (isTerminalSalesOrderStatus(currentStatus)) {
           return errorResponse(ts('k_1tfnqbu'), 400, 400);
         }
 
@@ -259,8 +278,8 @@ export const PUT = withPermission(
 
         await transaction(async (conn) => {
           await conn.execute(
-            'UPDATE sal_order SET status = 3, audit_by = ?, audit_time = NOW(), update_time = NOW() WHERE id = ?',
-            [user.userId, id]
+            'UPDATE sal_order SET status = ?, update_time = NOW() WHERE id = ?',
+            [SalesOrderStatusCode.CONFIRMED, id]
           );
           await getDomainEventOutbox().saveEvents(conn, 'SalesOrder', id, [
             new SalesOrderApprovedEvent({
@@ -287,16 +306,20 @@ export const PUT = withPermission(
           lineCount: lines.length,
         });
 
-        return successResponse({ status: 3 }, ts('k_j1hdld'));
+        return successResponse({ status: SalesOrderStatusCode.CONFIRMED }, ts('k_j1hdld'));
 
       case 'reject':
-        if (order.status !== 2) {
+        // 已确认 → 退回待确认
+        if (currentStatus !== SalesOrderStatusCode.CONFIRMED) {
           return errorResponse(ts('k_bekxqy'), 400, 400);
         }
 
-        await execute('UPDATE sal_order SET status = 1, update_time = NOW() WHERE id = ?', [id]);
+        await execute('UPDATE sal_order SET status = ?, update_time = NOW() WHERE id = ?', [
+          SalesOrderStatusCode.PENDING,
+          id,
+        ]);
 
-        return successResponse({ status: 1 }, ts('k_uptysj'));
+        return successResponse({ status: SalesOrderStatusCode.PENDING }, ts('k_uptysj'));
 
       default:
         return errorResponse(ts('k_ztn3ax'), 400, 400);

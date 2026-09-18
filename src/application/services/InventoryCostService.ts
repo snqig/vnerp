@@ -1,4 +1,5 @@
 import { CostEngine, CostCalculationResult } from '@/lib/cost-engine';
+import type { DbConnection } from '@/types/db';
 import { secureLog } from '@/lib/logger';
 import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
 
@@ -25,7 +26,7 @@ export class InventoryCostService {
    * 写回 inv_inventory.unit_cost 和 inv_inventory.total_cost
    */
   async onInbound(
-    conn: PoolConnection,
+    conn: DbConnection,
     inventoryId: number,
     inboundQty: number,
     inboundUnitPrice: number
@@ -74,7 +75,7 @@ export class InventoryCostService {
    * 出库不改变单位成本，仅返回当前成本用于流水记录
    */
   async getOutboundCost(
-    conn: PoolConnection,
+    conn: DbConnection,
     inventoryId: number,
     outboundQty: number
   ): Promise<{ unitCost: number; totalCost: number } | null> {
@@ -110,7 +111,7 @@ export class InventoryCostService {
    * 公式：反向移除入库金额，重算平均成本
    */
   async onInboundRollback(
-    conn: PoolConnection,
+    conn: DbConnection,
     inventoryId: number,
     rollbackQty: number,
     rollbackUnitPrice: number

@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
@@ -80,6 +81,10 @@ export default function OutsourceIssuePage() {
 
   const { toast } = useToast();
   const [list, setList] = useState<OutsourceIssue[]>([]);
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    list,
+    (r) => String(r.id)
+  );
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
@@ -87,7 +92,6 @@ export default function OutsourceIssuePage() {
   const [form, setForm] = useState<Loose>({ items: [] });
   const [outsourceOrders, setOutsourceOrders] = useState<Loose[]>([]);
   const [materials, setMaterials] = useState<Loose[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const _exportColumns = [
     { key: t('issueNo'), header: t('issueNo') },
@@ -289,7 +293,7 @@ export default function OutsourceIssuePage() {
                   formatter: (v) => statusMap[v]?.label || '-',
                 },
               ]}
-              data={selectedIds.size > 0 ? list.filter((i) => selectedIds.has(i.id)) : list}
+              data={selectedCount > 0 ? list.filter((i) => isSelected(String(i.id))) : list}
             />
             <Button
               size="sm"
@@ -310,13 +314,7 @@ export default function OutsourceIssuePage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[40px]">
-                    <Checkbox
-                      checked={selectedIds.size > 0 && selectedIds.size === list.length}
-                      onCheckedChange={(checked) => {
-                        if (checked) setSelectedIds(new Set(list.map((i) => i.id)));
-                        else setSelectedIds(new Set());
-                      }}
-                    />
+                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                   </TableHead>
                   <TableHead className="text-xs">{t('issueNo')}</TableHead>
                   <TableHead className="text-xs">{t('orderNo')}</TableHead>
@@ -338,13 +336,8 @@ export default function OutsourceIssuePage() {
                     <TableRow key={item.id}>
                       <TableCell>
                         <Checkbox
-                          checked={selectedIds.has(item.id)}
-                          onCheckedChange={(checked) => {
-                            const next = new Set(selectedIds);
-                            if (checked) next.add(item.id);
-                            else next.delete(item.id);
-                            setSelectedIds(next);
-                          }}
+                          checked={isSelected(String(item.id))}
+                          onCheckedChange={() => toggle(String(item.id))}
                         />
                       </TableCell>
                       <TableCell className="text-xs font-mono">{item.issue_no}</TableCell>

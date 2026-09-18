@@ -12,6 +12,7 @@ const { mockExecute, mockTransaction } = vi.hoisted(() => {
 vi.mock('@/lib/db', () => ({
   transaction: (...args: unknown[]) => mockTransaction(args[0] as Function),
   execute: (...args: unknown[]) => mockExecute(args[0], ...args.slice(1)),
+  query: (...args: unknown[]) => mockExecute(args[0], ...args.slice(1)),
 }));
 
 vi.mock('@/lib/logger', () => ({

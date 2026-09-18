@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { AppError } from '@/lib/error-handling';
+import { WorkOrderStatus, WORK_ORDER_STATUSES_ALLOW_INBOUND } from '@/lib/constants';
 import { PickOrderApprovedEvent } from '@/domain/production/events/PickOrderEvents';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { checkMaterialsCategorized } from '@/lib/category-validation';
@@ -109,18 +111,28 @@ export const POST = withPermission(
 
     const result = await transaction(async (conn) => {
       if (work_order_id) {
+        // prod_work_order 无 plan_qty 列（真名 quantity / planned_qty）：
+        // 原写法多选了一个不存在的列 → 1054 Unknown column → 整个接口恒 500。
+        // 该列在本分支中并未被使用（仅用 status），故直接移除。
         const [woRows] = await conn.execute(
-          'SELECT id, order_no, status, plan_qty FROM prod_work_order WHERE id = ? AND deleted = 0 FOR UPDATE',
+          'SELECT id, order_no, status FROM prod_work_order WHERE id = ? AND deleted = 0 FOR UPDATE',
           [work_order_id]
         );
         if (woRows.length === 0) {
           throw new Error(ts('k_lmufdi'));
         }
-        if (woRows[0].status < 20) {
-          throw new Error(ts('k_11hglnu'));
+        // prod_work_order.status 是 varchar 状态机，禁止数值比较：旧写法 `status < 20` /
+        // `status >= 90` 在 'pending'/'confirmed' 上恒为 false → 状态校验完全失效。
+        // 白名单：仅 已确认/生产中/已完成 可创建领料单，未知状态兜底拒绝。
+        const woStatus = String(woRows[0].status ?? '');
+        if (woStatus === WorkOrderStatus.PENDING) {
+          throw AppError.badRequest(ts('k_11hglnu'));
         }
-        if (woRows[0].status >= 90) {
-          throw new Error(ts('k_121g1jl'));
+        if (woStatus === WorkOrderStatus.CANCELLED) {
+          throw AppError.badRequest(ts('k_121g1jl'));
+        }
+        if (!WORK_ORDER_STATUSES_ALLOW_INBOUND.includes(woStatus)) {
+          throw AppError.badRequest(ts('k_11hglnu'));
         }
       }
 
@@ -144,8 +156,10 @@ export const POST = withPermission(
           if (bomRows.length > 0) {
             const bomQty = Number(bomRows[0].quantity);
             const lossRate = Number(bomRows[0].loss_rate || 0);
+            // 计划数量取 prod_work_order.quantity（planned_qty 全为 0，无数据）；
+            // 别名保持 plan_qty，与 finance/cost-variance 的既有口径一致
             const [planRows] = await conn.execute(
-              'SELECT plan_qty FROM prod_work_order WHERE id = ?',
+              'SELECT quantity AS plan_qty FROM prod_work_order WHERE id = ?',
               [work_order_id]
             );
             const planQty = Number(planRows[0]?.plan_qty || 0);

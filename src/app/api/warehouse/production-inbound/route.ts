@@ -7,9 +7,25 @@ import { successResponse, errorResponse, logOperation } from '@/lib/api-response
 import { randomUUID } from 'crypto';
 
 import { withPermission } from '@/lib/api-permissions';
+import { AppError } from '@/lib/error-handling';
+import { WorkOrderStatus, WORK_ORDER_STATUSES_ALLOW_INBOUND } from '@/lib/constants';
 import { FinishOrderApprovedEvent } from '@/domain/production/events/FinishOrderEvents';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import type { DbRow } from '@/types/db';
+
+/**
+ * prod_work_order.status 为 varchar 状态机（与 src/lib/constants.ts 的 WorkOrderStatus 对齐）。
+ * ⚠️ 本文件历史上按数值状态（10/20/40/50/90）与之比较，在 JS/Mysql 中
+ * 'confirmed' → NaN，所有数值比较恒为 false，导致工单状态校验与流转双双失效。
+ */
+const WO_STATUS = {
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  PRODUCING: 'producing',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+} as const;
+
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
@@ -86,19 +102,28 @@ export const POST = withPermission(async (request: NextRequest) => {
 
   const result = await transaction(async (conn) => {
     if (work_order_id) {
+      // prod_work_order 无 plan_qty 列（真名 quantity）：
+      // 原写法 1054 Unknown column → POST 恒 500（该列在本分支中未被使用）。
       const [woRows] = await conn.execute(
-        'SELECT id, order_no, status, plan_qty, completed_qty FROM prod_work_order WHERE id = ? AND deleted = 0 FOR UPDATE',
+        'SELECT id, order_no, status FROM prod_work_order WHERE id = ? AND deleted = 0 FOR UPDATE',
         [work_order_id]
       );
       if (woRows.length === 0) {
         throw new Error(ts('k_lmufdi'));
       }
       const wo = woRows[0];
-      if (wo.status < 20) {
-        throw new Error(ts('k_kg03c'));
+      // prod_work_order.status 是 varchar 状态机，禁止数值比较：旧写法 `status < 20` /
+      // `status >= 90` 在 'pending'/'confirmed' 上恒为 false → 状态校验完全失效。
+      // 改为白名单判定（仅 已确认/生产中/已完成 可建完工入库单），未知状态兜底拒绝。
+      const woStatus = String(wo.status ?? '');
+      if (woStatus === WorkOrderStatus.PENDING) {
+        throw AppError.badRequest(ts('k_kg03c'));
       }
-      if (wo.status >= 90) {
-        throw new Error(ts('k_zpty73'));
+      if (woStatus === WorkOrderStatus.CANCELLED) {
+        throw AppError.badRequest(ts('k_zpty73'));
+      }
+      if (!WORK_ORDER_STATUSES_ALLOW_INBOUND.includes(woStatus)) {
+        throw AppError.badRequest(ts('k_kg03c'));
       }
     }
 
@@ -195,18 +220,29 @@ export const PUT = withPermission(async (request: NextRequest) => {
         );
 
         const [woRows] = await conn.execute(
-          'SELECT plan_qty, completed_qty, status FROM prod_work_order WHERE id = ?',
+          'SELECT quantity AS plan_qty, completed_qty, status FROM prod_work_order WHERE id = ?',
           [inbound.work_order_id]
         );
 
         if (woRows.length > 0) {
           const wo = woRows[0];
-          if (Number(wo.completed_qty) >= Number(wo.plan_qty) && wo.status < 50) {
-            await conn.execute('UPDATE prod_work_order SET status = 50 WHERE id = ?', [
-              inbound.work_order_id,
-            ]);
-          } else if (Number(wo.completed_qty) > 0 && wo.status < 40) {
-            await conn.execute('UPDATE prod_work_order SET status = 40 WHERE id = ?', [
+          // 状态判定改为真实字符串状态机：
+          //   完工数量达计划量 → completed；有完工但未达量 → producing。
+          // 历史写法 wo.status < 50 对 'confirmed' 恒 false（NaN 比较），
+          // 于是工单状态永远不流转（且原实现会把数值 50/40 写进 varchar 列）。
+          const woStatus = String(wo.status ?? '');
+          const doneQty = Number(wo.completed_qty) || 0;
+          const plannedQty = Number(wo.plan_qty) || 0;
+          if (plannedQty > 0 && doneQty >= plannedQty) {
+            if (woStatus !== WO_STATUS.COMPLETED) {
+              await conn.execute('UPDATE prod_work_order SET status = ? WHERE id = ?', [
+                WO_STATUS.COMPLETED,
+                inbound.work_order_id,
+              ]);
+            }
+          } else if (doneQty > 0 && woStatus === WO_STATUS.CONFIRMED) {
+            await conn.execute('UPDATE prod_work_order SET status = ? WHERE id = ?', [
+              WO_STATUS.PRODUCING,
               inbound.work_order_id,
             ]);
           }

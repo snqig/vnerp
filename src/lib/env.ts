@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 /**
  * 环境变量 Schema 校验
@@ -79,7 +80,7 @@ function loadEnv(): Env {
 
   if (process.env.NODE_ENV === 'production') {
     // SECURITY: 生产环境配置缺失必须 fail-fast，绝不静默降级到弱默认值/空密码。
-    console.error(
+    logger.error(
       '[env] Environment variable validation failed:\n' +
         result.error.issues.map((issue) => `  ${issue.path.join('.')}: ${issue.message}`).join('\n')
     );

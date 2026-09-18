@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbRow } from '@/types/db';
 
 ;
 import { NextRequest, NextResponse } from 'next/server';
@@ -9,7 +10,7 @@ import { logger } from '@/lib/logger';
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
   try {
-    const overview: unknown = {
+    const overview: Record<string, unknown> = {
       totalItems: 0,
       totalValue: 0,
       lowStock: 0,
@@ -53,7 +54,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let categoryDistribution: SqlValue[] = [];
+    let categoryDistribution: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT m.material_type, COUNT(DISTINCT m.id) as count,
@@ -69,7 +70,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let lowStockItems: SqlValue[] = [];
+    let lowStockItems: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT m.material_code, m.material_name, COALESCE(i.quantity, 0) as stock_qty,
@@ -86,7 +87,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let recentTransactions: SqlValue[] = [];
+    let recentTransactions: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT t.trans_type as transaction_type, t.material_code,
@@ -102,7 +103,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       });
     }
 
-    let warehouseOccupancy: SqlValue[] = [];
+    let warehouseOccupancy: DbRow[] = [];
     try {
       const rows = await query(`
         SELECT w.warehouse_name, COUNT(DISTINCT i.material_id) as item_count,

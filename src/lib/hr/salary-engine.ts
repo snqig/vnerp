@@ -1,4 +1,5 @@
 import { getDrizzleDb } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { eq, and } from 'drizzle-orm';
 import {
   hrSalaryProfile,
@@ -209,7 +210,7 @@ export async function batchCalculateSalary(
       const r = await calculateMonthlySalary(id, month, options);
       results.push(r);
     } catch (err) {
-      console.error(`员工 ${id} 薪资计算失败:`, err);
+      logger.error(`员工 ${id} 薪资计算失败:`, err);
     }
   }
   return results;

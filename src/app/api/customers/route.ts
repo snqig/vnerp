@@ -51,7 +51,7 @@ function buildQueryConditions(params: {
   customerType?: string;
   followUpStatus?: string;
   keyword?: string;
-}): { sql: string; countSql: string; values: DbRow[] } {
+}): { sql: string; countSql: string; values: SqlValue[] } {
   let sql = `
     SELECT
       id, customer_code, customer_name, short_name, customer_type,

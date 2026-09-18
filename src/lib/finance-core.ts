@@ -24,7 +24,7 @@ export async function generateReceivable(
 ): Promise<{ success: boolean; receivableId?: number; receivableNo?: string; message: string }> {
   try {
     // 查询销售订单和客户信息
-    const [orderRows]: DbResult = await query(
+    const orderRows: DbRow[] = await query(
       `SELECT so.*, c.customer_name
        FROM sal_order so
        LEFT JOIN crm_customer c ON so.customer_id = c.id
@@ -44,7 +44,7 @@ export async function generateReceivable(
     defaultDueDate.setDate(defaultDueDate.getDate() + 30);
     const finalDueDate = dueDate || defaultDueDate.toISOString().split('T')[0];
 
-    const [result]: DbResult = await execute(
+    const result = await execute(
       `INSERT INTO fin_receivable (
         receivable_no, source_type, source_id, source_no,
         customer_id, amount, received_amount, balance,
@@ -308,7 +308,7 @@ export async function calculateWorkOrderCost(
 ): Promise<{ success: boolean; message: string; cost?: Record<string, unknown> }> {
   try {
     // 1. 查询工单信息
-    const [woRows]: DbResult = await query(`SELECT * FROM prd_work_order WHERE id = ? AND deleted = 0`, [
+    const woRows: DbRow[] = await query(`SELECT * FROM prd_work_order WHERE id = ? AND deleted = 0`, [
       workOrderId,
     ]);
 
@@ -319,7 +319,7 @@ export async function calculateWorkOrderCost(
     const workOrder = woRows[0];
 
     // 2. 计算原材料成本（从小料领用记录）
-    const [materialCostRows]: DbResult = await query(
+    const materialCostRows: DbRow[] = await query(
       `SELECT COALESCE(SUM(total_cost), 0) as total_cost
        FROM material_requisition_items
        WHERE requisition_id IN (
@@ -331,7 +331,7 @@ export async function calculateWorkOrderCost(
     const materialCost = parseFloat(materialCostRows[0]?.total_cost) || 0;
 
     // 3. 计算人工成本（从工序报工）
-    const [laborCostRows]: DbResult = await query(
+    const laborCostRows: DbRow[] = await query(
       `SELECT COALESCE(SUM(actual_hours * hourly_rate), 0) as total_cost
        FROM prd_work_report
        WHERE work_order_id = ?`,

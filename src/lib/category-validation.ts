@@ -59,17 +59,25 @@ export interface CategoryRules {
   enforceOnUpdate: boolean;
 }
 
-/** 代码内置兜底值：DB 不可用时静默降级，与迁移 074 的种子保持一致 */
+/**
+ * 代码内置兜底值：DB 不可用时静默降级。
+ *
+ * 必须与 database/migrations/080_category_pattern_and_password.sql 落库的规则保持一致 ——
+ * 否则 `sys_calc_param` 一但读不到（DB 抖动 / 缓存未命中），降级到这里的旧严格正则
+ * `^MAT-CAT-\d{3,}$` 会把全部 169 条存量物料分类判为非法，整条录入链路直接瘫掉。
+ * （这是 BUG-SET-003 的第三处：正则放宽必须同时改「库中规则」与「代码兜底」。）
+ */
 const FALLBACK_RULES: Record<CategoryType, Omit<CategoryRules, 'enforceOnCreate' | 'enforceOnUpdate'>> = {
   material: {
-    codePattern: '^MAT-CAT-\\d{3,}$',
-    codePatternDesc: 'MAT-CAT-XXX（3位以上数字）',
+    codePattern: '^(MAT-CAT-\\d{3,}|[A-Za-z]{2,}[A-Za-z0-9._\\-#一-鿿 ]{0,32})$',
+    codePatternDesc:
+      'MAT-CAT-XXX，或以 2 位以上字母开头的分类码（2-34 位，可含数字、下划线、连字符、点、井号、汉字、空格）',
     maxDepth: 4,
     statusValues: [0, 1],
   },
   warehouse: {
-    codePattern: '^WH-CAT-\\d{3,}$',
-    codePatternDesc: 'WH-CAT-XXX（3位以上数字）',
+    codePattern: '^(WH-CAT-\\d{3,}|WHCAT\\d{3,})$',
+    codePatternDesc: 'WHCATXXX 或 WH-CAT-XXX（3 位以上数字）',
     maxDepth: 3,
     statusValues: [0, 1],
   },

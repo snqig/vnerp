@@ -84,7 +84,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 async function recommendSurplus(pantoneCode: string, colorName: string) {
   const ts = await getTranslations('Common');
-  const recommendations: SqlValue[] = [];
+  const recommendations: DbRow[] = [];
 
   const surplusInks = await query(ts('k_lkk34o'));
 
@@ -176,7 +176,7 @@ async function getSurplusDetail(batchNo: string) {
   );
 
   let formulaInfo = null;
-  let rawInks: SqlValue[] = [];
+  let rawInks: DbRow[] = [];
 
   if (dispatchRows.length > 0) {
     const dispatch = dispatchRows[0];

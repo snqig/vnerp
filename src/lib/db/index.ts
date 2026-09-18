@@ -97,6 +97,102 @@ export async function getConnection(): Promise<mysql.PoolConnection> {
  * @example
  * const users = await query<User>('SELECT * FROM users WHERE status = ?', [1]);
  */
+
+/**
+ * ── SQL 参数归一化（在 DB 边界统一收敛，覆盖池上调用与事务连接）──
+ *
+ * 处理两类历史缺口：
+ * 1. `undefined` → `null`：mysql2 预处理语句不接受 undefined，会抛
+ *    「Bind parameters must not contain undefined」；而 SqlValue 契约与上层调用
+ *    （仓储 toRow() 的可选字段、路由直接透传的 body.xxx）都会产生 undefined。
+ * 2. 带时区的 ISO-8601 时间戳 → MySQL DATETIME：见 {@link normalizeIsoDatetime}。
+ */
+
+/**
+ * 「带时区的完整 ISO-8601 时间戳」识别式。
+ * 例：2026-09-14T08:19:44.911Z / 2026-09-14T08:19:44+08:00
+ */
+const ISO_DATETIME_WITH_TZ =
+  /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})(?:\.\d+)?(Z|[+-]\d{2}:?\d{2})$/;
+
+/**
+ * ISO-8601 时间戳 → MySQL DATETIME 字面量（`YYYY-MM-DD HH:MM:SS`）
+ *
+ * 领域层普遍用 `new Date().toISOString()` 产出 `2026-09-14T08:19:44.911Z`
+ * （src/ 下近 300 处），直接写入 DATETIME 列时 MySQL 严格模式报：
+ *   Incorrect datetime value: '...' for column 'converted_at' at row 1  (errno 1292)
+ * 例如打样转大货 T305 因此 100% 失败。该问题属「表示层与存储层格式未对齐」，
+ * 在 DB 边界统一收敛，而不是逐个调用点打补丁。
+ *
+ * 仅当「整个参数值恰好是一个带时区的完整 ISO 时间戳」时才转换，
+ * 因此不会误伤 TEXT/JSON 列中内嵌日期的长文本。
+ */
+function normalizeIsoDatetime(value: string): string {
+  const m = ISO_DATETIME_WITH_TZ.exec(value);
+  if (!m) return value;
+  // Z：保留 UTC 钟面读数，仅去掉毫秒与 T/Z —— 与本仓既有的
+  // `.slice(0, 19).replace('T', ' ')` 写法保持同一口径
+  if (m[3] === 'Z') return `${m[1]} ${m[2]}`;
+  // 显式偏移：先换算到 UTC 再落库，避免丢弃偏移语义
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? value
+    : parsed.toISOString().slice(0, 19).replace('T', ' ');
+}
+
+function normalizeSqlValues(values?: SqlValue[]): SqlValue[] | undefined {
+  if (!values || values.length === 0) return values;
+  let changed = false;
+  const normalized = values.map((value) => {
+    if (value === undefined) {
+      changed = true;
+      return null;
+    }
+    if (typeof value === 'string') {
+      const iso = normalizeIsoDatetime(value);
+      if (iso !== value) {
+        changed = true;
+        return iso;
+      }
+    }
+    return value;
+  });
+  return changed ? normalized : values;
+}
+
+/**
+ * 包装事务连接，使 `conn.execute` / `conn.query` 也经过参数归一化。
+ *
+ * 事务回调拿到的是裸 mysql2 连接，不经 `execute`/`query` 两个导出函数，
+ * 因此「undefined 参数」「ISO 时间戳」这两类边界问题在事务路径上依然复现
+ * （打样转大货 convertOrder 就是在事务内 UPDATE `converted_at` = ISO 字符串而 1292）。
+ * 仅拦截 execute/query 两个方法，其余成员绑定后原样透传。
+ */
+function normalizeConnection<T extends object>(connection: T): T {
+  return new Proxy(connection, {
+    get(target, prop, receiver) {
+      const original = Reflect.get(target, prop, receiver) as unknown;
+      if (typeof original !== 'function') return original;
+      if (prop !== 'execute' && prop !== 'query') {
+        return (original as (...args: unknown[]) => unknown).bind(target);
+      }
+      return (...args: unknown[]) => {
+        if (args.length > 1 && Array.isArray(args[1])) {
+          args[1] = normalizeSqlValues(args[1] as SqlValue[]);
+        }
+        return (original as (...a: unknown[]) => unknown).apply(target, args);
+      };
+    },
+  });
+}
+
+/**
+ * 执行查询语句（SELECT）
+ *
+ * @throws 数据库错误，重试失败后抛出
+ * @example
+ * const users = await query<User>('SELECT * FROM users WHERE status = ?', [1]);
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function query<T = any>(sql: string, values?: SqlValue[]): Promise<T[]> {
   if (isDemoMode()) {
@@ -111,7 +207,7 @@ export async function query<T = any>(sql: string, values?: SqlValue[]): Promise<
       if (DEBUG_DB) {
         const _sqlStr = typeof sql === 'string' ? sql : String(sql);
       }
-      const [rows] = await pool.query(sql, values);
+      const [rows] = await pool.query(sql, normalizeSqlValues(values));
       if (DEBUG_DB) {
       }
       return rows as T[];
@@ -152,7 +248,7 @@ export async function execute(sql: string, values?: SqlValue[]): Promise<mysql.R
     }
     // mysql2 的 execute 类型签名比 query 更严格（不接受 undefined），实际运行时支持
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [result] = await pool.execute(sql, values as any[]);
+    const [result] = await pool.execute(sql, normalizeSqlValues(values) as any[]);
     return result as mysql.ResultSetHeader;
   } catch (error) {
     throw error;
@@ -208,7 +304,8 @@ export async function transaction<T>(
 
   try {
     await connection.beginTransaction();
-    const result = await callback(connection);
+    // 传入包装后的连接：保证事务内的 execute/query 与池上调用享有同一套参数归一化
+    const result = await callback(normalizeConnection(connection) as unknown as DbConnection);
     await connection.commit();
     return result;
   } catch (error) {

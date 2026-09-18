@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbRow } from '@/types/db';
 
 ;
 import { NextRequest } from 'next/server';
@@ -81,7 +82,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo, context
     return errorResponse(ts('k_1020hvi'), 404, 404);
   }
 
-  let items: SqlValue[] = [];
+  let items: DbRow[] = [];
 
   switch (card.type) {
     case 'color':

@@ -29,7 +29,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   const revenueRows = await query(`
     SELECT DATE_FORMAT(create_time, '${dateFormat}') as period,
-      'revenue' as type, '销售收入' as category,
+      'revenue' as type, 'sales' as category,
       COALESCE(SUM(amount), 0) as revenue, 0 as cost,
       COALESCE(SUM(amount), 0) as profit,
       CASE WHEN SUM(amount) > 0 THEN 100 ELSE 0 END as profit_rate

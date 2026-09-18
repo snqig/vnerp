@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { DbConnection } from '@/types/db';
 
 ;
 import { NextRequest } from 'next/server';
@@ -35,7 +36,7 @@ export const POST = withPermission(
     try {
       // 发货流程整体包在一个事务中：全部写操作（明细/库存/二维码/发货单/销售订单/应收单）
       // 要么全部成功要么全部回滚，杜绝中途失败导致的数据不一致。
-      const result = await transaction(async (conn: mysql.PoolConnection) => {
+      const result = await transaction(async (conn: DbConnection) => {
         // 锁定发货单行，防止并发点击重复发货/超发（TOCTOU）
         const [shipmentRows] = await conn.query<mysql.RowDataPacket[]>(
           `SELECT * FROM shipments WHERE id = ? AND deleted = 0 FOR UPDATE`,

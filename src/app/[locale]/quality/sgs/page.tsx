@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
@@ -254,8 +255,11 @@ export default function SGSManagementPage() {
     expiring: Cert[];
     total: number;
   }>({ expired: [], expiring: [], total: 0 });
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'cert_no');
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    sortedData,
+    (r) => String(r.id)
+  );
 
   const fetchData = async () => {
     try {
@@ -474,8 +478,8 @@ export default function SGSManagementPage() {
                 { key: 'expire_date', label: t('validUntil'), width: 12 },
               ]}
               data={
-                selectedIds.length > 0
-                  ? sortedData.filter((i) => i.id && selectedIds.includes(i.id))
+                selectedCount > 0
+                  ? sortedData.filter((i) => i.id && isSelected(String(i.id)))
                   : sortedData
               }
             />
@@ -504,16 +508,7 @@ export default function SGSManagementPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedIds.length === sortedData.length && sortedData.length > 0}
-                      onCheckedChange={() =>
-                        setSelectedIds(
-                          selectedIds.length === sortedData.length
-                            ? []
-                            : sortedData.filter((i) => i.id).map((i) => i.id!)
-                        )
-                      }
-                    />
+                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                   </TableHead>
                   <TableHead className="text-xs w-12 text-center">{tc('serialNo')}</TableHead>
                   <SortableTableHeader
@@ -562,15 +557,8 @@ export default function SGSManagementPage() {
                   <TableRow key={item.id}>
                     <TableCell>
                       <Checkbox
-                        checked={item.id ? selectedIds.includes(item.id) : false}
-                        onCheckedChange={() => {
-                          if (item.id)
-                            setSelectedIds((prev) =>
-                              prev.includes(item.id!)
-                                ? prev.filter((i) => i !== item.id!)
-                                : [...prev, item.id!]
-                            );
-                        }}
+                        checked={isSelected(String(item.id))}
+                        onCheckedChange={() => toggle(String(item.id))}
                       />
                     </TableCell>
                     <TableCell className="text-xs text-center text-muted-foreground">
@@ -669,7 +657,7 @@ export default function SGSManagementPage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{tc('totalRecords', { total })}</span>
+          <span className="text-sm text-gray-500">{tc('totalRecords', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"

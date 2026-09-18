@@ -245,7 +245,7 @@ export const POST = withPermission(
     }
 
     // 构建插入数据
-    const insertData: unknown = {
+    const insertData: Record<string, unknown> = {
       card_no: cardNo,
       version: body.version || '1.0',
       status: body.status || 1,
@@ -390,7 +390,7 @@ export const PUT = withPermission(
     }
 
     // 构建更新数据（过滤掉undefined值）
-    const updateData: unknown = {};
+    const updateData: Record<string, unknown> = {};
     const fieldMappings: Record<string, string> = {
       card_no: 'card_no',
       version: 'version',

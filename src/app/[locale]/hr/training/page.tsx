@@ -34,6 +34,8 @@ import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/lib/date-utils';
+import { useRowSelection } from '@/lib/useRowSelection';
+import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
 interface Item {
   id: number;
@@ -76,6 +78,30 @@ export default function TrainingPage() {
   const [searchName, setSearchName] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
+
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
+    useRowSelection(list, (r) => String(r.id));
+  const [deleting, setDeleting] = useState(false);
+
+  const handleBatchDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
+    setDeleting(true);
+    let okCount = 0; let failMsg = '';
+    for (const id of ids) {
+      try {
+        const res = await authFetch(`/api/hr/training?id=${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) okCount++; else failMsg = data.message || failMsg;
+      } catch { failMsg = tc('error'); }
+    }
+    setDeleting(false);
+    if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
+    if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
+    clear();
+    fetchData();
+  };
 
   const fetchData = async () => {
     try {
@@ -175,9 +201,13 @@ export default function TrainingPage() {
         </div>
         <Card>
           <CardContent className="p-0">
+            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
+                  </TableHead>
                   <TableHead className="text-xs w-12 text-center">{tc('serialNo')}</TableHead>
                   <TableHead className="text-xs">{tc('trainingNo')}</TableHead>
                   <TableHead className="text-xs">{tc('trainingName')}</TableHead>
@@ -195,6 +225,9 @@ export default function TrainingPage() {
                   const st = statusMap[item.status] || statusMap[1];
                   return (
                     <TableRow key={item.id}>
+                      <TableCell>
+                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(item.id))} onChange={() => toggle(String(item.id))} aria-label={tc('selectRow', { id: item.id })} />
+                      </TableCell>
                       <TableCell className="text-xs text-center text-muted-foreground">
                         {(page - 1) * 20 + index + 1}
                       </TableCell>
@@ -260,7 +293,7 @@ export default function TrainingPage() {
                 })}
                 {list.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                       {tc('noRecords')}
                     </TableCell>
                   </TableRow>

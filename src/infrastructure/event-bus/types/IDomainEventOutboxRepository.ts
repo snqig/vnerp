@@ -1,4 +1,5 @@
 import type { PoolConnection } from 'mysql2/promise';
+import type { DbConnection } from '@/types/db';
 import type { DomainEvent } from '@/domain/shared/DomainTypes';
 
 /**
@@ -37,7 +38,7 @@ export interface IDomainEventOutboxRepository {
    * @param events 待持久化的事件列表
    */
   saveEvents(
-    conn: PoolConnection,
+    conn: DbConnection,
     aggregateType: string,
     aggregateId: number,
     events: DomainEvent[]

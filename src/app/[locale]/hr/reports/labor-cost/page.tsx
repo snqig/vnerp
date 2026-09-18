@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, ErrorInfo, Component } from 'react';
+import { logger } from '@/lib/logger';
 import { authFetch } from '@/lib/auth-fetch';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,7 +41,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('[LaborCostPage Error]', error, errorInfo);
+    logger.error('[LaborCostPage Error]', error, errorInfo);
     this.setState({ error, errorInfo });
   }
 

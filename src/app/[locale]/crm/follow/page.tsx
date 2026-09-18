@@ -319,7 +319,7 @@ export default function CustomerFollowPage() {
               </TableBody>
             </Table>
             <div className="flex justify-between items-center mt-4 text-sm">
-              <span>{tc('totalRecords', { total })}</span>
+              <span>{tc('totalRecords', { count: total })}</span>
               <div className="flex gap-2">
                 <Button
                   size="sm"

@@ -1,13 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { authFetch } from '@/lib/auth-fetch';
+import { useAuthGate } from '@/contexts/AuthContext';
 
 export function useCompanyName() {
   const tc = useTranslations('Common');
   const [companyName, setCompanyName] = useState(tc('companyName'));
   const [loading, setLoading] = useState(true);
+  // 认证闸门：/api/system/config 与 /api/organization 均需登录态。
+  // 登录页（未登录）也会调用本 hook 取品牌名，若照旧发起请求会产生 401 噪音（BUG-005）。
+  // 未登录时短路——保持 i18n 默认名（与「请求 401 后回退」的最终结果完全一致，故无 UI 变化）。
+  const authGate = useAuthGate();
 
   useEffect(() => {
+    if (authGate === 'pending') return;
+    if (authGate === 'anonymous') {
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
 
     const fetchWithRetry = async (url: string, retries = 2): Promise<Response | null> => {
@@ -84,7 +95,7 @@ export function useCompanyName() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authGate]);
 
   return { companyName, loading };
 }

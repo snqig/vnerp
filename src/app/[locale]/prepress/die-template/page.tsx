@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useCallback } from 'react';
@@ -119,7 +120,6 @@ export default function DieTemplatePage() {
   const [statusFilter, _setStatusFilter] = useState('all');
   const [dieStatusFilter, setDieStatusFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('list');
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
@@ -254,18 +254,14 @@ export default function DieTemplatePage() {
     }
     return sortDir === 'asc' ? cmp : -cmp;
   });
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    sortedList,
+    (r) => String(r.id)
+  );
 
-  const toggleSelect = (id: number) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedIds(next);
-  };
+  const toggleSelect = (id: number) => toggle(String(id));
 
-  const toggleSelectAll = () => {
-    if (selectedIds.size === sortedList.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(sortedList.map((s) => s.id)));
-  };
+  const toggleSelectAll = () => toggleAll();;
 
   const handleCreate = async () => {
     if (!form.template_code || !form.template_name) {
@@ -936,7 +932,7 @@ export default function DieTemplatePage() {
                       key: 'current_usage',
                       label: td('usageRate'),
                       width: 10,
-                      formatter: (_v, row) => `${getUsagePercent(row)}%`,
+                      formatter: (_v, row) => `${getUsagePercent(row as any)}%`,
                     },
                     {
                       key: 'die_status',
@@ -953,8 +949,8 @@ export default function DieTemplatePage() {
                     },
                   ]}
                   data={
-                    selectedIds.size > 0
-                      ? sortedList.filter((i) => selectedIds.has(i.id))
+                    selectedCount > 0
+                      ? sortedList.filter((i) => isSelected(String(i.id)))
                       : sortedList
                   }
                 />
@@ -1000,7 +996,7 @@ export default function DieTemplatePage() {
                   <TableRow>
                     <TableHead className="w-[40px]">
                       <Checkbox
-                        checked={selectedIds.size > 0 && selectedIds.size === sortedList.length}
+                        checked={allSelected}
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
@@ -1060,7 +1056,7 @@ export default function DieTemplatePage() {
                       >
                         <TableCell>
                           <Checkbox
-                            checked={selectedIds.has(item.id)}
+                            checked={isSelected(String(item.id))}
                             onCheckedChange={() => toggleSelect(item.id)}
                           />
                         </TableCell>

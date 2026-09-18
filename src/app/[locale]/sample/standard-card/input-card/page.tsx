@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, Suspense, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { authFetch } from '@/lib/auth-fetch';
@@ -98,11 +99,11 @@ function InputCardPageContent() {
       if (result.success && result.data) {
         setData(mapApiDataToCardData(result.data));
       } else {
-        console.error('[StandardCard:Load] API返回失败:', result.message);
+        logger.error('[StandardCard:Load] API返回失败:', result.message);
         setError(result.message || '加载失败');
       }
     } catch (e) {
-      console.error('[StandardCard:Load] 异常:', e instanceof Error ? e.message : e, e);
+      logger.error('[StandardCard:Load] 异常:', e instanceof Error ? e.message : e, e);
       setError(e instanceof Error ? e.message : '加载数据失败');
     } finally {
       setLoading(false);
@@ -186,12 +187,12 @@ function InputCardPageContent() {
 
   const handleSave = async () => {
     if (!data.customer) {
-      console.warn('[StandardCard:Save] 校验失败: 客户为空');
+      logger.warn('[StandardCard:Save] 校验失败: 客户为空');
       toast({ title: '请选择客户', variant: 'destructive' });
       return;
     }
     if (!data.productName) {
-      console.warn('[StandardCard:Save] 校验失败: 品名为空');
+      logger.warn('[StandardCard:Save] 校验失败: 品名为空');
       toast({ title: '请输入品名', variant: 'destructive' });
       return;
     }
@@ -212,7 +213,7 @@ function InputCardPageContent() {
       const result = await response.json();
 
       if (!result.success) {
-        console.error('[StandardCard:Save] API返回失败:', result.message, result);
+        logger.error('[StandardCard:Save] API返回失败:', result.message, result);
         toast({ title: result.message || '保存失败', variant: 'destructive' });
         return;
       }
@@ -224,7 +225,7 @@ function InputCardPageContent() {
         router.push(`/sample/standard-card/input-card?id=${newId}`);
       }
     } catch (e) {
-      console.error('[StandardCard:Save] 异常:', e instanceof Error ? e.message : e, e);
+      logger.error('[StandardCard:Save] 异常:', e instanceof Error ? e.message : e, e);
       toast({ title: '保存失败，请检查网络连接', variant: 'destructive' });
     } finally {
       setSaving(false);

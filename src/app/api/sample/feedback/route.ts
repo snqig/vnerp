@@ -26,8 +26,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   try {
     const list = await service.getFeedbacks(parseInt(sampleOrderId));
     return successResponse(list.map((f) => f.toProps()));
-  } catch (err: DbRow) {
-    return errorResponse(err.message || ts('k_qoguk0'), 400, 400);
+  } catch (err) {
+    return errorResponse(err instanceof Error ? err.message : String(err) || ts('k_qoguk0'), 400, 400);
   }
 });
 
@@ -48,12 +48,12 @@ export const POST = withPermission(
         feedbackContent: body.feedbackContent,
         modificationRequirements: body.modificationRequirements,
         confirmationStatus: 'pending',
-        feedbackBy: userInfo.id,
+        feedbackBy: userInfo.userId,
         feedbackTime: new Date().toISOString(),
       });
       return successResponse({ id }, ts('k_csurqa'));
-    } catch (err: DbRow) {
-      return errorResponse(err.message || ts('k_1q9u8le'), 400, 400);
+    } catch (err) {
+      return errorResponse(err instanceof Error ? err.message : String(err) || ts('k_1q9u8le'), 400, 400);
     }
   },
   { logTitle: '添加打样反馈' }
@@ -78,8 +78,8 @@ export const PUT = withPermission(
         return errorResponse(`不支持的操作: ${action}`, 400, 400);
       }
       return successResponse({ id, action }, ts('k_d209xt'));
-    } catch (err: DbRow) {
-      return errorResponse(err.message || ts('k_ydow7a'), 400, 400);
+    } catch (err) {
+      return errorResponse(err instanceof Error ? err.message : String(err) || ts('k_ydow7a'), 400, 400);
     }
   },
   { logTitle: '处理打样反馈' }

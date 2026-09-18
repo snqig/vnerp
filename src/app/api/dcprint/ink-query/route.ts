@@ -35,7 +35,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return errorResponse(ts('k_1dz2n7l'), 400, 400);
   }
 
-  const result: unknown = {};
+  const result: Record<string, unknown> = {};
 
   if (queryType === 'all' || queryType === 'formula') {
     result.formula = await queryFormulaTrace(actualBatchNo);
@@ -57,7 +57,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 });
 
 async function queryFormulaTrace(batchNo: string) {
-  const trace: unknown = { batch_no: batchNo, formula: null, raw_inks: [], dispatch: null };
+  const trace: Record<string, unknown> = { batch_no: batchNo, formula: null, raw_inks: [], dispatch: null };
 
   const dispatchRows = await query(
     'SELECT * FROM ink_dispatch WHERE batch_no = ? AND deleted = 0',
@@ -147,7 +147,7 @@ async function queryFormulaTrace(batchNo: string) {
 }
 
 async function queryProcessGuide(batchNo: string) {
-  const guide: unknown = { batch_no: batchNo, workorder: null, sop: null, process_card: null };
+  const guide: Record<string, unknown> = { batch_no: batchNo, workorder: null, sop: null, process_card: null };
 
   const dispatchRows = await query(
     'SELECT workorder_id, workorder_no, formula_id FROM ink_dispatch WHERE batch_no = ? AND deleted = 0',
@@ -164,7 +164,8 @@ async function queryProcessGuide(batchNo: string) {
       guide.workorder = {
         order_no: wo.order_no,
         product_name: wo.product_name,
-        plan_qty: wo.plan_qty,
+        // prod_work_order 无 plan_qty 列；上面是 SELECT *，取不存在的列恒为 undefined
+        plan_qty: wo.quantity,
         status: wo.status,
         plan_start_date: wo.plan_start_date,
         plan_end_date: wo.plan_end_date,
@@ -205,7 +206,7 @@ async function queryProcessGuide(batchNo: string) {
 }
 
 async function queryQualityTrace(batchNo: string) {
-  const trace: unknown = { batch_no: batchNo, inspection: null, usage_history: [], supplier: null };
+  const trace: Record<string, unknown> = { batch_no: batchNo, inspection: null, usage_history: [], supplier: null };
 
   const batchRows = await query(
     'SELECT * FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0',
@@ -272,7 +273,7 @@ async function queryQualityTrace(batchNo: string) {
 }
 
 async function queryInventoryExpiry(batchNo: string) {
-  const info: unknown = { batch_no: batchNo, inventory: null, expiry: null, opening: null };
+  const info: Record<string, unknown> = { batch_no: batchNo, inventory: null, expiry: null, opening: null };
 
   const batchRows = await query(
     `SELECT ib.*, w.warehouse_name

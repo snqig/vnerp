@@ -147,7 +147,7 @@ export const POST = withPermission(
     }
 
     // 查询流程卡信息
-    const card = await queryOne<unknown>(
+    const card = await queryOne(
       `SELECT
       c.id, c.card_no, c.work_order_no, c.product_code, c.product_name,
       c.main_label_id, c.main_label_no,
@@ -290,7 +290,7 @@ export const detail = withPermission(async (request: NextRequest, _userInfo) => 
     return errorResponse(ts('k_6xqqgv'), 400, 400);
   }
 
-  const trace = await queryOne<unknown>(
+  const trace = await queryOne(
     `SELECT
       t.id,
       t.trace_no as traceNo,
@@ -351,14 +351,14 @@ export const detail = withPermission(async (request: NextRequest, _userInfo) => 
 async function queryPaginated(
   sql: string,
   countSql: string,
-  params: DbRow[],
+  params: SqlValue[],
   pagination: { page: number; pageSize: number }
 ) {
   const { page, pageSize } = pagination;
   const offset = (page - 1) * pageSize;
 
   const [data, countResult] = await Promise.all([
-    query<unknown[]>(`${sql} LIMIT ? OFFSET ?`, [...params, pageSize, offset]),
+    query(`${sql} LIMIT ? OFFSET ?`, [...params, pageSize, offset]),
     queryOne<{ total: number }>(countSql, params),
   ]);
 

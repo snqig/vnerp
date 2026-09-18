@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
@@ -134,8 +135,11 @@ export default function Complaint8DPage() {
   const [show8DDialog, setShow8DDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<ComplaintRecord>>({});
   const [active8DTab, setActive8DTab] = useState('d1');
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'complaint_no');
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    sortedData,
+    (r) => String(r.id)
+  );
 
   const fetchData = async () => {
     try {
@@ -300,8 +304,8 @@ export default function Complaint8DPage() {
                   },
                 ]}
                 data={
-                  selectedIds.length > 0
-                    ? sortedData.filter((i) => i.id && selectedIds.includes(i.id))
+                  selectedCount > 0
+                    ? sortedData.filter((i) => i.id && isSelected(String(i.id)))
                     : sortedData
                 }
               />
@@ -311,18 +315,7 @@ export default function Complaint8DPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedIds.length === sortedData.length && sortedData.length > 0}
-                      onCheckedChange={() =>
-                        setSelectedIds(
-                          selectedIds.length === sortedData.length
-                            ? []
-                            : sortedData
-                                .filter((i: ComplaintRecord) => i.id)
-                                .map((i: ComplaintRecord) => i.id!)
-                        )
-                      }
-                    />
+                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                   </TableHead>
                   <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
                   <SortableTableHeader
@@ -370,15 +363,8 @@ export default function Complaint8DPage() {
                   <TableRow key={item.id}>
                     <TableCell>
                       <Checkbox
-                        checked={item.id ? selectedIds.includes(item.id) : false}
-                        onCheckedChange={() => {
-                          if (item.id)
-                            setSelectedIds((prev: number[]) =>
-                              prev.includes(item.id!)
-                                ? prev.filter((i: number) => i !== item.id!)
-                                : [...prev, item.id!]
-                            );
-                        }}
+                        checked={isSelected(String(item.id))}
+                        onCheckedChange={() => toggle(String(item.id))}
                       />
                     </TableCell>
                     <TableCell className="text-center text-muted-foreground">
@@ -445,7 +431,7 @@ export default function Complaint8DPage() {
 
             <div className="flex items-center justify-between mt-4">
               <span className="text-sm text-muted-foreground">
-                {tc('totalRecords', { total })}
+                {tc('totalRecords', { count: total })}
               </span>
               <div className="flex gap-2">
                 <Button

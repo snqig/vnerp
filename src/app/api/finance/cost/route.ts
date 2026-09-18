@@ -1,5 +1,6 @@
-import { NextRequest } from 'next/server';
-import { query, SqlValue } from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
+import { getTranslations } from 'next-intl/server';
+import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
@@ -48,4 +49,13 @@ export const GET = withPermission(async (request: NextRequest) => {
     pageSize,
     cost_summary: costSummary[0] || { material: 0, labor: 0, overhead: 0, outsource: 0, total: 0 },
   });
+});
+
+export const DELETE = withPermission(async (request: NextRequest) => {
+  const ts = await getTranslations('Common');
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  if (!id) return NextResponse.json({ success: false, message: ts('k_js4lo9') }, { status: 400 });
+  await execute('UPDATE fin_cost_record SET deleted = 1 WHERE id = ?', [Number(id)]);
+  return successResponse(null, ts('k_1hlqs'));
 });

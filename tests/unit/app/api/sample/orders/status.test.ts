@@ -47,11 +47,13 @@ const mocks = vi.hoisted(() => {
 
 vi.mock('@/lib/api-permissions', () => ({
   withPermission: (
-    handler: (req: Request, userInfo: { id: number }, ctx?: unknown) => Promise<Response>,
+    handler: (req: Request, userInfo: { id: number; userId: number }, ctx?: unknown) => Promise<Response>,
     _options?: { logTitle?: string }
   ) => async (request: Request, ctx?: unknown): Promise<Response> => {
     try {
-      return await handler(request, { id: 1 }, ctx);
+      // 注意：`UserInfo` 只有 `userId`（没有 `id`）。此前 mock 只注入 `{ id: 1 }`，
+      // 而路由已改为读 `userInfo.userId` → userId 恒 undefined，9 条用例假失败。
+      return await handler(request, { id: 1, userId: 1 }, ctx);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '服务器内部错误';
       return Response.json(

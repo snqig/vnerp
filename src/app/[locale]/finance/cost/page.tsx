@@ -25,6 +25,9 @@ import { Search, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { authFetch } from '@/lib/auth-fetch';
 import { formatDate } from '@/lib/date-utils';
+import { useToast } from '@/hooks/use-toast';
+import { useRowSelection } from '@/lib/useRowSelection';
+import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
 interface CostItem {
   id: number;
@@ -64,6 +67,32 @@ export default function CostPage() {
     outsource: 0,
     total: 0,
   });
+
+  const { toast } = useToast();
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
+    useRowSelection(list, (r) => String(r.id));
+  const [deleting, setDeleting] = useState(false);
+
+  const handleBatchDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
+    setDeleting(true);
+    let okCount = 0; let failMsg = '';
+    for (const id of ids) {
+      try {
+        const res = await authFetch(`/api/finance/cost?id=${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) okCount++; else failMsg = data.message || failMsg;
+      } catch { failMsg = tc('error'); }
+    }
+    setDeleting(false);
+    if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
+    if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
+    clear();
+    fetchData();
+    fetchSummary();
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -175,9 +204,13 @@ export default function CostPage() {
 
         <Card>
           <CardContent className="p-0">
+            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
+                  </TableHead>
                   <TableHead>{t('costNo')}</TableHead>
                   <TableHead>{t('costType')}</TableHead>
                   <TableHead>{t('sourceNo')}</TableHead>
@@ -190,13 +223,16 @@ export default function CostPage() {
               <TableBody>
                 {list.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       {t('noData')}
                     </TableCell>
                   </TableRow>
                 ) : (
                   list.map((c) => (
                     <TableRow key={c.id}>
+                      <TableCell>
+                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(c.id))} onChange={() => toggle(String(c.id))} aria-label={tc('selectRow', { id: c.id })} />
+                      </TableCell>
                       <TableCell className="font-mono text-sm">{c.cost_no}</TableCell>
                       <TableCell>
                         <Badge variant="outline">
@@ -217,7 +253,7 @@ export default function CostPage() {
         </Card>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{tc('totalRecords', { total })}</span>
+          <span>{tc('totalRecords', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               variant="outline"

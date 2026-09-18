@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { logger } from '@/lib/logger';
 
 import { StandardCard } from '@/domain/standard-card/aggregates/StandardCard';
 import { StandardCardType } from '@/domain/standard-card/value-objects/StandardCardType';
@@ -387,7 +388,7 @@ export class StandardCardApplicationService {
         changed_by: userId,
       } as any);
     } catch (e) {
-      console.error(ts('k_1focctz'), e);
+      logger.error(ts('k_1focctz'), e);
     }
 
     card.confirm(userId);
@@ -470,7 +471,7 @@ export class StandardCardApplicationService {
         );
       }
     } catch (e) {
-      console.error(ts('k_1alssve'), e);
+      logger.error(ts('k_1alssve'), e);
     }
 
     return newCard;
@@ -789,7 +790,7 @@ export class StandardCardApplicationService {
         } as any);
       }
     } catch (e) {
-      console.error(ts('k_1focctz'), e);
+      logger.error(ts('k_1focctz'), e);
     }
   }
 }

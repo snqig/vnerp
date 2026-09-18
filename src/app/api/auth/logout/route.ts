@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { logger } from '@/lib/logger';
 
 ;
 import { NextRequest, NextResponse } from 'next/server';
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       // 请求体可能为空，忽略
     }
   } catch (error) {
-    console.error('[Logout API] Error during token revocation:', error);
+    logger.error('[Logout API] Error during token revocation:', error);
     // 不影响登出流程，继续清除 cookie
   }
 

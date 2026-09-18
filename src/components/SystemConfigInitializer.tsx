@@ -2,10 +2,19 @@
 
 import { useEffect } from 'react';
 import { setConfig } from '@/lib/global-config';
+import { useAuthGate } from '@/contexts/AuthContext';
 import type { DbRow } from '@/types/db';
 
 export default function SystemConfigInitializer() {
+  // 该组件挂在 [locale]/layout 上，登录页也会渲染。
+  // /api/system/config 需要登录态，未登录时发起会返回 401（BUG-005 控制台噪音）。
+  // 因此按认证闸门短路：pending 时等待，anonymous 时直接跳过。
+  const authGate = useAuthGate();
+
   useEffect(() => {
+    if (authGate === 'pending') return;
+    if (authGate === 'anonymous') return;
+
     const initSystemConfig = async () => {
       try {
         const res = await fetch('/api/system/config?pageSize=200');
@@ -36,7 +45,7 @@ export default function SystemConfigInitializer() {
                 break;
               case 'json':
                 try {
-                  value = JSON.parse(value);
+                  value = JSON.parse(value as string);
                 } catch {
                   value = value;
                 }
@@ -54,7 +63,7 @@ export default function SystemConfigInitializer() {
     };
 
     initSystemConfig();
-  }, []);
+  }, [authGate]);
 
   return null;
 }

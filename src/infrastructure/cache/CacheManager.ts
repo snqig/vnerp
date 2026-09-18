@@ -69,7 +69,12 @@ export class InMemoryCacheManager implements CacheManager {
   }
 }
 
-let globalCache: CacheManager | null = null;
+// 单例挂在 globalThis：Turbopack/webpack 的 HMR 会为重编译的模块图重建模块实例，
+// 模块级 let 会导致「登出路由写入的黑名单」与「SSR/其他路由读取的实例」分裂（dev 必现）。
+// 与 Next.js 官方 Prisma 单例模式一致，用 globalThis 保证同进程内唯一。
+const globalForCache = globalThis as unknown as { __vnerpCacheManager?: CacheManager | null };
+
+let globalCache: CacheManager | null = globalForCache.__vnerpCacheManager ?? null;
 
 /**
  * 缓存管理器工厂：根据 REDIS_URL env 自动选择实现
@@ -107,6 +112,7 @@ export function getCacheManager(): CacheManager {
     }
   }
   // 此时 globalCache 必已初始化（所有分支都赋值）
+  globalForCache.__vnerpCacheManager = globalCache;
   return globalCache as CacheManager;
 }
 
@@ -115,6 +121,7 @@ export function getCacheManager(): CacheManager {
  */
 export function resetCacheManagerForTest(): void {
   globalCache = null;
+  globalForCache.__vnerpCacheManager = null;
 }
 
 /**

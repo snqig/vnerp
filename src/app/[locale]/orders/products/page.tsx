@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { useRowSelection } from '@/lib/useRowSelection';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -151,7 +152,6 @@ export default function ProductsPage() {
   const [bomLoading, setBomLoading] = useState(false);
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
-  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -183,6 +183,13 @@ export default function ProductsPage() {
       return 0;
     });
   }, [products, sortField, sortOrder]);
+  const {
+    isSelected,
+    allSelected,
+    toggle,
+    toggleAll,
+    selectAllRef,
+  } = useRowSelection(sortedProducts, (p) => String(p.id));
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 20,
@@ -487,20 +494,6 @@ export default function ProductsPage() {
     }
   };
 
-  const toggleSelectAll = () => {
-    if (selectedProducts.length === sortedProducts.length) {
-      setSelectedProducts([]);
-    } else {
-      setSelectedProducts(sortedProducts.map((p) => p.id));
-    }
-  };
-
-  const toggleSelectProduct = (id: number) => {
-    setSelectedProducts((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    );
-  };
-
   return (
     <MainLayout title={t('productArchive')}>
       <div className="space-y-6">
@@ -558,12 +551,13 @@ export default function ProductsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">
-                      <Checkbox
-                        checked={
-                          sortedProducts.length > 0 &&
-                          selectedProducts.length === sortedProducts.length
-                        }
-                        onCheckedChange={toggleSelectAll}
+                      <input
+                        ref={selectAllRef}
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer accent-blue-600"
+                        checked={allSelected}
+                        onChange={toggleAll}
+                        aria-label={tc('selectAll')}
                       />
                     </TableHead>
                     <TableHead
@@ -644,8 +638,8 @@ export default function ProductsPage() {
                       <TableRow key={product.id}>
                         <TableCell>
                           <Checkbox
-                            checked={selectedProducts.includes(product.id)}
-                            onCheckedChange={() => toggleSelectProduct(product.id)}
+                            checked={isSelected(String(product.id))}
+                            onCheckedChange={() => toggle(String(product.id))}
                           />
                         </TableCell>
                         <TableCell className="font-mono">{product.product_code}</TableCell>

@@ -1,4 +1,5 @@
 'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
@@ -126,6 +127,10 @@ export default function SuppliersPage() {
   const { companyName } = useCompanyName();
   const { toast } = useToast();
   const [list, setList] = useState<Supplier[]>([]);
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    list,
+    (r) => String(r.id)
+  );
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -137,7 +142,6 @@ export default function SuppliersPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
 
@@ -282,21 +286,13 @@ export default function SuppliersPage() {
     }
   };
 
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
-  };
+  const toggleSelect = (id: number) => toggle(String(id));
 
-  const toggleSelectAll = () => {
-    if (selectedIds.length === list.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(list.map((s) => s.id));
-    }
-  };
+  const toggleSelectAll = () => toggleAll();;
 
   const handlePrint = () => {
     const recordsToPrint =
-      selectedIds.length > 0 ? list.filter((s) => selectedIds.includes(s.id)) : list;
+      selectedCount > 0 ? list.filter((s) => isSelected(String(s.id))) : list;
     if (recordsToPrint.length === 0) {
       toast({ title: tc('noDataToPrint'), variant: 'destructive' });
       return;
@@ -479,8 +475,8 @@ export default function SuppliersPage() {
                     { key: 'address', label: tc('address'), width: 30 },
                   ]}
                   data={
-                    selectedIds.length > 0
-                      ? list.filter((s) => selectedIds.includes(s.id))
+                    selectedCount > 0
+                      ? list.filter((s) => isSelected(String(s.id)))
                       : sortedList
                   }
                 />
@@ -505,7 +501,7 @@ export default function SuppliersPage() {
                   <TableRow>
                     <TableHead className="w-12">
                       <Checkbox
-                        checked={list.length > 0 && selectedIds.length === list.length}
+                        checked={allSelected}
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
@@ -591,7 +587,7 @@ export default function SuppliersPage() {
                         <TableRow key={item.id}>
                           <TableCell>
                             <Checkbox
-                              checked={selectedIds.includes(item.id)}
+                              checked={isSelected(String(item.id))}
                               onCheckedChange={() => toggleSelect(item.id)}
                             />
                           </TableCell>
@@ -648,7 +644,7 @@ export default function SuppliersPage() {
               </Table>
             )}
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-gray-500">{tc('totalRecords', { total })}</span>
+              <span className="text-sm text-gray-500">{tc('totalRecords', { count: total })}</span>
               <div className="flex gap-2">
                 <Button
                   size="sm"
