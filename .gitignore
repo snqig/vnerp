@@ -134,6 +134,17 @@ eslint_current_report.json
 scripts/_*.js
 scripts/_*.mjs
 scripts/_*.cjs
+scripts/_*.py
+scripts/_*.md
+
+# AI 生成的草稿/临时文件夹
+draft_*_folder/
+
+# QA 测试结果（本地产物，不入仓）
+qa-results/
+
+# 本地原型文件（按需单独管理）
+prototypes/
 
 # 临时 eslint any 清理脚本与分析输出
 scripts/fix-any-batch.mjs

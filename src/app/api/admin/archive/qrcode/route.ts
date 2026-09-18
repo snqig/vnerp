@@ -1,8 +1,5 @@
 import { getTranslations } from 'next-intl/server';
 
-;
-export const runtime = 'edge';
-
 import { NextRequest, NextResponse } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { query, execute } from '@/lib/db';
