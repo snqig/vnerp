@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Printer, UserCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import QRCode from 'qrcode';
+import Image from 'next/image';
 import type { Employee } from '../../types';
 
 // 批量打印卡片组件
@@ -38,9 +39,9 @@ function BatchPrintCard({ employee, index }: { employee: Employee; index: number
         <span className="font-medium">{employee.name}</span>
       </div>
       <div className="flex gap-4">
-        <div className="w-20 h-24 bg-muted rounded flex items-center justify-center overflow-hidden">
+        <div className="w-20 h-24 bg-muted rounded flex items-center justify-center overflow-hidden relative">
           {employee.photo ? (
-            <img src={employee.photo} alt={employee.name} className="w-full h-full object-cover" />
+            <Image src={employee.photo} alt={employee.name} fill className="object-cover" unoptimized />
           ) : (
             <UserCircle className="w-10 h-10 text-muted-foreground" />
           )}

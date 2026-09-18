@@ -1,6 +1,5 @@
 import { getTranslations } from 'next-intl/server';
 
-import { query, execute, transaction } from '@/lib/db';
 import type { SqlValue } from '@/lib/db';
 import type { DbExecutor } from './DbExecutor';
 import { mysqlDbExecutor } from './MysqlDbExecutor';

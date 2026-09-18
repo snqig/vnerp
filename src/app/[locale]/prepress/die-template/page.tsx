@@ -186,7 +186,7 @@ export default function DieTemplatePage() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, typeFilter, statusFilter, dieStatusFilter]);
+  }, [keyword, typeFilter, statusFilter, dieStatusFilter, toast]);
 
   const fetchMaintenanceList = useCallback(async () => {
     try {
@@ -198,7 +198,7 @@ export default function DieTemplatePage() {
     } catch {
       toast({ title: 'td("fetchMaintenanceFailed")', variant: 'destructive' });
     }
-  }, []);
+  }, [toast]);
 
   const fetchUsageLogs = useCallback(async () => {
     try {
@@ -210,7 +210,7 @@ export default function DieTemplatePage() {
     } catch {
       toast({ title: 'td("fetchUsageFailed")', variant: 'destructive' });
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     fetchList();

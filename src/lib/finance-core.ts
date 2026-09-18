@@ -7,7 +7,7 @@ import { query, execute, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import { generateDocNo } from '@/lib/global-config';
 import { CalcParamService } from '@/lib/calc-param-service';
-import type { DbRow, DbResult, DbRowArray } from '@/types/db';
+import type { DbRow, DbResult } from '@/types/db';
 
 // ============================================================
 // 应收管理
@@ -84,9 +84,9 @@ export async function recordReceipt(
   amount: number,
   receiptMethod: string,
   receiptDate: string,
-  bankAccount?: string,
-  referenceNo?: string,
-  operatorId?: number
+  _bankAccount?: string,
+  _referenceNo?: string,
+  _operatorId?: number
 ): Promise<{ success: boolean; message: string }> {
   try {
     const result = await transaction(async (conn) => {

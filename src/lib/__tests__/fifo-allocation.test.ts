@@ -2,6 +2,31 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { DbConnection } from '@/types/db';
 
+// Mock db 模块，防止导入时创建真实数据库连接池
+vi.mock('@/lib/db', () => ({
+  query: vi.fn(),
+  execute: vi.fn(),
+  transaction: vi.fn((fn) =>
+    fn({
+      query: vi.fn().mockResolvedValue([[]]),
+      execute: vi.fn().mockResolvedValue([{ affectedRows: 0 }]),
+    })
+  ),
+}));
+
+vi.mock('@/lib/inventory-ledger', () => ({
+  appendInventoryLog: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/lib/logger', () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
 describe('FIFO Allocation Logic', () => {
   describe('allocateFIFO - quantity calculation', () => {
     it('should calculate shortage when total available is less than required', async () => {

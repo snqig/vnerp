@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 
 export interface RowSelection<T> {
   /** The full Set of selected keys (may include keys no longer in the current view). */
@@ -44,16 +44,16 @@ export function useRowSelection<T>(rows: T[], keyOf: (row: T) => string): RowSel
     }
   }, [someSelected]);
 
-  const toggle = (key: string) => {
+  const toggle = useCallback((key: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
     });
-  };
+  }, []);
 
-  const toggleAll = () => {
+  const toggleAll = useCallback(() => {
     setSelected((prev) => {
       const current = new Set(prev);
       if (allSelected) {
@@ -63,9 +63,9 @@ export function useRowSelection<T>(rows: T[], keyOf: (row: T) => string): RowSel
       }
       return current;
     });
-  };
+  }, [allSelected, keys]);
 
-  const clear = () => setSelected(new Set());
+  const clear = useCallback(() => setSelected(new Set()), []);
 
   return {
     selected,

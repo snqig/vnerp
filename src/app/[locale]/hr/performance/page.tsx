@@ -99,7 +99,7 @@ export default function PerformancePage() {
 
   useEffect(() => {
     fetchScores();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅首载拉取
+     
   }, []);
 
   const updateScore = (employeeId: number, field: keyof ScoreRow, value: number) => {

@@ -347,6 +347,16 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
     [saveToLocalStorage, debouncedSaveToDatabase]
   );
 
+
+  // 检查菜单是否激活（必须在引用它的 useEffect 之前定义，避免 TDZ）
+  const isActive = useCallback(
+    (path?: string) => {
+      if (!path) return false;
+      return pathname === path || pathname.startsWith(path + '/' );
+    },
+    [pathname]
+  );
+
   useEffect(() => {
     const expandActiveParent = () => {
       setExpandedMenus((prev) => {
@@ -371,7 +381,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
       });
     };
     expandActiveParent();
-  }, [pathname, orderedMenus]);
+  }, [pathname, orderedMenus, isActive]);
 
   // 配置拖拽传感器
   const sensors = useSensors(
@@ -401,7 +411,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
         });
       }
     },
-    [saveMenuOrder]
+    [saveMenuOrder, tc, toast]
   );
 
   // 切换菜单展开状态
@@ -451,12 +461,6 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
     );
   };
 
-  // 检查菜单是否激活
-  const isActive = (path?: string) => {
-    if (!path) return false;
-    return pathname === path || pathname.startsWith(path + '/');
-  };
-
   // 计算当前激活的一级菜单（用于混合导航模式）
   useEffect(() => {
     if (navigationMode !== 'mixed') return;
@@ -475,7 +479,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
       }
     }
     setActiveParentCode(null);
-  }, [pathname, orderedMenus, navigationMode]);
+  }, [pathname, orderedMenus, navigationMode, isActive]);
 
   // 获取混合模式下当前激活的子菜单
   const mixedSubMenus =

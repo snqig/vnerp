@@ -131,6 +131,7 @@ export default function CustomersPage() {
   // 从数据库加载客户数据
   useEffect(() => {
     fetchCustomers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchCustomers 依赖 searchTerm，搜索由下方防抖 effect 单独处理
   }, [currentPage, statusFilter, customerTypeFilter, followUpStatusFilter]);
 
   // 防抖搜索：搜索词变化时自动触发搜索
@@ -145,6 +146,7 @@ export default function CustomersPage() {
       fetchCustomers();
     }, 300);
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchCustomers 依赖多个状态，此处仅响应 searchTerm 变化做防抖搜索
   }, [searchTerm]);
 
   const fetchCustomers = async () => {

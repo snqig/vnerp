@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import type { Employee } from '../../types';
 
 interface PrintDialogProps {
@@ -52,10 +53,12 @@ export function PrintDialog({
               </div>
               <div className="photo-area">
                 {selectedEmployee?.photo ? (
-                  <img
+                  <Image
                     src={selectedEmployee.photo}
                     alt={selectedEmployee.name}
-                    className="w-full h-full object-cover rounded-lg"
+                    fill
+                    className="object-cover rounded-lg"
+                    unoptimized
                   />
                 ) : (
                   <span className="photo-text">{tc('photo')}</span>

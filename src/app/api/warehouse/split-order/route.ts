@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 ;
 import { NextRequest } from 'next/server';
 import { randomUUID } from 'crypto';
-import { query, transaction, execute } from '@/lib/db';
+import { query, transaction } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
@@ -11,7 +11,6 @@ import {
   logOperation,
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-import { AppError } from '@/lib/error-handling';
 import { assertMaterialSplittable } from '@/lib/reference-validation';
 import { getEventBus } from '@/infrastructure/event-bus/EventBus';
 import { SplitOrderAuditedEvent } from '@/domain/cutting/events/SplitOrderEvents';
@@ -472,7 +471,7 @@ export const PATCH = withPermission(
         });
 
         if (totalWasteQty.greaterThan(0)) {
-          const wasteCost = totalCostDecimal.times(totalWasteQty).div(totalQty);
+          const _wasteCost = totalCostDecimal.times(totalWasteQty).div(totalQty);
           await appendInventoryLog(conn, {
             materialId: order.material_id,
             warehouseId,

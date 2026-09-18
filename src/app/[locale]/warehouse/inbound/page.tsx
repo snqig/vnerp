@@ -207,7 +207,7 @@ export default function InboundManagementPage() {
         toast.error(t('qrCodeGenerateFailed'));
       }
     },
-    [t]
+    [t, setIsQRCodeDialogOpen]
   );
 
   const handleSourceLabelFound = useCallback(
@@ -261,7 +261,7 @@ export default function InboundManagementPage() {
         toast.error(t('scanQueryFailed'));
       }
     },
-    [t]
+    [t, setIsQRCodeDialogOpen]
   );
 
   const handleConfirmDelete = async () => {

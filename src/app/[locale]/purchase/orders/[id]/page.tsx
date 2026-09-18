@@ -225,7 +225,7 @@ export default function PurchaseOrderDetailPage() {
     } finally {
       setTabLoading(null);
     }
-  }, [order?.po_no]);
+  }, [order?.po_no, ts]);
 
   const fetchReturnRecords = useCallback(async () => {
     if (!order?.id) return;
@@ -248,7 +248,7 @@ export default function PurchaseOrderDetailPage() {
     } finally {
       setTabLoading(null);
     }
-  }, [order?.id]);
+  }, [order?.id, ts]);
 
   const fetchPayableRecords = useCallback(async () => {
     if (!order?.po_no) return;
@@ -270,7 +270,7 @@ export default function PurchaseOrderDetailPage() {
     } finally {
       setTabLoading(null);
     }
-  }, [order?.po_no]);
+  }, [order?.po_no, ts]);
 
   useEffect(() => {
     fetchOrder();

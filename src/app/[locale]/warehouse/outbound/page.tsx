@@ -403,7 +403,7 @@ export default function OutboundManagementPage() {
     await fetchOutboundRecords();
     setIsLoading(false);
     toast.success(t('dataRefreshed'));
-  }, []);
+  }, [t]);
 
   // 获取出库单列表
   const fetchOutboundRecords = useCallback(async () => {
@@ -430,7 +430,7 @@ export default function OutboundManagementPage() {
         error: (error as Error).message,
       });
     }
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, ts]);
 
   // 获取仓库列表
   const fetchWarehouses = useCallback(async () => {
@@ -447,7 +447,7 @@ export default function OutboundManagementPage() {
   useEffect(() => {
     fetchWarehouses();
     fetchOutboundRecords();
-  }, [fetchWarehouses, fetchOutboundRecords]);
+  }, [fetchWarehouses]);
 
   // 重置筛选
   const handleReset = useCallback(() => {
@@ -456,7 +456,7 @@ export default function OutboundManagementPage() {
     setDateRange('all');
     clear();
     toast.success(t('filterReset'));
-  }, []);
+  }, [t]);
 
   // 筛选出库记录
   const filteredRecords = useMemo(() => {
@@ -520,7 +520,7 @@ export default function OutboundManagementPage() {
         setInvLoading(false);
       }
     },
-    []
+    [ts]
   );
 
   const handleAdd = () => {
@@ -715,7 +715,7 @@ export default function OutboundManagementPage() {
         setScanLoading(false);
       }
     },
-    [formData.warehouse, warehouses]
+    [formData.warehouse, warehouses, ts]
   );
 
   const handleScanWarehouseChange = (value: string) => {

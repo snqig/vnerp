@@ -198,7 +198,7 @@ export default function FinancePage() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, statusFilter]);
+  }, [keyword, statusFilter, tc]);
 
   const fetchPayables = useCallback(async () => {
     setLoading(true);
@@ -217,7 +217,7 @@ export default function FinancePage() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, statusFilter]);
+  }, [keyword, statusFilter, tc]);
 
   // 经营看板汇总：KPI 卡片依赖 /api/finance/stats 返回的 receivable/payable 汇总
   // （应收/应付列表接口本身不返回 summary，原先读不存在的 data.data.summary 导致卡片恒为 ¥0.00）
@@ -259,7 +259,7 @@ export default function FinancePage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [tc]);
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
@@ -274,7 +274,7 @@ export default function FinancePage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [tc]);
 
   const fetchCustomers = async () => {
     try {
@@ -300,7 +300,7 @@ export default function FinancePage() {
     fetchCustomers();
     fetchSuppliers();
     fetchSummary();
-  }, []);
+  }, [fetchSummary]);
 
   useEffect(() => {
     if (activeTab === 'receivable') fetchReceivables();

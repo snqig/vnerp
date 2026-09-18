@@ -119,14 +119,16 @@ export default function OutsourceOrderPage() {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchData 依赖 searchNo，搜索应由搜索按钮/事件触发而非自动随输入变化
   }, [page, searchStatus]);
   useEffect(() => {
     fetchSuppliers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 初始加载，仅执行一次
   }, []);
 
   useEffect(() => {
     clear();
-  }, [page]);
+  }, [page, clear]);
 
   const handleSave = async () => {
     try {

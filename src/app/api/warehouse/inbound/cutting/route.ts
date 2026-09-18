@@ -150,13 +150,6 @@ export const POST = withPermission(
       operatorId,
       operatorName,
       remark,
-      materialCode,
-      materialName,
-      specification,
-      quantity,
-      unit,
-      supplierName,
-      batchNo,
       orderNo,
       originalWidth,
     } = body;

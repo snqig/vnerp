@@ -16,6 +16,7 @@ import {
   Maximize,
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
+import Image from 'next/image';
 
 /* ═══ 数据接口 ═══ */
 interface CEOData {
@@ -673,10 +674,11 @@ export default function CEODashboard() {
                     mixBlendMode: 'overlay',
                   }}
                 />
-                <img
+                <Image
                   src="/bj.jpg"
                   alt={ts('k_104bo0m')}
-                  className="w-full h-full object-cover animate-hologram"
+                  fill
+                  className="object-cover animate-hologram"
                 />
                 {/* 扫描线 */}
                 <div

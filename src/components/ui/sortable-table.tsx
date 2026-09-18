@@ -27,7 +27,6 @@ export function SortableTableHeader({
   return (
     <TableHead
       className={`cursor-pointer select-none hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 min-h-[44px] ${className}`}
-      role="button"
       tabIndex={0}
       aria-sort={ariaSort}
       onClick={() => onSort(field)}

@@ -9,11 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  QrCode,
   CheckCircle,
   AlertCircle,
-  Trash2,
-  Lock,
   Search,
   FileText,
   Package,

@@ -247,7 +247,7 @@ export default function PurchaseOrdersPage() {
         setLoading(false);
       }
     },
-    [page, pageSize, statusFilter]
+    [page, pageSize, statusFilter, ts]
   );
 
   const fetchSuppliers = useCallback(async () => {
@@ -265,11 +265,11 @@ export default function PurchaseOrdersPage() {
         error: (error as Error).message,
       });
     }
-  }, []);
+  }, [ts]);
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
 
   const debouncedKeyword = useDebounce(keyword, 300);
 

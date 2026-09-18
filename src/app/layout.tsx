@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import { getCompanyProfile, resolveCompanyDisplayName } from '@/lib/company-profile';
 
@@ -20,15 +21,13 @@ export default function RootLayout({
     <html suppressHydrationWarning>
       <body className="antialiased bg-background text-foreground" suppressHydrationWarning>
         {children}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js').catch(() => {});
-              }
-            `,
-          }}
-        />
+        <Script id="sw-register" strategy="lazyOnload">
+          {`
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.register('/sw.js').catch(() => {});
+            }
+          `}
+        </Script>
       </body>
     </html>
   );

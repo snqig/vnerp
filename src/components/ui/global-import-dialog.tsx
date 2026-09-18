@@ -83,7 +83,7 @@ export function GlobalImportDialog({
     } catch (error) {
       toast.error(`${t('templateDownloadFailed') || tc('templateDownloadFailed')}: ${(error as Error).message}`);
     }
-  }, [templateFilename, columns, sampleData, templateDescription, t]);
+  }, [templateFilename, columns, sampleData, templateDescription, t, tc]);
 
   const handleFileSelect = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,8 +112,17 @@ export function GlobalImportDialog({
         setImporting(false);
       }
     },
-    [columns, onValidate, t]
+    [columns, onValidate, t, tc]
   );
+
+  const handleClose = useCallback(() => {
+    onOpenChange(false);
+    setResult(null);
+    setFileName('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [onOpenChange]);
 
   const handleConfirm = useCallback(async () => {
     if (!result || result.validRows.length === 0) return;
@@ -128,16 +137,7 @@ export function GlobalImportDialog({
     } finally {
       setImporting(false);
     }
-  }, [result, onConfirm, t]);
-
-  const handleClose = useCallback(() => {
-    onOpenChange(false);
-    setResult(null);
-    setFileName('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, [onOpenChange]);
+  }, [result, onConfirm, t, tc, handleClose]);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>

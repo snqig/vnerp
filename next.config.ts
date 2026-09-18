@@ -16,6 +16,9 @@ const corsAllowOrigin = process.env.CORS_ALLOW_ORIGIN || (process.env.NODE_ENV =
 const isProd = process.env.NODE_ENV === 'production';
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: __dirname,
+  },
   allowedDevOrigins: devOrigins,
   reactStrictMode: true,
   devIndicators: false,

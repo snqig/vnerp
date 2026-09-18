@@ -230,7 +230,7 @@ export default function SalesOrderDetailPage() {
     } finally {
       setTabLoading(null);
     }
-  }, [orderId]);
+  }, [orderId, ts]);
 
   const fetchReturnRecords = useCallback(async () => {
     if (!orderId) return;
@@ -251,7 +251,7 @@ export default function SalesOrderDetailPage() {
     } finally {
       setTabLoading(null);
     }
-  }, [orderId]);
+  }, [orderId, ts]);
 
   const fetchReceivableRecords = useCallback(async () => {
     if (!order?.order_no) return;
@@ -272,7 +272,7 @@ export default function SalesOrderDetailPage() {
     } finally {
       setTabLoading(null);
     }
-  }, [order?.order_no]);
+  }, [order?.order_no, ts]);
 
   useEffect(() => {
     fetchOrder();

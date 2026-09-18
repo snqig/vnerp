@@ -182,7 +182,7 @@ export default function EquipmentMaintenancePage() {
     } finally {
       setLoading(false);
     }
-  }, [planPage, searchNo]);
+  }, [planPage, searchNo, tc, toast]);
 
   const fetchRecords = useCallback(async () => {
     setLoading(true);
@@ -204,7 +204,7 @@ export default function EquipmentMaintenancePage() {
     } finally {
       setLoading(false);
     }
-  }, [recordPage, searchNo]);
+  }, [recordPage, searchNo, tc, toast]);
 
   useEffect(() => {
     fetchEquipment();
@@ -220,7 +220,7 @@ export default function EquipmentMaintenancePage() {
 
   useEffect(() => {
     clear();
-  }, [activeTab]);
+  }, [activeTab, clear]);
 
   const handleSave = async () => {
     try {

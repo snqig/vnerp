@@ -18,7 +18,7 @@ if (typeof window !== 'undefined') {
 }
 
 if (typeof globalThis.IntersectionObserver === 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+   
   globalThis.IntersectionObserver = class IntersectionObserver {
     readonly root: Element | null = null;
     readonly rootMargin: string = '';

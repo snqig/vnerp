@@ -6,7 +6,7 @@ import { crmCustomer } from './_gen_crm';
 // 来源: live information_schema. 建模 11 张核心 sal_* 缺失表。
 // 注意：sal_delivery 因与已建模 sal_delivery_order(salDelivery) 冲突，导出名改为 salDeliveryHdr。
 // 跨域 FK / 自引用 FK 以注释保留；内部 sal_* FK 实写。
-import { mysqlTable, int, bigint, smallint, mediumint, tinyint, varchar, char, decimal, float, double, text, date, datetime, timestamp, time, json, mysqlEnum, primaryKey, index, uniqueIndex, foreignKey } from 'drizzle-orm/mysql-core';
+import { mysqlTable, int, bigint, tinyint, varchar, decimal, text, date, datetime, primaryKey, index, uniqueIndex, foreignKey } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 import { salOrder, salOrderDetail, salReturnOrder } from './sales';
 

@@ -191,6 +191,7 @@ export default function OrganizationPage() {
     } finally {
       setCompanyLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadMockCompany 是模拟数据兜底函数，仅使用 setState 稳定引用，定义在函数体之后
   }, []);
 
   // 模拟企业数据
@@ -268,6 +269,7 @@ export default function OrganizationPage() {
     } finally {
       setDeptLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadMockDepartments 是模拟数据兜底函数，仅使用 setState 稳定引用，定义在函数体之后
   }, []);
 
   // 模拟部门数据
@@ -427,6 +429,7 @@ export default function OrganizationPage() {
     } finally {
       setRoleLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadMockRoles 是模拟数据兜底函数，仅使用 setState 稳定引用，定义在函数体之后
   }, []);
 
   // 模拟角色数据

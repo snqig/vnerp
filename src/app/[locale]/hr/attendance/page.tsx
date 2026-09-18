@@ -93,6 +93,14 @@ interface AttendanceRecord {
   remark?: string;
 }
 
+function calculateWorkingHours(checkIn: string, checkOut: string): number {
+  if (!checkIn || !checkOut) return 0;
+  const [inH, inM] = checkIn.split(':').map(Number);
+  const [outH, outM] = checkOut.split(':').map(Number);
+  const diffMinutes = outH * 60 + outM - (inH * 60 + inM);
+  return diffMinutes > 0 ? Math.round((diffMinutes / 60) * 100) / 100 : 0;
+}
+
 export default function AttendancePage() {
   const ts = useTranslations('Common');
   // 翻译钩子
@@ -189,7 +197,7 @@ export default function AttendancePage() {
     fetchAttendanceRecords();
   }, []);
 
-  const fetchAttendanceRecords = async () => {
+  const fetchAttendanceRecords = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await authFetch('/api/hr/attendance?pageSize=9999');
@@ -230,13 +238,13 @@ export default function AttendancePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // 刷新数据
   const handleRefresh = useCallback(async () => {
     await fetchAttendanceRecords();
     toast.success(t('refreshSuccess'));
-  }, []);
+  }, [fetchAttendanceRecords, t]);
 
   // 重置筛选
   const handleReset = useCallback(() => {
@@ -246,15 +254,7 @@ export default function AttendancePage() {
     setDateRange('all');
     clear();
     toast.success(t('resetSuccess'));
-  }, []);
-
-  const calculateWorkingHours = (checkIn: string, checkOut: string): number => {
-    if (!checkIn || !checkOut) return 0;
-    const [inH, inM] = checkIn.split(':').map(Number);
-    const [outH, outM] = checkOut.split(':').map(Number);
-    const diffMinutes = outH * 60 + outM - (inH * 60 + inM);
-    return diffMinutes > 0 ? Math.round((diffMinutes / 60) * 100) / 100 : 0;
-  };
+  }, [t]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {

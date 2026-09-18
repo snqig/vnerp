@@ -111,7 +111,7 @@ export default function EmployeePage() {
       avgAge,
       education,
     });
-  }, []);
+  }, [t, ts]);
 
   // 排序函数
   const handleSort = (key: keyof Employee) => {
@@ -191,7 +191,7 @@ export default function EmployeePage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, calculateStats]);
+  }, [debouncedSearch, calculateStats, t, ts]);
 
   // 获取部门列表
   const fetchDepartments = useCallback(async () => {
@@ -214,7 +214,7 @@ export default function EmployeePage() {
         error: (error as Error).message,
       });
     }
-  }, []);
+  }, [ts]);
 
   // 获取角色列表
   const fetchRoles = useCallback(async () => {
@@ -237,7 +237,7 @@ export default function EmployeePage() {
         error: (error as Error).message,
       });
     }
-  }, []);
+  }, [tc, ts]);
 
   // 生成员工编号
   const generateEmployeeNo = () => {

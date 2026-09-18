@@ -253,7 +253,7 @@ export function AuthProvider({
         setState((prev) => ({ ...prev, isLoading: false }));
       }
     },
-    []
+    [ts]
   );
 
   useEffect(() => {
@@ -319,7 +319,7 @@ export function AuthProvider({
       // 生产环境 cleanup 仅在卸载时执行，effect 不会再运行，无副作用。
       authChecked.current = false;
     };
-  }, [fetchMenus]);
+  }, [fetchMenus, ts]);
 
   const login = useCallback(
     async (username: string, password: string, rememberMe: boolean = true) => {
@@ -359,7 +359,7 @@ export function AuthProvider({
         return { success: false, message: ts('k_rn5blf') };
       }
     },
-    [fetchMenus]
+    [fetchMenus, ts]
   );
 
   const logout = useCallback(async () => {
@@ -400,7 +400,7 @@ export function AuthProvider({
       // 且 SSR layout.tsx 重新执行（此时 access_token cookie 已被清除，prefetchMenus 返回 null）
       window.location.href = '/login';
     }
-  }, []);
+  }, [ts]);
 
   const register = useCallback(async (data: Record<string, unknown>) => {
     try {
@@ -413,15 +413,14 @@ export function AuthProvider({
     } catch {
       return { success: false, message: ts('k_osck6n') };
     }
-  }, []);
+  }, [ts]);
 
   const hasPermission = useCallback(
     (permission: string): boolean => {
-      const { permissions, user } = state;
-      if (user?.roles?.some((r) => r.role_code === 'super_admin')) {
+      if (state.user?.roles?.some((r) => r.role_code === 'super_admin')) {
         return true;
       }
-      return permissions.includes(permission) || permissions.includes('*');
+      return state.permissions.includes(permission) || state.permissions.includes('*');
     },
     [state.permissions, state.user]
   );

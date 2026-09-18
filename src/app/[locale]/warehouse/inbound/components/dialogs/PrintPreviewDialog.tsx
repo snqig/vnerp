@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
+import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
@@ -210,10 +211,12 @@ export function PrintPreviewDialog({ open, onOpenChange, printLabels }: PrintPre
                     {qrLoading ? (
                       <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
                     ) : qrDataUrls[label.id || label.labelNo] ? (
-                      <img
+                      <Image
                         src={qrDataUrls[label.id || label.labelNo]}
                         alt="QR"
-                        className="w-16 h-16"
+                        width={64}
+                        height={64}
+                        unoptimized
                       />
                     ) : (
                       <QrCode className="h-12 w-12 text-muted-foreground/40" />

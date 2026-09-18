@@ -145,11 +145,12 @@ export default function SampleToMassPage() {
     fetchData();
     fetchCustomers();
     fetchBoms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchData 等依赖搜索/筛选状态，应由用户主动触发而非自动随输入变化
   }, [page]);
 
   useEffect(() => {
     clear();
-  }, [page]);
+  }, [page, clear]);
 
   const handleSave = async () => {
     try {

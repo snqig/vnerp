@@ -142,10 +142,13 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
     );
   };
 
-  const isActive = (path?: string) => {
-    if (!path) return false;
-    return pathname === path || pathname.startsWith(path + '/');
-  };
+  const isActive = useCallback(
+    (path?: string) => {
+      if (!path) return false;
+      return pathname === path || pathname.startsWith(path + '/');
+    },
+    [pathname]
+  );
 
   const findActiveParent = useCallback(() => {
     for (const menu of menus) {
@@ -157,7 +160,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
       if (isActive(menu.path)) return menu.code;
     }
     return null;
-  }, [menus, pathname]);
+  }, [menus, isActive]);
 
   useEffect(() => {
     setActiveTopMenu(findActiveParent());
@@ -199,7 +202,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
       ]);
       setUnreadCount(1);
     }
-  }, []);
+  }, [tc, ts]);
 
   const fetchUserInfo = useCallback(async () => {
     try {
@@ -214,7 +217,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
       } else {
       }
     } catch {}
-  }, []);
+  }, [ts]);
 
   useEffect(() => {
     fetchNotifications();

@@ -244,7 +244,7 @@ export default function DeliveryPage() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, statusFilter, typeFilter]);
+  }, [keyword, statusFilter, typeFilter, t, tc]);
 
   const fetchCustomers = useCallback(async () => {
     logger.info({ module: 'Sales', action: 'fetchCustomers' }, tc('k_3ao17l'));
@@ -262,7 +262,7 @@ export default function DeliveryPage() {
         error: (e as Error).message,
       });
     }
-  }, []);
+  }, [tc]);
 
   const fetchSalesOrders = useCallback(async () => {
     try {
@@ -276,7 +276,7 @@ export default function DeliveryPage() {
         error: (e as Error).message,
       });
     }
-  }, []);
+  }, [tc]);
 
   const fetchMaterials = useCallback(async () => {
     try {
