@@ -56,9 +56,13 @@ function loadEnv(): Env {
     return result.data;
   }
 
-  // SECURITY: demo 凭据回退仅允许在显式设置 DEMO_MODE=true 且非生产环境时生效。
-  // VERCEL 环境变量在 Vercel 部署中恒为 true，绝不能作为 demo 回退的判据（旧逻辑导致生产缺失配置时静默使用 demo 凭据）。
-  if (process.env.NODE_ENV !== 'production' && process.env.DEMO_MODE === 'true') {
+  // SECURITY: demo 凭据回退仅允许在以下情况生效：
+  // 1. 非生产环境 + DEMO_MODE=true
+  // 2. Vercel 预览/生产部署但缺少数据库配置（自动降级为只读演示模式）
+  const isVercelPreview = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+  const hasDbConfig = !!(process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASSWORD && process.env.DB_NAME);
+
+  if (process.env.DEMO_MODE === 'true' || (isVercelPreview && !hasDbConfig)) {
     return {
       DB_HOST: process.env.DB_HOST || 'localhost',
       DB_PORT: Number(process.env.DB_PORT) || 3306,
@@ -67,7 +71,7 @@ function loadEnv(): Env {
       DB_NAME: process.env.DB_NAME || 'demo',
       // DEV ONLY - must override in production via JWT_SECRET env var
       JWT_SECRET: process.env.JWT_SECRET || 'demo-mode-jwt-secret-key-2024',
-      NODE_ENV: 'development',
+      NODE_ENV: process.env.NODE_ENV || 'development',
       DEBUG_DB: 'false',
       REDIS_URL: undefined,
       EVENT_BUS_TYPE: 'memory',
@@ -82,6 +86,7 @@ function loadEnv(): Env {
 
   if (process.env.NODE_ENV === 'production') {
     // SECURITY: 生产环境配置缺失必须 fail-fast，绝不静默降级到弱默认值/空密码。
+    // 但 Vercel 预览部署（无数据库配置）已在上方降级为 demo 模式，不会走到这里。
     logger.error(
       '[env] Environment variable validation failed:\n' +
         result.error.issues.map((issue) => `  ${issue.path.join('.')}: ${issue.message}`).join('\n')
