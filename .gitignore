@@ -95,6 +95,15 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
+# Windows 保留设备名垃圾文件
+# 背景：Git Bash 下 `cmd 2>nul` / `dir ... 2>nul` 里的 nul 不会被当作设备名，会在项目根目录
+# 误创建一个真实文件 `nul`。Tailwind v4 的自动内容扫描会枚举到它并请求读取，
+# 而 Windows 把 `nul` 解析为 NUL 设备 → 读取返回 os error 1，触发 Turbopack panic
+# （Failed to write app endpoint /[locale]/login/page）。
+# 该文件无法在本沙箱内删除（safe-delete 策略拒绝 trash 保留设备名），故显式忽略，
+# 使 Tailwind 扫描跳过它；并请手动删除真实文件。
+/nul
+
 # 临时文件
 *.tmp
 *.temp

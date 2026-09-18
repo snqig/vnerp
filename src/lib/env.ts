@@ -1,5 +1,7 @@
 import { z } from 'zod';
-import { logger } from '@/lib/logger';
+// 注意：本模块在 next.config 加载期被 Node 直接 require，tsconfig 的 `@/` 别名不会被解析，
+// 必须用相对路径，否则会被 config-loader 错写成 `./src/lib/logger` 而 MODULE_NOT_FOUND。
+import { logger } from './logger';
 
 /**
  * 环境变量 Schema 校验
