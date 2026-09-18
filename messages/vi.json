@@ -1,6 +1,5 @@
 {
   "Common": {
-    "appTitle": "VNERP | Hệ thống quản lý in màn hình",
     "newDeliveryTitle": "Tạo lô hàng mới",
     "newDeliveryDesc": "Điền thông tin lô hàng, các trường có dấu * là bắt buộc",
     "shipmentItems": "Chi tiết lô hàng",
@@ -5861,7 +5860,21 @@
     "k_1mtkise": "获取发货单列表失败",
     "k_1od0l5n": "开始获取发货单列表",
     "k_1ytjkgm": "获取客户列表失败",
-    "k_3ao17l": "开始获取客户列表"
+    "k_3ao17l": "开始获取客户列表",
+    "logoLabel": "Logo",
+    "logoUploadHint": "Hỗ trợ PNG / JPG, ưu tiên ảnh vuông, tối đa 1MB",
+    "logoUploadButton": "Tải lên logo",
+    "logoReplaceButton": "Thay logo",
+    "logoRemoveButton": "Xóa",
+    "logoUploading": "Đang tải lên...",
+    "logoUploadSuccess": "Đã cập nhật logo",
+    "logoRemoveSuccess": "Đã xóa logo",
+    "logoUploadFailed": "Tải logo thất bại",
+    "logoRemoveFailed": "Xóa logo thất bại",
+    "logoInvalidType": "Chỉ chấp nhận ảnh PNG hoặc JPG",
+    "logoTooLarge": "Kích thước ảnh không vượt quá 1MB",
+    "logoEmptyFile": "Vui lòng chọn ảnh để tải lên",
+    "logoCompanyMissing": "Không tìm thấy thông tin doanh nghiệp"
   },
   "Nav": {
     "dashboard_center": "Trung tâm Bảng điều khiển",

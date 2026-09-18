@@ -1,6 +1,5 @@
 {
   "Common": {
-    "appTitle": "VNERP | Screen Printing Management System",
     "newDeliveryTitle": "New Shipment",
     "newDeliveryDesc": "Fill in shipment information, fields marked * are required",
     "shipmentItems": "Shipment Items",
@@ -5861,7 +5860,21 @@
     "k_1mtkise": "获取发货单列表失败",
     "k_1od0l5n": "开始获取发货单列表",
     "k_1ytjkgm": "获取客户列表失败",
-    "k_3ao17l": "开始获取客户列表"
+    "k_3ao17l": "开始获取客户列表",
+    "logoLabel": "Logo",
+    "logoUploadHint": "PNG or JPG, square image preferred, max 1 MB",
+    "logoUploadButton": "Upload Logo",
+    "logoReplaceButton": "Replace Logo",
+    "logoRemoveButton": "Remove",
+    "logoUploading": "Uploading...",
+    "logoUploadSuccess": "Logo updated",
+    "logoRemoveSuccess": "Logo removed",
+    "logoUploadFailed": "Failed to upload logo",
+    "logoRemoveFailed": "Failed to remove logo",
+    "logoInvalidType": "Only PNG or JPG images are allowed",
+    "logoTooLarge": "Image size must not exceed 1 MB",
+    "logoEmptyFile": "Please select an image to upload",
+    "logoCompanyMissing": "Company profile record not found"
   },
   "Nav": {
     "dashboard_center": "Dashboard Center",

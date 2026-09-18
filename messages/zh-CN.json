@@ -18,7 +18,6 @@
     "SERVICE_UNAVAILABLE": "服务暂时不可用，请稍后重试"
   },
   "Common": {
-    "appTitle": "VNERP | 丝网印刷管理系统",
     "newDeliveryTitle": "新增发货单",
     "newDeliveryDesc": "填写发货资讯，带 * 为必填项",
     "shipmentItems": "发货明细",
@@ -5879,7 +5878,21 @@
     "k_1mtkise": "获取发货单列表失败",
     "k_1od0l5n": "开始获取发货单列表",
     "k_1ytjkgm": "获取客户列表失败",
-    "k_3ao17l": "开始获取客户列表"
+    "k_3ao17l": "开始获取客户列表",
+    "logoLabel": "LOGO 图标",
+    "logoUploadHint": "支持 PNG / JPG，建议 1:1 方图，不超过 1MB",
+    "logoUploadButton": "上传 LOGO",
+    "logoReplaceButton": "更换 LOGO",
+    "logoRemoveButton": "移除",
+    "logoUploading": "上传中...",
+    "logoUploadSuccess": "LOGO 已更新",
+    "logoRemoveSuccess": "LOGO 已移除",
+    "logoUploadFailed": "LOGO 上传失败",
+    "logoRemoveFailed": "LOGO 移除失败",
+    "logoInvalidType": "只能上传 PNG 或 JPG 格式的图片",
+    "logoTooLarge": "图片大小不能超过 1MB",
+    "logoEmptyFile": "请选择要上传的图片",
+    "logoCompanyMissing": "未找到企业信息记录"
   },
   "Nav": {
     "dashboard_center": "看板中心",

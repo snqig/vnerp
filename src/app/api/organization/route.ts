@@ -1,7 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-
-;
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { execute, queryOne } from '@/lib/db';
 import {
   successResponse,
@@ -11,6 +9,7 @@ import {
 } from '@/lib/api-response';
 import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
+import { invalidateCompanyProfileCache } from '@/lib/company-profile';
 
 // 企业信息数据接口
 interface Company {
@@ -29,6 +28,8 @@ interface Company {
   fax?: string;
   postcode?: string;
   description?: string;
+  /** LOGO 静态资源路径，写入走 /api/organization/logo（本接口不修改，避免误清空） */
+  logo?: string | null;
   create_time?: string;
   update_time?: string;
 }
@@ -44,7 +45,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
       `SELECT
         id, full_name, short_name, code, legal_person, reg_address,
         contact_phone, email, tax_no, bank_name, bank_account,
-        website, fax, postcode, description, create_time, update_time
+        website, fax, postcode, description, logo, create_time, update_time
       FROM sys_company
       WHERE id = 1`
     );
@@ -56,6 +57,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
 });
 
 // PUT - 更新企业信息
+//
+// 注意：LOGO 不在本接口的更新列内 —— 它由 `/api/organization/logo` 专职管理。
+// 若把 logo 混进「保存企业信息」的全量 UPDATE，任何未回填 logo 的提交都会把它清空。
 export const PUT = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
   const ts = await getTranslations('Common');
@@ -76,12 +80,14 @@ export const PUT = withPermission(
 
       const result = await execute(
         `INSERT INTO sys_company (
-        id, full_name, short_name, code, legal_person, reg_address,
+        id, full_name, company_name, short_name, code, legal_person, reg_address,
         contact_phone, email, tax_no, bank_name, bank_account,
         website, fax, postcode, description
-      ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           body.full_name,
+          // company_name 在真实表中为 NOT NULL 且无默认值，缺省时跟随全称
+          body.short_name || body.full_name,
           body.short_name ?? null,
           body.code ?? null,
           body.legal_person ?? null,
@@ -98,6 +104,7 @@ export const PUT = withPermission(
         ]
       );
 
+      invalidateCompanyProfileCache();
       return successResponse({ id: result.insertId }, ts('k_1pvyl8y'));
     }
 
@@ -140,6 +147,9 @@ export const PUT = withPermission(
     if (result.affectedRows === 0) {
       return commonErrors.notFound(ts('k_1nf2v1x'));
     }
+
+    // 公司名/简称变更后立即失效服务端缓存，使标题等位置及时生效
+    invalidateCompanyProfileCache();
 
     return successResponse(null, ts('k_9deiaf'));
   },

@@ -1,6 +1,5 @@
 {
   "Common": {
-    "appTitle": "VNERP | 絲網印刷管理系統",
     "newDeliveryTitle": "新增發貨單",
     "newDeliveryDesc": "填寫發貨資訊，帶 * 為必填項",
     "shipmentItems": "發貨明細",
@@ -5861,7 +5860,21 @@
     "k_1mtkise": "获取发货单列表失败",
     "k_1od0l5n": "开始获取发货单列表",
     "k_1ytjkgm": "获取客户列表失败",
-    "k_3ao17l": "开始获取客户列表"
+    "k_3ao17l": "开始获取客户列表",
+    "logoLabel": "LOGO 圖標",
+    "logoUploadHint": "支援 PNG / JPG，建議 1:1 方圖，不超過 1MB",
+    "logoUploadButton": "上傳 LOGO",
+    "logoReplaceButton": "更換 LOGO",
+    "logoRemoveButton": "移除",
+    "logoUploading": "上傳中...",
+    "logoUploadSuccess": "LOGO 已更新",
+    "logoRemoveSuccess": "LOGO 已移除",
+    "logoUploadFailed": "LOGO 上傳失敗",
+    "logoRemoveFailed": "LOGO 移除失敗",
+    "logoInvalidType": "只能上傳 PNG 或 JPG 格式的圖片",
+    "logoTooLarge": "圖片大小不能超過 1MB",
+    "logoEmptyFile": "請選擇要上傳的圖片",
+    "logoCompanyMissing": "未找到企業資訊記錄"
   },
   "Nav": {
     "dashboard_center": "看板中心",
