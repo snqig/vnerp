@@ -6638,6 +6638,7 @@
     "k_zsv6bq": "物料编码"
   },
   "Warehouse": {
+    "categoryFetchFailed": "获取仓库分类失败",
     "title": "仓库管理",
     "inbound": "入库",
     "outbound": "出库",
@@ -7944,8 +7945,6 @@
     "priority.low": "低",
     "priority.label": "优先级",
     "units.sheet": "张",
-    "units.roll": "卷",
-    "units.piece": "个",
     "error": "操作失败",
     "success": "操作成功",
     "statusUpdated": "状态已更新为：{status}",

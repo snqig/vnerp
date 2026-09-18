@@ -6620,6 +6620,7 @@
     "k_zsv6bq": "物料编码"
   },
   "Warehouse": {
+    "categoryFetchFailed": "Lấy phân loại kho thất bại",
     "title": "Quản lý kho",
     "inbound": "Nhập kho",
     "outbound": "Xuất kho",
@@ -7926,8 +7927,6 @@
     "priority.low": "Thấp",
     "priority.label": "Ưu tiên",
     "units.sheet": "Tờ",
-    "units.roll": "Cuộn",
-    "units.piece": "Cái",
     "error": "操作失败",
     "success": "操作成功",
     "statusUpdated": "状态已更新为：{status}",

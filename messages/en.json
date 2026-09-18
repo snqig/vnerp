@@ -6620,6 +6620,7 @@
     "k_zsv6bq": "物料编码"
   },
   "Warehouse": {
+    "categoryFetchFailed": "Failed to fetch warehouse category",
     "title": "Warehouse Management",
     "inbound": "Inbound",
     "outbound": "Outbound",
@@ -7926,8 +7927,6 @@
     "priority.low": "Low",
     "priority.label": "Priority",
     "units.sheet": "Sheet",
-    "units.roll": "Roll",
-    "units.piece": "Piece",
     "error": "Operation Failed",
     "success": "Operation Successful",
     "statusUpdated": "Status updated to: {status}",

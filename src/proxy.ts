@@ -120,13 +120,28 @@ export async function proxy(request: NextRequest) {
     ].some((p) => pathname.startsWith(p));
 
     if (!isPublicApi) {
-      // 非公开 API 需携带 access_token cookie 或 Authorization header（兼容 localStorage 与 cookie 两种认证模式）
-      const apiToken = request.cookies.get('access_token')?.value;
+      // 非公开 API 需携带 access_token cookie 或 Authorization header（兼容 localStorage 与 cookie 两种认证模式）。
+      // 取值优先级与 src/lib/auth.ts 的 extractToken 保持一致：Bearer header 优先，回退 cookie。
       const authHeader = request.headers.get('authorization');
-      const hasBearerToken = authHeader?.startsWith('Bearer ') && authHeader.length > 7;
-      if (!apiToken && !hasBearerToken) {
+      const bearerToken =
+        authHeader?.startsWith('Bearer ') && authHeader.length > 7
+          ? authHeader.slice(7).trim()
+          : null;
+      const presentedToken = bearerToken || request.cookies.get('access_token')?.value || null;
+
+      if (!presentedToken) {
         return NextResponse.json(
           { success: false, message: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+
+      // 边缘层验签 + 过期校验（与下方页面级鉴权同口径：粗粒度、不查库）。
+      // 关闭「API 路径只校验 token 存在性、不校验有效性」的缺口：伪造 / 过期 token 在边缘即拒绝，
+      // 不会再穿透到路由层。黑名单 / 用户级撤销（改密 / 锁号）仍由 API 层 withAuth 负责，此处不重复实现。
+      if (!(await verifyJwtSignature(presentedToken))) {
+        return NextResponse.json(
+          { success: false, message: 'Invalid or expired token' },
           { status: 401 }
         );
       }

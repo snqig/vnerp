@@ -20,12 +20,13 @@
  *   node scripts/lint-gate.mjs                  # 自动取 git 改动文件（CI / pre-commit）
  *   node scripts/lint-gate.mjs --files a.tsx b.tsx   # 仅查指定文件
  *   node scripts/lint-gate.mjs --self-test     # 自测拦截逻辑
+ *   node scripts/lint-gate.mjs --update-baseline  # 生成/刷新债务冻结线（= pnpm lint:baseline）
  *
  * 退出码：0 = 通过；1 = 发现新增硬编码；2 = 环境/脚本错误。
  */
 
 import { ESLint } from 'eslint';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve, relative } from 'node:path';
 import { execFileSync } from 'node:child_process';
 
@@ -66,6 +67,69 @@ function buildBaseline() {
     if (counts.size) map.set(f.filePath, counts);
   }
   return map;
+}
+
+// 遍历 src/ 下所有源码文件（跳过 node_modules/.next），返回绝对路径
+function walkSrc(dir, acc = []) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) {
+      if (e.name === 'node_modules' || e.name === '.next') continue;
+      walkSrc(p, acc);
+    } else if (SRC_RE.test(e.name)) {
+      acc.push(p);
+    }
+  }
+  return acc;
+}
+
+/**
+ * 生成 / 刷新 i18n 硬编码冻结线快照（--update-baseline）。
+ *
+ * 为什么由本脚本生成、而不是 `eslint --format json`：
+ *   冻结线必须与 gate 的**同一代码路径**（lintText + 本文件的 extractText）产出，
+ *   否则格式/口径差异会让 gate 误报或漏报。此处直接保存原始 ESLint 消息，
+ *   buildBaseline 反解后与 gate 逐文件比对的结果完全一致。
+ *
+ * 产物 eslint-baseline.json 必须**入库**：它是「债务冻结线快照」，
+ * 只在显式刷新（批量迁移收敛硬编码后）时变更；CI 依赖它的历史版本做增量比对。
+ */
+async function updateBaseline() {
+  const eslint = new ESLint();
+  const files = walkSrc(join(ROOT, 'src'));
+  const out = [];
+  let total = 0;
+  for (const abs of files) {
+    let content;
+    try {
+      content = readFileSync(abs, 'utf8');
+    } catch {
+      continue;
+    }
+    let results;
+    try {
+      results = await eslint.lintText(content, { filePath: abs });
+    } catch (e) {
+      console.error(`\n❌ 无法 lint ${abs}（冻结线无法生成该文件）：${e.message}`);
+      process.exit(2);
+    }
+    const messages = [];
+    for (const r of results) {
+      for (const m of r.messages || []) {
+        if (m.ruleId !== 'i18n/no-chinese-hardcode') continue;
+        messages.push({ ruleId: m.ruleId, message: m.message });
+      }
+    }
+    if (messages.length) {
+      out.push({ filePath: abs, messages });
+      total += messages.length;
+    }
+  }
+  writeFileSync(BASELINE_PATH, JSON.stringify(out, null, 2) + '\n');
+  console.log(
+    `✅ 冻结线已刷新：${out.length} 个文件 / ${total} 处硬编码中文 → ${relative(ROOT, BASELINE_PATH)}`
+  );
+  process.exit(0);
 }
 
 // 取 git 改动文件（相对仓库根），多种来源合并去重
@@ -142,6 +206,7 @@ async function lintFile(eslint, absPath) {
 async function main() {
   const args = process.argv.slice(2);
   if (args.includes('--self-test')) return selfTest();
+  if (args.includes('--update-baseline')) return updateBaseline();
 
   const baseline = buildBaseline();
 
