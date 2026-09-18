@@ -13,8 +13,12 @@
  *   - 按"中文短语"集合 diff，而非总 warning 数 → 不会被"删一个加一个"绕过
  *   - 只关心 i18n/no-chinese-hardcode 这一条红线，不误伤其他 lint 规则
  *
- * 依赖：eslint-baseline.json 必须由 `pnpm lint:baseline` 预先生成。
+ * 依赖：eslint-baseline.json 必须由 `pnpm lint:baseline` 预先生成（已入库，勿加入 .gitignore）。
  *       每次批量迁移减少硬编码后，记得重跑 `pnpm lint:baseline` 刷新冻结线。
+ *
+ * CI 注意：改动集合取自 `git diff <base>...HEAD`。actions/checkout 默认 fetch-depth: 1
+ *       会让基线 ref 不可解析 → 改动集合为空 → 红线静默放行。因此 CI 必须
+ *       fetch-depth: 0，否则脚本在 CI=1 且无基线时以 exit 2 失败关闭。
  *
  * 用法：
  *   node scripts/lint-gate.mjs                  # 自动取 git 改动文件（CI / pre-commit）
@@ -132,9 +136,21 @@ async function updateBaseline() {
   process.exit(0);
 }
 
-// 取 git 改动文件（相对仓库根），多种来源合并去重
+// 候选基线 ref：优先 CI 提供的 GITHUB_BASE_REF，其次 main/develop
+function candidateBaseRefs() {
+  const refs = [];
+  const ghBase = process.env.GITHUB_BASE_REF;
+  if (ghBase) refs.push(`origin/${ghBase}`, ghBase);
+  refs.push('origin/main', 'origin/develop', 'main', 'develop');
+  return refs;
+}
+
+// 取 git 改动文件（相对仓库根），多种来源合并去重。
+// 额外返回 baseResolved：是否成功解析出基线 ref（CI 下为 false 时必须失败关闭，
+// 否则浅克隆会让改动集合为空 → 红线检查静默放行）。
 function getChangedFiles() {
   const out = new Set();
+  let baseResolved = false;
   const tryRun = (args) => {
     try {
       const s = execFileSync('git', args, {
@@ -146,14 +162,21 @@ function getChangedFiles() {
         .map((x) => x.trim())
         .filter(Boolean)
         .forEach((f) => out.add(f));
+      return true;
     } catch {
-      /* 忽略单次失败，尝试下一个来源 */
+      return false;
     }
   };
-  tryRun(['diff', '--name-only', '--diff-filter=ACMR', 'origin/main...HEAD']); // PR 视角
+  // PR 视角：命中第一个可解析的基线即止
+  for (const ref of candidateBaseRefs()) {
+    if (tryRun(['diff', '--name-only', '--diff-filter=ACMR', `${ref}...HEAD`])) {
+      baseResolved = true;
+      break;
+    }
+  }
   tryRun(['diff', '--name-only', '--diff-filter=ACMR', 'HEAD']); // 工作树 vs HEAD
   tryRun(['diff', '--cached', '--name-only', '--diff-filter=ACMR']); // 已暂存
-  return [...out];
+  return { files: [...out], baseResolved };
 }
 
 const SRC_RE = /\.(ts|tsx|js|jsx)$/;
@@ -211,14 +234,28 @@ async function main() {
   const baseline = buildBaseline();
 
   let files;
+  let baseResolved = true;
   const fi = args.indexOf('--files');
   if (fi !== -1) {
     files = args.slice(fi + 1).filter((a) => !a.startsWith('--'));
   } else {
-    files = getChangedFiles();
+    const r = getChangedFiles();
+    files = r.files;
+    baseResolved = r.baseResolved;
   }
   const targets = filterFiles(files);
   if (!targets.length) {
+    // CI 下拿不到基线 ref（如 actions/checkout 默认 fetch-depth: 1）会让改动集合
+    // 恒为空 → 静默放行。这里失败关闭，逼出「补 fetch-depth: 0」或显式 --files。
+    if (!baseResolved && process.env.CI) {
+      console.error(
+        '\n❌ i18n 红线无法验证：解析不到基线 ref（origin/main / origin/develop / GITHUB_BASE_REF）。'
+      );
+      console.error(
+        '   修复：在 actions/checkout 设置 fetch-depth: 0，或改用 `--files <路径…>` 显式指定待检文件。'
+      );
+      process.exit(2);
+    }
     console.log('ℹ️ 无改动源码文件，跳过 i18n 红线检查。');
     process.exit(0);
   }
