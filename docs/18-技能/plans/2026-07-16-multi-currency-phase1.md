@@ -8,7 +8,7 @@
 
 **技术栈：** Next.js 16 App Router / mysql2 / Drizzle ORM / Vitest / next-intl / shadcn/ui
 
-**规格文档：** `docs/superpowers/specs/2026-07-16-multi-currency-design.md`
+**规格文档：** `docs/18-技能/specs/2026-07-16-multi-currency-design.md`
 
 ---
 
