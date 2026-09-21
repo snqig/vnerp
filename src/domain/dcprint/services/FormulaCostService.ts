@@ -12,16 +12,31 @@ import { FormulaItemVO } from '../value-objects/FormulaItemVO';
 import { CostSnapshotResult } from '../aggregates/InkFormulaVersion';
 
 /**
+ * 物料成本查询引用
+ *
+ * `code` 是唯一可靠的解析键：`dcprint_ink_formula_item.material_id` 是跨表弱引用
+ * （同一数字 id 既可指 inv_material.id 也可指 base_ink.id，两表 id 域重叠），
+ * 因此解析成本以随条目落库的编码（material_code / ink_code）为准，
+ * `id` 只用于回填返回 Map 的键、以及条目完全没有编码时的兜底。
+ */
+export interface IMaterialCostRef {
+  /** 物料/油墨 id（作为返回 Map 的键） */
+  id: number;
+  /** 物料编码或油墨编码（解析依据），缺失时退化为按 id 解析 */
+  code?: string | null;
+}
+
+/**
  * 物料成本提供者接口（依赖倒置）
  * 基础设施层实现此接口，对接库存模块物料成本表
  */
 export interface IMaterialCostProvider {
   /**
    * 批量获取物料单位成本
-   * @param materialIds 物料 ID 列表
-   * @returns Map<materialId, unitCost>
+   * @param items 物料引用列表
+   * @returns Map<materialId, unitCost>；解析不到成本的物料不会出现在 Map 中
    */
-  getBatchCosts(materialIds: number[]): Promise<Map<number, number>>;
+  getBatchCosts(items: ReadonlyArray<IMaterialCostRef>): Promise<Map<number, number>>;
 }
 
 export interface CostCalculationItem {
@@ -57,11 +72,13 @@ export class FormulaCostService {
       return { totalCost: 0, itemCosts: [], missingCount: 0, warnings: [], status: 0 };
     }
 
-    // 获取成本数据
+    // 获取成本数据（传编码作解析依据，避免跨表 id 域重叠导致成本错配）
     let resolvedCostMap = costMap;
     if (!resolvedCostMap && this.costProvider) {
-      const materialIds = items.filter((i) => i.materialId).map((i) => i.materialId!) as number[];
-      resolvedCostMap = await this.costProvider.getBatchCosts(materialIds);
+      const refs: IMaterialCostRef[] = items
+        .filter((i) => i.materialId)
+        .map((i) => ({ id: i.materialId as number, code: i.materialCode ?? null }));
+      resolvedCostMap = await this.costProvider.getBatchCosts(refs);
     }
     resolvedCostMap = resolvedCostMap ?? new Map<number, number>();
 
