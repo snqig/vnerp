@@ -11,7 +11,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    include: ['tests/**/*.test.ts', 'src/**/*.test.{ts,tsx}'],
+    include: ['tests/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
     setupFiles: ['tests/setup-env.ts'],
     coverage: {
       provider: 'v8', // 优先使用 v8，性能更好

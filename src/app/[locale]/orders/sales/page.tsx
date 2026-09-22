@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { useRouter } from '@/i18n/navigation';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { useTranslations } from 'next-intl';
 import {
@@ -24,7 +25,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -33,7 +33,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -46,7 +45,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { MoneyDisplay } from '@/components/ui/money-display';
-import { CurrencySelect } from '@/components/ui/currency-select';
 import {
   Plus,
   MoreHorizontal,
@@ -64,12 +62,18 @@ import {
   ChevronRight,
   ShoppingCart,
   CheckCircle,
+  ClipboardList,
+  CheckCheck,
+  Truck,
+  CircleCheckBig,
+  XCircle,
 } from 'lucide-react';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import { SalesStatsCards } from './sales-stats-cards';
 
 type SortField =
   | 'order_no'
@@ -113,22 +117,6 @@ interface Order {
   update_time?: string;
 }
 
-interface Customer {
-  id: number;
-  customer_code: string;
-  customer_name: string;
-}
-
-interface Material {
-  id: number;
-  material_code: string;
-  material_name: string;
-  specification?: string;
-  unit: string;
-  sale_price: number;
-  material_type?: number;
-}
-
 /**
  * 状态徽标映射 —— 不再手写。
  *
@@ -169,78 +157,40 @@ export default function SalesOrdersPage() {
   const ts = useTranslations('Orders');
   const t = useTranslations('Orders');
   const tc = useTranslations('Common');
+  const router = useRouter();
   const { companyName } = useCompanyName();
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>(null);
-  const [orderItems, setOrderItems] = useState<
-    {
-      material_id: number | '';
-      material_code: string;
-      material_name: string;
-      quantity: string;
-      unit: string;
-      unit_price: string;
-    }[]
-  >([
-    {
-      material_id: '',
-      material_code: '',
-      material_name: '',
-      quantity: '',
-      unit: '',
-      unit_price: '',
-    },
-  ]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [materials, setMaterials] = useState<Material[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
-  const [submitting, setSubmitting] = useState(false);
-  const [currency, setCurrency] = useState('CNY');
-  const [orderDate, setOrderDate] = useState(() => new Date().toISOString().slice(0, 10));
-
-  const fetchCustomers = async () => {
-    try {
-      const response = await authFetch('/api/customers');
-      const result = await response.json();
-      if (result.success || result.code === 200) {
-        setCustomers(result.data?.list || result.data || []);
-      }
-    } catch {}
-  };
-
-  const fetchMaterials = async () => {
-    try {
-      const response = await authFetch('/api/inventory/materials');
-      const result = await response.json();
-      const list = result.data?.list || result.data || [];
-      setMaterials(list);
-    } catch {
-      setMaterials([]);
-    }
-  };
+  const [stats, setStats] = useState<{ status: number; count: number; amount: number }[]>([]);
 
   const fetchOrders = useCallback(
-    async (keyword?: string, status?: string) => {
+    async (keyword?: string, status?: string, pageNum?: number) => {
       setLoading(true);
       try {
         const params = new URLSearchParams();
         if (keyword) params.append('keyword', keyword);
         const st = status ?? statusFilter;
         if (st && st !== 'all') params.append('status', st);
-        const response = await authFetch(`/api/orders?${params}`);
+        params.append('page', String(pageNum ?? 1));
+        params.append('pageSize', '20');
+        const response = await authFetch(`/api/orders/sales?${params}`);
         const result = await response.json();
         if (result.success) {
-          const orderList = result.data?.list || [];
+          const data = result.data;
+          const orderList = data?.list || [];
           setOrders(orderList);
+          setTotalRecords(data?.total ?? 0);
+          setStats(data?.summary ?? []);
         } else {
           toast.error(result.message || t('fetchOrdersFailed'));
         }
@@ -254,16 +204,15 @@ export default function SalesOrdersPage() {
   );
 
   useEffect(() => {
-    fetchOrders();
-    fetchCustomers();
-    fetchMaterials();
+    fetchOrders(undefined, undefined, 1);
   }, []);
 
   const debouncedSearchKeyword = useDebounce(searchKeyword, 300);
 
   useEffect(() => {
-    fetchOrders(debouncedSearchKeyword, statusFilter);
-  }, [debouncedSearchKeyword, statusFilter, fetchOrders]);
+    setPage(1);
+    fetchOrders(debouncedSearchKeyword, statusFilter, 1);
+  }, [debouncedSearchKeyword, statusFilter]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -345,32 +294,14 @@ export default function SalesOrdersPage() {
     setExpandedRows(newExpanded);
   };
 
-  const addOrderItem = () => {
-    setOrderItems([
-      ...orderItems,
-      {
-        material_id: '',
-        material_code: '',
-        material_name: '',
-        quantity: '',
-        unit: '',
-        unit_price: '',
-      },
-    ]);
-  };
-
-  const removeOrderItem = (index: number) => {
-    setOrderItems(orderItems.filter((_, i) => i !== index));
-  };
-
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
     setIsViewOpen(true);
   };
 
   const handleEditOrder = (order: Order) => {
-    setSelectedOrder(order);
-    setIsEditOpen(true);
+    // 编辑走独立全页表单（与新建同一套组件），路由参数用订单号
+    router.push(`/orders/sales/${encodeURIComponent(order.order_no)}/edit`);
   };
 
   const handleDeleteOrder = async (orderId: number) => {
@@ -392,9 +323,9 @@ export default function SalesOrdersPage() {
 
   const handleConfirmOrder = async (orderId: number) => {
     try {
-      const response = await authFetch('/api/orders', {
+      const response = await authFetch('/api/orders/sales', {
         method: 'PUT',
-        body: JSON.stringify({ id: orderId, status: 2 }),
+        body: JSON.stringify({ id: orderId, action: 'submit' }),
       });
       const result = await response.json();
       if (result.success) {
@@ -425,9 +356,9 @@ export default function SalesOrdersPage() {
     try {
       let successCount = 0;
       for (const order of pendingOrders) {
-        const res = await authFetch('/api/orders', {
+        const res = await authFetch('/api/orders/sales', {
           method: 'PUT',
-          body: JSON.stringify({ id: order.id, status: 2 }),
+          body: JSON.stringify({ id: order.id, action: 'submit' }),
         });
         const data = await res.json();
         if (data.success) successCount++;
@@ -521,13 +452,7 @@ export default function SalesOrdersPage() {
       return;
     }
 
-    const statusLabels: Record<number, string> = {
-      1: t('statusPending'),
-      2: t('statusConfirmed'),
-      3: t('statusPartialShip'),
-      4: t('statusCompleted'),
-      5: t('statusCancelled'),
-    };
+    const statusLabels: Record<number, string> = buildStatusLabelMap(t);
 
     if (format === 'excel') {
       const headers = [
@@ -718,144 +643,17 @@ export default function SalesOrdersPage() {
     toast.success(t('printSuccess', { count: dataToPrint.length }));
   };
 
-  const handleSubmitOrder = async () => {
-    if (!selectedCustomer) {
-      toast.warning(t('selectCustomerWarning'));
-      return;
-    }
-
-    const deliveryDate = (document.getElementById('deliveryDate') as HTMLInputElement)?.value;
-    if (!deliveryDate) {
-      toast.warning(t('selectDeliveryDateWarning'));
-      return;
-    }
-
-    const validItems = orderItems.filter(
-      (item) => item.material_name && item.quantity && item.unit_price
-    );
-    if (validItems.length === 0) {
-      toast.warning(t('addValidItemWarning'));
-      return;
-    }
-
-    for (let i = 0; i < validItems.length; i++) {
-      const item = validItems[i];
-      if (parseFloat(item.quantity) <= 0) {
-        toast.warning(t('quantityMustBePositive', { row: i + 1 }));
-        return;
-      }
-      if (parseFloat(item.unit_price) < 0) {
-        toast.warning(t('priceCannotBeNegative', { row: i + 1 }));
-        return;
-      }
-    }
-
-    setSubmitting(true);
-    try {
-      const response = await authFetch('/api/orders', {
-        method: 'POST',
-        body: JSON.stringify({
-          customer_id: parseInt(selectedCustomer),
-          delivery_date: deliveryDate,
-          order_date: orderDate || null,
-          currency,
-          items: validItems.map((item) => ({
-            material_id: item.material_id || null,
-            material_code: item.material_code || '',
-            material_name: item.material_name,
-            quantity: parseFloat(item.quantity),
-            unit: item.unit || ts('k_d5a1x9'),
-            unit_price: parseFloat(item.unit_price),
-          })),
-          remark: (document.getElementById('remark') as HTMLInputElement)?.value,
-        }),
-      });
-      const result = await response.json();
-      if (result.success) {
-        toast.success(t('submitSuccess'));
-        setIsCreateOpen(false);
-        fetchOrders();
-        setOrderItems([
-          {
-            material_id: '',
-            material_code: '',
-            material_name: '',
-            quantity: '',
-            unit: '',
-            unit_price: '',
-          },
-        ]);
-        setSelectedCustomer('');
-      } else {
-        toast.error(result.message || t('submitFailed'));
-      }
-    } catch {
-      toast.error(t('submitNetworkError'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleSaveDraft = async () => {
-    try {
-      const response = await authFetch('/api/orders', {
-        method: 'POST',
-        body: JSON.stringify({
-          customer_id: parseInt(selectedCustomer) || null,
-          delivery_date: (document.getElementById('deliveryDate') as HTMLInputElement)?.value,
-          order_date: orderDate || null,
-          currency,
-          items: orderItems.map((item) => ({
-            material_id: item.material_id || null,
-            material_code: item.material_code || '',
-            material_name: item.material_name,
-            quantity: parseFloat(item.quantity) || 0,
-            unit: item.unit || ts('k_d5a1x9'),
-            unit_price: parseFloat(item.unit_price) || 0,
-          })),
-          remark: (document.getElementById('remark') as HTMLInputElement)?.value,
-        }),
-      });
-      const result = await response.json();
-      if (result.success) {
-        toast.success(t('draftSaveSuccess'));
-        setIsCreateOpen(false);
-        fetchOrders();
-      } else {
-        toast.error(result.message || t('saveFailed'));
-      }
-    } catch {
-      toast.error(t('saveFailed'));
-    }
-  };
-
-  const handleSaveEdit = async () => {
-    if (!selectedOrder) return;
-    try {
-      const response = await authFetch('/api/orders', {
-        method: 'PUT',
-        body: JSON.stringify({
-          id: selectedOrder.id,
-          delivery_date: (document.getElementById('editDeliveryDate') as HTMLInputElement)?.value,
-          remark: (document.getElementById('editRemark') as HTMLInputElement)?.value,
-        }),
-      });
-      const result = await response.json();
-      if (result.success) {
-        toast.success(t('updateSuccess'));
-        setIsEditOpen(false);
-        fetchOrders();
-      } else {
-        toast.error(result.message || t('updateFailed'));
-      }
-    } catch {
-      toast.error(t('updateFailed'));
-    }
-  };
-
   return (
     <MainLayout title={t('salesOrderTitle')}>
       <div className="space-y-6">
+        <SalesStatsCards
+          stats={stats}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          onFetchOrders={fetchOrders}
+          onPageChange={setPage}
+          t={t}
+        />
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -880,14 +678,7 @@ export default function SalesOrdersPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    setStatusFilter('all');
-                    setSearchKeyword('');
-                  }}
-                >
+                <Button variant="outline" size="icon" onClick={() => { setStatusFilter('all'); setSearchKeyword(''); setPage(1); fetchOrders(undefined, undefined, 1); }}>
                   <Filter className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" onClick={() => fetchOrders()}>
@@ -947,13 +738,7 @@ export default function SalesOrdersPage() {
                       label: tc('status'),
                       width: 10,
                       formatter: (v) => {
-                        const m: Record<number, string> = {
-                          1: t('statusPending'),
-                          2: t('statusConfirmed'),
-                          3: t('statusPartialShip'),
-                          4: t('statusCompleted'),
-                          5: t('statusCancelled'),
-                        };
+                        const m = buildStatusLabelMap(t);
                         return m[v] || `${t('unknown')}(${v})`;
                       },
                     },
@@ -973,205 +758,10 @@ export default function SalesOrdersPage() {
                       : filteredOrders
                   }
                 />
-                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      {t('newOrder')}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent
-                    className="w-[1000px] max-w-[95vw] h-[512px] max-h-[90vh] overflow-y-auto"
-                    resizable
-                  >
-                    <DialogHeader>
-                      <DialogTitle>{t('newSalesOrder')}</DialogTitle>
-                      <DialogDescription>{t('fillOrderInfo')}</DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="customer">{t('customer')} *</Label>
-                          <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t('selectCustomer')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {customers.map((c) => (
-                                <SelectItem key={c.id} value={String(c.id)}>
-                                  {c.customer_name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="deliveryDate">{t('deliveryDate')} *</Label>
-                          <Input type="date" id="deliveryDate" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="orderDate">{t('orderDate')}</Label>
-                          <Input
-                            type="date"
-                            id="orderDate"
-                            value={orderDate}
-                            onChange={(e) => setOrderDate(e.target.value)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{tc('currency')}</Label>
-                          <CurrencySelect value={currency} onChange={setCurrency} />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label>{t('orderItems')}</Label>
-                          <Button type="button" variant="outline" size="sm" onClick={addOrderItem}>
-                            <Plus className="h-4 w-4 mr-1" />
-                            {t('addDetail')}
-                          </Button>
-                        </div>
-                        <div className="border rounded-lg overflow-hidden max-h-[50vh] overflow-y-auto">
-                          <Table className="min-w-[920px]">
-                            <TableHeader className="sticky top-0 bg-background z-10">
-                              <TableRow>
-                                <TableHead className="w-[300px] min-w-[280px]">
-                                  {t('product')}
-                                </TableHead>
-                                <TableHead className="w-[150px] min-w-[140px] text-right">
-                                  {t('quantity')}
-                                </TableHead>
-                                <TableHead className="w-[130px] min-w-[120px]">
-                                  {t('unit')}
-                                </TableHead>
-                                <TableHead className="w-[170px] min-w-[160px] text-right">
-                                  {t('unitPrice')}
-                                </TableHead>
-                                <TableHead className="w-[170px] min-w-[160px] text-right">
-                                  {t('amount')}
-                                </TableHead>
-                                <TableHead className="w-[60px] min-w-[60px] text-center"></TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {orderItems.map((item, index) => (
-                                <TableRow key={index}>
-                                  <TableCell>
-                                    <Select
-                                      onValueChange={(value) => {
-                                        const material = materials.find(
-                                          (m) => String(m.id) === value
-                                        );
-                                        const newItems = [...orderItems];
-                                        newItems[index].material_id = material?.id ?? '';
-                                        newItems[index].material_code =
-                                          material?.material_code || '';
-                                        newItems[index].material_name =
-                                          material?.material_name || '';
-                                        newItems[index].unit_price =
-                                          material?.sale_price?.toString() || '';
-                                        newItems[index].unit = material?.unit || '';
-                                        setOrderItems(newItems);
-                                      }}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder={t('selectProduct')} />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {materials
-                                          .filter((m) => m.material_type === 3)
-                                          .map((m) => (
-                                            <SelectItem key={m.id} value={String(m.id)}>
-                                              {m.material_code} - {m.material_name}
-                                            </SelectItem>
-                                          ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </TableCell>
-                                  <TableCell>
-                                    <Input
-                                      type="number"
-                                      placeholder="0"
-                                      value={item.quantity}
-                                      className="text-right h-9 px-2"
-                                      onChange={(e) => {
-                                        const newItems = [...orderItems];
-                                        newItems[index].quantity = e.target.value;
-                                        setOrderItems(newItems);
-                                      }}
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    <Input
-                                      placeholder={t('unit')}
-                                      value={item.unit}
-                                      className="h-9 px-2"
-                                      onChange={(e) => {
-                                        const newItems = [...orderItems];
-                                        newItems[index].unit = e.target.value;
-                                        setOrderItems(newItems);
-                                      }}
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    <Input
-                                      type="number"
-                                      placeholder="0.00"
-                                      value={item.unit_price}
-                                      className="text-right h-9 px-2"
-                                      onChange={(e) => {
-                                        const newItems = [...orderItems];
-                                        newItems[index].unit_price = e.target.value;
-                                        setOrderItems(newItems);
-                                      }}
-                                    />
-                                  </TableCell>
-                                  <TableCell className="text-right tabular-nums">
-                                    <MoneyDisplay
-                                      amount={
-                                        (parseFloat(item.quantity) || 0) *
-                                        (parseFloat(item.unit_price) || 0)
-                                      }
-                                      currency={currency}
-                                    />
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => removeOrderItem(index)}
-                                      disabled={orderItems.length === 1}
-                                    >
-                                      <Trash2 className="h-4 w-4 text-muted-foreground" />
-                                    </Button>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="remark">{tc('remark')}</Label>
-                        <Input id="remark" placeholder={t('orderRemark')} />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2 pt-2 sticky bottom-0 bg-background border-t -mx-6 px-6 py-3 z-20">
-                      <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                        {tc('cancel')}
-                      </Button>
-                      <Button variant="outline" onClick={handleSaveDraft}>
-                        {t('saveDraft')}
-                      </Button>
-                      <Button onClick={handleSubmitOrder} disabled={submitting}>
-                        {submitting ? t('submitting') : t('submitOrder')}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <Button onClick={() => router.push('/orders/sales/new')}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('newOrder')}
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -1181,7 +771,7 @@ export default function SalesOrdersPage() {
           <CardHeader>
             <CardTitle>{t('orderList')}</CardTitle>
             <CardDescription>
-              {tc('total', { count: filteredOrders.length })}
+              {tc('total', { count: totalRecords })}
               {statusFilter !== 'all' ? ` (${t('filtered')})` : ''}
             </CardDescription>
           </CardHeader>
@@ -1194,6 +784,7 @@ export default function SalesOrdersPage() {
                 <p>{orders.length === 0 ? t('noOrderData') : t('noMatchingOrder')}</p>
               </div>
             ) : (
+              <>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -1459,6 +1050,35 @@ export default function SalesOrdersPage() {
                   })}
                 </TableBody>
               </Table>
+              {totalRecords > pageSize && (
+                <div className="flex items-center justify-between mt-4">
+                  <span className="text-sm text-muted-foreground">
+                    {t('orderCount')}: {totalRecords}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page <= 1}
+                      onClick={() => setPage((p) => p - 1)}
+                    >
+                      {tc('prevPage')}
+                    </Button>
+                    <span className="flex items-center px-3 text-sm text-muted-foreground">
+                      {tc('pageOf', { page, pages: Math.ceil(totalRecords / pageSize) })}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page * pageSize >= totalRecords}
+                      onClick={() => setPage((p) => p + 1)}
+                    >
+                      {tc('nextPage')}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              </>
             )}
           </CardContent>
         </Card>
@@ -1553,85 +1173,6 @@ export default function SalesOrdersPage() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-          <DialogContent className="max-w-5xl w-[92vw] max-h-[90vh] overflow-y-auto" resizable>
-            <DialogHeader>
-              <DialogTitle>{t('editOrder')}</DialogTitle>
-              <DialogDescription>
-                {t('orderNo')}: {selectedOrder?.order_no}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t('customer')}</Label>
-                  <Input value={selectedOrder?.customer_name || ''} disabled />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="editDeliveryDate">{t('deliveryDate')}</Label>
-                  <Input
-                    type="date"
-                    id="editDeliveryDate"
-                    defaultValue={
-                      selectedOrder?.delivery_date
-                        ? new Date(selectedOrder.delivery_date).toISOString().split('T')[0]
-                        : ''
-                    }
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>{t('orderItems')}</Label>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('product')}</TableHead>
-                      <TableHead>{t('materialCode') || ts('k_zsv6bq')}</TableHead>
-                      <TableHead>{t('quantity')}</TableHead>
-                      <TableHead>{t('unit')}</TableHead>
-                      <TableHead>{t('unitPrice')}</TableHead>
-                      <TableHead>{t('amount')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedOrder?.items?.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{item.material_name}</TableCell>
-                        <TableCell className="font-mono text-muted-foreground">
-                          {item.material_code || '-'}
-                        </TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>{item.unit}</TableCell>
-                        <TableCell>
-                          <MoneyDisplay
-                            amount={item.unit_price || 0}
-                            currency={selectedOrder?.currency || 'CNY'}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <MoneyDisplay
-                            amount={item.total_price || 0}
-                            currency={selectedOrder?.currency || 'CNY'}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="editRemark">{tc('remark')}</Label>
-                <Input id="editRemark" defaultValue={selectedOrder?.remark || ''} />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-                {tc('cancel')}
-              </Button>
-              <Button onClick={handleSaveEdit}>{tc('save')}</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </MainLayout>
   );
