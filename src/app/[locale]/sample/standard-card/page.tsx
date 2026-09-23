@@ -10,8 +10,9 @@ import { authFetch } from '@/lib/auth-fetch';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -19,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { InputV2Form } from './InputV2Form';
 import { InputCardForm } from './InputCardForm';
@@ -301,7 +303,7 @@ function StandardCardPageContent() {
               {t('backToList')}
             </Button>
             <span className="text-lg font-bold flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-blue-500" />
+              <Sparkles className="h-5 w-5 text-blue-500 dark:text-blue-400" />
               {isEdit ? t('editV2Mode') : t('newV2Mode')}
             </span>
           </div>
@@ -321,7 +323,7 @@ function StandardCardPageContent() {
               {t('backToList')}
             </Button>
             <span className="text-lg font-bold flex items-center gap-2">
-              <LayoutGrid className="h-5 w-5 text-blue-500" />
+              <LayoutGrid className="h-5 w-5 text-blue-500 dark:text-blue-400" />
               {isEdit ? t('editCardMode') : t('newCardMode')}
             </span>
           </div>
@@ -332,101 +334,102 @@ function StandardCardPageContent() {
   }
 
   return (
-    <MainLayout>
-      <div className="container mx-auto py-6 max-w-7xl">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">{t('management')}</h1>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleImportClick} disabled={importing}>
-              <Upload className="h-4 w-4 mr-2" />
-              {importing ? t('importing') : tc('import')}
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json,application/json"
-              onChange={handleFileImport}
-              style={{ display: 'none' }}
-            />
-            <Button variant="outline" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-2" />
-              {tc('export')}
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 mb-4">
-          <Button onClick={handleNewV2}>
-            <Sparkles className="h-4 w-4 mr-2" />
-            {t('newCardBtn')}
-          </Button>
-          <Button variant="outline" onClick={handleNewCard}>
-            <LayoutGrid className="h-4 w-4 mr-2" />
-            {t('traditionalInput')}
-          </Button>
-          {selectedCount > 0 && (
-            <Button variant="destructive" onClick={handleBatchDelete} className="ml-auto">
-              <Trash2 className="h-4 w-4 mr-2" />
-              {ts('k_tfzlxh')}{selectedCount})
-            </Button>
-          )}
-        </div>
-
-        <Card className="mb-4">
-          <CardContent className="pt-6">
-            <div className="flex flex-wrap items-center gap-3">
-              <Input
-                placeholder={t('searchCardPlaceholder')}
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSearch();
-                }}
-                className="max-w-xs"
-              />
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder={tc('status')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('allStatus')}</SelectItem>
-                  <SelectItem value="1">{t('draft')}</SelectItem>
-                  <SelectItem value="2">{t('reviewed')}</SelectItem>
-                  <SelectItem value="3">{t('confirmed')}</SelectItem>
-                  <SelectItem value="4">{t('invalid')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={handleSearch}>
-                <Search className="h-4 w-4 mr-2" />
-                {tc('search')}
-              </Button>
+    <MainLayout title={t('management')}>
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="flex flex-1 gap-4 items-center w-full md:w-auto flex-wrap">
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={t('searchCardPlaceholder')}
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSearch();
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder={tc('status')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('allStatus')}</SelectItem>
+                    <SelectItem value="1">{t('draft')}</SelectItem>
+                    <SelectItem value="2">{t('reviewed')}</SelectItem>
+                    <SelectItem value="3">{t('confirmed')}</SelectItem>
+                    <SelectItem value="4">{t('invalid')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleSearch}>
+                  <Search className="h-4 w-4 mr-2" />
+                  {tc('search')}
+                </Button>
+              </div>
+              <div className="flex gap-2 items-center">
+                <Button onClick={handleNewV2}>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  {t('newCardBtn')}
+                </Button>
+                <Button variant="outline" onClick={handleNewCard}>
+                  <LayoutGrid className="h-4 w-4 mr-2" />
+                  {t('traditionalInput')}
+                </Button>
+                <Button variant="outline" onClick={handleImportClick} disabled={importing}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  {importing ? t('importing') : tc('import')}
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={handleFileImport}
+                  style={{ display: 'none' }}
+                />
+                <Button variant="outline" onClick={handleExport}>
+                  <Download className="h-4 w-4 mr-2" />
+                  {tc('export')}
+                </Button>
+                {selectedCount > 0 && (
+                  <Button variant="destructive" onClick={handleBatchDelete}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {ts('k_tfzlxh')}{selectedCount})
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardHeader>
+            <CardTitle>{t('management')}</CardTitle>
+            <CardDescription>
+              {tc('total', { count: total })}
+              {selectedCount > 0 ? `，${t('selectedCount', { count: selectedCount })}` : ''}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                <span className="ml-3 text-muted-foreground">{tc('loading')}</span>
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : list.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <span className="text-lg">{t('noData')}</span>
-                <span className="text-sm mt-1">{t('clickToCreate')}</span>
+              <div className="text-center py-12 text-muted-foreground">
+                {t('noData')}
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="rounded-md border overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="px-3 py-2 text-left font-medium whitespace-nowrap w-10">
-                        <input
-                          type="checkbox"
-                          className="w-4 h-4 cursor-pointer"
+                        <Checkbox
                           checked={allSelected}
-                          onChange={handleToggleAll}
+                          onCheckedChange={handleToggleAll}
                           aria-label={ts('k_1yb2sje')}
                         />
                       </th>
@@ -472,11 +475,9 @@ function StandardCardPageContent() {
                     {list.map((item) => (
                       <tr key={item.id} className="border-b hover:bg-muted/30">
                         <td className="px-3 py-2 text-center">
-                          <input
-                            type="checkbox"
-                            className="w-4 h-4 cursor-pointer"
+                          <Checkbox
                             checked={isSelected(String(item.id))}
-                            onChange={() => handleToggle(item.id)}
+                            onCheckedChange={() => handleToggle(item.id)}
                             aria-label={`选择 ${item.card_no}`}
                           />
                         </td>

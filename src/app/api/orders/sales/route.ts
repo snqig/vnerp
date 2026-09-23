@@ -19,6 +19,9 @@ import {
   normalizeSalesOrderStatus,
 } from '@/lib/order-status';
 import type { DbRow } from '@/types/db';
+import type { ResultSetHeader } from 'mysql2';
+import { generateDocNo } from '@/lib/global-config';
+import { getDefaultTaxRate } from '@/lib/sales-config';
 
 export const GET = withPermission(async (request: NextRequest, _user: UserInfo) => {
   const { searchParams } = new URL(request.url);
@@ -57,27 +60,28 @@ export const GET = withPermission(async (request: NextRequest, _user: UserInfo) 
   );
 
   const list = (rows as DbRow[]).map((order: DbRow) => ({
-    id: order.id,
-    order_no: order.order_no,
-    order_date: order.order_date,
-    customer_id: order.customer_id,
-    customer_name: order.customer_name,
-    contact_name: order.contact_name,
-    contact_phone: order.contact_phone,
-    delivery_address: order.delivery_address,
-    delivery_date: order.delivery_date,
-    total_amount: parseFloat(order.total_amount || '0'),
-    total_with_tax: parseFloat(order.total_with_tax || '0'),
-    currency: order.currency || 'CNY',
-    exchange_rate: parseFloat(order.exchange_rate || '1'),
-    base_currency: order.base_currency || 'CNY',
-    base_total_amount: parseFloat(order.base_total_amount || '0'),
-    base_tax_amount: parseFloat(order.base_tax_amount || '0'),
-    base_grand_total: parseFloat(order.base_grand_total || '0'),
-    status: order.status,
-    remark: order.remark,
-    create_time: order.create_time,
-  }));
+      id: order.id,
+      order_no: order.order_no,
+      order_date: order.order_date,
+      customer_id: order.customer_id,
+      customer_name: order.customer_name,
+      contact_name: order.contact_name,
+      contact_phone: order.contact_phone,
+      delivery_address: order.delivery_address,
+      delivery_date: order.delivery_date,
+      total_amount: parseFloat(order.total_amount || '0'),
+      total_with_tax: parseFloat(order.total_with_tax || '0'),
+      tax_amount: parseFloat(order.tax_amount || '0'),
+      currency: order.currency || 'CNY',
+      exchange_rate: parseFloat(order.exchange_rate || '1'),
+      base_currency: order.base_currency || 'CNY',
+      base_total_amount: parseFloat(order.base_total_amount || '0'),
+      base_tax_amount: parseFloat(order.base_tax_amount || '0'),
+      base_grand_total: parseFloat(order.base_grand_total || '0'),
+      status: order.status,
+      remark: order.remark,
+      create_time: order.create_time,
+    }));
 
   // 附带每单的订单明细（页面「生成工单」与展开明细依赖 order.items）
   const orderIds = list.map((o) => o.id);
@@ -93,7 +97,30 @@ export const GET = withPermission(async (request: NextRequest, _user: UserInfo) 
   }
   const listWithItems = list.map((o) => ({ ...o, items: itemsByOrder[o.id] || [] }));
 
-  return successResponse({ list: listWithItems, total, page, pageSize });
+  // 统计摘要：按状态分组 count + amount
+  const summaryRows = await query<DbRow>(
+    `SELECT so.status, COUNT(*) as cnt, COALESCE(SUM(so.total_amount), 0) as amt
+     FROM sal_order so
+     LEFT JOIN crm_customer c ON so.customer_id = c.id
+     WHERE so.deleted = 0
+       ${keyword ? "AND (so.order_no LIKE ? OR c.customer_name LIKE ?)" : ""}
+       ${status ? "AND so.status = ?" : ""}
+     GROUP BY so.status`,
+    keyword && status
+      ? [`%${keyword}%`, `%${keyword}%`, parseInt(status)]
+      : keyword
+      ? [`%${keyword}%`, `%${keyword}%`]
+      : status
+      ? [parseInt(status)]
+      : []
+  );
+  const summary = (summaryRows as DbRow[]).map((r) => ({
+    status: Number(r.status),
+    count: Number(r.cnt),
+    amount: parseFloat(r.amt || '0'),
+  }));
+
+  return successResponse({ list: listWithItems, total, page, pageSize, summary });
 });
 
 export const POST = withPermission(
@@ -139,61 +166,74 @@ export const POST = withPermission(
       });
     }
 
-    const order_no = 'SO' + Date.now();
+    const order_no = generateDocNo('SO');
 
-    const result = await execute(
-      `INSERT INTO sal_order (
-      order_no, customer_id, order_date, delivery_date, status,
-      salesman_id, payment_terms, contract_no, remark,
-      currency, create_by, create_time, update_time, deleted
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
-      [
-        order_no,
-        customer_id,
-        order_date || new Date().toISOString().slice(0, 10),
-        delivery_date || null,
-        // 契约：1-待确认, 2-已确认, 3-部分发货, 4-已完成, 5-已取消（见 src/lib/order-status.ts）
-        SalesOrderStatusCode.PENDING,
-        user.userId,
-        payment_terms || null,
-        contract_no || null,
-        remark || null,
-        currency || null,
-        user.userId,
-      ]
-    );
+    // P0-1：读取可配置税率（sys_config.finance.tax_rate，默认 13%）
+    const taxRate = await getDefaultTaxRate();
 
-    const orderId = result.insertId;
-
+    // 先算总金额（明细累加），避免事务内多次计算
     let totalAmount = 0;
     for (const item of items) {
       const amount = (item.quantity || 0) * (item.unit_price || 0);
       totalAmount += amount;
+    }
+    const totalWithTax = totalAmount * (1 + taxRate);
+    const taxAmount = totalWithTax - totalAmount;
 
-      await execute(
-        `INSERT INTO sal_order_item (
-        order_id, material_id, material_code, material_name,
-        quantity, unit_price, total_price, unit, remark, create_time, deleted
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0)`,
+    // P0-2：整个创建流程包裹在事务里
+    // 原代码：主表 INSERT → 明细循环 INSERT → 独立 UPDATE total_amount
+    // 问题：明细插入失败会留下孤儿主单；UPDATE 失败主单金额为零
+    const orderId: number = await transaction(async (conn) => {
+      // 1) 主表 INSERT — 显式 <ResultSetHeader> 泛型以正确取 insertId
+      const [orderRes] = await conn.execute<ResultSetHeader>(
+        `INSERT INTO sal_order (
+          order_no, customer_id, order_date, delivery_date, status,
+          salesman_id, payment_terms, contract_no, remark,
+          currency, total_amount, total_with_tax, tax_amount,
+          create_by, create_time, update_time, deleted
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)`,
         [
-          orderId,
-          item.material_id,
-          item.material_code || '',
-          item.material_name || '',
-          item.quantity,
-          item.unit_price || 0,
-          amount,
-          item.unit || '',
-          item.remark || null,
+          order_no,
+          customer_id,
+          order_date || new Date().toISOString().slice(0, 10),
+          delivery_date || null,
+          SalesOrderStatusCode.PENDING,
+          user.userId,
+          payment_terms || null,
+          contract_no || null,
+          remark || null,
+          currency || null,
+          totalAmount,
+          totalWithTax,
+          taxAmount,
+          user.userId,
         ]
       );
-    }
+      const id = Number(orderRes.insertId);
 
-    await execute(`UPDATE sal_order SET total_amount = ?, total_with_tax = ? WHERE id = ?`, [
-      totalAmount,
-      totalAmount * 1.13,
-      orderId,
-    ]);
+      // 2) 明细循环 INSERT（事务内）
+      for (const item of items) {
+        await conn.execute(
+          `INSERT INTO sal_order_item (
+            order_id, material_id, material_code, material_name,
+            quantity, unit_price, total_price, unit, remark, create_time, deleted
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0)`,
+          [
+            id,
+            item.material_id,
+            item.material_code || '',
+            item.material_name || '',
+            item.quantity,
+            item.unit_price || 0,
+            (item.quantity || 0) * (item.unit_price || 0),
+            item.unit || '',
+            item.remark || null,
+          ]
+        );
+      }
+
+      return id;
+    });
 
     return successResponse(
       {
