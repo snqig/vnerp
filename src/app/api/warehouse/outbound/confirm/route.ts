@@ -253,7 +253,8 @@ export const POST = withPermission(
 
       // 自动生成应收单（如果出库单关联了客户）
       const [orderInfo] = await connection.execute(
-        `SELECT customer_id, customer_name, total_amount, sales_order_no FROM inv_outbound_order WHERE id = ?`,
+        `SELECT customer_id, customer_name, total_amount, sales_order_no, outbound_type
+         FROM inv_outbound_order WHERE id = ?`,
         [id]
       );
 
@@ -282,8 +283,76 @@ export const POST = withPermission(
         );
       }
 
-      // 注：sales_order/sales_order_item 为幽灵表（live 库不存在），原累计出库/状态回写块已删除。
-      // 销售出库进度如需统计，应基于真实表 sal_order 另行实现。
+      // === 销售出库进度回写 sal_order ===
+      // 仅 sales 类型出库单且关联了 sales_order_no 才回写
+      // 幂等：累计所有已 completed 的出库单 total_qty，重复确认不重算
+      const salesOrderNo = orderInfo?.[0]?.sales_order_no;
+      const outboundType = orderInfo?.[0]?.outbound_type;
+
+      if (outboundType === 'sales' && salesOrderNo) {
+        // FOR UPDATE 锁行防止并发出库
+        const [soRows] = await connection.execute(
+          `SELECT id, status FROM sal_order WHERE order_no = ? AND deleted = 0 FOR UPDATE`,
+          [salesOrderNo]
+        );
+
+        if (soRows.length > 0) {
+          const saleOrder = soRows[0];
+
+          // 累计所有已完成出库单的出库数量（幂等，不重复计数）
+          const [agg] = await connection.execute(
+            `SELECT COALESCE(SUM(io.total_qty), 0) AS shipped_qty
+             FROM inv_outbound_order io
+             WHERE io.sales_order_no = ?
+               AND io.outbound_type = 'sales'
+               AND io.status = 'completed'
+               AND io.deleted = 0`,
+            [salesOrderNo]
+          );
+
+          const newShippedQty = parseFloat(String(agg[0].shipped_qty));
+
+          // 订单明细总数（用于判断发货状态）
+          const [itemSum] = await connection.execute(
+            `SELECT COALESCE(SUM(quantity), 0) AS total_qty
+             FROM sal_order_item WHERE order_id = ? AND deleted = 0`,
+            [saleOrder.id]
+          );
+
+          const orderTotalQty = parseFloat(String(itemSum[0].total_qty));
+
+          // 状态判定：已完成 > 已取消 优先保持终态不变
+          let newStatus = saleOrder.status;
+          let deliveryDateExpr = '';
+
+          if (saleOrder.status === 1 || saleOrder.status === 2 || saleOrder.status === 3) {
+            if (newShippedQty >= orderTotalQty && orderTotalQty > 0) {
+              newStatus = 4; // COMPLETED
+              deliveryDateExpr = ', actual_delivery_date = NOW()';
+            } else if (newShippedQty > 0) {
+              newStatus = 3; // PARTIALLY_SHIPPED
+            }
+            // shipped_qty = 0 → 保持原状态
+          }
+          // status=4(completed) 或 5(cancelled) → 不动
+
+          await connection.execute(
+            `UPDATE sal_order
+             SET shipped_qty = ?, status = ?, update_time = NOW()${deliveryDateExpr}
+             WHERE id = ?`,
+            [newShippedQty, newStatus, saleOrder.id]
+          );
+
+          logger.info(
+            `[OUTBOUND] sal_order shipped_qty updated — sales_order_no=${salesOrderNo}, ` +
+            `shipped_qty=${newShippedQty}, order_total=${orderTotalQty}, new_status=${newStatus}`
+          );
+        } else {
+          logger.warn(
+            `[OUTBOUND] sales_order_no=${salesOrderNo} not found in sal_order — shipped_qty not updated`
+          );
+        }
+      }
     }).catch((error) => {
       const msg = error instanceof Error ? error.message : String(error);
       // i18n 翻译值可能自带前缀，防御性剥离重复前缀；经 txCtl 显式带出
