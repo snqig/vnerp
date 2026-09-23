@@ -361,6 +361,44 @@ export const PUT = withPermission(
 
         return successResponse({ status: SalesOrderStatusCode.PENDING }, ts('k_uptysj'));
 
+      case 'cancel':
+        // 取消订单 → status=5（已取消）
+        // 规则：
+        // - 1(待确认) → 直接允许
+        // - 2(已确认) → 需检查下游出库单是否已创建
+        // - ≥3(部分发货/已完成) → 禁止，必须走退货流程
+        if (currentStatus === SalesOrderStatusCode.CANCELLED) {
+          return errorResponse(ts('k_1tfnqbu'), 400, 400);
+        }
+        if (
+          currentStatus === SalesOrderStatusCode.PARTIALLY_SHIPPED ||
+          currentStatus === SalesOrderStatusCode.COMPLETED
+        ) {
+          return errorResponse(ts('k_ord_cannot_cancel_shipped'), 400, 400);
+        }
+        if (currentStatus === SalesOrderStatusCode.CONFIRMED) {
+          // 检查下游 inv_outbound_order 是否已关联 sales_order_no
+          const [outboundRows] = await query<{ cnt: number }>(
+            `SELECT COUNT(*) as cnt FROM inv_outbound_order
+             WHERE sales_order_no = ? AND deleted = 0`,
+            [order.order_no]
+          );
+          const cnt = Number((outboundRows as unknown as { cnt: number }[])[0]?.cnt ?? 0);
+          if (cnt > 0) {
+            return errorResponse(ts('k_ord_cannot_cancel_outbound'), 400, 400);
+          }
+        }
+
+        await transaction(async (conn) => {
+          await conn.execute(
+            'UPDATE sal_order SET status = ?, update_time = NOW() WHERE id = ?',
+            [SalesOrderStatusCode.CANCELLED, id]
+          );
+        });
+
+        secureLog('info', 'Sales order cancelled', { orderId: id, orderNo: order.order_no });
+        return successResponse({ status: SalesOrderStatusCode.CANCELLED }, ts('k_ord_cancelled'));
+
       default:
         return errorResponse(ts('k_ztn3ax'), 400, 400);
     }

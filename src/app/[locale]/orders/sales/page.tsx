@@ -89,12 +89,17 @@ interface Order {
   order_no: string;
   customer_id?: number;
   customer_name: string;
+  contact_name?: string;
+  contact_phone?: string;
+  delivery_address?: string;
   order_date: string;
   delivery_date: string;
   total_amount: number;
   total_with_tax?: number;
+  tax_amount?: number;
   status: number;
   currency?: string;
+  exchange_rate?: number;
   base_currency?: string;
   base_total_amount?: number;
   base_tax_amount?: number;
@@ -336,6 +341,25 @@ export default function SalesOrdersPage() {
       }
     } catch {
       toast.error(t('confirmFailed'));
+    }
+  };
+
+  const handleCancelOrder = async (orderId: number) => {
+    if (!confirm(t('confirmCancelOrder'))) return;
+    try {
+      const response = await authFetch('/api/orders/sales', {
+        method: 'PUT',
+        body: JSON.stringify({ id: orderId, action: 'cancel' }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        toast.success(result.message || t('cancelOrderSuccess'));
+        fetchOrders();
+      } else {
+        toast.error(result.message || t('cancelOrderFailed'));
+      }
+    } catch {
+      toast.error(t('cancelOrderFailed'));
     }
   };
 
@@ -947,6 +971,15 @@ export default function SalesOrdersPage() {
                                     {t('confirmOrder')}
                                   </DropdownMenuItem>
                                 )}
+                                {order.status === 1 || order.status === 2 ? (
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() => handleCancelOrder(order.id)}
+                                  >
+                                    <XCircle className="h-4 w-4 mr-2" />
+                                    {t('cancelOrder')}
+                                  </DropdownMenuItem>
+                                ) : null}
                                 <DropdownMenuItem onClick={() => handleEditOrder(order)}>
                                   <Edit className="h-4 w-4 mr-2" />
                                   {tc('edit')}
