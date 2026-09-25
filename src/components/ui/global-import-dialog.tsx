@@ -156,7 +156,7 @@ export function GlobalImportDialog({
         <div className="space-y-3">
           <div className="flex items-center justify-between rounded-lg border border-dashed p-3">
             <div className="flex items-center gap-2">
-              <FileSpreadsheet className="h-8 w-8 text-green-600" />
+              <FileSpreadsheet className="h-8 w-8 text-green-600 dark:text-green-400" />
               <div>
                 <p className="text-sm font-medium">
                   {t('step1DownloadTemplate') || tc('step1DownloadTemplate')}
@@ -175,7 +175,7 @@ export function GlobalImportDialog({
           {/* 步骤 2: 上传文件 */}
           <div className="flex items-center justify-between rounded-lg border border-dashed p-3">
             <div className="flex items-center gap-2">
-              <Upload className="h-8 w-8 text-blue-600" />
+              <Upload className="h-8 w-8 text-blue-600 dark:text-blue-400" />
               <div>
                 <p className="text-sm font-medium">
                   {t('step2UploadFile') || tc('step2UploadFile')}
@@ -208,14 +208,14 @@ export function GlobalImportDialog({
             <div className="space-y-2">
               <div className="flex items-center gap-4 rounded-lg border p-3">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
                   <span className="text-sm font-medium">
                     {t('valid') || ts('k_kgwvlw')}: {result.validCount}
                   </span>
                 </div>
                 {result.invalidCount > 0 && (
                   <div className="flex items-center gap-2">
-                    <XCircle className="h-5 w-5 text-red-600" />
+                    <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
                     <span className="text-sm font-medium">
                       {t('invalid') || tc('invalid')}: {result.invalidCount}
                     </span>
@@ -261,7 +261,7 @@ export function GlobalImportDialog({
                           {columns.map((col) => (
                             <TableHead key={col.key} className="text-xs">
                               {col.label}
-                              {col.required && <span className="text-red-500 ml-0.5">*</span>}
+                              {col.required && <span className="text-red-500 dark:text-red-400 ml-0.5">*</span>}
                             </TableHead>
                           ))}
                         </TableRow>

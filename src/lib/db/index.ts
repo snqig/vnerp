@@ -46,6 +46,21 @@ const dbConfig = {
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'vnerpdacahng',
   charset: 'utf8mb4',
+  // ── DECIMAL 读取类型（在 DB 边界统一收敛，而不是逐个调用点打补丁）──
+  //
+  // 默认 mysql2 会把 MySQL 的 DECIMAL/NEWDECIMAL 列读成**字符串**
+  // （如 `basic_salary` → "8888.00"）。本库现有 280 个 DECIMAL 列，
+  // 字符串在 JS 侧会引发整类缺陷：
+  //   1. 算术被降级为字符串拼接：`"8888.00" + "100.00"` → "8888.00100.00"
+  //      （实发工资/收入合计/仪表盘 total_value 因此变 NaN 或长串）
+  //   2. 字符串没有 `.toFixed()`，调用即抛 TypeError → 页面白屏
+  //      （dcprint/tool-manage、ink-formula、process-card 实测命中）
+  //
+  // 开启后 mysql2 直接返回 number，与同一文件里 `normalizeIsoDatetime`
+  // 对 ISO 时间戳的处理是同一思路：边界收敛，调用点无需感知存储格式。
+  // 全仓已核查：无任何代码依赖「DECIMAL 是字符串」这一假设。
+  // 注：仅影响读取侧（DECIMAL），不影响写入、也不改变 BIGINT 的字符串语义。
+  decimalNumbers: true,
   waitForConnections: true,
   connectionLimit: 20,
   maxIdle: 10,

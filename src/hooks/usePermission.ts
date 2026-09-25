@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { PERMISSION_MODULES } from '@/lib/permissions-catalog';
+import { hasPermissionIn } from '@/lib/permission-match';
+
+/** 超管硬绕过判定：与服务端 `hasPermission`（src/lib/auth.ts）保持一致 */
+function isSuperAdmin(user: StoredUser | null): boolean {
+  return Boolean(user?.roles?.some((r: { role_code: string }) => r.role_code === 'super_admin'));
+}
 
 // 权限类型
 export interface Permission {
@@ -66,34 +72,32 @@ export function usePermission() {
       const result = await response.json();
 
       if (result.success) {
-        // 获取角色的按钮权限
-        const roleResponse = await fetch(`/api/organization/role`);
-        const roleResult = await roleResponse.json();
-
-        let buttonPermissions: string[] = [];
-        if (roleResult.success) {
-          const role = roleResult.data.find((r: { id: number; permissions?: string[] }) => r.id === user.role_id);
-          if (role && role.permissions) {
-            buttonPermissions = role.permissions;
-          }
-        }
+        // 获取角色的按钮权限。
+        // 数据源固定为按钮权限专用接口：`data` 直接就是权限码数组。
+        // 此前这里读的是 `/api/organization/role`，而该接口返回的是分页结构
+        // （`{list,total,page,pageSize}`），对其 data 直接 find 会抛 TypeError 并被
+        // 外层 catch {} 静默吞掉 —— 结果是按钮权限恒为空、loaded 永远 false。
+        const btnResponse = await fetch(`/api/role-permissions/buttons?roleId=${user.role_id}`);
+        const btnResult = await btnResponse.json();
 
         setUserPermissions({
-          menus: result.data.map((p: { menu_id: number }) => p.menu_id),
-          buttons: buttonPermissions,
+          menus: Array.isArray(result.data) ? result.data.map((p: { menu_id: number }) => p.menu_id) : [],
+          buttons: Array.isArray(btnResult?.data) ? btnResult.data : [],
           loaded: true,
         });
       }
     } catch {}
   }, []);
 
-  // 检查是否有权限
+  // 检查是否有权限。
+  // 持有码是旧轨 `sys_role.permissions` 的值，形如 `warehouse:*` / `orders:sales:*`，
+  // 而调用方传的是 API 侧精确码（如 `warehouse:view`）—— 纯字面量 includes 永不命中。
+  // 必须走 `hasPermissionIn` 的通配符展开 + 模块别名归一，与服务端 `src/lib/auth.ts` 口径一致。
   const hasPermission = useCallback(
     (permissionId: string): boolean => {
-      const user = safeGetUser();
-      if (user?.roles?.some((r: { role_code: string }) => r.role_code === 'super_admin')) return true;
+      if (isSuperAdmin(safeGetUser())) return true;
 
-      return userPermissions.buttons.includes(permissionId);
+      return hasPermissionIn(userPermissions.buttons, permissionId);
     },
     [userPermissions.buttons]
   );
@@ -101,8 +105,7 @@ export function usePermission() {
   // 检查是否有菜单权限
   const hasMenuPermission = useCallback(
     (menuId: number): boolean => {
-      const user = safeGetUser();
-      if (user?.roles?.some((r: { role_code: string }) => r.role_code === 'super_admin')) return true;
+      if (isSuperAdmin(safeGetUser())) return true;
 
       return userPermissions.menus.includes(menuId);
     },
@@ -112,10 +115,9 @@ export function usePermission() {
   // 检查是否有任意一个权限
   const hasAnyPermission = useCallback(
     (permissionIds: string[]): boolean => {
-      const user = safeGetUser();
-      if (user?.roles?.some((r: { role_code: string }) => r.role_code === 'super_admin')) return true;
+      if (isSuperAdmin(safeGetUser())) return true;
 
-      return permissionIds.some((id) => userPermissions.buttons.includes(id));
+      return permissionIds.some((id) => hasPermissionIn(userPermissions.buttons, id));
     },
     [userPermissions.buttons]
   );
@@ -123,10 +125,9 @@ export function usePermission() {
   // 检查是否拥有所有权限
   const hasAllPermissions = useCallback(
     (permissionIds: string[]): boolean => {
-      const user = safeGetUser();
-      if (user?.roles?.some((r: { role_code: string }) => r.role_code === 'super_admin')) return true;
+      if (isSuperAdmin(safeGetUser())) return true;
 
-      return permissionIds.every((id) => userPermissions.buttons.includes(id));
+      return permissionIds.every((id) => hasPermissionIn(userPermissions.buttons, id));
     },
     [userPermissions.buttons]
   );

@@ -716,7 +716,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                     variant="ghost"
                     size="sm"
                     onClick={logout}
-                    className="text-muted-foreground hover:text-red-600"
+                    className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400"
                   >
                     {t('logout')}
                   </Button>

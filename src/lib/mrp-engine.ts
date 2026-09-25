@@ -6,6 +6,31 @@
  */
 
 import { CalcParamService } from '@/lib/calc-param-service';
+import { WORK_ORDER_STATUSES_OPEN } from '@/lib/constants';
+import { logger } from '@/lib/logger';
+
+/**
+ * 事务内查询取「行数组」。
+ *
+ * ⚠️ 契约差异（已运行时证真，2026-09-23）：
+ *   - 独立导出的 `query()` / `queryOne()` 返回**行数组**（内部已 `const [rows] = await pool.query(...)`）；
+ *   - 而 `transaction(conn => ...)` 传入的 `conn` 是 `normalizeConnection()` 的透明 Proxy，
+ *     未改变返回形状 → `conn.query()` 返回 mysql2 原生 **`[rows, fields]` 元组**、
+ *     `conn.execute()` 返回 **`[result, fields]` 元组**。
+ *
+ * 本文件原先一律写作 `const rows = await conn.query(...)` 再按行数组使用，导致：
+ *   - `rows.length` 恒为 2（恒「非空」），`rows[0]` 其实是行数组 → 字段全为 undefined；
+ *   - `for (const r of rows)` 只迭代「行数组」与「字段数组」两项；
+ *   - 表现为 BOM 展开每层恰好 2 个 `material_id=undefined` 的子节点并递归到 maxDepth。
+ * 故此处统一经 `cq()` 取行数组；新增事务内查询一律使用本助手。
+ */
+async function cq<T = Loose>(conn: Loose, sql: string, params: unknown[] = []): Promise<T> {
+  const result = (await conn.query(sql, params)) as unknown;
+  if (Array.isArray(result) && Array.isArray(result[0])) {
+    return result[0] as T;
+  }
+  return result as T;
+}
 
 /**
  * 表示 BOM 树中的一个节点，用于存储展开后的物料清单结构
@@ -49,10 +74,10 @@ interface StackItem {
 
 interface BOMRow {
   id: number;
-  material_id: number;
+  /** 指向 mdm_product（产品域）。该表无 material_id / is_default 列。 */
+  product_id: number;
   version: string;
   status: number;
-  is_default: number;
 }
 
 interface BOMLineRow {
@@ -98,10 +123,19 @@ export async function explodeBOM(
   quantity: number,
   maxDepth: number = 10
 ): Promise<BOMNode> {
-  const productRows: Loose = await conn.query(
-    `SELECT id, material_code, material_name, unit FROM inv_material WHERE id = ? AND deleted = 0`,
+  // prd_bom.product_id 指向 mdm_product（产品域，10/10 与 bom_name 对位已核实），
+  // 故根节点展示信息优先取产品主数据；未命中时退回 inv_material（历史/物料域调用方）。
+  let productRows: Loose = await cq(conn, 
+    `SELECT product_code AS material_code, product_name AS material_name, unit
+       FROM mdm_product WHERE id = ? AND deleted = 0`,
     [productId]
   );
+  if (productRows.length === 0) {
+    productRows = await cq(conn, 
+      `SELECT material_code, material_name, unit FROM inv_material WHERE id = ? AND deleted = 0`,
+      [productId]
+    );
+  }
 
   let productCode = '';
   let productName = '';
@@ -114,7 +148,7 @@ export async function explodeBOM(
   }
 
   const defaultLeadTime = await CalcParamService.getInt('mrp.default_lead_time_days', 7);
-  const leadTimeRows: Loose = await conn.query(
+  const leadTimeRows: Loose = await cq(conn, 
     `SELECT id FROM inv_material WHERE id = ? AND deleted = 0`,
     [productId]
   );
@@ -163,11 +197,15 @@ export async function explodeBOM(
     }
     visited.add(visitKey);
 
-    const bomRows: BOMRow[] = await conn.query(
-      `SELECT id, material_id, version, status, is_default
-       FROM prd_bom
-       WHERE material_id = ? AND status = 1
-       ORDER BY is_default DESC, version DESC
+    // prd_bom 的真实键是 product_id（指向 mdm_product）；该表**没有** material_id / is_default 列，
+    // 原写法 SELECT material_id, is_default FROM prd_bom 会抛 Unknown column。
+    // 子层节点是物料（prd_bom_detail.material_id -> inv_material），而 prd_bom 按产品键，
+    // 故本循环仅顶层（level 0，传入 productId）能展开；如需多层 BOM 需改用 bom_header/bom_line 族。
+    const bomRows: BOMRow[] = await cq(conn, 
+      `SELECT b.id, b.product_id, b.version, b.status
+       FROM prd_bom b
+       WHERE b.product_id = ? AND b.status = 1 AND b.deleted = 0
+       ORDER BY b.version DESC, b.id DESC
        LIMIT 1`,
       [item.material_id]
     );
@@ -181,7 +219,7 @@ export async function explodeBOM(
       item.parent_node.is_leaf = false;
     }
 
-    const lines: BOMLineRow[] = await conn.query(
+    const lines: BOMLineRow[] = await cq(conn, 
       `SELECT bd.id, bd.bom_id, bd.material_id, bd.quantity, bd.unit, bd.loss_rate,
               m.material_code, m.material_name
        FROM prd_bom_detail bd
@@ -199,7 +237,7 @@ export async function explodeBOM(
 
       const childCircularKey = `${line.material_id}:${childPath}`;
 
-      const matInfoRows: Loose = await conn.query(
+      const matInfoRows: Loose = await cq(conn, 
         `SELECT id, material_code, material_name FROM inv_material WHERE id = ?`,
         [line.material_id]
       );
@@ -294,13 +332,13 @@ export async function calculateTimeBuckets(
   }
 
   const defaultLeadTime = await CalcParamService.getInt('mrp.default_lead_time_days', 7);
-  const _matInfoRows: Loose = await conn.query(
+  const _matInfoRows: Loose = await cq(conn, 
     `SELECT id FROM inv_material WHERE id = ? AND deleted = 0`,
     [materialId]
   );
   const leadTimeDays = defaultLeadTime;
 
-  const invRows: Loose = await conn.query(
+  const invRows: Loose = await cq(conn, 
     `SELECT COALESCE(SUM(available_qty), 0) as total_available
      FROM inv_inventory
      WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
@@ -308,31 +346,33 @@ export async function calculateTimeBuckets(
   );
   const currentOnHand = Number(invRows.length > 0 ? invRows[0].total_available : 0);
 
-  const requirementRows: Loose = await conn.query(
+  const requirementRows: Loose = await cq(conn, 
     `SELECT
        DATE(wo.plan_start_date) as req_date,
-       COALESCE(SUM(bd.quantity * wo.plan_qty * (1 + bd.loss_rate / 100)), 0) as total_req
-     FROM prd_work_order wo
-     INNER JOIN prd_bom b ON b.material_id = wo.material_id AND b.status = 1
+       COALESCE(SUM(bd.quantity * wo.planned_qty * (1 + bd.loss_rate / 100)), 0) as total_req
+     FROM prod_work_order wo
+     -- prd_bom 的产品外键列是 product_id（指向 mdm_product），并无 material_id 列；
+     -- prod_work_order.product_id 由 SalesToWorkOrderHandler 以同一语义写入，二者同域。
+     INNER JOIN prd_bom b ON b.product_id = wo.product_id AND b.status = 1
      INNER JOIN prd_bom_detail bd ON bd.bom_id = b.id AND bd.material_id = ?
      WHERE wo.plan_start_date IS NOT NULL
-       AND wo.status IN (1, 2)
+       -- prod_work_order.status 是 varchar(20) 规范词表（唯一真相源见 src/lib/constants.ts）。
+       -- 未终结 = 仍需备料，故取 WORK_ORDER_STATUSES_OPEN(pending/confirmed/producing)。
+       -- 原写法 IN (1, 2) 是遗留数字码，字符串与整数比较恒不成立 → 各时间桶需求恒为 0。
+       AND wo.status IN (${WORK_ORDER_STATUSES_OPEN.map(() => '?').join(', ')})
        AND wo.plan_start_date >= ?
        AND wo.plan_start_date <= ?
      GROUP BY DATE(wo.plan_start_date)`,
-    [materialId, startDate, endDate]
+    [materialId, ...WORK_ORDER_STATUSES_OPEN, startDate, endDate]
   );
 
   const requirementMap = new Map<string, number>();
   for (const row of requirementRows) {
-    const dateStr =
-      typeof row.req_date === 'string'
-        ? row.req_date.substring(0, 10)
-        : String(row.req_date).substring(0, 10);
+    const dateStr = toDateBucketKey(row.req_date);
     requirementMap.set(dateStr, Number(row.total_req));
   }
 
-  const receiptRows: Loose = await conn.query(
+  const receiptRows: Loose = await cq(conn, 
     `SELECT
        DATE(po.delivery_date) as receipt_date,
        COALESCE(SUM(pol.order_qty - pol.received_qty), 0) as total_receipt
@@ -351,10 +391,7 @@ export async function calculateTimeBuckets(
 
   const receiptMap = new Map<string, number>();
   for (const row of receiptRows) {
-    const dateStr =
-      typeof row.receipt_date === 'string'
-        ? row.receipt_date.substring(0, 10)
-        : String(row.receipt_date).substring(0, 10);
+    const dateStr = toDateBucketKey(row.receipt_date);
     receiptMap.set(dateStr, Number(row.total_receipt));
   }
 
@@ -421,6 +458,20 @@ function getBucketDays(bucketSize: 'day' | 'week' | 'month'): number {
     case 'month':
       return 30;
   }
+}
+
+/**
+ * 把 SQL DATE 列统一格式化为 'YYYY-MM-DD' 桶键，与 generateBucketDates 的 label 口径一致。
+ *
+ * 连接池未开启 dateStrings（见 src/lib/db/index.ts 的 dbConfig），mysql2 会把 DATE 返回成
+ * JS Date 对象；此时 `String(date).substring(0, 10)` 得到的是 "Wed Nov 11" 之类的垃圾串，
+ * 而 `toISOString()` 又会被时区平移（+08:00 会退到前一天）。故委托 formatDateStr 按本地年月日拼接。
+ */
+function toDateBucketKey(value: unknown): string {
+  if (value instanceof Date) {
+    return formatDateStr(value);
+  }
+  return String(value ?? '').substring(0, 10);
 }
 
 interface BucketDates {
@@ -541,9 +592,14 @@ export async function calculateNetRequirements(
 
   const placeholders = workOrderIds.map(() => '?').join(',');
 
-  const workOrders: Loose = await conn.query(
-    `SELECT wo.id, wo.work_order_no, wo.plan_qty, wo.plan_start_date, wo.material_id
-     FROM prd_work_order wo
+  // BOM 的键是「产品」（prd_bom.product_id -> mdm_product），故取 wo.product_id。
+  // 原写法 `wo.legacy_material_id AS material_id` 把**物料**当**产品**用（域混淆）：
+  // prd_bom.product_id ∈ mdm_product 域，legacy_material_id ∈ inv_material 域，二者无键相连，
+  // 恒查不到（仅在 id 段偶然重叠时假命中）。
+  const workOrders: Loose = await cq(conn, 
+    `SELECT wo.id, wo.work_order_no, wo.planned_qty AS plan_qty, wo.plan_start_date,
+            wo.product_id
+     FROM prod_work_order wo
      WHERE wo.id IN (${placeholders})`,
     workOrderIds
   );
@@ -564,19 +620,30 @@ export async function calculateNetRequirements(
     }
   >();
 
+  let unresolvedWorkOrders = 0;
+
   for (const wo of workOrders) {
-    if (!wo.material_id) continue;
-    const bomTree = await explodeBOM(conn, wo.material_id, Number(wo.plan_qty || 0));
+    // 工单未记录产品（product_id = 0）时无法定位 BOM。此处**显式跳过并计数**，
+    // 而非静默查空 —— 静默正是历史上 MRP「跑得通但需求恒为 0 行」的成因。
+    if (!wo.product_id) {
+      unresolvedWorkOrders++;
+      continue;
+    }
+    const bomTree = await explodeBOM(conn, Number(wo.product_id), Number(wo.plan_qty || 0));
 
     const leafMaterials = collectLeafMaterials(bomTree);
+
+    // plan_start_date 是 DATE 列，连接池未开 dateStrings → mysql2 返回 JS Date 对象，
+    // 原写法 `.substring(0, 10)` 会抛 TypeError（与字符串比较同样不成立）。统一走 toDateBucketKey。
+    const woStartDate = wo.plan_start_date ? toDateBucketKey(wo.plan_start_date) : '';
 
     for (const leaf of leafMaterials) {
       const existing = materialRequirements.get(leaf.material_id);
       if (existing) {
         existing.total_qty += leaf.quantity;
-        if (wo.plan_start_date) {
-          if (!existing.earliest_start_date || wo.plan_start_date < existing.earliest_start_date) {
-            existing.earliest_start_date = wo.plan_start_date.substring(0, 10);
+        if (woStartDate) {
+          if (!existing.earliest_start_date || woStartDate < existing.earliest_start_date) {
+            existing.earliest_start_date = woStartDate;
           }
         }
         if (!existing.work_order_ids.includes(wo.id)) {
@@ -588,13 +655,18 @@ export async function calculateNetRequirements(
           unit: leaf.unit,
           material_code: leaf.material_code,
           material_name: leaf.material_name,
-          earliest_start_date: wo.plan_start_date
-            ? wo.plan_start_date.substring(0, 10)
-            : formatDateStr(new Date()),
+          earliest_start_date: woStartDate || formatDateStr(new Date()),
           work_order_ids: [wo.id],
         });
       }
     }
+  }
+
+  if (unresolvedWorkOrders > 0) {
+    logger.warn(
+      `[MRP] ${unresolvedWorkOrders}/${workOrders.length} 张工单未记录 product_id（prod_work_order.product_id = 0），` +
+        `无法定位 BOM，已跳过。需先打通「销售物料 -> 产品」主数据映射。`
+    );
   }
 
   const results: NetRequirement[] = [];
@@ -603,7 +675,7 @@ export async function calculateNetRequirements(
   for (const entry of materialReqEntries) {
     const materialId = entry[0];
     const req = entry[1];
-    const invRows: Loose = await conn.query(
+    const invRows: Loose = await cq(conn, 
       `SELECT COALESCE(SUM(available_qty), 0) as total_available
        FROM inv_inventory
        WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
@@ -611,7 +683,7 @@ export async function calculateNetRequirements(
     );
     const onHandQty = Number(invRows.length > 0 ? invRows[0].total_available : 0);
 
-    const allocatedRows: Loose = await conn.query(
+    const allocatedRows: Loose = await cq(conn, 
       `SELECT COALESCE(SUM(mii.issued_qty), 0) as total_allocated
        FROM prd_material_issue_item mii
        INNER JOIN prd_material_issue mi ON mi.id = mii.issue_id
@@ -623,7 +695,7 @@ export async function calculateNetRequirements(
     );
     const allocatedQty = Number(allocatedRows.length > 0 ? allocatedRows[0].total_allocated : 0);
 
-    const inTransitRows: Loose = await conn.query(
+    const inTransitRows: Loose = await cq(conn, 
       `SELECT COALESCE(SUM(pol.order_qty - pol.received_qty), 0) as total_in_transit
        FROM pur_purchase_order_line pol
        INNER JOIN pur_purchase_order po ON po.id = pol.po_id
@@ -636,7 +708,7 @@ export async function calculateNetRequirements(
     const inTransitQty = Number(inTransitRows.length > 0 ? inTransitRows[0].total_in_transit : 0);
 
     const defaultLeadTime = await CalcParamService.getInt('mrp.default_lead_time_days', 7);
-    const matInfoRows: Loose = await conn.query(
+    const matInfoRows: Loose = await cq(conn, 
       `SELECT id, material_code, material_name, unit, safety_stock, purchase_price
        FROM inv_material WHERE id = ? AND deleted = 0`,
       [materialId]
@@ -845,7 +917,7 @@ export async function generatePurchaseRequestsFromMRP(
 
   const supplierMap = new Map<number | null, PlannedOrder[]>();
 
-  const matSupplierRows: Loose = await conn.query(
+  const matSupplierRows: Loose = await cq(conn, 
     `SELECT id, material_code, material_name
      FROM inv_material
      WHERE id IN (${matPlaceholders})`,
@@ -877,7 +949,7 @@ export async function generatePurchaseRequestsFromMRP(
 
     let supplierName = '';
     if (supplierId) {
-      const suppRows: Loose = await conn.query(
+      const suppRows: Loose = await cq(conn, 
         `SELECT supplier_name FROM pur_supplier WHERE id = ? AND deleted = 0`,
         [supplierId]
       );
@@ -908,7 +980,7 @@ export async function generatePurchaseRequestsFromMRP(
     for (const order of orders) {
       let suggestedPrice = 0;
 
-      const priceRows: Loose = await conn.query(
+      const priceRows: Loose = await cq(conn, 
         `SELECT purchase_price FROM inv_material WHERE id = ? AND deleted = 0`,
         [order.material_id]
       );
@@ -1010,9 +1082,9 @@ export async function runFullMRP(
   }
 
   const placeholders = workOrderIds.map(() => '?').join(',');
-  const workOrders: Loose = await conn.query(
-    `SELECT wo.id, wo.plan_qty, wo.material_id
-     FROM prd_work_order wo
+  const workOrders: Loose = await cq(conn, 
+    `SELECT wo.id, wo.planned_qty AS plan_qty, wo.legacy_material_id AS material_id
+     FROM prod_work_order wo
      WHERE wo.id IN (${placeholders})`,
     workOrderIds
   );
@@ -1057,7 +1129,7 @@ export async function runFullMRP(
 
   let totalPlannedAmount = 0;
   for (const order of plannedOrders) {
-    const priceRows: Loose = await conn.query(
+    const priceRows: Loose = await cq(conn, 
       `SELECT purchase_price FROM inv_material WHERE id = ? AND deleted = 0`,
       [order.material_id]
     );

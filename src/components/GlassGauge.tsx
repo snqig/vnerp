@@ -153,7 +153,10 @@ export default function GlassGauge({
   })();
 
   return (
-    <div className="relative flex flex-col items-center" style={{ width: size, height: totalH }}>
+    <div
+      className="glass-scope relative flex flex-col items-center"
+      style={{ width: size, height: totalH }}
+    >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <defs>
           <radialGradient id={`${id}-bg`} cx="45%" cy="40%" r="55%">

@@ -78,7 +78,7 @@ export interface WorkOrderWithColors {
   /** 优先级：urgent > high > normal > low */
   priority: string;
   /** 截止日期 */
-  deadline: string;
+  deadline?: string;
 }
 
 /**
@@ -186,7 +186,14 @@ export async function getAvailableEquipment(workshop?: string): Promise<Equipmen
   sql += ' ORDER BY workshop_id, equipment_type, equipment_code';
 
   const rows = await query<DbRow>(sql, params);
-  return rows as Equipment[];
+  return rows.map((r) => ({
+    id: Number(r.id),
+    equipment_code: String(r.equipment_code),
+    equipment_name: String(r.equipment_name),
+    equipment_type: String(r.equipment_type),
+    workshop: String(r.workshop),
+    status: String(r.status),
+  })) as Equipment[];
 }
 
 /**
@@ -205,7 +212,15 @@ export async function getWorkOrderColorSequences(workOrderId: number): Promise<C
      ORDER BY seq_no`,
     [workOrderId]
   );
-  return rows as ColorSequence[];
+  return rows.map((r) => ({
+    seq_no: Number(r.seq_no),
+    color_name: String(r.color_name),
+    screen_plate_id: Number(r.screen_plate_id),
+    ink_formula_id: Number(r.ink_formula_id),
+    estimated_duration_hours: Number(r.estimated_duration_hours),
+    equipment_type_required: String(r.equipment_type_required),
+    depends_on_seq: r.depends_on_seq ? Number(r.depends_on_seq) : undefined,
+  }));
 }
 
 /**
@@ -502,10 +517,10 @@ export async function autoScheduleWorkOrders(
     const colorSeqs = await getWorkOrderColorSequences(woId);
 
     workOrders.push({
-      id: wo.id,
-      work_order_no: wo.work_order_no,
-      product_id: wo.id,
-      product_name: wo.product_name,
+      id: Number(wo.id),
+      work_order_no: String(wo.work_order_no),
+      product_id: Number(wo.id),
+      product_name: String(wo.product_name),
       plan_qty: Number(wo.quantity) || 0,
       color_sequences:
         colorSeqs.length > 0
@@ -520,8 +535,8 @@ export async function autoScheduleWorkOrders(
                 equipment_type_required: 'printing',
               },
             ],
-      priority: wo.priority || 'normal',
-      deadline: wo.deadline,
+      priority: String(wo.priority) || 'normal',
+      deadline: wo.deadline ? String(wo.deadline) : undefined,
     });
   }
 

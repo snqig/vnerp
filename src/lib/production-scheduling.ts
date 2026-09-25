@@ -264,7 +264,7 @@ export async function checkMaterialAvailability(params: {
     if (availableQty < requiredQty) {
       shortages.push({
         material_id: Number(line.material_id),
-        material_name: line.material_name,
+        material_name: String(line.material_name),
         required_qty: Math.round(requiredQty * 1000) / 1000,
         available_qty: Math.round(availableQty * 1000) / 1000,
         shortage: Math.round((requiredQty - availableQty) * 1000) / 1000,
@@ -399,8 +399,8 @@ export async function getCapacityLoad(params: {
   }
 
   for (const wo of workOrders) {
-    const woStart = new Date(wo.plan_start_date);
-    const woEnd = new Date(wo.plan_end_date);
+    const woStart = new Date(String(wo.plan_start_date));
+    const woEnd = new Date(String(wo.plan_end_date));
 
     for (
       let d = new Date(Math.max(woStart.getTime(), start.getTime()));
@@ -417,10 +417,10 @@ export async function getCapacityLoad(params: {
         // 每个工单每天占用 workingHoursPerDay 工时
         load.totalWorkHours += DEFAULT_WORKING_HOURS_PER_DAY;
         load.orders.push({
-          work_order_no: wo.work_order_no,
-          product_name: wo.product_name,
+          work_order_no: String(wo.work_order_no),
+          product_name: String(wo.product_name),
           quantity: Number(wo.quantity),
-          priority: wo.priority,
+          priority: String(wo.priority),
         });
       }
     }

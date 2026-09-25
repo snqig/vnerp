@@ -31,10 +31,10 @@ export function ChartImage({ url, title, loading = false, onError }: ChartProps)
 
   if (loading || !imageLoaded) {
     return (
-      <div className="flex items-center justify-center h-full min-h-[200px] bg-white/5 rounded-lg">
+      <div className="flex items-center justify-center h-full min-h-[200px] bg-slate-100 dark:bg-white/5 rounded-lg">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-2"></div>
-          <p className="text-white/50 text-sm">{ts('k_1h3lvir')}</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8A4A22] dark:border-cyan-400 mx-auto mb-2"></div>
+          <p className="text-slate-500 dark:text-white/50 text-sm">{ts('k_1h3lvir')}</p>
         </div>
       </div>
     );
@@ -47,7 +47,7 @@ export function ChartImage({ url, title, loading = false, onError }: ChartProps)
           <p className="text-red-400 text-sm mb-2">{ts('k_s6johq')}</p>
           <button
             onClick={() => window.location.reload()}
-            className="text-cyan-400 hover:text-cyan-300 text-sm underline"
+            className="text-[#8A4A22] hover:text-[#C2763C] dark:text-cyan-400 dark:hover:text-cyan-300 text-sm underline"
           >
             {ts('k_10ex5dr')}</button>
         </div>
@@ -79,18 +79,18 @@ export function ChartPlaceholder({
 }) {
   const ts = useTranslations('Common');
   return (
-    <div className="flex items-center justify-center h-full min-h-[200px] bg-white/5 rounded-lg">
+    <div className="flex items-center justify-center h-full min-h-[200px] bg-slate-100 dark:bg-white/5 rounded-lg">
       <div className="text-center">
         {type === 'loading' && (
           <>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-2"></div>
-            <p className="text-white/50 text-sm">{ts('k_1h3lvir')}</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8A4A22] dark:border-cyan-400 mx-auto mb-2"></div>
+            <p className="text-slate-500 dark:text-white/50 text-sm">{ts('k_1h3lvir')}</p>
           </>
         )}
         {type === 'empty' && (
           <>
-            <div className="text-white/30 text-4xl mb-2">📊</div>
-            <p className="text-white/40 text-sm">{ts('k_6tzr61')}</p>
+            <div className="text-slate-300 dark:text-white/30 text-4xl mb-2">📊</div>
+            <p className="text-slate-400 dark:text-white/40 text-sm">{ts('k_6tzr61')}</p>
           </>
         )}
         {type === 'error' && (
@@ -131,12 +131,12 @@ export function ChartCard({
 }) {
   return (
     <div className={`tech-card tech-glow p-0 ${className}`}>
-      <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
+      <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-white dark:bg-white/5">
         {icon && (
-          <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
+          <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#C2763C] to-[#8A4A22] dark:from-cyan-400 dark:to-blue-600" />
         )}
         {icon}
-        <span className="text-sm font-medium text-white/80">{title}</span>
+        <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">{title}</span>
       </div>
       <div className="p-4 h-[300px]">{children}</div>
     </div>

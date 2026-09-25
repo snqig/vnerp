@@ -19,25 +19,36 @@ import { sql } from 'drizzle-orm';
 import { invMaterial } from './warehouse';
 import { eqpEquipment } from './_gen_eqp';
 import { salOrder } from './sales';
+// 注：表名与列定义已对齐在用表 prod_work_order（2026-09-23 遗留表 prd_work_order 切换）。
+// 变量名沿用 prdWorkOrder 以保持 131 处 foreignKey() 引用兼容。
 export const prdWorkOrder = mysqlTable(
-  'prd_work_order',
+  'prod_work_order',
   {
     id: serial('id').primaryKey(),
     workOrderNo: varchar('work_order_no', { length: 50 }).notNull(),
-    workOrderDate: date('work_order_date'),
+    orderId: bigint('order_id', { mode: 'number', unsigned: true }),
+    orderNo: varchar('order_no', { length: 50 }),
     salesOrderId: bigint('sales_order_id', { mode: 'number', unsigned: true }),
-    materialId: bigint('material_id', { mode: 'number', unsigned: true }).notNull(),
-    planQty: decimal('plan_qty', { precision: 18, scale: 4 }).notNull(),
-    completedQty: decimal('completed_qty', { precision: 18, scale: 4 }).default('0.0000'),
+    bomId: bigint('bom_id', { mode: 'number', unsigned: true }),
+    customerName: varchar('customer_name', { length: 200 }),
+    productName: varchar('product_name', { length: 200 }),
+    productId: int('product_id').notNull().default(0),
+    productCode: varchar('product_code', { length: 64 }).notNull().default(''),
+    legacyMaterialId: bigint('legacy_material_id', { mode: 'number', unsigned: true }),
+    plannedQty: decimal('planned_qty', { precision: 18, scale: 3 }).notNull().default('0.000'),
+    completedQty: decimal('completed_qty', { precision: 18, scale: 3 }).notNull().default('0.000'),
+    quantity: decimal('quantity', { precision: 15, scale: 2 }),
     unit: varchar('unit', { length: 20 }),
     planStartDate: date('plan_start_date'),
     planEndDate: date('plan_end_date'),
     actualStartDate: date('actual_start_date'),
     actualEndDate: date('actual_end_date'),
-    workshopId: bigint('workshop_id', { mode: 'number', unsigned: true }),
-    workcenterId: bigint('workcenter_id', { mode: 'number', unsigned: true }),
-    priority: tinyint('priority').default(1),
-    status: tinyint('status').default(1),
+    priority: varchar('priority', { length: 20 }),
+    status: varchar('status', { length: 20 }),
+    processName: varchar('process_name', { length: 128 }).notNull().default(''),
+    warehouseId: int('warehouse_id').notNull().default(1),
+    standardCardId: bigint('standard_card_id', { mode: 'number', unsigned: true }),
+    processCardId: bigint('process_card_id', { mode: 'number', unsigned: true }),
     remark: text('remark'),
     createBy: bigint('create_by', { mode: 'number', unsigned: true }),
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
@@ -47,22 +58,22 @@ export const prdWorkOrder = mysqlTable(
   },
   (table) => ({
     workOrderNoIdx: uniqueIndex('uk_work_order_no').on(table.workOrderNo),
-    materialIdx: index('idx_material').on(table.materialId),
     statusIdx: index('idx_status').on(table.status),
     salesOrderIdx: index('idx_sales_order').on(table.salesOrderId),
-    workshopIdx: index('idx_workshop').on(table.workshopId),
-    workcenterIdx: index('idx_workcenter').on(table.workcenterId),
+    orderNoIdx: index('idx_order_no').on(table.orderNo),
+    createTimeIdx: index('idx_create_time').on(table.createTime),
 
+    // 声明式关联（生产库当前未建物理 FK，此处保留语义定义）
     fk_salOrder_salesOrderId: foreignKey({
-      name: 'fk_prd_wo_sales_order',
+      name: 'fk_prod_wo_sales_order',
       columns: [table.salesOrderId],
       foreignColumns: [salOrder.id],
     })
       .onDelete('set null')
       .onUpdate('cascade'),
-      fk_invMaterial_materialId: foreignKey({
-      name: 'fk_prd_wo_material',
-      columns: [table.materialId],
+    fk_invMaterial_legacyMaterialId: foreignKey({
+      name: 'fk_prod_wo_legacy_material',
+      columns: [table.legacyMaterialId],
       foreignColumns: [invMaterial.id],
     })
       .onDelete('restrict')

@@ -1,6 +1,7 @@
 'use client';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
+import { hasPermissionIn } from '@/lib/permission-match';
 
 import {
   createContext,
@@ -420,7 +421,11 @@ export function AuthProvider({
       if (state.user?.roles?.some((r) => r.role_code === 'super_admin')) {
         return true;
       }
-      return state.permissions.includes(permission) || state.permissions.includes('*');
+      // 走与服务端 `src/lib/auth.ts` 相同的通配展开口径。
+      // state.permissions 来自 sys_menu.permission，形如 `warehouse:*` / `orders:*`，
+      // 而调用方请求的是 API 侧精确码（如 `warehouse:view`）——
+      // 此前用字面量 includes 实测命中率为 0/189，等于所有守卫对该用户恒「无权限」。
+      return hasPermissionIn(state.permissions, permission);
     },
     [state.permissions, state.user]
   );

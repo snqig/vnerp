@@ -95,7 +95,7 @@ export function GlobalExportToolbar<T = Record<string, unknown>>({
           filename,
           title: title || filename,
           columns,
-          data: data as Record<string, unknown>[],
+          data: data as unknown as import('@/types/db').DbRow[],
           subtitle,
           landscape,
           footer,
@@ -114,10 +114,10 @@ export function GlobalExportToolbar<T = Record<string, unknown>>({
   );
 
   const icons = {
-    excel: <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" />,
-    pdf: <FileText className="mr-2 h-4 w-4 text-red-600" />,
-    word: <FileType className="mr-2 h-4 w-4 text-blue-600" />,
-    csv: <FileIcon className="mr-2 h-4 w-4 text-orange-600" />,
+    excel: <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600 dark:text-green-400" />,
+    pdf: <FileText className="mr-2 h-4 w-4 text-red-600 dark:text-red-400" />,
+    word: <FileType className="mr-2 h-4 w-4 text-blue-600 dark:text-blue-400" />,
+    csv: <FileIcon className="mr-2 h-4 w-4 text-orange-600 dark:text-orange-400" />,
     print: <Printer className="mr-2 h-4 w-4 text-gray-600" />,
   };
 

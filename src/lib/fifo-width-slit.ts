@@ -33,6 +33,8 @@ export interface WidthSlitAlloc {
   child_width: number; // = requiredWidth
   child_length: number; // = 母批长度
   child_batch_no?: string;
+  original_inbound_date?: string | null;
+  inbound_date?: string | null;
 }
 
 export interface WidthSlitPlan {

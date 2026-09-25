@@ -301,7 +301,7 @@ export function QRCodeScanner({
         {lastResult && (
           <div
             className={`flex items-center gap-2 p-3 rounded-lg ${
-              lastResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+              lastResult.success ? 'bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-red-500/10 text-red-700 dark:text-red-400'
             }`}
           >
             {lastResult.success ? (
@@ -334,14 +334,14 @@ export function QRCodeScanner({
                 <div
                   key={index}
                   className={`flex items-center justify-between text-xs p-2 rounded ${
-                    item.success ? 'bg-green-50' : 'bg-red-50'
+                    item.success ? 'bg-green-500/10' : 'bg-red-500/10'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     {item.success ? (
-                      <CheckCircle2 className="h-3 w-3 text-green-500" />
+                      <CheckCircle2 className="h-3 w-3 text-green-500 dark:text-green-400" />
                     ) : (
-                      <AlertCircle className="h-3 w-3 text-red-500" />
+                      <AlertCircle className="h-3 w-3 text-red-500 dark:text-red-400" />
                     )}
                     <span className="font-mono">{item.qrCode}</span>
                   </div>

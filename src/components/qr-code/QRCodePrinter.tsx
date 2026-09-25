@@ -23,6 +23,7 @@ import { Printer, Eye, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
+import { authFetch } from '@/lib/auth-fetch';
 
 type LabelType = 'material' | 'small' | 'finished' | 'shipping' | 'workorder' | 'ink';
 
@@ -162,7 +163,7 @@ export function QRCodePrinter({
         data: printData,
       };
       logger.info(ctx, ts('k_1yfvubt'), { payload });
-      const res = await fetch('/api/qrcode/print', {
+      const res = await authFetch('/api/qrcode/print', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

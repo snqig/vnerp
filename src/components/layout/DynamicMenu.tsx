@@ -152,7 +152,7 @@ export function DynamicMenu() {
           <button
             onClick={() => toggleMenu(menu.code)}
             className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-              active ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+              active ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:bg-gray-700'
             }`}
             style={{ paddingLeft: `${16 + level * 16}px` }}
           >
@@ -181,7 +181,7 @@ export function DynamicMenu() {
         key={menu.id}
         href={menu.path || '#'}
         className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-          active ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+          active ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:bg-gray-700'
         }`}
         style={{ paddingLeft: `${16 + level * 16}px` }}
       >

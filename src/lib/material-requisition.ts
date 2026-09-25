@@ -56,9 +56,10 @@ export async function autoGenerateRequisition(
   try {
     // 1. 查询工单信息
     const workOrderRows: Loose = await query(
-      `SELECT wo.*, m.material_code, m.material_name, m.unit
-       FROM prd_work_order wo
-       LEFT JOIN inv_material m ON wo.material_id = m.id
+      `SELECT wo.*, wo.legacy_material_id AS material_id, wo.planned_qty AS plan_qty,
+              m.material_code, m.material_name, m.unit
+       FROM prod_work_order wo
+       LEFT JOIN inv_material m ON wo.legacy_material_id = m.id
        WHERE wo.id = ? AND wo.deleted = 0`,
       [workOrderId]
     );

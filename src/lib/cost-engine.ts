@@ -4,7 +4,6 @@
  * 标准成本差异分析等成本计算方法，以及产品成本卷积（BOM 材料成本 + 人工成本 + 制造费用 + 委外费用）核算。
  */
 import { getConnection } from '@/lib/db';
-import type { DbConnection } from '@/types/db';
 import {
   roundTo as roundToUtil,
   roundPrice as roundPriceUtil,
@@ -547,7 +546,7 @@ export class CostEngine {
    * @returns 材料成本合计金额
    */
   private async calculateMaterialCost(
-    conn: DbConnection,
+    conn: PoolConnection,
     productId: number,
     _period: string,
     _workOrderId?: number
@@ -606,7 +605,7 @@ export class CostEngine {
    * @returns 人工成本合计金额
    */
   private async calculateLaborCost(
-    conn: DbConnection,
+    conn: PoolConnection,
     productId: number,
     _period: string,
     _workOrderId?: number
@@ -645,7 +644,7 @@ export class CostEngine {
    * @returns 制造费用合计金额
    */
   private async calculateManufacturingCost(
-    conn: DbConnection,
+    conn: PoolConnection,
     productId: number,
     _period: string,
     _workOrderId?: number
@@ -683,7 +682,7 @@ export class CostEngine {
    * @returns 委外加工费合计金额
    */
   private async calculateOutsourcingCost(
-    conn: DbConnection,
+    conn: PoolConnection,
     productId: number,
     period: string,
     workOrderId?: number

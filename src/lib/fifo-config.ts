@@ -11,8 +11,8 @@ export async function getFIFOMode(): Promise<FIFOMode> {
     const rows = await query(`SELECT config_value FROM sys_config WHERE config_key = ?`, [
       FIFO_CONFIG_KEY,
     ]);
-    const mode = (rows as DbRow[])?.[0]?.config_value || 'off';
-    if (Object.values(FIFO_MODE).includes(mode)) return mode as FIFOMode;
+    const mode = String((rows as DbRow[])?.[0]?.config_value || 'off');
+    if ((Object.values(FIFO_MODE) as readonly string[]).includes(mode)) return mode as FIFOMode;
     return 'off';
   } catch {
     return 'off';
@@ -35,5 +35,5 @@ export async function checkFIFOWidthMatch(materialId: number, width: number): Pr
      WHERE material_id = ? AND width = ? AND available_qty > 0 AND deleted = 0 AND status = 1`,
     [materialId, width]
   );
-  return ((rows as DbRow[])?.[0]?.cnt || 0) > 0;
+  return Number((rows as DbRow[])?.[0]?.cnt || 0) > 0;
 }

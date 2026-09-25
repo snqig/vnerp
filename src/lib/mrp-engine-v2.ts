@@ -431,7 +431,7 @@ export class MRPEngine {
     const startTime = new Date();
     this.warnings = [];
 
-    const conn = this.conn || (await getConnection());
+    const conn = this.conn || ((await getConnection()) as unknown as DbConnection);
     const isExternalConn = !!this.conn;
 
     try {

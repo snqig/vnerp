@@ -47,11 +47,11 @@ interface EditForm {
 }
 
 const typeConfig: Record<string, { icon: LucideIcon; label: string; color: string }> = {
-  group: { icon: Building2, label: 'orgGroup', color: 'text-blue-600' },
-  legal_entity: { icon: Landmark, label: 'orgLegalEntity', color: 'text-purple-600' },
-  factory: { icon: Factory, label: 'orgFactory', color: 'text-green-600' },
-  workshop: { icon: Wrench, label: 'orgWorkshop', color: 'text-orange-600' },
-  team: { icon: Users, label: 'orgTeam', color: 'text-teal-600' },
+  group: { icon: Building2, label: 'orgGroup', color: 'text-blue-600 dark:text-blue-400' },
+  legal_entity: { icon: Landmark, label: 'orgLegalEntity', color: 'text-purple-600 dark:text-purple-400' },
+  factory: { icon: Factory, label: 'orgFactory', color: 'text-green-600 dark:text-green-400' },
+  workshop: { icon: Wrench, label: 'orgWorkshop', color: 'text-orange-600 dark:text-orange-400' },
+  team: { icon: Users, label: 'orgTeam', color: 'text-teal-600 dark:text-teal-400' },
   position: { icon: Briefcase, label: 'orgPosition', color: 'text-gray-600' },
 };
 
@@ -118,7 +118,7 @@ function TreeNode({
             onClick={(e) => { e.stopPropagation(); onEdit(node); }}>
             <Pencil className="h-3 w-3" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" title={ts('k_1t2vi4h')}
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 dark:text-red-400" title={ts('k_1t2vi4h')}
             onClick={(e) => { e.stopPropagation(); onDelete(node); }}>
             <Trash2 className="h-3 w-3" />
           </Button>
@@ -241,11 +241,11 @@ export function OrganizationTree() {
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>{ts('k_1lqzgmw')}<span className="text-red-500">*</span></Label>
+              <Label>{ts('k_1lqzgmw')}<span className="text-red-500 dark:text-red-400">*</span></Label>
               <Input value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} placeholder={ts('k_1u6vx58')} />
             </div>
             <div className="space-y-1.5">
-              <Label>{ts('k_hzx914')}<span className="text-red-500">*</span></Label>
+              <Label>{ts('k_hzx914')}<span className="text-red-500 dark:text-red-400">*</span></Label>
               <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={ts('k_w9hn8s')} />
             </div>
             <div className="space-y-1.5">

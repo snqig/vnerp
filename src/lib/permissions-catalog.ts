@@ -89,6 +89,11 @@ export const API_PERMISSIONS = {
   EQUIPMENT_REPAIR: 'equipment:repair',
   EQUIPMENT_CALIBRATION: 'equipment:calibration',
   EQUIPMENT_SCRAP: 'equipment:scrap',
+  EQUIPMENT_SPARE_PART: 'equipment:spare-part',
+  EQUIPMENT_SPARE_ISSUE: 'equipment:spare-issue',
+  EQUIPMENT_DOCUMENT: 'equipment:document',
+  EQUIPMENT_INSPECTION: 'equipment:inspection',
+  EQUIPMENT_STATUS: 'equipment:status',
 
   // 印前/印制管理
   DCPRESET_TRACE: 'dcprint:trace',
@@ -441,6 +446,9 @@ export const PERMISSION_MODULES: Array<{
       { id: API_PERMISSIONS.EQUIPMENT_REPAIR, name: '设备维修' },
       { id: API_PERMISSIONS.EQUIPMENT_CALIBRATION, name: '设备校准' },
       { id: API_PERMISSIONS.EQUIPMENT_SCRAP, name: '设备报废' },
+      { id: API_PERMISSIONS.EQUIPMENT_SPARE_PART, name: '备件管理' },
+      { id: API_PERMISSIONS.EQUIPMENT_SPARE_ISSUE, name: '备件领用' },
+      { id: API_PERMISSIONS.EQUIPMENT_STATUS, name: '设备状态监控' },
     ],
   },
   {

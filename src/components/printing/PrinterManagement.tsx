@@ -89,17 +89,17 @@ export const PrinterManagement: React.FC = () => {
   const statusIcon = (status: PrintQueueItem['status']) => {
     switch (status) {
       case 'success':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+        return <CheckCircle2 className="h-4 w-4 text-green-500 dark:text-green-400" />;
       case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />;
       case 'printing':
         return (
           <div className="animate-pulse">
-            <Clock className="h-4 w-4 text-blue-500" />
+            <Clock className="h-4 w-4 text-blue-500 dark:text-blue-400" />
           </div>
         );
       case 'failed':
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-red-500 dark:text-red-400" />;
       default:
         return null;
     }
@@ -218,7 +218,7 @@ export const PrinterManagement: React.FC = () => {
                   >
                     <Settings className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="text-red-500">
+                  <Button variant="ghost" size="icon" className="text-red-500 dark:text-red-400">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

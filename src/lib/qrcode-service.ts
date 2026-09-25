@@ -174,7 +174,7 @@ export class QRCodeService {
         ]
       );
 
-      const qrId = (result as mysql.ResultSetHeader).insertId;
+      const qrId = (result as unknown as mysql.ResultSetHeader).insertId;
       const qrContent = this.buildQRContent({
         type: 'material',
         id: materialId,
@@ -225,7 +225,7 @@ export class QRCodeService {
         ]
       );
 
-      const qrId = (result as mysql.ResultSetHeader).insertId;
+      const qrId = (result as unknown as mysql.ResultSetHeader).insertId;
       const qrContent = this.buildQRContent({
         type: 'batch',
         id: materialId,
@@ -270,7 +270,7 @@ export class QRCodeService {
         ]
       );
 
-      const qrId = (result as mysql.ResultSetHeader).insertId;
+      const qrId = (result as unknown as mysql.ResultSetHeader).insertId;
       const qrContent = this.buildQRContent({
         type: 'workorder',
         id: workOrderId,

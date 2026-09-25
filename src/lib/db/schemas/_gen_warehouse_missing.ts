@@ -347,6 +347,12 @@ export const invMaterialCategory = mysqlTable(
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
     categoryType: tinyint('category_type'),
     remark: varchar('remark', { length: 255 }),
+    // 该分类下的物料是否“可以分切”（母材分切/分条）。用途分类维度的分切能力标记，
+    // 与 inv_material.is_splittable（物料实例维度）正交：分类标记是默认值/能力提示。
+    isSplittable: tinyint('is_splittable').default(0),
+  // 典型品名/代号举例：帮助人工判断物料应归入哪个分类
+  // （如 C01 → 0.033KB、黑色PET36、MTL-75C离型膜 …）。迁移 20260921_category_tree_v2.sql。
+  typicalExamples: varchar('typical_examples', { length: 600 }),
   },
   (t) => ({
     idxParent: index('idx_parent').on(t.parentId),
@@ -549,7 +555,7 @@ export const invProductInventory = mysqlTable(
   })
 );
 
-// SKIP-FK (cross-domain): inv_production_inbound.workOrderId -> prd_work_order.id [SET NULL/undefined]
+// SKIP-FK (cross-domain): inv_production_inbound.workOrderId -> prod_work_order.id [SET NULL/undefined]
 export const invProductionInbound = mysqlTable(
   'inv_production_inbound',
   {

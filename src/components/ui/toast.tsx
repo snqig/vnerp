@@ -5,42 +5,54 @@ import { cva } from 'class-variance-authority';
 import { X } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { toastStore, type ToastItem } from '@/lib/toast-store';
 
-const ToastProvider = React.createContext<{
-  toasts: Toast[];
-  addToast: (toast: Omit<Toast, 'id'>) => void;
+/**
+ * Toast 渲染管线。
+ *
+ * 状态源统一为 `@/lib/toast-store` 的全局单例：
+ *   · `useToastContext()`（本文件，6 个文件在用）
+ *   · `useToast()`（`@/hooks/use-toast`，84 个文件在用）
+ * 都写入同一个 store，因此**任一路径投递的提示都会在这里被渲染**。
+ *
+ * 历史缺陷：本组件此前读的是 `React.useState` 局部状态，而 `useToast()` 写的是
+ * 另一份局部状态 → 占绝大多数的提示无人渲染。现收敛到单一来源。
+ */
+const ToastContext = React.createContext<{
+  toasts: ToastItem[];
+  addToast: (toast: Omit<ToastItem, 'id'>, id?: string) => string;
   removeToast: (id: string) => void;
 }>({
   toasts: [],
-  addToast: () => {},
+  addToast: () => '',
   removeToast: () => {},
 });
 
 export function ToastProviderComponent({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = React.useState<Toast[]>([]);
+  const toasts = React.useSyncExternalStore(
+    toastStore.subscribe,
+    toastStore.getSnapshot,
+    toastStore.getSnapshot
+  );
 
-  const addToast = React.useCallback((toast: Omit<Toast, 'id'>) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { ...toast, id }]);
-
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 5000);
-  }, []);
-
-  const removeToast = React.useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+  const value = React.useMemo(
+    () => ({
+      toasts,
+      addToast: (toast: Omit<ToastItem, 'id'>, id?: string) => toastStore.add(toast, id),
+      removeToast: (id: string) => toastStore.remove(id),
+    }),
+    [toasts]
+  );
 
   return (
-    <ToastProvider.Provider value={{ toasts, addToast, removeToast }}>
+    <ToastContext.Provider value={value}>
       {children}
       <ToastViewport />
-    </ToastProvider.Provider>
+    </ToastContext.Provider>
   );
 }
 
-export const useToastContext = () => React.useContext(ToastProvider);
+export const useToastContext = () => React.useContext(ToastContext);
 
 const toastVariants = cva(
   'group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full',
@@ -57,13 +69,6 @@ const toastVariants = cva(
     },
   }
 );
-
-interface Toast {
-  id: string;
-  title?: string;
-  description?: string;
-  variant?: 'default' | 'destructive';
-}
 
 function ToastViewport() {
   const { toasts, removeToast } = useToastContext();

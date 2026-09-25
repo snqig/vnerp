@@ -28,7 +28,18 @@ function deepMerge(base: any, override: any): any {
 }
 
 export default getRequestConfig(async ({ requestLocale }) => {
-  let locale = await requestLocale;
+  // 事件总线的 handler 会在「无请求上下文」场景下调用 getTranslations()：
+  // OutboxPoller 的 setInterval 回调只继承「启动它的那次调用」的 AsyncLocalStorage。
+  // 自 2026-09-23 起 poller 由 src/instrumentation.ts 在进程启动时启动，回调里
+  // 没有任何 request store，next-intl 读取 requestLocale 会走 headers() 并抛
+  // "headers was called outside a request scope"，导致整条事件链路 dead_letter。
+  // 这里回退默认语言兜底；有请求上下文时行为不变。
+  let locale: string | undefined;
+  try {
+    locale = await requestLocale;
+  } catch {
+    locale = defaultLocale;
+  }
 
   if (!locale || !locales.includes(locale as (typeof locales)[number])) {
     locale = defaultLocale;

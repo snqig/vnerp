@@ -201,7 +201,7 @@ export function QRCodeTrace({
                       {event.operator}
                     </span>
                     <span
-                      className={`flex items-center gap-1 ${event.result === 'success' ? 'text-green-600' : 'text-red-600'}`}
+                      className={`flex items-center gap-1 ${event.result === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
                     >
                       {event.result === 'success' ? (
                         <CheckCircle2 className="h-3 w-3" />

@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
 import type { QRCodeType, QRCodeGenerateParams } from './qr-code-types';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface QRCodeGeneratorProps {
   onSuccess?: (qrCode: string, data: Record<string, unknown>) => void;
@@ -74,7 +75,7 @@ export function QRCodeGenerator({
     setIsGenerating(true);
     try {
       logger.info(ctx, ts('k_1y4x4v9'), { payload: formData });
-      const res = await fetch('/api/qrcode', {
+      const res = await authFetch('/api/qrcode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

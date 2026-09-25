@@ -154,10 +154,16 @@ export async function seedMasterData(
       industry: ts('k_1pmedts'),
     },
   ];
-  for (const c of customers) {
+  // 显式指定 id（1..N）：下游步骤（销售订单 / 发货 / 退货 / 财务往来）以「第 N 个客户」
+  // 的硬编码 cid 引用客户。若依赖 AUTO_INCREMENT 的续接值，一旦上游清表未重置
+  // AUTO_INCREMENT（或重置被跳过），全部 customer_id 都会指向不存在的客户而悬空
+  // —— 该缺陷在 2026-09-23 实测发生过（outbound/delivery/return/receivable 等 11 张表）。
+  // 显式 id 使「序号 ↔ 主键」恒等，彻底消除该脆弱依赖。
+  for (let ci = 0; ci < customers.length; ci++) {
+    const c = customers[ci];
     await conn.execute(
-      `INSERT INTO crm_customer (customer_code, customer_name, customer_type, contact_name, contact_phone, industry, status) VALUES (?, ?, ?, ?, ?, ?, 1)`,
-      [c.code, c.name, c.type, c.contact, c.phone, c.industry]
+      `INSERT INTO crm_customer (id, customer_code, customer_name, customer_type, contact_name, contact_phone, industry, status) VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
+      [ci + 1, c.code, c.name, c.type, c.contact, c.phone, c.industry]
     );
   }
   stats.customers = customers.length;
@@ -760,7 +766,7 @@ export async function seedCommercialData(
       ]
     );
     const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
-    const orderId = rows[0].id;
+    const orderId = Number(rows[0].id);
     saleOrderIds.push(orderId);
     for (const item of order.items) {
       const amount = item.qty * item.price;
@@ -1527,14 +1533,14 @@ export async function seedProductionData(
       const [matRows] = await conn.execute(`SELECT purchase_price FROM inv_material WHERE id = ?`, [
         item.mid,
       ]);
-      totalCost += item.qty * (matRows[0]?.purchase_price || 0);
+      totalCost += item.qty * Number(matRows[0]?.purchase_price || 0);
     }
     await conn.execute(
       `INSERT INTO prd_bom (bom_name, product_id, version, total_cost, status, create_time) VALUES (?, ?, '1.0', ?, 1, NOW())`,
       [bom.name, bom.pid, Math.round(totalCost * 100) / 100]
     );
     const [rows] = (await conn.execute('SELECT LAST_INSERT_ID() as id')) as [DbRow[], unknown];
-    const bomId = rows[0].id;
+    const bomId = Number(rows[0].id);
     bomIds.push(bomId);
     for (const item of bom.items) {
       const [matRows] = await conn.execute(
@@ -1552,7 +1558,7 @@ export async function seedProductionData(
           item.unit || mat?.unit,
           item.loss,
           mat?.purchase_price || 0,
-          item.qty * (mat?.purchase_price || 0),
+          item.qty * Number(mat?.purchase_price || 0),
         ]
       );
     }

@@ -3,6 +3,153 @@ import type { DbConnection } from '@/types/db';
 import type { DbRow } from '@/types/db';
 import type mysql from 'mysql2/promise';
 
+// ---------------------------------------------------------------------------
+// 模板串模型（纯函数，不访问数据库）
+// 语法见 docs/superpowers/specs/2026-09-22-document-numbering-design.md 第 3 节
+// ---------------------------------------------------------------------------
+
+export type DocumentNumberContext = Record<string, string | number | null | undefined>;
+
+export class DocumentNumberError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'DocumentNumberError';
+  }
+}
+
+/** 日期/时刻占位符（{TS:n} 带参数，单独判断） */
+const DATE_TOKENS = [
+  'YYYYMMDDHHmmss',
+  'YYYYMMDD',
+  'YYMMDD',
+  'YYYYMM',
+  'MMDD',
+  'HHmmss',
+  'YYYY',
+  'YY',
+  'MM',
+  'DD',
+] as const;
+
+/** 命中即判定「按日重置」的占位符（最细粒度优先） */
+const DAILY_TOKENS = ['DD', 'MMDD', 'YYMMDD', 'YYYYMMDD', 'HHmmss', 'YYYYMMDDHHmmss'];
+
+/** 命中即判定「按月重置」的占位符 */
+const MONTHLY_TOKENS = ['MM', 'YYYYMM'];
+
+const PLACEHOLDER_RE = /\{([^{}]*)\}/g;
+const TS_RE = /^TS:\d+$/;
+const SEQ_RE = /^SEQ:(\d+)$/;
+const VAR_RE = /^[A-Z][A-Z0-9_]*$/;
+
+export interface ParsedTemplate {
+  /** {SEQ:n} 之前的片段 */
+  prefix: string;
+  /** {SEQ:n} 之后的片段 */
+  suffix: string;
+  /** 流水补零位数；模板不含 {SEQ:n} 时为 null（派生编号，不消费流水） */
+  seqLength: number | null;
+  /** 需要调用方通过 ctx 提供的变量名（大写） */
+  variables: string[];
+}
+
+function readTokens(template: string): string[] {
+  return [...template.matchAll(PLACEHOLDER_RE)].map((m) => m[1]);
+}
+
+/**
+ * 校验模板合法性。
+ * 规则：{SEQ:n} 数量 0 或 1、n∈[1,10]、不得有未知占位符、不得为空、
+ * 至少含一个非流水片段（纯 {SEQ:n} 无法定位业务）。
+ */
+export function validateDocumentNoTemplate(template: string): {
+  valid: boolean;
+  errors: string[];
+  placeholders: string[];
+} {
+  if (!template || !template.trim()) {
+    return { valid: false, errors: ['模板不能为空'], placeholders: [] };
+  }
+
+  const errors: string[] = [];
+  const placeholders = readTokens(template);
+
+  const opens = (template.match(/\{/g) || []).length;
+  const closes = (template.match(/\}/g) || []).length;
+  if (opens !== closes) {
+    errors.push('模板中存在未闭合的花括号');
+  }
+
+  let seqCount = 0;
+  for (const token of placeholders) {
+    if ((DATE_TOKENS as readonly string[]).includes(token) || TS_RE.test(token)) continue;
+
+    const seqMatch = SEQ_RE.exec(token);
+    if (seqMatch) {
+      seqCount += 1;
+      const len = Number(seqMatch[1]);
+      if (len < 1 || len > 10) {
+        errors.push(`{SEQ:n} 的 n 必须在 1-10 之间，当前为 ${len}`);
+      }
+      continue;
+    }
+
+    if (VAR_RE.test(token)) continue;
+    errors.push(`无法识别的占位符 {${token}}`);
+  }
+
+  if (seqCount > 1) {
+    errors.push('模板最多只能包含一个 {SEQ:n}');
+  }
+
+  const literal = template.replace(PLACEHOLDER_RE, '').trim();
+  // 仅当整串就是孤零零一个 {SEQ:n} 时才算「纯流水」——
+  // 形如 {SC_TYPE}{YYYYMMDD}{SEQ:4} 的模板虽然没有字面量，但有业务变量可定位，合法
+  if (!literal && placeholders.length <= 1 && seqCount === 1) {
+    errors.push('模板至少需要包含一个非流水片段');
+  }
+
+  return { valid: errors.length === 0, errors, placeholders };
+}
+
+/**
+ * 推导流水重置周期（不单独配置，避免与模板矛盾）。
+ * 判定顺序：按日 → 按月 → 按年 → 不重置（最细粒度优先）。
+ */
+export function resolveResetPeriod(template: string): 'daily' | 'monthly' | 'yearly' | 'global' {
+  const tokens = readTokens(template);
+  if (tokens.some((t) => DAILY_TOKENS.includes(t) || TS_RE.test(t))) return 'daily';
+  if (tokens.some((t) => MONTHLY_TOKENS.includes(t))) return 'monthly';
+  if (tokens.some((t) => t === 'YYYY' || t === 'YY')) return 'yearly';
+  return 'global';
+}
+
+/** 按 {SEQ:n} 把模板切成前/后两段，并收集所需的上下文变量 */
+export function parseTemplate(template: string): ParsedTemplate {
+  const variables = readTokens(template).filter(
+    (t) =>
+      !(DATE_TOKENS as readonly string[]).includes(t) &&
+      !TS_RE.test(t) &&
+      !SEQ_RE.test(t) &&
+      VAR_RE.test(t)
+  );
+
+  const seqToken = /\{(SEQ:\d+)\}/.exec(template);
+  if (!seqToken) {
+    return { prefix: template, suffix: '', seqLength: null, variables };
+  }
+
+  const start = seqToken.index;
+  const end = start + seqToken[0].length;
+  const seqLength = Number(SEQ_RE.exec(seqToken[1])![1]);
+  return {
+    prefix: template.slice(0, start),
+    suffix: template.slice(end),
+    seqLength,
+    variables,
+  };
+}
+
 export interface DocumentNumberingConfig {
   sales_order_prefix: string;
   purchase_order_prefix: string;
@@ -21,6 +168,8 @@ export interface DocumentNumberingConfig {
   delivery_prefix: string;
   return_prefix: string;
   reconciliation_prefix: string;
+  eco_prefix: string;
+  mrp_run_prefix: string;
   serial_length: number;
 }
 
@@ -42,6 +191,8 @@ const DEFAULT_CONFIG: DocumentNumberingConfig = {
   delivery_prefix: 'DL',
   return_prefix: 'RT',
   reconciliation_prefix: 'RC',
+  eco_prefix: 'ECO',
+  mrp_run_prefix: 'MRP',
   serial_length: 6,
 };
 
@@ -67,6 +218,7 @@ export async function getNumberingConfig(): Promise<DocumentNumberingConfig> {
         'delivery_prefix',
         'return_prefix',
         'reconciliation_prefix',
+        'eco_prefix',
         'serial_length',
         'order.prefix',
         'purchase.prefix',
@@ -104,6 +256,8 @@ export async function getNumberingConfig(): Promise<DocumentNumberingConfig> {
       return_prefix: configs['return_prefix'] || DEFAULT_CONFIG.return_prefix,
       reconciliation_prefix:
         configs['reconciliation_prefix'] || DEFAULT_CONFIG.reconciliation_prefix,
+      eco_prefix: configs['eco_prefix'] || DEFAULT_CONFIG.eco_prefix,
+      mrp_run_prefix: configs['mrp_run_prefix'] || DEFAULT_CONFIG.mrp_run_prefix,
       serial_length: configs['serial_length']
         ? Number(configs['serial_length'])
         : DEFAULT_CONFIG.serial_length,
@@ -147,8 +301,10 @@ export type DocumentType =
   | 'delivery' // 发货单
   | 'return_order' // 退货单
   | 'reconciliation' // 对账单
-  // MRP 运行
-  | 'mrp_run'; // MRP 计划运行号
+  // PLM 工程变更
+  | 'eco' // 工程变更单
+  // MRP 运算批次
+  | 'mrp_run';
 
 const DOCUMENT_PREFIX_MAP: Partial<Record<DocumentType, keyof DocumentNumberingConfig>> = {
   sales_order: 'sales_order_prefix',
@@ -169,6 +325,8 @@ const DOCUMENT_PREFIX_MAP: Partial<Record<DocumentType, keyof DocumentNumberingC
   return_order: 'return_prefix',
   reconciliation: 'reconciliation_prefix',
   purchase_reconcile: 'reconciliation_prefix',
+  eco: 'eco_prefix',
+  mrp_run: 'mrp_run_prefix',
 };
 
 const DOCUMENT_TABLE_MAP: Partial<Record<DocumentType, { table: string; field: string }>> = {
@@ -189,8 +347,8 @@ const DOCUMENT_TABLE_MAP: Partial<Record<DocumentType, { table: string; field: s
   delivery: { table: 'sal_delivery', field: 'delivery_no' },
   return_order: { table: 'sal_return', field: 'return_no' },
   reconciliation: { table: 'sal_reconciliation', field: 'reconciliation_no' },
-  // 采购对账单：与销售对账共用 reconciliation_prefix 配置，但各自扫自己的表取最大流水号
   purchase_reconcile: { table: 'pur_purchase_reconciliation', field: 'reconciliation_no' },
+  eco: { table: 'plm_eco', field: 'eco_no' },
 };
 
 export function validateDocumentNoFormat(

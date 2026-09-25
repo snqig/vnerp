@@ -72,7 +72,7 @@ export interface ExportOptions {
   /** 列定义 */
   columns: ExportColumn[];
   /** 数据行 */
-  data: Record<string, unknown>[];
+  data: DbRow[];
   /** 副标题/描述 */
   subtitle?: string;
   /** 是否横向（仅 PDF） */

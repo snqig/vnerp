@@ -533,7 +533,7 @@ export default function PrepressReportsContent() {
                           {(dieData.warningList || []).map((d: Record<string, any>, i: number) => (
                             <TableRow key={i}>
                               <TableCell className="font-mono">{d.template_code}</TableCell>
-                              <TableCell className="text-right text-red-500 font-bold">
+                              <TableCell className="text-right text-red-500 dark:text-red-400 font-bold">
                                 {d.remaining_usage}
                               </TableCell>
                               <TableCell className="text-right">
@@ -772,7 +772,7 @@ export default function PrepressReportsContent() {
                               <TableCell className="font-mono">{d.record_no}</TableCell>
                               <TableCell>{d.material_name}</TableCell>
                               <TableCell>{formatDate(d.open_time)}</TableCell>
-                              <TableCell className="text-red-500">
+                              <TableCell className="text-red-500 dark:text-red-400">
                                 {formatDate(d.expire_time)}
                               </TableCell>
                               <TableCell className="text-right">{d.remaining_qty}</TableCell>

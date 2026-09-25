@@ -69,9 +69,12 @@ export interface CategoryRules {
  */
 const FALLBACK_RULES: Record<CategoryType, Omit<CategoryRules, 'enforceOnCreate' | 'enforceOnUpdate'>> = {
   material: {
-    codePattern: '^(MAT-CAT-\\d{3,}|[A-Za-z]{2,}[A-Za-z0-9._\\-#一-鿿 ]{0,32})$',
+    // 20260925 与迁移 20260925_material_category_pattern_hierarchical.sql 同步：
+    // 补入层级码分支 [A-Za-z]\d{2}(-\d{2})?（C01 / C01-01），否则 90 行存量 89 行被判非法
+    codePattern:
+      '^(MAT-CAT-\\d{3,}|[A-Za-z]\\d{2}(-\\d{2})?|[A-Za-z]{2,}[A-Za-z0-9._\\-#一-鿿 ]{0,32})$',
     codePatternDesc:
-      'MAT-CAT-XXX，或以 2 位以上字母开头的分类码（2-34 位，可含数字、下划线、连字符、点、井号、汉字、空格）',
+      'MAT-CAT-XXX 标准码、层级码（字母+2位数字，如 C01 / C01-01），或以 2 位以上字母开头的分类码（2-34 位，可含数字、下划线、连字符、点、井号、汉字、空格）',
     maxDepth: 4,
     statusValues: [0, 1],
   },

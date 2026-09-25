@@ -100,8 +100,8 @@ export async function recordReceipt(
       }
 
       const receivable = recRows[0];
-      const currentReceived = parseFloat(receivable.received_amount) || 0;
-      const totalAmount = parseFloat(receivable.amount);
+      const currentReceived = parseFloat(String(receivable.received_amount)) || 0;
+      const totalAmount = parseFloat(String(receivable.amount));
       const newReceived = currentReceived + amount;
 
       if (newReceived > totalAmount) {
@@ -242,8 +242,8 @@ export async function recordPayment(
       }
 
       const payable = payRows[0];
-      const currentPaid = parseFloat(payable.paid_amount) || 0;
-      const totalAmount = parseFloat(payable.amount);
+      const currentPaid = parseFloat(String(payable.paid_amount)) || 0;
+      const totalAmount = parseFloat(String(payable.amount));
       const newPaid = currentPaid + amount;
 
       if (newPaid > totalAmount) {
@@ -308,7 +308,7 @@ export async function calculateWorkOrderCost(
 ): Promise<{ success: boolean; message: string; cost?: Record<string, unknown> }> {
   try {
     // 1. 查询工单信息
-    const woRows: DbRow[] = await query(`SELECT * FROM prd_work_order WHERE id = ? AND deleted = 0`, [
+    const woRows: DbRow[] = await query(`SELECT * FROM prod_work_order WHERE id = ? AND deleted = 0`, [
       workOrderId,
     ]);
 
@@ -328,7 +328,7 @@ export async function calculateWorkOrderCost(
        )`,
       [workOrderId]
     );
-    const materialCost = parseFloat(materialCostRows[0]?.total_cost) || 0;
+    const materialCost = parseFloat(String(materialCostRows[0]?.total_cost)) || 0;
 
     // 3. 计算人工成本（从工序报工）
     const laborCostRows: DbRow[] = await query(
@@ -337,7 +337,7 @@ export async function calculateWorkOrderCost(
        WHERE work_order_id = ?`,
       [workOrderId]
     );
-    const laborCost = parseFloat(laborCostRows[0]?.total_cost) || 0;
+    const laborCost = parseFloat(String(laborCostRows[0]?.total_cost)) || 0;
 
     // 4. 计算制造费用 — 优先从事件驱动已归集的实际数据读取
     // 事件路径（InkCostHandler/ScreenPlateCostHandler）在工单完工时已将实际制造费用累加写入 work_order_costs
@@ -369,7 +369,8 @@ export async function calculateWorkOrderCost(
     }
 
     const totalCost = effectiveMaterialCost + laborCost + manufacturingCost;
-    const completedQty = parseFloat(workOrder.completed_qty) || parseFloat(workOrder.plan_qty) || 1;
+    const completedQty =
+      parseFloat(String(workOrder.completed_qty)) || parseFloat(String(workOrder.planned_qty)) || 1;
     const unitCost = totalCost / completedQty;
 
     // 5. 保存或更新成本记录

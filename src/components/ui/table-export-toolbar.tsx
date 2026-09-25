@@ -52,15 +52,15 @@ export function TableExportToolbar({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={onExportPDF}>
-            <FileText className="h-4 w-4 mr-2 text-red-500" />
+            <FileText className="h-4 w-4 mr-2 text-red-500 dark:text-red-400" />
             {t('exportPDF')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onExportXLS}>
-            <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
+            <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
             {t('exportXLS')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onExportWORD}>
-            <File className="h-4 w-4 mr-2 text-blue-500" />
+            <File className="h-4 w-4 mr-2 text-blue-500 dark:text-blue-400" />
             {t('exportWORD')}
           </DropdownMenuItem>
         </DropdownMenuContent>

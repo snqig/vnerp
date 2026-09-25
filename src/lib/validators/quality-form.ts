@@ -193,7 +193,7 @@ export function buildSupplierAuditSchema(m: QualityFormMessages) {
     supplier_name: reqString(m.required),
     audit_type: z.string().optional(),
     audit_date: z.string().optional(),
-    auditor: reqString(m.required),
+    auditor: z.string().optional(),
     audit_scope: z.string().optional(),
     quality_system_score: scoreField('', m).optional(),
     delivery_score: scoreField('', m).optional(),

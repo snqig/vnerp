@@ -70,10 +70,25 @@ export function VerticalMarquee({
   const shouldScroll = !reduceMotion && contentHeight > maxHeight;
   const duration = contentHeight > 0 ? contentHeight / speed : 0;
 
+  /*
+   * 上下渐隐：用 CSS mask 让内容**自身淡出到透明**，露出卡片自身底色。
+   * ⚠️ 不要改回「叠一块深色渐变 div」的做法 —— 那种写法必须写死一个颜色，
+   * 而写死的颜色只在某一个主题下成立（历史上写的是暗色底 #0a1628），
+   * 一旦切到浅色主题（卡片是暖米白底）就会在上下各画出一条 24px 的暗带。
+   * mask 与主题色完全解耦，深浅色通用。
+   */
+  const fadeMask =
+    fadeEdges && shouldScroll
+      ? 'linear-gradient(to bottom, rgba(0,0,0,0) 0, #000 24px, #000 calc(100% - 24px), rgba(0,0,0,0) 100%)'
+      : undefined;
+
   return (
     <div
       className={`relative overflow-hidden ${className}`}
-      style={{ maxHeight: `${maxHeight}px` }}
+      style={{
+        maxHeight: `${maxHeight}px`,
+        ...(fadeMask ? { WebkitMaskImage: fadeMask, maskImage: fadeMask } : null),
+      }}
       onMouseEnter={pauseOnHover ? () => setPaused(true) : undefined}
       onMouseLeave={pauseOnHover ? () => setPaused(false) : undefined}
     >
@@ -98,14 +113,6 @@ export function VerticalMarquee({
         */}
         {shouldScroll && <div aria-hidden="true">{children}</div>}
       </div>
-
-      {/* 上下渐隐遮罩，弱化裁切感 */}
-      {fadeEdges && shouldScroll && (
-        <>
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-[#0a1628] to-transparent" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-[#0a1628] to-transparent" />
-        </>
-      )}
     </div>
   );
 }

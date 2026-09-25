@@ -8,9 +8,22 @@
  *     形如 `order:view`，单数模块 + 动作位）；
  *  2. `sys_menu.permission`（登录/`getUserInfo` 产出给用户的通配码，
  *     形如 `orders:*`、`warehouse:inbound:*`、`dashboard:finance:*`，复数模块 + 尾部 `*`）；
- *  3. `sys_role.permissions`（角色权限 UI 保存，`getUserInfo` 不读）。
- * 两边交集为 0：字面量 `includes()` 比较会让除 super_admin 外的所有角色必然 403
- * （super_admin 靠 `roles.includes('super_admin')` 硬绕过）。
+ *  3. `sys_role.permissions`（**按钮权限码**，JSON 数组，形如 `warehouse:*` / `orders:sales:*`；
+ *     正式读写入口 `/api/role-permissions/buttons`，是前端按钮显隐的唯一数据源。
+ *     **不参与服务端鉴权** —— `getUserInfo` 只读词汇表 2）。
+ * 词汇表 2/3 与 1 形态不同（通配 vs 精确）。旧代码用字面量 `includes()` 比较会永不命中，
+ * 现已统一走 `hasPermissionIn`（通配符展开 + 模块别名归一），命中率恢复
+ * （菜单轨 `sys_menu` 经展开可覆盖 189 个 API 码中的 149 个，按钮轨走 `/api/role-permissions/buttons`）。
+ * super_admin 仍靠 `roles.includes('super_admin')` 硬绕过。
+ *
+ * 2026-09-24 收敛进展（词汇表统一 P1，方案见
+ * `qa-results/field-alignment/权限码词汇表统一方案-20260924.md`）：
+ * - 已止血：`organization/role`、`system/roles` 的 POST/PUT 均不再写词汇表 3，
+ *   消除「编辑角色 → 静默覆盖按钮权限」。
+ * - 词汇表 2 与 3 **不是同一件事的双写**：2 是菜单/鉴权轨（`sys_menu` 无按钮型记录，
+ *   `menu_type` 仅 1/2），3 是按钮轨，二者互补而非冗余，**不可互相清空**。
+ * - 别名表（`PERMISSION_MODULE_ALIASES`）属历史兼容，新增模块请直接复用 `API_PERMISSIONS`
+ *   同形命名，勿再新增别名条目。
  *
  * 本模块在 `hasPermission` 内做**通配符展开 + 模块别名归一**，让词汇表 2 能命中词汇表 1：
  * - 精确码 / `*`：直接命中；

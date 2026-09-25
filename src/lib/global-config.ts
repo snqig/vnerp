@@ -39,6 +39,7 @@ const DEFAULT_CONFIGS: Record<string, unknown> = {
   bf_prefix: 'BF',
   jd_prefix: 'JD',
   wx_prefix: 'WX',
+  inspection_prefix: 'IN',
 
   mould_life_days: 90,
   mould_max_times: 5000,
@@ -263,6 +264,10 @@ export function getJdPrefix(): string {
 
 export function getWxPrefix(): string {
   return getConfig('wx_prefix') as string;
+}
+
+export function getInspectionPrefix(): string {
+  return getConfig('inspection_prefix') as string;
 }
 
 export function getMouldScrapRule(): string {

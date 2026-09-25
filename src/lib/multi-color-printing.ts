@@ -329,10 +329,10 @@ export async function createMultiColorWorkOrder(
       const workOrderNo = `WO${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
 
       const [woResult]: Loose = await conn.execute(
-        `INSERT INTO prd_work_order (
-          work_order_no, work_order_date, sales_order_id,
-          material_id, plan_qty, unit, status, priority, remark
-        ) VALUES (?, CURDATE(), ?, ?, ?, 'pcs', 1, 2, ?)`,
+        `INSERT INTO prod_work_order (
+          work_order_no, sales_order_id,
+          legacy_material_id, planned_qty, unit, status, priority, remark
+        ) VALUES (?, ?, ?, ?, 'pcs', 1, 2, ?)`,
         [workOrderNo, salesOrderId, standardCardId, planQty, `多色套印: ${colorSequences.length}色`]
       );
 

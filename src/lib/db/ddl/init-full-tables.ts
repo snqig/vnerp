@@ -1603,3 +1603,23 @@ export const CREATE_TABLE_EQP_MAINTENANCE_PLAN = `CREATE TABLE IF NOT EXISTS eqp
       KEY idx_equipment (equipment_id),
       KEY idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备维护计划表'`;
+
+/** CREATE … */
+export const CREATE_TABLE_EQP_DOCUMENT = `CREATE TABLE IF NOT EXISTS eqp_document (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      equipment_id BIGINT UNSIGNED NOT NULL COMMENT '设备ID',
+      doc_type VARCHAR(50) NOT NULL COMMENT '文档类型: manual-说明书, certificate-合格证, warranty-保修卡, repair-log-维修记录, calibration-cert-检定证书, other-其他',
+      doc_name VARCHAR(200) NOT NULL COMMENT '文档名称',
+      doc_no VARCHAR(50) COMMENT '文档编号',
+      file_path VARCHAR(500) COMMENT '文件路径',
+      file_name VARCHAR(200) COMMENT '原始文件名',
+      file_size BIGINT COMMENT '文件大小(字节)',
+      remark TEXT COMMENT '备注',
+      create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+      update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      create_by BIGINT UNSIGNED,
+      deleted TINYINT DEFAULT 0,
+      PRIMARY KEY (id),
+      KEY idx_equipment (equipment_id),
+      KEY idx_doc_type (doc_type)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备文档管理表'`;
