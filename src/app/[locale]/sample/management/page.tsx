@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -29,16 +30,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Search,
-  Plus,
-  Eye,
-  Edit,
-  Trash2,
-  MoreHorizontal,
-  Loader2,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
+  Search, Plus, Eye, Edit, Trash2, MoreHorizontal, Loader2,
+  ArrowUpDown, ArrowUp, ArrowDown, LayoutGrid, CheckCircle,
+  Clock, AlertTriangle, Calendar, FlaskConical, Users,
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
@@ -61,58 +55,34 @@ interface SampleOrder {
   customer_require_date: string;
   actual_delivery_date: string;
   delivery_status: string;
-  delivery_status_label?: string;
+  status: string;
   remark: string;
   create_time: string;
   update_time: string;
 }
 
+// ⚠️ 状态值域权威 = SampleOrderStatus 生命周期（draft/pending/in_progress/completed/confirmed/converted/cancelled）。
+// 历史缺陷：本页曾把 delivery_status（交付状态，值域 pending/delivered/signed）套用生命周期词表渲染，
+// 且筛选下拉发了 delivery_status 值域中不存在的 approved/confirmed/printing/producing → 筛选恒空。
 const statusColorMap: Record<string, { className: string }> = {
-  pending: { className: 'bg-yellow-100 text-yellow-700' },
-  approved: { className: 'bg-green-100 text-green-700' },
-  confirmed: { className: 'bg-blue-100 text-blue-700' },
-  rejected: { className: 'bg-red-100 text-red-700' },
-  producing: { className: 'bg-purple-100 text-purple-700' },
-  printing: { className: 'bg-indigo-100 text-indigo-700' },
-  completed: { className: 'bg-blue-100 text-blue-700' },
-  delivered: { className: 'bg-cyan-100 text-cyan-700' },
-  signed: { className: 'bg-emerald-100 text-emerald-700' },
-  cancelled: { className: 'bg-gray-100 text-gray-700' },
-};
-
-const statusLabelMap: Record<string, string> = {
-  pending: 'pendingApproval',
-  approved: 'approved',
-  confirmed: 'confirmed',
-  rejected: 'rejected',
-  producing: 'producing',
-  printing: 'printing',
-  completed: 'completed',
-  delivered: 'delivered',
-  signed: 'signed',
-  cancelled: 'cancelled',
+  draft: { className: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200' },
+  pending: { className: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' },
+  in_progress: { className: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' },
+  completed: { className: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' },
+  confirmed: { className: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' },
+  converted: { className: 'bg-black text-white' },
+  cancelled: { className: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' },
 };
 
 // 直接的中文标签映射（不依赖 i18n），用于 Badge 显示
 const statusBadgeLabel: Record<string, string> = {
-  pending: '待审核',
-  approved: '已审核',
-  confirmed: '已确认',
-  rejected: '已驳回',
-  producing: '生产中',
-  printing: '印刷中',
+  draft: '草稿',
+  pending: '待打样',
+  in_progress: '打样中',
   completed: '已完成',
-  delivered: '已交付',
-  signed: '已签收',
-  cancelled: '已取消',
-};
-
-const _deliveryStatusLabelMap: Record<number, string> = {
-  0: 'notDelivered',
-  1: 'partialDelivered',
-  2: 'delivered',
-  3: 'partialSigned',
-  4: 'allSigned',
+  confirmed: '已确认',
+  converted: '已转大货',
+  cancelled: '已作废',
 };
 
 const emptyForm = {
@@ -153,6 +123,15 @@ export default function SampleManagementPage() {
   const [saving, setSaving] = useState(false);
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [stats, setStats] = useState({
+    pending: 0,
+    inProgress: 0,
+    completed: 0,
+    sampling: 0,
+    confirming: 0,
+    todayCount: 0,
+    monthlyCount: 0,
+  });
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -193,10 +172,10 @@ export default function SampleManagementPage() {
   );
 
   const getStatusBadge = (item: SampleOrder) => {
-    // 状态标签渲染（中文映射，不依赖 i18n）
-    const status = item.delivery_status || 'pending';
+    // 状态标签渲染（中文映射，不依赖 i18n）；读生命周期 status 列（非 delivery_status）
+    const status = item.status || 'draft';
     const label = statusBadgeLabel[status] || status;
-    const colorConfig = statusColorMap[status] || statusColorMap.pending;
+    const colorConfig = statusColorMap[status] || statusColorMap.draft;
     return (
       <span
         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colorConfig.className}`}
@@ -213,7 +192,7 @@ export default function SampleManagementPage() {
       params.set('page', String(page));
       params.set('pageSize', String(pageSize));
       if (debouncedKeyword) params.set('keyword', debouncedKeyword);
-      if (statusFilter !== 'all') params.set('deliveryStatus', statusFilter);
+      if (statusFilter !== 'all') params.set('status', statusFilter);
       const res = await authFetch(`/api/sample/orders?${params}`);
       const result = await res.json();
       if (result.success) {
@@ -227,8 +206,21 @@ export default function SampleManagementPage() {
     }
   }, [page, pageSize, debouncedKeyword, statusFilter]);
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/sample/management/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [fetchData]);
 
   const handleViewDetail = (item: SampleOrder) => {
@@ -272,7 +264,8 @@ export default function SampleManagementPage() {
       const url = '/api/sample/orders';
       const method = editId ? 'PUT' : 'POST';
       const body = editId ? { id: editId, ...form } : form;
-      const res = await fetch(url, {
+      // ⚠️ 必须走 authFetch：/api/* 写请求被 src/proxy.ts 强制 CSRF 双提交校验，裸 fetch 必 403
+      const res = await authFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -314,7 +307,7 @@ export default function SampleManagementPage() {
     { key: 'customer_name', header: tc('customer') },
     { key: 'notify_date', header: t('notifyDate') },
     { key: 'customer_require_date', header: t('requireDeliveryDate') },
-    { key: 'delivery_status', header: tc('status') },
+    { key: 'status', header: tc('status') },
   ];
   const _getExportData = () =>
     sortedList.map((s) => ({
@@ -323,7 +316,7 @@ export default function SampleManagementPage() {
       customer_name: s.customer_name,
       notify_date: formatDate(s.notify_date),
       customer_require_date: formatDate(s.customer_require_date),
-      delivery_status: t(statusLabelMap[s.delivery_status] || s.delivery_status),
+      status: statusBadgeLabel[s.status] || s.status,
     }));
 
   const toggleSelect = (id: number) => toggle(String(id));
@@ -332,6 +325,25 @@ export default function SampleManagementPage() {
   return (
     <MainLayout title={t('sampleManagement')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'pending', label: '待打样', icon: Clock, ...StatsTheme.orange },
+            { key: 'sampling', label: '打样中', icon: FlaskConical, ...StatsTheme.blue },
+            { key: 'completed', label: '已完成', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'confirming', label: '客户确认中', icon: Users, ...StatsTheme.cyan },
+            { key: 'monthlyCount', label: '本月打样数', icon: Calendar, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'sampling', count: stats.sampling },
+            { key: 'completed', count: stats.completed },
+            { key: 'confirming', count: stats.confirming },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -351,15 +363,11 @@ export default function SampleManagementPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{tc('all')}</SelectItem>
-                    <SelectItem value="pending">{t('pendingApproval')}</SelectItem>
-                    <SelectItem value="approved">{t('approved')}</SelectItem>
-                    <SelectItem value="confirmed">{t('confirmed')}</SelectItem>
-                    <SelectItem value="printing">{t('printing')}</SelectItem>
-                    <SelectItem value="producing">{t('producing')}</SelectItem>
-                    <SelectItem value="completed">{tc('completed')}</SelectItem>
-                    <SelectItem value="delivered">{t('delivered')}</SelectItem>
-                    <SelectItem value="signed">{t('signed')}</SelectItem>
-                    <SelectItem value="cancelled">{t('cancelled')}</SelectItem>
+                    {Object.entries(statusBadgeLabel).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -384,10 +392,10 @@ export default function SampleManagementPage() {
                       formatter: (v) => formatDate(v),
                     },
                     {
-                      key: 'delivery_status',
+                      key: 'status',
                       label: tc('status'),
                       width: 12,
-                      formatter: (v) => t(statusLabelMap[v] || v),
+                      formatter: (v) => statusBadgeLabel[v] || v,
                     },
                   ]}
                   data={
@@ -487,11 +495,11 @@ export default function SampleManagementPage() {
                       </th>
                       <th
                         className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80"
-                        onClick={() => handleSort('delivery_status')}
+                        onClick={() => handleSort('status')}
                       >
                         <span className="inline-flex items-center">
                           {tc('status')}
-                          {getSortIcon('delivery_status')}
+                          {getSortIcon('status')}
                         </span>
                       </th>
                       <th className="h-12 px-4 text-right align-middle font-medium">
@@ -545,7 +553,7 @@ export default function SampleManagementPage() {
                                 {tc('edit')}
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-red-600"
+                                className="text-red-600 dark:text-red-400"
                                 onClick={() => handleDelete(item.id)}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
@@ -680,7 +688,7 @@ export default function SampleManagementPage() {
           <div className="grid grid-cols-2 gap-4 py-4">
             <div>
               <Label>
-                {t('notifyDate')} <span className="text-red-500">*</span>
+                {t('notifyDate')} <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 type="date"
@@ -690,7 +698,7 @@ export default function SampleManagementPage() {
             </div>
             <div>
               <Label>
-                {t('customerName')} <span className="text-red-500">*</span>
+                {t('customerName')} <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 value={form.customer_name}
@@ -700,7 +708,7 @@ export default function SampleManagementPage() {
             </div>
             <div>
               <Label>
-                {t('productName')} <span className="text-red-500">*</span>
+                {t('productName')} <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 value={form.product_name}
@@ -710,7 +718,7 @@ export default function SampleManagementPage() {
             </div>
             <div>
               <Label>
-                {t('materialNo')} <span className="text-red-500">*</span>
+                {t('materialNo')} <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 value={form.material_no}

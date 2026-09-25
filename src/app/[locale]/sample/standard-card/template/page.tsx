@@ -26,8 +26,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Plus, Search, Edit, Trash2, ArrowLeft, Library } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, ArrowLeft, Library, Archive, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface Template {
   id: number;
@@ -197,6 +198,23 @@ export default function SampleTemplateListPage() {
           {ts('k_ytmxn3')}</Button>
       </div>
 
+      <StatsCards
+        configs={[
+          { key: 'total', label: ts('k_zl7i8a') || '总模板', icon: Archive, ...StatsTheme.blue },
+          { key: 'active', label: ts('k_ytmxn3') || '可用', icon: CheckCircle, ...StatsTheme.green },
+          { key: 'editing', label: ts('k_1u0fhic') || '编辑中', icon: Clock, ...StatsTheme.orange },
+          { key: 'disabled', label: ts('k_p2wuj2') || '禁用', icon: AlertTriangle, ...StatsTheme.red },
+        ]}
+        stats={[
+          { key: 'total', count: list.length },
+          { key: 'active', count: list.filter((r) => r.status === 1).length },
+          { key: 'editing', count: list.filter((r) => r.status === 2).length },
+          { key: 'disabled', count: list.filter((r) => r.status === 9).length },
+        ]}
+        cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        showTrend={false}
+      />
+
       <Card className="mb-4">
         <CardContent className="py-3 flex gap-2 items-center">
           <div className="flex-1 relative">
@@ -277,7 +295,7 @@ export default function SampleTemplateListPage() {
                       title={ts('k_1t2vi4h')}
                       onClick={() => handleDelete(t.id)}
                     >
-                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                      <Trash2 className="h-3.5 w-3.5 text-red-500 dark:text-red-400" />
                     </Button>
                   </div>
                 </TableCell>

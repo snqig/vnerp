@@ -6,7 +6,7 @@ import { query, transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { logger, generateTraceId } from '@/lib/logger';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbConnection, DbResultSetHeader } from '@/types/db';
 
 const SAMPLE_DELIVERY_STATUS = {
   PENDING: 'pending',
@@ -24,7 +24,7 @@ const WORK_ORDER_STATUS = {
 
 const SAMPLE_ORDER_TYPE = 1;
 
-async function generateWorkOrderNo(conn: DbRow): Promise<string> {
+async function generateWorkOrderNo(conn: DbConnection): Promise<string> {
   const today = new Date();
   const y = today.getFullYear();
   const m = String(today.getMonth() + 1).padStart(2, '0');
@@ -34,7 +34,7 @@ async function generateWorkOrderNo(conn: DbRow): Promise<string> {
     'SELECT COUNT(*) AS cnt FROM prod_work_order WHERE work_order_no LIKE ?',
     [`${prefix}%`]
   );
-  const nextSeq = ((rows as DbRow[])[0]?.cnt || 0) + 1;
+  const nextSeq = Number((rows as DbRow[])[0]?.cnt ?? 0) + 1;
   return `${prefix}${String(nextSeq).padStart(4, '0')}`;
 }
 
@@ -79,7 +79,8 @@ export const POST = withPermission(
         [SAMPLE_ORDER_TYPE, sample_order_id, WORK_ORDER_STATUS.CANCELLED]
       );
 
-      if ((existingWO as DbRow[])[0].cnt > 0) {
+      const existingFirst = (existingWO as DbRow[])[0];
+      if (existingFirst && Number(existingFirst.cnt) > 0) {
         throw new Error(ts('k_fykb41'));
       }
 
@@ -108,7 +109,7 @@ export const POST = withPermission(
         ]
       );
 
-      const workOrderId = (orderResult as DbRow).insertId;
+      const workOrderId = ((orderResult as unknown) as DbResultSetHeader).insertId;
       logger.info(ctx, ts('k_1viwive'), { workOrderId, workOrderNo, sampleOrderId: sample_order_id });
 
       await connection.execute(
@@ -144,8 +145,8 @@ export const POST = withPermission(
         for (const bomLine of bomLines as DbRow[]) {
           const requiredQty =
             Number(bomLine.usage_qty) *
-            (sampleOrder.quantity || 1) *
-            (1 + (Number(bomLine.loss_rate) || 0) / 100);
+            (Number(sampleOrder.quantity) || 1) *
+            (1 + (Number(bomLine.loss_rate) ?? 0) / 100);
           await connection.execute(
             `INSERT INTO prod_work_order_material_req
              (work_order_id, bom_line_id, material_id, material_name, required_qty, unit, create_time)

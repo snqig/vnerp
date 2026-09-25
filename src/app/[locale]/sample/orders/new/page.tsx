@@ -21,8 +21,10 @@ export default function NewSampleOrderPage() {
 
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
+  // 本地日期（YYYY-MM-DD）；toISOString 在 +08:00 早 8 点前会落到前一天
+  const localToday = new Date().toLocaleDateString('en-CA');
   const [formData, setFormData] = useState({
-    notify_date: new Date().toISOString().split('T')[0],
+    notify_date: localToday,
     customer_name: '',
     product_name: '',
     material_no: '',
@@ -31,7 +33,7 @@ export default function NewSampleOrderPage() {
     material_spec: '',
     specification: '',
     quantity: '',
-    order_date: new Date().toISOString().split('T')[0],
+    order_date: localToday,
     customer_require_date: '',
     delivery_date: '',
     remark: '',
@@ -42,8 +44,17 @@ export default function NewSampleOrderPage() {
   };
 
   const handleSave = async () => {
+    // 与服务端 validateRequestBody 必填四字段对齐
     if (!formData.customer_name) {
       toast({ title: tc('customer') + tc('required') || ts('k_fu88no'), variant: 'destructive' });
+      return;
+    }
+    if (!formData.product_name) {
+      toast({ title: t('productName') + tc('required'), variant: 'destructive' });
+      return;
+    }
+    if (!formData.material_no) {
+      toast({ title: t('materialNo') + tc('required'), variant: 'destructive' });
       return;
     }
     if (!formData.notify_date) {
@@ -86,7 +97,7 @@ export default function NewSampleOrderPage() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
-                <FlaskConical className="h-6 w-6 text-blue-500" />
+                <FlaskConical className="h-6 w-6 text-blue-500 dark:text-blue-400" />
                 {t('createSampleOrder')}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">{t('fillSampleOrderInfo')}</p>
@@ -106,7 +117,7 @@ export default function NewSampleOrderPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>
-                  {t('notifyDate')} <span className="text-red-500">*</span>
+                  {t('notifyDate')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   type="date"
@@ -116,7 +127,7 @@ export default function NewSampleOrderPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {tc('customer')} <span className="text-red-500">*</span>
+                  {tc('customer')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   placeholder={tc('customer')}
@@ -126,7 +137,7 @@ export default function NewSampleOrderPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {t('productName')} <span className="text-red-500">*</span>
+                  {t('productName')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   placeholder={t('productName')}
@@ -136,7 +147,7 @@ export default function NewSampleOrderPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {t('materialNo')} <span className="text-red-500">*</span>
+                  {t('materialNo')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   placeholder={t('materialNo')}

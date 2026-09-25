@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
+import { CheckCircle, Clock, AlertTriangle, Archive } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { InputV2Form } from './InputV2Form';
 import { InputCardForm } from './InputCardForm';
@@ -33,6 +35,9 @@ import {
   ArrowLeft,
   Sparkles,
   LayoutGrid,
+  Power,
+  PlusCircle,
+  History as HistoryIcon,
 } from 'lucide-react';
 
 const STATUS_MAP: Record<number, { labelKey: string; color: 'gray' | 'blue' | 'green' | 'red' }> = {
@@ -80,6 +85,14 @@ function StandardCardPageContent() {
 
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    inactive: 0,
+    withVersion: 0,
+    todayCount: 0,
+    monthlyNew: 0,
+  });
 
   // URL mode 参数变化时同步组件状态（含显式 mode=list，回列表时也要切回列表视图）
   useEffect(() => {
@@ -123,10 +136,23 @@ function StandardCardPageContent() {
     }
   }, [page, pageSize, keyword, statusFilter, toast, t]);
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/sample/standard-card/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     if (mode === 'list') {
       fetchList();
     }
+    fetchStats();
   }, [mode, page, statusFilter, fetchList]);
 
   const handleSearch = () => {
@@ -336,6 +362,25 @@ function StandardCardPageContent() {
   return (
     <MainLayout title={t('management')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: '标准卡总数', icon: Archive, ...StatsTheme.blue },
+            { key: 'active', label: '已启用', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'inactive', label: '已停用', icon: Power, ...StatsTheme.gray },
+            { key: 'monthlyNew', label: '本月新增', icon: PlusCircle, ...StatsTheme.cyan },
+            { key: 'withVersion', label: '有版本标准卡', icon: HistoryIcon, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: stats.total },
+            { key: 'active', count: stats.active },
+            { key: 'inactive', count: stats.inactive },
+            { key: 'monthlyNew', count: stats.monthlyNew },
+            { key: 'withVersion', count: stats.withVersion },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">

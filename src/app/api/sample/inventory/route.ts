@@ -10,11 +10,12 @@ import {
   validateRequestBody,
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { stringFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const sampleOrderId = searchParams.get('sampleOrderId');
-  const status = searchParams.get('status') || '';
+  const status = stringFilter(searchParams.get('status'));
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '10');
 

@@ -444,8 +444,8 @@ export default function SampleCardInputPage() {
                         isCompleted
                           ? 'bg-blue-600 border-blue-600 text-white'
                           : isCurrent
-                            ? 'border-blue-600 text-blue-600 bg-white'
-                            : 'border-gray-300 text-gray-400 bg-white'
+                            ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-white dark:bg-card'
+                            : 'border-gray-300 dark:border-gray-600 text-gray-400 bg-white dark:bg-card'
                       }`}
                     >
                       {isCompleted ? <Check className="h-5 w-5" /> : step.id}
@@ -453,9 +453,9 @@ export default function SampleCardInputPage() {
                     <div
                       className={`text-sm font-medium ${
                         isCurrent
-                          ? 'text-blue-600'
+                          ? 'text-blue-600 dark:text-blue-400'
                           : isCompleted
-                            ? 'text-gray-700'
+                            ? 'text-gray-700 dark:text-gray-200'
                             : 'text-gray-400'
                       }`}
                     >
@@ -465,7 +465,7 @@ export default function SampleCardInputPage() {
                   {idx < STEPS.length - 1 && (
                     <div
                       className={`h-0.5 flex-1 mx-2 mb-5 ${
-                        currentStep > step.id ? 'bg-blue-600' : 'bg-gray-200'
+                        currentStep > step.id ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
                       }`}
                     />
                   )}
@@ -478,10 +478,10 @@ export default function SampleCardInputPage() {
 
       {/* 全量校验错误展示 */}
       {form.validationErrors.length > 0 && (
-        <Card className="mb-4 border-red-300 bg-red-50">
+        <Card className="mb-4 border-red-300 dark:border-red-800 bg-red-500/10">
           <CardContent className="py-3">
-            <p className="font-semibold text-red-700 mb-1">{'填写须知'}</p>
-            <ul className="text-sm text-red-600 list-disc list-inside">
+            <p className="font-semibold text-red-700 dark:text-red-400 mb-1">{'填写须知'}</p>
+            <ul className="text-sm text-red-600 dark:text-red-400 list-disc list-inside">
               {form.validationErrors.map((err, i) => (
                 <li key={i}>{err}</li>
               ))}
@@ -500,7 +500,7 @@ export default function SampleCardInputPage() {
             <div className="space-y-1">
               <Label>
                 {'工艺卡名称'}
-                <span className="text-red-500">*</span>
+                <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 value={form.formData.sample_name || ''}
@@ -508,7 +508,7 @@ export default function SampleCardInputPage() {
                 disabled={isReadonly}
               />
               {stepErrors.sample_name && (
-                <p className="text-xs text-red-500">{stepErrors.sample_name}</p>
+                <p className="text-xs text-red-500 dark:text-red-400">{stepErrors.sample_name}</p>
               )}
             </div>
             <div className="space-y-1">
@@ -612,7 +612,7 @@ export default function SampleCardInputPage() {
                       {t.tool_code} - {t.tool_name}
                       {t.status === 4 && (
                         <span
-                          className={isRedWarning(t) ? 'text-red-600 font-bold' : 'text-yellow-600'}
+                          className={isRedWarning(t) ? 'text-red-600 dark:text-red-400 font-bold' : 'text-yellow-600 dark:text-yellow-400'}
                         >
                           {isRedWarning(t) ? ' 红色预警' : ' 预警'}（剩余 {t.remain_life}/
                           {t.total_life}）
@@ -639,7 +639,7 @@ export default function SampleCardInputPage() {
                       {t.tool_code} - {t.tool_name}
                       {t.status === 4 && (
                         <span
-                          className={isRedWarning(t) ? 'text-red-600 font-bold' : 'text-yellow-600'}
+                          className={isRedWarning(t) ? 'text-red-600 dark:text-red-400 font-bold' : 'text-yellow-600 dark:text-yellow-400'}
                         >
                           {isRedWarning(t) ? ' 红色预警' : ' 预警'}（剩余 {t.remain_life}/
                           {t.total_life}）
@@ -718,7 +718,7 @@ export default function SampleCardInputPage() {
               </div>
             ) : (
               !isReadonly && (
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded cursor-pointer hover:bg-muted">
                   <div className="flex flex-col items-center gap-2 text-gray-500">
                     <ImageIcon className="h-8 w-8" />
                     <span className="text-sm">点击上传工艺简图</span>
@@ -822,7 +822,7 @@ export default function SampleCardInputPage() {
                           }
                           disabled={isReadonly}
                         />
-                        {itemTypeErr && <p className="text-xs text-red-500 mt-1">{itemTypeErr}</p>}
+                        {itemTypeErr && <p className="text-xs text-red-500 dark:text-red-400 mt-1">{itemTypeErr}</p>}
                       </TableCell>
                       <TableCell>
                         <Input
@@ -844,7 +844,7 @@ export default function SampleCardInputPage() {
                           }
                           disabled={isReadonly}
                         />
-                        {dosageErr && <p className="text-xs text-red-500 mt-1">{dosageErr}</p>}
+                        {dosageErr && <p className="text-xs text-red-500 dark:text-red-400 mt-1">{dosageErr}</p>}
                       </TableCell>
                       <TableCell>
                         <Input
@@ -875,7 +875,7 @@ export default function SampleCardInputPage() {
                             variant="ghost"
                             onClick={() => form.removeItem(index)}
                           >
-                            <Trash2 className="h-3 w-3 text-red-500" />
+                            <Trash2 className="h-3 w-3 text-red-500 dark:text-red-400" />
                           </Button>
                         </TableCell>
                       )}
@@ -949,7 +949,7 @@ export default function SampleCardInputPage() {
                             disabled={isReadonly}
                           />
                         </div>
-                        {nameErr && <p className="text-xs text-red-500 mt-1">{nameErr}</p>}
+                        {nameErr && <p className="text-xs text-red-500 dark:text-red-400 mt-1">{nameErr}</p>}
                       </TableCell>
                       <TableCell>
                         <Input
@@ -961,7 +961,7 @@ export default function SampleCardInputPage() {
                           }
                           disabled={isReadonly}
                         />
-                        {hourErr && <p className="text-xs text-red-500 mt-1">{hourErr}</p>}
+                        {hourErr && <p className="text-xs text-red-500 dark:text-red-400 mt-1">{hourErr}</p>}
                       </TableCell>
                       <TableCell>
                         <Input
@@ -994,7 +994,7 @@ export default function SampleCardInputPage() {
                             variant="ghost"
                             onClick={() => form.removeStep(index)}
                           >
-                            <Trash2 className="h-3 w-3 text-red-500" />
+                            <Trash2 className="h-3 w-3 text-red-500 dark:text-red-400" />
                           </Button>
                         </TableCell>
                       )}
@@ -1016,33 +1016,33 @@ export default function SampleCardInputPage() {
               <CardTitle>成本汇总</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-4 gap-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+              <div className="flex items-center justify-between p-3 bg-muted rounded-md">
                 <span className="text-sm text-gray-600 flex items-center gap-1">
                   <Package className="h-4 w-4" />
                   物料成本
                 </span>
                 <span className="font-mono">¥{form.cost.materialCost.toFixed(2)}</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+              <div className="flex items-center justify-between p-3 bg-muted rounded-md">
                 <span className="text-sm text-gray-600 flex items-center gap-1">
                   <Clock className="h-4 w-4" />
                   人工成本
                 </span>
                 <span className="font-mono">¥{form.cost.laborCost.toFixed(2)}</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+              <div className="flex items-center justify-between p-3 bg-muted rounded-md">
                 <span className="text-sm text-gray-600 flex items-center gap-1">
                   <Wrench className="h-4 w-4" />
                   工装成本
                 </span>
                 <span className="font-mono">¥{form.cost.toolCost.toFixed(2)}</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-md">
+              <div className="flex items-center justify-between p-3 bg-blue-500/10 rounded-md">
                 <span className="font-semibold flex items-center gap-1">
                   <DollarSign className="h-5 w-5" />
                   总成本
                 </span>
-                <span className="font-mono text-lg font-bold text-blue-600">
+                <span className="font-mono text-lg font-bold text-blue-600 dark:text-blue-400">
                   ¥{form.cost.totalCost.toFixed(2)}
                 </span>
               </div>
@@ -1057,7 +1057,7 @@ export default function SampleCardInputPage() {
             <CardContent className="space-y-4">
               {/* 基础信息汇总 */}
               <div>
-                <h4 className="font-medium mb-2 text-gray-700">基础信息</h4>
+                <h4 className="font-medium mb-2 text-gray-700 dark:text-gray-200">基础信息</h4>
                 <div className="grid grid-cols-3 gap-3 text-sm">
                   <div>
                     <span className="text-gray-500">工艺卡名称</span>
@@ -1118,7 +1118,7 @@ export default function SampleCardInputPage() {
 
               {/* 物料明细汇总 */}
               <div>
-                <h4 className="font-medium mb-2 text-gray-700">
+                <h4 className="font-medium mb-2 text-gray-700 dark:text-gray-200">
                   {'物料明细'}
                   {form.formData.items.length}
                   {'项'}
@@ -1161,7 +1161,7 @@ export default function SampleCardInputPage() {
 
               {/* 工序路线汇总 */}
               <div>
-                <h4 className="font-medium mb-2 text-gray-700">
+                <h4 className="font-medium mb-2 text-gray-700 dark:text-gray-200">
                   {'工序明细'}
                   {form.formData.steps.length}
                   {'项'}

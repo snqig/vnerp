@@ -15,6 +15,7 @@ import { SampleOrderStatus } from '@/domain/sample/value-objects/SampleOrderStat
 import type { SampleOrderProps } from '@/domain/sample/aggregates/SampleOrder';
 import { logger, generateTraceId } from '@/lib/logger';
 import type { DbRow } from '@/types/db';
+import { stringFilter } from '@/lib/query-filter';
 
 const service = new SampleOrderApplicationService(new MysqlSampleOrderRepository());
 
@@ -84,8 +85,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || undefined;
   const customerName = searchParams.get('customerName') || undefined;
-  const status = searchParams.get('status') as SampleOrderStatus | null;
-  const deliveryStatus = searchParams.get('deliveryStatus') || undefined;
+  const status = stringFilter(searchParams.get('status'));
+  const deliveryStatus = stringFilter(searchParams.get('deliveryStatus'));
   const startDate = searchParams.get('startDate') || undefined;
   const endDate = searchParams.get('endDate') || undefined;
   const page = parseInt(searchParams.get('page') || '1');
@@ -106,7 +107,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const dateTo = endDate ? new Date(endDate) : undefined;
 
   const result = await service.listOrders(
-    { keyword, customerName, status: status || undefined, deliveryStatus, dateFrom, dateTo },
+    { keyword, customerName, status: (status || undefined) as SampleOrderStatus | undefined, deliveryStatus, dateFrom, dateTo },
     page,
     pageSize
   );

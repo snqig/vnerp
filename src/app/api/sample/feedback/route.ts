@@ -8,6 +8,7 @@ import { SampleOrderApplicationService } from '@/application/services/SampleOrde
 import { MysqlSampleOrderRepository } from '@/infrastructure/repositories/MysqlSampleOrderRepository';
 import { MysqlSampleFeedbackRepository } from '@/infrastructure/repositories/MysqlSampleFeedbackRepository';
 import type { DbRow } from '@/types/db';
+import type { UserInfo } from '@/lib/api-auth';
 
 const service = new SampleOrderApplicationService(
   new MysqlSampleOrderRepository(),
@@ -32,7 +33,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 });
 
 export const POST = withPermission(
-  async (request: NextRequest, userInfo: DbRow) => {
+  async (request: NextRequest, userInfo: UserInfo) => {
   const ts = await getTranslations('Common');
     const body = await request.json();
 

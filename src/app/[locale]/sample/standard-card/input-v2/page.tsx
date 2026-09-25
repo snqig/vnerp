@@ -354,10 +354,10 @@ export default function SampleCardInputV2Page() {
       </div>
 
       {form.validationErrors.length > 0 && (
-        <Card className="mb-4 border-red-300 bg-red-50">
+        <Card className="mb-4 border-red-300 dark:border-red-800 bg-red-500/10">
           <CardContent className="py-3">
-            <p className="font-semibold text-red-700 mb-1">{'填写须知'}</p>
-            <ul className="text-sm text-red-600 list-disc list-inside">
+            <p className="font-semibold text-red-700 dark:text-red-400 mb-1">{'填写须知'}</p>
+            <ul className="text-sm text-red-600 dark:text-red-400 list-disc list-inside">
               {form.validationErrors.map((err, i) => (
                 <li key={i}>{err}</li>
               ))}
@@ -378,7 +378,7 @@ export default function SampleCardInputV2Page() {
               <div className="space-y-1">
                 <Label>
                   {'工艺卡名称'}
-                  <span className="text-red-500">*</span>
+                  <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   value={form.formData.sample_name || ''}
@@ -488,7 +488,7 @@ export default function SampleCardInputV2Page() {
                         {t.status === 4 && (
                           <span
                             className={
-                              isRedWarning(t) ? 'text-red-600 font-bold' : 'text-yellow-600'
+                              isRedWarning(t) ? 'text-red-600 dark:text-red-400 font-bold' : 'text-yellow-600 dark:text-yellow-400'
                             }
                           >
                             {isRedWarning(t) ? ' 红色预警' : ' 预警'}（剩余 {t.remain_life}/
@@ -517,7 +517,7 @@ export default function SampleCardInputV2Page() {
                         {t.status === 4 && (
                           <span
                             className={
-                              isRedWarning(t) ? 'text-red-600 font-bold' : 'text-yellow-600'
+                              isRedWarning(t) ? 'text-red-600 dark:text-red-400 font-bold' : 'text-yellow-600 dark:text-yellow-400'
                             }
                           >
                             {isRedWarning(t) ? ' 红色预警' : ' 预警'}（剩余 {t.remain_life}/
@@ -586,7 +586,7 @@ export default function SampleCardInputV2Page() {
                 </div>
               ) : (
                 !isReadonly && (
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded cursor-pointer hover:bg-muted">
                     <div className="flex flex-col items-center gap-2 text-gray-500">
                       <ImageIcon className="h-8 w-8" />
                       <span className="text-sm">点击上传工艺简图</span>
@@ -669,11 +669,11 @@ export default function SampleCardInputV2Page() {
                           />
                           {materialSearch[index] &&
                             filteredMaterials(materialSearch[index]).length > 0 && (
-                              <div className="absolute z-50 mt-1 w-full bg-white border rounded shadow-lg max-h-48 overflow-auto">
+                              <div className="absolute z-50 mt-1 w-full bg-white dark:bg-card border rounded shadow-lg max-h-48 overflow-auto">
                                 {filteredMaterials(materialSearch[index]).map((m) => (
                                   <button
                                     key={m.id}
-                                    className="w-full text-left px-2 py-1 hover:bg-gray-100 text-sm"
+                                    className="w-full text-left px-2 py-1 hover:bg-gray-100 dark:bg-gray-700 text-sm"
                                     onClick={() => handleMaterialSelect(index, m)}
                                   >
                                     {m.material_code} - {m.material_name} (¥{m.cost_price}/{m.unit})
@@ -733,7 +733,7 @@ export default function SampleCardInputV2Page() {
                             variant="ghost"
                             onClick={() => form.removeItem(index)}
                           >
-                            <Trash2 className="h-3 w-3 text-red-500" />
+                            <Trash2 className="h-3 w-3 text-red-500 dark:text-red-400" />
                           </Button>
                         </TableCell>
                       )}
@@ -844,7 +844,7 @@ export default function SampleCardInputV2Page() {
                             variant="ghost"
                             onClick={() => form.removeStep(index)}
                           >
-                            <Trash2 className="h-3 w-3 text-red-500" />
+                            <Trash2 className="h-3 w-3 text-red-500 dark:text-red-400" />
                           </Button>
                         </TableCell>
                       )}
@@ -906,7 +906,7 @@ export default function SampleCardInputV2Page() {
                       <DollarSign className="h-5 w-5" />
                       总成本
                     </span>
-                    <span className="font-mono text-xl font-bold text-blue-600">
+                    <span className="font-mono text-xl font-bold text-blue-600 dark:text-blue-400">
                       ¥{form.cost.totalCost.toFixed(2)}
                     </span>
                   </div>

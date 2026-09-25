@@ -888,6 +888,16 @@ export function InputCardForm() {
                 />
               </td>
             </tr>
+            <tr>
+              <td className="border text-center font-bold">{tc('templateCategory')}</td>
+              <td colSpan={5} className="border">
+                <EditableCell value={data.templateCategory} onChange={(v) => updateField('templateCategory', v)} />
+              </td>
+              <td className="border text-center font-bold">{tc('tags')}</td>
+              <td colSpan={5} className="border">
+                <EditableCell value={data.tags} onChange={(v) => updateField('tags', v)} />
+              </td>
+            </tr>
 
             {/* 审批行 */}
             <tr>

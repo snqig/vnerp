@@ -41,9 +41,9 @@ export function FileUploadCell({
     if (!fileName) return <Upload className="h-4 w-4 text-gray-400" />;
     const ext = fileName.split('.').pop()?.toLowerCase();
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext || '')) {
-      return <ImageIcon className="h-4 w-4 text-blue-500" />;
+      return <ImageIcon className="h-4 w-4 text-blue-500 dark:text-blue-400" />;
     }
-    return <FileText className="h-4 w-4 text-red-500" />;
+    return <FileText className="h-4 w-4 text-red-500 dark:text-red-400" />;
   };
 
   return (

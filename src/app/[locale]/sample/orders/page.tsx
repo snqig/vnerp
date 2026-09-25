@@ -30,25 +30,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Plus,
-  Search,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  FileText,
-  CheckCircle2,
-  Loader2,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-} from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, FileText, CheckCircle2, Loader2, ArrowUpDown, ArrowUp, ArrowDown, ClipboardList, CheckCircle, Clock, AlertTriangle, Calendar, Factory, Truck } from 'lucide-react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/use-debounce';
 import { formatDate } from '@/lib/date-utils';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface SampleOrder {
   id: number;
@@ -71,14 +60,14 @@ interface SampleOrder {
 }
 
 const lifecycleStatusMap: Record<string, { label: string; color: string }> = {
-  draft: { label: 'draft', color: 'bg-gray-100 text-gray-700' },
-  pending: { label: 'pending', color: 'bg-yellow-100 text-yellow-700' },
-  printing: { label: 'printing', color: 'bg-yellow-100 text-yellow-700' },
-  in_progress: { label: 'inProgress', color: 'bg-blue-100 text-blue-700' },
-  completed: { label: 'completed', color: 'bg-green-100 text-green-700' },
-  confirmed: { label: 'confirmed', color: 'bg-emerald-100 text-emerald-700' },
+  draft: { label: 'draft', color: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200' },
+  pending: { label: 'pending', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' },
+  printing: { label: 'printing', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' },
+  in_progress: { label: 'inProgress', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' },
+  completed: { label: 'completed', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' },
+  confirmed: { label: 'confirmed', color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' },
   converted: { label: 'converted', color: 'bg-black text-white' },
-  cancelled: { label: 'cancelled', color: 'bg-red-100 text-red-700' },
+  cancelled: { label: 'cancelled', color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' },
 };
 
 export default function SampleOrdersPage() {
@@ -104,6 +93,15 @@ export default function SampleOrdersPage() {
     pageSize: 20,
     total: 0,
     totalPages: 0,
+  });
+  const [stats, setStats] = useState({
+    pending: 0,
+    inProgress: 0,
+    completed: 0,
+    producing: 0,
+    shipping: 0,
+    totalAmount: 0,
+    monthlyCount: 0,
   });
 
   const [formData, setFormData] = useState({
@@ -196,11 +194,29 @@ export default function SampleOrdersPage() {
     toast,
   ]);
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/sample/orders/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
+    fetchStats();
   }, [fetchOrders]);
 
   const handleCreate = async () => {
+    // 与服务端 validateRequestBody 必填四字段对齐（notify_date/customer_name/product_name/material_no）
+    if (!formData.notify_date || !formData.customer_name || !formData.product_name || !formData.material_no) {
+      toast({ title: tc('required'), variant: 'destructive' });
+      return;
+    }
     try {
       const response = await authFetch('/api/sample/orders', {
         method: 'POST',
@@ -429,7 +445,7 @@ export default function SampleOrdersPage() {
     <div className="grid grid-cols-2 gap-4 py-4">
       <div className="space-y-2">
         <Label>
-          {t('notifyDate')} <span className="text-red-500">*</span>
+          {t('notifyDate')} <span className="text-red-500 dark:text-red-400">*</span>
         </Label>
         <Input
           type="date"
@@ -439,7 +455,7 @@ export default function SampleOrdersPage() {
       </div>
       <div className="space-y-2">
         <Label>
-          {tc('customer')} <span className="text-red-500">*</span>
+          {tc('customer')} <span className="text-red-500 dark:text-red-400">*</span>
         </Label>
         <Input
           placeholder={tc('customer')}
@@ -449,7 +465,7 @@ export default function SampleOrdersPage() {
       </div>
       <div className="space-y-2">
         <Label>
-          {t('productName')} <span className="text-red-500">*</span>
+          {t('productName')} <span className="text-red-500 dark:text-red-400">*</span>
         </Label>
         <Input
           placeholder={t('productName')}
@@ -459,7 +475,7 @@ export default function SampleOrdersPage() {
       </div>
       <div className="space-y-2">
         <Label>
-          {t('materialNo')} <span className="text-red-500">*</span>
+          {t('materialNo')} <span className="text-red-500 dark:text-red-400">*</span>
         </Label>
         <Input
           placeholder={t('materialNo')}
@@ -521,7 +537,25 @@ export default function SampleOrdersPage() {
 
   return (
     <MainLayout title={t('sampleOrderManagement')}>
-      <div className="space-y-6">
+      <div className="space-y-6">        <StatsCards
+          configs={[
+            { key: 'pending', label: '待确认', icon: Clock, ...StatsTheme.orange },
+            { key: 'producing', label: '生产中', icon: Factory, ...StatsTheme.blue },
+            { key: 'shipping', label: '待发货', icon: Truck, ...StatsTheme.cyan },
+            { key: 'completed', label: '已完成', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'monthlyCount', label: '本月订单数', icon: Calendar, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'producing', count: stats.producing },
+            { key: 'shipping', count: stats.shipping },
+            { key: 'completed', count: stats.completed },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">

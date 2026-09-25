@@ -118,7 +118,7 @@ export default function SampleOrderDetailPage() {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/api/sample/orders?id=${id}`, {
+      const response = await authFetch(`/api/sample/orders?id=${id}`, {
         method: 'DELETE',
       });
 
@@ -172,7 +172,7 @@ export default function SampleOrderDetailPage() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
-                <FlaskConical className="h-6 w-6 text-blue-500" />
+                <FlaskConical className="h-6 w-6 text-blue-500 dark:text-blue-400" />
                 {ts('k_1xkq6g7')}</h1>
               <p className="text-sm text-muted-foreground mt-1">{order.sample_no}</p>
             </div>
@@ -224,7 +224,7 @@ export default function SampleOrderDetailPage() {
                   <div>
                     {order.sample_type ? (
                       <span
-                        className={`px-2 py-1 rounded text-xs ${sampleTypeColors[order.sample_type] || 'bg-gray-100'}`}
+                        className={`px-2 py-1 rounded text-xs ${sampleTypeColors[order.sample_type] || 'bg-gray-100 dark:bg-gray-700'}`}
                       >
                         {order.sample_type}
                       </span>
@@ -353,7 +353,7 @@ export default function SampleOrderDetailPage() {
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">{ts('k_16p17ir')}</div>
-                  <div className={`font-medium ${order.is_urgent ? 'text-red-600' : ''}`}>
+                  <div className={`font-medium ${order.is_urgent ? 'text-red-600 dark:text-red-400' : ''}`}>
                     {order.is_urgent ? tc('yes') : tc('no')}
                   </div>
                 </div>

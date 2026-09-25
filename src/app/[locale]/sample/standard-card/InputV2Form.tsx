@@ -71,7 +71,7 @@ export function InputV2Form() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-blue-500" />
+              <Sparkles className="h-6 w-6 text-blue-500 dark:text-blue-400" />
               {isEditMode ? '编辑标准卡' : '新建标准卡（现代化录入）'}
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -140,7 +140,7 @@ export function InputV2Form() {
                   isActive
                     ? 'bg-blue-500 text-white'
                     : isCompleted
-                      ? 'bg-green-100 text-green-700'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                       : 'bg-muted text-muted-foreground hover:bg-accent'
                 }`}
               >
@@ -228,7 +228,7 @@ export function InputV2Form() {
                       </div>
                       {/* 客户下拉列表 */}
                       {showCustomerDropdown && filteredCustomers.length > 0 && (
-                        <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-card border rounded-md shadow-lg max-h-60 overflow-auto">
                           {filteredCustomers.map((customer) => (
                             <div
                               key={customer.id}
@@ -252,7 +252,7 @@ export function InputV2Form() {
                         onChange={(e) => updateField('customerCode', e.target.value)}
                         placeholder="选择客户后自动填充"
                         readOnly
-                        className="bg-gray-50"
+                        className="bg-muted"
                       />
                     </div>
                   </CardContent>
@@ -491,7 +491,7 @@ export function InputV2Form() {
                 <ScrollArea className="h-[300px] border rounded-lg">
                   <div className="p-4 space-y-3">
                     {data.sequences.map((seq, index) => (
-                      <Card key={seq.id} className="bg-gray-50">
+                      <Card key={seq.id} className="bg-muted">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-2 mb-3">
                             <Badge variant="secondary">序{index + 1}</Badge>
@@ -1002,6 +1002,24 @@ export function InputV2Form() {
                   value={data.notes}
                   onChange={(e) => updateField('notes', e.target.value)}
                   placeholder="输入备注信息"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>模板分类</Label>
+                <Input
+                  value={data.templateCategory}
+                  onChange={(e) => updateField('templateCategory', e.target.value)}
+                  placeholder="输入模板分类"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>标签</Label>
+                <Input
+                  value={data.tags}
+                  onChange={(e) => updateField('tags', e.target.value)}
+                  placeholder="多个标签用逗号分隔"
                 />
               </div>
 

@@ -212,7 +212,7 @@ export default function EditSampleOrderPage() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
-                <FlaskConical className="h-6 w-6 text-blue-500" />
+                <FlaskConical className="h-6 w-6 text-blue-500 dark:text-blue-400" />
                 {ts('k_8dj0lx')}</h1>
               <p className="text-sm text-muted-foreground mt-1">{ts('editDesc')}</p>
             </div>
@@ -515,7 +515,7 @@ export default function EditSampleOrderPage() {
                     checked={formData.is_urgent}
                     onCheckedChange={(checked) => handleChange('is_urgent', checked)}
                   />
-                  <Label htmlFor="is_urgent" className="text-red-600">
+                  <Label htmlFor="is_urgent" className="text-red-600 dark:text-red-400">
                     {ts('k_16p17ir')}</Label>
                 </div>
                 <div className="flex items-center space-x-2">
