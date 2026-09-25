@@ -1,10 +1,10 @@
 import { getTranslations } from 'next-intl/server';
 
-;
 import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { numericFilter } from '@/lib/query-filter';
 
 /**
  * 设备台账管理 API
@@ -25,9 +25,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   if (id) {
     const rows = await query(
       `SELECT e.*,
-              (SELECT COUNT(*) FROM eq_maintenance_record r WHERE r.equipment_id = e.id AND r.deleted = 0) as maintenance_count,
-              (SELECT MAX(maintenance_date) FROM eq_maintenance_record r WHERE r.equipment_id = e.id AND r.deleted = 0) as last_maintenance_date
-       FROM eq_equipment e
+              (SELECT COUNT(*) FROM eqp_maintenance_record r WHERE r.equipment_id = e.id AND r.deleted = 0) as maintenance_count,
+              (SELECT MAX(create_time) FROM eqp_maintenance_record r WHERE r.equipment_id = e.id AND r.deleted = 0) as last_maintenance_date
+       FROM eqp_equipment e
        WHERE e.id = ? AND e.deleted = 0`,
       [Number(id)]
     );
@@ -42,7 +42,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const keyword = searchParams.get('keyword') || '';
   const equipmentType = searchParams.get('equipment_type') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
   const workshop = searchParams.get('workshop') || '';
 
   let where = 'WHERE e.deleted = 0';
@@ -66,16 +66,15 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(workshop);
   }
 
-  const countRows = await query(`SELECT COUNT(*) as total FROM eq_equipment e ${where}`, params);
+  const countRows = await query(`SELECT COUNT(*) as total FROM eqp_equipment e ${where}`, params);
   const total = countRows[0]?.total || 0;
 
   const rows = await query(
     `SELECT e.id, e.equipment_code, e.equipment_name, e.equipment_type, e.model,
             e.manufacturer as brand, e.workshop, e.location, e.status as current_status,
-            e.rated_capacity, e.oee,
-            e.cumulative_run_hours, e.cumulative_print_count,
+            e.rated_capacity, e.oee, e.total_run_hours,
             e.last_maintenance_date, e.next_maintenance_date
-     FROM eq_equipment e ${where}
+     FROM eqp_equipment e ${where}
      ORDER BY e.id DESC
      LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
@@ -109,7 +108,7 @@ export const POST = withPermission(
 
     // 检查编号唯一性
     const existing = await query(
-      'SELECT id FROM eq_equipment WHERE equipment_code = ? AND deleted = 0',
+      'SELECT id FROM eqp_equipment WHERE equipment_code = ? AND deleted = 0',
       [equipment_code]
     );
     if (existing && existing.length > 0) {
@@ -117,7 +116,7 @@ export const POST = withPermission(
     }
 
     const result = await execute(
-      `INSERT INTO eq_equipment
+      `INSERT INTO eqp_equipment
        (equipment_code, equipment_name, equipment_type, model, manufacturer,
         workshop, location, purchase_date, install_date, purchase_price,
         expected_life_years, remark, create_by)
@@ -164,8 +163,7 @@ export const PUT = withPermission(
       'purchase_price',
       'expected_life_years',
       'status',
-      'cumulative_run_hours',
-      'cumulative_print_count',
+      'total_run_hours',
       'last_maintenance_date',
       'next_maintenance_date',
       'remark',
@@ -190,7 +188,7 @@ export const PUT = withPermission(
     updateValues.push(Number(id));
 
     await execute(
-      `UPDATE eq_equipment SET ${updateFields.join(', ')} WHERE id = ? AND deleted = 0`,
+      `UPDATE eqp_equipment SET ${updateFields.join(', ')} WHERE id = ? AND deleted = 0`,
       updateValues
     );
 
@@ -206,7 +204,7 @@ export const DELETE = withPermission(
     const id = searchParams.get('id');
     if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
-    await execute('UPDATE eq_equipment SET deleted = 1, update_by = ? WHERE id = ?', [
+    await execute('UPDATE eqp_equipment SET deleted = 1, update_by = ? WHERE id = ?', [
       userInfo?.userId || null,
       Number(id),
     ]);

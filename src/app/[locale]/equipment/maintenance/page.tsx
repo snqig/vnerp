@@ -7,6 +7,7 @@ import { EQUIPMENT_MAINT_TYPE_LABEL, EQUIPMENT_PLAN_STATUS_LABEL } from '@/lib/s
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,7 +37,7 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, Edit, Trash2, RefreshCw, Wrench, ClipboardList } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, RefreshCw, Wrench, ClipboardList, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 
@@ -125,10 +126,10 @@ const PLAN_CYCLE_TYPE: Record<string, string> = {
 };
 
 const PLAN_STATUS: Record<number, { label: string; color: string }> = {
-  1: { label: EQUIPMENT_PLAN_STATUS_LABEL[1], color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: EQUIPMENT_PLAN_STATUS_LABEL[2], color: 'bg-blue-100 text-blue-800' },
-  3: { label: EQUIPMENT_PLAN_STATUS_LABEL[3], color: 'bg-green-100 text-green-800' },
-  4: { label: EQUIPMENT_PLAN_STATUS_LABEL[4], color: 'bg-red-100 text-red-800' },
+  1: { label: EQUIPMENT_PLAN_STATUS_LABEL[1], color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' },
+  2: { label: EQUIPMENT_PLAN_STATUS_LABEL[2], color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
+  3: { label: EQUIPMENT_PLAN_STATUS_LABEL[3], color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
+  4: { label: EQUIPMENT_PLAN_STATUS_LABEL[4], color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' },
 };
 export default function EquipmentMaintenancePage() {
   const ts = useTranslations('Equipment');
@@ -136,9 +137,9 @@ export default function EquipmentMaintenancePage() {
   const tc = useTranslations('Common');
 
   const RECORD_RESULT: Record<number, { label: string; color: string }> = {
-    1: { label: tc('normal'), color: 'bg-green-100 text-green-800' },
-    2: { label: ts('k_1uz4mvb'), color: 'bg-red-100 text-red-800' },
-    3: { label: ts('k_1qw8bup'), color: 'bg-yellow-100 text-yellow-800' },
+    1: { label: tc('normal'), color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
+    2: { label: ts('k_1uz4mvb'), color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' },
+    3: { label: ts('k_1qw8bup'), color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' },
   };
 
   const { toast } = useToast();
@@ -150,6 +151,13 @@ export default function EquipmentMaintenancePage() {
   const [planPage, setPlanPage] = useState(1);
   const [recordPage, setRecordPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    maintaining: 0,
+    completed: 0,
+    overdue: 0,
+    planCount: 0,
+  });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<'plan' | 'record'>('plan');
   const [form, setForm] = useState<MaintenanceForm>({});
@@ -209,9 +217,22 @@ export default function EquipmentMaintenancePage() {
   useEffect(() => {
     fetchEquipment();
   }, [fetchEquipment]);
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/equipment/maintenance/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'plan') fetchPlans();
     else fetchRecords();
+    fetchStats();
   }, [activeTab, fetchPlans, fetchRecords]);
 
   const rows: Array<MaintenancePlan | MaintenanceRecord> = activeTab === 'plan' ? plans : records;
@@ -362,6 +383,25 @@ export default function EquipmentMaintenancePage() {
   return (
     <MainLayout title={ts('k_1q6ppqq')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'pending', label: '待保养', icon: Clock, ...StatsTheme.orange },
+            { key: 'maintaining', label: '保养中', icon: Wrench, ...StatsTheme.blue },
+            { key: 'completed', label: '已完成', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'overdue', label: '逾期未保养', icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'planCount', label: '保养计划数', icon: ClipboardList, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'maintaining', count: stats.maintaining },
+            { key: 'completed', count: stats.completed },
+            { key: 'overdue', count: stats.overdue },
+            { key: 'planCount', count: stats.planCount },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex items-center justify-between">
             <TabsList>
@@ -501,7 +541,7 @@ export default function EquipmentMaintenancePage() {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-7 w-7 p-0 text-red-500"
+                                  className="h-7 w-7 p-0 text-red-500 dark:text-red-400"
                                   onClick={() => handleDelete(p.id, 'plan')}
                                 >
                                   <Trash2 className="w-3 h-3" />
@@ -614,7 +654,7 @@ export default function EquipmentMaintenancePage() {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-7 w-7 p-0 text-red-500"
+                                  className="h-7 w-7 p-0 text-red-500 dark:text-red-400"
                                   onClick={() => handleDelete(r.id, 'record')}
                                 >
                                   <Trash2 className="w-3 h-3" />
@@ -680,7 +720,7 @@ export default function EquipmentMaintenancePage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>
-                      {ts('k_1kb4ymq')}<span className="text-red-500">*</span>
+                      {ts('k_1kb4ymq')}<span className="text-red-500 dark:text-red-400">*</span>
                     </Label>
                     <Select
                       value={String(form.equipment_id || '')}
@@ -708,7 +748,7 @@ export default function EquipmentMaintenancePage() {
                   </div>
                   <div className="space-y-2">
                     <Label>
-                      {ts('k_iuncnz')}<span className="text-red-500">*</span>
+                      {ts('k_iuncnz')}<span className="text-red-500 dark:text-red-400">*</span>
                     </Label>
                     <Input
                       value={form.plan_name || ''}
@@ -783,7 +823,7 @@ export default function EquipmentMaintenancePage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>
-                      {ts('k_1kb4ymq')}<span className="text-red-500">*</span>
+                      {ts('k_1kb4ymq')}<span className="text-red-500 dark:text-red-400">*</span>
                     </Label>
                     <Select
                       value={String(form.equipment_id || '')}
@@ -831,7 +871,7 @@ export default function EquipmentMaintenancePage() {
                 </div>
                 <div className="space-y-2">
                   <Label>
-                    {ts('k_1xkpsc6')}<span className="text-red-500">*</span>
+                    {ts('k_1xkpsc6')}<span className="text-red-500 dark:text-red-400">*</span>
                   </Label>
                   <Input
                     type="date"

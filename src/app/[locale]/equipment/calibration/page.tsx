@@ -25,9 +25,10 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Ruler, CheckCircle, Clock, AlertTriangle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface Item {
   id: number;
@@ -61,6 +62,13 @@ export default function EquipmentCalibrationPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    calibrating: 0,
+    completed: 0,
+    overdue: 0,
+    monthlyCount: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
 
@@ -82,8 +90,21 @@ export default function EquipmentCalibrationPage() {
       }
     } catch {}
   };
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/equipment/calibration/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
 
   const handleSave = async () => {
@@ -189,7 +210,25 @@ export default function EquipmentCalibrationPage() {
               <Plus className="h-3 w-3 mr-1" />
               {tc('calibrationTitle')}</Button>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'pending', label: '待校准', icon: Clock, ...StatsTheme.orange },
+            { key: 'calibrating', label: '校准中', icon: Ruler, ...StatsTheme.blue },
+            { key: 'completed', label: '已完成', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'overdue', label: '逾期未校准', icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'monthlyCount', label: '本月校准次数', icon: Calendar, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'calibrating', count: stats.calibrating },
+            { key: 'completed', count: stats.completed },
+            { key: 'overdue', count: stats.overdue },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
         <Card>
           <CardContent className="p-0">
             <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
@@ -277,7 +316,7 @@ export default function EquipmentCalibrationPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />

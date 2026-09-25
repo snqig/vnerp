@@ -32,10 +32,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Wrench, CheckCircle, Clock, AlertTriangle, Calendar, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface Item {
   id: number;
@@ -74,6 +75,13 @@ export default function EquipmentRepairPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    repairing: 0,
+    completed: 0,
+    monthlyCount: 0,
+    monthlyCost: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
 
@@ -95,8 +103,21 @@ export default function EquipmentRepairPage() {
       }
     } catch {}
   };
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/equipment/repair/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
 
   const handleSave = async () => {
@@ -202,7 +223,25 @@ export default function EquipmentRepairPage() {
               <Plus className="h-3 w-3 mr-1" />
               {ts('k_1f62jlo')}</Button>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'pending', label: '待维修', icon: Clock, ...StatsTheme.orange },
+            { key: 'repairing', label: '维修中', icon: Wrench, ...StatsTheme.blue },
+            { key: 'completed', label: '已完成', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'monthlyCount', label: '本月维修数', icon: Calendar, ...StatsTheme.cyan },
+            { key: 'monthlyCost', label: '本月维修费用', icon: DollarSign, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'repairing', count: stats.repairing },
+            { key: 'completed', count: stats.completed },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+            { key: 'monthlyCost', count: stats.monthlyCost, prefix: '¥' },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
         <Card>
           <CardContent className="p-0">
             <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
@@ -292,7 +331,7 @@ export default function EquipmentRepairPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />

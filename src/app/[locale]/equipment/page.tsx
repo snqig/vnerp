@@ -33,7 +33,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, Search, RefreshCw, Cpu } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, RefreshCw, Cpu, Settings, Activity, Wrench } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
@@ -79,6 +80,7 @@ export default function EquipmentPage() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Equipment>>({});
   const [typeStats, setTypeStats] = useState<Loose[]>([]);
+  const [maintenanceReminders, setMaintenanceReminders] = useState(0);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -102,6 +104,22 @@ export default function EquipmentPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    const fetchMaintenanceReminders = async () => {
+      try {
+        const res = await authFetch('/api/equipment/maintenance-reminders');
+        const result = await res.json();
+        if (result.success) {
+          setMaintenanceReminders(result.data?.count || 0);
+        }
+      } catch (error) {
+        console.error('Failed to fetch maintenance reminders:', error);
+      }
+    };
+
+    fetchMaintenanceReminders();
+  }, []);
 
   const saveEquipment = async () => {
     if (!form.equipment_code || !form.equipment_name) {
@@ -147,6 +165,38 @@ export default function EquipmentPage() {
   return (
     <MainLayout title={ts('k_14ygvtp')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('totalEquipment'), icon: Settings, ...StatsTheme.blue },
+            { key: 'running', label: tc('running'), icon: Activity, ...StatsTheme.green },
+            { key: 'maintenance', label: tc('maintenance'), icon: Wrench, ...StatsTheme.orange },
+            { key: 'calibration', label: tc('calibrationDue'), icon: Activity, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'total', count: list.length },
+            { key: 'running', count: list.filter((e) => e.current_status === 1).length },
+            { key: 'maintenance', count: list.filter((e) => e.current_status === 2).length },
+            { key: 'calibration', count: list.filter((e) => e.current_status === 3).length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+          clickable={true}
+          onCardClick={(key) => {
+            if (key === 'maintenance') {
+              window.location.href = '/equipment/maintenance';
+            }
+          }}
+       />
+
+        {maintenanceReminders > 0 && (
+          <div className="flex justify-end">
+            <a href="/equipment/maintenance" className="inline-flex items-center gap-1">
+              <Badge variant="destructive" className="cursor-pointer hover:bg-destructive/90">
+                {ts('k_maintenanceReminders')} {maintenanceReminders}
+              </Badge>
+            </a>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {typeStats.map((s: Loose) => (
             <Card key={s.equipment_type}>
@@ -207,7 +257,7 @@ export default function EquipmentPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={fetchData}>
+              <Button variant="outline" onClick={() => { fetchData(); }}>
                 <RefreshCw className="w-4 h-4" />
               </Button>
             </div>
@@ -248,14 +298,14 @@ export default function EquipmentPage() {
                       <TableCell>{eq.rated_capacity || '-'}</TableCell>
                       <TableCell>
                         <span
-                          className={`font-medium ${(eq.oee || 0) >= 85 ? 'text-green-600' : (eq.oee || 0) >= 70 ? 'text-yellow-600' : 'text-red-600'}`}
+                          className={`font-medium ${(eq.oee || 0) >= 85 ? 'text-green-600 dark:text-green-400' : (eq.oee || 0) >= 70 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}
                         >
-                          {eq.oee?.toFixed(1) || 0}%
+                          {Number(eq.oee || 0).toFixed(1)}%
                         </span>
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={CURRENT_STATUS[eq.current_status]?.color || 'bg-gray-100'}
+                          className={CURRENT_STATUS[eq.current_status]?.color || 'bg-gray-100 dark:bg-gray-700'}
                         >
                           {CURRENT_STATUS[eq.current_status]?.label || tc('unknown')}
                         </Badge>
@@ -274,7 +324,7 @@ export default function EquipmentPage() {
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => deleteEquipment(eq.id)}>
-                            <Trash2 className="w-4 h-4 text-red-500" />
+                            <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
                           </Button>
                         </div>
                       </TableCell>
@@ -297,7 +347,7 @@ export default function EquipmentPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
-                  {ts('k_17s4qyf')}<span className="text-red-500">*</span>
+                  {ts('k_17s4qyf')}<span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   value={form.equipment_code || ''}
@@ -308,7 +358,7 @@ export default function EquipmentPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {ts('k_eb1q6f')}<span className="text-red-500">*</span>
+                  {ts('k_eb1q6f')}<span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   value={form.equipment_name || ''}

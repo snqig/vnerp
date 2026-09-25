@@ -25,9 +25,10 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, CheckCircle, Clock, AlertTriangle, Calendar, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface Item {
   id: number;
@@ -60,6 +61,13 @@ export default function EquipmentScrapPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    approved: 0,
+    scrapped: 0,
+    monthlyCount: 0,
+    monthlyOriginalValue: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
 
@@ -77,8 +85,21 @@ export default function EquipmentScrapPage() {
       }
     } catch {}
   };
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/equipment/scrap/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
 
   const handleSave = async () => {
@@ -184,7 +205,25 @@ export default function EquipmentScrapPage() {
               <Plus className="h-3 w-3 mr-1" />
               {tc('scrapTitle')}</Button>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'pending', label: '待审批', icon: Clock, ...StatsTheme.orange },
+            { key: 'approved', label: '已审批', icon: CheckCircle, ...StatsTheme.blue },
+            { key: 'scrapped', label: '已报废', icon: Trash2, ...StatsTheme.gray },
+            { key: 'monthlyCount', label: '本月报废数', icon: Calendar, ...StatsTheme.cyan },
+            { key: 'monthlyOriginalValue', label: '本月报废原值', icon: DollarSign, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'approved', count: stats.approved },
+            { key: 'scrapped', count: stats.scrapped },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+            { key: 'monthlyOriginalValue', count: stats.monthlyOriginalValue, prefix: '¥' },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
         <Card>
           <CardContent className="p-0">
             <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
@@ -280,7 +319,7 @@ export default function EquipmentScrapPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />

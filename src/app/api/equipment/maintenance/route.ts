@@ -1,6 +1,5 @@
 import { getTranslations } from 'next-intl/server';
 
-;
 import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -25,8 +24,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   if (id) {
     const rows = await query(
       `SELECT r.*, e.equipment_code, e.equipment_name, e.model
-       FROM eq_maintenance_record r
-       LEFT JOIN eq_equipment e ON r.equipment_id = e.id
+       FROM eqp_maintenance_record r
+       LEFT JOIN eqp_equipment e ON r.equipment_id = e.id
        WHERE r.id = ? AND r.deleted = 0`,
       [Number(id)]
     );
@@ -40,7 +39,6 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const equipmentId = searchParams.get('equipment_id') || '';
   const maintenanceType = searchParams.get('maintenance_type') || '';
-  const status = searchParams.get('status') || '';
   const startDate = searchParams.get('start_date') || '';
   const endDate = searchParams.get('end_date') || '';
 
@@ -55,35 +53,31 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     where += ' AND r.maintenance_type = ?';
     params.push(maintenanceType);
   }
-  if (status) {
-    where += ' AND r.status = ?';
-    params.push(Number(status));
-  }
   if (startDate) {
-    where += ' AND r.maintenance_date >= ?';
+    where += ' AND DATE(r.start_time) >= ?';
     params.push(startDate);
   }
   if (endDate) {
-    where += ' AND r.maintenance_date <= ?';
+    where += ' AND DATE(r.start_time) <= ?';
     params.push(endDate);
   }
 
   const countRows = await query(
-    `SELECT COUNT(*) as total FROM eq_maintenance_record r ${where}`,
+    `SELECT COUNT(*) as total FROM eqp_maintenance_record r ${where}`,
     params
   );
   const total = countRows[0]?.total || 0;
 
   const rows = await query(
     `SELECT r.id, r.record_no, r.equipment_id, r.plan_id, r.maintenance_type,
-            r.maintenance_date, r.start_time, r.end_time, r.actual_hours,
-            r.actual_cost, r.technician_name, r.result, r.status, r.remark,
+            r.start_time, r.end_time, r.downtime_hours,
+            r.cost, r.responsible_id, r.result, r.remark,
             r.create_time,
             e.equipment_code, e.equipment_name, e.model
-     FROM eq_maintenance_record r
-     LEFT JOIN eq_equipment e ON r.equipment_id = e.id
+     FROM eqp_maintenance_record r
+     LEFT JOIN eqp_equipment e ON r.equipment_id = e.id
      ${where}
-     ORDER BY r.maintenance_date DESC, r.id DESC
+     ORDER BY r.start_time DESC, r.id DESC
      LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -99,20 +93,13 @@ export const POST = withPermission(
       equipment_id,
       plan_id,
       maintenance_type,
-      maintenance_date,
       start_time,
       end_time,
-      actual_hours,
       downtime_hours,
-      actual_cost,
       cost,
-      technician_name,
-      run_hours_before,
-      run_hours_after,
-      description,
+      responsible_id,
       maintenance_content,
       fault_desc,
-      parts_replaced,
       result,
       remark,
     } = body;
@@ -121,26 +108,13 @@ export const POST = withPermission(
       return errorResponse(ts('k_1trm375'), 400, 400);
     }
 
-    // 维保日期：优先 maintenance_date，否则从开始时间(start_time)取日期部分
-    let mDate = maintenance_date;
-    if (!mDate && start_time) {
-      mDate = String(start_time).slice(0, 10);
-    }
-    if (!mDate) {
-      return errorResponse(ts('k_1shnfgm'), 400, 400);
-    }
-
     // 字段别名兼容（前端表单字段名为 downtime_hours/cost/maintenance_content/fault_desc）
-    const realHours = actual_hours != null ? actual_hours : (downtime_hours ?? 0);
-    const realCost = actual_cost != null ? actual_cost : (cost ?? 0);
     const realDesc =
-      description != null
-        ? description
-        : maintenance_content != null
-          ? maintenance_content
-          : fault_desc != null
-            ? fault_desc
-            : null;
+      maintenance_content != null
+        ? maintenance_content
+        : fault_desc != null
+          ? fault_desc
+          : null;
 
     // result 兼容：前端可能传 1/2/3，后端按语义字符串存储
     const resultMap: Record<string, string> = {
@@ -154,7 +128,7 @@ export const POST = withPermission(
         : 'completed';
 
     // 验证设备存在
-    const equipRows = await query('SELECT id FROM eq_equipment WHERE id = ? AND deleted = 0', [
+    const equipRows = await query('SELECT id FROM eqp_equipment WHERE id = ? AND deleted = 0', [
       Number(equipment_id),
     ]);
     if (!equipRows || equipRows.length === 0) {
@@ -171,68 +145,36 @@ export const POST = withPermission(
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
     const result2 = await execute(
-      `INSERT INTO eq_maintenance_record
-       (record_no, equipment_id, plan_id, maintenance_type, maintenance_date,
-        start_time, end_time, actual_hours, actual_cost, technician_name,
-        run_hours_before, run_hours_after, description, parts_replaced,
-        result, status, remark, create_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO eqp_maintenance_record
+       (record_no, equipment_id, plan_id, maintenance_type, fault_desc, maintenance_content,
+        start_time, end_time, downtime_hours, cost, responsible_id, result, remark, create_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         recordNo,
         Number(equipment_id),
         plan_id || null,
         maintenance_type || 'routine',
-        mDate,
+        fault_desc || null,
+        realDesc,
         start_time || null,
         end_time || null,
-        realHours || 0,
-        realCost || 0,
-        technician_name || null,
-        run_hours_before || null,
-        run_hours_after || null,
-        realDesc,
-        parts_replaced ? JSON.stringify(parts_replaced) : null,
+        downtime_hours || 0,
+        cost || 0,
+        responsible_id || null,
         resultVal,
-        1,
         remark || null,
         userInfo?.userId || null,
       ]
     );
 
-    // 同步更新设备表的 last_maintenance_date
-    await execute(
-      `UPDATE eq_equipment SET last_maintenance_date = ?, update_time = NOW() WHERE id = ?`,
-      [maintenance_date, Number(equipment_id)]
-    );
-
-    // 若关联维保计划，同步计划的 last_executed_date 和 next_execute_date
+    // 若关联维保计划，更新计划的 complete_date
     if (plan_id) {
-      const planRows = await query(
-        'SELECT cycle_type, cycle_days FROM eq_maintenance_plan WHERE id = ? AND deleted = 0',
+      await execute(
+        `UPDATE eqp_maintenance_plan
+         SET complete_date = CURDATE(), update_time = NOW()
+         WHERE id = ? AND deleted = 0`,
         [Number(plan_id)]
       );
-      if (planRows && planRows.length > 0) {
-        const cycleType = planRows[0].cycle_type;
-        const cycleDays = Number(planRows[0].cycle_days || 30);
-        const cycleMap: Record<string, number> = {
-          daily: 1,
-          weekly: 7,
-          monthly: 30,
-          quarterly: 90,
-          yearly: 365,
-        };
-        const days = cycleType === 'custom' ? cycleDays : cycleMap[cycleType] || 30;
-        const nextDate = new Date(maintenance_date);
-        nextDate.setDate(nextDate.getDate() + days);
-        const nextExecuteDate = nextDate.toISOString().slice(0, 10);
-
-        await execute(
-          `UPDATE eq_maintenance_plan
-           SET last_executed_date = ?, next_execute_date = ?, update_time = NOW()
-           WHERE id = ? AND deleted = 0`,
-          [maintenance_date, nextExecuteDate, Number(plan_id)]
-        );
-      }
     }
 
     return successResponse({ id: result2.insertId, record_no: recordNo }, ts('k_u00p3l'));
@@ -250,19 +192,15 @@ export const PUT = withPermission(
 
     const allowedFields = [
       'maintenance_type',
-      'maintenance_date',
       'start_time',
       'end_time',
-      'actual_hours',
-      'actual_cost',
-      'technician_name',
-      'run_hours_before',
-      'run_hours_after',
-      'description',
-      'parts_replaced',
+      'downtime_hours',
+      'cost',
+      'responsible_id',
       'result',
-      'status',
       'remark',
+      'fault_desc',
+      'maintenance_content',
     ];
 
     const updateFields: string[] = [];
@@ -271,11 +209,7 @@ export const PUT = withPermission(
     for (const field of allowedFields) {
       if (fields[field] !== undefined) {
         updateFields.push(`${field} = ?`);
-        updateValues.push(
-          field === 'parts_replaced' && fields[field]
-            ? JSON.stringify(fields[field])
-            : fields[field]
-        );
+        updateValues.push(fields[field]);
       }
     }
 
@@ -288,7 +222,7 @@ export const PUT = withPermission(
     updateValues.push(Number(id));
 
     await execute(
-      `UPDATE eq_maintenance_record SET ${updateFields.join(', ')} WHERE id = ? AND deleted = 0`,
+      `UPDATE eqp_maintenance_record SET ${updateFields.join(', ')} WHERE id = ? AND deleted = 0`,
       updateValues
     );
 
@@ -304,7 +238,7 @@ export const DELETE = withPermission(
     const id = searchParams.get('id');
     if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
-    await execute('UPDATE eq_maintenance_record SET deleted = 1, update_by = ? WHERE id = ?', [
+    await execute('UPDATE eqp_maintenance_record SET deleted = 1, update_by = ? WHERE id = ?', [
       userInfo?.userId || null,
       Number(id),
     ]);
