@@ -4262,6 +4262,7 @@
     "k_1bnm2sz": "只有草稿状态的调拨单才能提交审批",
     "k_w7efif": "调拨单已提交审批",
     "k_hmi4kz": "只有待审批的调拨单才能审批",
+    "k_trf_not_approved": "Phiếu điều chuyển chưa được duyệt, không thể thực hiện xuất kho",
     "k_141pjml": "请指定审批人",
     "k_1gbywpo": "调拨单审批通过",
     "k_ia45zk": "只有待审批的调拨单才能驳回",
@@ -8716,7 +8717,14 @@
     "lastUpdate": "Cập nhật cuối",
     "oee": "OEE",
     "workshop": "Xưởng",
-    "location": "Vị trí"
+    "location": "Vị trí",
+    "changeReason": "Lý do thay đổi",
+    "changeReasonPlaceholder": "Nhập lý do thay đổi (tùy chọn)",
+    "statusHistory": "Lịch sử thay đổi trạng thái",
+    "fromStatus": "Trước",
+    "toStatus": "Sau",
+    "operator": "Người thao tác",
+    "changeTime": "Thời gian"
   },
   "Outsource": {
     "title": "Quản lý gia công",

@@ -4250,6 +4250,7 @@
     "k_1bnm2sz": "只有草稿状态的调拨单才能提交审批",
     "k_w7efif": "调拨单已提交审批",
     "k_hmi4kz": "只有待审批的调拨单才能审批",
+    "k_trf_not_approved": "調撥單尚未審批通過，不能執行出庫操作",
     "k_141pjml": "请指定审批人",
     "k_1gbywpo": "调拨单审批通过",
     "k_ia45zk": "只有待审批的调拨单才能驳回",
@@ -8710,7 +8711,14 @@
     "lastUpdate": "最後更新",
     "oee": "OEE",
     "workshop": "車間",
-    "location": "位置"
+    "location": "位置",
+    "changeReason": "變更原因",
+    "changeReasonPlaceholder": "請輸入變更原因（可選）",
+    "statusHistory": "狀態變更歷史",
+    "fromStatus": "變更前",
+    "toStatus": "變更後",
+    "operator": "操作人",
+    "changeTime": "時間"
   },
   "Outsource": {
     "title": "委外管理",
