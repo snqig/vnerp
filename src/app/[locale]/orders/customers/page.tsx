@@ -55,6 +55,7 @@ import {
   ArrowDown,
 } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
+import { CustomerStatsCards } from './customer-stats-cards';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 
@@ -327,8 +328,8 @@ export default function CustomersPage() {
   };
 
   const customerTypeColors: Record<number, string> = {
-    1: 'bg-blue-100 text-blue-800 border-blue-200',
-    2: 'bg-green-100 text-green-800 border-green-200',
+    1: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200',
+    2: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200',
   };
 
   const followUpStatusColors: Record<number, string> = {
@@ -339,8 +340,8 @@ export default function CustomersPage() {
   };
 
   const statusColors: Record<number, string> = {
-    0: 'bg-red-100 text-red-800 border-red-200',
-    1: 'bg-green-100 text-green-800 border-green-200',
+    0: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200',
+    1: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200',
   };
 
   // 获取客户类型标签
@@ -426,54 +427,7 @@ export default function CustomersPage() {
     <MainLayout title={t('customerArchive')}>
       <div className="space-y-4">
         {/* 统计卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t('totalCustomers')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalCount}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t('completedCustomers')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {customers.filter((c) => c.followUpStatus === 3).length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t('intentionCustomers')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
-                {customers.filter((c) => c.followUpStatus === 2).length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t('enterpriseCustomers')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {customers.filter((c) => c.customerType === 1).length}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <CustomerStatsCards totalCount={totalCount} customers={customers} t={t} />
 
         {/* 搜索和筛选 */}
         <Card>
@@ -766,7 +720,7 @@ export default function CustomersPage() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleDelete(customer)}
-                                className="text-red-600 focus:text-red-600"
+                                className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 {tc('delete')}

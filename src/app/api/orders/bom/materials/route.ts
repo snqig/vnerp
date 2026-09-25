@@ -10,7 +10,8 @@ import {
   validateRequestBody,
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
+import { numericFilter, stringFilter } from '@/lib/query-filter';
 
 /**
  * 获取物料列表
@@ -22,8 +23,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
   const keyword = searchParams.get('keyword') || '';
-  const materialType = searchParams.get('materialType') || '';
-  const categoryId = searchParams.get('categoryId') || '';
+  const materialType = stringFilter(searchParams.get('materialType'));
+  const categoryId = numericFilter(searchParams.get('categoryId'));
 
   let whereClause = 'WHERE deleted = 0';
   const params: SqlValue[] = [];
@@ -40,7 +41,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   if (categoryId) {
     whereClause += ' AND category_id = ?';
-    params.push(parseInt(categoryId));
+    params.push(categoryId);
   }
 
   const result = await queryPaginated(
@@ -121,7 +122,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: (result as DbRow).insertId, materialCode }, ts('k_18twvmr'));
+    return successResponse({ id: (result as unknown as DbResultSetHeader).insertId, materialCode }, ts('k_18twvmr'));
   },
   { logTitle: '创建BOM物料', logType: 'business' }
 );

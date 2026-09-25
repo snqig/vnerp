@@ -20,6 +20,7 @@ import { MysqlCurrencyRepository } from '@/infrastructure/repositories/MysqlCurr
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 import type { ReconciliationLineProps } from '@/domain/sales/aggregates/Reconciliation';
 import type { DbRow } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 const reconciliationService = new ReconciliationApplicationService(
   new MysqlReconciliationRepository(),
@@ -33,7 +34,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const keyword = searchParams.get('keyword') || '';
-  const status = searchParams.get('status');
+  const status = numericFilter(searchParams.get('status'));
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
@@ -71,7 +72,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
   if (status) {
     sql += ' AND r.status = ?';
-    values.push(parseInt(status));
+    values.push(String(status));
   }
 
   sql += ' ORDER BY r.create_time DESC LIMIT ? OFFSET ?';
@@ -117,25 +118,25 @@ export const POST = withPermission(
     )) as DbRow[];
 
     const deliveryAmount = deliveries.reduce(
-      (sum, d) => sum + (parseFloat(d.total_amount) || 0),
+      (sum, d) => sum + (parseFloat(String(d.total_amount)) || 0),
       0
     );
-    const returnAmount = returns.reduce((sum, r) => sum + (parseFloat(r.total_amount) || 0), 0);
+    const returnAmount = returns.reduce((sum, r) => sum + (parseFloat(String(r.total_amount)) || 0), 0);
 
     const lines: ReconciliationLineProps[] = [
       ...deliveries.map((d) => ({
         sourceType: 1 as const,
-        sourceId: d.id,
-        sourceNo: d.delivery_no,
-        sourceDate: d.delivery_date,
-        amount: parseFloat(d.total_amount) || 0,
+        sourceId: Number(d.id),
+        sourceNo: String(d.delivery_no),
+        sourceDate: String(d.delivery_date),
+        amount: parseFloat(String(d.total_amount)) || 0,
       })),
       ...returns.map((r) => ({
         sourceType: 2 as const,
-        sourceId: r.id,
-        sourceNo: r.return_no,
-        sourceDate: r.return_date,
-        amount: parseFloat(r.total_amount) || 0,
+        sourceId: Number(r.id),
+        sourceNo: String(r.return_no),
+        sourceDate: String(r.return_date),
+        amount: parseFloat(String(r.total_amount)) || 0,
       })),
     ];
 

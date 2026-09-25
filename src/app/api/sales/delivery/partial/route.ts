@@ -49,8 +49,8 @@ export const POST = withPermission(
         }
 
         // 验证部分发货数量不超过订单剩余数量（行已锁定，此处计算安全）
-        const shippedQty = parseFloat(order.shipped_qty) || 0;
-        const remainingQty = (parseFloat(order.total_qty) || 0) - shippedQty;
+        const shippedQty = parseFloat(String(order.shipped_qty)) || 0;
+        const remainingQty = (parseFloat(String(order.total_qty)) || 0) - shippedQty;
         if (parseFloat(quantity) > remainingQty) {
           throw new PartialShipError(400, `部分发货数量${quantity}超过订单剩余数量${remainingQty}`);
         }

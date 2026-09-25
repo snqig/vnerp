@@ -15,6 +15,10 @@ import {
   Package,
   Layers,
   MoreHorizontal,
+  Clock,
+  AlertTriangle,
+  PlusCircle,
+  History as HistoryIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +43,7 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { useTranslations } from 'next-intl';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface BOMItem {
   id: number;
@@ -91,6 +96,13 @@ export default function BOMPage() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [stats, setStats] = useState({
+    total: 0,
+    approved: 0,
+    pending: 0,
+    monthlyNew: 0,
+    withVersion: 0,
+  });
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [bomDetail, setBomDetail] = useState<Loose>(null);
 
@@ -249,18 +261,50 @@ export default function BOMPage() {
     fetchBOMList();
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/orders/bom/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchBOMList();
+    fetchStats();
   }, [currentPage]);
 
   return (
     <MainLayout title={t('bomManagement')}>
       <div className="p-6 space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: 'BOM总数', icon: FileText, ...StatsTheme.blue },
+            { key: 'approved', label: '已审核', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'pending', label: '待审核', icon: Clock, ...StatsTheme.orange },
+            { key: 'monthlyNew', label: '本月新增', icon: PlusCircle, ...StatsTheme.cyan },
+            { key: 'withVersion', label: '有版本BOM', icon: HistoryIcon, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: stats.total },
+            { key: 'approved', count: stats.approved },
+            { key: 'pending', count: stats.pending },
+            { key: 'monthlyNew', count: stats.monthlyNew },
+            { key: 'withVersion', count: stats.withVersion },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Layers className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-200 dark:text-white">
                 {t('bomManagement')}
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">{t('bomListManagement')}</p>

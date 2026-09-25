@@ -21,7 +21,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Car, Wrench, FileText } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Car, Wrench, FileText, Truck, CheckCircle, Circle } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
@@ -123,6 +124,22 @@ export default function VehiclesPage() {
   return (
     <MainLayout>
       <div className="container mx-auto py-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('totalVehicles'), icon: Truck, ...StatsTheme.blue },
+            { key: 'active', label: tc('inUse'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'maintenance', label: tc('underMaintenance'), icon: Wrench, ...StatsTheme.orange },
+            { key: 'idle', label: tc('idleCount'), icon: Circle, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: vehicles.length },
+            { key: 'active', count: vehicles.filter((v) => v.status === 1).length },
+            { key: 'maintenance', count: vehicles.filter((v) => v.status === 2).length },
+            { key: 'idle', count: vehicles.filter((v) => v.status === 0).length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -254,7 +271,7 @@ export default function VehiclesPage() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleDelete(vehicle.id)}
-                            className="text-red-600"
+                            className="text-red-600 dark:text-red-400"
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             {tc('delete')}

@@ -114,12 +114,12 @@ const formatCurrency = (amount: number, locale: string) => {
 };
 
 const SALES_STATUS_CLASS: Record<number, string> = {
-  1: 'bg-gray-100 text-gray-700',
-  2: 'bg-blue-100 text-blue-700',
-  3: 'bg-orange-100 text-orange-700',
-  4: 'bg-green-100 text-green-700',
-  5: 'bg-red-100 text-red-700',
-  6: 'bg-red-100 text-red-700',
+  1: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200',
+  2: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+  3: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
+  4: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+  5: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+  6: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
 };
 
 const SALES_STATUS_KEY: Record<number, string> = {
@@ -336,7 +336,7 @@ export default function SalesOrderDetailPage() {
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
               {order.order_no}
-              <Badge className={SALES_STATUS_CLASS[order.status] || 'bg-gray-100'}>
+              <Badge className={SALES_STATUS_CLASS[order.status] || 'bg-gray-100 dark:bg-gray-700'}>
                 {SALES_STATUS_KEY[order.status] ? t(SALES_STATUS_KEY[order.status]) : tc('unknown')}
               </Badge>
             </CardTitle>
@@ -607,7 +607,7 @@ export default function SalesOrderDetailPage() {
                         <TableRow
                           key={rec.id}
                           className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => router.push(`/finance/receivables?id=${rec.id}`)}
+                          onClick={() => router.push(`/finance/receivable?id=${rec.id}`)}
                         >
                           <TableCell className="font-mono">{rec.receivable_no}</TableCell>
                           <TableCell className="font-mono">{rec.source_no || '-'}</TableCell>

@@ -10,8 +10,9 @@ import {
   validateRequestBody,
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 import { INSERT_INTO_BOM_VERSION_HISTORY } from '@/lib/db/ddl/orders-bom';
+import { numericFilter } from '@/lib/query-filter';
 
 // BOM状态常量
 const BOM_STATUS = {
@@ -32,7 +33,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
   const keyword = searchParams.get('keyword') || '';
   const productCode = searchParams.get('productCode') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
   const materialCode = searchParams.get('materialCode') || '';
 
   let whereClause = 'WHERE bh.deleted = 0';
@@ -50,7 +51,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   if (status) {
     whereClause += ' AND bh.status = ?';
-    params.push(parseInt(status));
+    params.push(status);
   }
 
   // 如果按物料编码查询，需要关联BOM行表
@@ -184,7 +185,7 @@ export const POST = withPermission(
         ]
       );
 
-      const bomId = (headerResult as DbRow).insertId;
+      const bomId = (headerResult as unknown as DbResultSetHeader).insertId;
 
       for (const line of processedLines) {
         await connection.execute(
@@ -276,7 +277,7 @@ export const PUT = withPermission(
       }
 
       // 普通更新
-      if (bom.status >= BOM_STATUS.PUBLISHED) {
+      if (Number(bom.status) >= BOM_STATUS.PUBLISHED) {
         throw new Error(ts('k_1tgh9gt'));
       }
 
@@ -373,7 +374,7 @@ export const DELETE = withPermission(
 
     const bomData = (bom as DbRow[])[0];
 
-    if (bomData.status >= BOM_STATUS.PUBLISHED) {
+    if (Number(bomData.status) >= BOM_STATUS.PUBLISHED) {
       return errorResponse(ts('k_198cxid'), 400, 400);
     }
 

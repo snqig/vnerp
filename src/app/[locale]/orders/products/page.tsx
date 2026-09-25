@@ -4,6 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import {
   Table,
   TableBody,
@@ -50,6 +51,12 @@ import {
   ArrowUp,
   ArrowDown,
   Printer,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  Power,
+  PlusCircle,
+  Layers,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
@@ -126,9 +133,9 @@ const formatDate = (dateStr: string | null | undefined) => {
 };
 
 const productStatusColors: Record<string, string> = {
-  active: 'bg-green-100 text-green-700',
-  inactive: 'bg-yellow-100 text-yellow-700',
-  discontinued: 'bg-red-100 text-red-700',
+  active: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+  inactive: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+  discontinued: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
 };
 
 export default function ProductsPage() {
@@ -145,6 +152,13 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    inactive: 0,
+    monthlyNew: 0,
+    withBom: 0,
+  });
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [bomLines, setBomLines] = useState<BomLine[]>([]);
   const [bomHeader, setBomHeader] = useState<Loose>(null);
@@ -260,8 +274,21 @@ export default function ProductsPage() {
     } catch {}
   }, []);
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/orders/products/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchStats();
   }, [fetchProducts]);
 
   useEffect(() => {
@@ -497,6 +524,25 @@ export default function ProductsPage() {
   return (
     <MainLayout title={t('productArchive')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: '产品总数', icon: Package, ...StatsTheme.blue },
+            { key: 'active', label: '已启用', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'inactive', label: '已停用', icon: Power, ...StatsTheme.gray },
+            { key: 'monthlyNew', label: '本月新增', icon: PlusCircle, ...StatsTheme.cyan },
+            { key: 'withBom', label: '有BOM产品', icon: Layers, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: stats.total },
+            { key: 'active', count: stats.active },
+            { key: 'inactive', count: stats.inactive },
+            { key: 'monthlyNew', count: stats.monthlyNew },
+            { key: 'withBom', count: stats.withBom },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">

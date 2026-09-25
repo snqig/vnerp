@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ReturnStatsCards } from './return-stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -114,10 +115,10 @@ export default function ReturnPage() {
   };
 
   const STATUS_MAP: Record<number, { label: string; color: string }> = {
-    1: { label: SALES_RETURN_STATUS_LABEL[1], color: 'bg-yellow-100 text-yellow-800' },
-    2: { label: SALES_RETURN_STATUS_LABEL[2], color: 'bg-blue-100 text-blue-800' },
-    3: { label: SALES_RETURN_STATUS_LABEL[3], color: 'bg-green-100 text-green-800' },
-    9: { label: SALES_RETURN_STATUS_LABEL[9], color: 'bg-red-100 text-red-800' },
+    1: { label: SALES_RETURN_STATUS_LABEL[1], color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' },
+    2: { label: SALES_RETURN_STATUS_LABEL[2], color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
+    3: { label: SALES_RETURN_STATUS_LABEL[3], color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
+    9: { label: SALES_RETURN_STATUS_LABEL[9], color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' },
   };
 
   const [list, setList] = useState<ReturnOrder[]>([]);
@@ -394,38 +395,14 @@ export default function ReturnPage() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-4 gap-4 mb-4">
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{t('totalReturnOrders')}</div>
-                  <div className="text-2xl font-bold">{total}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{tc('pending')}</div>
-                  <div className="text-2xl font-bold text-yellow-600">
-                    {list.filter((r) => r.status === 1).length}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{tc('approved')}</div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {list.filter((r) => r.status === 2).length}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{t('returned')}</div>
-                  <div className="text-2xl font-bold text-green-600">
-                    {list.filter((r) => r.status === 3).length}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <ReturnStatsCards
+              total={total}
+              pending={list.filter((r) => r.status === 1).length}
+              approved={list.filter((r) => r.status === 2).length}
+              returned={list.filter((r) => r.status === 3).length}
+              t={t}
+              tc={tc}
+            />
 
             {loading ? (
               <div className="flex justify-center py-8">
@@ -483,14 +460,14 @@ export default function ReturnPage() {
                       <TableCell>
                         <Badge
                           className={
-                            INSPECTION_STATUS_MAP[r.inspection_status]?.color || 'bg-gray-100'
+                            INSPECTION_STATUS_MAP[r.inspection_status]?.color || 'bg-gray-100 dark:bg-gray-700'
                           }
                         >
                           {INSPECTION_STATUS_MAP[r.inspection_status]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={STATUS_MAP[r.status]?.color || 'bg-gray-100'}>
+                        <Badge className={STATUS_MAP[r.status]?.color || 'bg-gray-100 dark:bg-gray-700'}>
                           {STATUS_MAP[r.status]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
@@ -513,7 +490,7 @@ export default function ReturnPage() {
                               onClick={() => updateStatus(r.id, 'approve')}
                               title={t('approve')}
                             >
-                              <Badge className="bg-blue-100 text-blue-800 text-xs">
+                              <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs">
                                 {tc('review')}
                               </Badge>
                             </Button>
@@ -525,13 +502,13 @@ export default function ReturnPage() {
                               onClick={() => updateStatus(r.id, 'complete')}
                               title={t('confirmReturn')}
                             >
-                              <Badge className="bg-green-100 text-green-800 text-xs">
+                              <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs">
                                 {tc('returnOrder')}
                               </Badge>
                             </Button>
                           )}
                           <Button variant="ghost" size="sm" onClick={() => deleteReturn(r.id)}>
-                            <Trash2 className="w-4 h-4 text-red-500" />
+                            <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
                           </Button>
                         </div>
                       </TableCell>
@@ -562,7 +539,7 @@ export default function ReturnPage() {
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>
-                  {tc('customer')} <span className="text-red-500">*</span>
+                  {tc('customer')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Select
                   value={String(form.customer_id || '')}
@@ -617,7 +594,7 @@ export default function ReturnPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
-                  {t('originalOrderNo')} <span className="text-red-500">*</span>
+                  {t('originalOrderNo')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Select
                   value={String(form.order_id || '')}
@@ -646,7 +623,7 @@ export default function ReturnPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {t('warehouse')} <span className="text-red-500">*</span>
+                  {t('warehouse')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <WarehouseSelect
                   value={form.warehouse_id}
@@ -745,7 +722,7 @@ export default function ReturnPage() {
                       <TableCell>
                         {(form.items || []).length > 1 && (
                           <Button variant="ghost" size="sm" onClick={() => removeItem(idx)}>
-                            <Trash2 className="w-4 h-4 text-red-500" />
+                            <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
                           </Button>
                         )}
                       </TableCell>
@@ -759,7 +736,7 @@ export default function ReturnPage() {
                 </span>
                 <span>
                   {t('totalAmount')}:{' '}
-                  <strong className="text-red-600">
+                  <strong className="text-red-600 dark:text-red-400">
                     <MoneyDisplay amount={calcTotal()} currency="CNY" />
                   </strong>
                 </span>
@@ -827,7 +804,7 @@ export default function ReturnPage() {
                   </div>
                   <div>
                     <div className="text-gray-500 text-sm">{t('returnAmount')}</div>
-                    <div className="text-xl font-bold text-red-600">
+                    <div className="text-xl font-bold text-red-600 dark:text-red-400">
                       <MoneyDisplay
                         amount={parseFloat(String(detailData.total_amount || 0))}
                         currency={detailData.currency || 'CNY'}

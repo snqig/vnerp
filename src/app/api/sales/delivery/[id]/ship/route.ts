@@ -129,8 +129,8 @@ export const POST = withPermission(
         }
 
         // 更新发货单主表（行已被 FOR UPDATE 锁定，此处读-改-写安全）
-        const newShippedQty = (parseFloat(shipment.shipped_quantity) || 0) + totalShippedQty;
-        const newStatus = newShippedQty >= parseFloat(shipment.total_quantity) ? 5 : 4; // 已发货 or 部分发货
+        const newShippedQty = (parseFloat(String(shipment.shipped_quantity)) || 0) + totalShippedQty;
+        const newStatus = newShippedQty >= parseFloat(String(shipment.total_quantity)) ? 5 : 4; // 已发货 or 部分发货
 
         await conn.execute(
           `UPDATE shipments

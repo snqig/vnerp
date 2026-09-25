@@ -50,8 +50,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       order.order_date || '',
       order.delivery_date || '',
       order.total_amount || 0,
-      statusLabelOf(order.status),
-      `"${(order.remark || '').replace(/"/g, '""')}"`,
+      statusLabelOf(Number(order.status)),
+      `"${String(order.remark || '').replace(/"/g, '""')}"`,
     ]);
 
     const csvContent = BOM + [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
@@ -81,7 +81,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   const items = await query('SELECT * FROM sal_order_item WHERE order_id = ?', [order.id]);
 
-  const statusLabel = statusLabelOf(order.status);
+  const statusLabel = statusLabelOf(Number(order.status));
 
   const htmlContent = `<!DOCTYPE html>
 <html>

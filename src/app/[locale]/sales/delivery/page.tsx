@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { DeliveryStatsCards } from './delivery-stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -491,38 +492,13 @@ export default function DeliveryPage() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-4 gap-4 mb-4">
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{t('totalDelivery')}</div>
-                  <div className="text-2xl font-bold">{total}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{t('pendingDelivery')}</div>
-                  <div className="text-2xl font-bold text-yellow-600">
-                    {list.filter((d) => d.status === 1).length}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{t('delivered')}</div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {list.filter((d) => d.status === 2).length}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{t('signed')}</div>
-                  <div className="text-2xl font-bold text-green-600">
-                    {list.filter((d) => d.status === 3).length}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <DeliveryStatsCards
+              total={total}
+              pending={list.filter((d) => d.status === 1).length}
+              delivered={list.filter((d) => d.status === 2).length}
+              signed={list.filter((d) => d.status === 3).length}
+              t={t}
+            />
 
             {loading ? (
               <div className="flex justify-center py-8">
@@ -573,13 +549,13 @@ export default function DeliveryPage() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={SIGN_STATUS_MAP[d.sign_status ?? 0]?.color || 'bg-gray-100'}
+                          className={SIGN_STATUS_MAP[d.sign_status ?? 0]?.color || 'bg-gray-100 dark:bg-gray-700'}
                         >
                           {SIGN_STATUS_MAP[d.sign_status ?? 0]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={STATUS_MAP[d.status]?.color || 'bg-gray-100'}>
+                        <Badge className={STATUS_MAP[d.status]?.color || 'bg-gray-100 dark:bg-gray-700'}>
                           {STATUS_MAP[d.status]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
@@ -595,7 +571,7 @@ export default function DeliveryPage() {
                               onClick={() => updateStatus(d.id!, 2)}
                               title={t('confirmShip')}
                             >
-                              <Truck className="w-4 h-4 text-blue-500" />
+                              <Truck className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                             </Button>
                           )}
                           {d.status === 2 && d.id && (
@@ -605,7 +581,7 @@ export default function DeliveryPage() {
                               onClick={() => updateStatus(d.id!, 3)}
                               title={t('confirmSign')}
                             >
-                              <Printer className="w-4 h-4 text-green-500" />
+                              <Printer className="w-4 h-4 text-green-500 dark:text-green-400" />
                             </Button>
                           )}
                           <Button
@@ -613,7 +589,7 @@ export default function DeliveryPage() {
                             size="sm"
                             onClick={() => d.id && deleteDelivery(d.id)}
                           >
-                            <Trash2 className="w-4 h-4 text-red-500" />
+                            <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
                           </Button>
                         </div>
                       </TableCell>
@@ -645,7 +621,7 @@ export default function DeliveryPage() {
               <div className="space-y-2">
                 <Label>
                   {tc('customer')}
-                  <span className="text-red-500">*</span>
+                  <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Select
                   value={String(form.customer_id || '')}
@@ -673,7 +649,7 @@ export default function DeliveryPage() {
               <div className="space-y-2">
                 <Label>
                   {t('relatedOrder')}
-                  <span className="text-red-500">*</span>
+                  <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Select
                   value={String(form.order_id || '')}
@@ -703,7 +679,7 @@ export default function DeliveryPage() {
               <div className="space-y-2">
                 <Label>
                   {tc('warehouse')}
-                  <span className="text-red-500">*</span>
+                  <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <WarehouseSelect
                   value={form.warehouse_id || ''}
@@ -873,7 +849,7 @@ export default function DeliveryPage() {
                       <TableCell>
                         {(form.items || []).length > 1 && (
                           <Button variant="ghost" size="sm" onClick={() => removeItem(idx)}>
-                            <Trash2 className="w-4 h-4 text-red-500" />
+                            <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
                           </Button>
                         )}
                       </TableCell>
@@ -887,7 +863,7 @@ export default function DeliveryPage() {
                 </span>
                 <span>
                   {tc('totalAmount')}:
-                  <strong className="text-blue-600">
+                  <strong className="text-blue-600 dark:text-blue-400">
                     <MoneyDisplay amount={calcTotal()} currency="CNY" />
                   </strong>
                 </span>
@@ -957,7 +933,7 @@ export default function DeliveryPage() {
                   </div>
                   <div>
                     <div className="text-gray-500 text-sm">{tc('totalAmount')}</div>
-                    <div className="text-xl font-bold text-blue-600">
+                    <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
                       <MoneyDisplay
                         amount={parseFloat(String(detailData.total_amount || 0))}
                         currency={detailData.currency || 'CNY'}

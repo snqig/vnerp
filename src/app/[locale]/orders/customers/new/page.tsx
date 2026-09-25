@@ -159,7 +159,7 @@ export default function NewCustomerPage() {
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="customer_code">
-                  {t('customerCode')} <span className="text-red-500">*</span>
+                  {t('customerCode')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   id="customer_code"
@@ -171,7 +171,7 @@ export default function NewCustomerPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="customer_name">
-                  {t('customerName')} <span className="text-red-500">*</span>
+                  {t('customerName')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   id="customer_name"
@@ -383,19 +383,19 @@ export default function NewCustomerPage() {
                 <Label>{t('businessLicensePdf') || ts('k_kxmhnu')}</Label>
                 {licenseFile ? (
                   <div className="flex items-center gap-2 rounded-md border border-input bg-muted/30 px-3 py-2">
-                    <FileText className="h-4 w-4 text-red-500 shrink-0" />
+                    <FileText className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                     <a
                       href={licenseFile.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline truncate flex-1"
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline truncate flex-1"
                     >
                       {licenseFile.name}
                     </a>
                     <button
                       type="button"
                       onClick={() => setLicenseFile(null)}
-                      className="text-muted-foreground hover:text-red-500 shrink-0"
+                      className="text-muted-foreground hover:text-red-500 dark:hover:text-red-400 shrink-0"
                     >
                       <X className="h-4 w-4" />
                     </button>

@@ -4,6 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Edit, Trash2, Phone } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Phone, Users, CheckCircle, Clock, AlertCircle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { useRowSelection } from '@/lib/useRowSelection';
@@ -81,6 +82,13 @@ export default function CustomerFollowPage() {
   const [_loading, setLoading] = useState(false);
   const [searchName, setSearchName] = useState('');
   const [searchType, setSearchType] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    following: 0,
+    converted: 0,
+    lost: 0,
+    monthlyCount: 0,
+  });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<FollowRecord | null>(null);
   const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
@@ -125,12 +133,28 @@ export default function CustomerFollowPage() {
       if (data.success || data.code === 200) {
         setCustomers(data.data?.list || data.data || []);
       }
-    } catch {}
+    } catch (error) {
+      console.error('Failed to fetch customers:', error);
+      setCustomers([]);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/crm/follow/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
   };
 
   useEffect(() => {
     fetchData();
     fetchCustomers();
+    fetchStats();
   }, [page]);
 
   const handleSave = async () => {
@@ -218,6 +242,25 @@ export default function CustomerFollowPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-4">
+        <StatsCards
+          configs={[
+            { key: 'pending', label: '待跟进', icon: Clock, ...StatsTheme.orange },
+            { key: 'following', label: '跟进中', icon: Phone, ...StatsTheme.blue },
+            { key: 'converted', label: '已转化', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'lost', label: '已流失', icon: AlertCircle, ...StatsTheme.red },
+            { key: 'monthlyCount', label: '本月跟进次数', icon: Calendar, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'following', count: stats.following },
+            { key: 'converted', count: stats.converted },
+            { key: 'lost', count: stats.lost },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Phone className="h-6 w-6" />

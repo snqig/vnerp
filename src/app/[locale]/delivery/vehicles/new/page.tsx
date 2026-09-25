@@ -133,7 +133,7 @@ export default function NewVehiclePage() {
             <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="vehicle_no">
-                  {t('plateNo')} <span className="text-red-500">*</span>
+                  {t('plateNo')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   id="vehicle_no"

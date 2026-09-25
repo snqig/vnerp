@@ -4,6 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
+import { AnalysisStatsCards } from './analysis-stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -270,46 +271,7 @@ export default function CustomerAnalysisPage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <Users className="h-8 w-8 text-blue-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">{t('totalCustomers')}</p>
-                <p className="text-2xl font-bold">{summary.total_customers || 0}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <DollarSign className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">{t('totalOrderAmount')}</p>
-                <p className="text-2xl font-bold">
-                  ¥{(summary.total_amount || 0).toLocaleString()}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <TrendingUp className="h-8 w-8 text-orange-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">{t('avgSatisfaction')}</p>
-                <p className="text-2xl font-bold">{(summary.avg_satisfaction || 0).toFixed(1)}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <BarChart3 className="h-8 w-8 text-purple-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">{t('avgOnTimeRate')}</p>
-                <p className="text-2xl font-bold">{(summary.avg_on_time_rate || 0).toFixed(1)}%</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <AnalysisStatsCards summary={summary} t={t} />
 
         <Card>
           <CardContent className="p-4">

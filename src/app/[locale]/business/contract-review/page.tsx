@@ -5,6 +5,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -41,7 +42,7 @@ import {
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { Plus, Search, Edit, Trash2, Upload, FileText, X } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Upload, FileText, X, FileCheck, CheckCircle, Clock, AlertTriangle, FileSearch, XCircle, Banknote } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 
@@ -129,6 +130,13 @@ export default function ContractReviewPage() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [attachments, setAttachments] = useState<{ name: string; url: string }[]>([]);
+  const [stats, setStats] = useState({
+    pending: 0,
+    reviewing: 0,
+    approved: 0,
+    rejected: 0,
+    monthlyAmount: 0,
+  });
 
   const fetchData = useCallback(async () => {
     try {
@@ -148,8 +156,21 @@ export default function ContractReviewPage() {
     } catch {}
   }, [page, searchCustomer, searchProduct, searchStatus]);
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/business/contract-review/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [fetchData]);
 
   const toggleSelect = (id: number) => toggle(String(id));
@@ -268,6 +289,25 @@ export default function ContractReviewPage() {
   return (
     <MainLayout title={ts('k_45cj5x')}>
       <div className="p-6 space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'pending', label: '待审核', icon: Clock, ...StatsTheme.orange },
+            { key: 'reviewing', label: '审核中', icon: FileSearch, ...StatsTheme.blue },
+            { key: 'approved', label: '已通过', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'rejected', label: '已驳回', icon: XCircle, ...StatsTheme.red },
+            { key: 'monthlyAmount', label: '本月合同金额', icon: Banknote, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'reviewing', count: stats.reviewing },
+            { key: 'approved', count: stats.approved },
+            { key: 'rejected', count: stats.rejected },
+            { key: 'monthlyAmount', count: stats.monthlyAmount, prefix: '¥' },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
@@ -371,7 +411,7 @@ export default function ContractReviewPage() {
               </TableHeader>
               <TableBody>
                 {list.map((item) => (
-                  <TableRow key={item.id} className={isSelected(String(item.id)) ? 'bg-blue-50' : ''}>
+                  <TableRow key={item.id} className={isSelected(String(item.id)) ? 'bg-blue-500/10' : ''}>
                     <TableCell>
                       <Checkbox
                         checked={isSelected(String(item.id))}
@@ -715,12 +755,12 @@ export default function ContractReviewPage() {
                 <div className="space-y-1">
                   {attachments.map((att, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-sm">
-                      <FileText className="h-4 w-4 text-blue-500" />
+                      <FileText className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                       <a
                         href={att.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline truncate"
+                        className="text-blue-600 dark:text-blue-400 hover:underline truncate"
                       >
                         {att.name}
                       </a>

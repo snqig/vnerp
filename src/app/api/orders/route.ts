@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server';
 
 ;
 import { NextRequest } from 'next/server';
-import { query, queryOne, SqlValue } from '@/lib/db';
+import { query, queryOne, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { getSystemConfig } from '@/lib/system-config';
@@ -26,6 +26,20 @@ function toFiniteNumber(value: unknown, fallback: number): number {
 /** 金额按本位币折算并保留 4 位小数（与 sal_order.base_* 的 decimal(18,4) 精度一致）。 */
 function convertToBase(amount: number, exchangeRate: number): number {
   return Math.round(amount * exchangeRate * 10000) / 10000;
+}
+
+/**
+ * PUT 更新明细时的入参形状。
+ * 不能直接用 DbRow —— DbRow 的值类型是 DbValue（含 null/Date/Buffer），
+ * 对它做数量×单价会被 TS 判定为非法算术。
+ */
+interface IncomingOrderItem {
+  material_id?: number | string | null;
+  material_code?: string;
+  material_name: string;
+  quantity: number;
+  unit?: string;
+  unit_price: number;
 }
 
 // GET - 获取订单列表/详情
@@ -66,8 +80,13 @@ export const GET = withPermission(
 
       const order = (orders as DbRow[])[0];
 
-      // 获取订单明细
-      let items = await query('SELECT * FROM sal_order_item WHERE order_id = ?', [order.id]);
+      // 获取订单明细。
+      // 必须过滤 deleted = 0：PUT 更新明细采用「软删除旧行 + 插入新行」，
+      // 不过滤会把历史版本与当前版本一起返回，前端明细会翻倍。
+      let items = await query(
+        'SELECT * FROM sal_order_item WHERE order_id = ? AND deleted = 0',
+        [order.id]
+      );
 
       if (!items || (items as DbRow[]).length === 0) {
         items = await query(
@@ -87,17 +106,17 @@ export const GET = withPermission(
         order_date: order.order_date,
         delivery_date: order.delivery_date,
         status: order.status,
-        total_amount: parseFloat(order.total_amount),
-        total_with_tax: order.total_with_tax ? parseFloat(order.total_with_tax) : undefined,
+        total_amount: parseFloat(String(order.total_amount)),
+        total_with_tax: order.total_with_tax ? parseFloat(String(order.total_with_tax)) : undefined,
         ...currencyFieldsOf(order),
         items: (items as DbRow[]).map((item: DbRow) => ({
           material_id: item.material_id || null,
           material_code: item.material_code || '',
           material_name: item.material_name || '',
-          quantity: parseFloat(item.quantity),
+          quantity: parseFloat(String(item.quantity)),
           unit: item.unit || '',
-          unit_price: parseFloat(item.unit_price),
-          total_price: parseFloat(item.total_price || item.total_amount || 0),
+          unit_price: parseFloat(String(item.unit_price)),
+          total_price: parseFloat(String(item.total_price || item.total_amount || 0)),
         })),
         remark: order.remark,
         create_time: order.create_time,
@@ -147,17 +166,17 @@ export const GET = withPermission(
           order_date: order.order_date,
           delivery_date: order.delivery_date,
           status: order.status,
-          total_amount: parseFloat(order.total_amount),
-          total_with_tax: order.total_with_tax ? parseFloat(order.total_with_tax) : undefined,
+          total_amount: parseFloat(String(order.total_amount)),
+          total_with_tax: order.total_with_tax ? parseFloat(String(order.total_with_tax)) : undefined,
           ...currencyFieldsOf(order),
           items: (items as DbRow[]).map((item: DbRow) => ({
             material_id: item.material_id || null,
             material_code: item.material_code || '',
             material_name: item.material_name || '',
-            quantity: parseFloat(item.quantity),
+            quantity: parseFloat(String(item.quantity)),
             unit: item.unit || '',
-            unit_price: parseFloat(item.unit_price),
-            total_price: parseFloat(item.total_price || item.total_amount || 0),
+            unit_price: parseFloat(String(item.unit_price)),
+            total_price: parseFloat(String(item.total_price || item.total_amount || 0)),
           })),
           remark: order.remark,
           create_time: order.create_time,
@@ -217,7 +236,8 @@ export const POST = withPermission(
     }
 
     const total_amount = items.reduce(
-      (sum: number, item: DbRow) => sum + item.quantity * item.unit_price,
+      (sum: number, item: DbRow) =>
+        sum + Number(item.quantity ?? 0) * Number(item.unit_price ?? 0),
       0
     );
 
@@ -272,7 +292,7 @@ export const POST = withPermission(
       ]
     );
 
-    const orderId = (orderResult as DbRow).insertId;
+    const orderId = (orderResult as unknown as DbRow).insertId;
 
     for (const item of items) {
       await query(
@@ -301,7 +321,7 @@ export const PUT = withPermission(
   async (request: NextRequest) => {
   const ts = await getTranslations('Common');
     const body = await request.json();
-    const { id, status, ...updateData } = body;
+    const { id, status, items, currency, customer_id, order_date, delivery_date, remark } = body;
 
     if (!id) {
       return errorResponse(ts('k_jibosn'), 400, 400);
@@ -315,7 +335,9 @@ export const PUT = withPermission(
 
     const order = (orders as DbRow[])[0];
 
-    if (order.status === 'completed' || order.status === 'cancelled') {
+    // 终态守卫：原实现把 TINYINT 状态列与字符串 'completed'/'cancelled' 比较，
+    // 永远不成立，等于没有守卫。改为按契约码判定（与 DELETE 同一口径）。
+    if (isTerminalSalesOrderStatus(order.status)) {
       return errorResponse(ts('k_two405'), 400, 400);
     }
 
@@ -327,25 +349,144 @@ export const PUT = withPermission(
       updateParams.push(status);
     }
 
-    if (updateData.delivery_date) {
+    if (delivery_date) {
       updateFields.push('delivery_date = ?');
-      updateParams.push(updateData.delivery_date);
+      updateParams.push(delivery_date);
     }
 
-    if (updateData.remark !== undefined) {
+    if (order_date) {
+      updateFields.push('order_date = ?');
+      updateParams.push(order_date);
+    }
+
+    if (remark !== undefined) {
       updateFields.push('remark = ?');
-      updateParams.push(updateData.remark);
+      updateParams.push(remark);
     }
 
-    if (updateFields.length > 0) {
-      updateParams.push(order.id);
-      await query(
-        `UPDATE sal_order SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
-        updateParams
+    // 客户变更：必须指向存在且未删除的客户
+    if (customer_id !== undefined && customer_id !== null && customer_id !== '') {
+      const cid = Number(customer_id);
+      if (!Number.isInteger(cid) || cid <= 0) {
+        return errorResponse(ts('k_4bpl2g'), 400, 400);
+      }
+      const customerRows = await query(
+        'SELECT id FROM crm_customer WHERE id = ? AND deleted = 0',
+        [cid]
+      );
+      if (!customerRows || (customerRows as DbRow[]).length === 0) {
+        return errorResponse(ts('k_4bpl2g'), 400, 400);
+      }
+      updateFields.push('customer_id = ?');
+      updateParams.push(cid);
+    }
+
+    // 明细变更：与 POST 完全相同的校验口径
+    let normalizedItems: IncomingOrderItem[] | null = null;
+    if (Array.isArray(items)) {
+      if (items.length === 0) {
+        return errorResponse(ts('k_12n97pp'), 400, 400);
+      }
+      for (const item of items) {
+        if (!item.material_name || !item.quantity || !item.unit_price) {
+          return errorResponse(ts('k_11ti01b'), 400, 400);
+        }
+        if (item.quantity <= 0) {
+          return errorResponse(ts('k_1ewtigk'), 400, 400);
+        }
+        if (item.unit_price < 0) {
+          return errorResponse(ts('k_1p0b05s'), 400, 400);
+        }
+      }
+      normalizedItems = items as IncomingOrderItem[];
+    }
+
+    // 明细变化 → 重算订单总额
+    let recalculatedTotal: number | null = null;
+    if (normalizedItems) {
+      recalculatedTotal = normalizedItems.reduce(
+        (sum: number, item: IncomingOrderItem) => sum + item.quantity * item.unit_price,
+        0
+      );
+      updateFields.push('total_amount = ?');
+      updateParams.push(recalculatedTotal);
+    }
+
+    // 币种或明细变化 → 重算汇率与本位币金额快照（口径同 POST）
+    const effectiveCurrency = currency ? String(currency).trim() : '';
+    if (effectiveCurrency || normalizedItems) {
+      const baseCurrency = (await getSystemConfig('finance.base_currency', 'CNY')) || 'CNY';
+      const targetCurrency =
+        effectiveCurrency || String(order.currency || '').trim() || baseCurrency;
+
+      let exchangeRate = 1;
+      if (targetCurrency !== baseCurrency) {
+        try {
+          exchangeRate = await new CurrencyApplicationService(
+            new MysqlCurrencyRepository()
+          ).getLatestRate(targetCurrency, baseCurrency);
+        } catch {
+          return errorResponse(ts('k_uigql6'), 400, 400);
+        }
+      }
+
+      const totalForBase = recalculatedTotal ?? toFiniteNumber(order.total_amount, 0);
+      const recordedTax = Math.max(
+        toFiniteNumber(order.total_with_tax, totalForBase) - totalForBase,
+        0
+      );
+      const baseTotalAmount = convertToBase(totalForBase, exchangeRate);
+      const baseTaxAmount = convertToBase(recordedTax, exchangeRate);
+      updateFields.push(
+        'currency = ?',
+        'exchange_rate = ?',
+        'base_total_amount = ?',
+        'base_tax_amount = ?',
+        'base_grand_total = ?'
+      );
+      updateParams.push(
+        targetCurrency,
+        exchangeRate,
+        baseTotalAmount,
+        baseTaxAmount,
+        convertToBase(baseTotalAmount + baseTaxAmount, 1)
       );
     }
 
-    return successResponse({ id, status, ...updateData }, ts('k_usync9'));
+    // 头表与明细必须一起成功或一起失败：明细整批替换放事务内
+    await transaction(async (conn) => {
+      if (normalizedItems) {
+        await conn.execute(
+          'UPDATE sal_order_item SET deleted = 1 WHERE order_id = ? AND deleted = 0',
+          [id]
+        );
+        for (const item of normalizedItems) {
+          await conn.execute(
+            `INSERT INTO sal_order_item (order_id, material_id, material_code, material_name, quantity, unit, unit_price, total_price, create_time, deleted)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0)`,
+            [
+              id,
+              item.material_id || null,
+              item.material_code || '',
+              item.material_name,
+              item.quantity,
+              item.unit,
+              item.unit_price,
+              item.quantity * item.unit_price,
+            ]
+          );
+        }
+      }
+
+      if (updateFields.length > 0) {
+        await conn.execute(
+          `UPDATE sal_order SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
+          [...updateParams, order.id]
+        );
+      }
+    });
+
+    return successResponse({ id, status }, ts('k_usync9'));
   },
   { errorMessage: '更新订单失败' }
 );

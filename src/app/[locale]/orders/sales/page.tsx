@@ -771,9 +771,9 @@ export default function SalesOrdersPage() {
                       label: t('productDetail'),
                       width: 30,
                       formatter: (_v, row) =>
-                        row.items
-                          ?.map((i: Loose) => `${i.material_name} x${i.quantity}${i.unit}`)
-                          .join('; ') || '-',
+                      ((row.items as unknown as Loose[] | null | undefined)
+                        ?.map((i: Loose) => `${i.material_name} x${i.quantity}${i.unit}`)
+                        .join('; ') || '-'),
                     },
                   ]}
                   data={

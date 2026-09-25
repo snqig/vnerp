@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ReconciliationStatsCards } from './reconciliation-stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -337,40 +338,13 @@ export default function ReconciliationPage() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-4 gap-4 mb-4">
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{t('totalDelivery')}</div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    <MoneyDisplay amount={summary.totalDelivery} currency="CNY" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{t('totalReturn')}</div>
-                  <div className="text-2xl font-bold text-red-600">
-                    <MoneyDisplay amount={summary.totalReturn} currency="CNY" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{t('netAmount')}</div>
-                  <div className="text-2xl font-bold text-green-600">
-                    <MoneyDisplay amount={summary.totalNet} currency="CNY" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{t('balanceAmount')}</div>
-                  <div className="text-2xl font-bold text-orange-600">
-                    <MoneyDisplay amount={summary.totalBalance} currency="CNY" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <ReconciliationStatsCards
+              totalDelivery={summary.totalDelivery}
+              totalReturn={summary.totalReturn}
+              totalNet={summary.totalNet}
+              totalBalance={summary.totalBalance}
+              t={t}
+            />
 
             {loading ? (
               <div className="flex justify-center py-8">
@@ -407,20 +381,20 @@ export default function ReconciliationPage() {
                       <TableCell className="font-medium">{r.reconciliation_no}</TableCell>
                       <TableCell>{r.customer_name || '-'}</TableCell>
                       {r.has_mismatch && (
-                        <TableCell colSpan={1} className="text-red-600 text-xs">
+                        <TableCell colSpan={1} className="text-red-600 dark:text-red-400 text-xs">
                           {t('currencyMismatch')}
                         </TableCell>
                       )}
                       <TableCell className="text-xs">
                         {r.period_start} ~ {r.period_end}
                       </TableCell>
-                      <TableCell className="text-blue-600">
+                      <TableCell className="text-blue-600 dark:text-blue-400">
                         <MoneyDisplay
                           amount={parseFloat(String(r.delivery_amount || 0))}
                           currency={r.currency || 'CNY'}
                         />
                       </TableCell>
-                      <TableCell className="text-red-600">
+                      <TableCell className="text-red-600 dark:text-red-400">
                         <MoneyDisplay
                           amount={parseFloat(String(r.return_amount || 0))}
                           currency={r.currency || 'CNY'}
@@ -438,7 +412,7 @@ export default function ReconciliationPage() {
                           currency={r.currency || 'CNY'}
                         />
                       </TableCell>
-                      <TableCell className="text-orange-600">
+                      <TableCell className="text-orange-600 dark:text-orange-400">
                         <MoneyDisplay
                           amount={parseFloat(String(r.balance_amount || 0))}
                           currency={r.currency || 'CNY'}
@@ -448,7 +422,7 @@ export default function ReconciliationPage() {
                         {r.currency || <span className="text-muted-foreground">-</span>}
                       </TableCell>
                       <TableCell>
-                        <Badge className={STATUS_MAP[r.status]?.color || 'bg-gray-100'}>
+                        <Badge className={STATUS_MAP[r.status]?.color || 'bg-gray-100 dark:bg-gray-700'}>
                           {STATUS_MAP[r.status]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
@@ -493,7 +467,7 @@ export default function ReconciliationPage() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>
-                {tc('customer')} <span className="text-red-500">*</span>
+                {tc('customer')} <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Select
                 value={String(form.customer_id || '')}
@@ -521,7 +495,7 @@ export default function ReconciliationPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
-                  {t('periodStart')} <span className="text-red-500">*</span>
+                  {t('periodStart')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   type="date"
@@ -531,7 +505,7 @@ export default function ReconciliationPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {t('periodEnd')} <span className="text-red-500">*</span>
+                  {t('periodEnd')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   type="date"
@@ -548,7 +522,7 @@ export default function ReconciliationPage() {
                 placeholder={tc('remark')}
               />
             </div>
-            <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800">
+            <div className="bg-blue-500/10 p-3 rounded-lg text-sm text-blue-800 dark:text-blue-300">
               {t('autoGenerateHint')}
             </div>
           </div>
@@ -584,15 +558,15 @@ export default function ReconciliationPage() {
                 </div>
               </div>
               {detailData.has_mismatch && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
-                  <span className="text-sm text-red-700">{t('currencyMismatch')}</span>
+                <div className="bg-red-500/10 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center gap-2">
+                  <span className="text-sm text-red-700 dark:text-red-400">{t('currencyMismatch')}</span>
                 </div>
               )}
               <div className="grid grid-cols-5 gap-3 text-center">
                 <Card>
                   <CardContent className="pt-3 pb-3">
                     <div className="text-xs text-gray-500">{t('deliveryAmount')}</div>
-                    <div className="text-lg font-bold text-blue-600">
+                    <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
                       <MoneyDisplay
                         amount={parseFloat(String(detailData.delivery_amount || 0))}
                         currency={detailData.currency || 'CNY'}
@@ -603,7 +577,7 @@ export default function ReconciliationPage() {
                 <Card>
                   <CardContent className="pt-3 pb-3">
                     <div className="text-xs text-gray-500">{t('returnAmount')}</div>
-                    <div className="text-lg font-bold text-red-600">
+                    <div className="text-lg font-bold text-red-600 dark:text-red-400">
                       <MoneyDisplay
                         amount={parseFloat(String(detailData.return_amount || 0))}
                         currency={detailData.currency || 'CNY'}
@@ -625,7 +599,7 @@ export default function ReconciliationPage() {
                 <Card>
                   <CardContent className="pt-3 pb-3">
                     <div className="text-xs text-gray-500">{t('netAmount')}</div>
-                    <div className="text-lg font-bold text-green-600">
+                    <div className="text-lg font-bold text-green-600 dark:text-green-400">
                       <MoneyDisplay
                         amount={parseFloat(String(detailData.net_amount || 0))}
                         currency={detailData.currency || 'CNY'}
@@ -636,7 +610,7 @@ export default function ReconciliationPage() {
                 <Card>
                   <CardContent className="pt-3 pb-3">
                     <div className="text-xs text-gray-500">{t('balanceAmount')}</div>
-                    <div className="text-lg font-bold text-orange-600">
+                    <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
                       <MoneyDisplay
                         amount={parseFloat(String(detailData.balance_amount || 0))}
                         currency={detailData.currency || 'CNY'}
@@ -670,7 +644,7 @@ export default function ReconciliationPage() {
                           <TableCell>{item.source_no}</TableCell>
                           <TableCell>{item.source_date}</TableCell>
                           <TableCell
-                            className={item.source_type === 1 ? 'text-blue-600' : 'text-red-600'}
+                            className={item.source_type === 1 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}
                           >
                             <MoneyDisplay
                               amount={parseFloat(String(item.amount || 0))}

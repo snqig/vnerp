@@ -11,7 +11,7 @@ import {
   SalesOrderApprovedEvent,
   SalesOrderSubmittedEvent,
 } from '@/domain/sales/events/SalesOrderEvents';
-import { secureLog } from '@/lib/logger';
+import { secureLog, logger } from '@/lib/logger';
 import { checkMaterialsCategorized } from '@/lib/category-validation';
 import {
   SalesOrderStatusCode,
@@ -22,13 +22,14 @@ import type { DbRow } from '@/types/db';
 import type { ResultSetHeader } from 'mysql2';
 import { generateDocNo } from '@/lib/global-config';
 import { getDefaultTaxRate } from '@/lib/sales-config';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _user: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
   const keyword = searchParams.get('keyword');
-  const status = searchParams.get('status');
+  const status = numericFilter(searchParams.get('status'));
 
   let whereClause = 'WHERE so.deleted = 0';
   const params: SqlValue[] = [];
@@ -40,17 +41,28 @@ export const GET = withPermission(async (request: NextRequest, _user: UserInfo) 
 
   if (status) {
     whereClause += ' AND so.status = ?';
-    params.push(parseInt(status));
+    params.push(status);
   }
 
+  const t0 = Date.now();
   const totalRows = await query(
     `SELECT COUNT(*) as total FROM sal_order so LEFT JOIN crm_customer c ON so.customer_id = c.id ${whereClause}`,
     params
   );
+  logger.db({ module: 'SalesOrder', action: 'GET list' }, 'COUNT', 'sal_order', {
+    elapsedMs: Date.now() - t0,
+    keyword: keyword ?? undefined,
+    status: status ?? undefined,
+  });
   const total = totalRows[0]?.total || 0;
 
+  const t1 = Date.now();
   const rows = await query(
-    `SELECT so.*, c.customer_name
+    `SELECT so.id, so.order_no, so.order_date, so.customer_id, so.contact_name, so.contact_phone,
+            so.delivery_address, so.delivery_date, so.total_amount, so.tax_amount, so.total_with_tax,
+            so.discount_amount, so.currency, so.exchange_rate, so.base_total_amount,
+            so.base_tax_amount, so.base_grand_total, so.payment_terms, so.contract_no,
+            so.status, so.remark, so.create_time, c.customer_name
      FROM sal_order so
      LEFT JOIN crm_customer c ON so.customer_id = c.id
      ${whereClause}
@@ -58,7 +70,12 @@ export const GET = withPermission(async (request: NextRequest, _user: UserInfo) 
      LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
-
+  logger.db({ module: 'SalesOrder', action: 'GET list' }, 'SELECT', 'sal_order', {
+    elapsedMs: Date.now() - t1,
+    page,
+    pageSize,
+    rowCount: rows.length,
+  });
   const list = (rows as DbRow[]).map((order: DbRow) => ({
       id: order.id,
       order_no: order.order_no,
@@ -69,15 +86,15 @@ export const GET = withPermission(async (request: NextRequest, _user: UserInfo) 
       contact_phone: order.contact_phone,
       delivery_address: order.delivery_address,
       delivery_date: order.delivery_date,
-      total_amount: parseFloat(order.total_amount || '0'),
-      total_with_tax: parseFloat(order.total_with_tax || '0'),
-      tax_amount: parseFloat(order.tax_amount || '0'),
+      total_amount: parseFloat(String(order.total_amount ?? 0)),
+      total_with_tax: parseFloat(String(order.total_with_tax ?? 0)),
+      tax_amount: parseFloat(String(order.tax_amount ?? 0)),
       currency: order.currency || 'CNY',
-      exchange_rate: parseFloat(order.exchange_rate || '1'),
-      base_currency: order.base_currency || 'CNY',
-      base_total_amount: parseFloat(order.base_total_amount || '0'),
-      base_tax_amount: parseFloat(order.base_tax_amount || '0'),
-      base_grand_total: parseFloat(order.base_grand_total || '0'),
+      exchange_rate: parseFloat(String(order.exchange_rate ?? 1)),
+      base_currency: order.currency || 'CNY',
+      base_total_amount: parseFloat(String(order.base_total_amount ?? 0)),
+      base_tax_amount: parseFloat(String(order.base_tax_amount ?? 0)),
+      base_grand_total: parseFloat(String(order.base_grand_total ?? 0)),
       status: order.status,
       remark: order.remark,
       create_time: order.create_time,
@@ -87,17 +104,25 @@ export const GET = withPermission(async (request: NextRequest, _user: UserInfo) 
   const orderIds = list.map((o) => o.id);
   const itemsByOrder: Record<number, DbRow[]> = {};
   if (orderIds.length > 0) {
+    const t2 = Date.now();
     const items = await query<DbRow>(
-      `SELECT * FROM sal_order_item WHERE order_id IN (?) AND deleted = 0 ORDER BY id`,
+      `SELECT id, order_id, material_id, material_code, material_name, quantity, unit, unit_price, total_price, remark, deleted
+       FROM sal_order_item WHERE order_id IN (?) AND deleted = 0 ORDER BY id`,
       [orderIds]
     );
+    logger.db({ module: 'SalesOrder', action: 'GET list' }, 'SELECT', 'sal_order_item', {
+      elapsedMs: Date.now() - t2,
+      orderCount: orderIds.length,
+      itemRowCount: items.length,
+    });
     items.forEach((it) => {
       (itemsByOrder[Number(it.order_id)] ||= []).push(it);
     });
   }
-  const listWithItems = list.map((o) => ({ ...o, items: itemsByOrder[o.id] || [] }));
+  const listWithItems = list.map((o) => ({ ...o, items: itemsByOrder[Number(o.id)] || [] }));
 
   // 统计摘要：按状态分组 count + amount
+  const t3 = Date.now();
   const summaryRows = await query<DbRow>(
     `SELECT so.status, COUNT(*) as cnt, COALESCE(SUM(so.total_amount), 0) as amt
      FROM sal_order so
@@ -107,17 +132,22 @@ export const GET = withPermission(async (request: NextRequest, _user: UserInfo) 
        ${status ? "AND so.status = ?" : ""}
      GROUP BY so.status`,
     keyword && status
-      ? [`%${keyword}%`, `%${keyword}%`, parseInt(status)]
+      ? [`%${keyword}%`, `%${keyword}%`, status]
       : keyword
       ? [`%${keyword}%`, `%${keyword}%`]
       : status
-      ? [parseInt(status)]
+      ? [status]
       : []
   );
+  logger.db({ module: 'SalesOrder', action: 'GET list' }, 'SELECT', 'sal_order', {
+    elapsedMs: Date.now() - t3,
+    groupBy: 'status',
+    rowCount: summaryRows.length,
+  });
   const summary = (summaryRows as DbRow[]).map((r) => ({
     status: Number(r.status),
     count: Number(r.cnt),
-    amount: parseFloat(r.amt || '0'),
+    amount: parseFloat(String(r.amt ?? 0)),
   }));
 
   return successResponse({ list: listWithItems, total, page, pageSize, summary });
@@ -144,7 +174,7 @@ export const POST = withPermission(
     }
 
     // 系统设置 category.require_on_business：销售订单要求物料已归类
-    const materialIds = (items as DbRow[]).map((item: DbRow) => item.material_id).filter(Boolean);
+    const materialIds = (items as DbRow[]).map((item: DbRow) => Number(item.material_id)).filter((id): id is number => Number.isInteger(id) && id > 0);
     secureLog('info', ts('k_cfmbx8'), {
       itemCount: items.length,
       materialIds,
