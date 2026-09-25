@@ -96,8 +96,11 @@ export class UnqualifiedApplicationService {
 
     const record = UnqualifiedProduct.create(props);
     const result = await this.repo.save(record);
+    // 落库后回填主键（顺带压入建单事件）
+    record.markPersisted(result.id);
 
-    record.clearDomainEvents();
+    // 建单事件必须先落 outbox 再清空，否则下游订阅者永远收不到「新不合格品登记」
+    await this.persistAndPublishEvents(result.id, record);
 
     return result;
   }

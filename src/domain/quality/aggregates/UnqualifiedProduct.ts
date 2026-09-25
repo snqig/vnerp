@@ -1,4 +1,5 @@
 import { t } from '@/lib/server-translate';
+import { toLocalDateStr } from '@/lib/date-utils';
 
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { UnqualifiedStatus, UnqualifiedStatusValue } from '../value-objects/UnqualifiedStatus';
@@ -48,7 +49,7 @@ export class UnqualifiedProduct {
   private _remark: string | undefined;
 
   private constructor(
-    public readonly id: number | undefined,
+    public id: number | undefined,
     public readonly unqualifiedNo: string,
     public readonly handleNo: string,
     public readonly inspectionId: number,
@@ -122,25 +123,37 @@ export class UnqualifiedProduct {
       props.updateTime
     );
 
-    if (product.id) {
-      product._domainEvents.push(
-        new UnqualifiedCreatedEvent({
-          recordId: product.id,
-          unqualifiedNo: product.unqualifiedNo,
-          handleNo: product.handleNo,
-          inspectionId: product.inspectionId,
-          sourceType: product.sourceType,
-          sourceNo: product.sourceNo,
-          materialId: product.materialId,
-          materialName: product.materialName,
-          quantity: product.quantity,
-          defectType: product.defectType,
-          handleType: handleType?.value,
-        })
-      );
-    }
-
+    // 建单事件不在此处压入：新建时主键尚未产生（要等 INSERT 拿到 insertId），
+    // 一律由 markPersisted() 在落库后补压，避免「事件永不发布」。
     return product;
+  }
+
+  /**
+   * 落库后回填主键并压入建单事件。
+   *
+   * 历史缺陷：create() 里的建单事件被 `if (product.id)` 包着，而新建单此时
+   * 还没有 id，导致 UnqualifiedCreatedEvent 永远不会进入 outbox，下游订阅者
+   * 收不到「新不合格品已登记」通知。
+   */
+  markPersisted(persistedId: number): void {
+    if (this.id !== undefined) return; // 已持久化（reconstitute 场景）不重复压入
+
+    this.id = persistedId;
+    this._domainEvents.push(
+      new UnqualifiedCreatedEvent({
+        recordId: persistedId,
+        unqualifiedNo: this.unqualifiedNo,
+        handleNo: this.handleNo,
+        inspectionId: this.inspectionId,
+        sourceType: this.sourceType,
+        sourceNo: this.sourceNo,
+        materialId: this.materialId,
+        materialName: this.materialName,
+        quantity: this.quantity,
+        defectType: this.defectType,
+        handleType: this._handleType?.value,
+      })
+    );
   }
 
   static reconstitute(props: UnqualifiedProductProps): UnqualifiedProduct {
@@ -266,7 +279,8 @@ export class UnqualifiedProduct {
     this._handler = handler.trim();
     this._handleResult = handleResult;
     this._costAmount = costAmount;
-    this._handleDate = new Date().toISOString().slice(0, 10);
+    // 本地日历日：toISOString() 取的是 UTC 日期，UTC+8 早 8 点前会退一天
+    this._handleDate = toLocalDateStr();
     this._status = this._status.transitionTo('completed');
 
     this._domainEvents.push(
