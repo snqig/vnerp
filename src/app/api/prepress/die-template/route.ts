@@ -13,6 +13,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { FieldMapper } from '@/domain/prepress/value-objects/FieldMapping';
 import { ASSET_TYPE_LABEL, DIE_STATUS_LABEL } from '@/lib/status-labels';
 import type { DbRow } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 const ASSET_TYPE_MAP = ASSET_TYPE_LABEL;
 const DIE_STATUS_MAP = DIE_STATUS_LABEL;
@@ -35,7 +36,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const template_type = searchParams.get('template_type');
   const asset_type = searchParams.get('asset_type');
   const die_status = searchParams.get('die_status');
-  const status = searchParams.get('status');
+  const status = numericFilter(searchParams.get('status'));
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
@@ -61,7 +62,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
   if (status) {
     sql += ' AND status = ?';
-    values.push(parseInt(status));
+    values.push(String(status));
   }
 
   sql += ' ORDER BY id ASC LIMIT ? OFFSET ?';
@@ -155,8 +156,8 @@ export const POST = withPermission(
       max_impressions, cumulative_impressions, warning_threshold,
       maintenance_interval, maintenance_count, last_maintenance_impressions,
       status, die_status, storage_location, purchase_date, supplier_id,
-      unit_price, qr_code, remark
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      unit_price, qr_code, remark, category, tags
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         body.template_code,
         body.template_name,
@@ -184,6 +185,8 @@ export const POST = withPermission(
         body.unit_price || 0,
         body.qr_code || null,
         body.remark || null,
+        body.category || null,
+        body.tags ? JSON.stringify(body.tags) : null,
       ]
     );
 

@@ -3,6 +3,7 @@
 import { MainLayout } from '@/components/layout';
 import { useTranslations, useLocale } from 'next-intl';
 import { Card, CardContent } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
+  ClipboardList,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -102,8 +104,8 @@ const STEP_LABEL_KEY: Record<string, string> = {
   failed: 'stepFailed',
 };
 const PRIORITY_CLASS: Record<string, string> = {
-  urgent: 'text-red-600 font-bold',
-  high: 'text-orange-600 font-semibold',
+  urgent: 'text-red-600 dark:text-red-400 font-bold',
+  high: 'text-orange-600 dark:text-orange-400 font-semibold',
   normal: '',
 };
 
@@ -154,6 +156,13 @@ export default function WorkOrdersPage() {
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    producing: 0,
+    completed: 0,
+    delayed: 0,
+    todayOutput: 0,
+  });
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [qrOrder, setQrOrder] = useState<WorkOrder | null>(null);
@@ -182,6 +191,28 @@ export default function WorkOrdersPage() {
     (async () => {
       try {
         setLoading(true);
+        
+        // 获取统计数据
+        try {
+          const statsData = await apiJson<{
+            pending: number;
+            producing: number;
+            completed: number;
+            delayed: number;
+            todayOutput: number;
+          }>('/api/production/orders/stats');
+          setStats(statsData);
+        } catch (e) {
+          console.error('Failed to fetch stats:', e);
+          setStats({
+            pending: 0,
+            producing: 0,
+            completed: 0,
+            delayed: 0,
+            todayOutput: 0,
+          });
+        }
+        
         const data = await apiJson<{ list: Record<string, unknown>[] }>(
           '/api/production/work-orders?pageSize=100'
         );
@@ -321,14 +352,14 @@ export default function WorkOrdersPage() {
         {steps.map((step) => {
           const cls =
             step.status === 'completed'
-              ? 'bg-green-50 text-green-700'
+              ? 'bg-green-500/10 text-green-700 dark:text-green-400'
               : step.status === 'in_progress'
-                ? 'bg-orange-50 text-orange-700'
+                ? 'bg-orange-500/10 text-orange-700 dark:text-orange-400'
                 : step.status === 'failed'
-                  ? 'bg-red-50 text-red-700'
+                  ? 'bg-red-500/10 text-red-700 dark:text-red-400'
                   : step.status === 'skipped'
-                    ? 'bg-gray-50 text-gray-400'
-                    : 'bg-gray-50 text-gray-500';
+                    ? 'bg-muted text-gray-400'
+                    : 'bg-muted text-gray-500';
           const icon =
             step.status === 'completed' ? (
               <CheckCircle className="h-3 w-3" />
@@ -373,6 +404,25 @@ export default function WorkOrdersPage() {
   return (
     <MainLayout title={t('workOrders')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'pending', label: '待开工', icon: Clock, ...StatsTheme.orange },
+            { key: 'producing', label: '生产中', icon: Factory, ...StatsTheme.blue },
+            { key: 'completed', label: '已完成', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'delayed', label: '已延期', icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'todayOutput', label: '今日产量', icon: ClipboardList, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'producing', count: stats.producing },
+            { key: 'completed', count: stats.completed },
+            { key: 'delayed', count: stats.delayed },
+            { key: 'todayOutput', count: stats.todayOutput },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -466,7 +516,7 @@ export default function WorkOrdersPage() {
 
         {loading && <div className="text-sm text-muted-foreground p-4">{t('loading')}</div>}
         {error && (
-          <div className="text-sm text-red-600 p-4">
+          <div className="text-sm text-red-600 dark:text-red-400 p-4">
             {t('loadFailed')}: {error}
           </div>
         )}
@@ -492,7 +542,7 @@ export default function WorkOrdersPage() {
                           <h3 className="font-bold text-lg">{order.id}</h3>
                           {getStatusBadge(order.status)}
                           {order.efficiency < 80 && order.status === 'producing' && (
-                            <Badge className="bg-red-100 text-red-700">
+                            <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
                               <AlertTriangle className="h-3 w-3 mr-1" />
                               {t('efficiencyWarning')}
                             </Badge>
@@ -578,8 +628,8 @@ export default function WorkOrdersPage() {
                           <span
                             className={
                               order.efficiency < 80
-                                ? 'text-red-600 font-bold'
-                                : 'text-green-600 font-medium'
+                                ? 'text-red-600 dark:text-red-400 font-bold'
+                                : 'text-green-600 dark:text-green-400 font-medium'
                             }
                           >
                             {order.efficiency}%

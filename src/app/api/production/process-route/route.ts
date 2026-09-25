@@ -40,7 +40,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       'SELECT * FROM prd_process_route_step WHERE route_id = ? ORDER BY step_seq ASC',
       [route.id]
     );
-    route.steps = steps;
+    (route as any).steps = steps as DbRow[];
   }
 
   return successResponse({ list, total: countResult?.total || 0, page, pageSize });

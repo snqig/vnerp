@@ -37,6 +37,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import {
   Scan,
   QrCode,
@@ -50,6 +51,7 @@ import {
   Plus,
   Search,
   RefreshCw,
+  CalendarCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -368,6 +370,28 @@ export default function ProductionReportPage() {
   return (
     <MainLayout title={t('workReport')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: t('totalWorkOrders'), icon: CalendarCheck, ...StatsTheme.blue },
+            { key: 'completed', label: t('completed'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'defective', label: t('defectiveQty'), icon: AlertTriangle, ...StatsTheme.orange },
+            { key: 'scrapRate', label: t('scrapRate'), icon: RotateCcw, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'total', count: summaryStats.todayCount || list.length },
+            { key: 'completed', count: summaryStats.total_completed || 0 },
+            { key: 'defective', count: summaryStats.total_defective || 0 },
+            {
+              key: 'scrapRate',
+              count: (() => {
+                const total = (summaryStats.total_completed || 0) + (summaryStats.total_defective || 0) + (summaryStats.total_scrap || 0);
+                return total > 0 ? Math.round(((summaryStats.total_scrap || 0) / total) * 100) : 0;
+              })(),
+            },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <Card className="border-border bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
@@ -464,41 +488,6 @@ export default function ProductionReportPage() {
             </div>
           </CardContent>
         </Card>
-
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-sm text-muted-foreground">{t('totalCompleted')}</div>
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {Number(summaryStats.total_completed || 0).toLocaleString(locale)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-sm text-muted-foreground">{t('qualifiedQty')}</div>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {Number(summaryStats.total_qualified || 0).toLocaleString(locale)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-sm text-muted-foreground">{t('defectiveQty')}</div>
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {Number(summaryStats.total_defective || 0).toLocaleString(locale)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-sm text-muted-foreground">{t('scrapQty')}</div>
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {Number(summaryStats.total_scrap || 0).toLocaleString(locale)}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -803,7 +792,7 @@ export default function ProductionReportPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>
-                    {t('workOrderLabel')} <span className="text-red-500">*</span>
+                    {t('workOrderLabel')} <span className="text-red-500 dark:text-red-400">*</span>
                   </Label>
                   <Select
                     value={String(form.work_order_id || '')}
@@ -831,7 +820,7 @@ export default function ProductionReportPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>
-                    {t('processName')} <span className="text-red-500">*</span>
+                    {t('processName')} <span className="text-red-500 dark:text-red-400">*</span>
                   </Label>
                   <Select
                     value={form.process_name || ''}
@@ -926,7 +915,7 @@ export default function ProductionReportPage() {
                         <span>
                           {t('usageRate')}: {usagePct}%
                         </span>
-                        <div className="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="w-20 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                           <div
                             className={`h-full ${usagePct >= 80 ? 'bg-red-500' : usagePct >= 60 ? 'bg-yellow-500' : 'bg-green-500'}`}
                             style={{ width: `${usagePct}%` }}

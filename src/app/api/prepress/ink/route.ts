@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -12,8 +13,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const inkCode = searchParams.get('inkCode') || '';
   const inkName = searchParams.get('inkName') || '';
-  const inkType = searchParams.get('inkType') || '';
-  const status = searchParams.get('status') || '';
+  const inkType = numericFilter(searchParams.get('inkType'));
+  const status = numericFilter(searchParams.get('status'));
 
   let where = 'WHERE deleted = 0';
   const params: SqlValue[] = [];
@@ -29,7 +30,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     where += ' AND ink_type = ?';
     params.push(Number(inkType));
   }
-  if (status !== '') {
+  if (status !== undefined) {
     where += ' AND status = ?';
     params.push(Number(status));
   }

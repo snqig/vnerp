@@ -6,6 +6,7 @@ import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Edit, Trash2, FileText, Download } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, FileText, Download, CheckCircle, Clock, AlertTriangle, PlusCircle, History as HistoryIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 
@@ -91,6 +92,13 @@ export default function SOPManagementPage() {
   const [page, setPage] = useState(1);
   const [searchProduct, setSearchProduct] = useState('');
   const [searchType, setSearchType] = useState('');
+  const [stats, setStats] = useState({
+    total: 0,
+    approved: 0,
+    pending: 0,
+    monthlyNew: 0,
+    withVersion: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<SOPRecord>>({});
   const [uploading, setUploading] = useState(false);
@@ -150,8 +158,21 @@ export default function SOPManagementPage() {
     } catch {}
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/engineering/sop/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
 
   useEffect(() => {
@@ -216,6 +237,25 @@ export default function SOPManagementPage() {
   return (
     <MainLayout title={t('sopManagement')}>
       <div className="p-6 space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: 'SOP总数', icon: FileText, ...StatsTheme.blue },
+            { key: 'approved', label: '已审核', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'pending', label: '待审核', icon: Clock, ...StatsTheme.orange },
+            { key: 'monthlyNew', label: '本月新增', icon: PlusCircle, ...StatsTheme.cyan },
+            { key: 'withVersion', label: '有版本SOP', icon: HistoryIcon, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: stats.total },
+            { key: 'approved', count: stats.approved },
+            { key: 'pending', count: stats.pending },
+            { key: 'monthlyNew', count: stats.monthlyNew },
+            { key: 'withVersion', count: stats.withVersion },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
@@ -497,7 +537,7 @@ export default function SOPManagementPage() {
                     {t('uploaded')}: {editItem.file_url}
                   </p>
                 )}
-                {uploading && <p className="text-xs text-blue-500 mt-1">{t('uploading')}...</p>}
+                {uploading && <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">{t('uploading')}...</p>}
               </div>
               <div className="col-span-2">
                 <Label>{t('sopContent')}</Label>

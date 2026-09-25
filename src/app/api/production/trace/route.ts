@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 
 ;
 import { NextRequest } from 'next/server';
@@ -110,9 +110,9 @@ export const POST = withPermission(
         return { id: existing[0].id, sn, updated: true };
       }
 
-      const [insertResult] = await conn.execute(
+      const insertResult = (await conn.execute<DbResultSetHeader>(
         `INSERT INTO prd_product_trace_link (sn, parent_sn, material_batch, workorder_id, workorder_no, material_id, material_code, material_name, supplier_id, supplier_name, inbound_date, inbound_no, inspection_id, inspection_result, trace_level, trace_type)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           sn,
           parent_sn || null,
@@ -131,7 +131,7 @@ export const POST = withPermission(
           trace_level || 1,
           trace_type || 'product',
         ]
-      );
+      )) as unknown as DbResultSetHeader;
 
       return { id: insertResult.insertId, sn, updated: false };
     });
@@ -188,5 +188,5 @@ async function buildTraceChain(startSn: string): Promise<unknown[]> {
   }
 
   await traverse(startSn, 0);
-  return chain.sort((a, b) => a.level - b.level);
+  return chain.sort((a, b) => Number(a.level ?? 0) - Number(b.level ?? 0));
 }

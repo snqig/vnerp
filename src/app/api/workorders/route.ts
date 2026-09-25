@@ -144,7 +144,7 @@ export const POST = withPermission(
         [order_no, WORK_ORDER_STATUS.CANCELLED]
       );
 
-      if ((existingWO as DbRow[])[0].cnt > 0) {
+      if ((existingWO as DbRow[])[0] && Number((existingWO as DbRow[])[0].cnt ?? 0) > 0) {
         // 业务规则冲突，须返回 400 + 具体原因：
         // 若抛普通 Error，全局处理器会将其折叠为 500「创建工单失败」，客户端无法区分
         // 「参数错误」「订单状态非法」「重复建单」，也无法据此做幂等/提示处理。
@@ -154,7 +154,7 @@ export const POST = withPermission(
       const workOrderNo = await generateDocumentNo('work_order');
 
       const totalQuantity = items.reduce(
-        (sum: number, item: DbRow) => sum + (item.quantity || 0),
+        (sum: number, item: DbRow) => sum + Number(item.quantity || 0),
         0
       );
       const product_name = items.length === 1 ? items[0].material_name : `${items.length}种产品`;
@@ -178,7 +178,7 @@ export const POST = withPermission(
         ]
       );
 
-      const workOrderId = (orderResult as DbRow).insertId;
+      const workOrderId = (orderResult as unknown as import('@/types/db').DbResultSetHeader).insertId;
 
       let lineNo = 1;
       for (const item of items) {
@@ -208,7 +208,7 @@ export const POST = withPermission(
 
         for (const bomLine of bomLines as DbRow[]) {
           const requiredQty =
-            bomLine.quantity * totalQuantity * (1 + (bomLine.scrap_rate || 0) / 100);
+            Number(bomLine.quantity || 0) * totalQuantity * (1 + (Number(bomLine.scrap_rate) || 0) / 100);
           await connection.execute(
             `INSERT INTO prod_work_order_material_req 
            (work_order_id, bom_line_id, material_id, material_name, required_qty, unit, create_time)

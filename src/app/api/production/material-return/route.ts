@@ -9,13 +9,14 @@ import { getMrPrefix, generateDocNo } from '@/lib/global-config';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { MaterialReturnApprovedEvent } from '@/domain/production/events/PickOrderEvents';
 import type { DbRow } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const returnNo = searchParams.get('returnNo') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
 
   let where = 'WHERE r.deleted = 0';
   const params: SqlValue[] = [];
@@ -129,14 +130,14 @@ export const PUT = withPermission(
             warehouseId: order.warehouse_id,
             operatorName: null,
             items: itemRows.map((item: DbRow) => ({
-              materialId: item.material_id,
+              materialId: Number(item.material_id),
               materialCode: null,
-              materialName: item.material_name || null,
-              quantity: Number(item.return_qty),
+              materialName: String(item.material_name) || null,
+              quantity: Number(item.return_qty) || 0,
               unit: null,
-              batchNo: item.batch_no || null,
-              batchId: item.batch_id || null,
-              originalInboundDate: item.original_inbound_date || null,
+              batchNo: String(item.batch_no) || null,
+              batchId: Number(item.batch_id) || null,
+              originalInboundDate: String(item.original_inbound_date) || null,
             })),
           }),
         ]);

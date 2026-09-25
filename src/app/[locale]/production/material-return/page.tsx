@@ -112,7 +112,7 @@ export default function MaterialReturnPage() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch('/api/production/material-return', {
+      const res = await authFetch('/api/production/material-return', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editItem),
@@ -269,7 +269,7 @@ export default function MaterialReturnPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />

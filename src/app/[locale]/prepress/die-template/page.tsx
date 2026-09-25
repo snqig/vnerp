@@ -70,42 +70,42 @@ export default function DieTemplatePage() {
   const td = useTranslations('DieTemplate');
 
   const TYPE_MAP: Record<number, { label: string; color: string }> = {
-    1: { label: t('dieMold'), color: 'bg-blue-100 text-blue-800' },
-    2: { label: t('screenPlate'), color: 'bg-purple-100 text-purple-800' },
+    1: { label: t('dieMold'), color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
+    2: { label: t('screenPlate'), color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300' },
   };
 
   const ASSET_TYPE_MAP: Record<string, { label: string; color: string }> = {
-    die: { label: t('dieMold'), color: 'bg-blue-100 text-blue-800' },
-    flexo_plate: { label: t('flexoPlate'), color: 'bg-cyan-100 text-cyan-800' },
-    screen_mesh: { label: t('screenPlate'), color: 'bg-purple-100 text-purple-800' },
+    die: { label: t('dieMold'), color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
+    flexo_plate: { label: t('flexoPlate'), color: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-300' },
+    screen_mesh: { label: t('screenPlate'), color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300' },
   };
 
   const DIE_STATUS_MAP: Record<string, { label: string; color: string }> = {
-    available: { label: t('available'), color: 'bg-green-100 text-green-800' },
-    in_use: { label: t('inUse'), color: 'bg-blue-100 text-blue-800' },
-    maintenance_needed: { label: t('maintenanceNeeded'), color: 'bg-yellow-100 text-yellow-800' },
-    re_rule_needed: { label: t('reRuleNeeded'), color: 'bg-orange-100 text-orange-800' },
+    available: { label: t('available'), color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
+    in_use: { label: t('inUse'), color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
+    maintenance_needed: { label: t('maintenanceNeeded'), color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' },
+    re_rule_needed: { label: t('reRuleNeeded'), color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300' },
     scrap: { label: t('scrapped'), color: 'bg-secondary text-secondary-foreground' },
   };
 
   const STATUS_MAP: Record<number, { label: string; color: string }> = {
-    1: { label: t('normal'), color: 'bg-green-100 text-green-800' },
-    2: { label: t('warning'), color: 'bg-yellow-100 text-yellow-800' },
-    3: { label: t('locked'), color: 'bg-red-100 text-red-800' },
+    1: { label: t('normal'), color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
+    2: { label: t('warning'), color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' },
+    3: { label: t('locked'), color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' },
     4: { label: t('scrap'), color: 'bg-secondary text-secondary-foreground' },
   };
 
   const MAINTENANCE_TYPE_MAP: Record<string, { label: string; color: string }> = {
-    routine: { label: t('routineMaintenance'), color: 'bg-green-100 text-green-800' },
-    grinding: { label: t('grinding'), color: 'bg-blue-100 text-blue-800' },
-    re_rule: { label: t('reRule'), color: 'bg-orange-100 text-orange-800' },
-    replace: { label: t('replace'), color: 'bg-red-100 text-red-800' },
+    routine: { label: t('routineMaintenance'), color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
+    grinding: { label: t('grinding'), color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
+    re_rule: { label: t('reRule'), color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300' },
+    replace: { label: t('replace'), color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' },
   };
 
   const MAINTENANCE_STATUS_MAP: Record<number, { label: string; color: string }> = {
-    1: { label: t('pendingMaintenance'), color: 'bg-yellow-100 text-yellow-800' },
-    2: { label: t('maintaining'), color: 'bg-blue-100 text-blue-800' },
-    3: { label: t('completed'), color: 'bg-green-100 text-green-800' },
+    1: { label: t('pendingMaintenance'), color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' },
+    2: { label: t('maintaining'), color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
+    3: { label: t('completed'), color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
   };
 
   const { toast } = useToast();
@@ -359,7 +359,7 @@ export default function DieTemplatePage() {
       return;
     }
     try {
-      const res = await fetch('/api/prepress/die-usage', {
+      const res = await authFetch('/api/prepress/die-usage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -688,12 +688,12 @@ export default function DieTemplatePage() {
             </CardContent>
           </Card>
           <Card
-            className="border-green-200 cursor-pointer hover:shadow-md transition-shadow"
+            className="border-green-200 dark:border-green-800 cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => handleStatusCardClick('available')}
           >
             <CardContent className="pt-4">
-              <div className="text-sm text-green-600">{td('available')}</div>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-sm text-green-600 dark:text-green-400">{td('available')}</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {dashboardStats.available_count || 0}
               </div>
             </CardContent>
@@ -703,25 +703,25 @@ export default function DieTemplatePage() {
             onClick={() => handleStatusCardClick('maintenance_needed')}
           >
             <CardContent className="pt-4">
-              <div className="text-sm text-yellow-600">{td('maintenanceNeeded')}</div>
-              <div className="text-2xl font-bold text-yellow-600">
+              <div className="text-sm text-yellow-600 dark:text-yellow-400">{td('maintenanceNeeded')}</div>
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 {dashboardStats.warning_count || 0}
               </div>
             </CardContent>
           </Card>
           <Card
-            className="border-orange-200 cursor-pointer hover:shadow-md transition-shadow"
+            className="border-orange-200 dark:border-orange-800 cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => handleStatusCardClick('re_rule_needed')}
           >
             <CardContent className="pt-4">
-              <div className="text-sm text-orange-600">{td('reRuleNeeded')}</div>
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-sm text-orange-600 dark:text-orange-400">{td('reRuleNeeded')}</div>
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                 {dashboardStats.locked_count || 0}
               </div>
             </CardContent>
           </Card>
           <Card
-            className="border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
+            className="border-gray-200 dark:border-gray-600 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => handleStatusCardClick('scrap')}
           >
             <CardContent className="pt-4">
@@ -732,12 +732,12 @@ export default function DieTemplatePage() {
             </CardContent>
           </Card>
           <Card
-            className="border-blue-200 cursor-pointer hover:shadow-md transition-shadow"
+            className="border-blue-200 dark:border-blue-800 cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => handleStatusCardClick('maintenance_due')}
           >
             <CardContent className="pt-4">
-              <div className="text-sm text-blue-600">{td('maintenanceDue')}</div>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-sm text-blue-600 dark:text-blue-400">{td('maintenanceDue')}</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {dashboardStats.maintenance_due_count || 0}
               </div>
             </CardContent>
@@ -912,7 +912,7 @@ export default function DieTemplatePage() {
                       label: td('assetType'),
                       width: 12,
                       formatter: (_v, row) =>
-                        (ASSET_TYPE_MAP[row.asset_type] || TYPE_MAP[row.template_type])?.label ||
+                        (ASSET_TYPE_MAP[row.asset_type as any] || TYPE_MAP[row.template_type as any])?.label ||
                         '-',
                     },
                     {
@@ -939,7 +939,7 @@ export default function DieTemplatePage() {
                       label: td('lifeCycle'),
                       width: 12,
                       formatter: (_v, row) =>
-                        (DIE_STATUS_MAP[row.die_status] || STATUS_MAP[row.status])?.label || '-',
+                        (DIE_STATUS_MAP[row.die_status as any] || STATUS_MAP[row.status as any])?.label || '-',
                     },
                     {
                       key: 'storage_location',
@@ -1175,7 +1175,7 @@ export default function DieTemplatePage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-red-500"
+                              className="text-red-500 dark:text-red-400"
                               onClick={() => handleScrap(item)}
                               title={td('scrapAction')}
                             >
@@ -1330,7 +1330,7 @@ export default function DieTemplatePage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>
-                    {td('codeRequired')} <span className="text-red-500">*</span>
+                    {td('codeRequired')} <span className="text-red-500 dark:text-red-400">*</span>
                   </Label>
                   <Input
                     value={form.template_code}
@@ -1341,7 +1341,7 @@ export default function DieTemplatePage() {
                 </div>
                 <div className="space-y-2">
                   <Label>
-                    {td('nameRequired')} <span className="text-red-500">*</span>
+                    {td('nameRequired')} <span className="text-red-500 dark:text-red-400">*</span>
                   </Label>
                   <Input
                     value={form.template_name}
@@ -1547,7 +1547,7 @@ export default function DieTemplatePage() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               {selectedItem && (
-                <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-1">
+                <div className="bg-muted p-3 rounded-lg text-sm space-y-1">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{td('currentCumulative')}</span>
                     <span className="font-medium">
@@ -1575,7 +1575,7 @@ export default function DieTemplatePage() {
               )}
               <div className="space-y-2">
                 <Label>
-                  {td('thisUsageCount')} <span className="text-red-500">*</span>
+                  {td('thisUsageCount')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   type="number"
@@ -1607,7 +1607,7 @@ export default function DieTemplatePage() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               {selectedItem && (
-                <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-1">
+                <div className="bg-muted p-3 rounded-lg text-sm space-y-1">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{td('cumulativeUsage')}</span>
                     <span className="font-medium">
@@ -1634,7 +1634,7 @@ export default function DieTemplatePage() {
               )}
               <div className="space-y-2">
                 <Label>
-                  {td('maintenanceType')} <span className="text-red-500">*</span>
+                  {td('maintenanceType')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Select
                   value={maintenanceForm.maintenance_type}
@@ -1953,7 +1953,7 @@ export default function DieTemplatePage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-yellow-700 border-yellow-300 hover:bg-yellow-50"
+                              className="text-yellow-700 dark:text-yellow-400 border-yellow-300 dark:border-yellow-800 hover:bg-yellow-500/10"
                               onClick={() => handleCardMaintenance(item)}
                             >
                               <Wrench className="h-3 w-3 mr-1" />
@@ -1965,7 +1965,7 @@ export default function DieTemplatePage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-orange-700 border-orange-300 hover:bg-orange-50"
+                              className="text-orange-700 dark:text-orange-400 border-orange-300 dark:border-orange-800 hover:bg-orange-500/10"
                               onClick={() => handleCardReRule(item)}
                             >
                               <RotateCcw className="h-3 w-3 mr-1" />

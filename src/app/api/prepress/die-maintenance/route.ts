@@ -13,6 +13,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { FieldMapper } from '@/domain/prepress/value-objects/FieldMapping';
 import { MAINTENANCE_TYPE_LABEL } from '@/lib/status-labels';
 import type { DbRow } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 const MAINTENANCE_TYPE_MAP = MAINTENANCE_TYPE_LABEL;
 
@@ -20,7 +21,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const die_id = searchParams.get('die_id');
   const maintenance_type = searchParams.get('maintenance_type');
-  const status = searchParams.get('status');
+  const status = numericFilter(searchParams.get('status'));
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
@@ -40,7 +41,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
   if (status) {
     sql += ' AND m.status = ?';
-    values.push(parseInt(status));
+    values.push(parseInt(String(status)));
   }
 
   sql += ' ORDER BY m.create_time DESC LIMIT ? OFFSET ?';
@@ -106,9 +107,9 @@ export const POST = withPermission(
 
       if (maintenanceType === 'routine' || maintenanceType === 'grinding') {
         newDieStatus = 'available';
-        if (die.maintenance_interval > 0) {
+        if (Number(die.maintenance_interval ?? 0) > 0) {
           const nextDate = new Date();
-          nextDate.setDate(nextDate.getDate() + Math.ceil(die.maintenance_interval / 10));
+          nextDate.setDate(nextDate.getDate() + Math.ceil(Number(die.maintenance_interval ?? 0) / 10));
           nextMaintenanceDate = nextDate.toISOString().split('T')[0];
         }
       } else if (maintenanceType === 're_rule') {
@@ -139,7 +140,7 @@ export const POST = withPermission(
       );
 
       if (body.status === 3 || body.complete_immediately) {
-        const newMaintenanceCount = die.maintenance_count + 1;
+        const newMaintenanceCount = Number(die.maintenance_count ?? 0) + 1;
         await conn.execute(
           `UPDATE prd_die_template
          SET cumulative_impressions = ?,
@@ -204,11 +205,11 @@ export const PUT = withPermission(
             : existing.maintenance_type === 're_rule' || existing.maintenance_type === 'replace'
               ? 0
               : die.cumulative_impressions;
-        const newMaintenanceCount = die.maintenance_count + 1;
+        const newMaintenanceCount = Number(die.maintenance_count ?? 0) + 1;
         const newDieStatus = computeDieStatus(
           impressionsAfter,
-          die.max_impressions,
-          die.warning_threshold
+          Number(die.max_impressions ?? 0),
+          Number(die.warning_threshold ?? 0)
         );
 
         await conn.execute(

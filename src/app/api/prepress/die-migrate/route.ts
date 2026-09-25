@@ -8,22 +8,25 @@ import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { ALTER_TABLE_PRD_DIE_TEMPLATE, CREATE_TABLE_PRD_DIE_MAINTENANCE, ALTER_TABLE_PRD_DIE_TEMPLATE_2, ALTER_TABLE_PRD_DIE_TEMPLATE_3, ALTER_TABLE_PRD_DIE_TEMPLATE_4, ALTER_TABLE_PRD_DIE_TEMPLATE_5, ALTER_TABLE_PRD_DIE_TEMPLATE_6, CREATE_TABLE_PRD_DIE_USAGE_LOG, ALTER_TABLE_PRD_DIE_TEMPLATE_7, ALTER_TABLE_PRD_DIE_TEMPLATE_8, ALTER_TABLE_PRD_DIE_TEMPLATE_9, ALTER_TABLE_PRD_DIE_TEMPLATE_10, ALTER_TABLE_PRD_DIE_TEMPLATE_11, ALTER_TABLE_PRD_DIE_TEMPLATE_12, ALTER_TABLE_PRD_DIE_TEMPLATE_13, ALTER_TABLE_PRD_DIE_TEMPLATE_14 } from '@/lib/db/ddl/prepress-die-migrate';
 
-async function safeAlterTable(tableName: string, sql: string) {
+type AlterResult = { table: string; status: string; reason: string | null; message: string | null };
+type CreateResult = { table: string; status: string; message: string | null };
+
+async function safeAlterTable(tableName: string, sql: string): Promise<AlterResult> {
   try {
     await execute(sql);
-    return { table: tableName, status: 'altered' };
+    return { table: tableName, status: 'altered', reason: null, message: null };
   } catch (e) {
     if ((e as Error).message?.includes('Duplicate column')) {
-      return { table: tableName, status: 'skipped', reason: 'column already exists' };
+      return { table: tableName, status: 'skipped', reason: 'column already exists', message: null };
     }
-    return { table: tableName, status: 'error', message: (e as Error).message };
+    return { table: tableName, status: 'error', reason: null, message: (e as Error).message };
   }
 }
 
-async function safeCreateTable(tableName: string, sql: string) {
+async function safeCreateTable(tableName: string, sql: string): Promise<CreateResult> {
   try {
     await execute(sql);
-    return { table: tableName, status: 'created' };
+    return { table: tableName, status: 'created', message: null };
   } catch (e) {
     return { table: tableName, status: 'error', message: (e as Error).message };
   }

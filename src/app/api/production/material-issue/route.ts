@@ -11,7 +11,8 @@ import { PickOrderApprovedEvent } from '@/domain/production/events/PickOrderEven
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { checkMaterialsCategorized } from '@/lib/category-validation';
 import { secureLog } from '@/lib/logger';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -19,7 +20,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const issueNo = searchParams.get('issueNo') || '';
   const workOrderNo = searchParams.get('workOrderNo') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
 
   let where = 'WHERE m.deleted = 0';
   const params: SqlValue[] = [];
@@ -79,7 +80,7 @@ export const POST = withPermission(
     }
 
     // 系统设置 category.require_on_business：生产领料单要求物料已归类
-    const materialIds = (items as DbRow[]).map((item: DbRow) => item.material_id).filter(Boolean);
+    const materialIds = (items as DbRow[]).map((item: DbRow) => Number(item.material_id ?? 0)).filter((n: number) => n > 0);
     secureLog('info', ts('k_kmeudl'), {
       itemCount: items.length,
       materialIds,
@@ -217,7 +218,7 @@ export const POST = withPermission(
         }
       }
 
-      const [orderResult] = await conn.execute(
+      const orderResult = await execute(
         'INSERT INTO prd_material_issue (issue_no, work_order_id, work_order_no, warehouse_id, issue_date, issue_type, operator_name, status, remark) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)',
         [
           issueNo,
@@ -280,9 +281,9 @@ export const PUT = withPermission(
           throw new Error(ts('k_14x793l'));
         }
 
-        const issue = issueRows[0];
+        const issue = issueRows[0] as DbRow & { status: number };
 
-        if (issue.status >= 3) {
+        if (Number(issue.status ?? 0) >= 3) {
           throw new Error(ts('k_kic6xf'));
         }
 
@@ -317,15 +318,15 @@ export const PUT = withPermission(
         await getDomainEventOutbox().saveEvents(conn, 'MaterialIssue', id, [
           new PickOrderApprovedEvent({
             pickOrderId: id,
-            pickNo: issue.issue_no,
-            workOrderId: issue.work_order_id || 0,
+            pickNo: String(issue.issue_no ?? ''),
+            workOrderId: Number(issue.work_order_id ?? 0),
             items: itemRows.map((item: DbRow) => ({
-              materialId: item.material_id,
-              quantity: Number(item.issued_qty),
-              batchNo: item.batch_no || '',
-              warehouseId: issue.warehouse_id,
-              batchId: item.batch_id || null,
-              originalInboundDate: item.original_inbound_date || null,
+              materialId: Number(item.material_id ?? 0),
+              quantity: Number(item.issued_qty ?? 0),
+              batchNo: String(item.batch_no ?? ''),
+              warehouseId: Number(item.warehouse_id ?? 0),
+              batchId: item.batch_id ? Number(item.batch_id) : null,
+              originalInboundDate: item.original_inbound_date ? String(item.original_inbound_date) : null,
             })),
             userId: 0,
           }),

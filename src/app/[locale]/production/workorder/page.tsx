@@ -2,10 +2,13 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useRowSelection } from '@/lib/useRowSelection';
+import { useRouter } from '@/i18n/navigation';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { MainLayout } from '@/components/layout';
 import { formatDate } from '@/lib/date-utils';
+import { normalizeWorkOrderStatus } from '@/lib/constants';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -43,24 +46,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Plus,
-  MoreHorizontal,
-  Eye,
-  Play,
-  Factory,
-  CheckCircle,
-  Clock,
-  Package,
-  TrendingUp,
-  Filter,
-  Printer,
-  Trash2,
-  Pencil,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-} from 'lucide-react';
+import { Plus, MoreHorizontal, Eye, Play, Factory, CheckCircle, Clock, Package, TrendingUp, Filter, Printer, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown, ClipboardList, AlertTriangle } from 'lucide-react';
 
 interface WorkOrderItem {
   id: number;
@@ -137,8 +123,11 @@ const getStatusConfig = (status: string, t: (key: string) => string) => {
       className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     },
   };
+  // 统一词表（唯一真相源 @/lib/constants）：历史/遗留取值（'migrated'、数字串等）
+  // 先归一到规范值再取标签，避免把原始码直接展示给用户；无法识别时保留原值便于排查。
+  const key = normalizeWorkOrderStatus(status) ?? status;
   return (
-    configs[status] || {
+    configs[key] || {
       label: status,
       className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
     }
@@ -176,6 +165,7 @@ export default function WorkOrderPage() {
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
   const locale = useLocale();
+  const router = useRouter();
   const { toast } = useToast();
 
   const getStatusBadge = (status: number | string) => {
@@ -189,7 +179,6 @@ export default function WorkOrderPage() {
   };
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null);
   const [activeTab, setActiveTab] = useState('all');
@@ -233,26 +222,7 @@ export default function WorkOrderPage() {
     () => new Set(workOrders.filter((wo) => wo.status !== 'cancelled').map((wo) => wo.order_no)),
     [workOrders]
   );
-  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
   const [bomList, setBomList] = useState<BOMItem[]>([]);
-  const [newOrder, setNewOrder] = useState({
-    order_no: '',
-    bom_id: '',
-    priority: 'normal',
-    plan_start_date: '',
-    plan_end_date: '',
-    remark: '',
-  });
-  const [selectedSalesOrder, setSelectedSalesOrder] = useState<{
-    customer_name: string;
-    items: {
-      material_id: number | null;
-      material_name: string;
-      quantity: number;
-      unit: string;
-      unit_price: number;
-    }[];
-  } | null>(null);
 
   const {
     selected,
@@ -320,15 +290,9 @@ export default function WorkOrderPage() {
     }
   }, [activeTab, searchQuery, toast]);
 
-  const fetchSalesOrders = useCallback(async () => {
-    try {
-      const res = await authFetch('/api/orders');
-      const data = await res.json();
-      if (data.success) {
-        setSalesOrders(data.data?.list || (Array.isArray(data.data) ? data.data : []));
-      }
-    } catch {}
-  }, []);
+  useEffect(() => {
+    fetchWorkOrders();
+  }, [fetchWorkOrders]);
 
   const fetchBomList = useCallback(async () => {
     try {
@@ -340,31 +304,9 @@ export default function WorkOrderPage() {
     } catch {}
   }, []);
 
-  const fetchSalesOrderDetail = useCallback(async (orderNo: string) => {
-    try {
-      const res = await authFetch(`/api/orders?id=${encodeURIComponent(orderNo)}`);
-      const data = await res.json();
-      if (data.success && data.data) {
-        setSelectedSalesOrder({
-          customer_name: data.data.customer_name || '',
-          items: Array.isArray(data.data.items) ? data.data.items : [],
-        });
-      } else {
-        setSelectedSalesOrder(null);
-      }
-    } catch {
-      setSelectedSalesOrder(null);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchWorkOrders();
-  }, [fetchWorkOrders]);
-
-  useEffect(() => {
-    fetchSalesOrders();
     fetchBomList();
-  }, [fetchSalesOrders, fetchBomList]);
+  }, [fetchBomList]);
 
   const handleViewDetail = async (order: WorkOrder) => {
     try {
@@ -379,70 +321,6 @@ export default function WorkOrderPage() {
       setSelectedOrder(order);
     }
     setIsDetailOpen(true);
-  };
-
-  const handleCreateOrder = async () => {
-    try {
-      if (!newOrder.order_no) {
-        toast({
-          title: tc('error'),
-          description: t('selectSalesOrder'),
-          variant: 'destructive',
-        });
-        return;
-      }
-      const items = selectedSalesOrder?.items || [];
-      if (items.length === 0) {
-        toast({
-          title: tc('error'),
-          description: t('salesOrderNoItems'),
-          variant: 'destructive',
-        });
-        return;
-      }
-      const res = await authFetch('/api/workorders', {
-        method: 'POST',
-        body: JSON.stringify({
-          order_no: newOrder.order_no,
-          customer_name: selectedSalesOrder?.customer_name || '',
-          items: items.map((i) => ({
-            material_id: i.material_id ?? null,
-            material_name: i.material_name,
-            quantity: i.quantity,
-            unit: i.unit,
-            unit_price: i.unit_price,
-          })),
-          bom_id: parseInt(newOrder.bom_id) || null,
-          priority: newOrder.priority,
-          plan_start_date: newOrder.plan_start_date || null,
-          plan_end_date: newOrder.plan_end_date || null,
-          remark: newOrder.remark,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast({ title: tc('success'), description: t('createSuccess') });
-        setIsCreateOpen(false);
-        setNewOrder({
-          order_no: '',
-          bom_id: '',
-          priority: 'normal',
-          plan_start_date: '',
-          plan_end_date: '',
-          remark: '',
-        });
-        setSelectedSalesOrder(null);
-        fetchWorkOrders();
-      } else {
-        toast({
-          title: tc('error'),
-          description: data.message || t('createFailed'),
-          variant: 'destructive',
-        });
-      }
-    } catch {
-      toast({ title: tc('error'), description: t('createFailed'), variant: 'destructive' });
-    }
   };
 
   const handleStatusChange = async (order: WorkOrder, newStatus: string) => {
@@ -680,57 +558,21 @@ export default function WorkOrderPage() {
   return (
     <MainLayout title={t('workOrder')}>
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('totalOrders')}</CardTitle>
-              <Factory className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('producing')}: {stats.producing} | {t('status.completed')}: {stats.completed}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('plannedQuantity')}</CardTitle>
-              <Package className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalQty.toLocaleString(locale)}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('involvingProducts', { count: workOrders.filter((o) => o.product_name).length })}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('producing')}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.producing}</div>
-              <p className="text-xs text-muted-foreground">{t('inProduction')}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pendingSchedule')}</CardTitle>
-              <Clock className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pending + stats.confirmed}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('status.pending')}: {stats.pending} | {t('status.confirmed')}: {stats.confirmed}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('total'), icon: ClipboardList, ...StatsTheme.blue },
+            { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
+            { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'total', count: workOrders.length },
+            { key: 'active', count: workOrders.length },
+            { key: 'pending', count: workOrders.length },
+            { key: 'warning', count: workOrders.length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
 
         <Card>
           <CardContent className="p-4">
@@ -749,144 +591,10 @@ export default function WorkOrderPage() {
                   <Filter className="h-4 w-4 mr-2" />
                   {tc('refresh')}
                 </Button>
-                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      {t('newWorkOrder')}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl" resizable>
-                    <DialogHeader>
-                      <DialogTitle>{t('newWorkOrder')}</DialogTitle>
-                      <DialogDescription>{t('createWorkOrderDesc')}</DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>{t('relatedSalesOrder')}</Label>
-                          <Select
-                            value={newOrder.order_no}
-                            onValueChange={(v) => {
-                              setNewOrder({ ...newOrder, order_no: v });
-                              fetchSalesOrderDetail(v);
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder={t('selectSalesOrder')} />
-                            </SelectTrigger>
-                            <SelectContent position="popper">
-                              {salesOrders
-                                .filter((so) => !ordersWithActiveWo.has(so.order_no))
-                                .map((so) => (
-                                  <SelectItem key={so.id} value={so.order_no}>
-                                    {so.order_no} - {so.customer_name || t('unknownCustomer')}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('relatedBOM')}</Label>
-                          <Select
-                            value={newOrder.bom_id}
-                            onValueChange={(v) => setNewOrder({ ...newOrder, bom_id: v })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder={t('selectBOM')} />
-                            </SelectTrigger>
-                            <SelectContent position="popper">
-                              {bomList.map((b) => (
-                                <SelectItem key={b.id} value={String(b.id)}>
-                                  {b.bom_no} - {b.product_name || t('unknownProduct')}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      {selectedSalesOrder ? (
-                        <div className="col-span-2 space-y-2">
-                          <Label>{t('workOrderMaterials')}</Label>
-                          <div className="max-h-44 overflow-auto rounded-md border p-3 text-sm">
-                            <p className="mb-2 text-muted-foreground">
-                              {t('customer')}: {selectedSalesOrder.customer_name || t('unknownCustomer')}
-                              {' · '}
-                              {t('quantity')}: {selectedSalesOrder.items.length}
-                            </p>
-                            {selectedSalesOrder.items.map((it, idx) => (
-                              <div key={idx} className="flex justify-between py-0.5">
-                                <span>{it.material_name || t('unknownProduct')}</span>
-                                <span className="text-muted-foreground">
-                                  {parseFloat(String(it.quantity)).toLocaleString(locale)} {it.unit}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="col-span-2 text-sm text-muted-foreground">
-                          {t('selectSalesOrder')}
-                        </div>
-                      )}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>{t('priority.label')}</Label>
-                          <Select
-                            value={newOrder.priority}
-                            onValueChange={(v) => setNewOrder({ ...newOrder, priority: v })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder={t('selectPriority')} />
-                            </SelectTrigger>
-                            <SelectContent position="popper">
-                              <SelectItem value="urgent">{t('priority.urgent')}</SelectItem>
-                              <SelectItem value="high">{t('priority.high')}</SelectItem>
-                              <SelectItem value="normal">{t('priority.normal')}</SelectItem>
-                              <SelectItem value="low">{t('priority.low')}</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('remark')}</Label>
-                          <Input
-                            placeholder={t('enterRemark')}
-                            value={newOrder.remark}
-                            onChange={(e) => setNewOrder({ ...newOrder, remark: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>{t('planStartDate')}</Label>
-                          <Input
-                            type="date"
-                            value={newOrder.plan_start_date}
-                            onChange={(e) =>
-                              setNewOrder({ ...newOrder, plan_start_date: e.target.value })
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('planEndDate')}</Label>
-                          <Input
-                            type="date"
-                            value={newOrder.plan_end_date}
-                            onChange={(e) =>
-                              setNewOrder({ ...newOrder, plan_end_date: e.target.value })
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                        {tc('cancel')}
-                      </Button>
-                      <Button onClick={handleCreateOrder}>{t('createWorkOrder')}</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <Button onClick={() => router.push('/production/workorder/new')}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('newWorkOrder')}
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -1117,7 +825,7 @@ export default function WorkOrderPage() {
                                     {t('printWorkOrder')}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    className="text-red-600"
+                                    className="text-red-600 dark:text-red-400"
                                     onClick={() => handleDelete(order)}
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
@@ -1358,7 +1066,7 @@ export default function WorkOrderPage() {
                   {selectedOrder.remark && (
                     <div className="space-y-3">
                       <h4 className="font-semibold text-sm text-muted-foreground">{t('remark')}</h4>
-                      <p className="text-sm bg-gray-50 p-3 rounded">{selectedOrder.remark}</p>
+                      <p className="text-sm bg-muted p-3 rounded">{selectedOrder.remark}</p>
                     </div>
                   )}
 

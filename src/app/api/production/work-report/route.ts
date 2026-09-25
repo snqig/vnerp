@@ -114,15 +114,15 @@ export const POST = withPermission(
         const die = dieRows?.[0];
 
         if (die) {
-          const piecesPerImpression = die.pieces_per_impression || 1;
+          const piecesPerImpression = Number(die.pieces_per_impression ?? 1);
           const impressionsToAdd = Math.ceil(completedQty / piecesPerImpression);
-          const newCumulative = (die.cumulative_impressions || 0) + impressionsToAdd;
+          const newCumulative = (Number(die.cumulative_impressions ?? 0) + impressionsToAdd);
 
-          let newDieStatus = die.die_status;
-          if (die.max_impressions > 0) {
-            const pct = (newCumulative / die.max_impressions) * 100;
+          let newDieStatus = String(die.die_status ?? '');
+          if (Number(die.max_impressions ?? 0) > 0) {
+            const pct = (newCumulative / Number(die.max_impressions ?? 0)) * 100;
             if (pct >= 95) newDieStatus = 're_rule_needed';
-            else if (pct >= (die.warning_threshold || 80)) newDieStatus = 'maintenance_needed';
+            else if (pct >= Number(die.warning_threshold ?? 80)) newDieStatus = 'maintenance_needed';
             else newDieStatus = 'available';
           }
 
@@ -156,7 +156,7 @@ export const POST = withPermission(
             [
               body.die_template_id,
               die.template_code,
-              reportId,
+              Number(reportId),
               body.work_order_id,
               body.work_order_no || null,
               body.process_name,
@@ -175,11 +175,11 @@ export const POST = withPermission(
         .map((v: unknown) => Number(v))
         .filter((v: number) => Number.isFinite(v) && v > 0);
       if (toolIds.length > 0) {
-        await getDomainEventOutbox().saveEvents(conn, 'WorkReport', reportId, [
+        await getDomainEventOutbox().saveEvents(conn, 'WorkReport', Number(reportId), [
           new WorkReportedEvent({
             workOrderId: Number(body.work_order_id),
             workOrderNo: body.work_order_no || String(body.work_order_id),
-            reportId,
+            reportId: Number(reportId),
             completedQty,
             toolIds,
             processName: body.process_name || '',

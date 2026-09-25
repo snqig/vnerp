@@ -7,6 +7,7 @@ import { withPermission } from '@/lib/api-permissions';
 import type { NextRequest } from 'next/server';
 import type { DbRow } from '@/types/db';
 import { INSERT_INTO_SCREEN_PLATE_HISTORY, INSERT_INTO_SCREEN_PLATE_HISTORY_2 } from '@/lib/db/ddl/screen-plates';
+import { stringFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
@@ -47,7 +48,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
   const offset = (page - 1) * pageSize;
-  const status = searchParams.get('status');
+  const status = stringFilter(searchParams.get('status'));
   const customerName = searchParams.get('customerName');
 
   let whereClause = 'sp.deleted = 0';
@@ -142,7 +143,7 @@ export const POST = withPermission(
       ]
     );
 
-    const plateId = (result as DbRow).insertId;
+    const plateId = (result as unknown as DbRow).insertId;
 
     await execute(
       INSERT_INTO_SCREEN_PLATE_HISTORY,

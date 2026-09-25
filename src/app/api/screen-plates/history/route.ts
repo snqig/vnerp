@@ -89,7 +89,7 @@ export const POST = withPermission(
       await execute(`UPDATE prd_screen_plate SET ${updateFields.join(', ')} WHERE id = ?`, params);
     }
 
-    return successResponse({ historyId: (result as DbRow).insertId }, ts('k_1wbhvnx'));
+    return successResponse({ historyId: (result as unknown as DbRow).insertId }, ts('k_1wbhvnx'));
   },
   { logTitle: '添加网版生命周期记录', logType: 'business' }
 );

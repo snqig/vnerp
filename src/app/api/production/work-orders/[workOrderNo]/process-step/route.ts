@@ -56,7 +56,7 @@ async function ensureSteps(workOrderId: number, processId: number | null, woStat
       'SELECT COUNT(*) c FROM prod_work_order_process_step WHERE work_order_id = ? AND deleted = 0',
       [workOrderId]
     )) as DbRow[];
-    if (existing[0].c > 0) return;
+    if ((existing[0] as DbRow)?.c && Number((existing[0] as DbRow).c) > 0) return;
 
     const routeId = processId || (await getDefaultRouteId());
     const steps = (await query(

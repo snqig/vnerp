@@ -121,7 +121,10 @@ export const POST = withPermission(
       if (die.die_status === 're_rule_needed')
         return errorResponse(ts('k_jx3bno'), 400, 400);
 
-      if (die.max_impressions > 0 && die.cumulative_impressions >= die.max_impressions) {
+      if (
+        Number(die.max_impressions ?? 0) > 0 &&
+        Number(die.cumulative_impressions ?? 0) >= Number(die.max_impressions ?? 0)
+      ) {
         return errorResponse(
           `刀模/网版已达最大使用次数(${die.cumulative_impressions}/${die.max_impressions})，请更换或保养后再使用`,
           400,
@@ -130,12 +133,12 @@ export const POST = withPermission(
       }
 
       const actualImpressions = body.actual_qty
-        ? Math.ceil(parseInt(body.actual_qty) / (die.pieces_per_impression || 1))
+        ? Math.ceil(parseInt(body.actual_qty) / Number(die.pieces_per_impression || 1))
         : impressionsToAdd;
 
-      if (die.max_impressions > 0) {
-        const projectedCumulative = die.cumulative_impressions + actualImpressions;
-        if (projectedCumulative > die.max_impressions * 1.05) {
+      if (Number(die.max_impressions ?? 0) > 0) {
+        const projectedCumulative = Number(die.cumulative_impressions ?? 0) + actualImpressions;
+        if (projectedCumulative > Number(die.max_impressions ?? 0) * 1.05) {
           return errorResponse(
             `本次使用后累计次数(${projectedCumulative})将远超最大限制(${die.max_impressions})，请确认使用次数是否正确`,
             400,
@@ -144,11 +147,11 @@ export const POST = withPermission(
         }
       }
 
-      const newCumulative = die.cumulative_impressions + actualImpressions;
+      const newCumulative = Number(die.cumulative_impressions ?? 0) + actualImpressions;
       const newDieStatus = computeDieStatus(
         newCumulative,
-        die.max_impressions,
-        die.warning_threshold
+        Number(die.max_impressions ?? 0),
+        Number(die.warning_threshold ?? 0)
       );
 
       await conn.execute(
@@ -200,7 +203,9 @@ export const POST = withPermission(
         cumulative_after: newCumulative,
         die_status: newDieStatus,
         usage_pct:
-          die.max_impressions > 0 ? Math.round((newCumulative / die.max_impressions) * 100) : 0,
+          Number(die.max_impressions ?? 0) > 0
+            ? Math.round((newCumulative / Number(die.max_impressions ?? 0)) * 100)
+            : 0,
       };
       return successResponse(FieldMapper.addCamelCase(result), ts('k_1tf6pvk'));
     });

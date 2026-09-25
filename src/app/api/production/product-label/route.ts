@@ -5,13 +5,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { stringFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const labelNo = searchParams.get('labelNo') || '';
-  const status = searchParams.get('status') || '';
+  const status = stringFilter(searchParams.get('status'));
 
   let where = 'WHERE deleted = 0';
   const params: SqlValue[] = [];

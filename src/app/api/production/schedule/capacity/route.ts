@@ -101,8 +101,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   // 设备级利用率
   const equipmentUtilization = equipmentUsageRows.map((row: DbRow) => {
-    const dailyCapacity = row.capacity_per_hour * 8;
-    const utilizationRate = dailyCapacity > 0 ? Math.round((row.used_hours / 8) * 100) : 0;
+    const dailyCapacity = Number(row.capacity_per_hour ?? 0) * 8;
+    const utilizationRate = dailyCapacity > 0 ? Math.round((Number(row.used_hours ?? 0) / 8) * 100) : 0;
     return {
       equipmentId: row.equipment_id,
       equipmentName: row.equipment_name,
@@ -122,12 +122,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       workshopCapacity: capacityData,
       equipmentUtilization,
       summary: {
-        totalEquipment: equipmentRows.reduce((sum: number, r: DbRow) => sum + r.equipment_count, 0),
+        totalEquipment: equipmentRows.reduce((sum: number, r: DbRow) => sum + Number(r.equipment_count ?? 0), 0),
         totalWorkshops: workshopMap.size,
         avgUtilization:
           capacityData.length > 0
             ? Math.round(
-                capacityData.reduce((sum: number, c: DbRow) => sum + c.utilizationRate, 0) /
+                capacityData.reduce((sum: number, c: DbRow) => sum + Number(c.utilizationRate ?? 0), 0) /
                   capacityData.length
               )
             : 0,

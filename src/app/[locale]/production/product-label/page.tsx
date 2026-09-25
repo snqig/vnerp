@@ -4,6 +4,7 @@ import { useRowSelection } from '@/lib/useRowSelection';
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,7 +35,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { Plus, Search, Edit, Trash2, Printer, QrCode } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Printer, QrCode, Tag, CheckCircle, Clock, AlertTriangle, Calendar, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import QRCode from 'qrcode';
 
@@ -72,6 +73,13 @@ export default function ProductLabelPage() {
   const [searchNo, setSearchNo] = useState('');
   const [searchMaterial, setSearchMaterial] = useState('');
   const [searchStatus, setSearchStatus] = useState('');
+  const [stats, setStats] = useState({
+    total: 0,
+    printed: 0,
+    pending: 0,
+    monthlyPrinted: 0,
+    involvedProducts: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
@@ -97,8 +105,21 @@ export default function ProductLabelPage() {
     } catch {}
   }, [page, searchNo, searchMaterial, searchStatus]);
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/production/product-label/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [fetchData]);
 
   const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
@@ -112,7 +133,7 @@ export default function ProductLabelPage() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch('/api/production/product-label', {
+      const res = await authFetch('/api/production/product-label', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editItem),
@@ -323,7 +344,25 @@ export default function ProductLabelPage() {
               {t('newLabel')}
             </Button>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'total', label: '标签总数', icon: Tag, ...StatsTheme.blue },
+            { key: 'printed', label: '已打印', icon: Printer, ...StatsTheme.green },
+            { key: 'pending', label: '待打印', icon: Clock, ...StatsTheme.orange },
+            { key: 'monthlyPrinted', label: '本月打印数', icon: Calendar, ...StatsTheme.cyan },
+            { key: 'involvedProducts', label: '涉及产品数', icon: Package, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: stats.total },
+            { key: 'printed', count: stats.printed },
+            { key: 'pending', count: stats.pending },
+            { key: 'monthlyPrinted', count: stats.monthlyPrinted },
+            { key: 'involvedProducts', count: stats.involvedProducts },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
 
         <Card>
           <CardContent className="p-0">
@@ -358,7 +397,7 @@ export default function ProductLabelPage() {
                   return (
                     <TableRow
                       key={item.id}
-                      className={isSelected(String(item.id)) ? 'bg-blue-50' : ''}
+                      className={isSelected(String(item.id)) ? 'bg-blue-500/10' : ''}
                     >
                       <TableCell>
                         <Checkbox
@@ -416,7 +455,7 @@ export default function ProductLabelPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />

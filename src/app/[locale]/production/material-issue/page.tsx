@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Package, CheckCircle, Clock, AlertTriangle, Calendar, PackagePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
@@ -75,6 +76,13 @@ export default function MaterialIssuePage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    partial: 0,
+    completed: 0,
+    todayCount: 0,
+    monthlyQty: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
 
@@ -92,8 +100,21 @@ export default function MaterialIssuePage() {
       }
     } catch {}
   };
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/production/material-issue/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
 
   const handleSave = async () => {
@@ -170,6 +191,25 @@ export default function MaterialIssuePage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'pending', label: '待发料', icon: Clock, ...StatsTheme.orange },
+            { key: 'partial', label: '部分发料', icon: Package, ...StatsTheme.blue },
+            { key: 'completed', label: '已发料', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'todayCount', label: '今日发料单数', icon: Calendar, ...StatsTheme.cyan },
+            { key: 'monthlyQty', label: '本月发料数量', icon: PackagePlus, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'partial', count: stats.partial },
+            { key: 'completed', count: stats.completed },
+            { key: 'todayCount', count: stats.todayCount },
+            { key: 'monthlyQty', count: stats.monthlyQty },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{t('materialIssueTitle')}</h1>
           <div className="flex gap-2">
@@ -282,7 +322,7 @@ export default function MaterialIssuePage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />

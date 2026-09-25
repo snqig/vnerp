@@ -5,7 +5,7 @@ import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 
 /**
  * 可经通用更新写入的字段白名单（防止任意字段注入）。
@@ -73,7 +73,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   let where = 'WHERE stm.deleted = 0';
   const params: SqlValue[] = [];
 
-  if (status) {
+  // 状态筛选：'all'（前端"全部"选项）不进 SQL——Number('all')=NaN 会让筛选必空/报错
+  if (status && status !== 'all' && Number.isFinite(Number(status))) {
     where += ' AND stm.status = ?';
     params.push(Number(status));
   }
@@ -101,9 +102,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 });
 
 export const POST = withPermission(
-  async (request: NextRequest, _userInfo) => {
+  async (request: NextRequest, userInfo) => {
   const ts = await getTranslations('Common');
     const body = await request.json();
+    // create_by 取当前登录用户（页面表单不发送此字段，从 body 取恒为 NULL）
+    const createBy = Number(userInfo?.userId) || null;
     const {
       sample_order_id,
       sample_order_no,
@@ -125,7 +128,6 @@ export const POST = withPermission(
       check_standard,
       special_note,
       remark,
-      create_by,
     } = body;
 
     if (!sample_order_no) {
@@ -138,27 +140,31 @@ export const POST = withPermission(
         [sample_order_no]
       );
 
-      if (existing.length > 0 && existing[0].status >= 3) {
+      if (existing.length > 0 && Number(existing[0].status) >= 3) {
         throw new Error(ts('k_g4banz'));
       }
 
       // 转移单号：缺失时自动生成，保证唯一（STM-YYYYMMDD-NNN）
-      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      //  - 本地日期拼接（勿用 toISOString：UTC 日期在 +08:00 早 8 点前会落到前一天）
+      //  - 序号取 MAX 尾号 +1（COUNT 会在删除中间行后重号，且并发下有碰撞风险）
+      const now = new Date();
+      const today = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
       const [seqRows] = await conn.execute(
-        'SELECT COUNT(*) AS c FROM eng_sample_to_mass WHERE transfer_no LIKE ?',
+        `SELECT MAX(CAST(SUBSTRING_INDEX(transfer_no, '-', -1) AS UNSIGNED)) AS max_seq
+         FROM eng_sample_to_mass WHERE transfer_no LIKE ?`,
         [`STM-${today}-%`]
       );
-      const transferNo = `STM-${today}-${String((seqRows[0]?.c || 0) + 1).padStart(3, '0')}`;
+      const nextSeq = Number((seqRows as DbRow[])[0]?.max_seq || 0) + 1;
+      const transferNo = `STM-${today}-${String(nextSeq).padStart(3, '0')}`;
 
-      if (existing.length > 0 && existing[0].status < 3) {
+      if (existing.length > 0 && Number(existing[0].status ?? 0) < 3) {
         await conn.execute(
           `UPDATE eng_sample_to_mass SET
           product_id = ?, product_code = ?, product_name = ?, customer_id = ?, customer_name = ?,
           standard_card_id = ?, standard_card_no = ?, process_card_id = ?, process_card_no = ?,
           bom_id = ?, bom_version = ?, sample_params = ?, mass_params = ?, sop_file = ?,
           process_route = ?, check_standard = ?, special_note = ?, remark = ?, create_by = ?
-        WHERE id = ?`,
-          [
+        WHERE id = ?`,          [
             product_id || null,
             product_code || null,
             product_name || null,
@@ -177,7 +183,7 @@ export const POST = withPermission(
             check_standard || null,
             special_note || null,
             remark || null,
-            create_by || null,
+            createBy,
             existing[0].id,
           ]
         );
@@ -213,11 +219,11 @@ export const POST = withPermission(
           check_standard || null,
           special_note || null,
           remark || null,
-          create_by || null,
+          createBy,
         ]
       );
 
-      return { id: insertResult.insertId, created: true, transfer_no: transferNo };
+      return { id: (insertResult as unknown as DbResultSetHeader).insertId, created: true, transfer_no: transferNo };
     });
 
     return successResponse(result, ts('k_1xkhus2'));
@@ -247,7 +253,7 @@ export const PUT = withPermission(
         }
 
         const record = recordRows[0];
-        if (record.status >= 3) {
+        if (Number(record.status) >= 3) {
           throw new Error(ts('k_1svgifr'));
         }
 
@@ -291,7 +297,8 @@ export const PUT = withPermission(
     }
 
     if (action === 'cancel') {
-      await execute('UPDATE eng_sample_to_mass SET status = 4 WHERE id = ?', [id]);
+      // 状态 7 = 退回（页面 statusMap：4=生产确认，写 4 会被误显示为「生产确认」）
+      await execute('UPDATE eng_sample_to_mass SET status = 7 WHERE id = ?', [id]);
       return successResponse(null, ts('k_s3z06b'));
     }
 
@@ -304,7 +311,7 @@ export const PUT = withPermission(
     }
 
     // 确认流转：按目标状态回填对应确认人/日期（取当前登录用户）
-    const confirmerName = (userInfo as DbRow)?.realName || (userInfo as DbRow)?.username || '';
+    const confirmerName = userInfo.realName || userInfo.username || '';
     const newStatus = Number(body.status);
     if (newStatus && STATUS_CONFIRMER[newStatus]) {
       const { who, date } = STATUS_CONFIRMER[newStatus];

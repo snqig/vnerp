@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { MainLayout } from '@/components/layout';
 import { formatDate } from '@/lib/date-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,23 +46,7 @@ import {
 } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-  Plus,
-  Search,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Calendar as CalendarIcon,
-  Factory,
-  CheckCircle,
-  AlertCircle,
-  AlertTriangle,
-  Play,
-  GanttChart,
-  Zap,
-  BarChart3,
-  RefreshCw,
-} from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Eye, Edit, Calendar as CalendarIcon, Factory, CheckCircle, AlertCircle, AlertTriangle, Play, GanttChart, Zap, BarChart3, RefreshCw, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -146,14 +131,14 @@ export default function ProductionSchedulePage() {
 
   const getWorkshopBadge = (workshop: string) => {
     const workshopMap: Record<string, { label: string; className: string }> = {
-      die_cut: { label: t('workshopDieCutShort'), className: 'bg-purple-100 text-purple-700' },
-      trademark: { label: t('workshopTrademarkShort'), className: 'bg-indigo-100 text-indigo-700' },
-      printing: { label: t('workshopPrintingShort'), className: 'bg-pink-100 text-pink-700' },
-      packaging: { label: t('workshopPackagingShort'), className: 'bg-teal-100 text-teal-700' },
+      die_cut: { label: t('workshopDieCutShort'), className: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' },
+      trademark: { label: t('workshopTrademarkShort'), className: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400' },
+      printing: { label: t('workshopPrintingShort'), className: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400' },
+      packaging: { label: t('workshopPackagingShort'), className: 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400' },
     };
     const config = workshopMap[workshop] || {
       label: workshop,
-      className: 'bg-gray-100 text-gray-700',
+      className: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200',
     };
     return <Badge className={config.className}>{config.label}</Badge>;
   };
@@ -183,7 +168,7 @@ export default function ProductionSchedulePage() {
     };
     const config = statusMap[status] || {
       label: tc('unknown'),
-      className: 'bg-gray-100 text-gray-700',
+      className: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200',
     };
     return <Badge className={config.className}>{config.label}</Badge>;
   };
@@ -205,7 +190,7 @@ export default function ProductionSchedulePage() {
     };
     const config = priorityMap[priority] || {
       label: tc('normal'),
-      className: 'bg-blue-100 text-blue-700',
+      className: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
     };
     return <Badge className={config.className}>{config.label}</Badge>;
   };
@@ -620,63 +605,21 @@ export default function ProductionSchedulePage() {
   return (
     <MainLayout title={t('schedule')}>
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('totalSchedules')}</CardTitle>
-              <Factory className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('statusPending')}</CardTitle>
-              <AlertCircle className="h-4 w-4 text-gray-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pending}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('statusProducing')}</CardTitle>
-              <Play className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.producing}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('capacityRate', { rate: stats.capacityRate })}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('statusCompleted')}</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.completed}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('conflictDetection')}</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div
-                className={`text-2xl font-bold ${stats.conflictCount > 0 ? 'text-red-600' : ''}`}
-              >
-                {stats.conflictCount}
-              </div>
-              {stats.conflictCount > 0 && (
-                <p className="text-xs text-red-500">{t('timeConflictFound')}</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('total'), icon: CalendarIcon, ...StatsTheme.blue },
+            { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
+            { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'total', count: schedules.length },
+            { key: 'active', count: schedules.length },
+            { key: 'pending', count: schedules.length },
+            { key: 'warning', count: schedules.length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
 
         <Card>
           <CardContent className="p-4">
@@ -1168,7 +1111,7 @@ export default function ProductionSchedulePage() {
                                             {t('tooltipStatus')}: {getStatusBadge(schedule.status)}
                                           </div>
                                           {hasConflict && (
-                                            <div className="text-red-500 font-medium flex items-center gap-1">
+                                            <div className="text-red-500 dark:text-red-400 font-medium flex items-center gap-1">
                                               <AlertTriangle className="h-3 w-3" />
                                               {t('timeConflict')}
                                             </div>
@@ -1196,7 +1139,7 @@ export default function ProductionSchedulePage() {
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-amber-500" />
+                <Zap className="h-5 w-5 text-amber-500 dark:text-amber-400" />
                 {t('autoScheduleTitle')}
               </DialogTitle>
               <DialogDescription>{t('autoScheduleDesc')}</DialogDescription>
@@ -1233,7 +1176,7 @@ export default function ProductionSchedulePage() {
                   {workOrders.map((wo) => (
                     <TableRow
                       key={wo.id}
-                      className={selectedWorkOrders.includes(wo.id) ? 'bg-blue-50' : ''}
+                      className={selectedWorkOrders.includes(wo.id) ? 'bg-blue-500/10' : ''}
                     >
                       <TableCell>
                         <input
@@ -1248,7 +1191,7 @@ export default function ProductionSchedulePage() {
                               );
                             }
                           }}
-                          className="rounded border-gray-300"
+                          className="rounded border-gray-300 dark:border-gray-600"
                         />
                       </TableCell>
                       <TableCell>{wo.work_order_no}</TableCell>
@@ -1277,7 +1220,7 @@ export default function ProductionSchedulePage() {
                           {result.conflicts.length > 0 ? (
                             <Badge variant="destructive">{t('hasConflict')}</Badge>
                           ) : (
-                            <Badge className="bg-green-100 text-green-700">
+                            <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
                               {t('statusScheduled')}
                             </Badge>
                           )}
@@ -1287,7 +1230,7 @@ export default function ProductionSchedulePage() {
                           {formatDate(result.overall_end)}
                         </div>
                         {result.conflicts.length > 0 && (
-                          <div className="text-xs text-red-500 mt-1">
+                          <div className="text-xs text-red-500 dark:text-red-400 mt-1">
                             {result.conflicts.map((c) => c.reason).join('; ')}
                           </div>
                         )}
@@ -1320,7 +1263,7 @@ export default function ProductionSchedulePage() {
           <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-blue-500" />
+                <BarChart3 className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                 {t('capacityAnalysisTitle')}
               </DialogTitle>
               <DialogDescription>{t('capacityDesc')}</DialogDescription>
@@ -1334,7 +1277,7 @@ export default function ProductionSchedulePage() {
                         {ganttWorkshopLabels[cap.workshop] || cap.workshop}
                       </div>
                       <div
-                        className={`text-sm font-bold ${cap.utilizationRate > 90 ? 'text-red-600' : cap.utilizationRate > 70 ? 'text-amber-600' : 'text-green-600'}`}
+                        className={`text-sm font-bold ${cap.utilizationRate > 90 ? 'text-red-600 dark:text-red-400' : cap.utilizationRate > 70 ? 'text-amber-600 dark:text-amber-400' : 'text-green-600 dark:text-green-400'}`}
                       >
                         {cap.utilizationRate}%
                       </div>
@@ -1348,7 +1291,7 @@ export default function ProductionSchedulePage() {
                           {t('totalCapacity')}: {cap.totalCapacity}
                         </span>
                       </div>
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-[width] duration-500 ${
                             cap.utilizationRate > 90
@@ -1442,7 +1385,7 @@ export default function ProductionSchedulePage() {
                       <h4 className="font-semibold text-sm text-muted-foreground">
                         {t('remarkLabel')}
                       </h4>
-                      <div className="text-sm p-3 bg-gray-50 rounded">
+                      <div className="text-sm p-3 bg-muted rounded">
                         {selectedSchedule.remark}
                       </div>
                     </div>

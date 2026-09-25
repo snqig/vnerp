@@ -3,13 +3,14 @@ import { query, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { stringFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
   const page = parseInt(searchParams.get('page') || '1');
   const keyword = searchParams.get('keyword');
-  const status = searchParams.get('status');
+  const status = stringFilter(searchParams.get('status'));
 
   let sql = `
     SELECT wo.*

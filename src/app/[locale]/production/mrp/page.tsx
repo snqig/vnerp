@@ -39,7 +39,10 @@ import {
   Loader2,
   ChevronRight,
   FileSpreadsheet,
+  Calculator,
+  Shield,
 } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import {
   ComposedChart,
   Bar,
@@ -311,6 +314,22 @@ export default function MRPPage() {
   return (
     <MainLayout title={t('mrpTitle')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'pending', label: tc('pendingCalc'), icon: Calculator, ...StatsTheme.blue },
+            { key: 'expiring', label: tc('expiringSoon'), icon: Clock, ...StatsTheme.orange },
+            { key: 'shortage', label: tc('shortageItems'), icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'safety', label: tc('safetyStock'), icon: Shield, ...StatsTheme.green },
+          ]}
+          stats={[
+            { key: 'pending', count: workOrders.length },
+            { key: 'expiring', count: mrpResult ? mrpResult.net_requirements.filter((r) => { const d = new Date(r.suggested_delivery_date); const n = new Date(); return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear() && r.shortage_warning; }).length : 0 },
+            { key: 'shortage', count: mrpResult ? mrpResult.summary.total_shortages : 0 },
+            { key: 'safety', count: mrpResult ? mrpResult.net_requirements.filter((r) => r.safety_stock > 0).length : 0 },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="mrp-run">
@@ -430,7 +449,7 @@ export default function MRPPage() {
                           <CardTitle className="text-sm font-medium">
                             {t('involvedMaterials')}
                           </CardTitle>
-                          <Layers className="h-4 w-4 text-blue-600" />
+                          <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl font-bold">
@@ -443,10 +462,10 @@ export default function MRPPage() {
                           <CardTitle className="text-sm font-medium">
                             {t('shortageItems')}
                           </CardTitle>
-                          <AlertTriangle className="h-4 w-4 text-red-600" />
+                          <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold text-red-600">
+                          <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                             {mrpResult.summary.total_shortages}
                           </div>
                         </CardContent>
@@ -454,7 +473,7 @@ export default function MRPPage() {
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                           <CardTitle className="text-sm font-medium">{t('plannedQty')}</CardTitle>
-                          <ShoppingCart className="h-4 w-4 text-orange-600" />
+                          <ShoppingCart className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl font-bold">
@@ -467,7 +486,7 @@ export default function MRPPage() {
                           <CardTitle className="text-sm font-medium">
                             {t('plannedAmount')}
                           </CardTitle>
-                          <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                          <FileSpreadsheet className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </CardHeader>
                         <CardContent>
                           <div className="text-2xl font-bold">

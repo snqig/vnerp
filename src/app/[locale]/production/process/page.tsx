@@ -5,6 +5,7 @@ import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -43,19 +44,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Search,
-  MoreHorizontal,
-  Eye,
-  Play,
-  CheckCircle,
-  RotateCcw,
-  Factory,
-  Calendar,
-  Package,
-  Clock,
-  ChevronRight,
-} from 'lucide-react';
+import { Search, MoreHorizontal, Eye, Play, CheckCircle, RotateCcw, Factory, Calendar, Package, Clock, ChevronRight, GitBranch, AlertTriangle } from 'lucide-react';
 
 interface ProcessCard {
   id: number;
@@ -268,47 +257,21 @@ export default function ProductionProcessPage() {
   return (
     <MainLayout title={t('processManagement')}>
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('statusScheduled')}</CardTitle>
-              <Calendar className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.scheduled}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('statusProducing')}</CardTitle>
-              <Factory className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.producing}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('statusCompleted')}</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.completed}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('totalPlanQty')}</CardTitle>
-              <Package className="h-4 w-4 text-indigo-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalQty.toLocaleString(locale)}</div>
-            </CardContent>
-          </Card>
-        </div>
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('total'), icon: GitBranch, ...StatsTheme.blue },
+            { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
+            { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'total', count: processes.length },
+            { key: 'active', count: processes.length },
+            { key: 'pending', count: processes.length },
+            { key: 'warning', count: processes.length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
 
         <Card>
           <CardContent className="p-4">
@@ -655,7 +618,7 @@ export default function ProductionProcessPage() {
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-muted rounded-lg p-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">{t('product')}:</span>

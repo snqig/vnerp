@@ -6,6 +6,7 @@ import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Edit, Trash2, ArrowRightLeft } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, ArrowRightLeft, CheckCircle, Clock, Package, Calendar, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 
@@ -91,6 +92,13 @@ export default function SampleToMassPage() {
   const [page, setPage] = useState(1);
   const [searchProduct, setSearchProduct] = useState('');
   const [searchStatus, setSearchStatus] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    converting: 0,
+    completed: 0,
+    monthlyCount: 0,
+    successRate: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<TransferRecord>>({});
   const [customers, setCustomers] = useState<
@@ -141,10 +149,23 @@ export default function SampleToMassPage() {
     } catch {}
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/engineering/sample-to-mass/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
     fetchCustomers();
     fetchBoms();
+    fetchStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchData 等依赖搜索/筛选状态，应由用户主动触发而非自动随输入变化
   }, [page]);
 
@@ -229,6 +250,25 @@ export default function SampleToMassPage() {
   return (
     <MainLayout title={t('sampleToMassManagement')}>
       <div className="p-6 space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'pending', label: '待转量产', icon: Clock, ...StatsTheme.orange },
+            { key: 'converting', label: '转产中', icon: ArrowRightLeft, ...StatsTheme.blue },
+            { key: 'completed', label: '已完成', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'monthlyCount', label: '本月转产数', icon: Calendar, ...StatsTheme.cyan },
+            { key: 'successRate', label: '转产成功率', icon: TrendingUp, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'converting', count: stats.converting },
+            { key: 'completed', count: stats.completed },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+            { key: 'successRate', count: stats.successRate, suffix: '%' },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
