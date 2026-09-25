@@ -118,14 +118,31 @@ export class MysqlReconciliationRepository implements IReconciliationRepository 
       `SELECT ${MAIN_COLUMNS} FROM sal_reconciliation WHERE customer_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [customerId]
     );
-    return Promise.all(
-      rows.map(async (r) => {
-        const [lines, writeOffs] = await Promise.all([
-          this.findLines(r.id),
-          this.findWriteOffs(r.id),
-        ]);
-        return this.mapToAggregate(r, lines, writeOffs);
-      })
+    const ids = rows.map((r) => r.id);
+    const [allLines, allWriteOffs] = await Promise.all([
+      query<SalReconciliationLineRow>(
+        `SELECT ${LINE_COLUMNS} FROM sal_reconciliation_line WHERE reconciliation_id IN (${ids.map(() => '?').join(',')}) AND deleted = 0 ORDER BY reconciliation_id, source_date, id`,
+        ids
+      ),
+      query<SalReconciliationWriteoffRow>(
+        `SELECT ${WRITEOFF_COLUMNS} FROM sal_reconciliation_writeoff WHERE reconciliation_id IN (${ids.map(() => '?').join(',')}) AND deleted = 0 ORDER BY reconciliation_id, write_off_date, id`,
+        ids
+      ),
+    ]);
+    const linesByReconId = new Map<number, SalReconciliationLineRow[]>();
+    allLines.forEach((l) => {
+      const arr = linesByReconId.get(l.reconciliation_id) ?? [];
+      arr.push(l);
+      linesByReconId.set(l.reconciliation_id, arr);
+    });
+    const writeOffsByReconId = new Map<number, SalReconciliationWriteoffRow[]>();
+    allWriteOffs.forEach((w) => {
+      const arr = writeOffsByReconId.get(w.reconciliation_id) ?? [];
+      arr.push(w);
+      writeOffsByReconId.set(w.reconciliation_id, arr);
+    });
+    return rows.map((r) =>
+      this.mapToAggregate(r, linesByReconId.get(r.id) ?? [], writeOffsByReconId.get(r.id) ?? [])
     );
   }
 
@@ -134,14 +151,31 @@ export class MysqlReconciliationRepository implements IReconciliationRepository 
       `SELECT ${MAIN_COLUMNS} FROM sal_reconciliation WHERE status = ? AND deleted = 0 ORDER BY create_time DESC`,
       [status]
     );
-    return Promise.all(
-      rows.map(async (r) => {
-        const [lines, writeOffs] = await Promise.all([
-          this.findLines(r.id),
-          this.findWriteOffs(r.id),
-        ]);
-        return this.mapToAggregate(r, lines, writeOffs);
-      })
+    const ids = rows.map((r) => r.id);
+    const [allLines, allWriteOffs] = await Promise.all([
+      query<SalReconciliationLineRow>(
+        `SELECT ${LINE_COLUMNS} FROM sal_reconciliation_line WHERE reconciliation_id IN (${ids.map(() => '?').join(',')}) AND deleted = 0 ORDER BY reconciliation_id, source_date, id`,
+        ids
+      ),
+      query<SalReconciliationWriteoffRow>(
+        `SELECT ${WRITEOFF_COLUMNS} FROM sal_reconciliation_writeoff WHERE reconciliation_id IN (${ids.map(() => '?').join(',')}) AND deleted = 0 ORDER BY reconciliation_id, write_off_date, id`,
+        ids
+      ),
+    ]);
+    const linesByReconId = new Map<number, SalReconciliationLineRow[]>();
+    allLines.forEach((l) => {
+      const arr = linesByReconId.get(l.reconciliation_id) ?? [];
+      arr.push(l);
+      linesByReconId.set(l.reconciliation_id, arr);
+    });
+    const writeOffsByReconId = new Map<number, SalReconciliationWriteoffRow[]>();
+    allWriteOffs.forEach((w) => {
+      const arr = writeOffsByReconId.get(w.reconciliation_id) ?? [];
+      arr.push(w);
+      writeOffsByReconId.set(w.reconciliation_id, arr);
+    });
+    return rows.map((r) =>
+      this.mapToAggregate(r, linesByReconId.get(r.id) ?? [], writeOffsByReconId.get(r.id) ?? [])
     );
   }
 

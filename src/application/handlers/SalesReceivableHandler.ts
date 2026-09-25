@@ -39,10 +39,13 @@ export class SalesReceivableHandler implements EventHandler<SalesOrderShippedEve
         logger.info(ctx, ts('k_82y3g6'), { orderNo, receivableNo });
 
         phase = 'insert_receivable';
+        // P1-②: 回填关联列 order_id / order_type
+        //（fin_receivable 真实关联列为 order_id，非 sales_order_id；order_type='sales' 与扫码发货路由口径一致）
         const insertParams = [
           receivableNo,
           customerId,
           orderNo,
+          orderId,
           totalShippedAmount,
           totalShippedAmount,
           `Sales order ${orderNo} outbound auto-generated`,
@@ -53,8 +56,8 @@ export class SalesReceivableHandler implements EventHandler<SalesOrderShippedEve
         });
         await conn.execute(
           `INSERT INTO fin_receivable
-           (receivable_no, customer_id, source_type, source_no, amount, received_amount, balance, status, due_date, remark, create_time)
-           VALUES (?, ?, 1, ?, ?, 0, ?, 1, DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, NOW())`,
+           (receivable_no, customer_id, source_type, source_no, order_id, order_type, amount, received_amount, balance, status, due_date, remark, create_time)
+           VALUES (?, ?, 1, ?, ?, 'sales', ?, 0, ?, 1, DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, NOW())`,
           insertParams
         );
         created = true;

@@ -41,7 +41,11 @@ export class PurchaseApplicationService {
     return this.orderRepo.findByStatus(status, { page, pageSize }, filters);
   }
 
-  async createOrder(props: PurchaseOrderProps): Promise<{ id: number; orderNo: string }> {
+  /**
+   * 采购单入参归一化：容差/税率/币种默认值、价格上限校验、本位币快照与金额换算。
+   * createOrder 与 updateDraftOrder 共用，避免两处口径漂移。
+   */
+  private async normalizeOrderProps(props: PurchaseOrderProps): Promise<PurchaseOrderProps> {
     // 采购允差比例：未指定时使用系统配置默认值
     let effectiveProps = props;
     if (!props.overReceiptTolerance) {
@@ -144,6 +148,12 @@ export class PurchaseApplicationService {
       baseGrandTotal: Math.round(baseGrandTotal * 100) / 100,
     };
 
+    return effectiveProps;
+  }
+
+  async createOrder(props: PurchaseOrderProps): Promise<{ id: number; orderNo: string }> {
+    const effectiveProps = await this.normalizeOrderProps(props);
+
     const order = PurchaseOrder.create(effectiveProps);
 
     // #① 引用完整性：写入前断言供应商与物料主数据存在（防悬空引用）
@@ -166,6 +176,61 @@ export class PurchaseApplicationService {
     }
 
     return result;
+  }
+
+  /**
+   * 更新草稿采购单（仅 draft 状态可改）。
+   *
+   * 为什么限制草稿：已提审/已审核的单据改明细会破坏审批语义，已收货的单据还涉及
+   * received_qty 对账。故此处与仓储层的「状态复核 + 行锁」双重拦截。
+   * 归一化与金额口径复用 normalizeOrderProps，保证与新建完全一致。
+   */
+  async updateOrder(
+    id: number,
+    props: PurchaseOrderProps
+  ): Promise<{ id: number; status: string }> {
+    const existing = await this.getOrderById(id);
+
+    if (!existing.status.canEdit()) {
+      throw new DomainError('仅「草稿」状态的采购单允许修改，该单据已进入流转流程');
+    }
+
+    // 币种与订单日期不随编辑变化：
+    //   - 币种创建后不可修改（既定业务规则，PUT 路由也会拦截显式传值），此处强制沿用库中币种，
+    //     否则 normalizeOrderProps 会按系统默认币种回填，把原单币种改掉。
+    //   - 新建弹窗没有订单日期录入项，编辑时同样保持原值。
+    const effectiveProps = await this.normalizeOrderProps({
+      ...props,
+      id,
+      currency: existing.currency,
+      orderDate: props.orderDate || existing.orderDate,
+    });
+
+    const order = PurchaseOrder.create(effectiveProps);
+
+    // 引用完整性：与新建同一口径，防悬空引用
+    await assertSupplierExists(effectiveProps.supplierId);
+    await assertAllMaterialsExist(effectiveProps.lines.map((l) => l.materialId));
+
+    const updated = await this.orderRepo.updateDraft(order);
+    if (!updated) {
+      // 读取后状态被他人流转或单据被删除，交由上层返回 409
+      throw new VersionConflictError();
+    }
+
+    // 与新建保持一致：总额超过审批阈值时自动提交进入审批流
+    const threshold = await getSystemConfigNumber('purchase.approval_threshold', 0);
+    if (threshold > 0 && order.totalAmount > threshold) {
+      order.submit();
+      const submitted = await this.orderRepo.updateStatus(id, 'submitted', 'draft');
+      if (!submitted) {
+        throw new VersionConflictError();
+      }
+    }
+
+    await this.persistAndPublishEvents(id, order);
+
+    return { id, status: order.status.value };
   }
 
   /**

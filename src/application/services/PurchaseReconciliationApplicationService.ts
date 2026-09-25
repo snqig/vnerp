@@ -160,7 +160,7 @@ export class PurchaseReconciliationApplicationService {
           originalBalance,
         ]
       );
-      if ((updateResult as ResultSetHeader).affectedRows === 0) {
+      if ((updateResult as unknown as ResultSetHeader).affectedRows === 0) {
         throw new VersionConflictError();
       }
 

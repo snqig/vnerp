@@ -12,6 +12,7 @@ import { PurchaseOrder, PurchaseOrderProps } from '@/domain/purchase/aggregates/
 import { PurchaseOrderStatus } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
+import { updateDraftOrder } from './purchaseOrderDraftWrite';
 
 type SqlValue = string | number | null | boolean | Date;
 
@@ -287,6 +288,10 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
 
       return { id: orderId, orderNo };
     });
+  }
+
+  async updateDraft(order: PurchaseOrder): Promise<boolean> {
+    return updateDraftOrder(order);
   }
 
   async updateStatus(id: number, status: string, currentStatus: string): Promise<boolean> {

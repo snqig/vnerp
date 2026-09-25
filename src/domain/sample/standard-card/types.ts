@@ -82,6 +82,8 @@ export interface CardData {
   filePath: string;
   sampleInfo: string;
   notes: string;
+  templateCategory: string;
+  tags: string;
   creator: string;
   reviewer: string;
   factoryManager: string;

@@ -2,7 +2,19 @@ import { t } from '@/lib/server-translate';
 
 import { DomainError } from '../../shared/DomainTypes';
 
-/** 工单状态：与 prod_work_order.status 字段对齐 */
+/**
+ * @deprecated 未接线（dead code），且词表与 DB **并不对齐** —— 勿用于新增代码。
+ *
+ * 事实（2026-09-23 运行时核实）：
+ *   - 唯一消费者 `ProductionApplicationService` 零外部引用；`@/domain/production` 桶文件亦无人 import
+ *   - `prod_work_order.status` 的规范词表是 `pending/confirmed/producing/completed/cancelled`，
+ *     与本类的 `draft/approved/picking/in_progress/closed` **不同域**；
+ *     原注释称「与 prod_work_order.status 字段对齐」是**错的**，已更正
+ *   - 本类原有的 1..7 数字码映射（1=draft…）与迁移 `060_unify_status_codes.sql` 的 1..5 口径互相矛盾，
+ *     且零调用 —— 已删除，以免再次被误采信（曾导致 mrp-engine 写出 `IN ('draft','approved')`）
+ *
+ * 唯一真相源：`@/lib/constants` 的 `WorkOrderStatus` + `normalizeWorkOrderStatus()`。
+ */
 export type WorkOrderStatus =
   | 'draft'
   | 'approved'
@@ -12,6 +24,7 @@ export type WorkOrderStatus =
   | 'closed'
   | 'cancelled';
 
+/** @deprecated 见文件头说明；唯一真相源为 `@/lib/constants`。 */
 export class WorkOrderStatusVO {
   private constructor(public readonly value: WorkOrderStatus) {}
 
@@ -51,34 +64,6 @@ export class WorkOrderStatusVO {
       throw new DomainError(`无效的工单状态: ${value}`);
     }
     return new WorkOrderStatusVO(value as WorkOrderStatus);
-  }
-
-  static fromDbCode(code: number): WorkOrderStatusVO {
-    const map: Record<number, WorkOrderStatus> = {
-      1: 'draft',
-      2: 'approved',
-      3: 'picking',
-      4: 'in_progress',
-      5: 'completed',
-      6: 'closed',
-      7: 'cancelled',
-    };
-    const status = map[code];
-    if (!status) throw new DomainError(`无效的工单状态码: ${code}`);
-    return new WorkOrderStatusVO(status);
-  }
-
-  toDbCode(): number {
-    const map: Record<WorkOrderStatus, number> = {
-      draft: 1,
-      approved: 2,
-      picking: 3,
-      in_progress: 4,
-      completed: 5,
-      closed: 6,
-      cancelled: 7,
-    };
-    return map[this.value];
   }
 
   private static transitions: Record<WorkOrderStatus, WorkOrderStatus[]> = {

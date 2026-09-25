@@ -267,7 +267,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
           order.sourceOrderId || null,
         ]
       );
-      const orderId = (orderResult as ResultSetHeader).insertId;
+      const orderId = (orderResult as unknown as ResultSetHeader).insertId;
 
       // 明细批量插入（保留 raw execute 以在事务连接内执行；
       // 后续可改用 getDrizzleDb().transaction + getDrizzleDb().insert 完成彻底迁移）
@@ -312,7 +312,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
       .where(and(eq(invInboundOrders.id, id), eq(invInboundOrders.status, dbCurrentStatus)));
 
     // affectedRows 在 mysql2 ResultSetHeader 上
-    return (result[0] as ResultSetHeader)?.affectedRows > 0;
+    return (result[0] as unknown as ResultSetHeader)?.affectedRows > 0;
   }
 
   /**
@@ -335,7 +335,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
     data: InboundOrderContentUpdate
   ): Promise<{ id: number; orderNo: string }> {
     return transaction(async (conn) => {
-  const ts = await getTranslations('Common');
+      const ts = await getTranslations('Common');
       const [rows] = (await conn.query(
         'SELECT id, order_no, status FROM inv_inbound_order WHERE id = ? AND deleted = 0',
         [id]
@@ -345,7 +345,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
         throw new NotFoundError(ts('k_5pww03'));
       }
 
-      const orderNo = rows[0].order_no;
+      const orderNo = String(rows[0].order_no || '');
 
       await conn.execute(
         `UPDATE inv_inbound_order SET

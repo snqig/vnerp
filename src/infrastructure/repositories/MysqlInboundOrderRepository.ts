@@ -302,7 +302,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
         ]
       );
 
-      const orderId = (orderResult as ResultSetHeader).insertId;
+      const orderId = (orderResult as unknown as ResultSetHeader).insertId;
 
       for (const item of items) {
         await conn.execute(

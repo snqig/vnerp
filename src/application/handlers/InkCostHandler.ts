@@ -100,12 +100,26 @@ export class InkCostHandler implements EventHandler<WorkOrderCompletedEvent> {
       totalInkCost += totalCost;
     }
 
-    // 如果没有直接的油墨使用记录，尝试从配方计算
+    // 无直接油墨使用记录时的口径：**不推算**，保持「未归集」的真实状态。
+    //
+    // 原实现此处调用 calculateInkCostFromFormula() 做配方兜底，但该路径存在双重缺陷，已移除：
+    //   1) 它引用的对象在库中**全部不存在** —— prd_work_order_material_req / ink_formula_detail
+    //      两张表不存在，prd_ink_formula 亦不存在；且全库没有任何表有 quantity_per_piece 列。
+    //      故该查询必然抛 ER_NO_SUCH_TABLE / ER_BAD_FIELD_ERROR。
+    //   2) 异常会被 handle() 的 try/catch 吞掉并记一条 secureLog('error')，于是「每个工单完工」
+    //      都会留下一条噪声错误日志，而油墨成本从未被真正归集（静默失效）。
+    //   3) 即便它侥幸不抛错，返回值也不回填 inkUsages，recordInkCost() 会遍历空数组空转
+    //      —— 结果是只写 work_order_costs 成本、却不产生任何库存流水，成本口径割裂。
+    //
+    // 现行真实数据面：ink_usage 与 ink_dispatch 均为 **0 行**，不存在「工单 → 实际用墨量」的数据源，
+    // 任何重写都只能臆造口径（本文档口径：不臆测业务）。待「领墨单 ink_dispatch →
+    // 配方 dcprint_ink_formula_version / dcprint_ink_formula_item」链路产生真实数据后，
+    // 再按该新表族重写成本归集（含库存流水与配方理论成本两条口径的取舍）。
     if (inkUsages.length === 0) {
-      const formulaCost = await this.calculateInkCostFromFormula(workOrderId);
-      if (formulaCost > 0) {
-        totalInkCost = formulaCost;
-      }
+      secureLog('warn', 'Ink cost skipped: no ink usage record for work order', {
+        workOrderId,
+        workOrderNo,
+      });
     }
 
     return {
@@ -116,40 +130,6 @@ export class InkCostHandler implements EventHandler<WorkOrderCompletedEvent> {
     };
   }
 
-  private async calculateInkCostFromFormula(workOrderId: number): Promise<number> {
-    // 从工艺配方计算标准油墨成本
-    const formulaRows = await query<{
-      planned_qty: string | number;
-      quantity_per_piece: string | number;
-      unit_price: string | number;
-    }>(
-      `SELECT
-        wo.planned_qty,
-        wf.quantity_per_piece,
-        bi.unit_price
-       FROM prod_work_order wo
-       LEFT JOIN prd_process_route pr ON wo.process_id = pr.id
-       LEFT JOIN prd_work_order_material_req wom ON wom.work_order_id = wo.id
-       LEFT JOIN ink_formula_workorder ifw ON ifw.work_order_id = wo.id
-       LEFT JOIN ink_formula_detail ifd ON ifd.formula_id = ifw.formula_id
-       LEFT JOIN base_ink bi ON ifd.ink_id = bi.id
-       WHERE wo.id = ?
-       LIMIT 1`,
-      [workOrderId]
-    );
-
-    if (formulaRows.length > 0) {
-      const row = formulaRows[0];
-      const plannedQty = parseFloat(String(row.planned_qty || 0));
-      const qtyPerPiece = parseFloat(String(row.quantity_per_piece || 0));
-      const unitPrice = parseFloat(String(row.unit_price || 0));
-
-      return plannedQty * qtyPerPiece * unitPrice;
-    }
-
-    return 0;
-  }
-
   private async recordInkCost(result: InkCostCalculationResult): Promise<void> {
     const transNo = `INK-COST-${Date.now()}`;
 
@@ -157,28 +137,27 @@ export class InkCostHandler implements EventHandler<WorkOrderCompletedEvent> {
       if (usage.totalCost <= 0) continue;
 
       await execute(
+        // 列对齐 inv_inventory_transaction 真实列集：该表【无】material_name/operator_id/operator_name
+        // （人员列实为 create_by，且为 bigint，不接受 'system' 字符串）。
+        // 油墨是 base_ink 记录（其无 material_id 列、且与 inv_material id 空间不同），
+        // 故 material_id/material_code 置 NULL，油墨编码改记 reference_no 以便追溯。
         `INSERT INTO inv_inventory_transaction (
           trans_no, trans_type, source_type, source_id,
-          material_id, material_code, material_name,
+          material_id, material_code,
           quantity, unit_price, total_amount,
           account_dr, account_cr,
-          operator_id, operator_name,
-          remark, create_time
-        ) VALUES (?, 'out', 'workorder', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          reference_no, remark, create_time
+        ) VALUES (?, 'out', 'workorder', ?, NULL, NULL, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           `${transNo}-${usage.inkId}`,
           result.workOrderId,
-          usage.inkId,
-          usage.inkCode,
-          usage.inkName,
           usage.usageQty,
           usage.unitPrice,
           usage.totalCost,
           '6401', // 制造费用-油墨
           '1301', // 原材料
-          null, // operator_id
-          'system',
-          `工单 ${result.workOrderNo} 油墨成本`,
+          usage.inkCode,
+          `工单 ${result.workOrderNo} 油墨成本（${usage.inkCode}）`,
         ]
       );
 

@@ -79,6 +79,8 @@ export const createEmptyData = (): CardData => ({
   filePath: '',
   sampleInfo: '',
   notes: '',
+  templateCategory: '',
+  tags: '',
   creator: '',
   reviewer: '',
   factoryManager: '',
@@ -177,6 +179,8 @@ export function mapCardDataToApiPayload(
     file_path: data.filePath,
     sample_info: data.sampleInfo,
     notes: data.notes,
+    template_category: data.templateCategory || null,
+    tags: data.tags ? JSON.stringify(data.tags.split(',').filter(Boolean)) : null,
     creator: data.creator,
     reviewer: data.reviewer,
     factory_manager: data.factoryManager,
@@ -278,6 +282,10 @@ export function mapApiDataToCardData(item: Record<string, unknown>): CardData {
     filePath: (item.file_path as string) || '',
     sampleInfo: (item.sample_info as string) || '',
     notes: (item.notes as string) || '',
+    templateCategory: (item.template_category as string) || '',
+    tags: typeof item.tags === 'string'
+      ? (() => { try { const parsed = JSON.parse(item.tags as string); return Array.isArray(parsed) ? parsed.join(',') : ''; } catch { return ''; } })()
+      : '',
     creator: (item.creator as string) || '',
     reviewer: (item.reviewer as string) || '',
     factoryManager: (item.factory_manager as string) || '',

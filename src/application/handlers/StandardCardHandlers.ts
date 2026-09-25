@@ -5,6 +5,7 @@ import { DomainEvent } from '@/domain/shared/DomainTypes';
 import { db } from '@/lib/db';
 import { getCacheManager } from '@/lib/cache';
 import { logger } from '@/lib/logger';
+import { WorkOrderStatus } from '@/lib/constants';
 
 export class StandardCardNotificationHandler implements EventHandler {
   async handle(event: DomainEvent): Promise<void> {
@@ -232,17 +233,17 @@ export class StandardCardWorkOrderLinkHandler implements EventHandler {
     standardCardId: number
   ): Promise<void> {
     const pendingWorkOrders = await db.query<{ id: number }>(
-      `SELECT id FROM prd_work_order
-          WHERE material_id = ?
-          AND status IN ('created', 'scheduled')
+      `SELECT id FROM prod_work_order
+          WHERE legacy_material_id = ?
+          AND status = ?
           AND standard_card_id IS NULL
           LIMIT 100`,
-      [materialId]
+      [materialId, WorkOrderStatus.PENDING]
     );
 
     for (const wo of pendingWorkOrders) {
       await db.execute(
-        `UPDATE prd_work_order SET standard_card_id = ?, update_time = NOW() WHERE id = ?`,
+        `UPDATE prod_work_order SET standard_card_id = ?, update_time = NOW() WHERE id = ?`,
         [standardCardId, wo.id]
       );
     }

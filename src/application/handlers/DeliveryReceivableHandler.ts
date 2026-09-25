@@ -39,10 +39,13 @@ export class DeliveryReceivableHandler implements EventHandler<DeliveryShippedEv
         logger.info(ctx, ts('k_82y3g6'), { deliveryNo, receivableNo });
 
         phase = 'insert_receivable';
+        // P1-②: 回填关联列 order_id / order_type
+        //（DeliveryShippedEvent.orderId 即销售单ID；fin_receivable 真实关联列为 order_id，order_type='sales'）
         const insertParams = [
           receivableNo,
           customerId,
           deliveryNo,
+          _orderId,
           totalAmount,
           totalAmount,
           `Sales delivery ${deliveryNo} auto-generated`,
@@ -53,8 +56,8 @@ export class DeliveryReceivableHandler implements EventHandler<DeliveryShippedEv
         });
         await conn.execute(
           `INSERT INTO fin_receivable
-           (receivable_no, customer_id, source_type, source_no, amount, received_amount, balance, status, due_date, remark, create_time)
-           VALUES (?, ?, 1, ?, ?, 0, ?, 1, DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, NOW())`,
+           (receivable_no, customer_id, source_type, source_no, order_id, order_type, amount, received_amount, balance, status, due_date, remark, create_time)
+           VALUES (?, ?, 1, ?, ?, 'sales', ?, 0, ?, 1, DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, NOW())`,
           insertParams
         );
         created = true;

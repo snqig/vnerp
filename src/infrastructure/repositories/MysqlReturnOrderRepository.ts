@@ -101,9 +101,18 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
       `SELECT ${MAIN_COLUMNS} FROM sal_return WHERE order_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [orderId]
     );
-    return Promise.all(
-      rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l)))
+    const ids = rows.map((r) => r.id);
+    const allLines = await query<SalReturnDetailRow>(
+      `SELECT ${DETAIL_COLUMNS} FROM sal_return_detail WHERE return_id IN (${ids.map(() => '?').join(',')}) AND deleted = 0 ORDER BY return_id, line_no`,
+      ids
     );
+    const linesByReturnId = new Map<number, SalReturnDetailRow[]>();
+    allLines.forEach((l) => {
+      const arr = linesByReturnId.get(l.return_id) ?? [];
+      arr.push(l);
+      linesByReturnId.set(l.return_id, arr);
+    });
+    return rows.map((r) => this.mapToAggregate(r, linesByReturnId.get(r.id) ?? []));
   }
 
   async findByCustomerId(customerId: number): Promise<ReturnOrder[]> {
@@ -111,9 +120,18 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
       `SELECT ${MAIN_COLUMNS} FROM sal_return WHERE customer_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [customerId]
     );
-    return Promise.all(
-      rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l)))
+    const ids = rows.map((r) => r.id);
+    const allLines = await query<SalReturnDetailRow>(
+      `SELECT ${DETAIL_COLUMNS} FROM sal_return_detail WHERE return_id IN (${ids.map(() => '?').join(',')}) AND deleted = 0 ORDER BY return_id, line_no`,
+      ids
     );
+    const linesByReturnId = new Map<number, SalReturnDetailRow[]>();
+    allLines.forEach((l) => {
+      const arr = linesByReturnId.get(l.return_id) ?? [];
+      arr.push(l);
+      linesByReturnId.set(l.return_id, arr);
+    });
+    return rows.map((r) => this.mapToAggregate(r, linesByReturnId.get(r.id) ?? []));
   }
 
   async findByStatus(status: number): Promise<ReturnOrder[]> {
@@ -121,9 +139,18 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
       `SELECT ${MAIN_COLUMNS} FROM sal_return WHERE status = ? AND deleted = 0 ORDER BY create_time DESC`,
       [status]
     );
-    return Promise.all(
-      rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l)))
+    const ids = rows.map((r) => r.id);
+    const allLines = await query<SalReturnDetailRow>(
+      `SELECT ${DETAIL_COLUMNS} FROM sal_return_detail WHERE return_id IN (${ids.map(() => '?').join(',')}) AND deleted = 0 ORDER BY return_id, line_no`,
+      ids
     );
+    const linesByReturnId = new Map<number, SalReturnDetailRow[]>();
+    allLines.forEach((l) => {
+      const arr = linesByReturnId.get(l.return_id) ?? [];
+      arr.push(l);
+      linesByReturnId.set(l.return_id, arr);
+    });
+    return rows.map((r) => this.mapToAggregate(r, linesByReturnId.get(r.id) ?? []));
   }
 
   async save(returnOrder: ReturnOrder): Promise<number> {

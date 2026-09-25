@@ -181,7 +181,7 @@ export class MysqlFormulaVersionRepository implements IFormulaVersionRepository 
           props.updateBy ?? null,
         ]
       );
-      const versionId = (insertResult as ResultSetHeader).insertId;
+      const versionId = (insertResult as unknown as ResultSetHeader).insertId;
 
       await this.saveItems(conn, versionId, props.items ?? []);
       return versionId;

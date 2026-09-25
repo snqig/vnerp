@@ -29,7 +29,7 @@ export class PurchaseReconciliationWrittenOffHandler implements EventHandler<Pur
     await transaction(async (conn) => {
       for (const record of writeOffRecords) {
         // SELECT ... FOR UPDATE 锁定应付单行，防止并发核销导致 paid_amount/balance 丢失更新
-        const [payableRow]: DbRow[] = await conn.execute(
+        const [payableRow] = await conn.execute(
           `SELECT id, payable_no, amount, paid_amount, balance, status
            FROM fin_payable
            WHERE id = ?
@@ -45,9 +45,9 @@ export class PurchaseReconciliationWrittenOffHandler implements EventHandler<Pur
           continue;
         }
 
-        const payable = payableRow[0];
-        const currentPaid = Number(payable.paid_amount || 0);
-        const currentBalance = Number(payable.balance || 0);
+        const payable = payableRow[0] as DbRow;
+        const currentPaid = Number(payable.paid_amount ?? 0);
+        const currentBalance = Number(payable.balance ?? 0);
 
         let writeOffAmount = Number(record.amount);
         // 透支保护：并发核销可能导致应付单余额不足，截断为当前余额
@@ -69,7 +69,7 @@ export class PurchaseReconciliationWrittenOffHandler implements EventHandler<Pur
         const newPaidAmount = Math.round((currentPaid + writeOffAmount) * 100) / 100;
         const newBalance = Math.round((currentBalance - writeOffAmount) * 100) / 100;
 
-        let newStatus = Number(payable.status);
+        let newStatus = Number(payable.status ?? 0);
         if (newBalance <= 0.001) {
           newStatus = 3; // 已结清
         } else if (newPaidAmount > 0) {
@@ -85,7 +85,7 @@ export class PurchaseReconciliationWrittenOffHandler implements EventHandler<Pur
 
         secureLog('info', ts('k_tfk91l'), {
           payableId: record.payableId,
-          payableNo: payable.payable_no,
+          payableNo: String(payable.payable_no ?? ''),
           writeOffAmount,
           newPaidAmount,
           newBalance,

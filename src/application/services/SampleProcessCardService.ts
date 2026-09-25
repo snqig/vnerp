@@ -516,9 +516,9 @@ export class SampleProcessCardService {
 
         phase = 'insert_work_order';
         const [woResult] = (await conn.execute(
-          `INSERT INTO prd_work_order
-         (work_order_no, work_order_date, material_id, plan_qty, unit, priority, status, remark, create_by, create_time)
-         VALUES (?, CURDATE(), ?, 1, 'pcs', 1, 1, ?, ?, NOW())`,
+          `INSERT INTO prod_work_order
+         (work_order_no, legacy_material_id, planned_qty, unit, priority, status, remark, create_by, create_time)
+         VALUES (?, ?, 1, 'pcs', 1, 1, ?, ?, NOW())`,
           [
             workOrderNo,
             card.substrate_material_id || 0,

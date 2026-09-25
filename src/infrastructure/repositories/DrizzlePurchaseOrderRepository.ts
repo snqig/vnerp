@@ -32,6 +32,7 @@ import {
   PurchaseStatus,
 } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
 import { generateDocumentNo } from '@/lib/document-numbering';
+import { updateDraftOrder } from './purchaseOrderDraftWrite';
 import type { ResultSetHeader } from 'mysql2/promise';
 
 type PurPurchaseOrderRow = typeof purPurchaseOrder.$inferSelect;
@@ -310,7 +311,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
           order.createBy || null,
         ]
       );
-      const orderId = (orderResult as ResultSetHeader).insertId;
+      const orderId = (orderResult as unknown as ResultSetHeader).insertId;
 
       for (const line of order.lines) {
         await conn.execute(
@@ -356,6 +357,14 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
   }
 
   /**
+   * 整体更新草稿采购单。与 MysqlPurchaseOrderRepository 共用同一实现，
+   * 避免两套仓储对「草稿可改」的 SQL 与状态判定产生漂移。
+   */
+  async updateDraft(order: PurchaseOrder): Promise<boolean> {
+    return updateDraftOrder(order);
+  }
+
+  /**
    * updateStatus - 乐观锁 UPDATE
    */
   async updateStatus(id: number, status: string, currentStatus: string): Promise<boolean> {
@@ -368,7 +377,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
       .set({ status: dbStatus, updateTime: new Date() })
       .where(and(eq(purPurchaseOrder.id, id), eq(purPurchaseOrder.status, dbCurrentStatus)));
 
-    const affected = (result[0] as ResultSetHeader)?.affectedRows > 0;
+    const affected = (result[0] as unknown as ResultSetHeader)?.affectedRows > 0;
     logOp(
       'updateStatus',
       'pur_purchase_order (UPDATE)',

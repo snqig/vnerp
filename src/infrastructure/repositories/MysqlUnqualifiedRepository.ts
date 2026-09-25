@@ -11,7 +11,7 @@ import {
 } from '@/domain/quality/aggregates/UnqualifiedProduct';
 import { UnqualifiedStatus } from '@/domain/quality/value-objects/UnqualifiedStatus';
 import { HandleMethod } from '@/domain/quality/value-objects/HandleMethod';
-import { query, execute, queryPaginated } from '@/lib/db';
+import { query, execute, queryPaginated, queryOne } from '@/lib/db';
 
 interface UnqualifiedRow {
   id: number;
@@ -98,11 +98,21 @@ function generateUnqualifiedNo(): string {
   return `UQ-${dateStr}-${random}`;
 }
 
-function generateHandleNo(): string {
+/**
+ * 处理单号生成规则：UNQ-年-月日-序号（序号按天从 001 递增）
+ * 例：UNQ-2026-0922-001
+ */
+async function generateHandleNo(): Promise<string> {
   const now = new Date();
-  const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-  const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-  return `UH-${dateStr}-${random}`;
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  const prefix = `UNQ-${dateStr}-`;
+  const row = await queryOne<{ maxNo: string | null }>(
+    'SELECT MAX(handle_no) AS maxNo FROM qc_unqualified WHERE handle_no LIKE ?',
+    [`${prefix}%`]
+  );
+  const lastSeq = row?.maxNo ? Number(row.maxNo.slice(prefix.length)) : 0;
+  const nextSeq = Number.isFinite(lastSeq) && lastSeq > 0 ? lastSeq + 1 : 1;
+  return `${prefix}${String(nextSeq).padStart(3, '0')}`;
 }
 
 export class MysqlUnqualifiedRepository implements IUnqualifiedRepository {
@@ -186,7 +196,7 @@ export class MysqlUnqualifiedRepository implements IUnqualifiedRepository {
     record: UnqualifiedProduct
   ): Promise<{ id: number; unqualifiedNo: string; handleNo: string }> {
     const unqualifiedNo = record.unqualifiedNo || generateUnqualifiedNo();
-    const handleNo = record.handleNo || generateHandleNo();
+    const handleNo = record.handleNo || (await generateHandleNo());
 
     const result = await execute(
       `INSERT INTO qc_unqualified

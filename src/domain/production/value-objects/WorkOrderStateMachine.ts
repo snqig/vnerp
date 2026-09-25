@@ -1,18 +1,3 @@
-import { t } from '@/lib/server-translate';
-
-export type WorkOrderStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'material_preparing'
-  | 'material_ready'
-  | 'producing'
-  | 'qc_pending'
-  | 'qc_pass'
-  | 'qc_fail'
-  | 'rework'
-  | 'completed'
-  | 'cancelled';
-
 export type ProcessStepStatus = 'pending' | 'in_progress' | 'completed' | 'skipped' | 'failed';
 
 export interface ProcessStep {
@@ -34,87 +19,11 @@ export interface ProcessStep {
   remark?: string;
 }
 
-interface WorkOrderStatusConfig {
-  label: string;
-  color: string;
-  allowedTransitions: WorkOrderStatus[];
-  allowedOperations: string[];
-}
-
 interface ProcessStepStatusConfig {
   label: string;
   color: string;
   allowedTransitions: ProcessStepStatus[];
 }
-
-const workOrderStateMachineConfig: Record<WorkOrderStatus, WorkOrderStatusConfig> = {
-  pending: {
-    label: '待确认',
-    color: 'bg-gray-100 text-gray-700',
-    allowedTransitions: ['confirmed', 'cancelled'],
-    allowedOperations: ['edit', 'delete', 'confirm', 'cancel'],
-  },
-  confirmed: {
-    label: '已确认',
-    color: 'bg-blue-100 text-blue-700',
-    allowedTransitions: ['material_preparing', 'cancelled'],
-    allowedOperations: ['start_material_prep', 'cancel'],
-  },
-  material_preparing: {
-    label: '备料中',
-    color: 'bg-cyan-100 text-cyan-700',
-    allowedTransitions: ['material_ready', 'cancelled'],
-    allowedOperations: ['complete_material_prep', 'cancel'],
-  },
-  material_ready: {
-    label: '备料完成',
-    color: 'bg-teal-100 text-teal-700',
-    allowedTransitions: ['producing', 'cancelled'],
-    allowedOperations: ['start_production', 'cancel'],
-  },
-  producing: {
-    label: '生产中',
-    color: 'bg-yellow-100 text-yellow-700',
-    allowedTransitions: ['qc_pending', 'cancelled'],
-    allowedOperations: ['submit_qc', 'cancel'],
-  },
-  qc_pending: {
-    label: '待检验',
-    color: 'bg-orange-100 text-orange-700',
-    allowedTransitions: ['qc_pass', 'qc_fail'],
-    allowedOperations: ['inspect'],
-  },
-  qc_pass: {
-    label: '检验通过',
-    color: 'bg-green-100 text-green-700',
-    allowedTransitions: ['completed'],
-    allowedOperations: ['complete'],
-  },
-  qc_fail: {
-    label: '检验失败',
-    color: 'bg-red-100 text-red-700',
-    allowedTransitions: ['rework', 'cancelled'],
-    allowedOperations: ['rework', 'cancel'],
-  },
-  rework: {
-    label: '返工中',
-    color: 'bg-purple-100 text-purple-700',
-    allowedTransitions: ['qc_pending'],
-    allowedOperations: ['submit_qc'],
-  },
-  completed: {
-    label: '已完成',
-    color: 'bg-indigo-100 text-indigo-700',
-    allowedTransitions: [],
-    allowedOperations: [],
-  },
-  cancelled: {
-    label: '已取消',
-    color: 'bg-gray-200 text-gray-500',
-    allowedTransitions: [],
-    allowedOperations: [],
-  },
-};
 
 const processStepStateMachineConfig: Record<ProcessStepStatus, ProcessStepStatusConfig> = {
   pending: {
@@ -143,61 +52,6 @@ const processStepStateMachineConfig: Record<ProcessStepStatus, ProcessStepStatus
     allowedTransitions: ['in_progress'],
   },
 };
-
-export class WorkOrderStateMachine {
-  static canTransition(from: WorkOrderStatus, to: WorkOrderStatus): boolean {
-    if (from === to) return true;
-    return workOrderStateMachineConfig[from].allowedTransitions.includes(to);
-  }
-
-  static getAllowedTransitions(status: WorkOrderStatus): WorkOrderStatus[] {
-    return workOrderStateMachineConfig[status].allowedTransitions;
-  }
-
-  static getStatusLabel(status: WorkOrderStatus): string {
-    return workOrderStateMachineConfig[status]?.label || status;
-  }
-
-  static getStatusColor(status: WorkOrderStatus): string {
-    return workOrderStateMachineConfig[status]?.color || 'bg-gray-100 text-gray-700';
-  }
-
-  static getAllowedOperations(status: WorkOrderStatus): string[] {
-    return workOrderStateMachineConfig[status].allowedOperations;
-  }
-
-  static canEdit(status: WorkOrderStatus): boolean {
-    return workOrderStateMachineConfig[status].allowedOperations.includes('edit');
-  }
-
-  static canDelete(status: WorkOrderStatus): boolean {
-    return workOrderStateMachineConfig[status].allowedOperations.includes('delete');
-  }
-
-  static canCancel(status: WorkOrderStatus): boolean {
-    return workOrderStateMachineConfig[status].allowedOperations.includes('cancel');
-  }
-
-  static getTransitionError(from: WorkOrderStatus, to: WorkOrderStatus): string {
-  const tc = t;
-    if (from === to) return '';
-    const config = workOrderStateMachineConfig[from];
-    if (config.allowedTransitions.includes(to)) return '';
-    const fromLabel = config.label;
-    const toLabel = workOrderStateMachineConfig[to]?.label || to;
-    const allowedLabels = config.allowedTransitions
-      .map((s) => workOrderStateMachineConfig[s].label)
-      .join('、');
-    return `工单状态不允许从"${fromLabel}"流转到"${toLabel}"，允许的流转目标：${allowedLabels || tc('none')}`;
-  }
-
-  static validateTransition(from: WorkOrderStatus, to: WorkOrderStatus): void {
-    if (from === to) return;
-    if (!workOrderStateMachineConfig[from].allowedTransitions.includes(to)) {
-      throw new Error(WorkOrderStateMachine.getTransitionError(from, to));
-    }
-  }
-}
 
 export class ProcessStepStateMachine {
   static canTransition(from: ProcessStepStatus, to: ProcessStepStatus): boolean {

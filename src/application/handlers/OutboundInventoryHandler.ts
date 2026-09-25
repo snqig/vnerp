@@ -18,7 +18,7 @@ export class OutboundInventoryHandler implements EventHandler<OutboundOrderAppro
         );
 
         if (existingInv.length > 0) {
-          const currentQty = parseFloat(existingInv[0].quantity);
+          const currentQty = parseFloat(String(existingInv[0].quantity));
           if (currentQty < item.quantity) {
             throw new Error(
               `物料${item.materialName}库存不足: 当前${currentQty}, 需要出库${item.quantity}`
@@ -36,8 +36,8 @@ export class OutboundInventoryHandler implements EventHandler<OutboundOrderAppro
         );
 
         if (existingBatch.length > 0) {
-          const newAvailableQty = parseFloat(existingBatch[0].available_qty) - item.quantity;
-          const newQty = parseFloat(existingBatch[0].quantity) - item.quantity;
+          const newAvailableQty = parseFloat(String(existingBatch[0].available_qty)) - item.quantity;
+          const newQty = parseFloat(String(existingBatch[0].quantity)) - item.quantity;
           if (newAvailableQty <= 0 || newQty <= 0) {
             await conn.execute(
               'UPDATE inv_inventory_batch SET deleted = 1, update_time = NOW() WHERE id = ?',

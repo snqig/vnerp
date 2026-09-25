@@ -56,14 +56,17 @@ export class ToolCostHandler implements EventHandler<WorkOrderCompletedEvent> {
   ): Promise<void> {
     const transNo = `TOOL-COST-${workOrderId}-${Date.now()}`;
     await execute(
+      // 列对齐 inv_inventory_transaction 真实列集：该表【无】material_name/operator_id/operator_name
+      // （人员列实为 create_by，且为 bigint，不接受 'system' 字符串）。
+      // 本条为整单汇总单行（非逐工装），无从提供 material_id/material_code/quantity/unit_price
+      // → 一律 NULL；与 InkCostHandler / ScreenPlateCostHandler 同口径。
       `INSERT INTO inv_inventory_transaction (
         trans_no, trans_type, source_type, source_id,
-        material_id, material_code, material_name,
+        material_id, material_code,
         quantity, unit_price, total_amount,
         account_dr, account_cr,
-        operator_id, operator_name,
         remark, create_time
-      ) VALUES (?, 'out', 'workorder', ?, NULL, NULL, NULL, NULL, NULL, ?, ?, ?, NULL, 'system', ?, NOW())`,
+      ) VALUES (?, 'out', 'workorder', ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?, NOW())`,
       [transNo, workOrderId, totalCost, '6403', '1801', `工单 ${workOrderNo} 工装摊销成本归集`]
     );
   }

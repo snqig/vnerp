@@ -2,15 +2,24 @@ import { query, execute, queryOne, type SqlValue } from '@/lib/db';
 import { IEquipmentRepository } from '@/domain/equipment/repositories/IEquipmentRepository';
 import { Equipment, EquipmentStatus, EquipmentType } from '@/domain/equipment/aggregates/Equipment';
 
+const EQUIPMENT_TYPE_MAP: Record<number, EquipmentType> = {
+  1: EquipmentType.PRINTING,
+  2: EquipmentType.DIE_CUTTING,
+  3: EquipmentType.LAMINATING,
+  4: EquipmentType.SLITTING,
+  5: EquipmentType.OTHER,
+};
+
 type EquipmentRow = {
   id: number;
   equipment_code: string;
   equipment_name: string;
-  equipment_type: string;
-  model: string;
-  manufacturer: string;
-  workshop: string;
-  location: string;
+  equipment_type: number;
+  model: string | null;
+  manufacturer: string | null;
+  workshop: string | null;
+  workshop_id: number | null;
+  location: string | null;
   purchase_date: string | null;
   install_date: string | null;
   purchase_price: number;
@@ -20,7 +29,7 @@ type EquipmentRow = {
   cumulative_print_count: number;
   last_maintenance_date: string | null;
   next_maintenance_date: string | null;
-  remark: string;
+  remark: string | null;
 };
 
 function rowToEquipment(row: EquipmentRow): Equipment {
@@ -28,28 +37,28 @@ function rowToEquipment(row: EquipmentRow): Equipment {
     row.id,
     row.equipment_code,
     row.equipment_name,
-    row.equipment_type as EquipmentType,
-    row.model,
-    row.manufacturer,
-    row.workshop,
-    row.location,
+    EQUIPMENT_TYPE_MAP[row.equipment_type] || EquipmentType.OTHER,
+    row.model ?? '',
+    row.manufacturer ?? '',
+    row.workshop ?? '',
+    row.location ?? '',
     row.purchase_date ?? undefined,
     row.install_date ?? undefined,
-    row.purchase_price,
-    row.expected_life_years,
+    Number(row.purchase_price ?? 0),
+    Number(row.expected_life_years ?? 10),
     row.status as EquipmentStatus,
-    row.cumulative_run_hours,
-    row.cumulative_print_count,
+    Number(row.cumulative_run_hours ?? 0),
+    Number(row.cumulative_print_count ?? 0),
     row.last_maintenance_date ?? undefined,
     row.next_maintenance_date ?? undefined,
-    row.remark
+    row.remark ?? ''
   );
 }
 
 export class MysqlEquipmentRepository implements IEquipmentRepository {
   async getById(id: number): Promise<Equipment | null> {
     const rows = await query<EquipmentRow>(
-      'SELECT * FROM eq_equipment WHERE id = ? AND deleted = 0',
+      'SELECT * FROM eqp_equipment WHERE id = ? AND deleted = 0',
       [id]
     );
     return rows.length > 0 ? rowToEquipment(rows[0]) : null;
@@ -57,7 +66,7 @@ export class MysqlEquipmentRepository implements IEquipmentRepository {
 
   async getByCode(equipmentCode: string): Promise<Equipment | null> {
     const rows = await query<EquipmentRow>(
-      'SELECT * FROM eq_equipment WHERE equipment_code = ? AND deleted = 0',
+      'SELECT * FROM eqp_equipment WHERE equipment_code = ? AND deleted = 0',
       [equipmentCode]
     );
     return rows.length > 0 ? rowToEquipment(rows[0]) : null;
@@ -65,7 +74,7 @@ export class MysqlEquipmentRepository implements IEquipmentRepository {
 
   async existsByCode(equipmentCode: string): Promise<boolean> {
     const row = await queryOne<{ cnt: number }>(
-      'SELECT COUNT(*) as cnt FROM eq_equipment WHERE equipment_code = ? AND deleted = 0',
+      'SELECT COUNT(*) as cnt FROM eqp_equipment WHERE equipment_code = ? AND deleted = 0',
       [equipmentCode]
     );
     return (row?.cnt ?? 0) > 0;
@@ -77,7 +86,7 @@ export class MysqlEquipmentRepository implements IEquipmentRepository {
     status?: EquipmentStatus;
     workshop?: string;
   }): Promise<Equipment[]> {
-    let sql = 'SELECT * FROM eq_equipment WHERE deleted = 0';
+    let sql = 'SELECT * FROM eqp_equipment WHERE deleted = 0';
     const bindings: SqlValue[] = [];
     if (params?.keyword) {
       sql += ' AND (equipment_code LIKE ? OR equipment_name LIKE ? OR model LIKE ?)';
@@ -93,8 +102,8 @@ export class MysqlEquipmentRepository implements IEquipmentRepository {
       bindings.push(params.status);
     }
     if (params?.workshop) {
-      sql += ' AND workshop = ?';
-      bindings.push(params.workshop);
+      sql += ' AND (workshop LIKE ? OR workshop_id = ?)';
+      bindings.push(`%${params.workshop}%`, params.workshop ? Number(params.workshop) : 0);
     }
     sql += ' ORDER BY id DESC';
     const rows = await query<EquipmentRow>(sql, bindings);
@@ -103,7 +112,7 @@ export class MysqlEquipmentRepository implements IEquipmentRepository {
 
   async save(equipment: Equipment): Promise<number> {
     const result = await execute(
-      `INSERT INTO eq_equipment
+      `INSERT INTO eqp_equipment
        (equipment_code, equipment_name, equipment_type, model, manufacturer,
         workshop, location, purchase_date, install_date, purchase_price,
         expected_life_years, status, cumulative_run_hours, cumulative_print_count,
@@ -114,10 +123,10 @@ export class MysqlEquipmentRepository implements IEquipmentRepository {
         equipment.equipmentCode,
         equipment.equipmentName,
         equipment.equipmentType,
-        equipment.model,
-        equipment.manufacturer,
-        equipment.workshop,
-        equipment.location,
+        equipment.model || null,
+        equipment.manufacturer || null,
+        equipment.workshop || null,
+        equipment.location || null,
         equipment.purchaseDate ?? null,
         equipment.installDate ?? null,
         equipment.purchasePrice,
@@ -135,7 +144,7 @@ export class MysqlEquipmentRepository implements IEquipmentRepository {
 
   async update(equipment: Equipment): Promise<void> {
     await execute(
-      `UPDATE eq_equipment SET
+      `UPDATE eqp_equipment SET
         equipment_name=?, equipment_type=?, model=?, manufacturer=?,
         workshop=?, location=?, purchase_date=?, install_date=?,
         purchase_price=?, expected_life_years=?, status=?,
@@ -146,10 +155,10 @@ export class MysqlEquipmentRepository implements IEquipmentRepository {
       [
         equipment.equipmentName,
         equipment.equipmentType,
-        equipment.model,
-        equipment.manufacturer,
-        equipment.workshop,
-        equipment.location,
+        equipment.model || null,
+        equipment.manufacturer || null,
+        equipment.workshop || null,
+        equipment.location || null,
         equipment.purchaseDate ?? null,
         equipment.installDate ?? null,
         equipment.purchasePrice,
@@ -166,14 +175,14 @@ export class MysqlEquipmentRepository implements IEquipmentRepository {
   }
 
   async softDelete(id: number): Promise<void> {
-    await execute('UPDATE eq_equipment SET deleted=1, update_time=NOW() WHERE id=?', [id]);
+    await execute('UPDATE eqp_equipment SET deleted=1, update_time=NOW() WHERE id=?', [id]);
   }
 
   async generateEquipmentCode(): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const row = await queryOne<{ seq: number }>(
       `SELECT COALESCE(MAX(CAST(SUBSTRING(equipment_code, 5) AS UNSIGNED)), 0) + 1 as seq
-       FROM eq_equipment WHERE equipment_code LIKE CONCAT('EQ-', ?, '%')`,
+       FROM eqp_equipment WHERE equipment_code LIKE CONCAT('EQ-', ?, '%')`,
       [dateStr]
     );
     const seq = row?.seq ?? 1;

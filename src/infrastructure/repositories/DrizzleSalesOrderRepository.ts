@@ -253,7 +253,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         orderParams
       );
-      const orderId = (orderResult as ResultSetHeader).insertId;
+      const orderId = (orderResult as unknown as ResultSetHeader).insertId;
 
       for (const line of order.lines) {
         const lineParams = [
@@ -308,7 +308,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
       .set({ status: dbStatus, updateTime: new Date() })
       .where(and(eq(salOrder.id, id), eq(salOrder.status, dbCurrentStatus)));
 
-    const affected = (result[0] as ResultSetHeader)?.affectedRows > 0;
+    const affected = (result[0] as unknown as ResultSetHeader)?.affectedRows > 0;
     logOp(
       'updateStatus',
       'sal_order (UPDATE)',

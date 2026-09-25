@@ -212,7 +212,7 @@ export class MysqlSampleOrderRepository implements ISampleOrderRepository {
       // mysql2 的 execute 类型签名比 query 更严格（不接受 undefined），实际运行时支持
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const [result] = await conn.execute(sql, values as any[]);
-      return result as ResultSetHeader;
+      return result as unknown as ResultSetHeader;
     }
     return execute(sql, values);
   }

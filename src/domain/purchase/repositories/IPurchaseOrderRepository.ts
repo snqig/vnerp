@@ -29,6 +29,11 @@ export interface IPurchaseOrderRepository {
     }
   ): Promise<PaginatedResult<PurchaseOrder>>;
   save(order: PurchaseOrder): Promise<{ id: number; orderNo: string }>;
+  /**
+   * 整体更新「草稿」采购单：表头字段覆盖 + 明细整批替换，同一事务内完成。
+   * 仅在 status = 'draft' 时生效；返回 false 表示状态已变化（并发保护），调用方应视为冲突。
+   */
+  updateDraft(order: PurchaseOrder): Promise<boolean>;
   updateStatus(id: number, status: string, currentStatus: string): Promise<boolean>;
   updateReceivedQty(lineId: number, receivedQty: number): Promise<void>;
   updateAuditInfo(id: number, auditBy: number, auditTime: string): Promise<void>;

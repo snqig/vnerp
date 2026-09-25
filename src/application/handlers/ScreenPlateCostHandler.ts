@@ -20,6 +20,21 @@ export interface ScreenPlateCostResult {
   totalPlateCost: number;
 }
 
+/**
+ * 网版成本归集处理器
+ *
+ * 订阅 workorder.completed 事件，归集本工单网版使用成本到完工成本核算表
+ * （work_order_costs.manufacturing_cost），与 InkCostHandler（油墨）/ ToolCostHandler（工装）
+ * 保持同一归集模式。
+ *
+ * 数据来源（2026-09-23 依库结构核实后校正）：
+ * - 工单↔网版 的关联落在 `prd_work_report.screen_plate_id`（报工单），
+ *   原代码引用的 `screen_plate_usage` 表在库中并不存在，导致本 handler 每次触发都抛异常并被
+ *   catch 静默吞掉（等于从未生效）。
+ * - 网版价格：`prd_screen_plate` 没有任何价格列，`inv_material` 中「网版」行的
+ *   purchase_price 亦为空，故不从表取价，改由系统参数
+ *   `screen_plate.default_purchase_price`（缺省 0）提供，避免臆造金额。
+ */
 export class ScreenPlateCostHandler implements EventHandler<WorkOrderCompletedEvent> {
   async handle(event: WorkOrderCompletedEvent): Promise<void> {
     const { workOrderId, workOrderNo, completedQty } = event.payload;
@@ -57,32 +72,37 @@ export class ScreenPlateCostHandler implements EventHandler<WorkOrderCompletedEv
   ): Promise<ScreenPlateCostResult> {
     const plateUsages: ScreenPlateUsageRecord[] = [];
 
+    // 工单↔网版 的唯一真实关联：报工单 prd_work_report.screen_plate_id
     const usageRows = await query<{
       plateId: number;
       plateCode: string;
       plateName: string;
-      totalUsedCount: string | number;
+      currentUsage: string | number;
       maxUseCount: string | number;
       lifeCount: string | number;
       maxLifeCount: string | number;
-      currentUsage: string | number;
-      purchasePrice: string | number;
     }>(
       `SELECT
         sp.id as plateId,
         sp.plate_code as plateCode,
         sp.plate_name as plateName,
-        sp.used_count as totalUsedCount,
+        COUNT(wr.id) as currentUsage,
         sp.max_use_count as maxUseCount,
         sp.life_count as lifeCount,
-        sp.max_life_count as maxLifeCount,
-        spu.usage_count as currentUsage,
-        sp.purchase_price as purchasePrice
-       FROM screen_plate_usage spu
-       LEFT JOIN prd_screen_plate sp ON spu.plate_id = sp.id
-       WHERE spu.work_order_id = ?
-       AND spu.deleted = 0`,
+        sp.max_life_count as maxLifeCount
+       FROM prd_work_report wr
+       INNER JOIN prd_screen_plate sp ON sp.id = wr.screen_plate_id AND sp.deleted = 0
+       WHERE wr.work_order_id = ?
+       AND wr.deleted = 0
+       GROUP BY sp.id, sp.plate_code, sp.plate_name,
+                sp.max_use_count, sp.life_count, sp.max_life_count`,
       [workOrderId]
+    );
+
+    // 网版无采购价字段，价格来自系统参数；缺省 0 表示暂不归集，不臆造金额
+    const purchasePrice = CalcParamService.getCachedDecimal(
+      'screen_plate.default_purchase_price',
+      0
     );
 
     let totalPlateCost = 0;
@@ -93,7 +113,6 @@ export class ScreenPlateCostHandler implements EventHandler<WorkOrderCompletedEv
       const maxUseCount = parseInt(String(row.maxUseCount || 1000));
       const lifeCount = parseInt(String(row.lifeCount || 0));
       const maxLifeCount = parseInt(String(row.maxLifeCount || 10000));
-      const purchasePrice = parseFloat(String(row.purchasePrice || 0));
 
       // 计算摊销成本：按使用次数摊销
       const amortizedCost = this.calculateAmortizedCost(purchasePrice, maxUseCount, currentUsage);
@@ -113,14 +132,6 @@ export class ScreenPlateCostHandler implements EventHandler<WorkOrderCompletedEv
       });
 
       totalPlateCost += totalCost;
-    }
-
-    // 如果没有直接使用记录，尝试从网版关联计算
-    if (plateUsages.length === 0) {
-      const linkedCost = await this.calculateScreenPlateCostFromLink(workOrderId);
-      if (linkedCost > 0) {
-        totalPlateCost = linkedCost;
-      }
     }
 
     return {
@@ -163,33 +174,6 @@ export class ScreenPlateCostHandler implements EventHandler<WorkOrderCompletedEv
     return purchasePrice * wearRatio * wearCostRatio; // 磨损系数从配置读取
   }
 
-  private async calculateScreenPlateCostFromLink(workOrderId: number): Promise<number> {
-    const linkRows = await query<{
-      usageCount: string | number;
-      purchase_price: string | number;
-    }>(
-      `SELECT
-        COUNT(*) as usageCount,
-        sp.purchase_price
-       FROM prd_work_order wo
-       LEFT JOIN prd_screen_plate sp ON wo.id IS NOT NULL
-       WHERE wo.id = ?
-       LIMIT 1`,
-      [workOrderId]
-    );
-
-    if (linkRows.length > 0) {
-      const row = linkRows[0];
-      const usageCount = parseInt(String(row.usageCount || 0));
-      const purchasePrice = parseFloat(String(row.purchase_price || 0));
-
-      // 默认每次使用成本估算
-      return usageCount * (purchasePrice / 1000);
-    }
-
-    return 0;
-  }
-
   private async recordScreenPlateCost(result: ScreenPlateCostResult): Promise<void> {
     const transNo = `SCR-COST-${Date.now()}`;
 
@@ -197,30 +181,28 @@ export class ScreenPlateCostHandler implements EventHandler<WorkOrderCompletedEv
       if (usage.amortizedCost <= 0 && usage.wearCost <= 0) continue;
 
       const totalCost = usage.amortizedCost + usage.wearCost;
+      // 网版不是 inv_material 记录（两者 id 空间不同），故 material_id 置 NULL，
+      // 与 ToolCostHandler 保持一致，仅在 remark 中保留网版编码以便追溯。
+      const unitPrice = usage.usageCount > 0 ? totalCost / usage.usageCount : 0;
 
       await execute(
         `INSERT INTO inv_inventory_transaction (
           trans_no, trans_type, source_type, source_id,
-          material_id, material_code, material_name,
+          material_id, material_code,
           quantity, unit_price, total_amount,
           account_dr, account_cr,
-          operator_id, operator_name,
-          remark, create_time
-        ) VALUES (?, 'out', 'workorder', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          reference_no, remark, create_time
+        ) VALUES (?, 'out', 'workorder', ?, NULL, NULL, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           `${transNo}-${usage.plateId}`,
           result.workOrderId,
-          usage.plateId,
-          usage.plateCode,
-          usage.plateName,
           usage.usageCount,
-          (usage.amortizedCost + usage.wearCost) / usage.usageCount,
+          unitPrice,
           totalCost,
           '6402', // 制造费用-网版摊销
           '1801', // 长期待摊费用
-          null,
-          'system',
-          `工单 ${result.workOrderNo} 网版成本`,
+          usage.plateCode,
+          `工单 ${result.workOrderNo} 网版成本（${usage.plateCode}）`,
         ]
       );
 

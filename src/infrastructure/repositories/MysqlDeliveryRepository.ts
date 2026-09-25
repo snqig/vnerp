@@ -94,9 +94,18 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
       `SELECT ${MAIN_COLUMNS} FROM sal_delivery WHERE order_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [orderId]
     );
-    return Promise.all(
-      rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l)))
+    const ids = rows.map((r) => r.id);
+    const allLines = await query<SalDeliveryDetailRow>(
+      `SELECT ${DETAIL_COLUMNS} FROM sal_delivery_detail WHERE delivery_id IN (${ids.map(() => '?').join(',')}) AND deleted = 0 ORDER BY delivery_id, line_no`,
+      ids
     );
+    const linesByDeliveryId = new Map<number, SalDeliveryDetailRow[]>();
+    allLines.forEach((l) => {
+      const arr = linesByDeliveryId.get(l.delivery_id) ?? [];
+      arr.push(l);
+      linesByDeliveryId.set(l.delivery_id, arr);
+    });
+    return rows.map((r) => this.mapToAggregate(r, linesByDeliveryId.get(r.id) ?? []));
   }
 
   async findByCustomerId(customerId: number): Promise<Delivery[]> {
@@ -104,9 +113,18 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
       `SELECT ${MAIN_COLUMNS} FROM sal_delivery WHERE customer_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [customerId]
     );
-    return Promise.all(
-      rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l)))
+    const ids = rows.map((r) => r.id);
+    const allLines = await query<SalDeliveryDetailRow>(
+      `SELECT ${DETAIL_COLUMNS} FROM sal_delivery_detail WHERE delivery_id IN (${ids.map(() => '?').join(',')}) AND deleted = 0 ORDER BY delivery_id, line_no`,
+      ids
     );
+    const linesByDeliveryId = new Map<number, SalDeliveryDetailRow[]>();
+    allLines.forEach((l) => {
+      const arr = linesByDeliveryId.get(l.delivery_id) ?? [];
+      arr.push(l);
+      linesByDeliveryId.set(l.delivery_id, arr);
+    });
+    return rows.map((r) => this.mapToAggregate(r, linesByDeliveryId.get(r.id) ?? []));
   }
 
   async findByStatus(status: number): Promise<Delivery[]> {
@@ -114,9 +132,18 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
       `SELECT ${MAIN_COLUMNS} FROM sal_delivery WHERE status = ? AND deleted = 0 ORDER BY create_time DESC`,
       [status]
     );
-    return Promise.all(
-      rows.map((r) => this.findLines(r.id).then((l) => this.mapToAggregate(r, l)))
+    const ids = rows.map((r) => r.id);
+    const allLines = await query<SalDeliveryDetailRow>(
+      `SELECT ${DETAIL_COLUMNS} FROM sal_delivery_detail WHERE delivery_id IN (${ids.map(() => '?').join(',')}) AND deleted = 0 ORDER BY delivery_id, line_no`,
+      ids
     );
+    const linesByDeliveryId = new Map<number, SalDeliveryDetailRow[]>();
+    allLines.forEach((l) => {
+      const arr = linesByDeliveryId.get(l.delivery_id) ?? [];
+      arr.push(l);
+      linesByDeliveryId.set(l.delivery_id, arr);
+    });
+    return rows.map((r) => this.mapToAggregate(r, linesByDeliveryId.get(r.id) ?? []));
   }
 
   async save(delivery: Delivery): Promise<number> {

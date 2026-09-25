@@ -300,7 +300,7 @@ export class SampleOrderApplicationService {
              VALUES (?, ?, ?, ?, ?, 'CNY', 1, ?, NOW())`,
             [orderNo, today, order.customerId || 0, totalAmount, totalAmount, userId]
           );
-          const newId = (orderResult as ResultSetHeader).insertId;
+          const newId = (orderResult as unknown as ResultSetHeader).insertId;
           logger.info(ctx, 'Sales order created', { salesOrderId: newId, orderNo });
 
           await conn.execute(
