@@ -3,6 +3,7 @@ import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
@@ -32,19 +33,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Plus,
-  Edit,
-  Trash2,
-  Star,
-  AlertTriangle,
-  Loader2,
-  RefreshCw,
-  Printer,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-} from 'lucide-react';
+import { Plus, Edit, Trash2, Star, AlertTriangle, Loader2, RefreshCw, Printer, ArrowUpDown, ArrowUp, ArrowDown, Building2, CheckCircle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCompanyName } from '@/hooks/useCompanyName';
@@ -104,9 +93,9 @@ export default function SuppliersPage() {
   const tc = useTranslations('Common');
 
   const statusMap: Record<number, { label: string; cls: string }> = {
-    1: { label: tc('enabled'), cls: 'bg-green-100 text-green-800' },
-    0: { label: tc('disabled'), cls: 'bg-yellow-100 text-yellow-800' },
-    2: { label: tc('blacklist'), cls: 'bg-red-100 text-red-800' },
+    1: { label: tc('enabled'), cls: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
+    0: { label: tc('disabled'), cls: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' },
+    2: { label: tc('blacklist'), cls: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' },
   };
   const supplierTypeLabels: Record<number, string> = {
     1: t('supplierTypeRaw'),
@@ -142,6 +131,27 @@ export default function SuppliersPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
+
+  const requiredFields: { key: keyof typeof emptyForm; label: string }[] = [
+    { key: 'supplier_code', label: t('supplierCode') },
+    { key: 'supplier_name', label: t('supplierName') },
+    { key: 'supplier_type', label: t('supplierType') },
+    { key: 'contact_name', label: tc('contact') },
+    { key: 'contact_phone', label: tc('phone') },
+    { key: 'address', label: tc('address') },
+  ];
+
+  const validate = (f: typeof emptyForm): Record<string, boolean> => {
+    const e: Record<string, boolean> = {};
+    for (const r of requiredFields) {
+      const v = f[r.key];
+      const empty =
+        typeof v === 'string' ? v.trim() === '' : v === undefined || v === null || v === 0;
+      if (empty) e[r.key] = true;
+    }
+    return e;
+  };
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
 
@@ -214,11 +224,13 @@ export default function SuppliersPage() {
   const handleOpenAdd = () => {
     setEditId(null);
     setForm(emptyForm);
+    setErrors({});
     setShowDialog(true);
   };
 
   const handleOpenEdit = (item: Supplier) => {
     setEditId(item.id);
+    setErrors({});
     setForm({
       supplier_code: item.supplier_code,
       supplier_name: item.supplier_name,
@@ -239,8 +251,14 @@ export default function SuppliersPage() {
   };
 
   const handleSave = async () => {
-    if (!form.supplier_code || !form.supplier_name) {
-      toast({ title: t('supplierCodeNameRequired'), variant: 'destructive' });
+    const fieldErrors = validate(form);
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors(fieldErrors);
+      const firstMissing = requiredFields.find((r) => fieldErrors[r.key])?.label;
+      toast({
+        title: tc('k_1arc8l4') + (firstMissing ? `：${firstMissing}` : ''),
+        variant: 'destructive',
+      });
       return;
     }
     setSaving(true);
@@ -369,38 +387,21 @@ export default function SuppliersPage() {
   return (
     <MainLayout title={t('supplierManagement')}>
       <div className="space-y-6">
-        <div className="grid grid-cols-5 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-yellow-600">{stats.S}</div>
-              <div className="text-sm text-muted-foreground">{tc('strategicSupplier')}(S)</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-gray-600">{stats.A}</div>
-              <div className="text-sm text-muted-foreground">{tc('preferredSupplier')}(A)</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-orange-500">{stats.B}</div>
-              <div className="text-sm text-muted-foreground">{tc('qualifiedSupplier')}(B)</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-orange-600">{stats.C}</div>
-              <div className="text-sm text-muted-foreground">{tc('conditionalSupplier')}(C)</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-red-600">{stats.D}</div>
-              <div className="text-sm text-muted-foreground">{tc('disqualifiedSupplier')}(D)</div>
-            </CardContent>
-          </Card>
-        </div>
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('total'), icon: Building2, ...StatsTheme.blue },
+            { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
+            { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'total', count: list.length },
+            { key: 'active', count: list.length },
+            { key: 'pending', count: list.length },
+            { key: 'warning', count: list.length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
 
         <Card>
           <CardContent className="p-4">
@@ -632,7 +633,7 @@ export default function SuppliersPage() {
                                 size="icon"
                                 onClick={() => handleDelete(item.id)}
                               >
-                                <Trash2 className="h-4 w-4 text-red-500" />
+                                <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
                               </Button>
                             </div>
                           </TableCell>
@@ -677,17 +678,27 @@ export default function SuppliersPage() {
                 <Label>{t('supplierCode')} *</Label>
                 <Input
                   value={form.supplier_code}
-                  onChange={(e) => setForm({ ...form, supplier_code: e.target.value })}
+                  onChange={(e) => {
+                    setForm({ ...form, supplier_code: e.target.value });
+                    setErrors((p) => ({ ...p, supplier_code: false }));
+                  }}
                   placeholder={t('supplierCodePlaceholder')}
                   disabled={!!editId}
+                  aria-invalid={!!errors.supplier_code}
+                  className={errors.supplier_code ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('supplierName')}</Label>
+                <Label>{t('supplierName')} *</Label>
                 <Input
                   value={form.supplier_name}
-                  onChange={(e) => setForm({ ...form, supplier_name: e.target.value })}
+                  onChange={(e) => {
+                    setForm({ ...form, supplier_name: e.target.value });
+                    setErrors((p) => ({ ...p, supplier_name: false }));
+                  }}
                   placeholder={t('enterSupplierName')}
+                  aria-invalid={!!errors.supplier_name}
+                  className={errors.supplier_name ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 />
               </div>
               <div className="space-y-2">
@@ -699,12 +710,17 @@ export default function SuppliersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('supplierType')}</Label>
+                <Label>{t('supplierType')} *</Label>
                 <Select
                   value={String(form.supplier_type)}
-                  onValueChange={(v) => setForm({ ...form, supplier_type: Number(v) })}
+                  onValueChange={(v) => {
+                    setForm({ ...form, supplier_type: Number(v) });
+                    setErrors((p) => ({ ...p, supplier_type: false }));
+                  }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    className={errors.supplier_type ? 'border-red-500 focus:ring-red-500' : ''}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -718,19 +734,29 @@ export default function SuppliersPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{tc('contact')}</Label>
+                <Label>{tc('contact')} *</Label>
                 <Input
                   value={form.contact_name}
-                  onChange={(e) => setForm({ ...form, contact_name: e.target.value })}
+                  onChange={(e) => {
+                    setForm({ ...form, contact_name: e.target.value });
+                    setErrors((p) => ({ ...p, contact_name: false }));
+                  }}
                   placeholder={t('enterContact')}
+                  aria-invalid={!!errors.contact_name}
+                  className={errors.contact_name ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tc('phone')}</Label>
+                <Label>{tc('phone')} *</Label>
                 <Input
                   value={form.contact_phone}
-                  onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
+                  onChange={(e) => {
+                    setForm({ ...form, contact_phone: e.target.value });
+                    setErrors((p) => ({ ...p, contact_phone: false }));
+                  }}
                   placeholder={tc('enterPhone')}
+                  aria-invalid={!!errors.contact_phone}
+                  className={errors.contact_phone ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 />
               </div>
               <div className="space-y-2">
@@ -805,11 +831,16 @@ export default function SuppliersPage() {
                 </Select>
               </div>
               <div className="space-y-2 col-span-2">
-                <Label>{tc('address')}</Label>
+                <Label>{tc('address')} *</Label>
                 <Input
                   value={form.address}
-                  onChange={(e) => setForm({ ...form, address: e.target.value })}
+                  onChange={(e) => {
+                    setForm({ ...form, address: e.target.value });
+                    setErrors((p) => ({ ...p, address: false }));
+                  }}
                   placeholder={tc('enterAddress')}
+                  aria-invalid={!!errors.address}
+                  className={errors.address ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 />
               </div>
               <div className="space-y-2 col-span-2">

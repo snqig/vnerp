@@ -163,11 +163,14 @@ export default function PurchaseRequestFormPage() {
   }, []);
 
   useEffect(() => {
-    authFetch('/api/organization/department')
+    authFetch('/api/organization/department?pageSize=500')
       .then((res) => res.json())
       .then((result) => {
-        if (result.success && Array.isArray(result.data)) {
-          setDepartments(result.data);
+        if (result.success) {
+          // 部门接口返回的是 { list, total, page, pageSize }，不是裸数组；
+          // 旧写法只认 Array.isArray(result.data)，所以这两个下拉一直是空的。
+          const raw = result.data;
+          setDepartments(Array.isArray(raw) ? raw : raw?.list || []);
         }
       })
       .catch(() => {});
@@ -571,7 +574,7 @@ export default function PurchaseRequestFormPage() {
 
         <div
           ref={printRef}
-          className="bg-white rounded-2xl shadow-lg p-6 max-w-[1400px] mx-auto"
+          className="bg-white dark:bg-card rounded-2xl shadow-lg p-6 max-w-[1400px] mx-auto"
           style={{
             background: '#ffffff',
             borderRadius: '28px',

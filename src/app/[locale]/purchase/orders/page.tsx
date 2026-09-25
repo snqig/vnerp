@@ -1,6 +1,8 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -12,22 +14,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SearchInput } from '@/components/ui/search-input';
@@ -38,23 +30,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Plus,
-  MoreHorizontal,
-  Eye,
-  Trash2,
-  ShoppingCart,
-  Send,
-  FileText,
-  RefreshCw,
-  ChevronDown,
-  ChevronRight,
-  Printer,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-} from 'lucide-react';
+import { Plus, MoreHorizontal, Eye, Trash2, ShoppingCart, Send, FileText, RefreshCw, ChevronDown, ChevronRight, Printer, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, Clock, AlertTriangle, PackageOpen, Banknote } from 'lucide-react';
 import { useState, useEffect, useCallback, useMemo, Fragment } from 'react';
+import Link from 'next/link';
+import { useRouter } from '@/i18n/navigation';
 import { useToastContext } from '@/components/ui/toast';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useCompanyName } from '@/hooks/useCompanyName';
@@ -63,7 +42,6 @@ import { logger } from '@/lib/logger';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { MoneyDisplay } from '@/components/ui/money-display';
-import { CurrencySelect } from '@/components/ui/currency-select';
 
 interface PurchaseOrder {
   id: number;
@@ -180,6 +158,7 @@ export default function PurchaseOrdersPage() {
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
+  const router = useRouter();
   const { companyName } = useCompanyName();
   const { addToast: toast } = useToastContext();
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
@@ -187,27 +166,20 @@ export default function PurchaseOrdersPage() {
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [stats, setStats] = useState({
+    pending: 0,
+    ordered: 0,
+    partial: 0,
+    completed: 0,
+    monthlyAmount: 0,
+  });
 
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
-  const [detailItems, setDetailItems] = useState<Loose[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
-
-  const [newOrder, setNewOrder] = useState({
-    supplier_id: '',
-    delivery_date: '',
-    remark: '',
-    currency: '',
-  });
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([
-    { id: 1, material_code: '', material_name: '', quantity: 1, unit: ts('k_w0gthl'), unit_price: 0 },
-  ]);
 
   const fetchOrders = useCallback(
     async (searchKeyword?: string) => {
@@ -267,8 +239,21 @@ export default function PurchaseOrdersPage() {
     }
   }, [ts]);
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/purchase/orders/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
+    fetchStats();
   }, [fetchOrders]);
 
   const debouncedKeyword = useDebounce(keyword, 300);
@@ -281,10 +266,8 @@ export default function PurchaseOrdersPage() {
     fetchSuppliers();
   }, [fetchSuppliers]);
 
-  const handleViewDetail = (order: PurchaseOrder) => {
-    setSelectedOrder(order);
-    setDetailItems(order.lines || []);
-    setIsDetailOpen(true);
+  const handleViewDetail = (orderId: number) => {
+    router.push(`/purchase/orders/${orderId}`);
   };
 
   const toggleRowExpand = (order: PurchaseOrder) => {
@@ -295,55 +278,6 @@ export default function PurchaseOrdersPage() {
       newExpanded.add(order.id);
     }
     setExpandedRows(newExpanded);
-  };
-
-  const handleCreateOrder = async () => {
-    if (!newOrder.supplier_id) {
-      toast({ title: ts('k_v9pftt'), description: ts('k_116pur3'), variant: 'destructive' });
-      return;
-    }
-
-    const validItems = orderItems.filter((item) => item.material_code && item.quantity > 0);
-    if (validItems.length === 0) {
-      toast({ title: ts('k_v9pftt'), description: ts('k_1ato6eo'), variant: 'destructive' });
-      return;
-    }
-
-    const selectedSupplier = suppliers.find((s) => s.id === parseInt(newOrder.supplier_id));
-
-    try {
-      setLoading(true);
-      const data = await ApiClient.post('/api/purchase/orders', {
-        supplier_id: parseInt(newOrder.supplier_id),
-        supplier_name: selectedSupplier?.supplier_name || '',
-        supplier_code: selectedSupplier?.supplier_code || '',
-        delivery_date: newOrder.delivery_date || null,
-        remark: newOrder.remark,
-        currency: newOrder.currency || undefined,
-        lines: validItems.map((item) => ({
-          material_code: item.material_code,
-          material_name: item.material_name,
-          order_qty: item.quantity,
-          unit: item.unit,
-          unit_price: item.unit_price,
-        })),
-      });
-      if (data.success) {
-        toast({ title: ts('k_1rraohc'), description: ts('k_qqp9rs') });
-        setIsCreateOpen(false);
-        setNewOrder({ supplier_id: '', delivery_date: '', remark: '', currency: '' });
-        setOrderItems([
-          { id: 1, material_code: '', material_name: '', quantity: 1, unit: ts('k_w0gthl'), unit_price: 0 },
-        ]);
-        fetchOrders();
-      } else {
-        toast({ title: ts('k_v9pftt'), description: data.message || ts('k_1jxltyq'), variant: 'destructive' });
-      }
-    } catch {
-      toast({ title: ts('k_v9pftt'), description: ts('k_1io10lx'), variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleDelete = async (order: PurchaseOrder) => {
@@ -690,39 +624,27 @@ export default function PurchaseOrdersPage() {
     toast({ title: tc('print'), description: `正在打印 ${dataToPrint.length} 条采购订单` });
   };
 
-  const addItem = () => {
-    setOrderItems((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        material_code: '',
-        material_name: '',
-        quantity: 1,
-        unit: ts('k_w0gthl'),
-        unit_price: 0,
-      },
-    ]);
-  };
-
-  const removeItem = (id: number) => {
-    if (orderItems.length <= 1) return;
-    setOrderItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const updateItem = (id: number, field: keyof OrderItem, value: Loose) => {
-    setOrderItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          return { ...item, [field]: value };
-        }
-        return item;
-      })
-    );
-  };
-
   return (
     <MainLayout title={t('purchaseOrder')}>
-      <div className="space-y-6">
+      <div className="space-y-6">        <StatsCards
+          configs={[
+            { key: 'pending', label: '待下单', icon: Clock, ...StatsTheme.orange },
+            { key: 'ordered', label: '已下单', icon: ShoppingCart, ...StatsTheme.blue },
+            { key: 'partial', label: '部分到货', icon: PackageOpen, ...StatsTheme.yellow },
+            { key: 'completed', label: '已完成', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'monthlyAmount', label: '本月采购额', icon: Banknote, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'ordered', count: stats.ordered },
+            { key: 'partial', count: stats.partial },
+            { key: 'completed', count: stats.completed },
+            { key: 'monthlyAmount', count: stats.monthlyAmount, prefix: '¥' },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -824,180 +746,12 @@ export default function PurchaseOrdersPage() {
                       : sortedOrders
                   }
                 />
-                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      {t('newPurchaseOrder')}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" resizable>
-                    <DialogHeader>
-                      <DialogTitle>{t('createPurchaseOrder')}</DialogTitle>
-                      <DialogDescription>{tc('create')}</DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>{t('supplier')} *</Label>
-                          <Select
-                            value={newOrder.supplier_id}
-                            onValueChange={(v) =>
-                              setNewOrder((prev) => ({ ...prev, supplier_id: v }))
-                            }
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder={tc('select') + t('supplier')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {suppliers
-                                .filter((s) => Number(s.status) === 1)
-                                .map((s) => (
-                                  <SelectItem key={s.id} value={s.id.toString()}>
-                                    {s.supplier_name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('expectedDate')}</Label>
-                          <Input
-                            type="date"
-                            value={newOrder.delivery_date}
-                            onChange={(e) =>
-                              setNewOrder((prev) => ({ ...prev, delivery_date: e.target.value }))
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{tc('currency')}</Label>
-                          <CurrencySelect
-                            value={newOrder.currency}
-                            onChange={(v) => setNewOrder((prev) => ({ ...prev, currency: v }))}
-                            placeholder={tc('selectCurrency')}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>{t('purchaseDetails')}</Label>
-                        <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead className="min-w-[140px]">{t('materialCode')}</TableHead>
-                                <TableHead className="min-w-[140px]">{t('materialName')}</TableHead>
-                                <TableHead className="min-w-[100px]">{tc('quantity')}</TableHead>
-                                <TableHead className="min-w-[80px]">{tc('unit')}</TableHead>
-                                <TableHead className="min-w-[100px]">{t('unitPrice')}</TableHead>
-                                <TableHead className="min-w-[100px]">{tc('amount')}</TableHead>
-                                <TableHead className="w-[60px]"></TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {orderItems.map((item) => (
-                                <TableRow key={item.id}>
-                                  <TableCell>
-                                    <Input
-                                      value={item.material_code}
-                                      onChange={(e) =>
-                                        updateItem(item.id, 'material_code', e.target.value)
-                                      }
-                                      placeholder={t('materialCode')}
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    <Input
-                                      value={item.material_name}
-                                      onChange={(e) =>
-                                        updateItem(item.id, 'material_name', e.target.value)
-                                      }
-                                      placeholder={t('materialName')}
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    <Input
-                                      type="number"
-                                      min="1"
-                                      value={item.quantity || ''}
-                                      onChange={(e) =>
-                                        updateItem(
-                                          item.id,
-                                          'quantity',
-                                          parseFloat(e.target.value) || 0
-                                        )
-                                      }
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    <Input
-                                      value={item.unit}
-                                      onChange={(e) => updateItem(item.id, 'unit', e.target.value)}
-                                      className="w-20"
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      value={item.unit_price || ''}
-                                      onChange={(e) =>
-                                        updateItem(
-                                          item.id,
-                                          'unit_price',
-                                          parseFloat(e.target.value) || 0
-                                        )
-                                      }
-                                    />
-                                  </TableCell>
-                                  <TableCell className="font-medium">
-                                    {(item.quantity * item.unit_price).toFixed(2)}
-                                  </TableCell>
-                                  <TableCell>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => removeItem(item.id)}
-                                      disabled={orderItems.length === 1}
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                        <Button variant="outline" size="sm" onClick={addItem}>
-                          <Plus className="h-4 w-4 mr-1" />
-                          {t('addMaterial')}
-                        </Button>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>{tc('remark')}</Label>
-                        <Input
-                          placeholder={tc('pleaseInput') + tc('remark')}
-                          value={newOrder.remark}
-                          onChange={(e) =>
-                            setNewOrder((prev) => ({ ...prev, remark: e.target.value }))
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                        {tc('cancel')}
-                      </Button>
-                      <Button onClick={handleCreateOrder} loading={loading}>
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        {t('createPurchaseOrder')}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <Link href="/purchase/orders/new">
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t('newPurchaseOrder')}
+                  </Button>
+                </Link>
               </div>
             </div>
           </CardContent>
@@ -1168,7 +922,7 @@ export default function PurchaseOrdersPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleViewDetail(order)}>
+                                <DropdownMenuItem onClick={() => handleViewDetail(order.id)}>
                                   <Eye className="h-4 w-4 mr-2" />
                                   {t('viewDetail')}
                                 </DropdownMenuItem>
@@ -1314,99 +1068,35 @@ export default function PurchaseOrdersPage() {
           </CardContent>
         </Card>
 
-        <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{tc('purchaseOrderDetailTitle')}</DialogTitle>
-            </DialogHeader>
-            {selectedOrder && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-muted-foreground">{ts('k_rng21t')}</Label>
-                    <p className="font-mono">{selectedOrder.po_no}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">{tc('supplier')}</Label>
-                    <p>{selectedOrder.supplier_name}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">{tc('orderDateLabel')}</Label>
-                    <p>{formatDate(selectedOrder.order_date)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">{tc('expectedArrivalLabel')}</Label>
-                    <p>{formatDate(selectedOrder.delivery_date)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">{tc('totalQuantity')}</Label>
-                    <p>{selectedOrder.total_quantity}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">{tc('currency')}</Label>
-                    <p className="font-medium">{selectedOrder.currency || 'CNY'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">{tc('amount')}</Label>
-                    <p className="font-medium">
-                      <MoneyDisplay
-                        amount={Number(
-                          selectedOrder.grand_total || selectedOrder.total_amount || 0
-                        )}
-                        currency={selectedOrder.currency || 'CNY'}
-                        baseAmount={selectedOrder.base_grand_total}
-                        baseCurrency={selectedOrder.base_currency}
-                        showSymbol
-                      />
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">{tc('status')}</Label>
-                    <p>{getStatusBadge(selectedOrder.status)}</p>
-                  </div>
-                  {selectedOrder.remark && (
-                    <div className="col-span-2">
-                      <Label className="text-muted-foreground">{tc('remark')}</Label>
-                      <p>{selectedOrder.remark}</p>
-                    </div>
-                  )}
-                </div>
-                {detailItems.length > 0 && (
-                  <div>
-                    <Label className="text-muted-foreground mb-2 block">{tc('returnItems')}</Label>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{tc('materialCode')}</TableHead>
-                          <TableHead>{tc('materialName')}</TableHead>
-                          <TableHead>{tc('quantity')}</TableHead>
-                          <TableHead>{tc('unit')}</TableHead>
-                          <TableHead>{ts('k_isc1c5')}</TableHead>
-                          <TableHead>{tc('amount')}</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {detailItems.map((item: Loose, idx: number) => (
-                          <TableRow key={idx}>
-                            <TableCell>{item.material_code}</TableCell>
-                            <TableCell>{item.material_name}</TableCell>
-                            <TableCell>{item.order_qty || item.quantity}</TableCell>
-                            <TableCell>{item.unit}</TableCell>
-                            <TableCell>{item.unit_price}</TableCell>
-                            <TableCell>
-                              {item.total_price ||
-                                ((item.order_qty || item.quantity) * item.unit_price).toFixed(2)}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+        {total > pageSize && (
+          <div className="flex items-center justify-between mt-4">
+            <span className="text-sm text-muted-foreground">
+              {ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                {tc('prevPage')}
+              </Button>
+              <span className="flex items-center px-3 text-sm text-muted-foreground">
+                {tc('pageOf', { page, pages: Math.ceil(total / pageSize) })}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page * pageSize >= total}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                {tc('nextPage')}
+              </Button>
+            </div>
+          </div>
+        )}
+
       </div>
     </MainLayout>
   );

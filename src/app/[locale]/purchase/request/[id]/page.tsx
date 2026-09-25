@@ -194,10 +194,10 @@ export default function PurchaseRequestDetailPage() {
             )}
             {request.status === 1 && (
               <>
-                <Button variant="outline" className="text-green-600" onClick={handleApprove}>
+                <Button variant="outline" className="text-green-600 dark:text-green-400" onClick={handleApprove}>
                   <CheckCircle className="h-4 w-4 mr-2" />
                   {ts('k_1tmnt86')}</Button>
-                <Button variant="outline" className="text-red-600" onClick={handleReject}>
+                <Button variant="outline" className="text-red-600 dark:text-red-400" onClick={handleReject}>
                   <XCircle className="h-4 w-4 mr-2" />
                   {tc('auditReject')}</Button>
               </>
@@ -257,7 +257,7 @@ export default function PurchaseRequestDetailPage() {
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">{tc('totalAmountLabel')}</div>
-                <div className="font-medium text-blue-600">
+                <div className="font-medium text-blue-600 dark:text-blue-400">
                   {formatAmount(request.total_amount, request.currency)}
                 </div>
               </div>
@@ -309,7 +309,7 @@ export default function PurchaseRequestDetailPage() {
             {/* 合计 */}
             <div className="flex justify-end mt-4 pt-4 border-t">
               <div className="text-lg font-bold">
-                {ts('k_71hi4y')}<span className="text-blue-600">
+                {ts('k_71hi4y')}<span className="text-blue-600 dark:text-blue-400">
                   {formatAmount(request.total_amount, request.currency)}
                 </span>
               </div>
@@ -349,7 +349,7 @@ export default function PurchaseRequestDetailPage() {
               <CardTitle>{tc('remark')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-700">{request.remark}</p>
+              <p className="text-gray-700 dark:text-gray-200">{request.remark}</p>
             </CardContent>
           </Card>
         )}

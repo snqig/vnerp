@@ -15,6 +15,7 @@ import { PurchaseReturnApplicationService } from '@/application/services/Purchas
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 import type { PurchaseReturnLineProps } from '@/domain/purchase/entities/PurchaseReturnLine';
 import type { DbRow } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 const returnService = PurchaseReturnApplicationService.create();
 
@@ -22,8 +23,8 @@ const returnService = PurchaseReturnApplicationService.create();
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
-  const status = searchParams.get('status') || '';
-  const supplierId = searchParams.get('supplierId') || '';
+  const status = numericFilter(searchParams.get('status'));
+  const supplierId = numericFilter(searchParams.get('supplierId'));
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
   const page = parseInt(searchParams.get('page') || '1');

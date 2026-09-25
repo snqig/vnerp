@@ -14,6 +14,7 @@ import { PurchaseReconciliationApplicationService } from '@/application/services
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 import type { PurchaseReconciliationLineProps } from '@/domain/purchase/aggregates/PurchaseReconciliation';
 import type { DbRow } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 const reconciliationService = PurchaseReconciliationApplicationService.create();
 
@@ -23,8 +24,8 @@ export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const keyword = searchParams.get('keyword') || '';
-  const status = searchParams.get('status');
-  const supplierId = searchParams.get('supplierId');
+  const status = numericFilter(searchParams.get('status'));
+  const supplierId = numericFilter(searchParams.get('supplierId'));
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
   const page = parseInt(searchParams.get('page') || '1');
@@ -71,7 +72,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   }
   if (status) {
     where.push('r.status = ?');
-    values.push(parseInt(status));
+    values.push(String(status));
   }
   if (supplierId) {
     where.push('r.supplier_id = ?');
@@ -92,7 +93,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     `SELECT COUNT(*) as total FROM pur_purchase_reconciliation r WHERE ${whereClause}`,
     values
   )) as DbRow;
-  const total = countResult?.total || 0;
+  const total = Number(countResult?.total ?? 0);
   const totalPages = Math.ceil(total / pageSize) || 0;
 
   const list = await query(
@@ -167,15 +168,15 @@ export const POST = withPermission(
     const lines: PurchaseReconciliationLineProps[] = [
       ...receipts.map((r) => ({
         sourceType: 1 as const,
-        sourceId: r.id,
-        sourceNo: r.po_no,
+        sourceId: Number(r.id),
+        sourceNo: String(r.po_no),
         sourceDate: r.order_date ? String(r.order_date) : '',
         amount: Math.round((Number(r.received_amount) || 0) * 100) / 100,
       })),
       ...returns.map((r) => ({
         sourceType: 2 as const,
-        sourceId: r.id,
-        sourceNo: r.return_no,
+        sourceId: Number(r.id),
+        sourceNo: String(r.return_no),
         sourceDate: r.return_date ? String(r.return_date) : '',
         amount: Math.round((Number(r.total_amount) || 0) * 100) / 100,
       })),

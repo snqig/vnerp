@@ -123,12 +123,12 @@ const formatCurrency = (amount: number) => {
 };
 
 const PO_STATUS_CLASS: Record<number, string> = {
-  10: 'bg-gray-100 text-gray-700',
-  20: 'bg-yellow-100 text-yellow-700',
-  30: 'bg-blue-100 text-blue-700',
-  40: 'bg-orange-100 text-orange-700',
-  50: 'bg-green-100 text-green-700',
-  90: 'bg-red-100 text-red-700',
+  10: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200',
+  20: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+  30: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+  40: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
+  50: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+  90: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
 };
 
 const INBOUND_STATUS_KEY: Record<string, string> = {
@@ -332,7 +332,7 @@ export default function PurchaseOrderDetailPage() {
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
               {order.po_no}
-              <Badge className={PO_STATUS_CLASS[order.status] || 'bg-gray-100'}>
+              <Badge className={PO_STATUS_CLASS[order.status] || 'bg-gray-100 dark:bg-gray-700'}>
                 {order.status_label || tc('unknown')}
               </Badge>
             </CardTitle>

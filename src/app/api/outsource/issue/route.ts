@@ -8,6 +8,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { recomputeInventorySummary } from '@/lib/inventory-ledger';
 import type { DbRow } from '@/types/db';
 import { INSERT_INTO_INV_INVENTORY_TRANSACTION } from '@/lib/db/ddl/outsource-issue';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -15,7 +16,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const issueNo = searchParams.get('issueNo') || '';
   const outsourceOrderNo = searchParams.get('outsourceOrderNo') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
 
   let where = 'WHERE i.deleted = 0';
   const params: SqlValue[] = [];
@@ -126,7 +127,7 @@ export const PUT = withPermission(
         );
         if (issueRows.length === 0) throw new Error(ts('k_14x793l'));
         const issue = issueRows[0];
-        if (issue.status >= 3) throw new Error(ts('k_kic6xf'));
+        if (Number(issue.status ?? 0) >= 3) throw new Error(ts('k_kic6xf'));
 
         const [itemRows] = await conn.execute(
           'SELECT * FROM outsource_issue_item WHERE issue_id = ?',
@@ -166,7 +167,7 @@ export const PUT = withPermission(
           }
 
           // 2) 派生重算汇总（批次已变动，汇总 = 批次 SUM）
-          await recomputeInventorySummary(conn, item.material_id, issue.warehouse_id);
+          await recomputeInventorySummary(conn, Number(item.material_id), Number(issue.warehouse_id));
 
           // 3) 财务级流水（保留原 raw INSERT 含 account_dr/cr，财务列治理归 T-INV-6）
           const transNo = 'TRX' + Date.now() + String(item.id).slice(-4);
@@ -184,7 +185,7 @@ export const PUT = withPermission(
               matCode,
               item.batch_no || '',
               issue.warehouse_id,
-              -item.quantity,
+              -Number(item.quantity || 0),
             ]
           );
         }

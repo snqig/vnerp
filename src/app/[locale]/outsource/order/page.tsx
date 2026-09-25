@@ -33,9 +33,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Trash2 } from 'lucide-react';
+import { Plus, Search, Trash2, Package, CheckCircle, Clock, AlertTriangle, PackageOpen, Banknote } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface OutsourceOrder {
   id: number;
@@ -84,6 +85,13 @@ export default function OutsourceOrderPage() {
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
   const [searchStatus, setSearchStatus] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    ordered: 0,
+    partial: 0,
+    completed: 0,
+    monthlyAmount: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<OutsourceOrder>>({});
   const [suppliers, setSuppliers] = useState<{ id: number; supplier_name: string }[]>([]);
@@ -117,8 +125,21 @@ export default function OutsourceOrderPage() {
     } catch {}
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/outsource/order/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchData 依赖 searchNo，搜索应由搜索按钮/事件触发而非自动随输入变化
   }, [page, searchStatus]);
   useEffect(() => {
@@ -254,7 +275,25 @@ export default function OutsourceOrderPage() {
               {t('addOrder')}
             </Button>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'pending', label: '待下单', icon: Clock, ...StatsTheme.orange },
+            { key: 'ordered', label: '已下单', icon: Package, ...StatsTheme.blue },
+            { key: 'partial', label: '部分到货', icon: PackageOpen, ...StatsTheme.yellow },
+            { key: 'completed', label: '已完成', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'monthlyAmount', label: '本月外协金额', icon: Banknote, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'ordered', count: stats.ordered },
+            { key: 'partial', count: stats.partial },
+            { key: 'completed', count: stats.completed },
+            { key: 'monthlyAmount', count: stats.monthlyAmount, prefix: '¥' },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
 
         <Card>
           <CardContent className="p-0">
@@ -295,13 +334,13 @@ export default function OutsourceOrderPage() {
                       </TableCell>
                       <TableCell className="text-xs">{item.process_name || '-'}</TableCell>
                       <TableCell className="text-xs text-right">{item.plan_qty || 0}</TableCell>
-                      <TableCell className="text-xs text-right text-blue-600">
+                      <TableCell className="text-xs text-right text-blue-600 dark:text-blue-400">
                         {item.issued_qty || 0}
                       </TableCell>
-                      <TableCell className="text-xs text-right text-orange-600">
+                      <TableCell className="text-xs text-right text-orange-600 dark:text-orange-400">
                         {item.received_qty || 0}
                       </TableCell>
-                      <TableCell className="text-xs text-right text-green-600">
+                      <TableCell className="text-xs text-right text-green-600 dark:text-green-400">
                         {item.qualified_qty || 0}
                       </TableCell>
                       <TableCell className="text-xs">{item.delivery_date || '-'}</TableCell>
@@ -316,7 +355,7 @@ export default function OutsourceOrderPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 text-xs px-2 text-red-600"
+                              className="h-6 text-xs px-2 text-red-600 dark:text-red-400"
                               onClick={() => handleCancel(item.id)}
                             >
                               {tc('cancel')}
@@ -325,7 +364,7 @@ export default function OutsourceOrderPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />
@@ -377,7 +416,7 @@ export default function OutsourceOrderPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>
-                  {t('supplierName')} <span className="text-red-500">*</span>
+                  {t('supplierName')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Select
                   value={String(editItem.supplier_id || '')}
@@ -448,7 +487,7 @@ export default function OutsourceOrderPage() {
               </div>
               <div>
                 <Label>
-                  {t('planQty')} <span className="text-red-500">*</span>
+                  {t('planQty')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   type="number"

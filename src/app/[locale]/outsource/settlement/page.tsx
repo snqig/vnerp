@@ -30,9 +30,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Trash2, CheckCircle, DollarSign } from 'lucide-react';
+import { Plus, Search, Trash2, CheckCircle, DollarSign, Receipt, Banknote, Clock, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
@@ -83,6 +84,13 @@ export default function OutsourceSettlementPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    settling: 0,
+    settled: 0,
+    unpaid: 0,
+    monthlyAmount: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [form, setForm] = useState<Loose>({});
   const [outsourceOrders, setOutsourceOrders] = useState<Loose[]>([]);
@@ -115,8 +123,21 @@ export default function OutsourceSettlementPage() {
     } catch {}
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/outsource/settlement/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
   useEffect(() => {
     fetchOutsourceOrders();
@@ -253,7 +274,25 @@ export default function OutsourceSettlementPage() {
               {t('addSettlement')}
             </Button>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'pending', label: '待结算', icon: Clock, ...StatsTheme.orange },
+            { key: 'settling', label: '结算中', icon: Receipt, ...StatsTheme.blue },
+            { key: 'settled', label: '已结算', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'unpaid', label: '待付款', icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'monthlyAmount', label: '本月结算金额', icon: Banknote, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'settling', count: stats.settling },
+            { key: 'settled', count: stats.settled },
+            { key: 'unpaid', count: stats.unpaid },
+            { key: 'monthlyAmount', count: stats.monthlyAmount, prefix: '¥' },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
 
         <Card>
           <CardContent className="p-0">
@@ -298,10 +337,10 @@ export default function OutsourceSettlementPage() {
                       <TableCell className="text-xs text-right">
                         {formatAmount(item.settlement_amount)}
                       </TableCell>
-                      <TableCell className="text-xs text-right text-red-500">
+                      <TableCell className="text-xs text-right text-red-500 dark:text-red-400">
                         {formatAmount(item.deduct_amount)}
                       </TableCell>
-                      <TableCell className="text-xs text-right font-medium text-green-600">
+                      <TableCell className="text-xs text-right font-medium text-green-600 dark:text-green-400">
                         {formatAmount(item.actual_amount)}
                       </TableCell>
                       <TableCell>
@@ -320,7 +359,7 @@ export default function OutsourceSettlementPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 text-xs px-2 text-blue-600"
+                              className="h-6 text-xs px-2 text-blue-600 dark:text-blue-400"
                               onClick={() => handleConfirm(item.id)}
                             >
                               <CheckCircle className="h-3 w-3 mr-1" />
@@ -331,7 +370,7 @@ export default function OutsourceSettlementPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 text-xs px-2 text-green-600"
+                              className="h-6 text-xs px-2 text-green-600 dark:text-green-400"
                               onClick={() => handlePayment(item.id)}
                             >
                               <DollarSign className="h-3 w-3 mr-1" />
@@ -342,7 +381,7 @@ export default function OutsourceSettlementPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 w-6 p-0 text-red-600"
+                              className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                               onClick={() => handleDelete(item.id)}
                             >
                               <Trash2 className="h-3 w-3" />
@@ -395,7 +434,7 @@ export default function OutsourceSettlementPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label>
-                  {t('orderNo')} <span className="text-red-500">*</span>
+                  {t('orderNo')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Select
                   value={String(form.outsource_order_id || '')}

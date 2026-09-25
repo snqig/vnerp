@@ -84,11 +84,14 @@ export default function NewPurchaseRequestPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
 
   useEffect(() => {
-    authFetch('/api/organization/department')
+    authFetch('/api/organization/department?pageSize=500')
       .then((res) => res.json())
       .then((result) => {
-        if (result.success && Array.isArray(result.data)) {
-          setDepartments(result.data);
+        if (result.success) {
+          // 部门接口返回的是 { list, total, page, pageSize }，不是裸数组；
+          // 旧写法只认 Array.isArray(result.data)，所以这两个下拉一直是空的。
+          const raw = result.data;
+          setDepartments(Array.isArray(raw) ? raw : raw?.list || []);
         }
       })
       .catch(() => {});
@@ -213,7 +216,7 @@ export default function NewPurchaseRequestPage() {
             <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label>
-                  {ts('k_1i2qe7n')}<span className="text-red-500">*</span>
+                  {ts('k_1i2qe7n')}<span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   type="date"
@@ -261,7 +264,7 @@ export default function NewPurchaseRequestPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {ts('k_3fdyof')}<span className="text-red-500">*</span>
+                  {ts('k_3fdyof')}<span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   value={formData.requester_name}
@@ -328,7 +331,7 @@ export default function NewPurchaseRequestPage() {
                   >
                     <div className="col-span-1">
                       <Label className="text-xs">{ts('k_11vy4t0')}</Label>
-                      <div className="text-sm font-medium py-2 text-gray-900 dark:text-white">
+                      <div className="text-sm font-medium py-2 text-gray-900 dark:text-gray-200 dark:text-white">
                         {index + 1}
                       </div>
                     </div>
@@ -342,7 +345,7 @@ export default function NewPurchaseRequestPage() {
                     </div>
                     <div className="col-span-2">
                       <Label className="text-xs">
-                        {tc('materialName')}<span className="text-red-500">*</span>
+                        {tc('materialName')}<span className="text-red-500 dark:text-red-400">*</span>
                       </Label>
                       <Input
                         value={item.material_name}
@@ -368,7 +371,7 @@ export default function NewPurchaseRequestPage() {
                     </div>
                     <div className="col-span-1">
                       <Label className="text-xs">
-                        {ts('k_1i54xuo')}<span className="text-red-500">*</span>
+                        {ts('k_1i54xuo')}<span className="text-red-500 dark:text-red-400">*</span>
                       </Label>
                       <Input
                         type="number"
@@ -394,7 +397,7 @@ export default function NewPurchaseRequestPage() {
                     </div>
                     <div className="col-span-1">
                       <Label className="text-xs">{tc('amount')}</Label>
-                      <div className="text-sm font-medium py-2 text-gray-900 dark:text-white">
+                      <div className="text-sm font-medium py-2 text-gray-900 dark:text-gray-200 dark:text-white">
                         {item.amount.toFixed(2)}
                       </div>
                     </div>
@@ -404,7 +407,7 @@ export default function NewPurchaseRequestPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => removeItem(index)}
-                        className="text-red-500"
+                        className="text-red-500 dark:text-red-400"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -415,7 +418,7 @@ export default function NewPurchaseRequestPage() {
 
               {/* 合计 */}
               <div className="flex justify-end mt-4 pt-4 border-t">
-                <div className="text-lg font-bold text-gray-900 dark:text-white">
+                <div className="text-lg font-bold text-gray-900 dark:text-gray-200 dark:text-white">
                   {ts('k_71hi4y')}<span className="text-blue-600 dark:text-blue-400">
                     ¥{getTotalAmount().toFixed(2)}
                   </span>

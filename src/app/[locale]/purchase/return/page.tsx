@@ -32,7 +32,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, RefreshCw, Undo2, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { Plus, RefreshCw, Undo2, CheckCircle, XCircle, Eye, Clipboard, DollarSign } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { MoneyDisplay } from '@/components/ui/money-display';
@@ -297,6 +298,22 @@ export default function PurchaseReturnPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('totalReturns'), icon: Undo2, ...StatsTheme.blue },
+            { key: 'pending', label: tc('pendingReview'), icon: Clipboard, ...StatsTheme.orange },
+            { key: 'completed', label: tc('completed'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'refund', label: tc('refundAmount'), icon: DollarSign, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: list.length },
+            { key: 'pending', count: list.filter((o) => o.status === 1).length },
+            { key: 'completed', count: list.filter((o) => o.status === 3).length },
+            { key: 'refund', count: list.reduce((sum, o) => sum + (o.total_amount || 0), 0) },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -397,7 +414,7 @@ export default function PurchaseReturnPage() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-7 text-blue-600"
+                                className="h-7 text-blue-600 dark:text-blue-400"
                                 onClick={() => handleAction(order.id, 'approve')}
                               >
                                 <CheckCircle className="h-3 w-3 mr-1" />
@@ -405,7 +422,7 @@ export default function PurchaseReturnPage() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-7 text-red-600"
+                                className="h-7 text-red-600 dark:text-red-400"
                                 onClick={() => handleAction(order.id, 'cancel')}
                               >
                                 <XCircle className="h-3 w-3 mr-1" />
@@ -416,7 +433,7 @@ export default function PurchaseReturnPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 text-green-600"
+                              className="h-7 text-green-600 dark:text-green-400"
                               onClick={() => handleAction(order.id, 'complete')}
                             >
                               <CheckCircle className="h-3 w-3 mr-1" />
@@ -541,12 +558,12 @@ export default function PurchaseReturnPage() {
                           className="w-20 h-7 text-xs"
                         />
                       </TableCell>
-                      <TableCell className="text-xs font-mono">{item.amount.toFixed(2)}</TableCell>
+                      <TableCell className="text-xs font-mono">{Number(item.amount || 0).toFixed(2)}</TableCell>
                       <TableCell>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-6 w-6 p-0 text-red-600"
+                          className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                           onClick={() => removeItem(idx)}
                         >
                           <XCircle className="h-3 w-3" />

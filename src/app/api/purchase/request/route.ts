@@ -14,7 +14,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { checkMaterialsCategorized } from '@/lib/category-validation';
 import { secureLog } from '@/lib/logger';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 
 // 采购申请接口
 interface PurchaseRequest {
@@ -131,21 +131,22 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const result = await queryPaginated<PurchaseRequest>(sql, countSql, params, { page, pageSize });
 
   if (result.data && result.data.length > 0) {
-    const requestIds = (result.data as DbRow[]).map((r: DbRow) => r.id);
+    const requestIds = (result.data as unknown as DbRow[]).map((r: DbRow) => Number(r.id));
     const placeholders = requestIds.map(() => '?').join(',');
     const items = await query<RequestItem>(
       `SELECT * FROM pur_request_item WHERE request_id IN (${placeholders}) AND deleted = 0 ORDER BY request_id, line_no`,
       requestIds
     );
-    const itemsMap = new Map();
-    for (const item of items as DbRow[]) {
-      if (!itemsMap.has(item.request_id)) {
-        itemsMap.set(item.request_id, []);
+    const itemsMap = new Map<number, unknown[]>();
+    for (const item of items as unknown as DbRow[]) {
+      const key = Number((item as Record<string, unknown>).request_id);
+      if (!itemsMap.has(key)) {
+        itemsMap.set(key, []);
       }
-      itemsMap.get(item.request_id).push(item);
+      itemsMap.get(key)!.push(item);
     }
-    for (const req of result.data as DbRow[]) {
-      req.items = itemsMap.get(req.id) || [];
+    for (const req of result.data as unknown as DbRow[]) {
+      (req as Record<string, unknown>).items = itemsMap.get(Number(req.id)) || [];
     }
   }
 
@@ -205,7 +206,7 @@ export const POST = withPermission(
     // 使用事务确保数据一致性
     const result = await transaction(async (connection) => {
       // 插入主表
-      const [requestResult] = await connection.execute(
+      const [requestResult] = await connection.execute<DbResultSetHeader>(
         `INSERT INTO pur_request (
         request_no, request_date, request_type, request_dept_id, request_dept, requester_id, requester_name,
         reviewer_id, reviewer_name, approver_id, approver_name,
@@ -233,7 +234,7 @@ export const POST = withPermission(
         ]
       );
 
-      const requestId = (requestResult as DbRow).insertId;
+      const requestId = requestResult.insertId;
 
       // 批量插入明细
       const itemValues = body.items.map((item: RequestItem, index: number) => [

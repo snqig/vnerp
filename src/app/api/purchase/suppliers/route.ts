@@ -11,12 +11,13 @@ import {
   validateRequestBody,
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
   const supplierType = searchParams.get('supplier_type') || '';
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '50');
@@ -58,7 +59,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   if (status) {
     sql += ` AND status = ?`;
     countSql += ` AND status = ?`;
-    params.push(parseInt(status));
+    params.push(String(status));
   }
 
   if (supplierType) {
@@ -131,7 +132,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: (result as DbRow).insertId, supplier_code }, ts('k_1rd5ydc'));
+    return successResponse({ id: (result as unknown as DbResultSetHeader).insertId, supplier_code }, ts('k_1rd5ydc'));
   },
   { logTitle: '创建供应商', logType: 'business' }
 );

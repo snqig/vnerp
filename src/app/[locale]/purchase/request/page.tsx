@@ -5,7 +5,9 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useMemo, Fragment } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { MainLayout } from '@/components/layout';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -23,22 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Plus,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  FileText,
-  Eye,
-  CheckCircle,
-  XCircle,
-  Printer,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  ChevronRight,
-  ChevronDown,
-} from 'lucide-react';
+import { Plus, MoreHorizontal, Edit, Trash2, FileText, Eye, CheckCircle, XCircle, Printer, ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, ChevronDown, Clock, AlertTriangle, ShoppingCart, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -151,6 +138,13 @@ export default function PurchaseRequestPage() {
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [stats, setStats] = useState({
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    ordered: 0,
+    monthlyAmount: 0,
+  });
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -185,8 +179,21 @@ export default function PurchaseRequestPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/purchase/request/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchRequests();
+    fetchStats();
   }, [page, status, debouncedKeyword]);
 
   const fetchRequests = async () => {
@@ -446,9 +453,9 @@ export default function PurchaseRequestPage() {
 
   return (
     <MainLayout>
-      <div className="container mx-auto py-6">
+      <div className="p-6 space-y-4">
         {/* 头部 */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <FileText className="h-6 w-6" />
@@ -457,15 +464,11 @@ export default function PurchaseRequestPage() {
             <p className="text-sm text-muted-foreground mt-1">{t('purchaseRequestDesc')}</p>
           </div>
           <div className="flex gap-2 items-center">
-            <Button onClick={() => router.push('/purchase/request/new')} className="rounded-full">
+            <Button onClick={() => router.push('/purchase/request/new')}>
               <Plus className="h-4 w-4 mr-2" />
               {t('newRequest')}
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => router.push('/purchase/request/form')}
-              className="rounded-full"
-            >
+            <Button variant="outline" onClick={() => router.push('/purchase/request/form')}>
               <FileText className="h-4 w-4 mr-2" />
               {t('traditionalEntry')}
             </Button>
@@ -503,7 +506,7 @@ export default function PurchaseRequestPage() {
                     key: 'total_amount',
                     label: tc('amount'),
                     width: 12,
-                    formatter: (v, row) => formatAmount(v, row.currency),
+                    formatter: (v, row) => formatAmount(v, String(row.currency)),
                   },
                   {
                     key: 'status',
@@ -520,10 +523,30 @@ export default function PurchaseRequestPage() {
               />
             </div>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'pending', label: '待审批', icon: Clock, ...StatsTheme.orange },
+            { key: 'approved', label: '已审批', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'rejected', label: '已驳回', icon: XCircle, ...StatsTheme.red },
+            { key: 'ordered', label: '已转订单', icon: ShoppingCart, ...StatsTheme.blue },
+            { key: 'monthlyAmount', label: '本月申请金额', icon: DollarSign, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'approved', count: stats.approved },
+            { key: 'rejected', count: stats.rejected },
+            { key: 'ordered', count: stats.ordered },
+            { key: 'monthlyAmount', count: stats.monthlyAmount, prefix: '¥' },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
 
+
+
+        <Card>
+          <CardContent className="p-4">
         {/* 搜索栏 */}
-        <div className="flex flex-wrap gap-4 mb-6">
+        <div className="flex flex-wrap gap-3 mb-4">
           <SearchInput
             placeholder={t('searchPlaceholder')}
             value={keyword}
@@ -572,8 +595,7 @@ export default function PurchaseRequestPage() {
         </div>
 
         {/* 申请列表 */}
-        <div className="border rounded-lg">
-          <Table>
+        <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">
@@ -752,7 +774,7 @@ export default function PurchaseRequestPage() {
                               {request.status <= 1 && (
                                 <DropdownMenuItem
                                   onClick={() => handleDelete(request.id)}
-                                  className="text-red-600"
+                                  className="text-red-600 dark:text-red-400"
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   {tc('delete')}
@@ -844,11 +866,10 @@ export default function PurchaseRequestPage() {
               )}
             </TableBody>
           </Table>
-        </div>
 
         {/* 分页 */}
         {total > pageSize && (
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex justify-between items-center mt-4 text-sm">
             <div className="text-sm text-muted-foreground">
               {tc('totalRecords', { count: total })}，
               {tc('pageInfo', { current: page, total: Math.ceil(total / pageSize) })}
@@ -873,6 +894,8 @@ export default function PurchaseRequestPage() {
             </div>
           </div>
         )}
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );

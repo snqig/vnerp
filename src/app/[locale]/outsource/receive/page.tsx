@@ -32,11 +32,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Trash2, CheckCircle, XCircle, PackageCheck } from 'lucide-react';
+import { Plus, Search, Trash2, CheckCircle, XCircle, PackageCheck, Truck, Clock, AlertTriangle, PackageOpen, Boxes } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface OutsourceReceive {
   id: number;
@@ -83,6 +84,13 @@ export default function OutsourceReceivePage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    partial: 0,
+    received: 0,
+    todayCount: 0,
+    monthlyQty: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [form, setForm] = useState<Loose>({});
   const [outsourceOrders, setOutsourceOrders] = useState<Loose[]>([]);
@@ -115,8 +123,21 @@ export default function OutsourceReceivePage() {
     } catch {}
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/outsource/receive/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchData 依赖 searchNo，搜索应由搜索按钮/事件触发而非自动随输入变化
   }, [page]);
   useEffect(() => {
@@ -254,7 +275,25 @@ export default function OutsourceReceivePage() {
               {t('addReceive')}
             </Button>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'pending', label: '待收货', icon: Clock, ...StatsTheme.orange },
+            { key: 'partial', label: '部分收货', icon: PackageOpen, ...StatsTheme.yellow },
+            { key: 'received', label: '已收货', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'todayCount', label: '今日收货单数', icon: Truck, ...StatsTheme.blue },
+            { key: 'monthlyQty', label: '本月收货数量', icon: Boxes, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'partial', count: stats.partial },
+            { key: 'received', count: stats.received },
+            { key: 'todayCount', count: stats.todayCount },
+            { key: 'monthlyQty', count: stats.monthlyQty },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
 
         <Card>
           <CardContent className="p-0">
@@ -293,10 +332,10 @@ export default function OutsourceReceivePage() {
                       <TableCell className="text-xs">{item.warehouse_name || '-'}</TableCell>
                       <TableCell className="text-xs">{item.receive_date || '-'}</TableCell>
                       <TableCell className="text-xs text-right">{item.receive_qty || 0}</TableCell>
-                      <TableCell className="text-xs text-right text-green-600">
+                      <TableCell className="text-xs text-right text-green-600 dark:text-green-400">
                         {item.qualified_qty || 0}
                       </TableCell>
-                      <TableCell className="text-xs text-right text-red-500">
+                      <TableCell className="text-xs text-right text-red-500 dark:text-red-400">
                         {item.defective_qty || 0}
                       </TableCell>
                       <TableCell>
@@ -316,7 +355,7 @@ export default function OutsourceReceivePage() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-6 w-6 p-0 text-green-600"
+                                className="h-6 w-6 p-0 text-green-600 dark:text-green-400"
                                 onClick={() => handleQc(item.id, 'qc_pass')}
                                 title={t('qcPass')}
                               >
@@ -325,7 +364,7 @@ export default function OutsourceReceivePage() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-6 w-6 p-0 text-red-600"
+                                className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                                 onClick={() => handleQc(item.id, 'qc_fail')}
                                 title={t('qcFail')}
                               >
@@ -337,7 +376,7 @@ export default function OutsourceReceivePage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 text-xs px-2 text-blue-600"
+                              className="h-6 text-xs px-2 text-blue-600 dark:text-blue-400"
                               onClick={() => handlePost(item.id)}
                             >
                               <PackageCheck className="h-3 w-3 mr-1" />
@@ -348,7 +387,7 @@ export default function OutsourceReceivePage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 w-6 p-0 text-red-600"
+                              className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                               onClick={() => handleDelete(item.id)}
                             >
                               <Trash2 className="h-3 w-3" />
@@ -401,7 +440,7 @@ export default function OutsourceReceivePage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>
-                  {t('orderNo')} <span className="text-red-500">*</span>
+                  {t('orderNo')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Select
                   value={String(form.outsource_order_id || '')}
@@ -430,7 +469,7 @@ export default function OutsourceReceivePage() {
               </div>
               <div>
                 <Label>
-                  {t('warehouseIn')} <span className="text-red-500">*</span>
+                  {t('warehouseIn')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <WarehouseSelect
                   value={form.warehouse_id || ''}
@@ -448,7 +487,7 @@ export default function OutsourceReceivePage() {
               </div>
               <div>
                 <Label>
-                  {t('receiveQty')} <span className="text-red-500">*</span>
+                  {t('receiveQty')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   type="number"

@@ -7,6 +7,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { recomputeInventorySummary } from '@/lib/inventory-ledger';
 import { INSERT_INTO_INV_INVENTORY_TRANSACTION } from '@/lib/db/ddl/outsource-receive';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -14,7 +15,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const receiveNo = searchParams.get('receiveNo') || '';
   const outsourceOrderNo = searchParams.get('outsourceOrderNo') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
 
   let where = 'WHERE r.deleted = 0';
   const params: SqlValue[] = [];
@@ -111,7 +112,7 @@ export const PUT = withPermission(
         );
         if (receiveRows.length === 0) throw new Error(ts('k_1qhi45c'));
         const receive = receiveRows[0];
-        if (receive.status >= 3) throw new Error(ts('k_dcu88c'));
+        if (Number(receive.status ?? 0) >= 3) throw new Error(ts('k_dcu88c'));
         if (receive.qc_status === 3) throw new Error(ts('k_kq1av2'));
 
         const orderRows = await query(
@@ -141,7 +142,7 @@ export const PUT = withPermission(
         );
 
         // 2) 派生重算汇总（批次已新增，汇总 = 批次 SUM）
-        await recomputeInventorySummary(conn, order.product_id, receive.warehouse_id);
+        await recomputeInventorySummary(conn, Number(order.product_id), Number(receive.warehouse_id));
 
         // 3) 财务级流水（保留原 raw INSERT 含 account_dr/cr，财务列治理归 T-INV-6）
         const transNo = 'TRX' + Date.now() + String(id).slice(-4);

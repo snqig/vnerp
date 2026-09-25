@@ -31,11 +31,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Trash2, Send } from 'lucide-react';
+import { Plus, Search, Trash2, Send, FileText, CheckCircle, Clock, AlertTriangle, PackageOpen, Boxes } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 
@@ -92,6 +93,13 @@ export default function OutsourceIssuePage() {
   const [form, setForm] = useState<Loose>({ items: [] });
   const [outsourceOrders, setOutsourceOrders] = useState<Loose[]>([]);
   const [materials, setMaterials] = useState<Loose[]>([]);
+  const [stats, setStats] = useState({
+    pending: 0,
+    partial: 0,
+    issued: 0,
+    todayCount: 0,
+    monthlyQty: 0,
+  });
 
   const _exportColumns = [
     { key: t('issueNo'), header: t('issueNo') },
@@ -144,8 +152,21 @@ export default function OutsourceIssuePage() {
     } catch {}
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/outsource/issue/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
   useEffect(() => {
     fetchOutsourceOrders();
@@ -276,7 +297,7 @@ export default function OutsourceIssuePage() {
                   label: t('issueDetail'),
                   width: 30,
                   formatter: (_v, row) =>
-                    (row.items || [])
+                    (row.items as unknown as Loose[] || [])
                       .map((i: Loose) => `${i.material_name || '-'}×${i.quantity}`)
                       .join(', ') || '-',
                 },
@@ -306,7 +327,25 @@ export default function OutsourceIssuePage() {
               {t('addIssue')}
             </Button>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'pending', label: '待发料', icon: Clock, ...StatsTheme.orange },
+            { key: 'partial', label: '部分发料', icon: PackageOpen, ...StatsTheme.yellow },
+            { key: 'issued', label: '已发料', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'todayCount', label: '今日发料单数', icon: FileText, ...StatsTheme.blue },
+            { key: 'monthlyQty', label: '本月发料数量', icon: Boxes, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'partial', count: stats.partial },
+            { key: 'issued', count: stats.issued },
+            { key: 'todayCount', count: stats.todayCount },
+            { key: 'monthlyQty', count: stats.monthlyQty },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
 
         <Card>
           <CardContent className="p-0">
@@ -361,7 +400,7 @@ export default function OutsourceIssuePage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 text-xs px-2 text-blue-600"
+                              className="h-6 text-xs px-2 text-blue-600 dark:text-blue-400"
                               onClick={() => handlePost(item.id)}
                             >
                               <Send className="h-3 w-3 mr-1" />
@@ -372,7 +411,7 @@ export default function OutsourceIssuePage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 w-6 p-0 text-red-600"
+                              className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                               onClick={() => handleDelete(item.id)}
                             >
                               <Trash2 className="h-3 w-3" />
@@ -426,7 +465,7 @@ export default function OutsourceIssuePage() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label>
-                    {t('orderNo')} <span className="text-red-500">*</span>
+                    {t('orderNo')} <span className="text-red-500 dark:text-red-400">*</span>
                   </Label>
                   <Select
                     value={String(form.outsource_order_id || '')}
@@ -455,7 +494,7 @@ export default function OutsourceIssuePage() {
                 </div>
                 <div>
                   <Label>
-                    {t('issueWarehouse')} <span className="text-red-500">*</span>
+                    {t('issueWarehouse')} <span className="text-red-500 dark:text-red-400">*</span>
                   </Label>
                   <WarehouseSelect
                     value={form.warehouse_id || ''}
@@ -536,7 +575,7 @@ export default function OutsourceIssuePage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => removeItem(idx)}
                           >
                             <Trash2 className="h-3 w-3" />

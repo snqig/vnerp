@@ -137,7 +137,7 @@ export const POST = withPermission(
     }
 
     // 系统设置 category.require_on_business：采购单要求物料已归类
-    const materialIds = (body.lines as DbRow[]).map((line) => line.material_id).filter(Boolean);
+    const materialIds = (body.lines as DbRow[]).map((line) => Number(line.material_id)).filter((v): v is number => typeof v === 'number' && !isNaN(v));
     secureLog('info', ts('k_t9esp7'), {
       itemCount: body.lines.length,
       materialIds,
@@ -255,6 +255,63 @@ export const PUT = withPermission(
           410,
           410
         );
+      }
+
+      if (action === 'update') {
+        if (!Array.isArray(body.lines) || body.lines.length === 0) {
+          return errorResponse(ts('k_193r78b'), 400, 400);
+        }
+
+        // 与新建同口径：物料分类强制校验（系统设置 category.require_on_business 控制是否阻断）
+        // 显式标注类型：DbRow 的值类型为 DbValue，不能直接传给 (number|null|undefined)[]
+        const materialIds: (number | null | undefined)[] = (body.lines as DbRow[]).map((line) =>
+          line.material_id === null || line.material_id === undefined
+            ? null
+            : Number(line.material_id)
+        );
+        const categoryCheck = await checkMaterialsCategorized(materialIds);
+        if (categoryCheck.blocked) {
+          return errorResponse(categoryCheck.message!, 400, 400);
+        }
+
+        const result = await service.updateOrder(id, {
+          supplierId: Number(body.supplier_id),
+          supplierName: body.supplier_name || '',
+          supplierCode: body.supplier_code || '',
+          // 空值交由服务层回落为「单据原值」，避免编辑时把订单日期改掉
+          orderDate: body.order_date || '',
+          // 注意：币种/汇率不在入参内 —— 上方守卫已拦截显式传值，
+          // 服务层会强制沿用库中币种，保证「币种创建后不可修改」。
+          deliveryDate: body.delivery_date || '',
+          overReceiptTolerance:
+            body.over_receipt_tolerance === undefined || body.over_receipt_tolerance === null
+              ? undefined
+              : Number(body.over_receipt_tolerance),
+          taxRate: body.tax_rate,
+          paymentTerms: body.payment_terms || '',
+          deliveryAddress: body.delivery_address || '',
+          remark: body.remark || '',
+          lines: body.lines.map((line: DbRow, index: number) => ({
+            lineNo: index + 1,
+            materialId: line.material_id,
+            materialCode: line.material_code || '',
+            materialName: line.material_name || '',
+            materialSpec: line.material_spec || '',
+            unit: line.unit || ts('k_w0gthl'),
+            orderQty: line.order_qty,
+            receivedQty: 0,
+            returnedQty: 0,
+            unitPrice: line.unit_price || 0,
+            amount: 0,
+            taxRate: body.tax_rate,
+            taxAmount: 0,
+            lineTotal: 0,
+            requireDate: line.require_date,
+            remark: line.remark || '',
+          })),
+        });
+
+        return successResponse(result, tc('updateSuccess'));
       }
 
       return errorResponse(ts('k_ztn3ax'), 400, 400);

@@ -32,10 +32,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Edit, Trash2, Eye, Award, Printer } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Award, Printer, CheckCircle, Clock, AlertTriangle, Calendar, Trophy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 
@@ -229,6 +230,16 @@ export default function SupplierEvalPage() {
     remark: '',
   });
   const [formItems, setFormItems] = useState<EvalItem[]>([...defaultItems]);
+  const [stats, setStats] = useState({
+    total: 0,
+    excellent: 0,
+    good: 0,
+    average: 0,
+    poor: 0,
+    qualified: 0,
+    improve: 0,
+    monthlyEval: 0,
+  });
 
   const fetchData = async () => {
     try {
@@ -246,8 +257,21 @@ export default function SupplierEvalPage() {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/srm/evaluation/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
 
   const fetchDetail = async (id: number) => {
@@ -565,7 +589,25 @@ export default function SupplierEvalPage() {
               }
             />
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'total', label: '供应商总数', icon: Award, ...StatsTheme.blue },
+            { key: 'excellent', label: '优秀供应商', icon: Trophy, ...StatsTheme.green },
+            { key: 'qualified', label: '合格供应商', icon: CheckCircle, ...StatsTheme.cyan },
+            { key: 'improve', label: '待改进供应商', icon: AlertTriangle, ...StatsTheme.orange },
+            { key: 'monthlyEval', label: '本月评价次数', icon: Calendar, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: stats.total },
+            { key: 'excellent', count: stats.excellent },
+            { key: 'qualified', count: stats.qualified },
+            { key: 'improve', count: stats.improve },
+            { key: 'monthlyEval', count: stats.monthlyEval },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
 
         <Card>
           <CardContent className="p-4">
