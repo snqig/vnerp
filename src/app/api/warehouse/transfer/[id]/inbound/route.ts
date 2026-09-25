@@ -5,6 +5,7 @@ import { NextRequest } from 'next/server';
 import { queryOne, transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { BusinessError } from '@/lib/error-handling';
 import type { DbRow } from '@/types/db';
 import {
   appendInventoryTransaction,
@@ -58,10 +59,10 @@ export const POST = withPermission(
         const quantity = Number(item.quantity);
 
         if (!materialId) {
-          throw new Error(ts('k_ktgi83'));
+          throw new BusinessError(ts('k_ktgi83'), 'MATERIAL_ID_REQUIRED');
         }
         if (!quantity || quantity <= 0) {
-          throw new Error(ts('k_eg3g3'));
+          throw new BusinessError(ts('k_eg3g3'), 'IN_QUANTITY_INVALID');
         }
 
         const [matRows] = await conn.execute(
@@ -71,7 +72,7 @@ export const POST = withPermission(
         );
         const mat = (matRows as DbRow[])[0];
         if (!mat) {
-          throw new Error(`物料ID ${materialId} 不存在`);
+          throw new BusinessError(`物料ID ${materialId} 不存在`, 'MATERIAL_NOT_FOUND');
         }
         const [whRows] = await conn.execute(
           `SELECT warehouse_name FROM inv_warehouse WHERE id = ?`,

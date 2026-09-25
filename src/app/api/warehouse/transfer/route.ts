@@ -63,10 +63,15 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   return successResponse({
     list: rows.map((row: DbRow) => {
   const ts = t;
+  const statusValue = Number(row.status);
   return  ({
       ...row,
       type_name: TYPE_MAP[Number(row.type)] || ts('k_1lpnuh4'),
-      status_name: STATUS_MAP[Number(row.status)] || ts('k_1lpnuh4'),
+      status_name: STATUS_MAP[statusValue] || ts('k_1lpnuh4'),
+      // 审批不改变 status（避免与调出接口 status===1 前置冲突），以 approver_id 派生审批态
+      approved: row.approver_id != null,
+      // 待出库：已审批且尚未调出
+      pending_outbound: statusValue === 1 && row.approver_id != null,
     });
 }),
     total,
@@ -283,11 +288,16 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
         return errorResponse(ts('k_141pjml'), 400, 400);
       }
 
+      // 审批不推进状态：状态机为 0草稿 → 1待审批(审批通过后待出库) → 2已出库 → 3已入库。
+      // 若此处直接跳到 2（已出库），调出接口的前置校验 status===1 将永不满足 → 链路死锁。
+      // 审批结果以 approver_id / approver_name 落库，调出接口据此放行。
       await execute(
         `UPDATE inv_transfer_order
-         SET status = 2, approver_id = ?, update_time = NOW()
+         SET approver_id = ?,
+             approver_name = (SELECT real_name FROM sys_user WHERE id = ? LIMIT 1),
+             update_time = NOW()
          WHERE id = ?`,
-        [approver_id, id]
+        [approver_id, approver_id, id]
       );
 
       return successResponse(null, ts('k_1gbywpo'));

@@ -5,6 +5,7 @@ import { NextRequest } from 'next/server';
 import { queryOne, transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { BusinessError } from '@/lib/error-handling';
 import type { DbRow } from '@/types/db';
 import {
   appendInventoryTransaction,
@@ -45,6 +46,12 @@ export const POST = withPermission(
       return errorResponse(`当前状态为"${statusMap[transfer.status]}"，不能执行出库操作`, 400, 400);
     }
 
+    // 审批不改变 status（0草稿→1待审批→2已出库→3已入库），审批结果落在 approver_id 上。
+    // 此处据此放行，保证「未审批不得调出」。
+    if (!transfer.approver_id) {
+      return errorResponse(ts('k_trf_not_approved'), 400, 400);
+    }
+
     let totalOutQty = 0;
     let newStatus = transfer.status;
 
@@ -55,10 +62,10 @@ export const POST = withPermission(
         const quantity = Number(item.quantity);
 
         if (!materialId) {
-          throw new Error(ts('k_ktgi83'));
+          throw new BusinessError(ts('k_ktgi83'), 'MATERIAL_ID_REQUIRED');
         }
         if (!quantity || quantity <= 0) {
-          throw new Error(ts('k_1rxflii'));
+          throw new BusinessError(ts('k_1rxflii'), 'OUT_QUANTITY_INVALID');
         }
 
         // FIFO 选择调出仓批次并扣减
@@ -72,8 +79,9 @@ export const POST = withPermission(
         const batches = batchRows as DbRow[];
         const totalAvail = batches.reduce((s: number, b: DbRow) => s + Number(b.available_qty), 0);
         if (totalAvail < quantity) {
-          throw new Error(
-            `物料ID ${materialId} 在调出仓库存不足（可用 ${totalAvail}，需 ${quantity}）`
+          throw new BusinessError(
+            `物料ID ${materialId} 在调出仓库存不足（可用 ${totalAvail}，需 ${quantity}）`,
+            'INSUFFICIENT_STOCK'
           );
         }
 

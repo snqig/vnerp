@@ -568,7 +568,8 @@ export default function TransferPage() {
                               {tc('cancel')}
                             </Button>
                           )}
-                          {item.status === 1 && (
+                          {/* 审批不推进 status（避免与调出接口 status===1 前置死锁），已审批以 approver_id 标识 */}
+                          {item.status === 1 && !item.approver_id && (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -578,7 +579,7 @@ export default function TransferPage() {
                               {t('approveTransfer')}
                             </Button>
                           )}
-                          {item.status === 2 && (
+                          {item.status === 1 && !!item.approver_id && (
                             <Button
                               size="sm"
                               variant="ghost"
