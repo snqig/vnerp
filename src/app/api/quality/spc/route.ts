@@ -1,3 +1,4 @@
+import { toLocalDateStr } from '@/lib/date-utils';
 import { getTranslations } from 'next-intl/server';
 
 ;
@@ -24,8 +25,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const inspectionType = searchParams.get('inspection_type') || 'PQC';
     const startDate =
       searchParams.get('start_date') ||
-      new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-    const endDate = searchParams.get('end_date') || new Date().toISOString().slice(0, 10);
+      toLocalDateStr(new Date(Date.now() - 30 * 86400000));
+    const endDate = searchParams.get('end_date') || toLocalDateStr();
     const subgroupSize = parseInt(searchParams.get('subgroup_size') || '5');
 
     if (!materialId) return errorResponse(ts('k_3gnago'), 400, 400);
@@ -50,8 +51,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   if (action === 'pareto') {
     const startDate =
       searchParams.get('start_date') ||
-      new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-    const endDate = searchParams.get('end_date') || new Date().toISOString().slice(0, 10);
+      toLocalDateStr(new Date(Date.now() - 30 * 86400000));
+    const endDate = searchParams.get('end_date') || toLocalDateStr();
     const materialId = searchParams.get('material_id');
 
     let whereClause = 'WHERE DATE(create_time) BETWEEN ? AND ?';
@@ -79,8 +80,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   if (action === 'p-chart') {
     const startDate =
       searchParams.get('start_date') ||
-      new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-    const endDate = searchParams.get('end_date') || new Date().toISOString().slice(0, 10);
+      toLocalDateStr(new Date(Date.now() - 30 * 86400000));
+    const endDate = searchParams.get('end_date') || toLocalDateStr();
     const materialId = searchParams.get('material_id');
 
     let whereClause = 'WHERE inspection_date BETWEEN ? AND ?';

@@ -1,3 +1,4 @@
+import { toLocalDateStr } from '@/lib/date-utils';
 import { getTranslations } from 'next-intl/server';
 
 ;
@@ -30,7 +31,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
      FROM qms_lab_test WHERE lab_test_no LIKE CONCAT('LAB-', DATE_FORMAT(NOW(), '%Y%m%d'), '%')`
   );
   const seq = seqResult[0]?.seq || 1;
-  const labTestNo = `LAB-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(seq).padStart(4, '0')}`;
+  const labTestNo = `LAB-${toLocalDateStr().replace(/-/g, '')}-${String(seq).padStart(4, '0')}`;
 
   // 3. Insert lab test record
   const result = await execute(
