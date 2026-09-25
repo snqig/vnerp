@@ -323,9 +323,9 @@ describe('POST /api/purchase/orders — 物料分类校验集成', () => {
       const { status } = await parseResponse(res);
 
       expect(status).toBe(200);
-      // null/0/undefined 被 filter(Boolean) 过滤；-1 是 truthy 会被传入，
-      // 但 checkMaterialsCategorized 内部通过 v > 0 过滤掉
-      expect(h.checkMaterialsCategorized).toHaveBeenCalledWith([-1, 10]);
+      // 路由层只剔除 null/undefined（0 与 -1 都会透传），
+      // 非法值统一由 checkMaterialsCategorized 内部 v > 0 兜底过滤
+      expect(h.checkMaterialsCategorized).toHaveBeenCalledWith([0, 0, -1, 10]);
     });
   });
 

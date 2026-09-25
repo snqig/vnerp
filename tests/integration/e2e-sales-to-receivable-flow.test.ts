@@ -68,7 +68,7 @@ describe('端到端流程：销售→MRP→生产→库存→应收', () => {
   });
 
   describe('Step 1: 销售订单审核 → 生成生产工单', () => {
-    it('SalesToWorkOrderHandler 应根据销售订单行创建工单（prd_work_order INSERT）', async () => {
+    it('SalesToWorkOrderHandler 应根据销售订单行创建工单（prod_work_order INSERT）', async () => {
       const salesOrder = SalesOrder.reconstitute({
         id: 100,
         orderNo: 'SO20260101001',
@@ -114,15 +114,15 @@ describe('端到端流程：销售→MRP→生产→库存→应收', () => {
       await handler.handle(approvedEvent);
 
       const insertCall = mockConn.execute.mock.calls.find(
-        (call) => typeof call[0] === 'string' && call[0].includes('INSERT INTO prd_work_order')
+        (call) => typeof call[0] === 'string' && call[0].includes('INSERT INTO prod_work_order')
       );
 
       expect(insertCall).toBeDefined();
-      expect(insertCall![0]).toContain('prd_work_order');
+      expect(insertCall![0]).toContain('prod_work_order');
       expect(insertCall![0]).toContain('work_order_no');
       expect(insertCall![0]).toContain('sales_order_id');
       expect(insertCall![0]).toContain('material_id');
-      expect(insertCall![0]).toContain('plan_qty');
+      expect(insertCall![0]).toContain('planned_qty');
 
       const params = insertCall![1];
       expect(params).toContain(100);
@@ -429,7 +429,7 @@ describe('端到端流程：销售→MRP→生产→库存→应收', () => {
       await salesHandler.handle(approvedEvent);
 
       const woInsert = mockConn.execute.mock.calls.find(
-        (c) => typeof c[0] === 'string' && c[0].includes('INSERT INTO prd_work_order')
+        (c) => typeof c[0] === 'string' && c[0].includes('INSERT INTO prod_work_order')
       );
       expect(woInsert).toBeDefined();
 

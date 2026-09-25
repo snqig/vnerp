@@ -75,6 +75,20 @@ export interface AllocationWithRetry {
 
 /** 默认乐观锁冲突重试次数 */
 export const DEFAULT_RETRY_ATTEMPTS = 3;
+
+/**
+ * FIFO 扣减的可重试错误：批次被并发修改（乐观锁 version 不匹配）。
+ *
+ * 历史缺陷：重试判定曾依赖 error.message 匹配英文关键词 'version'，
+ * 而实际抛出的文案是中文「期望版本X, 实际版本Y」，导致判定永不命中、
+ * 重试机制形同虚设。改为按错误类型判定，不再依赖文案。
+ */
+export class FifoOptimisticLockConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'FifoOptimisticLockConflictError';
+  }
+}
 /** 默认重试间隔（毫秒），每次重试按 attempts 递增（线性退避） */
 export const DEFAULT_RETRY_DELAY_MS = 100;
 
@@ -418,12 +432,8 @@ export async function executeFIFODeductionWithRetry(
     } catch (error) {
       lastError = (error as Error).message;
       logger.debug(`[FIFO] executeFIFODeductionWithRetry attempt ${attempts} failed: ${lastError}`);
-      if (
-        attempts < maxRetries &&
-        (lastError.includes('已被其他操作修改') ||
-          lastError.includes('version') ||
-          lastError.includes('affectedRows'))
-      ) {
+      // 仅可重试错误才重试：以错误类型为准（中文文案匹配易失效），非冲突错误直接上抛
+      if (attempts < maxRetries && error instanceof FifoOptimisticLockConflictError) {
         logger.debug(
           `[FIFO] executeFIFODeductionWithRetry retrying after ${DEFAULT_RETRY_DELAY_MS * attempts}ms delay...`
         );
@@ -505,12 +515,14 @@ async function executeFIFODeductionInternal(
         `[FIFO]   batch ${alloc.batch_no} optimistic lock conflict - currentBatch: ${JSON.stringify(currentBatch)}`
       );
       if (currentBatch.length > 0) {
-        throw new Error(
+        throw new FifoOptimisticLockConflictError(
           `批次${alloc.batch_no}乐观锁冲突: 期望版本${alloc.version}, ` +
             `实际版本${currentBatch[0].version}, 可用量${currentBatch[0].available_qty}`
         );
       }
-      throw new Error(`FIFO库存更新失败: 批次${alloc.batch_no}，可能已被其他操作修改`);
+      throw new FifoOptimisticLockConflictError(
+        `FIFO库存更新失败: 批次${alloc.batch_no}，可能已被其他操作修改`
+      );
     }
 
     // 行成本 = 分配数量 × 单价（Decimal 运算避免浮点误差）
