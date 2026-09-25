@@ -32,6 +32,8 @@ export interface Department {
   id: number;
   dept_code: string;
   dept_name: string;
+  /** 上级部门；顶级部门为 null。用于「部门 → 科室」两级联动 */
+  parent_id?: number | null;
 }
 
 // 角色接口

@@ -32,12 +32,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, AlertTriangle, Award, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/lib/date-utils';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface Certificate {
   id: number;
@@ -249,7 +250,24 @@ export default function CertificatesPage() {
           </div>
         </div>
 
-        <Card>
+        
+        {/* 统计卡片 */}
+        <StatsCards
+          configs={[
+            { key: 'total', label: t('totalCertificates'), icon: Award, ...StatsTheme.blue },
+            { key: 'valid', label: t('valid'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'expiring', label: t('expiringSoon'), icon: Clock, ...StatsTheme.orange },
+            { key: 'expired', label: t('expired'), icon: XCircle, ...StatsTheme.red }
+          ]}
+          stats={[
+            { key: 'total', count: list.length },
+            { key: 'valid', count: list.length },
+            { key: 'expiring', count: list.length },
+            { key: 'expired', count: list.length }
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+<Card>
           <CardContent className="p-0">
             <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
             <Table>
@@ -299,14 +317,14 @@ export default function CertificatesPage() {
                       <TableCell className="text-xs">{formatDate(item.expiry_date)}</TableCell>
                       <TableCell className="text-xs">
                         {item.status === 'active' ? (
-                          <Badge className="bg-green-100 text-green-700 text-xs border-0">{tc('active')}</Badge>
+                          <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs border-0">{tc('active')}</Badge>
                         ) : (
-                          <Badge className="bg-red-100 text-red-700 text-xs border-0">{tc('expired')}</Badge>
+                          <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs border-0">{tc('expired')}</Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-xs">
                         {isExpiring ? (
-                          <Badge className="bg-red-100 text-red-700 text-xs border-0 whitespace-nowrap">
+                          <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs border-0 whitespace-nowrap">
                             <AlertTriangle className="h-3 w-3 mr-1" />
                             {daysLeft}
                           </Badge>
@@ -330,7 +348,7 @@ export default function CertificatesPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />
@@ -523,16 +541,16 @@ export default function CertificatesPage() {
                   <div>
                     <span className="text-muted-foreground">{tc('status')}：</span>
                     {detailItem.status === 'active' ? (
-                      <Badge className="bg-green-100 text-green-700 text-xs border-0">{tc('active')}</Badge>
+                      <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs border-0">{tc('active')}</Badge>
                     ) : (
-                      <Badge className="bg-red-100 text-red-700 text-xs border-0">{tc('expired')}</Badge>
+                      <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs border-0">{tc('expired')}</Badge>
                     )}
                   </div>
                 </div>
                 {detailItem.remark && (
                   <div className="text-sm">
                     <span className="text-muted-foreground">{tc('remark')}：</span>
-                    <p className="mt-1 bg-gray-50 p-2 rounded text-sm">{detailItem.remark}</p>
+                    <p className="mt-1 bg-muted p-2 rounded text-sm">{detailItem.remark}</p>
                   </div>
                 )}
                 {detailItem.file_url && (
@@ -542,7 +560,7 @@ export default function CertificatesPage() {
                       href={detailItem.file_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 underline ml-2"
+                      className="text-blue-600 dark:text-blue-400 underline ml-2"
                     >
                       {tc('view')}
                     </a>

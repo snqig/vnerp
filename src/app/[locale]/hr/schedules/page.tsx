@@ -18,8 +18,9 @@ import { Badge } from '@/components/ui/badge';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Calendar, Plus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Plus, Search, ChevronLeft, ChevronRight, CheckCircle, Clock, AlertTriangle, CalendarDays, CalendarRange } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
@@ -57,6 +58,13 @@ export default function SchedulesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [stats, setStats] = useState({
+    todayScheduled: 0,
+    weekScheduled: 0,
+    monthlyCount: 0,
+    totalShifts: 0,
+    todayLate: 0,
+  });
   const [form, setForm] = useState({
     employeeId: 0,
     shiftId: 0,
@@ -82,7 +90,22 @@ export default function SchedulesPage() {
     }
   };
 
-  useEffect(() => { fetchSchedules(); }, []);
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/hr/schedules/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
+  useEffect(() => { 
+    fetchSchedules(); 
+    fetchStats();
+  }, []);
 
   const changeMonth = (offset: number) => {
     const d = new Date(currentMonth + '-01');
@@ -148,13 +171,31 @@ export default function SchedulesPage() {
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Calendar className="h-6 w-6 text-blue-500" />
+            <Calendar className="h-6 w-6 text-blue-500 dark:text-blue-400" />
             <h1 className="text-2xl font-bold">{t('schedule')}</h1>
           </div>
           <Button onClick={() => { setForm({ employeeId: 0, shiftId: 0, startDate: '', endDate: '' }); setDialogOpen(true); }}>
             <Plus className="h-4 w-4 mr-2" />{tc('add')}
           </Button>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'todayScheduled', label: '今日排班人数', icon: Calendar, ...StatsTheme.blue },
+            { key: 'weekScheduled', label: '本周排班人数', icon: CalendarDays, ...StatsTheme.green },
+            { key: 'monthlyCount', label: '本月排班次数', icon: CalendarRange, ...StatsTheme.cyan },
+            { key: 'totalShifts', label: '班次总数', icon: Clock, ...StatsTheme.orange },
+            { key: 'todayLate', label: '今日迟到人数', icon: AlertTriangle, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'todayScheduled', count: stats.todayScheduled },
+            { key: 'weekScheduled', count: stats.weekScheduled },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+            { key: 'totalShifts', count: stats.totalShifts },
+            { key: 'todayLate', count: stats.todayLate },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
 
         <Card>
           <CardHeader>
@@ -210,7 +251,7 @@ export default function SchedulesPage() {
                     <TableCell>{s.endDate}</TableCell>
                     <TableCell>
                       <Badge className={
-                        s.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                        s.status === 'active' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
                       }>
                         {s.status === 'active' ? tc('active') : tc('inactive')}
                       </Badge>

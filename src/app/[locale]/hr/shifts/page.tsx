@@ -165,7 +165,7 @@ export default function ShiftsPage() {
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Clock className="h-6 w-6 text-blue-500" />
+            <Clock className="h-6 w-6 text-blue-500 dark:text-blue-400" />
             <h1 className="text-2xl font-bold">{t('shift') || ts('k_4ndpw8')}</h1>
           </div>
           <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" />{tc('add')}</Button>
@@ -219,7 +219,7 @@ export default function ShiftsPage() {
                     <TableCell>{shift.overtimeRate}x</TableCell>
                     <TableCell>¥{shift.nightAllowance}</TableCell>
                     <TableCell>
-                      <Badge className={shift.status === 1 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}>
+                      <Badge className={shift.status === 1 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}>
                         {shift.status === 1 ? (tc('active') || ts('k_5pm2ma')) : (tc('inactive') || ts('k_6q9o5l'))}
                       </Badge>
                     </TableCell>
@@ -228,7 +228,7 @@ export default function ShiftsPage() {
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleDelete(shift)}>
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
                       </Button>
                     </TableCell>
                   </TableRow>

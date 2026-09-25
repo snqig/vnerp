@@ -15,9 +15,10 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Save, TrendingUp } from 'lucide-react';
+import { Search, Save, TrendingUp, Users, Trophy, ThumbsUp, Minus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRowSelection } from '@/lib/useRowSelection';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
 interface ScoreRow {
@@ -178,7 +179,7 @@ export default function PerformancePage() {
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <TrendingUp className="h-6 w-6 text-blue-500" />
+            <TrendingUp className="h-6 w-6 text-blue-500 dark:text-blue-400" />
             <h1 className="text-2xl font-bold">{t('performance') || ts('k_1g8d66q')}</h1>
           </div>
           <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
@@ -187,7 +188,24 @@ export default function PerformancePage() {
           </Button>
         </div>
 
-        <Card>
+        
+        {/* 统计卡片 */}
+        <StatsCards
+          configs={[
+            { key: 'total', label: t('totalEmployees'), icon: Users, ...StatsTheme.blue },
+            { key: 'excellent', label: t('excellent'), icon: Trophy, ...StatsTheme.green },
+            { key: 'good', label: t('good'), icon: ThumbsUp, ...StatsTheme.cyan },
+            { key: 'average', label: t('average'), icon: Minus, ...StatsTheme.orange },
+          ]}
+          stats={[
+            { key: 'total', count: scores.length },
+            { key: 'excellent', count: scores.length },
+            { key: 'good', count: scores.length },
+            { key: 'average', count: scores.length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+<Card>
           <CardHeader>
             <div className="flex items-center gap-4">
               <div className="relative flex-1 max-w-sm">
@@ -222,7 +240,7 @@ export default function PerformancePage() {
                   <TableHead className="text-right">
                     {t('siteManagement15') || ts('k_3f0n70')}
                   </TableHead>
-                  <TableHead className="text-right text-blue-600 font-bold">
+                  <TableHead className="text-right text-blue-600 dark:text-blue-400 font-bold">
                     {t('totalScore') || ts('k_x4ssb8')}
                   </TableHead>
                 </TableRow>
@@ -263,7 +281,7 @@ export default function PerformancePage() {
                       </TableCell>
                     ))}
                     <TableCell className="text-right">
-                      <span className="text-lg font-bold text-blue-600">
+                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
                         {r.totalScore.toFixed(2)}
                       </span>
                     </TableCell>

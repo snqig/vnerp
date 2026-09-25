@@ -29,7 +29,10 @@ import {
   Calendar,
   ArrowUp,
   ArrowDown,
+  CheckCircle,
+  UserPlus,
 } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
@@ -199,7 +202,7 @@ export default function EmployeePage() {
     try {
       let deptList: Department[] = [];
 
-      const response = await fetch('/api/organization/department');
+      const response = await authFetch('/api/organization/department?pageSize=500');
       const result = await response.json();
       if (result.success) {
         deptList = Array.isArray(result.data) ? result.data : result.data?.list || [];
@@ -1050,10 +1053,10 @@ export default function EmployeePage() {
   // 状态标签
   const getStatusBadge = (status: number) => {
     const styles: Record<number, string> = {
-      1: 'bg-green-100 text-green-800',
+      1: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
       0: 'bg-muted text-muted-foreground',
-      2: 'bg-yellow-100 text-yellow-800',
-      3: 'bg-red-100 text-red-800',
+      2: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
+      3: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
     };
     const labels: Record<number, string> = {
       1: t('statusActive'),
@@ -1067,6 +1070,26 @@ export default function EmployeePage() {
   return (
     <MainLayout title={tc('employeeProfile')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('totalEmployees'), icon: Users, ...StatsTheme.blue },
+            { key: 'active', label: tc('activeEmployees'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'probation', label: tc('probationCount'), icon: UserCircle, ...StatsTheme.orange },
+            { key: 'new hires', label: tc('newHiresThisMonth'), icon: UserPlus, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: employees.length },
+            { key: 'active', count: employees.filter((e) => e.status === 1).length },
+            { key: 'probation', count: 0 },
+            { key: 'new hires', count: employees.filter((e) => {
+              const d = new Date(e.entry_date);
+              const n = new Date();
+              return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear();
+            }).length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -1154,24 +1177,24 @@ export default function EmployeePage() {
 
             {/* 统计面板 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+              <Card className="bg-gradient-to-br from-blue-50 dark:from-blue-950/20 to-blue-100 dark:to-blue-950/20 border-blue-200 dark:border-blue-800">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-blue-600 font-medium">{tc('totalCount')}</p>
-                      <p className="text-2xl font-bold text-blue-800">{stats.total}</p>
+                      <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{tc('totalCount')}</p>
+                      <p className="text-2xl font-bold text-blue-800 dark:text-blue-300">{stats.total}</p>
                     </div>
                     <Users className="w-8 h-8 text-blue-400" />
                   </div>
                 </CardContent>
               </Card>
-              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+              <Card className="bg-gradient-to-br from-green-50 dark:from-green-950/20 to-green-100 dark:to-green-950/20 border-green-200 dark:border-green-800">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-green-600 font-medium">{tc('male')}</p>
-                      <p className="text-2xl font-bold text-green-800">{stats.male}</p>
-                      <p className="text-xs text-green-500">
+                      <p className="text-sm text-green-600 dark:text-green-400 font-medium">{tc('male')}</p>
+                      <p className="text-2xl font-bold text-green-800 dark:text-green-300">{stats.male}</p>
+                      <p className="text-xs text-green-500 dark:text-green-400">
                         {stats.total > 0 ? ((stats.male / stats.total) * 100).toFixed(1) : 0}%
                       </p>
                     </div>
@@ -1181,13 +1204,13 @@ export default function EmployeePage() {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="bg-gradient-to-br from-pink-50 to-pink-100 border-pink-200">
+              <Card className="bg-gradient-to-br from-pink-50 dark:from-pink-950/20 to-pink-100 dark:to-pink-950/20 border-pink-200 dark:border-pink-800">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-pink-600 font-medium">{tc('female')}</p>
-                      <p className="text-2xl font-bold text-pink-800">{stats.female}</p>
-                      <p className="text-xs text-pink-500">
+                      <p className="text-sm text-pink-600 dark:text-pink-400 font-medium">{tc('female')}</p>
+                      <p className="text-2xl font-bold text-pink-800 dark:text-pink-300">{stats.female}</p>
+                      <p className="text-xs text-pink-500 dark:text-pink-400">
                         {stats.total > 0 ? ((stats.female / stats.total) * 100).toFixed(1) : 0}%
                       </p>
                     </div>
@@ -1197,13 +1220,13 @@ export default function EmployeePage() {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+              <Card className="bg-gradient-to-br from-purple-50 dark:from-purple-950/20 to-purple-100 dark:to-purple-950/20 border-purple-200 dark:border-purple-800">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-purple-600 font-medium">{tc('avgAge')}</p>
-                      <p className="text-2xl font-bold text-purple-800">{stats.avgAge}</p>
-                      <p className="text-xs text-purple-500">{tc('ageUnit')}</p>
+                      <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">{tc('avgAge')}</p>
+                      <p className="text-2xl font-bold text-purple-800 dark:text-purple-300">{stats.avgAge}</p>
+                      <p className="text-xs text-purple-500 dark:text-purple-400">{tc('ageUnit')}</p>
                     </div>
                     <Calendar className="w-8 h-8 text-purple-400" />
                   </div>
@@ -1238,8 +1261,8 @@ export default function EmployeePage() {
             ) : (
               <>
                 {selectedCount > 0 && (
-                  <div className="flex items-center gap-2 mb-4 p-2 bg-blue-50 rounded-lg">
-                    <span className="text-sm text-blue-600">
+                  <div className="flex items-center gap-2 mb-4 p-2 bg-blue-500/10 rounded-lg">
+                    <span className="text-sm text-blue-600 dark:text-blue-400">
                       {tc('selectedCount', { count: selectedCount })}
                     </span>
                     <Button variant="outline" size="sm" onClick={handleBatchPrint} className="ml-2">
@@ -1484,7 +1507,7 @@ export default function EmployeePage() {
                               className="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-600"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                               <UserCircle className="w-6 h-6 text-gray-400" />
                             </div>
                           )}
@@ -1511,7 +1534,7 @@ export default function EmployeePage() {
                               onClick={() => generateEmployeeQR(emp)}
                               title={tc('printCard')}
                             >
-                              <Printer className="w-4 h-4 text-blue-500" />
+                              <Printer className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                             </Button>
                             <Button
                               variant="ghost"
@@ -1529,7 +1552,7 @@ export default function EmployeePage() {
                               size="sm"
                               onClick={() => deleteEmployee(emp.id)}
                             >
-                              <Trash2 className="w-4 h-4 text-red-500" />
+                              <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
                             </Button>
                           </div>
                         </TableCell>

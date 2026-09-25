@@ -155,7 +155,7 @@ export default function PayslipsPage() {
     <MainLayout title={t('payslip') || ts('k_1qarlpz')}>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center gap-3">
-          <FileText className="h-6 w-6 text-blue-500" />
+          <FileText className="h-6 w-6 text-blue-500 dark:text-blue-400" />
           <h1 className="text-2xl font-bold">{t('payslip') || ts('k_1qarlpz')}</h1>
         </div>
 
@@ -203,7 +203,7 @@ export default function PayslipsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-green-500" />
+                <DollarSign className="h-5 w-5 text-green-500 dark:text-green-400" />
                 {data.employeeName} - {data.month} {t('payslip') || ts('k_1qarlpz')}
               </CardTitle>
             </CardHeader>
@@ -240,12 +240,12 @@ export default function PayslipsPage() {
                     { label: t('performanceSalary') || ts('k_n10a79'), value: data.performanceSalary },
                     { label: t('allowances') || ts('k_1hcqc71'), value: data.allowances },
                   ].map((item) => (
-                    <div key={item.label} className="flex justify-between p-2 rounded bg-green-50">
+                    <div key={item.label} className="flex justify-between p-2 rounded bg-green-500/10">
                       <span>{item.label}</span>
                       <span className="font-medium">¥{item.value.toLocaleString()}</span>
                     </div>
                   ))}
-                  <div className="flex justify-between p-2 rounded bg-green-100 col-span-2 font-bold">
+                  <div className="flex justify-between p-2 rounded bg-green-100 dark:bg-green-900/30 col-span-2 font-bold">
                     <span>{t('grossPay') || ts('k_c7r6rl')}</span>
                     <span>¥{data.grossPay.toLocaleString()}</span>
                   </div>
@@ -269,12 +269,12 @@ export default function PayslipsPage() {
                     },
                     { label: t('otherDeduction') || ts('k_mbuxmk'), value: data.otherDeduction },
                   ].map((item) => (
-                    <div key={item.label} className="flex justify-between p-2 rounded bg-red-50">
+                    <div key={item.label} className="flex justify-between p-2 rounded bg-red-500/10">
                       <span>{item.label}</span>
                       <span className="font-medium">¥{item.value.toLocaleString()}</span>
                     </div>
                   ))}
-                  <div className="flex justify-between p-2 rounded bg-red-100 col-span-2 font-bold">
+                  <div className="flex justify-between p-2 rounded bg-red-100 dark:bg-red-900/30 col-span-2 font-bold">
                     <span>{t('totalDeduction') || ts('k_lhh9b')}</span>
                     <span>¥{data.totalDeduction.toLocaleString()}</span>
                   </div>
@@ -283,9 +283,9 @@ export default function PayslipsPage() {
 
               <Separator />
 
-              <div className="flex justify-between items-center p-4 rounded-lg bg-blue-50">
+              <div className="flex justify-between items-center p-4 rounded-lg bg-blue-500/10">
                 <span className="text-lg font-semibold">{t('netPay') || ts('k_1rolvbl')}</span>
-                <span className="text-3xl font-bold text-blue-600">
+                <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                   ¥{data.netPay.toLocaleString()}
                 </span>
               </div>

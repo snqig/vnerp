@@ -33,9 +33,9 @@ const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  synced: { label: 'syncStatusSynced', className: 'bg-green-100 text-green-700' },
-  pending: { label: 'syncStatusPending', className: 'bg-yellow-100 text-yellow-700' },
-  failed: { label: 'syncStatusFailed', className: 'bg-red-100 text-red-700' },
+  synced: { label: 'syncStatusSynced', className: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' },
+  pending: { label: 'syncStatusPending', className: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' },
+  failed: { label: 'syncStatusFailed', className: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' },
 };
 
 export default function MesSyncPage() {
@@ -109,7 +109,7 @@ export default function MesSyncPage() {
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Database className="h-6 w-6 text-blue-500" />
+            <Database className="h-6 w-6 text-blue-500 dark:text-blue-400" />
             <h1 className="text-2xl font-bold">{t('mesSync')}</h1>
           </div>
           <Button onClick={handleManualSync} disabled={syncing} className="bg-blue-600 hover:bg-blue-700">
@@ -119,12 +119,12 @@ export default function MesSyncPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="bg-gradient-to-br from-blue-50 to-cyan-50">
+          <Card className="bg-gradient-to-br from-blue-50 dark:from-blue-950/20 to-cyan-50 dark:to-cyan-950/20">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{t('pieceWorkSync')}</p>
-                  <p className="text-3xl font-bold text-blue-600 mt-1">{pieceWorkCount}</p>
+                  <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">{pieceWorkCount}</p>
                   <p className="text-xs text-muted-foreground mt-1">{t('syncRecords')}</p>
                 </div>
                 <Database className="w-10 h-10 text-blue-400" />
@@ -132,12 +132,12 @@ export default function MesSyncPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50">
+          <Card className="bg-gradient-to-br from-green-50 dark:from-green-950/20 to-emerald-50 dark:to-emerald-950/20">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{t('qualitySync')}</p>
-                  <p className="text-3xl font-bold text-green-600 mt-1">{qualityCount}</p>
+                  <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-1">{qualityCount}</p>
                   <p className="text-xs text-muted-foreground mt-1">{t('syncRecords')}</p>
                 </div>
                 <CheckCircle2 className="w-10 h-10 text-green-400" />
@@ -145,12 +145,12 @@ export default function MesSyncPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-pink-50">
+          <Card className="bg-gradient-to-br from-purple-50 dark:from-purple-950/20 to-pink-50 dark:to-pink-950/20">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{t('lastSyncTime')}</p>
-                  <p className="text-xl font-bold text-purple-600 mt-1">{lastSyncTime}</p>
+                  <p className="text-xl font-bold text-purple-600 dark:text-purple-400 mt-1">{lastSyncTime}</p>
                   <p className="text-xs text-muted-foreground mt-1">{t('lastSyncDesc')}</p>
                 </div>
                 <Clock className="w-10 h-10 text-purple-400" />
@@ -195,7 +195,7 @@ export default function MesSyncPage() {
                       <TableCell>
                         <Badge className={statusConf.className}>{t(statusConf.label)}</Badge>
                       </TableCell>
-                      <TableCell className="text-red-500 text-sm">{r.errorMessage || '-'}</TableCell>
+                      <TableCell className="text-red-500 dark:text-red-400 text-sm">{r.errorMessage || '-'}</TableCell>
                     </TableRow>
                   );
                 })}

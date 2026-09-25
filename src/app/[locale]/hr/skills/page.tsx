@@ -4,6 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Trash2, Star, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Star, CheckCircle2, XCircle, Award } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/lib/date-utils';
@@ -225,7 +226,24 @@ export default function SkillsPage() {
           </div>
         </div>
 
-        <Card>
+        
+        {/* 统计卡片 */}
+        <StatsCards
+          configs={[
+            { key: 'total', label: t('totalSkills'), icon: Award, ...StatsTheme.blue },
+            { key: 'level1', label: t('level1'), icon: Star, ...StatsTheme.gray },
+            { key: 'level2', label: t('level2'), icon: Star, ...StatsTheme.cyan },
+            { key: 'level3', label: t('level3'), icon: Star, ...StatsTheme.orange }
+          ]}
+          stats={[
+            { key: 'total', count: list.length },
+            { key: 'level1', count: list.length },
+            { key: 'level2', count: list.length },
+            { key: 'level3', count: list.length }
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+<Card>
           <CardContent className="p-0">
             <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
             <Table>
@@ -265,12 +283,12 @@ export default function SkillsPage() {
                     </TableCell>
                     <TableCell className="text-xs">
                       {item.certified ? (
-                        <Badge className="bg-green-100 text-green-700 text-xs border-0">
+                        <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs border-0">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
                           {t('certified')}
                         </Badge>
                       ) : (
-                        <Badge className="bg-gray-100 text-gray-500 text-xs border-0">
+                        <Badge className="bg-gray-100 dark:bg-gray-700 text-gray-500 text-xs border-0">
                           <XCircle className="h-3 w-3 mr-1" />
                           {tc('no')}
                         </Badge>
@@ -289,14 +307,14 @@ export default function SkillsPage() {
                           onClick={() => {
                             setEditItem(item);
                             setShowDialog(true);
-                          }}
+                      }}
                         >
                           <Edit className="h-3 w-3" />
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-6 w-6 p-0 text-red-600"
+                          className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                           onClick={() => handleDelete(item.id)}
                         >
                           <Trash2 className="h-3 w-3" />
@@ -410,7 +428,7 @@ export default function SkillsPage() {
                 <div className="flex items-center gap-2 pt-2">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-gray-300 dark:border-gray-600"
                     checked={!!editItem.certified}
                     onChange={(e) => setEditItem({ ...editItem, certified: e.target.checked ? 1 : 0 })}
                   />

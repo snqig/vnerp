@@ -98,7 +98,7 @@ export default function BankReportPage() {
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <FileText className="h-6 w-6 text-blue-500" />
+            <FileText className="h-6 w-6 text-blue-500 dark:text-blue-400" />
             <h1 className="text-2xl font-bold">{t('bankReport')}</h1>
           </div>
           <Button onClick={generateBankFile} className="bg-green-600 hover:bg-green-700">

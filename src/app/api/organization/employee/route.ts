@@ -12,6 +12,7 @@ import {
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 // 员工数据接口
 interface Employee {
@@ -51,12 +52,18 @@ function buildQueryConditions(params: {
   role_id?: string;
   status?: string;
 }): { sql: string; countSql: string; values: SqlValue[] } {
-  let sql = 'SELECT * FROM sys_employee WHERE 1=1';
-  let countSql = 'SELECT COUNT(*) as total FROM sys_employee WHERE 1=1';
+  // dept_name 以 sys_department 为唯一真相源：由 dept_id 派生；
+  // 仅当关联部门缺失或已软删时回退 sys_employee.dept_name。
+  // 列表与编辑弹窗因此读同一真相源，不会再出现「列表有部门、弹窗空白」。
+  let sql = `SELECT e.*, COALESCE(d.dept_name, e.dept_name) AS dept_name
+               FROM sys_employee e
+               LEFT JOIN sys_department d ON d.id = e.dept_id AND d.deleted = 0
+              WHERE 1=1`;
+  let countSql = 'SELECT COUNT(*) as total FROM sys_employee e WHERE 1=1';
   const values: SqlValue[] = [];
 
   if (params.keyword) {
-    const condition = ' AND (name LIKE ? OR employee_no LIKE ? OR phone LIKE ?)';
+    const condition = ' AND (e.name LIKE ? OR e.employee_no LIKE ? OR e.phone LIKE ?)';
     sql += condition;
     countSql += condition;
     const likeKeyword = `%${params.keyword}%`;
@@ -64,29 +71,50 @@ function buildQueryConditions(params: {
   }
 
   if (params.dept_id) {
-    const condition = ' AND dept_id = ?';
+    const condition = ' AND e.dept_id = ?';
     sql += condition;
     countSql += condition;
     values.push(parseInt(params.dept_id));
   }
 
   if (params.role_id) {
-    const condition = ' AND role_id = ?';
+    const condition = ' AND e.role_id = ?';
     sql += condition;
     countSql += condition;
     values.push(parseInt(params.role_id));
   }
 
   if (params.status !== undefined && params.status !== null && params.status !== '') {
-    const condition = ' AND status = ?';
+    const condition = ' AND e.status = ?';
     sql += condition;
     countSql += condition;
     values.push(parseInt(params.status));
   }
 
-  sql += ' ORDER BY id DESC';
+  sql += ' ORDER BY e.id DESC';
 
   return { sql, countSql, values };
+}
+
+/**
+ * 部门名以 sys_department 为唯一真相源：
+ * 给定 dept_id 时一律以主数据名覆盖客户端传入的 dept_name，
+ * 避免 sys_employee 的 dept_id / dept_name 两列再次分叉
+ * （列表读 dept_name、编辑弹窗读 dept_id，二者必须同源）。
+ * dept_id 为空时保留客户端传入的 dept_name，兼容尚未建档的部门名。
+ */
+async function resolveDeptName(
+  deptId: Employee['dept_id'],
+  fallback: Employee['dept_name']
+): Promise<string | null> {
+  if (deptId === null || deptId === undefined || (deptId as unknown) === '') {
+    return fallback ?? null;
+  }
+  const dept = await queryOne<{ dept_name: string }>(
+    'SELECT dept_name FROM sys_department WHERE id = ? AND deleted = 0',
+    [Number(deptId)]
+  );
+  return dept?.dept_name ?? fallback ?? null;
 }
 
 // GET - 获取员工列表或单个员工
@@ -97,15 +125,19 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const keyword = searchParams.get('keyword') || '';
   const dept_id = searchParams.get('dept_id');
   const role_id = searchParams.get('role_id');
-  const status = searchParams.get('status');
+  const status = numericFilter(searchParams.get('status'));
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
   // 查询单个员工
   if (id) {
-    const employee = await queryOne<Employee>('SELECT * FROM sys_employee WHERE id = ?', [
-      parseInt(id),
-    ]);
+    const employee = await queryOne<Employee>(
+      `SELECT e.*, COALESCE(d.dept_name, e.dept_name) AS dept_name
+         FROM sys_employee e
+         LEFT JOIN sys_department d ON d.id = e.dept_id AND d.deleted = 0
+        WHERE e.id = ?`,
+      [parseInt(id)]
+    );
 
     if (!employee) {
       return commonErrors.notFound(ts('k_1k6rrmh'));
@@ -119,7 +151,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     keyword: keyword || undefined,
     dept_id: dept_id ?? undefined,
     role_id: role_id ?? undefined,
-    status: status ?? undefined,
+    status: status !== undefined ? String(status) : undefined,
   });
 
   // 使用分页查询工具
@@ -154,6 +186,8 @@ export const POST = withPermission(
       return errorResponse(ts('k_1n4lfot'), 409, 409);
     }
 
+    const deptName = await resolveDeptName(body.dept_id, body.dept_name);
+
     const result = await execute(
       `INSERT INTO sys_employee (
       employee_no, name, gender, age, id_card, phone, email,
@@ -169,7 +203,7 @@ export const POST = withPermission(
         body.phone ?? null,
         body.email ?? null,
         body.dept_id ?? null,
-        body.dept_name ?? null,
+        deptName,
         body.section ?? null,
         body.role_id ?? null,
         body.role_name ?? null,
@@ -231,6 +265,8 @@ export const PUT = withPermission(
       return errorResponse(ts('k_1n4lfot'), 409, 409);
     }
 
+    const deptName = await resolveDeptName(body.dept_id, body.dept_name);
+
     const result = await execute(
       `UPDATE sys_employee SET
       employee_no = ?,
@@ -267,7 +303,7 @@ export const PUT = withPermission(
         body.phone ?? null,
         body.email ?? null,
         body.dept_id ?? null,
-        body.dept_name ?? null,
+        deptName,
         body.section ?? null,
         body.role_id ?? null,
         body.role_name ?? null,

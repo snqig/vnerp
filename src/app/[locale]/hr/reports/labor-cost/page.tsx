@@ -65,8 +65,8 @@ function ErrorFallback({ error, onRetry }: { error?: Error; onRetry: () => void 
     <MainLayout>
       <div className="container mx-auto py-6">
         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-          <AlertCircle className="h-16 w-16 mb-4 text-red-500" />
-          <p className="text-lg font-medium text-red-500">{ts('k_dte5kz')}</p>
+          <AlertCircle className="h-16 w-16 mb-4 text-red-500 dark:text-red-400" />
+          <p className="text-lg font-medium text-red-500 dark:text-red-400">{ts('k_dte5kz')}</p>
           <p className="text-sm mt-2 text-muted-foreground">
             {error?.message || ts('k_1gs61y0')}
           </p>
@@ -158,8 +158,8 @@ export default function LaborCostReportPage() {
       <MainLayout>
         <div className="container mx-auto py-6">
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-            <AlertCircle className="h-16 w-16 mb-4 text-red-500" />
-            <p className="text-lg font-medium text-red-500">{tc('error') || ts('k_ydow7a')}</p>
+            <AlertCircle className="h-16 w-16 mb-4 text-red-500 dark:text-red-400" />
+            <p className="text-lg font-medium text-red-500 dark:text-red-400">{tc('error') || ts('k_ydow7a')}</p>
             <p className="text-sm mt-2 text-muted-foreground">{error}</p>
             <Button variant="outline" className="mt-4" onClick={fetchData}>
               {tc('retry') || tc('retry')}
@@ -239,7 +239,7 @@ export default function LaborCostReportPage() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${(data?.costTrend || 0) >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+              <div className={`text-2xl font-bold ${(data?.costTrend || 0) >= 0 ? 'text-red-500 dark:text-red-400' : 'text-green-500 dark:text-green-400'}`}>
                 {(data?.costTrend || 0) >= 0 ? '+' : ''}{data?.costTrend || 0}%
               </div>
             </CardContent>

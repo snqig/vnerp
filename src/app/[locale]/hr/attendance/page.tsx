@@ -22,7 +22,12 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  CheckCircle,
+  XCircle,
+  UserCircle,
+  UserPlus,
 } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,19 +69,11 @@ import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
 import { formatDate } from '@/lib/date-utils';
 
-const departmentOptions = [
-  { value: 'all', label: 'allDepartments' },
-  { value: '管理部', label: 'adminDept' },
-  { value: '业务部', label: 'businessDept' },
-  { value: '生产部', label: 'productionDept' },
-  { value: '打样中心', label: 'samplingDept' },
-  { value: '采购部', label: 'purchaseDept' },
-  { value: '品质部', label: 'qualityDept' },
-  { value: '模切', label: 'dieCutDept' },
-  { value: '商标', label: 'trademarkDept' },
-  { value: '其他', label: 'otherDept' },
-  { value: '采购', label: 'procurementDept' },
-];
+// 部门下拉不再内联硬编码。原清单（管理部/业务部/生产部/打样中心/采购部/品质部/
+// 模切/商标/其他/采购）是部门结构的第二份副本，与库中真实部门早已不一致。
+// 现改为在组件内拉取部门主数据（/api/organization/department），
+// 并与已加载考勤记录里出现过的部门名取并集 —— 这样历史记录中已改名/已删除的
+// 部门仍可被筛选到，不会因为主数据收敛而丢掉过滤入口。
 
 // 考勤记录接口
 interface AttendanceRecord {
@@ -144,22 +141,22 @@ export default function AttendancePage() {
   > = {
     normal: {
       label: tc('normal'),
-      color: 'bg-green-100 text-green-700 border-green-200',
+      color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200',
       icon: CheckCircle2,
     },
     late: {
       label: tc('late'),
-      color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200',
       icon: Clock3,
     },
     absent: {
       label: tc('absent'),
-      color: 'bg-red-100 text-red-700 border-red-200',
+      color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200',
       icon: AlertCircle,
     },
     leave: {
       label: tc('leave'),
-      color: 'bg-blue-100 text-blue-700 border-blue-200',
+      color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200',
       icon: Calendar,
     },
   };
@@ -174,6 +171,37 @@ export default function AttendancePage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+
+  // 部门主数据（唯一真相源：/api/organization/department）
+  const [liveDepartments, setLiveDepartments] = useState<{ id: number; dept_name: string }[]>([]);
+
+  const fetchDepartments = useCallback(async () => {
+    try {
+      const res = await authFetch('/api/organization/department?pageSize=500');
+      const data = await res.json();
+      if (data.success || data.code === 200) {
+        const raw = data.data;
+        const list = Array.isArray(raw) ? raw : raw?.list || [];
+        setLiveDepartments(
+          list.map((d: Loose) => ({ id: Number(d.id), dept_name: String(d.dept_name ?? '') }))
+        );
+      }
+    } catch {
+      // 主数据拉取失败不阻断页面：下拉退化为「仅历史记录里出现过的部门」
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, [fetchDepartments]);
+
+  // 选项 = 主数据部门 ∪ 已加载考勤记录里的部门名（保住历史值的过滤入口）
+  const departmentOptions = useMemo(() => {
+    const names = new Set<string>();
+    for (const dept of liveDepartments) if (dept.dept_name) names.add(dept.dept_name);
+    for (const record of attendanceRecords) if (record.department) names.add(record.department);
+    return Array.from(names).sort((a, b) => a.localeCompare(b, 'zh-CN'));
+  }, [liveDepartments, attendanceRecords]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -476,7 +504,7 @@ export default function AttendancePage() {
   const confirmDelete = async () => {
     if (!currentRecord) return;
     try {
-      const res = await fetch(`/api/hr/attendance?id=${currentRecord.id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/hr/attendance?id=${currentRecord.id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success || data.code === 200) {
         setIsDeleteDialogOpen(false);
@@ -632,12 +660,13 @@ export default function AttendancePage() {
                 <SelectValue placeholder={tc('selectDepartment')} />
               </SelectTrigger>
               <SelectContent>
-                  {departmentOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {tc(option.label)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectItem value="all">{t('allDepartments')}</SelectItem>
+                {departmentOptions.map((name) => (
+                  <SelectItem key={name} value={name}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
 
@@ -675,17 +704,33 @@ export default function AttendancePage() {
           )}
         </div>
 
+        <StatsCards
+          configs={[
+            { key: 'expected', label: tc('expectedAttendance'), icon: Calendar, ...StatsTheme.blue },
+            { key: 'normal', label: tc('actualAttendance'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'leave', label: tc('leaveCount'), icon: XCircle, ...StatsTheme.orange },
+            { key: 'late', label: tc('lateCount'), icon: Clock, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'expected', count: totalRecords },
+            { key: 'normal', count: normalRecords },
+            { key: 'leave', count: _leaveRecords },
+            { key: 'late', count: lateRecords },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{t('attendanceRate')}</p>
-                  <p className="text-3xl font-bold text-blue-600 mt-1">{attendanceRate}%</p>
+                  <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">{attendanceRate}%</p>
                   <p className="text-xs text-muted-foreground mt-1">{t('overallAttendanceRate')}</p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-blue-600" />
+                  <CheckCircle2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
               </div>
             </CardContent>
@@ -696,11 +741,11 @@ export default function AttendancePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{t('normalAttendance')}</p>
-                  <p className="text-3xl font-bold text-green-600 mt-1">{normalRecords}</p>
+                  <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-1">{normalRecords}</p>
                   <p className="text-xs text-muted-foreground mt-1">{t('normalRecords')}</p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-green-600" />
+                  <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
               </div>
             </CardContent>
@@ -711,11 +756,11 @@ export default function AttendancePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{t('lateRecord')}</p>
-                  <p className="text-3xl font-bold text-yellow-600 mt-1">{lateRecords}</p>
+                  <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">{lateRecords}</p>
                   <p className="text-xs text-muted-foreground mt-1">{t('lateRecords')}</p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center">
-                  <Clock3 className="w-6 h-6 text-yellow-600" />
+                  <Clock3 className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                 </div>
               </div>
             </CardContent>
@@ -726,11 +771,11 @@ export default function AttendancePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{t('absentRecord')}</p>
-                  <p className="text-3xl font-bold text-red-600 mt-1">{absentRecords}</p>
+                  <p className="text-3xl font-bold text-red-600 dark:text-red-400 mt-1">{absentRecords}</p>
                   <p className="text-xs text-muted-foreground mt-1">{t('absentRecords')}</p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-red-600" />
+                  <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
                 </div>
               </div>
             </CardContent>
@@ -883,13 +928,11 @@ export default function AttendancePage() {
                     <SelectValue placeholder={t('selectDepartment')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {departmentOptions
-                      .filter((opt) => opt.value !== 'all')
-                      .map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {tc(option.label)}
-                        </SelectItem>
-                      ))}
+                    {departmentOptions.map((name) => (
+                      <SelectItem key={name} value={name}>
+                        {name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -1021,13 +1064,11 @@ export default function AttendancePage() {
                     <SelectValue placeholder={t('selectDepartment')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {departmentOptions
-                      .filter((opt) => opt.value !== 'all')
-                      .map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {tc(option.label)}
-                        </SelectItem>
-                      ))}
+                    {departmentOptions.map((name) => (
+                      <SelectItem key={name} value={name}>
+                        {name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

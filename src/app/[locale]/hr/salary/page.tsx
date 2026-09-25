@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import {
   Table,
   TableBody,
@@ -65,6 +66,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+
+// DECIMAL 列经 mysql2 返回字符串，统一归一为数值，避免 `+` 变成字符串拼接
+const toNumber = (v: unknown): number => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
 
 // 薪资数据类型
 interface Salary {
@@ -152,7 +159,7 @@ export default function HRSalaryPage() {
       setLoading(true);
       const [salaryRes, deptRes] = await Promise.all([
         authFetch('/api/hr/salary'),
-        authFetch('/api/organization/department'),
+        authFetch('/api/organization/department?pageSize=500'),
       ]);
       const salaryData = await salaryRes.json();
       const deptData = await deptRes.json();
@@ -173,16 +180,16 @@ export default function HRSalaryPage() {
           status: item.status,
           salary_id: item.salaryId || item.salary_id,
           month: item.month,
-          basic_salary: item.basicSalary || item.basic_salary,
-          position_allowance: item.positionAllowance || item.position_allowance,
-          performance_bonus: item.performanceBonus || item.performance_bonus,
-          overtime_pay: item.overtimePay || item.overtime_pay,
-          other_bonus: item.otherBonus || item.other_bonus,
-          social_security: item.socialSecurity || item.social_security,
-          housing_fund: item.housingFund || item.housing_fund,
-          personal_tax: item.personalTax || item.personal_tax,
-          other_deduction: item.otherDeduction || item.other_deduction,
-          actual_salary: item.actualSalary || item.actual_salary,
+          basic_salary: toNumber(item.basicSalary ?? item.basic_salary),
+          position_allowance: toNumber(item.positionAllowance ?? item.position_allowance),
+          performance_bonus: toNumber(item.performanceBonus ?? item.performance_bonus),
+          overtime_pay: toNumber(item.overtimePay ?? item.overtime_pay),
+          other_bonus: toNumber(item.otherBonus ?? item.other_bonus),
+          social_security: toNumber(item.socialSecurity ?? item.social_security),
+          housing_fund: toNumber(item.housingFund ?? item.housing_fund),
+          personal_tax: toNumber(item.personalTax ?? item.personal_tax),
+          other_deduction: toNumber(item.otherDeduction ?? item.other_deduction),
+          actual_salary: toNumber(item.actualSalary ?? item.actual_salary),
           remark: item.remark,
         }));
         setSalaries(list);
@@ -239,13 +246,16 @@ export default function HRSalaryPage() {
   // 计算实发工资
   const calculateActualSalary = (form: typeof salaryForm) => {
     const income =
-      form.basicSalary +
-      form.positionAllowance +
-      form.performanceBonus +
-      form.overtimePay +
-      form.otherBonus;
+      toNumber(form.basicSalary) +
+      toNumber(form.positionAllowance) +
+      toNumber(form.performanceBonus) +
+      toNumber(form.overtimePay) +
+      toNumber(form.otherBonus);
     const deduction =
-      form.socialSecurity + form.housingFund + form.personalTax + form.otherDeduction;
+      toNumber(form.socialSecurity) +
+      toNumber(form.housingFund) +
+      toNumber(form.personalTax) +
+      toNumber(form.otherDeduction);
     return income - deduction;
   };
 
@@ -357,15 +367,15 @@ export default function HRSalaryPage() {
   const handleEdit = (salary: Salary) => {
     setSelectedSalary(salary);
     setSalaryForm({
-      basicSalary: salary.basic_salary || 0,
-      positionAllowance: salary.position_allowance || 0,
-      performanceBonus: salary.performance_bonus || 0,
-      overtimePay: salary.overtime_pay || 0,
-      otherBonus: salary.other_bonus || 0,
-      socialSecurity: salary.social_security || 0,
-      housingFund: salary.housing_fund || 0,
-      personalTax: salary.personal_tax || 0,
-      otherDeduction: salary.other_deduction || 0,
+      basicSalary: Number(salary.basic_salary) || 0,
+      positionAllowance: Number(salary.position_allowance) || 0,
+      performanceBonus: Number(salary.performance_bonus) || 0,
+      overtimePay: Number(salary.overtime_pay) || 0,
+      otherBonus: Number(salary.other_bonus) || 0,
+      socialSecurity: Number(salary.social_security) || 0,
+      housingFund: Number(salary.housing_fund) || 0,
+      personalTax: Number(salary.personal_tax) || 0,
+      otherDeduction: Number(salary.other_deduction) || 0,
       remark: salary.remark || '',
     });
     setIsEditOpen(true);
@@ -377,31 +387,31 @@ export default function HRSalaryPage() {
     setLoading(true);
     try {
       const actualSalary = calculateActualSalary(salaryForm);
-
-      // 更新本地数据
-      setSalaries(
-        salaries.map((s) =>
-          s.id === selectedSalary.id
-            ? {
-                ...s,
-                basic_salary: salaryForm.basicSalary,
-                position_allowance: salaryForm.positionAllowance,
-                performance_bonus: salaryForm.performanceBonus,
-                overtime_pay: salaryForm.overtimePay,
-                other_bonus: salaryForm.otherBonus,
-                social_security: salaryForm.socialSecurity,
-                housing_fund: salaryForm.housingFund,
-                personal_tax: salaryForm.personalTax,
-                other_deduction: salaryForm.otherDeduction,
-                actual_salary: actualSalary,
-                remark: salaryForm.remark,
-              }
-            : s
-        )
-      );
-
-      setIsEditOpen(false);
-      toast.success(t('salarySaveSuccess'));
+      const res = await authFetch('/api/hr/salary', {
+        method: 'POST',
+        body: JSON.stringify({
+          employeeId: selectedSalary.id,
+          month: currentMonth,
+          basicSalary: salaryForm.basicSalary,
+          positionAllowance: salaryForm.positionAllowance,
+          performanceBonus: salaryForm.performanceBonus,
+          overtimePay: salaryForm.overtimePay,
+          otherBonus: salaryForm.otherBonus,
+          socialSecurity: salaryForm.socialSecurity,
+          housingFund: salaryForm.housingFund,
+          personalTax: salaryForm.personalTax,
+          otherDeduction: salaryForm.otherDeduction,
+          remark: salaryForm.remark,
+        }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        await fetchSalaryData();
+        setIsEditOpen(false);
+        toast.success(t('salarySaveSuccess'));
+      } else {
+        toast.error(result.message || t('salarySaveFailed'));
+      }
     } catch {
       toast.error(t('salarySaveFailed'));
     } finally {
@@ -410,10 +420,25 @@ export default function HRSalaryPage() {
   };
 
   // 删除薪资
-  const handleDelete = (salary: Salary) => {
-    if (confirm(t('confirmDeleteSalary', { name: salary.name }))) {
-      setSalaries(salaries.filter((s) => s.id !== salary.id));
-      toast.success(t('salaryDeleteSuccess'));
+  const handleDelete = async (salary: Salary) => {
+    if (!confirm(t('confirmDeleteSalary', { name: salary.name }))) return;
+    if (!salary.salary_id) {
+      toast.error(tc('failed'));
+      return;
+    }
+    try {
+      const res = await authFetch('/api/hr/salary?id=' + salary.salary_id, {
+        method: 'DELETE',
+      });
+      const result = await res.json();
+      if (result.success) {
+        await fetchSalaryData();
+        toast.success(t('salaryDeleteSuccess'));
+      } else {
+        toast.error(result.message || t('salarySaveFailed'));
+      }
+    } catch {
+      toast.error(t('salarySaveFailed'));
     }
   };
 
@@ -461,67 +486,26 @@ export default function HRSalaryPage() {
     <MainLayout title={t('salaryManagement')}>
       <div className="space-y-6">
         {/* 统计卡片 */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{tc('totalEmployees')}</CardTitle>
-              <Users className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalEmployees}</div>
-            </CardContent>
-          </Card>
+        <StatsCards
+          configs={[
+            { key: 'totalEmployees', label: tc('totalEmployees'), icon: Users, ...StatsTheme.blue },
+            { key: 'paidEmployees', label: tc('paidEmployees'), icon: CreditCard, ...StatsTheme.green },
+            { key: 'totalSalary', label: tc('totalSalary'), icon: DollarSign, ...StatsTheme.purple },
+            { key: 'avgSalary', label: tc('avgSalary'), icon: TrendingUp, ...StatsTheme.orange },
+            { key: 'maxSalary', label: tc('maxSalary'), icon: Wallet, ...StatsTheme.cyan },
+            { key: 'minSalary', label: tc('minSalary'), icon: PieChart, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'totalEmployees', count: stats.totalEmployees },
+            { key: 'paidEmployees', count: stats.paidEmployees },
+            { key: 'totalSalary', count: stats.totalSalary, prefix: '¥' },
+            { key: 'avgSalary', count: stats.avgSalary, prefix: '¥' },
+            { key: 'maxSalary', count: stats.maxSalary, prefix: '¥' },
+            { key: 'minSalary', count: stats.minSalary, prefix: '¥' },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 6 }}
+        />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{tc('paidEmployees')}</CardTitle>
-              <CreditCard className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.paidEmployees}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{tc('totalSalary')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">¥{stats.totalSalary.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{tc('avgSalary')}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">¥{stats.avgSalary.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{tc('maxSalary')}</CardTitle>
-              <Wallet className="h-4 w-4 text-indigo-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">¥{stats.maxSalary.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{tc('minSalary')}</CardTitle>
-              <PieChart className="h-4 w-4 text-pink-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">¥{stats.minSalary.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* 工具栏 */}
         <Card>
@@ -748,7 +732,7 @@ export default function HRSalaryPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className="font-bold text-lg text-green-600">
+                      <span className="font-bold text-lg text-green-600 dark:text-green-400">
                         ¥{(salary.actual_salary || 0).toLocaleString()}
                       </span>
                     </TableCell>
@@ -792,7 +776,7 @@ export default function HRSalaryPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDelete(salary)}
-                              className="text-red-600"
+                              className="text-red-600 dark:text-red-400"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
                               {tc('delete')}
@@ -826,7 +810,7 @@ export default function HRSalaryPage() {
 
                 <div className="space-y-6 py-4">
                   {/* 员工信息 */}
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-muted rounded-lg p-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">{tc('employeeNoLabelShort')}</span>
@@ -983,10 +967,10 @@ export default function HRSalaryPage() {
                   </div>
 
                   {/* 实发工资 */}
-                  <div className="bg-green-50 rounded-lg p-4">
+                  <div className="bg-green-500/10 rounded-lg p-4">
                     <div className="flex justify-between items-center">
                       <span className="font-semibold">{tc('netSalaryLabel')}</span>
-                      <span className="text-2xl font-bold text-green-600">
+                      <span className="text-2xl font-bold text-green-600 dark:text-green-400">
                         ¥{calculateActualSalary(salaryForm).toLocaleString()}
                       </span>
                     </div>
@@ -1105,9 +1089,9 @@ export default function HRSalaryPage() {
                             ¥{(selectedSalary.other_bonus || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
-                        <TableRow className="bg-green-50">
+                        <TableRow className="bg-green-500/10">
                           <TableCell className="font-bold">{t('incomeTotal')}</TableCell>
-                          <TableCell className="text-right font-bold text-green-600">
+                          <TableCell className="text-right font-bold text-green-600 dark:text-green-400">
                             ¥
                             {(
                               (selectedSalary.basic_salary || 0) +
@@ -1119,40 +1103,40 @@ export default function HRSalaryPage() {
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium text-red-600">
+                          <TableCell className="font-medium text-red-600 dark:text-red-400">
                             {t('socialSecurity')}
                           </TableCell>
-                          <TableCell className="text-right text-red-600">
+                          <TableCell className="text-right text-red-600 dark:text-red-400">
                             -¥{(selectedSalary.social_security || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium text-red-600">
+                          <TableCell className="font-medium text-red-600 dark:text-red-400">
                             {t('housingFund')}
                           </TableCell>
-                          <TableCell className="text-right text-red-600">
+                          <TableCell className="text-right text-red-600 dark:text-red-400">
                             -¥{(selectedSalary.housing_fund || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium text-red-600">
+                          <TableCell className="font-medium text-red-600 dark:text-red-400">
                             {t('personalTax')}
                           </TableCell>
-                          <TableCell className="text-right text-red-600">
+                          <TableCell className="text-right text-red-600 dark:text-red-400">
                             -¥{(selectedSalary.personal_tax || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium text-red-600">
+                          <TableCell className="font-medium text-red-600 dark:text-red-400">
                             {t('otherDeduction')}
                           </TableCell>
-                          <TableCell className="text-right text-red-600">
+                          <TableCell className="text-right text-red-600 dark:text-red-400">
                             -¥{(selectedSalary.other_deduction || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
-                        <TableRow className="bg-blue-50">
+                        <TableRow className="bg-blue-500/10">
                           <TableCell className="font-bold">{t('actualSalary')}</TableCell>
-                          <TableCell className="text-right font-bold text-xl text-blue-600">
+                          <TableCell className="text-right font-bold text-xl text-blue-600 dark:text-blue-400">
                             ¥{(selectedSalary.actual_salary || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
@@ -1165,7 +1149,7 @@ export default function HRSalaryPage() {
                       <h4 className="font-semibold text-sm text-muted-foreground">
                         {tc('remark')}
                       </h4>
-                      <p className="text-sm bg-gray-50 p-3 rounded">{selectedSalary.remark}</p>
+                      <p className="text-sm bg-muted p-3 rounded">{selectedSalary.remark}</p>
                     </div>
                   )}
 
@@ -1219,19 +1203,19 @@ export default function HRSalaryPage() {
               <div className="grid grid-cols-6 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-blue-600">{stats.totalEmployees}</div>
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalEmployees}</div>
                     <div className="text-sm text-muted-foreground">{tc('totalEmployees')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-green-600">{stats.paidEmployees}</div>
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.paidEmployees}</div>
                     <div className="text-sm text-muted-foreground">{tc('paidEmployees')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-600">
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                       ¥{stats.totalSalary.toLocaleString()}
                     </div>
                     <div className="text-sm text-muted-foreground">{tc('totalSalary')}</div>
@@ -1239,7 +1223,7 @@ export default function HRSalaryPage() {
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-orange-600">
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                       ¥{stats.avgSalary.toLocaleString()}
                     </div>
                     <div className="text-sm text-muted-foreground">{tc('avgSalary')}</div>
@@ -1247,7 +1231,7 @@ export default function HRSalaryPage() {
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-indigo-600">
+                    <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                       ¥{stats.maxSalary.toLocaleString()}
                     </div>
                     <div className="text-sm text-muted-foreground">{tc('maxSalary')}</div>
@@ -1255,7 +1239,7 @@ export default function HRSalaryPage() {
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-pink-600">
+                    <div className="text-2xl font-bold text-pink-600 dark:text-pink-400">
                       ¥{stats.minSalary.toLocaleString()}
                     </div>
                     <div className="text-sm text-muted-foreground">{tc('minSalary')}</div>

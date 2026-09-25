@@ -8,7 +8,9 @@ export const GET = withPermission(
   async (request: NextRequest) => {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '20');
+    // 与 /api/organization/department 同理：部门是树形主数据，默认必须覆盖全量，
+    // 否则部门数超过 20 后调用方会静默漏掉尾部部门。
+    const pageSize = Math.min(Math.max(parseInt(searchParams.get('pageSize') || '500') || 500, 1), 2000);
 
     const countResult = await query(
       `SELECT COUNT(*) as total FROM sys_department WHERE status = 1 AND deleted = 0`
@@ -16,7 +18,7 @@ export const GET = withPermission(
     const total = (countResult as DbRow[])[0]?.total || 0;
 
     const departments = await query(
-      `SELECT id, dept_name, dept_code, parent_id FROM sys_department WHERE status = 1 AND deleted = 0 ORDER BY sort_order LIMIT ? OFFSET ?`,
+      `SELECT id, dept_name, dept_code, parent_id FROM sys_department WHERE status = 1 AND deleted = 0 ORDER BY (parent_id IS NULL) DESC, parent_id ASC, sort_order ASC, id ASC LIMIT ? OFFSET ?`,
       [pageSize, (page - 1) * pageSize]
     );
 

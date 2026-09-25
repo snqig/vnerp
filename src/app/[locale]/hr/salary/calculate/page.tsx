@@ -114,7 +114,7 @@ export default function SalaryCalculatePage() {
           </div>
           <Separator className="my-2" />
           <div className="flex justify-between text-sm font-bold">
-            <span>{t('grossPayTotal')}</span><span className="text-green-600">{data.grossPay.toFixed(2)}</span>
+            <span>{t('grossPayTotal')}</span><span className="text-green-600 dark:text-green-400">{data.grossPay.toFixed(2)}</span>
           </div>
         </div>
         <div>
@@ -127,12 +127,12 @@ export default function SalaryCalculatePage() {
           </div>
           <Separator className="my-2" />
           <div className="flex justify-between text-sm font-bold">
-            <span>{t('deductionTotal')}</span><span className="text-red-600">{data.totalDeduction.toFixed(2)}</span>
+            <span>{t('deductionTotal')}</span><span className="text-red-600 dark:text-red-400">{data.totalDeduction.toFixed(2)}</span>
           </div>
         </div>
         <Separator />
         <div className="flex justify-between text-lg font-bold">
-          <span>{t('netPay')}</span><span className="text-blue-600">{data.netPay.toFixed(2)}</span>
+          <span>{t('netPay')}</span><span className="text-blue-600 dark:text-blue-400">{data.netPay.toFixed(2)}</span>
         </div>
       </CardContent>
     </Card>
@@ -142,7 +142,7 @@ export default function SalaryCalculatePage() {
     <MainLayout>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center gap-3">
-          <Calculator className="h-6 w-6 text-blue-500" />
+          <Calculator className="h-6 w-6 text-blue-500 dark:text-blue-400" />
           <h1 className="text-2xl font-bold">{t('salaryCalculation')}</h1>
         </div>
 
@@ -211,9 +211,9 @@ export default function SalaryCalculatePage() {
                       <TableCell>{r.employeeName}</TableCell>
                       <TableCell>{r.baseSalary.toFixed(2)}</TableCell>
                       <TableCell>{r.pieceSalary.toFixed(2)}</TableCell>
-                      <TableCell className="text-green-600">{r.grossPay.toFixed(2)}</TableCell>
-                      <TableCell className="text-red-600">{r.totalDeduction.toFixed(2)}</TableCell>
-                      <TableCell className="font-bold text-blue-600">{r.netPay.toFixed(2)}</TableCell>
+                      <TableCell className="text-green-600 dark:text-green-400">{r.grossPay.toFixed(2)}</TableCell>
+                      <TableCell className="text-red-600 dark:text-red-400">{r.totalDeduction.toFixed(2)}</TableCell>
+                      <TableCell className="font-bold text-blue-600 dark:text-blue-400">{r.netPay.toFixed(2)}</TableCell>
                       <TableCell>
                         <Badge variant={r.status === 'confirmed' ? 'default' : 'secondary'}>
                           {r.status === 'confirmed' ? t('confirmed') : t('draft')}

@@ -12,6 +12,11 @@ import { getCategoryRules, safeRegExp } from '@/lib/category-validation';
  *   前端「分类下仓库数」永远显示 0，「空分类」列表永远等于全部分类——
  *   这是一个纯装饰性的假统计。现改为对 inv_warehouse.category_id 做真实聚合，
  *   并额外返回编码不合规的分类清单，让系统设置里的编码规则在管理页可见。
+ *
+ *   同时删除了两个恒为 0 的假字段 total_capacity / total_used_capacity：
+ *   inv_warehouse 虽有 capacity / used_capacity 列，但 used_capacity 全项目没有任何
+ *   写入方，聚合出来永远是 0，前端据此渲染的「使用率」列是假数据。已与用户确认
+ *   直接去掉该列，不再返回这两个字段。
  */
 
 interface CategoryStatRow {
@@ -35,9 +40,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       wc.sort_order,
       wc.status,
       COALESCE(w.warehouse_count, 0)        AS warehouse_count,
-      COALESCE(w.active_warehouse_count, 0) AS active_warehouse_count,
-      0 AS total_capacity,
-      0 AS total_used_capacity
+      COALESCE(w.active_warehouse_count, 0) AS active_warehouse_count
     FROM sys_warehouse_category wc
     LEFT JOIN (
       SELECT

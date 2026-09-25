@@ -55,6 +55,39 @@ export function EmployeeFormDialog({
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
 
+  // 「部门 / 科室」两级联动（口径：一级 = 部，二级 = 科 / 室 / 车间）
+  //   * 部门下拉：只列一级（总经办 + 各业务部），二级不在这里选
+  //   * 科室下拉：列出所选部门下的二级部门；所选部门没有下级时禁用
+  //   * 存量数据里的旧科室名（如「印刷课」）在新结构下已不存在，
+  //     这里作为「原值」选项保留展示，避免一打开弹窗就把历史值清掉
+  //     Map 的 key 必须显式声明，否则 TS 会把 [id, dept] 推成 (number | Department)[] 而无法赋值
+  const byId = new Map(departments.map((dept) => [dept.id, dept] as const));
+  const depthOf = (id: number): number => {
+    const seen = new Set<number>();
+    let depth = 0;
+    let cursor = byId.get(id)?.parent_id ?? null;
+    while (cursor !== null && cursor !== undefined && !seen.has(cursor) && depth < 16) {
+      seen.add(cursor);
+      depth += 1;
+      cursor = byId.get(cursor)?.parent_id ?? null;
+    }
+    return depth;
+  };
+  const departmentsWithDepth = departments
+    .map((dept) => ({ dept, depth: depthOf(dept.id) }))
+    .sort((a, b) => a.depth - b.depth || a.dept.id - b.dept.id);
+  const primaryDepartments = departmentsWithDepth.filter(({ depth }) => depth <= 1);
+  const selectedDepartment = form.dept_id ? byId.get(form.dept_id) : undefined;
+  const sectionOptions = selectedDepartment
+    ? departmentsWithDepth
+        .filter(({ dept, depth }) => dept.parent_id === selectedDepartment.id && depth === 2)
+        .map(({ dept }) => dept)
+    : [];
+  const legacySection =
+    form.section && !sectionOptions.some((dept) => dept.dept_name === form.section)
+      ? form.section
+      : '';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" resizable>
@@ -122,7 +155,7 @@ export function EmployeeFormDialog({
           </div>
           <div className="space-y-2">
             <Label>
-              {tc('name')} <span className="text-red-500">*</span>
+              {tc('name')} <span className="text-red-500 dark:text-red-400">*</span>
             </Label>
             <Input
               value={form.name || ''}
@@ -167,14 +200,49 @@ export function EmployeeFormDialog({
             <Label>{tc('department')}</Label>
             <Select
               value={form.dept_id?.toString() || ''}
-              onValueChange={(v) => setForm({ ...form, dept_id: parseInt(v) })}
+              onValueChange={(v) => {
+                const deptId = parseInt(v);
+                // 同步写 dept_name：列表渲染 dept_name、弹窗渲染 dept_id，
+                // 两列必须同时更新，否则保存后会再次分叉（服务端亦会按 dept_id 覆写回主数据名）
+                const deptName = departments.find((dept) => dept.id === deptId)?.dept_name;
+                // 换了部门，原科室不再属于新部门 —— 清空交给用户重选（服务端 section 与 dept_id 必须自洽）
+                setForm({ ...form, dept_id: deptId, dept_name: deptName ?? form.dept_name, section: '' });
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder={tc('selectDepartment')} />
               </SelectTrigger>
               <SelectContent>
-                {departments.map((dept) => (
+                {primaryDepartments.map(({ dept, depth }) => (
                   <SelectItem key={dept.id} value={dept.id.toString()}>
+                    {depth > 0 ? '　└ ' : ''}
+                    {dept.dept_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{tc('section')}</Label>
+            <Select
+              value={form.section || ''}
+              onValueChange={(v) => setForm({ ...form, section: v })}
+              disabled={sectionOptions.length === 0 && !legacySection}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={tc('enterSection')} />
+              </SelectTrigger>
+              <SelectContent>
+                {legacySection ? (
+                  <SelectItem value={legacySection}>
+                    {legacySection}
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      {tc('k_12o2s46')}
+                    </span>
+                  </SelectItem>
+                ) : null}
+                {sectionOptions.map((dept) => (
+                  <SelectItem key={dept.id} value={dept.dept_name}>
                     {dept.dept_name}
                   </SelectItem>
                 ))}
@@ -240,23 +308,15 @@ export function EmployeeFormDialog({
               type="number"
               value={form.age || ''}
               readOnly
-              className="bg-gray-50"
+              className="bg-muted"
               placeholder={tc('autoCalculate')}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>{tc('section')}</Label>
-            <Input
-              value={form.section || ''}
-              onChange={(e) => setForm({ ...form, section: e.target.value })}
-              placeholder={tc('enterSection')}
             />
           </div>
           <div className="space-y-2">
             <Label>
               {tc('birthDate')} <span className="text-gray-400 text-xs">{tc('autoCalculate')}</span>
             </Label>
-            <Input type="date" value={form.birth_date || ''} readOnly className="bg-gray-50" />
+            <Input type="date" value={form.birth_date || ''} readOnly className="bg-muted" />
           </div>
           <div className="space-y-2">
             <Label>{tc('idCard')}</Label>

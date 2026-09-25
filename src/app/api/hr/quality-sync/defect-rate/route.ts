@@ -53,8 +53,8 @@ export const GET = withPermission(async (request: NextRequest) => {
     .from(hrPieceWorkDetail)
     .where(and(...conditions));
 
-  const totalQuantity = details.reduce((s, d) => s + (d.quantity ?? 0), 0);
-  const totalDefective = details.reduce((s, d) => s + (d.defectiveQuantity ?? 0), 0);
+  const totalQuantity = details.reduce((s, d) => s + Number(d.quantity ?? 0), 0);
+  const totalDefective = details.reduce((s, d) => s + Number(d.defectiveQuantity ?? 0), 0);
   const defectRate = totalQuantity > 0 ? totalDefective / totalQuantity : 0;
 
   return successResponse({

@@ -41,17 +41,17 @@ interface ExpiringCert {
 
 const getExpiryBadge = (days: number) => {
   if (days < 15) {
-    return <Badge className="bg-red-100 text-red-700 border-0 whitespace-nowrap font-bold">{days}</Badge>;
+    return <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-0 whitespace-nowrap font-bold">{days}</Badge>;
   }
   if (days < 30) {
-    return <Badge className="bg-orange-100 text-orange-700 border-0 whitespace-nowrap">{days}</Badge>;
+    return <Badge className="bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-0 whitespace-nowrap">{days}</Badge>;
   }
-  return <Badge className="bg-yellow-100 text-yellow-700 border-0 whitespace-nowrap">{days}</Badge>;
+  return <Badge className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-0 whitespace-nowrap">{days}</Badge>;
 };
 
 const getRowClass = (days: number) => {
-  if (days < 15) return 'bg-red-50/50';
-  if (days < 30) return 'bg-orange-50/30';
+  if (days < 15) return 'bg-red-500/10';
+  if (days < 30) return 'bg-orange-500/10';
   return '';
 };
 
@@ -132,13 +132,13 @@ export default function ExpiringCertificatesPage() {
           </Button>
         </div>
 
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
+        <div className="bg-red-500/10 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
           <div>
-            <p className="text-sm font-medium text-red-800">
+            <p className="text-sm font-medium text-red-800 dark:text-red-300">
               {t('expiringCert')}：<span className="font-bold">{expiringCount}</span>
             </p>
-            <p className="text-sm text-red-600 mt-1">
+            <p className="text-sm text-red-600 dark:text-red-400 mt-1">
               <span className="font-bold">{criticalCount}</span> {tc('critical')}，
               <span className="font-bold">{warningCount}</span> {tc('warning')}
             </p>
@@ -209,7 +209,7 @@ export default function ExpiringCertificatesPage() {
             </DialogHeader>
             {renewItem && (
               <div className="space-y-4">
-                <div className="text-sm space-y-2 bg-gray-50 p-3 rounded">
+                <div className="text-sm space-y-2 bg-muted p-3 rounded">
                   <div>
                     <span className="text-muted-foreground">{t('certName')}：</span>
                     <span className="font-medium">{renewItem.cert_name}</span>
@@ -224,7 +224,7 @@ export default function ExpiringCertificatesPage() {
                   </div>
                   <div>
                     <span className="text-muted-foreground">{t('expiryDate')}：</span>
-                    <span className="text-red-600 font-medium">
+                    <span className="text-red-600 dark:text-red-400 font-medium">
                       {formatDate(renewItem.expiry_date)}
                     </span>
                   </div>

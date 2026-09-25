@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import { query, execute, queryOne, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { stringFilter } from '@/lib/query-filter';
 import {
   getCategoryRules,
   validateCategoryForCreate,
@@ -25,7 +26,7 @@ interface WarehouseCategory {
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
-  const status = searchParams.get('status');
+  const status = stringFilter(searchParams.get('status'));
   // 以分类编码为主查询维度（前缀匹配）
   const categoryCode = searchParams.get('categoryCode') || searchParams.get('code') || '';
 

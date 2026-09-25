@@ -11,6 +11,7 @@ import {
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 // 角色数据接口
 interface Role {
@@ -22,13 +23,19 @@ interface Role {
   role_type?: number;
   sort_order?: number;
   status?: number;
+  /**
+   * 遗留字段：`sys_role.permissions`（角色级权限串）。
+   * 服务端鉴权链路完全不读它（`getUserInfo` 只走 sys_role_menu + sys_menu），
+   * 仅前端按钮权限 hook（usePermission）消费。2026-09-24 起写入通道已关闭
+   * （POST / PUT 均不再写该列），后续将冻结并清理。
+   */
   permissions?: string | string[];
   create_time?: string;
   update_time?: string;
 }
 
 // 构建查询条件
-function buildQueryConditions(params: { keyword: string; status: string | null }): {
+function buildQueryConditions(params: { keyword: string; status?: number }): {
   sql: string;
   values: SqlValue[];
 } {
@@ -48,9 +55,9 @@ function buildQueryConditions(params: { keyword: string; status: string | null }
     values.push(likeKeyword, likeKeyword);
   }
 
-  if (params.status !== undefined && params.status !== null && params.status !== '') {
+  if (params.status !== undefined) {
     sql += ' AND status = ?';
-    values.push(parseInt(params.status));
+    values.push(params.status);
   }
 
   sql += ' ORDER BY id ASC';
@@ -58,7 +65,9 @@ function buildQueryConditions(params: { keyword: string; status: string | null }
   return { sql, values };
 }
 
-// 格式化角色数据
+// 格式化角色数据。
+// `permissions` 原样透出（兼容仍在读该字段的前端），但它是**只读遗留数据**：
+// 不参与任何服务端判定，也不应被写回（见 Role.permissions 注释）。
 function formatRole(role: DbRow) {
   let permissions: string[] = [];
   const raw = role.permissions;
@@ -87,7 +96,7 @@ function formatRole(role: DbRow) {
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
-  const status = searchParams.get('status');
+  const status = numericFilter(searchParams.get('status'));
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
@@ -104,9 +113,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     countValues.push(`%${keyword}%`, `%${keyword}%`);
   }
 
-  if (status !== undefined && status !== null && status !== '') {
+  if (status !== undefined) {
     countSql += ' AND status = ?';
-    countValues.push(parseInt(status));
+    countValues.push(status);
   }
 
   const countResult = await query(countSql, countValues);
@@ -150,19 +159,20 @@ export const POST = withPermission(
       return errorResponse(ts('k_14rslzi'), 409, 409);
     }
 
-    const permissions =
-      typeof body.permissions === 'object' ? JSON.stringify(body.permissions) : body.permissions;
-
+    // 不再写 `sys_role.permissions`（旧轨）。
+    // 服务端鉴权链路 getUserInfo 只读 sys_role_menu + sys_menu，该列不被任何权限判定消费；
+    // 只有前端按钮权限 hook（usePermission）读它。角色权限的统一入口是
+    // `/api/role-permissions`（菜单轨）与 `/api/role-permissions/buttons`（按钮轨），
+    // 此处若继续写，会把「编辑角色基本信息」变成一次对权限状态的静默回退。
     const result = await execute(
-      `INSERT INTO sys_role (role_code, role_name, description, data_scope, status, permissions, role_type, sort_order)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO sys_role (role_code, role_name, description, data_scope, status, role_type, sort_order)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         body.role_code,
         body.role_name,
         body.description ?? null,
         body.data_scope ?? 1,
         body.status ?? 1,
-        permissions ?? null,
         body.role_type ?? 2,
         body.sort_order ?? 0,
       ]
@@ -202,16 +212,15 @@ export const PUT = withPermission(
       return commonErrors.notFound(ts('k_lrx46w'));
     }
 
-    const permissions =
-      typeof body.permissions === 'object' ? JSON.stringify(body.permissions) : body.permissions;
-
+    // 与 POST 同理：不写 `sys_role.permissions`。
+    // 前端编辑角色时表单里会带一份打开对话框那一刻的权限快照，若后端照单写回，
+    // 用户在权限对话框里新授的按钮权限会被这次「只改个角色名」的操作静默回退。
     const result = await execute(
       `UPDATE sys_role SET
       role_name = ?,
       description = ?,
       data_scope = ?,
       status = ?,
-      permissions = ?,
       role_type = ?,
       sort_order = ?
     WHERE id = ? AND deleted = 0`,
@@ -220,7 +229,6 @@ export const PUT = withPermission(
         body.description ?? null,
         body.data_scope ?? 1,
         body.status ?? 1,
-        permissions ?? null,
         body.role_type ?? 2,
         body.sort_order ?? 0,
         id,

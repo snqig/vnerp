@@ -98,7 +98,7 @@ export default function TurnoverPage() {
               <UserMinus className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-500">{data?.resignedCount || 0}</div>
+              <div className="text-2xl font-bold text-red-500 dark:text-red-400">{data?.resignedCount || 0}</div>
             </CardContent>
           </Card>
           <Card>
@@ -140,9 +140,9 @@ export default function TurnoverPage() {
                   {data?.monthlyTrend.map((row, i) => (
                     <TableRow key={i}>
                       <TableCell className="font-medium">{row.month}</TableCell>
-                      <TableCell className="text-right text-green-600">{row.newHires}</TableCell>
-                      <TableCell className="text-right text-red-500">{row.resignations}</TableCell>
-                      <TableCell className={`text-right font-medium ${row.netChange >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                      <TableCell className="text-right text-green-600 dark:text-green-400">{row.newHires}</TableCell>
+                      <TableCell className="text-right text-red-500 dark:text-red-400">{row.resignations}</TableCell>
+                      <TableCell className={`text-right font-medium ${row.netChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
                         {row.netChange >= 0 ? '+' : ''}{row.netChange}
                       </TableCell>
                     </TableRow>

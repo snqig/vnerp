@@ -17,7 +17,7 @@ export default function HRReportsPage() {
       description: t('laborCostDesc'),
       icon: DollarSign,
       href: '/hr/reports/labor-cost',
-      color: 'text-green-600',
+      color: 'text-green-600 dark:text-green-400',
       bgColor: 'bg-green-100 dark:bg-green-900/20',
     },
     {
@@ -25,7 +25,7 @@ export default function HRReportsPage() {
       description: t('salaryStructureDesc'),
       icon: PieChart,
       href: '/hr/reports/salary-structure',
-      color: 'text-purple-600',
+      color: 'text-purple-600 dark:text-purple-400',
       bgColor: 'bg-purple-100 dark:bg-purple-900/20',
     },
     {
@@ -33,7 +33,7 @@ export default function HRReportsPage() {
       description: t('turnoverDesc'),
       icon: Users,
       href: '/hr/reports/turnover',
-      color: 'text-blue-600',
+      color: 'text-blue-600 dark:text-blue-400',
       bgColor: 'bg-blue-100 dark:bg-blue-900/20',
     },
   ];

@@ -11,8 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Search, Upload, Package } from 'lucide-react';
+import { Search, Upload, Package, FileText, Calendar, Clock, CheckCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface PieceWorkRecord {
   id: number;
@@ -79,7 +80,7 @@ export default function PieceWorkPage() {
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Package className="h-6 w-6 text-blue-500" />
+            <Package className="h-6 w-6 text-blue-500 dark:text-blue-400" />
             <h1 className="text-2xl font-bold">{t('pieceWork') || ts('k_8kbc4s')}</h1>
           </div>
           <Button variant="outline">
@@ -87,7 +88,24 @@ export default function PieceWorkPage() {
           </Button>
         </div>
 
-        <Card>
+        
+        {/* 统计卡片 */}
+        <StatsCards
+          configs={[
+            { key: 'total', label: t('totalRecords'), icon: FileText, ...StatsTheme.blue },
+            { key: 'month', label: t('thisMonth'), icon: Calendar, ...StatsTheme.green },
+            { key: 'pending', label: t('pendingReview'), icon: Clock, ...StatsTheme.orange },
+            { key: 'approved', label: t('reviewed'), icon: CheckCircle, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: records.length },
+            { key: 'month', count: records.length },
+            { key: 'pending', count: records.length },
+            { key: 'approved', count: records.length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+<Card>
           <CardHeader>
             <div className="flex flex-wrap items-end gap-4">
               <div className="space-y-1">
@@ -137,7 +155,7 @@ export default function PieceWorkPage() {
                     <TableCell><Badge variant="outline">{r.processCode}</Badge></TableCell>
                     <TableCell>{r.productCode}</TableCell>
                     <TableCell className="text-right">{r.quantity}</TableCell>
-                    <TableCell className="text-right text-red-500">{r.defectCount}</TableCell>
+                    <TableCell className="text-right text-red-500 dark:text-red-400">{r.defectCount}</TableCell>
                     <TableCell className="text-right">{r.passRate}%</TableCell>
                     <TableCell className="text-right">¥{r.unitPrice}</TableCell>
                     <TableCell className="text-right font-medium">¥{Number(r.amount).toFixed(2)}</TableCell>

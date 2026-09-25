@@ -41,7 +41,7 @@ export default function PieceRatePage() {
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Tag className="h-6 w-6 text-blue-500" />
+            <Tag className="h-6 w-6 text-blue-500 dark:text-blue-400" />
             <h1 className="text-2xl font-bold">{t('pieceRate') || ts('k_1al09iu')}</h1>
           </div>
           <Button><Plus className="h-4 w-4 mr-2" />{tc('add') || ts('k_ebh5gv')}</Button>

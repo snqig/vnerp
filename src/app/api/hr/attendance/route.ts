@@ -12,6 +12,7 @@ import {
 } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
+import { stringFilter } from '@/lib/query-filter';
 function isValidDate(dateStr: string): boolean {
   if (!dateStr) return false;
   const d = new Date(dateStr);
@@ -39,25 +40,26 @@ export const GET = withPermission(async (request: NextRequest) => {
   }
 
   const keyword = searchParams.get('keyword') || '';
-  const status = searchParams.get('status') || '';
+  const status = stringFilter(searchParams.get('status'));
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
-  const department = searchParams.get('department') || '';
+  const department = stringFilter(searchParams.get('department'));
 
   let sql = `
     SELECT
       a.id,
-      a.attendance_date as attendanceDate,
-      a.employee_id as employeeId,
-      a.employee_name as employeeName,
-      a.department_name as departmentName,
-      a.check_in_time as checkInTime,
-      a.check_out_time as checkOutTime,
+      -- ④ 命名统一：SQL 别名 snake_case（消费端 hr/attendance/page.tsx 已双读）
+      a.attendance_date as attendance_date,
+      a.employee_id as employee_id,
+      a.employee_name as employee_name,
+      a.department_name as department_name,
+      a.check_in_time as check_in_time,
+      a.check_out_time as check_out_time,
       a.status,
-      a.working_hours as workingHours,
-      a.overtime_hours as overtimeHours,
+      a.working_hours as working_hours,
+      a.overtime_hours as overtime_hours,
       a.remark,
-      a.create_time as createTime
+      a.create_time as create_time
     FROM hr_attendance a
     WHERE a.deleted = 0
   `;

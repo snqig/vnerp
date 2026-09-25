@@ -4,6 +4,8 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
+import { GraduationCap, CheckCircle, Clock, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -124,7 +126,7 @@ export default function TrainingPage() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch('/api/hr/training', {
+      const res = await authFetch('/api/hr/training', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editItem),
@@ -159,7 +161,7 @@ export default function TrainingPage() {
   const handleDelete = async (id: number) => {
     if (!confirm(t('confirmDelete'))) return;
     try {
-      const res = await fetch('/api/hr/training?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/hr/training?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: t('deleteSuccess') });
@@ -199,6 +201,23 @@ export default function TrainingPage() {
             </Button>
           </div>
         </div>
+        
+        {/* 统计卡片 */}
+        <StatsCards
+          configs={[
+            { key: 'total', label: t('totalTraining'), icon: GraduationCap, ...StatsTheme.blue },
+            { key: 'completed', label: t('completedTraining'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'ongoing', label: t('ongoingTraining'), icon: Clock, ...StatsTheme.orange },
+            { key: 'pending', label: t('pendingTraining'), icon: Calendar, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: list.length },
+            { key: 'completed', count: list.filter((item) => item.status === 2).length },
+            { key: 'ongoing', count: list.filter((item) => item.status === 1).length },
+            { key: 'pending', count: list.filter((item) => item.status === 0).length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
         <Card>
           <CardContent className="p-0">
             <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
@@ -281,7 +300,7 @@ export default function TrainingPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />

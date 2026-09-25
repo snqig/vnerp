@@ -13,7 +13,7 @@ export default function OrganizationPage() {
     <MainLayout>
       <div className="container mx-auto py-6">
         <div className="flex items-center gap-3 mb-6">
-          <Building2 className="h-6 w-6 text-blue-500" />
+          <Building2 className="h-6 w-6 text-blue-500 dark:text-blue-400" />
           <h1 className="text-2xl font-bold">{th('organization')}</h1>
         </div>
         <OrganizationTree />

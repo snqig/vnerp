@@ -86,15 +86,15 @@ function EmployeeQueryContent() {
       3: tc('statusResigned'),
     };
     return (
-      <Badge className={styles[status] || 'bg-gray-100'}>{labels[status] || tc('unknown')}</Badge>
+      <Badge className={styles[status] || 'bg-gray-100 dark:bg-gray-700'}>{labels[status] || tc('unknown')}</Badge>
     );
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 dark:from-blue-950/20 to-indigo-100 dark:to-indigo-950/20">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+          <Loader2 className="w-10 h-10 animate-spin text-blue-600 dark:text-blue-400" />
           <p className="text-gray-600">{tc('loading')}</p>
         </div>
       </div>
@@ -103,13 +103,13 @@ function EmployeeQueryContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 dark:from-blue-950/20 to-indigo-100 dark:to-indigo-950/20 p-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <UserCircle className="w-8 h-8 text-red-500" />
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <UserCircle className="w-8 h-8 text-red-500 dark:text-red-400" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">{tc('queryFailed')}</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-200 mb-2">{tc('queryFailed')}</h2>
             <p className="text-gray-600 mb-6">{error}</p>
             <Link href="/hr/employee">
               <Button className="w-full">
@@ -125,13 +125,13 @@ function EmployeeQueryContent() {
 
   if (!employee) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 dark:from-blue-950/20 to-indigo-100 dark:to-indigo-950/20 p-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <UserCircle className="w-8 h-8 text-gray-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">{tc('queryFailed')}</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-200 mb-2">{tc('queryFailed')}</h2>
             <p className="text-gray-600 mb-6">{tc('employeeNotExistDesc')}</p>
             <Link href="/hr/employee">
               <Button className="w-full">
@@ -146,7 +146,7 @@ function EmployeeQueryContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 dark:from-blue-950/20 to-indigo-100 dark:to-indigo-950/20 p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
         {/* 头部 */}
         <div className="mb-6 flex items-center justify-between">
@@ -187,77 +187,77 @@ function EmployeeQueryContent() {
           <CardContent className="p-6 md:p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 部门信息 */}
-              <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Building2 className="w-5 h-5 text-blue-600" />
+              <div className="flex items-start gap-4 p-4 bg-muted rounded-xl">
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1">{tc('department')}</p>
-                  <p className="font-semibold text-gray-900">{employee.dept_name || '-'}</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-200">{employee.dept_name || '-'}</p>
                 </div>
               </div>
 
               {/* 职位信息 */}
-              <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Briefcase className="w-5 h-5 text-purple-600" />
+              <div className="flex items-start gap-4 p-4 bg-muted rounded-xl">
+                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Briefcase className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1">{tc('position')}</p>
-                  <p className="font-semibold text-gray-900">{employee.position || '-'}</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-200">{employee.position || '-'}</p>
                 </div>
               </div>
 
               {/* 角色信息 */}
-              <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <UserCircle className="w-5 h-5 text-green-600" />
+              <div className="flex items-start gap-4 p-4 bg-muted rounded-xl">
+                <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <UserCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1">{tc('role')}</p>
-                  <p className="font-semibold text-gray-900">{employee.role_name || '-'}</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-200">{employee.role_name || '-'}</p>
                 </div>
               </div>
 
               {/* 入职日期 */}
-              <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Calendar className="w-5 h-5 text-orange-600" />
+              <div className="flex items-start gap-4 p-4 bg-muted rounded-xl">
+                <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Calendar className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1">{tc('entryDate')}</p>
-                  <p className="font-semibold text-gray-900">{employee.entry_date || '-'}</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-200">{employee.entry_date || '-'}</p>
                 </div>
               </div>
 
               {/* 联系电话 */}
-              <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-                <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Phone className="w-5 h-5 text-pink-600" />
+              <div className="flex items-start gap-4 p-4 bg-muted rounded-xl">
+                <div className="w-10 h-10 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Phone className="w-5 h-5 text-pink-600 dark:text-pink-400" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1">{tc('phone')}</p>
-                  <p className="font-semibold text-gray-900">{employee.phone || '-'}</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-200">{employee.phone || '-'}</p>
                 </div>
               </div>
 
               {/* 邮箱 */}
-              <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-                <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Mail className="w-5 h-5 text-cyan-600" />
+              <div className="flex items-start gap-4 p-4 bg-muted rounded-xl">
+                <div className="w-10 h-10 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Mail className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1">{tc('email')}</p>
-                  <p className="font-semibold text-gray-900">{employee.email || '-'}</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-200">{employee.email || '-'}</p>
                 </div>
               </div>
             </div>
 
             {/* 备注 */}
             {employee.remark && (
-              <div className="mt-6 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-                <p className="text-sm text-yellow-800 font-medium mb-1">{tc('remark')}</p>
-                <p className="text-gray-700">{employee.remark}</p>
+              <div className="mt-6 p-4 bg-yellow-500/10 rounded-xl border border-yellow-100 dark:border-yellow-800">
+                <p className="text-sm text-yellow-800 dark:text-yellow-300 font-medium mb-1">{tc('remark')}</p>
+                <p className="text-gray-700 dark:text-gray-200">{employee.remark}</p>
               </div>
             )}
           </CardContent>
@@ -275,9 +275,9 @@ function EmployeeQueryContent() {
 function Loading() {
   const tc = useTranslations('Common');
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 dark:from-blue-950/20 to-indigo-100 dark:to-indigo-950/20">
       <div className="flex flex-col items-center gap-4">
-        <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-600 dark:text-blue-400" />
         <p className="text-gray-600">{tc('loading')}</p>
       </div>
     </div>
