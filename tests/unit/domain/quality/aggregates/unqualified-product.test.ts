@@ -40,15 +40,27 @@ describe('UnqualifiedProduct Aggregate', () => {
       expect(product.status.toDbCode()).toBe(1);
     });
 
-    it('pushes UnqualifiedCreatedEvent when id is set', () => {
+    it('不压入建单事件：新建时主键尚未产生，须等落库后由 markPersisted() 补压', () => {
       const product = UnqualifiedProduct.create(buildValidProps());
+      expect(product.getDomainEvents()).toHaveLength(0);
+    });
+
+    it('markPersisted() 落库后压入建单事件，重复调用不重复压入', () => {
+      // create 时主键未知，这里模拟「新增单」：id 留空
+      const product = UnqualifiedProduct.create(buildValidProps({ id: undefined }));
+      product.markPersisted(300);
       const events = product.getDomainEvents();
       expect(events).toHaveLength(1);
       expect(events[0].eventType).toBe('quality.unqualified.created');
+      expect((events[0] as unknown as { payload: { recordId: number } }).payload.recordId).toBe(300);
+
+      product.markPersisted(999);
+      expect(product.getDomainEvents()).toHaveLength(1);
     });
 
-    it('does not push event when id is undefined', () => {
-      const product = UnqualifiedProduct.create(buildValidProps({ id: undefined }));
+    it('已持久化的聚合（reconstitute）再次 markPersisted() 不重复压入事件', () => {
+      const product = UnqualifiedProduct.reconstitute(buildValidProps());
+      product.markPersisted(300);
       expect(product.getDomainEvents()).toHaveLength(0);
     });
 
@@ -135,12 +147,12 @@ describe('UnqualifiedProduct Aggregate', () => {
 
   describe('startHandle()', () => {
     it('transitions pending -> handling and pushes HandlingStartedEvent', () => {
-      const product = UnqualifiedProduct.create(buildValidProps());
+      const product = UnqualifiedProduct.reconstitute(buildValidProps());
       product.startHandle('rework', '品质部', '周杰');
       expect(product.status.value).toBe('handling');
       const events = product.getDomainEvents();
-      expect(events).toHaveLength(2);
-      expect(events[1].eventType).toBe('quality.unqualified.handling_started');
+      expect(events).toHaveLength(1);
+      expect(events[0].eventType).toBe('quality.unqualified.handling_started');
       expect(product.handleType?.value).toBe('rework');
     });
 
@@ -268,25 +280,25 @@ describe('UnqualifiedProduct Aggregate', () => {
 
   describe('lifecycle events', () => {
     it('accumulates events through full lifecycle', () => {
-      const product = UnqualifiedProduct.create(buildValidProps());
-      expect(product.getDomainEvents()).toHaveLength(1);
+      const product = UnqualifiedProduct.reconstitute(buildValidProps());
+      expect(product.getDomainEvents()).toHaveLength(0);
 
       product.startHandle('rework', '品质部', '周杰');
-      expect(product.getDomainEvents()).toHaveLength(2);
+      expect(product.getDomainEvents()).toHaveLength(1);
 
       product.completeHandle('周杰', 1, 1500);
-      expect(product.getDomainEvents()).toHaveLength(3);
+      expect(product.getDomainEvents()).toHaveLength(2);
 
       const eventTypes = product.getDomainEvents().map((e) => e.eventType);
       expect(eventTypes).toEqual([
-        'quality.unqualified.created',
         'quality.unqualified.handling_started',
         'quality.unqualified.completed',
       ]);
     });
 
     it('clearDomainEvents() empties the events list', () => {
-      const product = UnqualifiedProduct.create(buildValidProps());
+      const product = UnqualifiedProduct.reconstitute(buildValidProps());
+      product.startHandle('rework', '品质部', '周杰');
       expect(product.getDomainEvents()).toHaveLength(1);
       product.clearDomainEvents();
       expect(product.getDomainEvents()).toHaveLength(0);
