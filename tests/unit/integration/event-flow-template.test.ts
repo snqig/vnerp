@@ -23,7 +23,7 @@
  *   - 真实组件：FinishOrder 聚合、MysqlDomainEventOutboxRepository、InMemoryEventBus、FinishOrderInventoryHandler
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { PoolConnection } from 'mysql2/promise';
+import type { DbConnection } from '@/types/db';
 
 // vi.hoisted 确保 mock 变量在 vi.mock 工厂中可用（vi.mock 会被提升到文件顶部）
 const mocks = vi.hoisted(() => {
@@ -192,7 +192,7 @@ describe('阶段 2：事件投递 — saveEvents 将事件写入 domain_event_ou
     // 使用真实的 MysqlDomainEventOutboxRepository（仅 conn 被 mock）
     const outboxRepo = new MysqlDomainEventOutboxRepository();
     await outboxRepo.saveEvents(
-      mocks.mockConn as unknown as PoolConnection,
+      mocks.mockConn as unknown as DbConnection,
       'FinishOrder',
       1,
       events
@@ -246,7 +246,7 @@ describe('阶段 2：事件投递 — saveEvents 将事件写入 domain_event_ou
 
     const outboxRepo = new MysqlDomainEventOutboxRepository();
     await outboxRepo.saveEvents(
-      mocks.mockConn as unknown as PoolConnection,
+      mocks.mockConn as unknown as DbConnection,
       'FinishOrder',
       1,
       [event1, event2]

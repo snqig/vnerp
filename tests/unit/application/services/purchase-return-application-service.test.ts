@@ -55,6 +55,7 @@ function createMockOrderRepo(): IPurchaseOrderRepository {
     findByOrderNo: vi.fn(),
     findByStatus: vi.fn(),
     save: vi.fn(),
+    updateDraft: vi.fn().mockResolvedValue(true),
     updateStatus: vi.fn(),
     updateReceivedQty: vi.fn(),
     updateAuditInfo: vi.fn(),

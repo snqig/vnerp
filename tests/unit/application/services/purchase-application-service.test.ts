@@ -39,6 +39,7 @@ function createMockOrderRepo(): IPurchaseOrderRepository {
     findByOrderNo: vi.fn(),
     findByStatus: vi.fn(),
     save: vi.fn().mockResolvedValue({ id: 1, orderNo: 'PO20260717001' }),
+    updateDraft: vi.fn().mockResolvedValue(true),
     updateStatus: vi.fn().mockResolvedValue(true),
     updateReceivedQty: vi.fn(),
     updateAuditInfo: vi.fn(),
