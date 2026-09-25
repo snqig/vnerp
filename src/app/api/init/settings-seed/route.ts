@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 ;
 import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
+import { syncCanonicalDepartments } from '@/lib/department-catalog';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
@@ -148,38 +149,21 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       } catch (_e) {}
     }
 
-    const departments = [
-      { dept_code: 'DEPT001', dept_name: ts('k_1f4z30i'), parent_id: null, sort_order: 1 },
-      { dept_code: 'DEPT002', dept_name: ts('k_axb29w'), parent_id: null, sort_order: 2 },
-      { dept_code: 'DEPT003', dept_name: ts('k_boxyuc'), parent_id: null, sort_order: 3 },
-      { dept_code: 'DEPT004', dept_name: ts('k_18glq49'), parent_id: null, sort_order: 4 },
-      { dept_code: 'DEPT00401', dept_name: ts('k_18ldhlf'), parent_id: null, sort_order: 1 },
-      { dept_code: 'DEPT00402', dept_name: ts('k_8zopts'), parent_id: null, sort_order: 2 },
-      { dept_code: 'DEPT005', dept_name: ts('k_qe62zc'), parent_id: null, sort_order: 5 },
-      { dept_code: 'DEPT006', dept_name: ts('k_1rgc4zf'), parent_id: null, sort_order: 6 },
-      { dept_code: 'DEPT007', dept_name: ts('k_11g5fpo'), parent_id: null, sort_order: 7 },
-      { dept_code: 'DEPT008', dept_name: ts('k_1jqantr'), parent_id: null, sort_order: 8 },
-    ];
-    for (const dept of departments) {
-      await conn.execute(
-        `INSERT IGNORE INTO sys_department (dept_code, dept_name, parent_id, sort_order, status, create_time, update_time) VALUES (?, ?, ?, ?, 1, NOW(), NOW())`,
-        [dept.dept_code, dept.dept_name, dept.parent_id, dept.sort_order]
-      );
-    }
-    const [deptRows] = await conn.execute('SELECT id, dept_name FROM sys_department ORDER BY id');
-    const deptMap: Record<string, number> = {};
+    // 部门结构统一从 @/lib/department-catalog 取（全站唯一真相源）。
+    // 旧实现在这里内联了第三份部门清单（管理部/业务部/生产部/打样中心/模切/商标/
+    // 采购部/品质部/财务部/行政人事部），且 10 行全部 parent_id: null 拍平，
+    // 再靠「按显示名回查 id」二次 UPDATE 把两个子部门挂上去 ——
+    // 部门一改名（或切到其它语言）这个回查就静默失配。
+    const deptSync = await syncCanonicalDepartments(conn);
+    stats.sys_department = deptSync.total;
+
+    const [deptRows] = await conn.execute<{ id: number; dept_code: string | null }[]>(
+      'SELECT id, dept_code FROM sys_department WHERE deleted = 0 ORDER BY id'
+    );
+    const deptIdByCode: Record<string, number> = {};
     for (const row of deptRows) {
-      deptMap[row.dept_name] = row.id;
+      if (row.dept_code) deptIdByCode[row.dept_code] = row.id;
     }
-    const prodDeptId = deptMap[ts('k_18glq49')];
-    if (prodDeptId) {
-      await conn.execute('UPDATE sys_department SET parent_id = ? WHERE dept_name IN (?, ?)', [
-        prodDeptId,
-        ts('k_18ldhlf'),
-        ts('k_8zopts'),
-      ]);
-    }
-    stats.sys_department = departments.length;
 
     const roles = [
       {
@@ -279,7 +263,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     const [roleRows] = await conn.execute('SELECT id, role_code FROM sys_role ORDER BY id');
     const roleMap: Record<string, number> = {};
     for (const row of roleRows) {
-      roleMap[row.role_code] = row.id;
+      roleMap[String(row.role_code) ?? ''] = Number((row as DbRow).id ?? 0);
     }
     stats.sys_role = roles.length;
 
@@ -290,7 +274,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         real_name: ts('k_1fcdmqa'),
         email: 'admin@dcprint.com',
         phone: '13800000001',
-        dept_name: ts('k_1f4z30i'),
+        dept_code: 'DEPT001', // 总经办
         role_code: 'super_admin',
       },
       {
@@ -298,7 +282,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         real_name: ts('k_3vr19c'),
         email: 'zhangwei@dcprint.com',
         phone: '13800000002',
-        dept_name: ts('k_axb29w'),
+        dept_code: 'DEPT002', // 业务部
         role_code: 'business_manager',
       },
       {
@@ -306,7 +290,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         real_name: ts('k_o5eojb'),
         email: 'lina@dcprint.com',
         phone: '13800000003',
-        dept_name: ts('k_axb29w'),
+        dept_code: 'DEPT002', // 业务部
         role_code: 'sales',
       },
       {
@@ -314,7 +298,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         real_name: ts('k_nqtivk'),
         email: 'wangqiang@dcprint.com',
         phone: '13800000004',
-        dept_name: ts('k_boxyuc'),
+        dept_code: 'DEPT004', // 工程技术部
         role_code: 'engineer',
       },
       {
@@ -322,7 +306,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         real_name: ts('k_9nfhqc'),
         email: 'liuyang@dcprint.com',
         phone: '13800000005',
-        dept_name: ts('k_18glq49'),
+        dept_code: 'DEPT003', // 生产部
         role_code: 'production_manager',
       },
       {
@@ -330,7 +314,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         real_name: ts('k_orolx7'),
         email: 'chenming@dcprint.com',
         phone: '13800000006',
-        dept_name: ts('k_qe62zc'),
+        dept_code: 'DEPT00602', // 仓储科
         role_code: 'warehouse_keeper',
       },
       {
@@ -338,7 +322,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         real_name: ts('k_qkv38u'),
         email: 'zhaolei@dcprint.com',
         phone: '13800000007',
-        dept_name: ts('k_qe62zc'),
+        dept_code: 'DEPT00602', // 仓储科
         role_code: 'warehouse_manager',
       },
       {
@@ -346,7 +330,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         real_name: ts('k_wrfy17'),
         email: 'sunli@dcprint.com',
         phone: '13800000008',
-        dept_name: ts('k_1rgc4zf'),
+        dept_code: 'DEPT00601', // 采购科
         role_code: 'purchaser',
       },
       {
@@ -354,7 +338,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         real_name: ts('k_1gmpisl'),
         email: 'zhoujie@dcprint.com',
         phone: '13800000009',
-        dept_name: ts('k_11g5fpo'),
+        dept_code: 'DEPT005', // 品质部
         role_code: 'qc_inspector',
       },
       {
@@ -362,12 +346,15 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         real_name: ts('k_vy0n74'),
         email: 'wufang@dcprint.com',
         phone: '13800000010',
-        dept_name: ts('k_1jqantr'),
+        dept_code: 'DEPT00701', // 会计科
         role_code: 'accountant',
       },
     ];
     for (const user of users) {
-      const deptId = deptMap[user.dept_name] || null;
+      // 按 dept_code 解析归属，而不是按部门显示名。
+      // 旧实现 ts('k_...') 取名字再回查 id —— 部门改名或切语言即静默失配，
+      // department_id 会落成 NULL 且全程无报错。
+      const deptId = deptIdByCode[user.dept_code] || null;
       await conn.execute(
         `INSERT IGNORE INTO sys_user (username, password, real_name, email, phone, department_id, status, first_login) VALUES (?, ?, ?, ?, ?, ?, 1, 1)`,
         [user.username, passwordHash, user.real_name, user.email, user.phone, deptId]
@@ -532,7 +519,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     );
     const matCatMap: Record<string, number> = {};
     for (const row of matCatRows) {
-      matCatMap[row.category_name] = row.id;
+      matCatMap[String(row.category_name) ?? ''] = Number((row as DbRow).id ?? 0);
     }
     const parentUpdates: [number, string][] = [
       [matCatMap[ts('k_1nvc7li')], ts('k_1yrdt7u')],
@@ -605,7 +592,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     );
     const dictTypeMap: Record<string, number> = {};
     for (const row of dictTypeRows) {
-      dictTypeMap[row.dict_code] = row.id;
+      dictTypeMap[String(row.dict_code) ?? ''] = Number((row as DbRow).id ?? 0);
     }
     stats.sys_dict_type = dictTypes.length;
 
@@ -1331,8 +1318,8 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     const menuCodeToId: Record<string, number> = {};
     const menuParentMap: Record<number, string> = {};
     for (const m of allMenus) {
-      menuCodeToId[m.menu_code] = m.id;
-      menuParentMap[m.id] = m.menu_code;
+      menuCodeToId[String(m.menu_code) ?? ''] = Number((m as DbRow).id ?? 0);
+      menuParentMap[Number((m as DbRow).id ?? 0)] = String(m.menu_code) ?? '';
     }
 
     const topLevelCodes = [
@@ -1352,7 +1339,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     function getMenuIdsByParentCode(parentCode: string): number[] {
       const parentId = menuCodeToId[parentCode];
       if (!parentId) return [];
-      return allMenus.filter((m: DbRow) => m.parent_id === parentId).map((m: DbRow) => m.id);
+      return allMenus.filter((m: DbRow) => m.parent_id === parentId).map((m: DbRow) => Number(m.id) || 0);
     }
 
     const dashboardMenuIds = getMenuIdsByParentCode('dashboard_center');
@@ -1375,7 +1362,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     const financeTopId = menuCodeToId['finance'] ? [menuCodeToId['finance']] : [];
 
     const roleMenuAssignments: Record<string, number[]> = {
-      super_admin: allMenus.map((m: DbRow) => m.id),
+      super_admin: allMenus.map((m: DbRow) => Number(m.id) || 0),
       business_manager: [...dashboardTopId, ...dashboardMenuIds, ...ordersTopId, ...ordersMenuIds],
       sales: [
         ...dashboardTopId,
@@ -1844,17 +1831,15 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     for (const log of operationLogs) {
       try {
         await conn.execute(
-          `INSERT INTO sys_operation_log (module, operation, oper_name, oper_type, oper_method, oper_url, oper_ip, oper_param, oper_result, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO sys_operation_log (operation, username, method, request_url, request_params, response_data, ip, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
           [
-            log.module,
             log.operation,
             log.oper_name,
-            log.oper_type,
             log.oper_method,
             log.oper_url,
-            log.oper_ip,
             log.oper_param,
             log.oper_result,
+            log.oper_ip,
             log.status,
           ]
         );

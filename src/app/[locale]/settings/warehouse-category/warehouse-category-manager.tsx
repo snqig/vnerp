@@ -1,8 +1,9 @@
 'use client';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,10 +38,21 @@ interface WarehouseCategory {
   status: number;
   warehouse_count?: number;
   active_warehouse_count?: number;
-  total_capacity?: number;
-  total_used_capacity?: number;
   create_time?: string;
   update_time?: string;
+}
+
+// 后端返回的编码规则与分析结果
+interface CategoryRules {
+  codePattern: string;
+  codePatternDesc: string;
+  enforceOnCreate: boolean;
+  enforceOnUpdate: boolean;
+}
+
+interface CategoryAnalysis {
+  emptyCategoryCount: number;
+  invalidCodeCount: number;
 }
 
 // 统计数据接口
@@ -55,7 +67,6 @@ interface CategoryStats {
 export function WarehouseCategoryManager() {
   const ts = useTranslations('Common');
   const tc = useTranslations('Common');
-  const locale = useLocale();
   const [categories, setCategories] = useState<WarehouseCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -69,30 +80,34 @@ export function WarehouseCategoryManager() {
     activeWarehouses: 0,
   });
   const [codeError, setCodeError] = useState('');
+  const [rules, setRules] = useState<CategoryRules | null>(null);
+  const [analysis, setAnalysis] = useState<CategoryAnalysis>({
+    emptyCategoryCount: 0,
+    invalidCodeCount: 0,
+  });
 
   // 生成唯一仓库分类编码
+  // 需同时识别库中并存的两种形态（种子数据 WHCAT001 与历史码 WH-CAT-001），
+  // 并沿用种子数据的主流形态 WHCAT + 3 位数字，避免新码与存量形态不一致。
   const generateCategoryCode = () => {
-    // 从现有分类中提取最大的序号
     let maxNum = 0;
     categories.forEach((c) => {
-      if (c.code) {
-        const match = c.code.match(/WH-CAT-(\d+)/);
-        if (match) {
-          const num = parseInt(match[1]);
-          if (num > maxNum) maxNum = num;
-        }
+      if (!c.code) return;
+      const match = c.code.match(/^(?:WHCAT|WH-CAT-?)(\d+)$/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) maxNum = num;
       }
     });
 
-    // 生成新的编码，确保不重复
     let counter = maxNum + 1;
-    let newCode = `WH-CAT-${String(counter).padStart(3, '0')}`;
+    let newCode = `WHCAT${String(counter).padStart(3, '0')}`;
 
     // 再次检查是否已存在（防止数据库中有但前端未加载的数据）
     const existingCodes = categories.map((c) => c.code);
     while (existingCodes.includes(newCode)) {
       counter++;
-      newCode = `WH-CAT-${String(counter).padStart(3, '0')}`;
+      newCode = `WHCAT${String(counter).padStart(3, '0')}`;
     }
 
     return newCode;
@@ -117,6 +132,11 @@ export function WarehouseCategoryManager() {
           inactive: result.data.summary.total_categories - result.data.summary.active_categories,
           totalWarehouses: result.data.summary.total_warehouses,
           activeWarehouses: result.data.summary.active_warehouses,
+        });
+        setRules(result.data.rules ?? null);
+        setAnalysis({
+          emptyCategoryCount: result.data.analysis?.emptyCategoryCount ?? 0,
+          invalidCodeCount: result.data.analysis?.invalidCodeCount ?? 0,
         });
       }
     } catch {
@@ -207,81 +227,41 @@ export function WarehouseCategoryManager() {
   // 状态标签
   const getStatusBadge = (status: number) => {
     return status === 1 ? (
-      <Badge className="bg-green-100 text-green-800">{ts('k_5pm2ma')}</Badge>
+      <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">{ts('k_5pm2ma')}</Badge>
     ) : (
       <Badge className="bg-secondary text-secondary-foreground">{ts('k_6q9o5l')}</Badge>
     );
   };
 
-  // 使用率计算
-  const getUsageRate = (used: number, total: number) => {
-    if (!total) return 0;
-    return Math.round((used / total) * 100);
+  // 编码是否合规（后端用同一份规则判定，这里只做展示）
+  const isCodeCompliant = (code: string) => {
+    if (!rules?.codePattern) return true;
+    try {
+      return new RegExp(rules.codePattern).test(code);
+    } catch {
+      return true;
+    }
   };
 
   return (
     <div className="space-y-6">
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{ts('k_1s6ted3')}</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
-              </div>
-              <div className="p-3 bg-blue-500/10 rounded-full dark:bg-blue-400/15">
-                <Warehouse className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{ts('k_lksp1x')}</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {stats.active}
-                </p>
-              </div>
-              <div className="p-3 bg-green-500/10 rounded-full dark:bg-green-400/15">
-                <Package className="w-6 h-6 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{ts('k_rsrzqg')}</p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {stats.totalWarehouses}
-                </p>
-              </div>
-              <div className="p-3 bg-purple-500/10 rounded-full dark:bg-purple-400/15">
-                <Warehouse className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{ts('k_aofusw')}</p>
-                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                  {stats.activeWarehouses}
-                </p>
-              </div>
-              <div className="p-3 bg-orange-500/10 rounded-full dark:bg-orange-400/15">
-                <Package className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <StatsCards
+        configs={[
+          { key: 'total', label: ts('k_1s6ted3'), icon: Warehouse, ...StatsTheme.blue },
+          { key: 'active', label: ts('k_lksp1x'), icon: Package, ...StatsTheme.green },
+          { key: 'totalWarehouses', label: ts('k_rsrzqg'), icon: Warehouse, ...StatsTheme.purple },
+          { key: 'activeWarehouses', label: ts('k_aofusw'), icon: Package, ...StatsTheme.orange },
+        ]}
+        stats={[
+          { key: 'total', count: stats.total },
+          { key: 'active', count: stats.active },
+          { key: 'totalWarehouses', count: stats.totalWarehouses },
+          { key: 'activeWarehouses', count: stats.activeWarehouses },
+        ]}
+        cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+      />
+
 
       {/* 分类列表 */}
       <Card>
@@ -311,6 +291,23 @@ export function WarehouseCategoryManager() {
             {ts('k_1gcuiks')}</Button>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            {rules?.codePatternDesc && (
+              <span>{tc('warehouseCategoryCodeRule', { rule: rules.codePatternDesc })}</span>
+            )}
+            {analysis.emptyCategoryCount > 0 ? (
+              <span className="text-amber-600 dark:text-amber-400">
+                {tc('warehouseCategoryEmptyCount', { count: analysis.emptyCategoryCount })}
+              </span>
+            ) : (
+              <span>{tc('warehouseCategoryAllMounted')}</span>
+            )}
+            {analysis.invalidCodeCount > 0 && (
+              <span className="text-red-600 dark:text-red-400">
+                {tc('warehouseCategoryInvalidCount', { count: analysis.invalidCodeCount })}
+              </span>
+            )}
+          </div>
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <RefreshCw className="w-6 h-6 animate-spin" />
@@ -322,8 +319,6 @@ export function WarehouseCategoryManager() {
                   <TableHead>{tc('categoryCode')}</TableHead>
                   <TableHead>{tc('categoryName')}</TableHead>
                   <TableHead>{tc('warehouseCount')}</TableHead>
-                  <TableHead>{ts('k_yo7aoo')}</TableHead>
-                  <TableHead>{ts('k_18ordsf')}</TableHead>
                   <TableHead>{ts('k_dqvmz2')}</TableHead>
                   <TableHead>{tc('status')}</TableHead>
                   <TableHead className="text-right">{tc('operation')}</TableHead>
@@ -332,13 +327,22 @@ export function WarehouseCategoryManager() {
               <TableBody>
                 {categories.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       {ts('k_yr4lzo')}</TableCell>
                   </TableRow>
                 ) : (
                   categories.map((category) => (
                     <TableRow key={category.id} className="hover:bg-muted">
-                      <TableCell className="font-medium">{category.code}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <span>{category.code}</span>
+                          {!isCodeCompliant(category.code) && (
+                            <Badge variant="destructive" className="text-xs">
+                              {tc('warehouseCategoryCodeInvalid')}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div>
                           <span className="font-medium text-foreground">{category.name}</span>
@@ -361,38 +365,6 @@ export function WarehouseCategoryManager() {
                           {category.warehouse_count || 0}
                           {ts('k_1psqcaj')}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground/80">
-                          {(category.total_capacity || 0) > 0
-                            ? `${(category.total_capacity || 0).toLocaleString(locale === 'zh-CN' ? 'zh-CN' : locale === 'zh-TW' ? 'zh-TW' : locale === 'en' ? 'en-US' : 'vi')} / ${(category.total_used_capacity || 0).toLocaleString(locale === 'zh-CN' ? 'zh-CN' : locale === 'zh-TW' ? 'zh-TW' : locale === 'en' ? 'en-US' : 'vi')}`
-                            : '-'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {(category.total_capacity || 0) > 0 ? (
-                            <>
-                              <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-blue-500 rounded-full"
-                                  style={{
-                                    width: `${getUsageRate(category.total_used_capacity || 0, category.total_capacity || 0)}%`,
-                                  }}
-                                />
-                              </div>
-                              <span className="text-xs text-muted-foreground">
-                                {getUsageRate(
-                                  category.total_used_capacity || 0,
-                                  category.total_capacity || 0
-                                )}
-                                %
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-xs text-muted-foreground/60">-</span>
-                          )}
-                        </div>
                       </TableCell>
                       <TableCell>{category.sort_order}</TableCell>
                       <TableCell>{getStatusBadge(category.status)}</TableCell>
@@ -418,7 +390,7 @@ export function WarehouseCategoryManager() {
                               deleteCategory(category.id);
                             }}
                           >
-                            <Trash2 className="w-4 h-4 text-red-500" />
+                            <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
                           </Button>
                         </div>
                       </TableCell>
@@ -444,7 +416,7 @@ export function WarehouseCategoryManager() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
-                  {tc('categoryCode')}<span className="text-red-500">*</span>
+                  {tc('categoryCode')}<span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <div className="flex gap-2">
                   <Input
@@ -476,11 +448,11 @@ export function WarehouseCategoryManager() {
                       {ts('k_3q0eu8')}</Button>
                   )}
                 </div>
-                {codeError && <p className="text-sm text-red-500">{codeError}</p>}
+                {codeError && <p className="text-sm text-red-500 dark:text-red-400">{codeError}</p>}
               </div>
               <div className="space-y-2">
                 <Label>
-                  {tc('categoryName')}<span className="text-red-500">*</span>
+                  {tc('categoryName')}<span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   value={form.name || ''}

@@ -5,6 +5,7 @@ import { NextRequest } from 'next/server';
 import { successResponse, commonErrors } from '@/lib/api-response';
 import { SagaLogRepository, SagaStatus } from '@/infrastructure/repositories/SagaLogRepository';
 import { withPermission } from '@/lib/api-permissions';
+import { stringFilter } from '@/lib/query-filter';
 
 const sagaLogRepository = new SagaLogRepository();
 
@@ -14,7 +15,7 @@ export const GET = withPermission(
     const { searchParams } = new URL(request.url);
     const sagaId = searchParams.get('sagaId');
     const sagaType = searchParams.get('sagaType');
-    const status = searchParams.get('status');
+    const status = stringFilter(searchParams.get('status'));
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
 

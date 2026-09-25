@@ -267,7 +267,7 @@ export default function AnnouncementPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 text-green-600"
+                              className="h-7 text-green-600 dark:text-green-400"
                               onClick={() => handlePublish(item.id)}
                             >
                               <Send className="h-3 w-3 mr-1" />
@@ -276,7 +276,7 @@ export default function AnnouncementPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 text-red-600"
+                            className="h-7 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />

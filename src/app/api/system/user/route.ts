@@ -7,6 +7,8 @@ import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+import { numericFilter } from '@/lib/query-filter';
+import type { DbResultSetHeader } from '@/types/db';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
@@ -14,7 +16,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const username = searchParams.get('username') || '';
   const realName = searchParams.get('realName') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
 
   let where = 'WHERE u.deleted = 0';
   const params: SqlValue[] = [];
@@ -26,7 +28,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     where += ' AND COALESCE(e.name, u.real_name) LIKE ?';
     params.push('%' + realName + '%');
   }
-  if (status !== '') {
+  if (status !== undefined) {
     where += ' AND u.status = ?';
     params.push(Number(status));
   }
@@ -71,7 +73,7 @@ export const POST = withPermission(async (request: NextRequest, _userInfo: UserI
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const result = await transaction(async (conn) => {
-    const [res] = await conn.execute(
+    const [res] = await conn.execute<DbResultSetHeader>(
       'INSERT INTO sys_user (username, password, real_name, email, phone, department_id, status, first_login) VALUES (?, ?, ?, ?, ?, ?, ?, 1)',
       [
         username,

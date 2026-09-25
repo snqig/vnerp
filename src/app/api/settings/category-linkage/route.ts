@@ -110,8 +110,8 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
 
       const item: LinkageItem = {
         material_category_id: Number(mc.id),
-        material_category_code: mc.category_code,
-        material_category_name: mc.category_name,
+        material_category_code: String(mc.category_code || ''),
+        material_category_name: String(mc.category_name || ''),
         material_category_type: categoryType,
         material_category_type_name: typeName,
         material_count: dom ? dom.total : 0,
@@ -143,8 +143,8 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
         summary.unlinked++;
       } else {
         item.warehouse_category_id = Number(linkedWh.id);
-        item.warehouse_category_code = linkedWh.code;
-        item.warehouse_category_name = linkedWh.name;
+        item.warehouse_category_code = String(linkedWh.code || null);
+        item.warehouse_category_name = String(linkedWh.name || null);
         item.linkage_status = 'linked';
         summary.linked++;
       }

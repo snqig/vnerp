@@ -158,11 +158,10 @@ export default function DashboardPage() {
     <MainLayout title={t('title')}>
       <div ref={dashboardRef} className="space-y-6">
         <div
-          className="relative rounded-xl overflow-hidden px-4 pt-6 pb-4"
-          style={{ background: 'linear-gradient(135deg, #091637 0%, #010205 100%)' }}
+          className="dashboard-gradient relative rounded-xl overflow-hidden px-4 pt-6 pb-4"
         >
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-0 left-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl animate-blob" />
+            <div className="absolute top-0 left-0 w-96 h-96 bg-[#A0522D]/5 rounded-full blur-3xl animate-blob dark:bg-cyan-500/5" />
             <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-blob animation-delay-2000" />
           </div>
           <div className="absolute inset-0 tech-grid-bg pointer-events-none" />
@@ -172,26 +171,26 @@ export default function DashboardPage() {
               <div className="tech-title-row">
                 <div className="tech-title-line-left" />
                 <div>
-                  <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
+                  <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-[#8A4A22] via-[#A0522D] to-[#8A4A22] dark:from-cyan-300 dark:via-blue-400 dark:to-cyan-300 bg-clip-text text-transparent">
                     {companyName}
                   </h1>
-                  <p className="text-[10px] text-white/50">{t('title')}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-white/50">{t('title')}</p>
                 </div>
                 <div className="tech-title-line-right" />
               </div>
               <div className="tech-title-bottom-line" />
             </div>
             <div className="flex items-center gap-3 mt-1.5">
-              <div className="text-sm font-mono font-bold text-cyan-400">{currentTime}</div>
+              <div className="text-sm font-mono font-bold text-[#8A4A22] dark:text-cyan-400">{currentTime}</div>
               <button
                 onClick={toggleFullscreen}
-                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 transition-colors"
                 title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
               >
                 {isFullscreen ? (
-                  <Minimize className="h-3.5 w-3.5 text-cyan-400" />
+                  <Minimize className="h-3.5 w-3.5 text-[#8A4A22] dark:text-cyan-400" />
                 ) : (
-                  <Maximize className="h-3.5 w-3.5 text-cyan-400" />
+                  <Maximize className="h-3.5 w-3.5 text-[#8A4A22] dark:text-cyan-400" />
                 )}
               </button>
               <button
@@ -199,13 +198,13 @@ export default function DashboardPage() {
                   setLoading(true);
                   fetchDashboard();
                 }}
-                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 transition-colors"
                 data-testid="dashboard-refresh"
                 title={tc('refresh')}
               >
-                <RefreshCw className="h-3.5 w-3.5 text-cyan-400" />
+                <RefreshCw className="h-3.5 w-3.5 text-[#8A4A22] dark:text-cyan-400" />
               </button>
-              <div className="px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-[10px] text-cyan-300">
+              <div className="px-2 py-0.5 rounded-full bg-[#A0522D]/15 border border-[#A0522D]/30 text-[10px] text-[#8A4A22] dark:bg-cyan-500/20 dark:border-cyan-500/30 dark:text-cyan-300">
                 {loading ? tc('loading') : '● ' + t('realtime')}
               </div>
             </div>
@@ -216,17 +215,17 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('todayOrders')}</CardTitle>
-              <FileText className="h-4 w-4 text-blue-600" />
+              <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.todayOrders}</div>
               <div className="flex items-center text-xs">
                 {s.orderChange >= 0 ? (
-                  <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
+                  <TrendingUp className="h-3 w-3 text-green-600 dark:text-green-400 mr-1" />
                 ) : (
-                  <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
+                  <TrendingDown className="h-3 w-3 text-red-600 dark:text-red-400 mr-1" />
                 )}
-                <span className={s.orderChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+                <span className={s.orderChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
                   {s.orderChange >= 0 ? '+' : ''}
                   {s.orderChange}%
                 </span>
@@ -237,7 +236,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('pendingWorkOrders')}</CardTitle>
-              <Factory className="h-4 w-4 text-orange-600" />
+              <Factory className="h-4 w-4 text-orange-600 dark:text-orange-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.pendingOrders}</div>
@@ -249,7 +248,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('lowStock')}</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.inventoryAlert}</div>
@@ -259,7 +258,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('todayCompleted')}</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.completedToday}</div>
@@ -272,7 +271,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('customersTitle')}</CardTitle>
-              <Users className="h-4 w-4 text-purple-600" />
+              <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.totalCustomers}</div>
@@ -282,7 +281,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('totalEmployees')}</CardTitle>
-              <Users className="h-4 w-4 text-cyan-600" />
+              <Users className="h-4 w-4 text-[#8A4A22] dark:text-cyan-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.totalEmployees}</div>
@@ -292,17 +291,17 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('todayProduction')}</CardTitle>
-              <Package className="h-4 w-4 text-indigo-600" />
+              <Package className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.todayProduction.toLocaleString()}</div>
               <div className="flex items-center text-xs">
                 {s.productionChange >= 0 ? (
-                  <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
+                  <TrendingUp className="h-3 w-3 text-green-600 dark:text-green-400 mr-1" />
                 ) : (
-                  <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
+                  <TrendingDown className="h-3 w-3 text-red-600 dark:text-red-400 mr-1" />
                 )}
-                <span className={s.productionChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+                <span className={s.productionChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
                   {s.productionChange >= 0 ? '+' : ''}
                   {s.productionChange}%
                 </span>
@@ -313,7 +312,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('todayRevenue')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-emerald-600" />
+              <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">¥{(s.todayRevenue || 0).toLocaleString()}</div>
@@ -399,9 +398,9 @@ export default function DashboardPage() {
                       };
                       const Icon = iconMap[a.type] || Activity;
                       const colorMap: Record<string, string> = {
-                        high: 'text-red-600 bg-red-50',
-                        medium: 'text-orange-600 bg-orange-50',
-                        low: 'text-blue-600 bg-blue-50',
+                        high: 'text-red-600 dark:text-red-400 bg-red-500/10',
+                        medium: 'text-orange-600 dark:text-orange-400 bg-orange-500/10',
+                        low: 'text-blue-600 dark:text-blue-400 bg-blue-500/10',
                       };
                       return (
                         <div
@@ -409,7 +408,7 @@ export default function DashboardPage() {
                           className="flex items-start space-x-4 p-3 rounded-lg border hover:bg-muted transition-colors"
                         >
                           <div
-                            className={`p-2 rounded-lg ${colorMap[a.severity] || 'text-gray-600 bg-gray-50'}`}
+                            className={`p-2 rounded-lg ${colorMap[a.severity] || 'text-gray-600 bg-muted'}`}
                           >
                             <Icon className="h-4 w-4" />
                           </div>
@@ -437,8 +436,8 @@ export default function DashboardPage() {
             <Card className="hover:bg-muted transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Factory className="h-5 w-5 text-blue-600" />
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <Factory className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
                     <p className="font-medium">{t('productionBoard')}</p>
@@ -453,8 +452,8 @@ export default function DashboardPage() {
             <Card className="hover:bg-muted transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Package className="h-5 w-5 text-green-600" />
+                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                    <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
                     <p className="font-medium">{t('warehouseBoard')}</p>
@@ -469,8 +468,8 @@ export default function DashboardPage() {
             <Card className="hover:bg-muted transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <DollarSign className="h-5 w-5 text-orange-600" />
+                  <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                   </div>
                   <div>
                     <p className="font-medium">{t('salesBoard')}</p>
@@ -485,8 +484,8 @@ export default function DashboardPage() {
             <Card className="hover:bg-muted transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <CheckCircle className="h-5 w-5 text-purple-600" />
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
                     <p className="font-medium">{t('qualityBoard')}</p>

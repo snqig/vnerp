@@ -74,12 +74,25 @@ interface Department {
   id: number;
   dept_code: string;
   dept_name: string;
-  parent_id: number;
+  /** 顶级部门在库中为 NULL（parent_id 有外键约束，0 非法） */
+  parent_id?: number | null;
+  /** 部门负责人 → sys_employee.id；leader_name 是 LEFT JOIN 出来的派生列 */
+  leader_id?: number | null;
   leader_name: string;
   sort_order: number;
   description: string;
   status: number;
   children?: Department[];
+}
+
+/** 负责人候选项：随部门接口一起下发（见请求参数 withLeaderOptions=1） */
+interface LeaderOption {
+  id: number;
+  name: string;
+  employee_no: string;
+  position: string | null;
+  status: number | null;
+  dept_name: string | null;
 }
 
 // 角色接口
@@ -109,6 +122,7 @@ export default function OrganizationPage() {
 
   // 部门管理状态
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [leaderOptions, setLeaderOptions] = useState<LeaderOption[]>([]);
   const [deptLoading, setDeptLoading] = useState(false);
   const [deptDialogOpen, setDeptDialogOpen] = useState(false);
   const [deptForm, setDeptForm] = useState<Partial<Department>>({});
@@ -242,9 +256,15 @@ export default function OrganizationPage() {
   const fetchDepartments = useCallback(async () => {
     setDeptLoading(true);
     try {
-      const response = await authFetch('/api/organization/department');
+      // 部门是树形主数据，必须一次取全量（分页截断会让整棵子树从表格里消失）；
+      // 负责人候选项与部门接口同权限下发，避免账号只有 ORG_DEPARTMENT 时下拉空白。
+      const response = await authFetch(
+        '/api/organization/department?pageSize=500&withLeaderOptions=1'
+      );
       if (!response.ok) {
-        loadMockDepartments();
+        // 不再用模拟部门兜底：假数据的 id 与真实部门同域，
+        // 用户对「假部门」执行编辑/删除会命中同 id 的真实部门，造成脏写。
+        toast.error(tc('fetchFailed'));
         return;
       }
       const result = await response.json();
@@ -256,106 +276,70 @@ export default function OrganizationPage() {
         } else if (deptData) {
           deptList = deptData.list || deptData.records || deptData.items || [];
         }
-        if (deptList.length === 0) {
-          loadMockDepartments();
-          return;
-        }
         setDepartments(deptList);
+        if (Array.isArray(deptData?.leaderOptions)) {
+          setLeaderOptions(deptData.leaderOptions);
+        }
       } else {
-        loadMockDepartments();
+        toast.error(result.message || tc('error'));
       }
     } catch {
-      loadMockDepartments();
+      toast.error(tc('fetchFailed'));
     } finally {
       setDeptLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadMockDepartments 是模拟数据兜底函数，仅使用 setState 稳定引用，定义在函数体之后
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅使用 setState 与 next-intl 的稳定引用
   }, []);
 
-  // 模拟部门数据
-  const loadMockDepartments = () => {
-    setDepartments([
-      {
-        id: 1,
-        dept_code: 'DEPT001',
-        dept_name: ts('k_1f4z30i'),
-        parent_id: 0,
-        leader_name: ts('k_3vr19c'),
-        sort_order: 1,
-        status: 1,
-        description: ts('k_184t2v4'),
-      },
-      {
-        id: 2,
-        dept_code: 'DEPT002',
-        dept_name: ts('k_axb29w'),
-        parent_id: 0,
-        leader_name: ts('k_o5eojb'),
-        sort_order: 2,
-        status: 1,
-        description: ts('k_1r91wmb'),
-      },
-      {
-        id: 3,
-        dept_code: 'DEPT003',
-        dept_name: ts('k_boxyuc'),
-        parent_id: 0,
-        leader_name: ts('k_nqtivk'),
-        sort_order: 3,
-        status: 1,
-        description: ts('k_ajc5hm'),
-      },
-      {
-        id: 4,
-        dept_code: 'DEPT004',
-        dept_name: ts('k_18glq49'),
-        parent_id: 0,
-        leader_name: ts('k_9nfhqc'),
-        sort_order: 4,
-        status: 1,
-        description: ts('k_16r4b4h'),
-      },
-      {
-        id: 5,
-        dept_code: 'DEPT005',
-        dept_name: ts('k_qe62zc'),
-        parent_id: 0,
-        leader_name: ts('k_qkv38u'),
-        sort_order: 5,
-        status: 1,
-        description: ts('k_o2ntke'),
-      },
-      {
-        id: 6,
-        dept_code: 'DEPT006',
-        dept_name: ts('k_1rgc4zf'),
-        parent_id: 0,
-        leader_name: ts('k_wrfy17'),
-        sort_order: 6,
-        status: 1,
-        description: ts('k_158jngu'),
-      },
-      {
-        id: 7,
-        dept_code: 'DEPT007',
-        dept_name: ts('k_11g5fpo'),
-        parent_id: 0,
-        leader_name: ts('k_1gmpisl'),
-        sort_order: 7,
-        status: 1,
-        description: ts('k_ry9su3'),
-      },
-      {
-        id: 8,
-        dept_code: 'DEPT008',
-        dept_name: ts('k_1jqantr'),
-        parent_id: 0,
-        leader_name: ts('k_vy0n74'),
-        sort_order: 8,
-        status: 1,
-        description: ts('k_pgejje'),
-      },
-    ]);
+  // 部门按「树序」展开成带层级的扁平列表，供「上级部门」下拉带缩进展示。
+  // 同时做孤儿兜底：父级已被软删 / 不在当前集合里的节点照样列出来，
+  // 否则下拉里看不到它，会被误判成「这个部门不存在」。
+  const departmentOptionsWithDepth = (() => {
+    const byId = new Map(departments.map((d) => [d.id, d]));
+    const children = new Map<string, Department[]>();
+    for (const d of departments) {
+      const parentId = d.parent_id ?? null;
+      const key = parentId !== null && byId.has(parentId) ? String(parentId) : 'root';
+      const bucket = children.get(key) || [];
+      bucket.push(d);
+      children.set(key, bucket);
+    }
+    const out: { dept: Department; depth: number }[] = [];
+    const seen = new Set<number>();
+    const walk = (key: string, depth: number) => {
+      const bucket = (children.get(key) || []).sort(
+        (a, b) => a.sort_order - b.sort_order || a.id - b.id
+      );
+      for (const d of bucket) {
+        if (seen.has(d.id)) continue;
+        seen.add(d.id);
+        out.push({ dept: d, depth });
+        walk(String(d.id), depth + 1);
+      }
+    };
+    walk('root', 0);
+    for (const d of departments) {
+      if (!seen.has(d.id)) out.push({ dept: d, depth: 0 });
+    }
+    return out;
+  })();
+
+  // 按编码规则建议下一个部门编码：部 = DEPT00N；科/室/车间 = 父编码 + 两位序号
+  const suggestDeptCode = (parentId?: number | null): string => {
+    const used = new Set(departments.map((d) => d.dept_code).filter(Boolean));
+    const parent = parentId ? departments.find((d) => d.id === parentId) : undefined;
+    if (!parent) {
+      for (let i = 1; i <= 99; i++) {
+        const code = `DEPT${String(i).padStart(3, '0')}`;
+        if (!used.has(code)) return code;
+      }
+      return 'DEPT999';
+    }
+    for (let i = 1; i <= 99; i++) {
+      const code = `${parent.dept_code}${String(i).padStart(2, '0')}`;
+      if (!used.has(code)) return code;
+    }
+    return `${parent.dept_code}99`;
   };
 
   // 保存部门
@@ -644,9 +628,9 @@ export default function OrganizationPage() {
   // 角色类型标签
   const getRoleTypeBadge = (type: number) => {
     return type === 1 ? (
-      <Badge className="bg-blue-100 text-blue-800">{ts('k_1vu5jmn')}</Badge>
+      <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">{ts('k_1vu5jmn')}</Badge>
     ) : (
-      <Badge className="bg-purple-100 text-purple-800">{tc('customRoleType')}</Badge>
+      <Badge className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">{tc('customRoleType')}</Badge>
     );
   };
 
@@ -672,7 +656,7 @@ export default function OrganizationPage() {
                     onClick={() => setActiveTab(item.key)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                       activeTab === item.key
-                        ? 'bg-blue-50 text-blue-700'
+                        ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400'
                         : 'text-foreground hover:bg-muted'
                     }`}
                   >
@@ -867,14 +851,24 @@ export default function OrganizationPage() {
                 </div>
                 <Button
                   onClick={() => {
-                    setDeptForm({});
+                    // 默认挂在树根（总经办）之下 —— 当前结构里 7 个部都是它的子级；
+                    // 要挂到别处可在弹窗里改「上级部门」。
+                    const root = departments.find((d) => !d.parent_id);
+                    setDeptForm({
+                      parent_id: root?.id,
+                      dept_code: suggestDeptCode(root?.id),
+                      status: 1,
+                      sort_order:
+                        departments.filter((d) => (d.parent_id ?? null) === (root?.id ?? null))
+                          .length + 1,
+                    });
                     setDeptEditing(false);
                     setDeptDialogOpen(true);
                   }}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  {ts('k_15tciwq')}</Button>
+                  {ts('k_1as41yz')}</Button>
               </CardHeader>
               <CardContent>
                 {deptLoading ? (
@@ -885,13 +879,24 @@ export default function OrganizationPage() {
                   <DepartmentTable
                     departments={departments}
                     onEdit={(dept) => {
-                      setDeptForm(dept);
+                      // children 是前端建树时挂上的，回传服务端无意义：落库前剥掉
+                      const rest: Partial<Department> = { ...dept };
+                      delete rest.children;
+                      setDeptForm(rest);
                       setDeptEditing(true);
                       setDeptDialogOpen(true);
                     }}
                     onDelete={deleteDepartment}
                     onAdd={(parentId) => {
-                      setDeptForm({ parent_id: parentId || 0 });
+                      setDeptForm({
+                        parent_id: parentId ?? undefined,
+                        dept_code: suggestDeptCode(parentId),
+                        status: 1,
+                        sort_order:
+                          departments.filter(
+                            (d) => (d.parent_id ?? null) === (parentId ?? null)
+                          ).length + 1,
+                      });
                       setDeptEditing(false);
                       setDeptDialogOpen(true);
                     }}
@@ -974,7 +979,7 @@ export default function OrganizationPage() {
                                 <Edit className="w-4 h-4" />
                               </Button>
                               <Button variant="ghost" size="sm" onClick={() => deleteRole(role.id)}>
-                                <Trash2 className="w-4 h-4 text-red-500" />
+                                <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
                               </Button>
                             </div>
                           </TableCell>
@@ -1002,7 +1007,7 @@ export default function OrganizationPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
-                  {ts('k_1flqf8g')}<span className="text-red-500">*</span>
+                  {ts('k_1flqf8g')}<span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   value={deptForm.dept_code || ''}
@@ -1012,7 +1017,7 @@ export default function OrganizationPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {ts('k_1dwuqb4')}<span className="text-red-500">*</span>
+                  {ts('k_1dwuqb4')}<span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   value={deptForm.dept_name || ''}
@@ -1024,29 +1029,69 @@ export default function OrganizationPage() {
             <div className="space-y-2">
               <Label>{tc('parentDepartmentLabel')}</Label>
               <Select
-                value={String(deptForm.parent_id ?? 0)}
-                onValueChange={(value) => setDeptForm({ ...deptForm, parent_id: parseInt(value) })}
+                value={deptForm.parent_id ? String(deptForm.parent_id) : 'none'}
+                onValueChange={(value) => {
+                  const nextParentId = value === 'none' ? undefined : parseInt(value);
+                  setDeptForm({
+                    ...deptForm,
+                    // 'none' = 顶级部门：置空该字段，由服务端归一为 NULL
+                    parent_id: nextParentId,
+                    // 换了上级，编码按新父级重算；编辑既有部门时不动用户已定的编码
+                    dept_code: deptEditing
+                      ? deptForm.dept_code
+                      : suggestDeptCode(nextParentId),
+                  });
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={tc('selectParentDepartment')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">{tc('topDepartment')}</SelectItem>
+                  <SelectItem value="none">{tc('topDepartment')}</SelectItem>
                   {(() => {
-                    // 去重兜底：若 DB 因 seed 重复执行产生同名部门，下拉只显示每个名称的第一项
-                    const seen = new Set<string>();
-                    return departments
-                      .filter((d) => d.id !== deptForm.id) // 排除自己，避免循环引用
-                      .filter((d) => {
-                        if (seen.has(d.dept_name)) return false;
-                        seen.add(d.dept_name);
-                        return true;
-                      })
-                      .map((dept) => (
-                        <SelectItem key={dept.id} value={String(dept.id)}>
-                          {dept.dept_name}
-                        </SelectItem>
-                      ));
+                    // 排除自己与自己的所有下级：成环会让整棵子树从列表里消失。
+                    // 前端先拦一层，服务端 PUT 另有一道 isSelfOrDescendant 兜底。
+                    const blocked = new Set<number>();
+                    if (deptForm.id) {
+                      blocked.add(deptForm.id);
+                      let grew = true;
+                      while (grew) {
+                        grew = false;
+                        for (const d of departments) {
+                          if (d.parent_id && blocked.has(d.parent_id) && !blocked.has(d.id)) {
+                            blocked.add(d.id);
+                            grew = true;
+                          }
+                        }
+                      }
+                    }
+                    // 当前 parent_id 指向已软删 / 不存在的部门时，Radix Select 找不到匹配项会渲染成空白，
+                    // 让人误以为「该部门没有上级」。这里补一个显式占位项，说明上级已失效，
+                    // 用户可直接改选「顶级部门」把这条孤儿数据修正过来。
+                    const orphanParentId =
+                      deptForm.parent_id && !departments.some((d) => d.id === deptForm.parent_id)
+                        ? deptForm.parent_id
+                        : null;
+                    return (
+                      <>
+                        {orphanParentId ? (
+                          <SelectItem value={String(orphanParentId)}>
+                            {ts('k_49h1e7')}（#{orphanParentId}）
+                          </SelectItem>
+                        ) : null}
+                        {departmentOptionsWithDepth
+                          .filter(({ dept }) => !blocked.has(dept.id))
+                          .map(({ dept, depth }) => (
+                            <SelectItem key={dept.id} value={String(dept.id)}>
+                              {depth > 0 ? '　'.repeat(depth) + '└ ' : ''}
+                              {dept.dept_name}
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                {dept.dept_code}
+                              </span>
+                            </SelectItem>
+                          ))}
+                      </>
+                    );
                   })()}
                 </SelectContent>
               </Select>
@@ -1054,11 +1099,45 @@ export default function OrganizationPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{tc('leaderLabel')}</Label>
-                <Input
-                  value={deptForm.leader_name || ''}
-                  onChange={(e) => setDeptForm({ ...deptForm, leader_name: e.target.value })}
-                  placeholder={ts('k_1glfj1a')}
-                />
+                <Select
+                  value={deptForm.leader_id ? String(deptForm.leader_id) : 'none'}
+                  onValueChange={(value) => {
+                    const leaderId = value === 'none' ? undefined : parseInt(value);
+                    setDeptForm({
+                      ...deptForm,
+                      leader_id: leaderId,
+                      // leader_name 在库里是 LEFT JOIN sys_employee 的派生列（唯一真相源是 leader_id），
+                      // 这里同步写一份，只为让表格在重新拉取前也能立刻显示正确。
+                      leader_name:
+                        (leaderId &&
+                          leaderOptions.find((emp) => emp.id === leaderId)?.name) ||
+                        '',
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={tc('responsiblePerson')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{tc('none')}</SelectItem>
+                    {deptForm.leader_id &&
+                    !leaderOptions.some((emp) => emp.id === deptForm.leader_id) ? (
+                      <SelectItem value={String(deptForm.leader_id)}>
+                        {deptForm.leader_name || ts('k_49h1e7')}（#{deptForm.leader_id}）
+                      </SelectItem>
+                    ) : null}
+                    {leaderOptions.map((emp) => (
+                      <SelectItem key={emp.id} value={String(emp.id)}>
+                        {emp.name}
+                        <span className="ml-1 text-xs text-muted-foreground">
+                          {emp.employee_no}
+                          {emp.dept_name ? ` · ${emp.dept_name}` : ''}
+                          {emp.status === 3 ? ' · ' + ts('k_1v4n1r6') : ''}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>{ts('k_1wnrlkr')}</Label>
@@ -1118,7 +1197,7 @@ export default function OrganizationPage() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>
-                {ts('k_2vd8u0')}<span className="text-red-500">*</span>
+                {ts('k_2vd8u0')}<span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <div className="flex gap-2">
                 <Input
@@ -1150,11 +1229,11 @@ export default function OrganizationPage() {
                     {ts('k_3q0eu8')}</Button>
                 )}
               </div>
-              {codeError && <p className="text-sm text-red-500">{codeError}</p>}
+              {codeError && <p className="text-sm text-red-500 dark:text-red-400">{codeError}</p>}
             </div>
             <div className="space-y-2">
               <Label>
-                {ts('k_1v3mprs')}<span className="text-red-500">*</span>
+                {ts('k_1v3mprs')}<span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 value={roleForm.name || ''}

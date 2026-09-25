@@ -43,35 +43,39 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params
     );
 
-    const result = rows.map((row: DbRow) => ({
-      month: row.month,
-      totalOrders: row.total_orders,
-      completedOrders: row.completed_orders,
-      onTimeOrders: row.on_time_orders || 0,
-      totalAmount: parseFloat(row.total_amount),
-      completedAmount: parseFloat(row.completed_amount),
+    const result = rows.map((row) => ({
+      month: String(row.month ?? ''),
+      totalOrders: Number(row.total_orders ?? 0),
+      completedOrders: Number(row.completed_orders ?? 0),
+      onTimeOrders: Number(row.on_time_orders ?? 0),
+      totalAmount: parseFloat(String(row.total_amount)),
+      completedAmount: parseFloat(String(row.completed_amount)),
       deliveryRate:
-        row.total_orders > 0 ? Math.round((row.completed_orders / row.total_orders) * 100) : 0,
+        Number(row.total_orders ?? 0) > 0
+          ? Math.round((Number(row.completed_orders ?? 0) / Number(row.total_orders ?? 0)) * 100)
+          : 0,
       onTimeRate:
-        row.total_orders > 0 ? Math.round(((row.on_time_orders || 0) / row.total_orders) * 100) : 0,
+        Number(row.total_orders ?? 0) > 0
+          ? Math.round((Number(row.on_time_orders ?? 0) / Number(row.total_orders ?? 0)) * 100)
+          : 0,
     }));
 
     return successResponse(
       {
         list: result,
         summary: {
-          totalOrders: result.reduce((sum: number, r: DbRow) => sum + r.totalOrders, 0),
-          completedOrders: result.reduce((sum: number, r: DbRow) => sum + r.completedOrders, 0),
+          totalOrders: result.reduce((sum, r) => sum + Number(r.totalOrders ?? 0), 0),
+          completedOrders: result.reduce((sum, r) => sum + Number(r.completedOrders ?? 0), 0),
           avgDeliveryRate:
             result.length > 0
               ? Math.round(
-                  result.reduce((sum: number, r: DbRow) => sum + r.deliveryRate, 0) / result.length
+                  result.reduce((sum, r) => sum + Number(r.deliveryRate ?? 0), 0) / result.length
                 )
               : 0,
           avgOnTimeRate:
             result.length > 0
               ? Math.round(
-                  result.reduce((sum: number, r: DbRow) => sum + r.onTimeRate, 0) / result.length
+                  result.reduce((sum, r) => sum + Number(r.onTimeRate ?? 0), 0) / result.length
                 )
               : 0,
         },
@@ -97,17 +101,21 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params
     );
 
-    const result = rows.map((row: DbRow) => ({
-      customerId: row.customer_id,
-      customerName: row.customer_name || ts('k_19qsq2z'),
-      totalOrders: row.total_orders,
-      completedOrders: row.completed_orders,
-      onTimeOrders: row.on_time_orders || 0,
-      totalAmount: parseFloat(row.total_amount),
+    const result = rows.map((row) => ({
+      customerId: Number(row.customer_id ?? 0),
+      customerName: String(row.customer_name ?? ''),
+      totalOrders: Number(row.total_orders ?? 0),
+      completedOrders: Number(row.completed_orders ?? 0),
+      onTimeOrders: Number(row.on_time_orders ?? 0),
+      totalAmount: parseFloat(String(row.total_amount)),
       deliveryRate:
-        row.total_orders > 0 ? Math.round((row.completed_orders / row.total_orders) * 100) : 0,
+        Number(row.total_orders ?? 0) > 0
+          ? Math.round((Number(row.completed_orders ?? 0) / Number(row.total_orders ?? 0)) * 100)
+          : 0,
       onTimeRate:
-        row.total_orders > 0 ? Math.round(((row.on_time_orders || 0) / row.total_orders) * 100) : 0,
+        Number(row.total_orders ?? 0) > 0
+          ? Math.round((Number(row.on_time_orders ?? 0) / Number(row.total_orders ?? 0)) * 100)
+          : 0,
     }));
 
     return successResponse(
@@ -115,11 +123,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         list: result,
         summary: {
           totalCustomers: result.length,
-          totalOrders: result.reduce((sum: number, r: DbRow) => sum + r.totalOrders, 0),
+          totalOrders: result.reduce((sum, r) => sum + Number(r.totalOrders ?? 0), 0),
           avgDeliveryRate:
             result.length > 0
               ? Math.round(
-                  result.reduce((sum: number, r: DbRow) => sum + r.deliveryRate, 0) / result.length
+                  result.reduce((sum, r) => sum + Number(r.deliveryRate ?? 0), 0) / result.length
                 )
               : 0,
         },

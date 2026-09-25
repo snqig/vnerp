@@ -477,7 +477,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
         FROM prd_process_card WHERE deleted = 0 AND product_name IS NOT NULL AND product_name != ''
         ORDER BY product_name
       `);
-      processRelations = Array.isArray(rows) ? rows.map((r: DbRow) => r.product_name) : [];
+      processRelations = Array.isArray(rows) ? rows.map((r: DbRow) => ({ product_name: String(r.product_name || '') })).filter((r: DbRow): r is DbRow & { product_name: string } => Boolean(r.product_name)) : [];
     } catch (e) {
       logger.error({ module: 'dashboard', action: 'ceo' }, 'Dashboard query failed', {
         error: e instanceof Error ? e.message : String(e),

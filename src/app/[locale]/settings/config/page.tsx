@@ -746,7 +746,7 @@ export default function ConfigPage() {
         )}
 
         {initError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
+          <div className="bg-red-500/10 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
             <span className="mt-0.5">⚠</span>
             <div>
               <p className="font-medium">{tc('loadFail')}</p>
@@ -817,7 +817,7 @@ export default function ConfigPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 w-6 p-0 text-red-600"
+                              className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                               onClick={() => handleDelete(item.id)}
                             >
                               <Trash2 className="h-3 w-3" />
@@ -882,7 +882,7 @@ export default function ConfigPage() {
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label>
-                {tc('paramName')} <span className="text-red-500">*</span>
+                {tc('paramName')} <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 value={form.config_name || ''}
@@ -892,7 +892,7 @@ export default function ConfigPage() {
             </div>
             <div className="space-y-2">
               <Label>
-                {tc('paramKey')} <span className="text-red-500">*</span>
+                {tc('paramKey')} <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 value={form.config_key || ''}

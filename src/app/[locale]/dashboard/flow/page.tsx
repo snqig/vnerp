@@ -65,13 +65,13 @@ const flowNodes = [
     color: 'from-cyan-500 to-cyan-600',
     bgColor: 'bg-cyan-500/10',
     borderColor: 'border-cyan-500/30',
-    textColor: 'text-cyan-400',
+    textColor: 'text-cyan-600 dark:text-cyan-400',
   },
   {
     step: 3,
     nameKey: 'workOrderProduction',
     icon: Factory,
-    tables: ['prd_work_order', 'prd_process_card'],
+    tables: ['prod_work_order', 'prd_process_card'],
     fields: ['work_order_no', 'sales_order_id', 'material_id', 'plan_qty'],
     color: 'from-amber-500 to-amber-600',
     bgColor: 'bg-amber-500/10',
@@ -156,7 +156,7 @@ const fieldTracking = [
     path: [
       'pur_request_detail.material_id',
       'inv_cutting_record.material_id',
-      'prd_work_order.material_id',
+      'prod_work_order.legacy_material_id',
       'prd_material_issue.material_id',
       'inv_inventory.material_id',
       'inv_trace_record.material_id',
@@ -170,7 +170,7 @@ const fieldTracking = [
     borderColor: 'border-amber-500/30',
     path: [
       'sal_order.id',
-      'prd_work_order.sales_order_id',
+      'prod_work_order.sales_order_id',
       'prd_work_report.work_order_id',
       'fin_receivable.source_id',
     ],
@@ -347,7 +347,7 @@ const moduleGroups: ModuleGroup[] = [
     tables: [
       { name: 'prd_standard_card', commentKey: 'flowT_147i38', fks: [] },
       {
-        name: 'prd_work_order',
+        name: 'prod_work_order',
         commentKey: 'flowT_1gpacg',
         fks: ['sales_order_id → sal_order', 'material_id → inv_material'],
       },
@@ -362,7 +362,7 @@ const moduleGroups: ModuleGroup[] = [
   {
     nameKey: 'warehouseManagement',
     icon: Warehouse,
-    color: 'text-cyan-400',
+    color: 'text-cyan-600 dark:text-cyan-400',
     bgColor: 'bg-cyan-500/10',
     tables: [
       { name: 'inv_inbound_order', commentKey: 'flowT_3l4ogi', fks: [] },
@@ -441,7 +441,7 @@ const fkConnections = [
   'sal_order.customer_id → crm_customer.id',
   'sal_order_detail.order_id → sal_order.id, material_id → inv_material.id',
   'sal_delivery.order_id → sal_order.id, customer_id → crm_customer.id, warehouse_id → inv_warehouse.id',
-  'prd_work_order.sales_order_id → sal_order.id, material_id → inv_material.id',
+  'prod_work_order.sales_order_id → sal_order.id, legacy_material_id → inv_material.id',
   'prd_bom.material_id → inv_material.id',
   'prd_bom_detail.bom_id → prd_bom.id, material_id → inv_material.id',
   'inv_inventory.material_id → inv_material.id, warehouse_id → inv_warehouse.id',
@@ -471,7 +471,7 @@ const architectureLayers = [
     icon: Globe,
     color: 'from-cyan-600 to-cyan-700',
     borderColor: 'border-cyan-500/40',
-    textColor: 'text-cyan-400',
+    textColor: 'text-cyan-600 dark:text-cyan-400',
     items: [
       { name: 'Next.js Route Handlers', descKey: 'flowD_ykopdz', icon: Server },
       { name: 'RESTful API Endpoints', descKey: 'flowD_1e2npi', icon: Link2 },
@@ -600,7 +600,7 @@ function FlowNodeCard({ node }: { node: (typeof flowNodes)[0] }) {
       <CardContent className="p-3 space-y-2">
         <div className="flex items-center gap-2">
           <div className={`p-1.5 rounded-md bg-gradient-to-br ${node.color}`}>
-            <Icon className="h-3.5 w-3.5 text-white" />
+            <Icon className="h-3.5 w-3.5 text-slate-900 dark:text-gray-200 dark:text-white" />
           </div>
           <div>
             <div className="text-[10px] text-muted-foreground">Step {node.step}</div>
@@ -720,7 +720,7 @@ function ModuleGroupSection({
                     <Badge
                       key={fk}
                       variant="outline"
-                      className="text-[8px] px-1 py-0 h-3.5 font-mono text-amber-500 border-amber-500/30"
+                      className="text-[8px] px-1 py-0 h-3.5 font-mono text-amber-500 dark:text-amber-400 border-amber-500/30"
                     >
                       FK: {fk}
                     </Badge>
@@ -751,7 +751,7 @@ function ArchitectureLayerCard({
         <CardContent className="p-4 pt-5">
           <div className="flex items-center gap-3 mb-4">
             <div className={`p-2 rounded-lg bg-gradient-to-br ${layer.color}`}>
-              <Icon className="h-5 w-5 text-white" />
+              <Icon className="h-5 w-5 text-slate-900 dark:text-gray-200 dark:text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -872,7 +872,7 @@ export default function FlowPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5 text-cyan-400" />
+                  <Database className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
                   {t('businessTableModules')}
                   <Badge variant="secondary" className="ml-2">
                     {t('tableModuleCount', { tables: 48, modules: 12 })}
@@ -912,7 +912,7 @@ export default function FlowPage() {
                       key={i}
                       className="flex items-center gap-2 p-2 rounded-md border border-border bg-muted/20"
                     >
-                      <ArrowRight className="h-3 w-3 text-amber-500 shrink-0" />
+                      <ArrowRight className="h-3 w-3 text-amber-500 dark:text-amber-400 shrink-0" />
                       <span className="text-xs font-mono text-foreground/80">{fk}</span>
                     </div>
                   ))}

@@ -22,7 +22,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Plus, Trash2, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, RefreshCw, Coins, CheckCircle, Clock } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { authFetch } from '@/lib/auth-fetch';
@@ -126,6 +127,22 @@ export default function ExchangeRatePage() {
   return (
     <MainLayout>
       <div className="container mx-auto p-6">
+        <StatsCards
+          configs={[
+            { key: 'currencies', label: tc('currencyCount'), icon: Coins, ...StatsTheme.blue },
+            { key: 'active', label: tc('activeRates'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'expiring', label: tc('expiringRates'), icon: Clock, ...StatsTheme.orange },
+            { key: 'pending', label: tc('pendingUpdate'), icon: RefreshCw, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'currencies', count: new Set(rates.map((r) => r.from_currency)).size + 1 },
+            { key: 'active', count: rates.filter((r) => r.rate_date >= new Date().toISOString().split('T')[0]).length },
+            { key: 'expiring', count: rates.filter((r) => { const d = new Date(r.rate_date); const n = new Date(); const diff = (d.getTime() - n.getTime()) / (1000 * 60 * 60 * 24); return diff > 0 && diff <= 7; }).length },
+            { key: 'pending', count: rates.filter((r) => r.rate_date < new Date().toISOString().split('T')[0]).length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">

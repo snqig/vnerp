@@ -138,7 +138,7 @@ export default function DbRelationsPage() {
             <CardTitle className="text-sm font-medium">{tc('analysisFkTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-500">{totalForeignKeys}</div>
+            <div className="text-2xl font-bold text-red-500 dark:text-red-400">{totalForeignKeys}</div>
           </CardContent>
         </Card>
         <Card>
@@ -146,7 +146,7 @@ export default function DbRelationsPage() {
             <CardTitle className="text-sm font-medium">{tc('analysisLogicalCardTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-500">{totalLogicalRelations}</div>
+            <div className="text-2xl font-bold text-blue-500 dark:text-blue-400">{totalLogicalRelations}</div>
           </CardContent>
         </Card>
         <Card>
@@ -154,7 +154,7 @@ export default function DbRelationsPage() {
             <CardTitle className="text-sm font-medium">{tc('analysisModuleCount')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">
+            <div className="text-2xl font-bold text-green-500 dark:text-green-400">
               {Object.keys(data.modules).length}
             </div>
           </CardContent>
@@ -338,7 +338,7 @@ export default function DbRelationsPage() {
                       <TableRow key={index}>
                         <TableCell className="font-medium">{fk.fromTable}</TableCell>
                         <TableCell>{fk.fromColumn}</TableCell>
-                        <TableCell className="font-medium text-red-500">{fk.toTable}</TableCell>
+                        <TableCell className="font-medium text-red-500 dark:text-red-400">{fk.toTable}</TableCell>
                         <TableCell>{fk.toColumn}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{fk.constraint}</Badge>
@@ -378,7 +378,7 @@ export default function DbRelationsPage() {
                       <TableCell>
                         <Badge variant="secondary">{rel.fromColumn}</Badge>
                       </TableCell>
-                      <TableCell className="font-medium text-blue-500">{rel.toTable}</TableCell>
+                      <TableCell className="font-medium text-blue-500 dark:text-blue-400">{rel.toTable}</TableCell>
                       <TableCell>{rel.toColumn}</TableCell>
                     </TableRow>
                   ))}

@@ -437,7 +437,7 @@ export const POST = withPermission(
         'SELECT id, customer_code FROM prd_standard_card ORDER BY id'
       );
       const scMap: Record<string, number> = {};
-      for (const row of scRows) scMap[row.customer_code] = row.id;
+      for (const row of scRows) scMap[String(row.customer_code) ?? ''] = Number((row as DbRow).id ?? 0);
 
       const processCards = [
         {

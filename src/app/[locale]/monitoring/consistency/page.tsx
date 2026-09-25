@@ -65,19 +65,19 @@ const PAGE_SIZE = 10;
 function getStatusColor(status: SagaLog['status']): string {
   switch (status) {
     case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
+      return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
     case 'executing':
-      return 'bg-blue-100 text-blue-800';
+      return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
     case 'success':
-      return 'bg-green-100 text-green-800';
+      return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
     case 'compensating':
-      return 'bg-orange-100 text-orange-800';
+      return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300';
     case 'compensated':
-      return 'bg-purple-100 text-purple-800';
+      return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300';
     case 'failed':
-      return 'bg-red-100 text-red-800';
+      return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
   }
 }
 
@@ -235,7 +235,7 @@ export default function ConsistencyMonitorPage() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="w-6 h-6 text-blue-600" />
+              <AlertCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               {t('consistency.title')}
             </CardTitle>
             <CardDescription>
@@ -244,29 +244,29 @@ export default function ConsistencyMonitorPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
+              <div className="flex flex-col items-center p-4 bg-muted rounded-lg">
+                <div className="text-2xl font-bold text-gray-800 dark:text-gray-200">{stats.total}</div>
                 <div className="text-sm text-gray-500">{t('consistency.total')}</div>
               </div>
-              <div className="flex flex-col items-center p-4 bg-yellow-50 rounded-lg">
-                <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-                <div className="text-sm text-yellow-600">{t('consistency.pending')}</div>
+              <div className="flex flex-col items-center p-4 bg-yellow-500/10 rounded-lg">
+                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.pending}</div>
+                <div className="text-sm text-yellow-600 dark:text-yellow-400">{t('consistency.pending')}</div>
               </div>
-              <div className="flex flex-col items-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{stats.executing}</div>
-                <div className="text-sm text-blue-600">{t('consistency.executing')}</div>
+              <div className="flex flex-col items-center p-4 bg-blue-500/10 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.executing}</div>
+                <div className="text-sm text-blue-600 dark:text-blue-400">{t('consistency.executing')}</div>
               </div>
-              <div className="flex flex-col items-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{stats.success}</div>
-                <div className="text-sm text-green-600">{t('consistency.success')}</div>
+              <div className="flex flex-col items-center p-4 bg-green-500/10 rounded-lg">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.success}</div>
+                <div className="text-sm text-green-600 dark:text-green-400">{t('consistency.success')}</div>
               </div>
-              <div className="flex flex-col items-center p-4 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
-                <div className="text-sm text-red-600">{t('consistency.failed')}</div>
+              <div className="flex flex-col items-center p-4 bg-red-500/10 rounded-lg">
+                <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.failed}</div>
+                <div className="text-sm text-red-600 dark:text-red-400">{t('consistency.failed')}</div>
               </div>
-              <div className="flex flex-col items-center p-4 bg-purple-50 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">{stats.compensated}</div>
-                <div className="text-sm text-purple-600">{t('consistency.compensated')}</div>
+              <div className="flex flex-col items-center p-4 bg-purple-500/10 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.compensated}</div>
+                <div className="text-sm text-purple-600 dark:text-purple-400">{t('consistency.compensated')}</div>
               </div>
             </div>
           </CardContent>
@@ -282,7 +282,7 @@ export default function ConsistencyMonitorPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => handleFilterChange(e.target.value)}
-                className="px-3 py-1.5 rounded-md border border-gray-300 text-sm"
+                className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 text-sm"
               >
                 <option value="all">{tc('all')}</option>
                 <option value="pending">{t('consistency.pending')}</option>
@@ -300,7 +300,7 @@ export default function ConsistencyMonitorPage() {
           <CardContent>
             {loading ? (
               <div className="flex justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
               </div>
             ) : paginatedSagas.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
@@ -325,7 +325,7 @@ export default function ConsistencyMonitorPage() {
                     {paginatedSagas.map((saga) => (
                       <TableRow
                         key={saga.sagaId}
-                        className="cursor-pointer hover:bg-gray-50"
+                        className="cursor-pointer hover:bg-muted"
                         onClick={() => setSelectedSaga(saga)}
                       >
                         <TableCell className="font-medium flex items-center gap-2">
@@ -434,7 +434,7 @@ export default function ConsistencyMonitorPage() {
         </Card>
 
         {selectedSaga && (
-          <Card className="fixed inset-4 md:inset-auto md:w-[600px] md:right-4 md:top-4 bg-white z-50 max-h-[80vh] overflow-auto">
+          <Card className="fixed inset-4 md:inset-auto md:w-[600px] md:right-4 md:top-4 bg-white dark:bg-card z-50 max-h-[80vh] overflow-auto">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 {getTypeIcon(selectedSaga.sagaType)}
@@ -470,15 +470,15 @@ export default function ConsistencyMonitorPage() {
                 </div>
 
                 {selectedSaga.errorMessage && (
-                  <div className="p-3 bg-red-50 rounded-lg">
-                    <label className="text-sm font-medium text-red-600">{tc('error')}</label>
-                    <p className="text-sm text-red-600 mt-1">{selectedSaga.errorMessage}</p>
+                  <div className="p-3 bg-red-500/10 rounded-lg">
+                    <label className="text-sm font-medium text-red-600 dark:text-red-400">{tc('error')}</label>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">{selectedSaga.errorMessage}</p>
                   </div>
                 )}
 
                 <div>
                   <label className="text-sm font-medium text-gray-500">{t('consistency.businessData')}</label>
-                  <pre className="mt-1 p-3 bg-gray-50 rounded-lg text-sm font-mono overflow-auto">
+                  <pre className="mt-1 p-3 bg-muted rounded-lg text-sm font-mono overflow-auto">
                     {JSON.stringify(selectedSaga.payload, null, 2)}
                   </pre>
                 </div>
@@ -489,7 +489,7 @@ export default function ConsistencyMonitorPage() {
                     {selectedSaga.steps.map((step, idx) => (
                       <div
                         key={idx}
-                        className="flex items-start gap-3 p-2 rounded-lg bg-gray-50"
+                        className="flex items-start gap-3 p-2 rounded-lg bg-muted"
                       >
                         <div className={`mt-0.5 w-2.5 h-2.5 rounded-full ${
                           step.status === 'success' ? 'bg-green-500' :
@@ -502,17 +502,17 @@ export default function ConsistencyMonitorPage() {
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium">{step.name}</span>
                             <span className={`text-xs px-2 py-0.5 rounded ${
-                              step.status === 'success' ? 'bg-green-100 text-green-700' :
-                              step.status === 'failed' ? 'bg-red-100 text-red-700' :
-                              step.status === 'compensated' ? 'bg-purple-100 text-purple-700' :
-                              step.status === 'compensating' ? 'bg-orange-100 text-orange-700' :
-                              'bg-gray-100 text-gray-700'
+                              step.status === 'success' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                              step.status === 'failed' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+                              step.status === 'compensated' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
+                              step.status === 'compensating' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' :
+                              'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
                             }`}>
                               {t(`consistency.stepStatus.${step.status}`)}
                             </span>
                           </div>
                           {step.errorMessage && (
-                            <p className="text-xs text-red-600 mt-1">{step.errorMessage}</p>
+                            <p className="text-xs text-red-600 dark:text-red-400 mt-1">{step.errorMessage}</p>
                           )}
                         </div>
                       </div>

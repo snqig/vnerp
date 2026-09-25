@@ -1,6 +1,12 @@
 import { query } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { WorkOrderStatus } from '@/lib/constants';
+
+// prod_work_order.status 是 varchar 规范词表（见 @/lib/constants）。
+// 原写法 `status >= 4` 在 varchar 上做数值比较：MySQL 把非数字串转为 0，`0 >= 4` 恒 false，
+// 故「完工率 / 完工数」历来恒为 0。改为按规范值比较。
+const WO_COMPLETED = `'${WorkOrderStatus.COMPLETED}'`;
 
 export const GET = withPermission(async () => {
   const [salesData, inventoryData, productionData] = await Promise.all([
@@ -15,13 +21,13 @@ export const GET = withPermission(async () => {
     ),
     query<{ completion_rate: number; total: number; completed: number }>(
       `SELECT COALESCE(
-         (SELECT COUNT(*) FROM prd_work_order WHERE status >= 4 AND deleted = 0
+         (SELECT COUNT(*) FROM prod_work_order WHERE status = ${WO_COMPLETED} AND deleted = 0
           AND MONTH(plan_end_date) = MONTH(NOW())) * 100.0 /
-         NULLIF((SELECT COUNT(*) FROM prd_work_order WHERE deleted = 0
+         NULLIF((SELECT COUNT(*) FROM prod_work_order WHERE deleted = 0
           AND MONTH(plan_end_date) = MONTH(NOW())), 0), 0) as completion_rate,
-       (SELECT COUNT(*) FROM prd_work_order WHERE deleted = 0
+       (SELECT COUNT(*) FROM prod_work_order WHERE deleted = 0
         AND MONTH(plan_end_date) = MONTH(NOW())) as total,
-       (SELECT COUNT(*) FROM prd_work_order WHERE status >= 4 AND deleted = 0
+       (SELECT COUNT(*) FROM prod_work_order WHERE status = ${WO_COMPLETED} AND deleted = 0
         AND MONTH(plan_end_date) = MONTH(NOW())) as completed`
     ),
   ]);

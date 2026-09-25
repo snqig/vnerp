@@ -266,11 +266,10 @@ export default function ProductionDashboard() {
     <MainLayout>
       <div
         ref={dashboardRef}
-        className="min-h-screen text-white p-4 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #091637 0%, #010205 100%)' }}
+        className="dash-scope dark:bg-[linear-gradient(135deg,#091637_0%,#010205_100%)] min-h-screen text-slate-900 dark:text-gray-200 dark:text-white p-4 relative overflow-hidden"
       >
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl animate-blob" />
+          <div className="absolute top-0 left-0 w-96 h-96 bg-[#A0522D]/5 rounded-full blur-3xl animate-blob dark:bg-cyan-500/5" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-blob animation-delay-2000" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-3xl animate-blob animation-delay-4000" />
         </div>
@@ -281,31 +280,31 @@ export default function ProductionDashboard() {
             <div className="tech-title-row">
               <div className="tech-title-line-left" />
               <div>
-                <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
+                <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-[#8A4A22] via-[#A0522D] to-[#8A4A22] dark:from-cyan-300 dark:via-blue-400 dark:to-cyan-300 bg-clip-text text-transparent">
                   {companyName}
                 </h1>
-                <p className="text-[10px] text-white/50">{t('productionSubtitle')}</p>
+                <p className="text-[10px] text-slate-500 dark:text-white/50">{t('productionSubtitle')}</p>
               </div>
               <div className="tech-title-line-right" />
             </div>
             <div className="tech-title-bottom-line" />
           </div>
           <div className="flex items-center gap-3 mt-1.5">
-            <div className="text-sm font-mono font-bold text-cyan-400">
+            <div className="text-sm font-mono font-bold text-[#8A4A22] dark:text-cyan-400">
               {currentTime && formatTime(currentTime)}
             </div>
             <button
               onClick={toggleFullscreen}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+              className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 transition-colors"
               title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
             >
               {isFullscreen ? (
-                <Minimize className="h-3.5 w-3.5 text-cyan-400" />
+                <Minimize className="h-3.5 w-3.5 text-[#8A4A22] dark:text-cyan-400" />
               ) : (
-                <Maximize className="h-3.5 w-3.5 text-cyan-400" />
+                <Maximize className="h-3.5 w-3.5 text-[#8A4A22] dark:text-cyan-400" />
               )}
             </button>
-            <div className="px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-[10px] text-cyan-300">
+            <div className="px-2 py-0.5 rounded-full bg-[#A0522D]/15 border border-[#A0522D]/30 text-[10px] text-[#8A4A22] dark:bg-cyan-500/20 dark:border-cyan-500/30 dark:text-cyan-300">
               {loading ? tc('loading') : '● ' + t('realtime')}
             </div>
           </div>
@@ -353,13 +352,13 @@ export default function ProductionDashboard() {
             <div key={i} className={`tech-card tech-glow tech-card-delay-${i + 1} p-4`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-white/60">{s.title}</p>
-                  <p className="text-xl font-bold mt-1 bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">
+                  <p className="text-xs text-slate-500 dark:text-white/60">{s.title}</p>
+                  <p className="text-xl font-bold mt-1 bg-gradient-to-r from-[#8A4A22] to-[#9C5527] dark:from-cyan-300 dark:to-blue-300 bg-clip-text text-transparent">
                     {s.value}
                   </p>
                 </div>
                 <div className={`p-2 rounded-lg bg-gradient-to-br ${s.color}`}>
-                  <s.icon className="h-5 w-5 text-white" />
+                  <s.icon className="h-5 w-5 text-slate-900 dark:text-gray-200 dark:text-white" />
                 </div>
               </div>
             </div>
@@ -368,10 +367,10 @@ export default function ProductionDashboard() {
 
         <div className="relative z-10 mb-6">
           <div className="tech-card tech-glow p-0">
-            <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
-              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
-              <Target className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">{tc('coreMetrics')}</span>
+            <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-white dark:bg-white/5">
+              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#C2763C] to-[#8A4A22] dark:from-cyan-400 dark:to-blue-600" />
+              <Target className="h-4 w-4 text-[#8A4A22] dark:text-cyan-400" />
+              <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">{tc('coreMetrics')}</span>
             </div>
             <div className="p-4">
               <div className="grid grid-cols-3 gap-2">
@@ -440,24 +439,24 @@ export default function ProductionDashboard() {
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
+                <div className="p-3 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-center">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
-                    <Users className="h-3 w-3 text-cyan-400" />
-                    <p className="text-xs text-white/40">{t('attendance')}</p>
+                    <Users className="h-3 w-3 text-[#8A4A22] dark:text-cyan-400" />
+                    <p className="text-xs text-slate-400 dark:text-white/40">{t('attendance')}</p>
                   </div>
-                  <p className="text-lg font-bold text-cyan-300">
+                  <p className="text-lg font-bold text-[#8A4A22] dark:text-cyan-300">
                     {data.staffStatus.onDuty}
-                    <span className="text-white/30 text-sm">/{data.staffStatus.total}</span>
+                    <span className="text-slate-400 dark:text-white/30 text-sm">/{data.staffStatus.total}</span>
                   </p>
                 </div>
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
+                <div className="p-3 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-center">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     <Activity className="h-3 w-3 text-green-400" />
-                    <p className="text-xs text-white/40">{t('attendanceRate')}</p>
+                    <p className="text-xs text-slate-400 dark:text-white/40">{t('attendanceRate')}</p>
                   </div>
                   <p className="text-lg font-bold text-green-300">
                     {data.staffStatus.attendance}
-                    <span className="text-white/30 text-sm">%</span>
+                    <span className="text-slate-400 dark:text-white/30 text-sm">%</span>
                   </p>
                 </div>
               </div>
@@ -466,16 +465,16 @@ export default function ProductionDashboard() {
         </div>
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="tech-card tech-glow p-0">
-            <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
-              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
-              <Settings className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">{t('equipmentMonitor')}</span>
+          <div className="tech-card tech-glow tech-flat p-0">
+            <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-white dark:bg-white/5">
+              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#C2763C] to-[#8A4A22] dark:from-cyan-400 dark:to-blue-600" />
+              <Settings className="h-4 w-4 text-[#8A4A22] dark:text-cyan-400" />
+              <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">{t('equipmentMonitor')}</span>
             </div>
             <AutoScroll maxHeight={320}>
               <div className="p-4">
                 {data.equipmentStatus.length === 0 ? (
-                  <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+                  <p className="text-slate-400 dark:text-white/40 text-center py-8">{tc('noData')}</p>
                 ) : (
                   <div className="space-y-3">
                     {data.equipmentStatus.map((eq) => {
@@ -483,12 +482,12 @@ export default function ProductionDashboard() {
                       return (
                         <div
                           key={eq.id}
-                          className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                          className="p-3 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:bg-white/10 transition-colors"
                         >
                           <div className="flex items-start justify-between mb-2">
                             <div>
-                              <h4 className="text-xs font-medium text-white/80">{eq.name}</h4>
-                              <p className="text-[10px] text-white/40 mt-0.5">
+                              <h4 className="text-xs font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">{eq.name}</h4>
+                              <p className="text-[10px] text-slate-400 dark:text-white/40 mt-0.5">
                                 {t('currentWorkOrder')}: {eq.currentOrder}
                               </p>
                             </div>
@@ -498,16 +497,16 @@ export default function ProductionDashboard() {
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-white/40">{t('productionEfficiency')}</span>
+                              <span className="text-slate-400 dark:text-white/40">{t('productionEfficiency')}</span>
                               <span className="font-medium">{eq.efficiency}%</span>
                             </div>
-                            <div className="bg-white/10 rounded-full h-1.5 overflow-hidden">
+                            <div className="bg-slate-200 dark:bg-white/10 rounded-full h-1.5 overflow-hidden">
                               <div
                                 className={`h-full rounded-full transition-[width] ${eq.efficiency > 80 ? 'bg-green-400' : eq.efficiency > 60 ? 'bg-yellow-400' : 'bg-red-400'}`}
                                 style={{ width: `${eq.efficiency}%` }}
                               />
                             </div>
-                            <div className="flex items-center justify-between text-[10px] text-white/30">
+                            <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-white/30">
                               <span>
                                 {t('operator')}: {eq.operator}
                               </span>
@@ -525,18 +524,18 @@ export default function ProductionDashboard() {
             </AutoScroll>
           </div>
 
-          <div className="tech-card tech-glow p-0">
-            <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
-              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
-              <Package className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">
+          <div className="tech-card tech-glow tech-flat p-0">
+            <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-white dark:bg-white/5">
+              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#C2763C] to-[#8A4A22] dark:from-cyan-400 dark:to-blue-600" />
+              <Package className="h-4 w-4 text-[#8A4A22] dark:text-cyan-400" />
+              <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">
                 {t('workOrderProductionProgress')}
               </span>
             </div>
             <AutoScroll maxHeight={320}>
               <div className="p-4">
                 {data.productionProgress.length === 0 ? (
-                  <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+                  <p className="text-slate-400 dark:text-white/40 text-center py-8">{tc('noData')}</p>
                 ) : (
                   <div className="space-y-3">
                     {data.productionProgress.map((order) => {
@@ -544,11 +543,11 @@ export default function ProductionDashboard() {
                       return (
                         <div
                           key={order.orderNo}
-                          className="p-3 rounded-lg bg-white/5 border border-white/10"
+                          className="p-3 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10"
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-mono text-cyan-300">
+                              <span className="text-xs font-mono text-[#8A4A22] dark:text-cyan-300">
                                 {order.orderNo}
                               </span>
                               <span
@@ -562,26 +561,26 @@ export default function ProductionDashboard() {
                                 </span>
                               )}
                             </div>
-                            <span className="text-[10px] text-white/40">
+                            <span className="text-[10px] text-slate-400 dark:text-white/40">
                               {tc('estimated')}: {order.estimatedComplete || '-'}
                             </span>
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                             <div>
-                              <span className="text-white/40">{tc('customer')}: </span>
-                              <span className="text-white/70">{order.customer}</span>
+                              <span className="text-slate-400 dark:text-white/40">{tc('customer')}: </span>
+                              <span className="text-slate-600 dark:text-white/70">{order.customer}</span>
                             </div>
                             <div>
-                              <span className="text-white/40">{tc('product')}: </span>
-                              <span className="text-white/70">{order.productName}</span>
+                              <span className="text-slate-400 dark:text-white/40">{tc('product')}: </span>
+                              <span className="text-slate-600 dark:text-white/70">{order.productName}</span>
                             </div>
                             <div>
-                              <span className="text-white/40">{tc('process')}: </span>
-                              <span className="text-white/70">{order.process || '-'}</span>
+                              <span className="text-slate-400 dark:text-white/40">{tc('process')}: </span>
+                              <span className="text-slate-600 dark:text-white/70">{order.process || '-'}</span>
                             </div>
                             <div>
-                              <span className="text-white/40">{tc('planQty')}: </span>
-                              <span className="text-white/70">
+                              <span className="text-slate-400 dark:text-white/40">{tc('planQty')}: </span>
+                              <span className="text-slate-600 dark:text-white/70">
                                 {(order.completedQty ?? 0).toLocaleString()} /{' '}
                                 {(order.planQty ?? 0).toLocaleString()}
                               </span>
@@ -589,10 +588,10 @@ export default function ProductionDashboard() {
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-white/40">{tc('progress')}</span>
+                              <span className="text-slate-400 dark:text-white/40">{tc('progress')}</span>
                               <span className="font-medium">{order.progress}%</span>
                             </div>
-                            <div className="bg-white/10 rounded-full h-2 overflow-hidden">
+                            <div className="bg-slate-200 dark:bg-white/10 rounded-full h-2 overflow-hidden">
                               <div
                                 className={`h-full rounded-full transition-[width] ${order.progress >= 100 ? 'bg-green-400' : order.progress >= 50 ? 'bg-cyan-400' : 'bg-amber-400'}`}
                                 style={{ width: `${order.progress}%` }}
@@ -609,15 +608,15 @@ export default function ProductionDashboard() {
           </div>
 
           <div className="tech-card tech-glow p-0">
-            <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
+            <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-white dark:bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-red-400 to-orange-500" />
               <AlertTriangle className="h-4 w-4 text-red-400" />
-              <span className="text-sm font-medium text-white/80">{t('alertNotifications')}</span>
+              <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">{t('alertNotifications')}</span>
             </div>
             <AutoScroll maxHeight={320}>
               <div className="p-4">
                 {data.alerts.length === 0 ? (
-                  <p className="text-white/40 text-center py-8">{t('noAlerts')}</p>
+                  <p className="text-slate-400 dark:text-white/40 text-center py-8">{t('noAlerts')}</p>
                 ) : (
                   <div className="space-y-3">
                     {data.alerts.map((alert) => {
@@ -646,9 +645,9 @@ export default function ProductionDashboard() {
                           <div className="flex items-start gap-2">
                             <AlertIcon className={`h-4 w-4 mt-0.5 ${iconColor}`} />
                             <div className="flex-1">
-                              <p className="text-xs text-white/80">{alert.message}</p>
+                              <p className="text-xs text-slate-700 dark:text-gray-200 dark:text-white/80">{alert.message}</p>
                               {alert.timestamp && (
-                                <p className="text-[10px] text-white/30 mt-1">{alert.timestamp}</p>
+                                <p className="text-[10px] text-slate-400 dark:text-white/30 mt-1">{alert.timestamp}</p>
                               )}
                             </div>
                           </div>

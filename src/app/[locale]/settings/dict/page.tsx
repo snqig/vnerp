@@ -242,7 +242,7 @@ export default function DictPage() {
                           handleDeleteType(dt.id);
                         }}
                       >
-                        <Trash2 className="h-3 w-3 text-red-500" />
+                        <Trash2 className="h-3 w-3 text-red-500 dark:text-red-400" />
                       </Button>
                     </div>
                   </div>
@@ -315,7 +315,7 @@ export default function DictPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 text-red-600"
+                              className="h-7 text-red-600 dark:text-red-400"
                               onClick={() => handleDeleteData(item.id)}
                             >
                               <Trash2 className="h-3 w-3" />

@@ -7,6 +7,7 @@ import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
 import { query } from '@/lib/db';
 import type { DbRow } from '@/types/db';
+import { stringFilter } from '@/lib/query-filter';
 
 /**
  * 系统监控 API
@@ -16,7 +17,7 @@ export const GET = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
   const ts = await getTranslations('Common');
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') || 'overview';
+    const type = stringFilter(searchParams.get('type')) ?? 'overview';
 
     // 系统概览
     if (type === 'overview') {
@@ -26,7 +27,7 @@ export const GET = withPermission(
       // 数据库统计
       let dbStats: Record<string, unknown> = {};
       try {
-        const [userCount, orderCount, inventoryCount, logCount]: DbRow[] = await Promise.all([
+        const [userCount, orderCount, inventoryCount, logCount]: DbRow[][] = await Promise.all([
           query('SELECT COUNT(*) as count FROM sys_user WHERE deleted = 0'),
           query('SELECT COUNT(*) as count FROM purchase_order WHERE deleted = 0'),
           query('SELECT COUNT(*) as count FROM inv_inventory'),
@@ -75,7 +76,7 @@ export const GET = withPermission(
     // 数据库连接池状态
     if (type === 'database') {
       try {
-        const [threads, queries, slowQueries, connections]: DbRow[] = await Promise.all([
+        const [threads, queries, slowQueries, connections]: DbRow[][] = await Promise.all([
           query('SHOW STATUS LIKE "Threads_connected"'),
           query('SHOW STATUS LIKE "Queries"'),
           query('SHOW STATUS LIKE "Slow_queries"'),

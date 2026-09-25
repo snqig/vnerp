@@ -374,7 +374,7 @@ export default function ReportsPage() {
                     </Badge>
                   ) : null}
                   {data?.inventoryMetrics.lowStockCount ? (
-                    <Badge variant="outline" className="text-xs text-orange-500 border-orange-500">
+                    <Badge variant="outline" className="text-xs text-orange-500 dark:text-orange-400 border-orange-500">
                       {t('labelLowStock')}
                       {data.inventoryMetrics.lowStockCount}
                     </Badge>
@@ -389,11 +389,11 @@ export default function ReportsPage() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {formatCurrency(data?.financeMetrics.pendingReceivable || 0)}
                 </div>
                 <p className="text-xs text-muted-foreground">{t('labelReceivable')}</p>
-                <div className="mt-2 text-sm text-red-500">
+                <div className="mt-2 text-sm text-red-500 dark:text-red-400">
                   {t('labelPayable')}
                   {formatCurrency(data?.financeMetrics.pendingPayable || 0)}
                 </div>
@@ -417,13 +417,13 @@ export default function ReportsPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">{tc('completed')}</span>
-                    <span className="font-medium text-green-600">
+                    <span className="font-medium text-green-600 dark:text-green-400">
                       {formatNumber(data?.orderMetrics.completedOrders || 0)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">{t('labelPending')}</span>
-                    <span className="font-medium text-orange-500">
+                    <span className="font-medium text-orange-500 dark:text-orange-400">
                       {formatNumber(data?.orderMetrics.pendingOrders || 0)}
                     </span>
                   </div>
@@ -435,7 +435,7 @@ export default function ReportsPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">{t('labelCompletedAmount')}</span>
-                    <span className="font-medium text-green-600">
+                    <span className="font-medium text-green-600 dark:text-green-400">
                       {formatCurrency(data?.orderMetrics.completedAmount || 0)}
                     </span>
                   </div>
@@ -458,7 +458,7 @@ export default function ReportsPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">{t('labelCompletedQty')}</span>
-                    <span className="font-medium text-green-600">
+                    <span className="font-medium text-green-600 dark:text-green-400">
                       {formatNumber(data?.productionMetrics.totalCompletedQty || 0)}
                     </span>
                   </div>
@@ -470,7 +470,7 @@ export default function ReportsPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">{tc('inProgress')}</span>
-                    <span className="font-medium text-blue-500">
+                    <span className="font-medium text-blue-500 dark:text-blue-400">
                       {formatNumber(data?.productionMetrics.inProgressWorkOrders || 0)}
                     </span>
                   </div>

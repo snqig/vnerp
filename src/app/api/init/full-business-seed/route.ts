@@ -302,7 +302,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      productIds.push(idRow[0].id);
+      productIds.push(Number(idRow[0].id ?? 0));
     }
     stats.mdm_product = 20;
 
@@ -448,7 +448,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      templateIds.push(idRow[0].id);
+      templateIds.push(Number(idRow[0].id ?? 0));
     }
     stats.prd_die_template = 20;
 
@@ -575,16 +575,16 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      formulaIds.push(idRow[0].id);
+      formulaIds.push(Number(idRow[0].id ?? 0));
     }
     stats.ink_formula = 20;
 
     const inkMaterials = materials.filter(
       (m: DbRow) =>
-        m.material_name?.includes(ts('k_w1cwb8')) ||
-        m.material_name?.includes(ts('k_1fshh99')) ||
-        m.material_name?.includes(ts('k_120z5rb')) ||
-        m.material_name?.includes(ts('k_1x5vg2x'))
+        String(m.material_name ?? '').includes(ts('k_w1cwb8')) ||
+        String(m.material_name ?? '').includes(ts('k_1fshh99')) ||
+        String(m.material_name ?? '').includes(ts('k_120z5rb')) ||
+        String(m.material_name ?? '').includes(ts('k_1x5vg2x'))
     );
     const inkMats = inkMaterials.length > 0 ? inkMaterials : materials.slice(0, 5);
 
@@ -748,7 +748,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      bomIds.push(idRow[0].id);
+      bomIds.push(Number(idRow[0].id ?? 0));
     }
     stats.bom_header = 20;
 
@@ -771,7 +771,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [bmRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      bomMaterialIds.push(bmRow[0].id);
+      bomMaterialIds.push(Number(bmRow[0].id ?? 0));
     }
 
     const materialTypes = ['RAW', 'SEMI', 'SUB', 'PKG', 'OTHER'];
@@ -794,7 +794,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       const consumptionQty = randomAmount(0.5, 10);
       const lossRate = randomAmount(0, 5);
       const actualQty = Math.round(consumptionQty * (1 + lossRate / 100) * 1000000) / 1000000;
-      const unitCost = mat.purchase_price || randomAmount(0.5, 50);
+      const unitCost = Number(mat.purchase_price || 0) || randomAmount(0.5, 50);
       const totalCost = Math.round(actualQty * unitCost * 10000) / 10000;
       await conn.execute(
         `INSERT INTO bom_line (bom_id, line_no, parent_line_id, level, material_id, material_code, material_name, material_spec, unit, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost, material_type, is_key_material, position_no, process_seq, process_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -862,7 +862,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      deliveryIds.push(idRow[0].id);
+      deliveryIds.push(Number(idRow[0].id ?? 0));
     }
     stats.sal_delivery = 20;
 
@@ -871,7 +871,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       const mat = materials[i % materials.length];
       const quantity = randomInt(100, 50000);
       const unitPrice = mat.sale_price || randomAmount(0.5, 30);
-      const amount = Math.round(quantity * unitPrice * 100) / 100;
+      const amount = Math.round(quantity * Number(mat.sale_price || 0) * 100) / 100;
       await conn.execute(
         `INSERT INTO sal_delivery_detail (delivery_id, line_no, material_id, material_name, material_spec, quantity, unit, unit_price, amount, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
@@ -931,7 +931,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      returnIds.push(idRow[0].id);
+      returnIds.push(Number(idRow[0].id ?? 0));
     }
     stats.sal_return = 20;
 
@@ -939,7 +939,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       const returnId = returnIds[i % returnIds.length];
       const mat = materials[i % materials.length];
       const quantity = randomInt(10, 5000);
-      const unitPrice = mat.sale_price || randomAmount(0.5, 30);
+      const unitPrice = Number(mat.sale_price || 0) || randomAmount(0.5, 30);
       const amount = Math.round(quantity * unitPrice * 100) / 100;
       await conn.execute(
         `INSERT INTO sal_return_detail (return_id, line_no, material_id, material_name, material_spec, unit, quantity, unit_price, amount, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -991,7 +991,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      reconciliationIds.push(idRow[0].id);
+      reconciliationIds.push(Number(idRow[0].id ?? 0));
     }
     stats.sal_reconciliation = 20;
 
@@ -1030,7 +1030,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      materialReturnIds.push(idRow[0].id);
+      materialReturnIds.push(Number(idRow[0].id ?? 0));
     }
     stats.prd_material_return = 20;
 
@@ -1186,13 +1186,12 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       const toWh = warehouses[(i + 1) % warehouses.length];
       const user = users[i % users.length];
       await conn.execute(
-        `INSERT INTO inv_transfer_order (transfer_no, from_warehouse_id, to_warehouse_id, transfer_date, transfer_type, status, operator_id, operator_name, remark, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO inv_transfer_order (transfer_no, type, from_warehouse_id, to_warehouse_id, status, operator_id, operator_name, remark, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           `TRF-2026-${pad(i + 1, 5)}`,
+          randomItem([1, 2]),
           fromWh.id,
           toWh.id,
-          randomDate(yearStart, now),
-          randomItem([1, 2]),
           randomItem([1, 2, 3]),
           user.id,
           user.real_name,
@@ -1201,7 +1200,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      transferIds.push(idRow[0].id);
+      transferIds.push(Number(idRow[0].id ?? 0));
     }
     stats.inv_transfer_order = 20;
 
@@ -1242,7 +1241,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      stocktakingIds.push(idRow[0].id);
+      stocktakingIds.push(Number(idRow[0].id ?? 0));
     }
     stats.inv_stocktaking = 20;
 
@@ -1288,7 +1287,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      adjustIds.push(idRow[0].id);
+      adjustIds.push(Number(idRow[0].id ?? 0));
     }
     stats.inv_stock_adjust = 20;
 
@@ -1340,7 +1339,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      outboundIds.push(idRow[0].id);
+      outboundIds.push(Number(idRow[0].id ?? 0));
     }
     stats.inv_sales_outbound = 20;
 
@@ -1398,7 +1397,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      poIds.push(idRow[0].id);
+      poIds.push(Number(idRow[0].id ?? 0));
     }
     stats.pur_purchase_order = 20;
 
@@ -1407,7 +1406,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       const mat = materials[i % materials.length];
       const orderQty = randomInt(100, 20000);
       const receivedQty = randomInt(0, orderQty);
-      const unitPrice = mat.purchase_price || randomAmount(0.5, 50);
+      const unitPrice = Number(mat.purchase_price || 0) || randomAmount(0.5, 50);
       const amount = Math.round(orderQty * unitPrice * 100) / 100;
       const taxRate = 13.0;
       const taxAmount = Math.round(((amount * taxRate) / 100) * 100) / 100;
@@ -1464,7 +1463,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      requestIds.push(idRow[0].id);
+      requestIds.push(Number(idRow[0].id ?? 0));
     }
     stats.pur_request = 20;
 
@@ -1473,7 +1472,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       const mat = materials[i % materials.length];
       const sup = suppliers[i % suppliers.length];
       const quantity = randomInt(50, 10000);
-      const price = mat.purchase_price || randomAmount(0.5, 50);
+      const price = Number(mat.purchase_price || 0) || randomAmount(0.5, 50);
       const amount = Math.round(quantity * price * 100) / 100;
       const expectedDate = randomDate(now, yearEnd);
       await conn.execute(
@@ -1523,7 +1522,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      inspectionIds.push(idRow[0].id);
+      inspectionIds.push(Number(idRow[0].id ?? 0));
     }
     stats.qc_final_inspection = 20;
 
@@ -1572,8 +1571,9 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       const costAmount = randomAmount(100, 10000);
       const user = users[i % users.length];
       await conn.execute(
-        `INSERT INTO qc_unqualified (handle_no, inspection_id, material_id, material_code, material_name, quantity, handle_type, handle_status, responsible_dept, responsible_person, handle_result, cost_amount, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO qc_unqualified (unqualified_no, handle_no, inspection_id, material_id, material_code, material_name, quantity, handle_type, handle_status, responsible_dept, responsible_person, handle_result, cost_amount, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
+          `UQ-2026-${pad(i + 1, 5)}`,
           `UQH-2026-${pad(i + 1, 5)}`,
           inspId,
           mat.id,
@@ -1854,7 +1854,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
       const [idRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      trainingIds.push(idRow[0].id);
+      trainingIds.push(Number(idRow[0].id ?? 0));
     }
     stats.hr_training = 20;
 

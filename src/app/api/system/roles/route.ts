@@ -1,3 +1,14 @@
+/**
+ * 角色管理接口（用户/角色侧）。
+ *
+ * ⚠️ `sys_role.permissions` 语义说明（2026-09-24 核准）：
+ * 该列是**按钮权限码**（JSON 数组，通配形态如 `warehouse:*`），由
+ * `/api/role-permissions/buttons` 正式读写，是前端按钮显隐的唯一数据源；
+ * **不参与服务端鉴权** —— 鉴权链路 `getUserInfo`（src/lib/auth.ts）只读
+ * `sys_role_menu` + `sys_menu`。
+ * 本接口自 2026-09-24 起**不再写该列**（POST/PUT 均已摘除），与
+ * `/api/organization/role` 同步收敛，避免「编辑角色」动作静默覆盖按钮权限。
+ */
 import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -20,7 +31,10 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     [pageSize, (page - 1) * pageSize]
   );
 
-  // 解析权限JSON
+  // `permissions` 是**按钮权限**列（JSON 数组），此处原样透出以兼容既有调用方。
+  // 它是**只读遗留输出**：本接口自 2026-09-24 起不再写该列，正式写入口是
+  // `/api/role-permissions/buttons`。注意 mysql2 对 JSON 列会自动解析为 JS 数组，
+  // 故需同时兼容「已是数组」与「仍是 JSON 字符串」两种形态。
   const list: DbRow[] = rows.map((row: DbRow) => ({
     ...row,
     permissions:
@@ -32,15 +46,19 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   // 如果需要继承权限，解析完整权限链
   if (withPermissions) {
     for (const role of list) {
-      role.effectivePermissions = await resolveEffectivePermissions(role.id);
-      role.parentRole = role.parent_id ? await getParentRoleName(role.parent_id) : null;
+      (role as any).effectivePermissions = await resolveEffectivePermissions(Number(role.id));
+      (role as any).parentRole = role.parent_id ? await getParentRoleName(Number(role.parent_id)) : null;
     }
   }
 
   return successResponse({ list, total, page, pageSize });
 });
 
-// 解析角色的有效权限（包含继承的权限）
+// 解析角色的有效权限（包含继承的权限）。
+// ⚠️ 死路径：仅在 `?withPermissions=true` 时被调用，而全仓无任何前端使用该参数
+// （`src/app/[locale]/settings/user/page.tsx` 是本接口 GET 的唯一调用方，只取 id/role_name）。
+// 它读 `sys_role.permissions`（按钮权限轨）做父子合并，但结果仅作为响应附加字段返回，
+// **不参与任何鉴权**。保留以备将来启用角色继承，勿据此认为该列是鉴权数据源。
 async function resolveEffectivePermissions(
   roleId: number,
   visited = new Set<number>()
@@ -84,6 +102,8 @@ async function getParentRoleName(parentId: number): Promise<string | null> {
 
 export const POST = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const body = await request.json();
+  // 不接收 `permissions`（按钮权限轨）。该列的正式写入口是
+  // `/api/role-permissions/buttons`；在此写入会在「编辑/新建角色」时静默覆盖按钮权限。
   const {
     role_name,
     role_code,
@@ -92,7 +112,6 @@ export const POST = withPermission(async (request: NextRequest, _userInfo: UserI
     description,
     data_scope,
     status,
-    permissions,
   } = body;
 
   if (!role_name || !role_code) return errorResponse('ROLE_NAME_CODE_REQUIRED', 400, 400);
@@ -111,7 +130,7 @@ export const POST = withPermission(async (request: NextRequest, _userInfo: UserI
   }
 
   const result = await execute(
-    'INSERT INTO sys_role (role_name, role_code, parent_id, inherit_mode, description, data_scope, status, permissions) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO sys_role (role_name, role_code, parent_id, inherit_mode, description, data_scope, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [
       role_name,
       role_code,
@@ -120,7 +139,6 @@ export const POST = withPermission(async (request: NextRequest, _userInfo: UserI
       description || null,
       data_scope || 1,
       status ?? 1,
-      JSON.stringify(permissions || []),
     ]
   );
 
@@ -129,6 +147,7 @@ export const POST = withPermission(async (request: NextRequest, _userInfo: UserI
 
 export const PUT = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const body = await request.json();
+  // 与 POST 同理：不接收 `permissions`，避免编辑角色时覆盖按钮权限。
   const {
     id,
     role_name,
@@ -138,7 +157,6 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo: UserIn
     description,
     data_scope,
     status,
-    permissions,
   } = body;
 
   if (!id) return errorResponse('ROLE_ID_REQUIRED', 400, 400);
@@ -190,10 +208,7 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo: UserIn
     fields.push('status = ?');
     values.push(status);
   }
-  if (permissions !== undefined) {
-    fields.push('permissions = ?');
-    values.push(JSON.stringify(permissions));
-  }
+  // `permissions` 分支已于 2026-09-24 移除（见 POST 注释）。
 
   if (fields.length === 0) return errorResponse('NO_FIELDS_TO_UPDATE', 400, 400);
 

@@ -40,7 +40,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as in_progress_work_orders,
       COALESCE(SUM(plan_qty), 0) as total_plan_qty,
       COALESCE(SUM(completed_qty), 0) as total_completed_qty
-    FROM prd_work_order
+    FROM prod_work_order
     WHERE deleted = 0 AND work_order_date >= ?`,
     [startDateStr]
   );

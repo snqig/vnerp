@@ -28,8 +28,8 @@ const modules = [
   {
     title: '订单管理',
     icon: FileText,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-100',
+    color: 'text-blue-600 dark:text-blue-400',
+    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
     description: '销售订单、客户档案、产品档案、BOM管理',
     features: ['订单录入与跟踪', '客户信用管控', '产品BOM版本管理', '应收账款跟踪'],
     links: [
@@ -43,8 +43,8 @@ const modules = [
   {
     title: '打样中心',
     icon: Printer,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-100',
+    color: 'text-purple-600 dark:text-purple-400',
+    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
     description: '打样申请、打样工单、样品管理',
     features: ['打样申请流程', '打样工单管理', '成本归集', '样品转量产'],
     links: [
@@ -56,8 +56,8 @@ const modules = [
   {
     title: '仓库管理',
     icon: Package,
-    color: 'text-green-600',
-    bgColor: 'bg-green-100',
+    color: 'text-green-600 dark:text-green-400',
+    bgColor: 'bg-green-100 dark:bg-green-900/30',
     description: '四仓分离、批次追溯、先进先出、库存预警',
     features: ['四仓分离管理', '批次效期管理', '批次血缘继承', '安全库存预警'],
     links: [
@@ -71,8 +71,8 @@ const modules = [
   {
     title: '生产管理',
     icon: Factory,
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-100',
+    color: 'text-orange-600 dark:text-orange-400',
+    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
     description: '工单管理、生产报工、效率预警、设备管理',
     features: ['工单排产调度', '报工进度跟踪', '效率实时监控', '设备OEE分析'],
     links: [
@@ -86,8 +86,8 @@ const modules = [
   {
     title: '品质管理',
     icon: ClipboardCheck,
-    color: 'text-red-600',
-    bgColor: 'bg-red-100',
+    color: 'text-red-600 dark:text-red-400',
+    bgColor: 'bg-red-100 dark:bg-red-900/30',
     description: '来料检验、首件确认、巡检SPC、售后追溯',
     features: ['全流程拦截', 'SPC统计分析', '膜厚/色差记录', '售后追溯'],
     links: [
@@ -101,8 +101,8 @@ const modules = [
   {
     title: '采购管理',
     icon: ShoppingCart,
-    color: 'text-cyan-600',
-    bgColor: 'bg-cyan-100',
+    color: 'text-cyan-600 dark:text-cyan-400',
+    bgColor: 'bg-cyan-100 dark:bg-cyan-900/30',
     description: '采购申请、采购订单、供应商协同、PDF送货码',
     features: ['双来源请购', '供应商评级', 'PDF扫码送货', '对账付款'],
     links: [
@@ -116,8 +116,8 @@ const modules = [
   {
     title: '委外管理',
     icon: Users,
-    color: 'text-indigo-600',
-    bgColor: 'bg-indigo-100',
+    color: 'text-indigo-600 dark:text-indigo-400',
+    bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
     description: '委外工单、委外跟踪、损耗管理、应付锁定',
     features: ['委外二维码跟踪', '委外损耗管理', '外协厂手机回货', '成本归集'],
     links: [
@@ -129,8 +129,8 @@ const modules = [
   {
     title: '车辆派送',
     icon: Truck,
-    color: 'text-teal-600',
-    bgColor: 'bg-teal-100',
+    color: 'text-teal-600 dark:text-teal-400',
+    bgColor: 'bg-teal-100 dark:bg-teal-900/30',
     description: '智能排车、装车确认、电子回单、对账支持',
     features: ['智能车型推荐', '装车确认', '电子回单上传', '对账支持'],
     links: [
@@ -143,8 +143,8 @@ const modules = [
   {
     title: '设备管理',
     icon: Wrench,
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-100',
+    color: 'text-amber-600 dark:text-amber-400',
+    bgColor: 'bg-amber-100 dark:bg-amber-900/30',
     description: '设备档案、保养计划、备件管理、故障报修',
     features: ['一机一档一码', '保养计划管理', '未保养锁定工单', '备件管理'],
     links: [
@@ -157,7 +157,7 @@ const modules = [
     title: '数据看板',
     icon: BarChart3,
     color: 'text-slate-600',
-    bgColor: 'bg-slate-100',
+    bgColor: 'bg-slate-100 dark:bg-gray-700',
     description: '老板驾驶舱、生产看板、仓库看板、品质看板',
     features: ['实时数据大屏', '生产看板', '库存周转分析', '品质看板'],
     links: [
@@ -209,11 +209,11 @@ export default function ModulesPage() {
     <MainLayout title={t('systemModules')}>
       <div className="space-y-6">
         {/* 系统概述 */}
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <Card className="bg-gradient-to-r from-blue-50 dark:from-blue-950/20 to-indigo-50 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
-              <div className="p-3 rounded-lg bg-blue-100">
-                <QrCode className="h-8 w-8 text-blue-600" />
+              <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                <QrCode className="h-8 w-8 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="flex-1">
                 <h2 className="text-xl font-bold mb-2">
@@ -225,19 +225,19 @@ export default function ModulesPage() {
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                     <span className="text-sm">{t('fourWarehouseSeparation')}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                     <span className="text-sm">{t('fifoLocking')}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                     <span className="text-sm">{t('efficiencyAlert')}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                     <span className="text-sm">{t('fullTraceability')}</span>
                   </div>
                 </div>
@@ -250,7 +250,7 @@ export default function ModulesPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              <AlertTriangle className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               {t('triTerminalCollaboration')}
             </CardTitle>
             <CardDescription>{t('triTerminalDescription')}</CardDescription>
@@ -299,7 +299,7 @@ export default function ModulesPage() {
                 <div className="space-y-2 mb-4">
                   {module.features.slice(0, 3).map((feature, index) => (
                     <div key={index} className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="h-3 w-3 text-green-500" />
+                      <CheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />
                       <span>{feature}</span>
                     </div>
                   ))}

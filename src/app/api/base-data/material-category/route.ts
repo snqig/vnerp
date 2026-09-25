@@ -110,8 +110,17 @@ export const POST = withPermission(
   const tc = await getTranslations('Common');
   const ts = await getTranslations('Common');
     const body = await request.json();
-    const { category_code, category_name, parent_id, sort_order, status, category_type, remark } =
-      body;
+    const {
+      category_code,
+      category_name,
+      parent_id,
+      sort_order,
+      status,
+      category_type,
+      remark,
+      is_splittable,
+      typical_examples,
+    } = body;
 
     if (!String(category_name ?? '').trim()) {
       return errorResponse(ts('k_u7qe7b'), 400);
@@ -138,8 +147,8 @@ export const POST = withPermission(
 
     const result = await execute(
       `INSERT INTO inv_material_category
-         (category_code, category_name, parent_id, category_type, sort_order, status, remark)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         (category_code, category_name, parent_id, category_type, sort_order, status, remark, is_splittable, typical_examples)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         String(category_code).trim(),
         String(category_name).trim(),
@@ -148,6 +157,8 @@ export const POST = withPermission(
         sort_order || 0,
         status ?? 1,
         remark ?? null,
+        is_splittable ? 1 : 0,
+        typical_examples ? String(typical_examples).trim() : null,
       ]
     );
 
@@ -174,6 +185,8 @@ export const PUT = withPermission(
       status,
       category_type,
       remark,
+      is_splittable,
+      typical_examples,
     } = body;
 
     if (!id) return errorResponse(ts('k_2myxfe'), 400);
@@ -232,6 +245,14 @@ export const PUT = withPermission(
     if (remark !== undefined) {
       sets.push('remark = ?');
       params.push(remark ?? null);
+    }
+    if (is_splittable !== undefined) {
+      sets.push('is_splittable = ?');
+      params.push(Number(is_splittable) ? 1 : 0);
+    }
+    if (typical_examples !== undefined) {
+      sets.push('typical_examples = ?');
+      params.push(typical_examples ? String(typical_examples).trim() : null);
     }
 
     if (sets.length === 0) {

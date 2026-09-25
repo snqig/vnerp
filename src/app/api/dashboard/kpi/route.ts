@@ -629,11 +629,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         avgSetupMinutes: Math.round(Number(r.avg_setup_minutes || 0) * 100) / 100,
       }));
       setupTime.totalSetups = setupTime.byEquipment.reduce(
-        (s: number, r: DbRow) => s + r.setupCount,
+        (s: number, r: DbRow) => Number(s) + Number(r.setupCount ?? 0),
         0
       );
       setupTime.totalMinutes = setupTime.byEquipment.reduce(
-        (s: number, r: DbRow) => s + r.avgSetupMinutes * r.setupCount,
+        (s: number, r: DbRow) => Number(s) + Number(r.avgSetupMinutes ?? 0) * Number(r.setupCount ?? 0),
         0
       );
       setupTime.avgMinutes =

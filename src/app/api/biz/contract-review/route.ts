@@ -5,13 +5,15 @@ import { NextRequest } from 'next/server';
 import { query, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 import { withPermission } from '@/lib/api-permissions';
 import { SalesOrderStatusCode } from '@/lib/order-status';
+import { numericFilter } from '@/lib/query-filter';
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
   const orderNo = searchParams.get('orderNo') || '';
 
   let where = 'WHERE cr.deleted = 0';
@@ -55,7 +57,7 @@ export const POST = withPermission(async (request: NextRequest) => {
       [order_id]
     );
 
-    if (existingReview.length > 0 && existingReview[0].status >= 3) {
+    if (existingReview.length > 0 && Number(existingReview[0].status ?? 0) >= 3) {
       throw new Error(ts('k_1ne9rzu'));
     }
 
@@ -73,7 +75,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     );
 
     const orderData = orderRows.length > 0 ? orderRows[0] : {};
-    const [insertResult] = await conn.execute(
+    const insertResult = (await conn.execute<DbResultSetHeader>(
       `INSERT INTO biz_contract_review (review_no, order_id, order_no, customer_id, customer_name, total_amount, delivery_date, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
       [
@@ -85,7 +87,7 @@ export const POST = withPermission(async (request: NextRequest) => {
         total_amount || orderData.total_amount || null,
         delivery_date || orderData.delivery_date || null,
       ]
-    );
+    )) as unknown as DbResultSetHeader;
 
     return { id: insertResult.insertId, review_no: reviewNo };
   });
@@ -118,7 +120,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
     }
 
     const review = reviewRows[0];
-    if (review.status >= 3) {
+    if (Number(review.status ?? 0) >= 3) {
       throw new Error(ts('k_koz1cb'));
     }
 

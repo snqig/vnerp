@@ -12,14 +12,15 @@ import {
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { stringFilter } from '@/lib/query-filter';
 
 // 获取产品列表
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
-  const categoryId = searchParams.get('categoryId') || '';
-  const status = searchParams.get('status') || '';
-  const customerId = searchParams.get('customerId') || '';
+  const categoryId = stringFilter(searchParams.get('categoryId'));
+  const status = stringFilter(searchParams.get('status'));
+  const customerId = stringFilter(searchParams.get('customerId'));
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
@@ -153,7 +154,7 @@ export const POST = withPermission(
       ]
     );
 
-    const insertId = (result as DbRow).insertId;
+    const insertId = (result as unknown as DbRow).insertId;
 
     return successResponse({ id: insertId, product_code }, ts('k_128bvwd'));
   },

@@ -6,7 +6,8 @@ import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { randomUUID } from 'crypto';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -14,7 +15,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
   const qrType = searchParams.get('qr_type') || '';
   const keyword = searchParams.get('keyword') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
 
   let where = 'WHERE q.deleted = 0';
   const params: SqlValue[] = [];
@@ -44,7 +45,26 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     [...params, pageSize, (page - 1) * pageSize]
   );
 
-  return successResponse({ list: rows, total, page, pageSize });
+  // 全库统计口径（统计卡片用，不受当前页/筛选影响）
+  const statRows = (await query(
+    `SELECT
+       COUNT(*) AS total,
+       SUM(q.status = 1) AS valid,
+       SUM(q.status = 2) AS used,
+       SUM(q.status = 3) AS expired,
+       SUM(q.status IN (4, 9)) AS invalidated
+     FROM qrcode_record q
+     WHERE q.deleted = 0`
+  )) as Array<{ total: number | null; valid: number | null; used: number | null; expired: number | null; invalidated: number | null }>;
+  const stats = {
+    total: Number(statRows[0]?.total || 0),
+    valid: Number(statRows[0]?.valid || 0),
+    used: Number(statRows[0]?.used || 0),
+    expired: Number(statRows[0]?.expired || 0),
+    invalidated: Number(statRows[0]?.invalidated || 0),
+  };
+
+  return successResponse({ list: rows, total, page, pageSize, stats });
 });
 
 export const POST = withPermission(
@@ -93,7 +113,7 @@ export const POST = withPermission(
         }
       }
 
-      const [insertResult] = await conn.execute(
+      const insertResult = await conn.execute<DbResultSetHeader>(
         `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, batch_no, material_id, material_code, material_name,
         specification, quantity, unit, warehouse_id, warehouse_name, location, supplier_id, supplier_name,
         customer_id, customer_name, work_order_id, work_order_no, production_date, expiry_date, extra_data, status, remark)
@@ -128,7 +148,7 @@ export const POST = withPermission(
       return insertResult;
     });
 
-    return successResponse({ id: (result as DbRow).insertId, qr_code: qrCode }, ts('k_1ju7g2q'));
+    return successResponse({ id: (result as unknown as DbResultSetHeader).insertId, qr_code: qrCode }, ts('k_1ju7g2q'));
   },
   { logTitle: '生成二维码' }
 );
@@ -146,11 +166,11 @@ export const PUT = withPermission(
       if (!batch_no) return errorResponse(ts('k_9avmne'), 400, 400);
 
       await transaction(async (conn) => {
-        const [batchResult] = await conn.execute(
+        const batchResult = await conn.execute<DbResultSetHeader>(
           'UPDATE inv_inventory_batch SET available_qty = 0, status = 0 WHERE batch_no = ? AND deleted = 0',
           [batch_no]
         );
-        if (batchResult.affectedRows === 0) {
+        if ((batchResult as unknown as DbResultSetHeader).affectedRows === 0) {
           throw new Error(`批次 ${batch_no} 不存在或已删除`);
         }
 

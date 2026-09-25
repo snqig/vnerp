@@ -203,7 +203,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     for (let i = 0; i < sampleData.length; i++) {
       const s = sampleData[i];
       await conn.execute(
-        `INSERT INTO sal_sample_order (sample_no, order_date, customer_id, customer_name, product_name, size_spec, quantity, required_date, status, remark, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        `INSERT INTO sal_sample_order (order_no, order_date, customer_id, customer_name, product_name, size_spec, quantity, customer_require_date, delivery_status, remark, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           `SMP2026${String(i + 1).padStart(2, '0')}${String(i + 1).padStart(3, '0')}`,
           s.date,
@@ -213,7 +213,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           s.spec,
           s.qty,
           s.delivery,
-          s.status === 'done' ? 3 : s.status === 'in_progress' ? 2 : 1,
+          s.status === 'done' ? 'delivered' : s.status === 'in_progress' ? 'in_production' : 'pending',
           '',
         ]
       );

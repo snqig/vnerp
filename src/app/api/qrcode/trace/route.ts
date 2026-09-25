@@ -53,7 +53,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   if (!record) return errorResponse(ts('k_pn7c6u'), 404, 404);
 
-  const cached = await getCachedTrace(record.qr_code);
+  const cached = await getCachedTrace(String(record.qr_code));
   if (cached) {
     return successResponse(cached);
   }
@@ -79,7 +79,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let inventoryInfo: DbRow | null = null;
+  let inventoryInfo: DbRow[] | null = null;
   if (record.material_id) {
     inventoryInfo = await query(
       'SELECT i.*, w.warehouse_name FROM inv_inventory i LEFT JOIN inv_warehouse w ON i.warehouse_id = w.id WHERE i.material_id = ? AND i.deleted = 0',
@@ -87,7 +87,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let inboundInfo: DbRow | null = null;
+  let inboundInfo: DbRow[] | null = null;
   if (record.batch_no) {
     inboundInfo = await query(
       `SELECT ii.*, io.order_no AS inbound_order_no, io.order_type AS inbound_type, io.status AS inbound_status
@@ -98,18 +98,18 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let productionUsage: DbRow | null = null;
+  let productionUsage: DbRow[] | null = null;
   if (record.material_id && record.qr_type === 'material') {
     productionUsage = await query(
       `SELECT wo.work_order_no, wo.status AS work_order_status, wo.plan_qty, wo.completed_qty
-       FROM prd_work_order wo
+       FROM prod_work_order wo
        WHERE wo.material_id = ? AND wo.deleted = 0
        ORDER BY wo.create_time DESC LIMIT 5`,
       [record.material_id]
     );
   }
 
-  let productQRs: DbRow | null = null;
+  let productQRs: DbRow[] | null = null;
   if (record.qr_type === 'material' && record.work_order_no) {
     productQRs = await query(
       `SELECT qr.qr_code, qr.qr_type, qr.material_name, qr.quantity, qr.status, qr.create_time
@@ -120,7 +120,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let shipmentInfo: DbRow | null = null;
+  let shipmentInfo: DbRow[] | null = null;
   if (record.qr_type === 'product' && record.ref_no) {
     shipmentInfo = await query(
       `SELECT sd.delivery_no, sd.delivery_date, sd.customer_name, sd.status
@@ -132,12 +132,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   let orderInfo: DbRow | null = null;
-  if (record.ref_no && record.ref_no.startsWith('SO')) {
+  if (record.ref_no && String(record.ref_no).startsWith('SO')) {
     orderInfo = await queryOne('SELECT * FROM sal_order WHERE order_no = ? AND deleted = 0', [
       record.ref_no,
     ]);
   }
-  if (record.ref_no && record.ref_no.startsWith('PO')) {
+  if (record.ref_no && String(record.ref_no).startsWith('PO')) {
     orderInfo = await queryOne(
       'SELECT * FROM pur_purchase_order WHERE order_no = ? AND deleted = 0',
       [record.ref_no]
@@ -145,12 +145,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
   if (record.work_order_no) {
     orderInfo = await queryOne(
-      'SELECT * FROM prd_work_order WHERE work_order_no = ? AND deleted = 0',
+      'SELECT * FROM prod_work_order WHERE work_order_no = ? AND deleted = 0',
       [record.work_order_no]
     );
   }
 
-  let qualityInfo: DbRow | null = null;
+  let qualityInfo: DbRow[] | null = null;
   if (record.ref_no) {
     qualityInfo = await query(
       'SELECT * FROM qc_incoming_inspection WHERE (batch_no = ? OR material_code = ?) AND deleted = 0 ORDER BY create_time DESC LIMIT 5',
@@ -161,17 +161,17 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const timeline = [
     ...scanLogs.map((log: DbRow) => ({
       time: log.create_time,
-      event: `${getScanTypeLabel(log.scan_type)}`,
+      event: `${getScanTypeLabel(String(log.scan_type))}`,
       operator: log.operator_name || '-',
       result: log.scan_result,
       message: log.scan_message || '',
     })),
-  ].sort((a: DbRow, b: DbRow) => new Date(a.time).getTime() - new Date(b.time).getTime());
+  ].sort((a: DbRow, b: DbRow) => new Date(String(a.time)).getTime() - new Date(String(b.time)).getTime());
 
   if (record.create_time) {
     timeline.unshift({
       time: record.create_time,
-      event: `生成${getTypeLabel(record.qr_type)}二维码`,
+      event: `生成${getTypeLabel(String(record.qr_type))}二维码`,
       operator: '-',
       result: 'success',
       message: `二维码 ${record.qr_code} 已生成`,
@@ -200,7 +200,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     });
   }
 
-  timeline.sort((a: DbRow, b: DbRow) => new Date(a.time).getTime() - new Date(b.time).getTime());
+  timeline.sort((a: DbRow, b: DbRow) => new Date(String(a.time)).getTime() - new Date(String(b.time)).getTime());
 
   const result = {
     record,

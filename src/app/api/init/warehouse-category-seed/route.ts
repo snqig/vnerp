@@ -183,7 +183,7 @@ export const POST = withPermission(
         'SELECT id, code FROM sys_warehouse_category ORDER BY id'
       );
       const whCatMap: Record<string, number> = {};
-      for (const row of whCatRows) whCatMap[row.code] = row.id;
+      for (const row of whCatRows) whCatMap[String(row.code)] = Number(row.id ?? 0);
 
       const warehouses = [
         {
@@ -430,7 +430,7 @@ export const POST = withPermission(
         'SELECT id, warehouse_code FROM inv_warehouse ORDER BY id'
       );
       const whMap: Record<string, number> = {};
-      for (const row of whRows) whMap[row.warehouse_code] = row.id;
+      for (const row of whRows) whMap[String(row.warehouse_code)] = Number(row.id ?? 0);
 
       const materialCategories = [
         {
@@ -606,7 +606,7 @@ export const POST = withPermission(
         'SELECT id, category_code FROM inv_material_category ORDER BY id'
       );
       const matCatMap: Record<string, number> = {};
-      for (const row of matCatRows) matCatMap[row.category_code] = row.id;
+      for (const row of matCatRows) matCatMap[String(row.category_code)] = Number(row.id ?? 0);
 
       const materials = [
         {
@@ -832,7 +832,7 @@ export const POST = withPermission(
         'SELECT id, material_code FROM inv_material ORDER BY id'
       );
       const matMap: Record<string, number> = {};
-      for (const row of matRows) matMap[row.material_code] = row.id;
+      for (const row of matRows) matMap[String(row.material_code)] = Number(row.id ?? 0);
 
       const inventories = [
         {

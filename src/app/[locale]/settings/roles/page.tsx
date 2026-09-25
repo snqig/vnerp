@@ -190,9 +190,15 @@ export default function RolesPage() {
       const url = editing ? '/api/organization/role' : '/api/organization/role';
       const method = editing ? 'PUT' : 'POST';
 
+      // 剥离遗留的 `permissions`（sys_role.permissions 旧轨快照）。
+      // 角色权限的真实入口是 `/api/role-permissions`（菜单）与
+      // `/api/role-permissions/buttons`（按钮），后端自 2026-09-24 起也已在 POST/PUT 中
+      // 停止写该列；此处显式剔除，避免编辑角色基本信息时把新授的按钮权限静默回退。
+      const { permissions: _droppedPermissions, ...payload } = form;
+
       const response = await authFetch(url, {
         method,
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
@@ -407,7 +413,7 @@ export default function RolesPage() {
           {menu.path && <span className="text-xs text-gray-400">({menu.path})</span>}
         </div>
         {menu.children && menu.children.length > 0 && (
-          <div className="border-l-2 border-gray-200 dark:border-gray-700 ml-4">
+          <div className="border-l-2 border-gray-200 dark:border-gray-600 dark:border-gray-700 ml-4">
             {renderMenuTree(menu.children, level + 1)}
           </div>
         )}
@@ -420,7 +426,7 @@ export default function RolesPage() {
     switch (status) {
       case 1:
         return (
-          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{tc('enabled')}</Badge>
+          <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 hover:bg-green-100 dark:bg-green-900/30">{tc('enabled')}</Badge>
         );
       case 0:
         return (
@@ -518,7 +524,7 @@ export default function RolesPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-400"
                             onClick={() => deleteRole(role.id)}
                           >
                             <Trash2 className="w-4 h-4 mr-1" />
@@ -547,7 +553,7 @@ export default function RolesPage() {
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label>
-                {tc('roleCode')} <span className="text-red-500">*</span>
+                {tc('roleCode')} <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 value={form.role_code || ''}
@@ -558,7 +564,7 @@ export default function RolesPage() {
             </div>
             <div className="space-y-2">
               <Label>
-                {tc('roleName')} <span className="text-red-500">*</span>
+                {tc('roleName')} <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 value={form.role_name || ''}

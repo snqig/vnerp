@@ -98,12 +98,12 @@ export default function SeedDataPage() {
     <MainLayout title={ts('k_nuvho1')}>
       <div className="container mx-auto py-6 space-y-6">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="bg-red-500/10 border border-red-200 dark:border-red-800 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
+              <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
               <div className="flex-1">
-                <h4 className="font-medium text-red-800">{ts('k_145ng7n')}</h4>
-                <p className="mt-1 text-sm text-red-700">{error}</p>
+                <h4 className="font-medium text-red-800 dark:text-red-300">{ts('k_145ng7n')}</h4>
+                <p className="mt-1 text-sm text-red-700 dark:text-red-400">{error}</p>
               </div>
             </div>
           </div>
@@ -119,12 +119,12 @@ export default function SeedDataPage() {
               {ts('k_gm737h')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="bg-amber-500/10 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
                 <div className="flex-1">
-                  <h4 className="font-medium text-amber-800">{ts('k_et3mbk')}</h4>
-                  <ul className="mt-2 text-sm text-amber-700 space-y-1">
+                  <h4 className="font-medium text-amber-800 dark:text-amber-300">{ts('k_et3mbk')}</h4>
+                  <ul className="mt-2 text-sm text-amber-700 dark:text-amber-400 space-y-1">
                     <li>{ts('k_i6vtfk')}</li>
                     <li>{ts('k_1t02ig2')}</li>
                     <li>{ts('k_1b2frda')}</li>
@@ -151,16 +151,16 @@ export default function SeedDataPage() {
             </Button>
 
             {systemStats && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-green-500/10 border border-green-200 dark:border-green-800 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
                   <div className="flex-1">
-                    <h4 className="font-medium text-green-800">{ts('k_1bupk9o')}</h4>
+                    <h4 className="font-medium text-green-800 dark:text-green-300">{ts('k_1bupk9o')}</h4>
                     <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
                       {Object.entries(systemStats).map(([key, value]) => (
                         <div
                           key={key}
-                          className="flex items-center justify-between p-2 bg-white rounded"
+                          className="flex items-center justify-between p-2 bg-white dark:bg-card rounded"
                         >
                           <span className="text-sm text-gray-600">{key}</span>
                           <Badge variant="secondary">{value} {ts('k_1rfm5gs')}</Badge>
@@ -184,12 +184,12 @@ export default function SeedDataPage() {
               {ts('k_1vbnd1t')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="bg-amber-500/10 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
                 <div className="flex-1">
-                  <h4 className="font-medium text-amber-800">{ts('k_et3mbk')}</h4>
-                  <ul className="mt-2 text-sm text-amber-700 space-y-1">
+                  <h4 className="font-medium text-amber-800 dark:text-amber-300">{ts('k_et3mbk')}</h4>
+                  <ul className="mt-2 text-sm text-amber-700 dark:text-amber-400 space-y-1">
                     <li>{ts('k_brgoub')}</li>
                     <li>{ts('k_9ovkwn')}</li>
                     <li>{ts('k_kovkkk')}</li>
@@ -216,16 +216,16 @@ export default function SeedDataPage() {
             </Button>
 
             {businessStats && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-green-500/10 border border-green-200 dark:border-green-800 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
                   <div className="flex-1">
-                    <h4 className="font-medium text-green-800">{ts('k_z7xbn9')}</h4>
+                    <h4 className="font-medium text-green-800 dark:text-green-300">{ts('k_z7xbn9')}</h4>
                     <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
                       {Object.entries(businessStats).map(([key, value]) => (
                         <div
                           key={key}
-                          className="flex items-center justify-between p-2 bg-white rounded"
+                          className="flex items-center justify-between p-2 bg-white dark:bg-card rounded"
                         >
                           <span className="text-sm text-gray-600">{key}</span>
                           <Badge variant="secondary">{value} {ts('k_1rfm5gs')}</Badge>

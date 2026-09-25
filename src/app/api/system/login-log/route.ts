@@ -6,6 +6,7 @@ import { query, SqlValue } from '@/lib/db';
 import type { DbRow } from '@/types/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { numericFilter } from '@/lib/query-filter';
 
 // 从 user-agent 中粗略提取操作系统名称
 function parseOS(ua?: string | null): string {
@@ -26,7 +27,7 @@ export const GET = withPermission(
     const page = Number(searchParams.get('page') || 1);
     const pageSize = Number(searchParams.get('pageSize') || 20);
     const userName = searchParams.get('userName') || '';
-    const status = searchParams.get('status') || '';
+    const status = numericFilter(searchParams.get('status'));
 
     let where = 'WHERE 1=1';
     const params: SqlValue[] = [];
@@ -34,7 +35,7 @@ export const GET = withPermission(
       where += ' AND username LIKE ?';
       params.push('%' + userName + '%');
     }
-    if (status !== '') {
+    if (status !== undefined) {
       where += ' AND status = ?';
       params.push(Number(status));
     }

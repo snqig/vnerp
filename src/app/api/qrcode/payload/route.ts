@@ -6,6 +6,7 @@ import { query, SqlValue } from '@/lib/db';
 import QRCode from 'qrcode';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { stringFilter } from '@/lib/query-filter';
 
 // 扩展的二维码数据类型
 export interface QrCodePayload {
@@ -114,7 +115,7 @@ export const POST = withPermission(async (request: NextRequest, _userInfo) => {
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const qrCode = searchParams.get('qrCode');
-  const type = searchParams.get('type');
+  const type = stringFilter(searchParams.get('type'));
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 

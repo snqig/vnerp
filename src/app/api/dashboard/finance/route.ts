@@ -128,7 +128,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       const receipts = Array.isArray(recRows) ? recRows : [];
       const payments = Array.isArray(payRows) ? payRows : [];
       recentTransactions = [...receipts, ...payments]
-        .sort((a: DbRow, b: DbRow) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .sort((a: DbRow, b: DbRow) => new Date(String(b.date)).getTime() - new Date(String(a.date)).getTime())
         .slice(0, 10);
     } catch (e) {
       logger.error({ module: 'dashboard', action: 'finance' }, 'Dashboard query failed', {

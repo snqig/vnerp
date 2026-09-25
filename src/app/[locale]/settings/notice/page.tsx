@@ -185,7 +185,7 @@ export default function NoticePage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-6 w-6 p-0 text-red-600"
+                          className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                           onClick={() => handleDelete(item.id)}
                         >
                           <Trash2 className="h-3 w-3" />

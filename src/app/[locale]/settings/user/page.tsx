@@ -170,7 +170,7 @@ export default function UserManagementPage() {
 
   const fetchDepartments = async () => {
     try {
-      const res = await authFetch('/api/organization/department');
+      const res = await authFetch('/api/organization/department?pageSize=500');
       if (!res.ok) {
         setDepartments([]);
         return;
@@ -410,7 +410,7 @@ export default function UserManagementPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-6 w-6 p-0 text-red-600"
+                          className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                           onClick={() => handleDelete(item.id)}
                         >
                           <Trash2 className="h-3 w-3" />
@@ -463,7 +463,7 @@ export default function UserManagementPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>
-                  {ts('k_u9jq8n')}<span className="text-red-500">*</span>
+                  {ts('k_u9jq8n')}<span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   value={editItem.username || ''}
@@ -474,7 +474,7 @@ export default function UserManagementPage() {
               </div>
               <div>
                 <Label>
-                  {ts('k_1aph6eg')}{!editItem.id && <span className="text-red-500">*</span>}
+                  {ts('k_1aph6eg')}{!editItem.id && <span className="text-red-500 dark:text-red-400">*</span>}
                 </Label>
                 <Input
                   type="password"
@@ -485,7 +485,7 @@ export default function UserManagementPage() {
               </div>
               <div>
                 <Label>
-                  {ts('k_10ld5dp')}<span className="text-red-500">*</span>
+                  {ts('k_10ld5dp')}<span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   value={editItem.real_name || ''}
@@ -499,7 +499,7 @@ export default function UserManagementPage() {
                   }}
                   placeholder={ts('k_p7rfum')}
                 />
-                {nameWarning && <p className="text-xs text-amber-600 mt-1">{nameWarning}</p>}
+                {nameWarning && <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">{nameWarning}</p>}
               </div>
               <div>
                 <Label>{tc('email')}</Label>

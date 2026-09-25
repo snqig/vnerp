@@ -4,7 +4,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query, SqlValue } from '@/lib/db';
 import { getTranslator } from '@/lib/i18n-server';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbValue } from '@/types/db';
 
 /**
  * 操作日志导出 API
@@ -92,13 +92,13 @@ export const GET = withPermission(
         r.business_id || '',
         r.ip_address || '',
         r.status === 1 ? t('success') : t('failed'),
-        (r.description || '').replace(/"/g, '""'),
+        String(r.description || '').replace(/"/g, '""'),
         r.create_time || '',
       ]);
 
       const csvContent = [
         headers.join(','),
-        ...csvRows.map((row: DbRow[]) => row.map((v: DbRow) => `"${v}"`).join(',')),
+        ...csvRows.map((row: DbValue[]) => row.map((v: DbValue) => `"${v}"`).join(',')),
       ].join('\n');
 
       const bom = '\uFEFF';

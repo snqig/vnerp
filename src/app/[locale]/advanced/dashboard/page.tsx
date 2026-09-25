@@ -66,7 +66,7 @@ export default function AdvancedDashboardPage() {
             </CardHeader>
             <CardContent>
               <div
-                className={`text-2xl font-bold ${(data.currentMonth.fulfillmentRate || 0) < 95 ? 'text-red-500' : 'text-green-500'}`}
+                className={`text-2xl font-bold ${(data.currentMonth.fulfillmentRate || 0) < 95 ? 'text-red-500 dark:text-red-400' : 'text-green-500 dark:text-green-400'}`}
               >
                 {Number(data.currentMonth.fulfillmentRate || 0).toFixed(1)}%
               </div>
@@ -78,7 +78,7 @@ export default function AdvancedDashboardPage() {
             </CardHeader>
             <CardContent>
               <div
-                className={`text-2xl font-bold ${(data.currentMonth.turnoverRate || 0) < 4 ? 'text-yellow-500' : 'text-green-500'}`}
+                className={`text-2xl font-bold ${(data.currentMonth.turnoverRate || 0) < 4 ? 'text-yellow-500 dark:text-yellow-400' : 'text-green-500 dark:text-green-400'}`}
               >
                 {Number(data.currentMonth.turnoverRate || 0).toFixed(1)}x
               </div>

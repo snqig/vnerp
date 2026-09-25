@@ -1,136 +1,125 @@
-import { getTranslations } from 'next-intl/server';
-
-;
 import { NextRequest } from 'next/server';
+import { getTranslations } from 'next-intl/server';
 import { query, transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
-
 import { withPermission } from '@/lib/api-permissions';
-import type { DbRow } from '@/types/db';
+import {
+  DEPARTMENT_CATALOG,
+  DEPARTMENT_CATALOG_SIZE,
+  LEVEL1_DEPARTMENT_CODES,
+  syncCanonicalDepartments,
+} from '@/lib/department-catalog';
+
 // 部门接口
 interface Department {
   id: number;
   dept_code: string;
   dept_name: string;
-  parent_id: number;
+  /** 树根为 NULL —— 库里没有 id = 0 的行，写 0 会被外键 fk_sys_department_parent 拒绝 */
+  parent_id: number | null;
   sort_order: number;
   status: number;
-  create_time?: string;
-  update_time?: string;
+  deleted: number;
 }
 
-// 一级部门数据
-const departmentData = [
-  { dept_code: 'DEPT001', dept_name: '管理部', parent_id: 0, sort_order: 1, status: 1 },
-  { dept_code: 'DEPT002', dept_name: '业务部', parent_id: 0, sort_order: 2, status: 1 },
-  { dept_code: 'DEPT003', dept_name: '生产部', parent_id: 0, sort_order: 3, status: 1 },
-  { dept_code: 'DEPT004', dept_name: '打样中心', parent_id: 0, sort_order: 4, status: 1 },
-  { dept_code: 'DEPT005', dept_name: '采购部', parent_id: 0, sort_order: 5, status: 1 },
-  { dept_code: 'DEPT006', dept_name: '品质部', parent_id: 0, sort_order: 6, status: 1 },
-];
+// 部门树节点（显式建模，避免 JsonObject 式松散类型）
+interface DepartmentTreeNode {
+  id: number;
+  dept_code: string;
+  dept_name: string;
+  parent_id: number | null;
+  sort_order: number;
+  status: number;
+  children: DepartmentTreeNode[];
+}
 
-// 子部门数据
-const subDepartmentData = [
-  // 生产部子部门
-  {
-    dept_code: 'DEPT00301',
-    dept_name: '模切',
-    parent_code: 'DEPT003',
-    sort_order: 1,
-    status: 1,
-  },
-  {
-    dept_code: 'DEPT00302',
-    dept_name: '商标',
-    parent_code: 'DEPT003',
-    sort_order: 2,
-    status: 1,
-  },
-  {
-    dept_code: 'DEPT00303',
-    dept_name: '其他',
-    parent_code: 'DEPT003',
-    sort_order: 3,
-    status: 1,
-  },
-  // 采购部子部门
-  {
-    dept_code: 'DEPT00501',
-    dept_name: '采购',
-    parent_code: 'DEPT005',
-    sort_order: 1,
-    status: 1,
-  },
-  {
-    dept_code: 'DEPT00502',
-    dept_name: '仓库',
-    parent_code: 'DEPT005',
-    sort_order: 2,
-    status: 1,
-  },
-];
+/**
+ * 组装部门树。
+ *
+ * 注意树根判定是 `parent_id === null` 而非 `=== 0`：
+ * 历史实现用 0 当根哨兵，既与库中实际数据（NULL）不符，也让 buildTree 永远返回空数组。
+ */
+function buildDepartmentTree(
+  departments: Department[],
+  parentId: number | null = null
+): DepartmentTreeNode[] {
+  return departments
+    .filter((dept) => dept.parent_id === parentId)
+    .map((dept) => ({
+      id: dept.id,
+      dept_code: dept.dept_code,
+      dept_name: dept.dept_name,
+      parent_id: dept.parent_id,
+      sort_order: dept.sort_order,
+      status: dept.status,
+      children: buildDepartmentTree(departments, dept.id),
+    }));
+}
 
-// POST - 初始化部门数据
+/** 读取当前存活部门（树序：树根 → 一级 → 二级 → 各自 sort_order） */
+async function loadLiveDepartments(): Promise<Department[]> {
+  return query<Department>(
+    'SELECT id, dept_code, dept_name, parent_id, sort_order, status, deleted' +
+      ' FROM sys_department WHERE deleted = 0' +
+      ' ORDER BY parent_id IS NULL DESC, parent_id, sort_order, id'
+  );
+}
+
+/** 层级统计：树根 / 部 / 科·室·车间 */
+function summarizeLevels(departments: Department[]) {
+  const rootIds = new Set(
+    departments.filter((dept) => dept.parent_id === null).map((dept) => dept.id)
+  );
+  return {
+    total: departments.length,
+    root: rootIds.size,
+    level1: departments.filter((dept) => dept.parent_id !== null && rootIds.has(dept.parent_id))
+      .length,
+    level2: departments.filter((dept) => dept.parent_id !== null && !rootIds.has(dept.parent_id))
+      .length,
+    active: departments.filter((dept) => dept.status === 1).length,
+  };
+}
+
+/**
+ * POST - 把 sys_department 收敛到规范部门树（总经办 > 7 个部 > 16 个科/室/车间）。
+ *
+ * 相对旧实现修掉三处硬伤（旧实现在本仓库必然失败或造成数据事故）：
+ *   1. 旧实现先 `DELETE FROM sys_department` 硬删全表再重建 —— 会立刻打断
+ *      sys_employee.dept_id 的引用（内存里 11 名员工的部门归属瞬间悬空）。
+ *      现改为按 dept_code 幂等 upsert，命中既有行**原地 UPDATE**，保住自增 id。
+ *   2. 旧实现一级部门写 `parent_id: 0`，而库中没有 id = 0 的行，
+ *      外键 fk_sys_department_parent 会以 errno 1452 拒绝整批写入。
+ *   3. 旧实现内联了一份「管理部 / 打样中心 / 模切 / 商标 / 其他 / 采购 / 仓库」
+ *      的旧结构，与库里真实结构、与 init/settings-seed 内联的又是第三份。
+ *      现统一从 @/lib/department-catalog 取 —— 全站一份真相源。
+ *
+ * 清洗：默认把「不在目录内」的存活部门软删（deleted=1，可回滚）；
+ *      传 `?prune=0` 可关闭，仅做补齐不动存量。
+ */
 export const POST = withPermission(
-  async (_request: NextRequest) => {
-  const ts = await getTranslations('Common');
-    // 使用事务初始化数据
-    await transaction(async (connection) => {
-      // 清空现有部门数据
-      await connection.execute('DELETE FROM sys_department');
+  async (request: NextRequest) => {
+    const ts = await getTranslations('Common');
+    const prune = new URL(request.url).searchParams.get('prune') !== '0';
 
-      // 重置自增ID
-      await connection.execute('ALTER TABLE sys_department AUTO_INCREMENT = 1');
-
-      // 插入一级部门
-      for (const dept of departmentData) {
-        await connection.execute(
-          'INSERT INTO sys_department (dept_code, dept_name, parent_id, sort_order, status) VALUES (?, ?, ?, ?, ?)',
-          [dept.dept_code, dept.dept_name, dept.parent_id, dept.sort_order, dept.status]
-        );
-      }
-
-      // 获取刚插入的部门ID映射
-      const [allDepts] = (await connection.execute('SELECT id, dept_code FROM sys_department')) as [
-        unknown[],
-        unknown,
-      ];
-      const codeToIdMap = new Map(allDepts.map((d: any) => [d.dept_code, d.id]));
-
-      // 插入子部门
-      for (const sub of subDepartmentData) {
-        const parentId = codeToIdMap.get(sub.parent_code) || 0;
-        await connection.execute(
-          'INSERT INTO sys_department (dept_code, dept_name, parent_id, sort_order, status) VALUES (?, ?, ?, ?, ?)',
-          [sub.dept_code, sub.dept_name, parentId, sub.sort_order, sub.status]
-        );
-      }
-    });
-
-    // 获取最终数据
-    const finalDepts = await query<Department>(
-      'SELECT * FROM sys_department ORDER BY parent_id, sort_order'
+    const sync = await transaction(async (connection) =>
+      syncCanonicalDepartments(connection, { prune })
     );
 
-    // 构建部门树结构
-    const buildTree = (departments: Department[], parentId: number = 0): DbRow[] => {
-      return departments
-        .filter((d) => d.parent_id === parentId)
-        .map((d) => ({
-          ...d,
-          children: buildTree(departments, d.id),
-        }));
-    };
-
-    const treeData = buildTree(finalDepts);
+    const finalDepts = await loadLiveDepartments();
 
     return successResponse(
       {
         list: finalDepts,
-        tree: treeData,
+        tree: buildDepartmentTree(finalDepts),
         count: finalDepts.length,
-        level1Count: departmentData.length,
-        level2Count: subDepartmentData.length,
+        catalog: {
+          total: DEPARTMENT_CATALOG_SIZE,
+          level1Count: LEVEL1_DEPARTMENT_CODES.length,
+          level2Count: DEPARTMENT_CATALOG_SIZE - LEVEL1_DEPARTMENT_CODES.length - 1,
+          codes: DEPARTMENT_CATALOG.map((node) => node.dept_code),
+        },
+        sync,
       },
       ts('k_z1dcny')
     );
@@ -138,38 +127,17 @@ export const POST = withPermission(
   { errorMessage: '初始化部门数据失败' }
 );
 
-// GET - 获取当前部门数据
+// GET - 获取当前部门数据（只读，不产生副作用）
 export const GET = withPermission(
   async (_request: NextRequest) => {
-    const depts = await query<Department>(
-      'SELECT * FROM sys_department ORDER BY parent_id, sort_order'
-    );
-
-    // 构建部门树结构
-    const buildTree = (departments: Department[], parentId: number = 0): DbRow[] => {
-      return departments
-        .filter((d) => d.parent_id === parentId)
-        .map((d) => ({
-          ...d,
-          children: buildTree(departments, d.id),
-        }));
-    };
-
-    const treeData = buildTree(depts);
-
-    // 统计信息
-    const stats = {
-      total: depts.length,
-      level1: depts.filter((d) => d.parent_id === 0).length,
-      level2: depts.filter((d) => d.parent_id !== 0).length,
-      active: depts.filter((d) => d.status === 1).length,
-    };
+    const depts = await loadLiveDepartments();
 
     return successResponse({
       list: depts,
-      tree: treeData,
-      stats,
+      tree: buildDepartmentTree(depts),
+      stats: summarizeLevels(depts),
     });
   },
   { errorMessage: '获取部门数据失败' }
 );
+

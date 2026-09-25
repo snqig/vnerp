@@ -119,9 +119,9 @@ export const POST = withPermission(
 
     try {
       await execute(
-        `INSERT INTO sys_operation_log (title, oper_name, oper_url, request_method, oper_ip, oper_time, status)
-         VALUES (?, ?, ?, ?, ?, NOW(), ?)`,
-        [ts('k_1pt7oo1'), user.username, '/api/auth/change-password', 'POST', '', 1]
+        `INSERT INTO sys_operation_log (operation, username, request_url, method, ip, status, create_time)
+         VALUES (?, ?, ?, ?, ?, 1, NOW())`,
+        [ts('k_1pt7oo1'), user.username, '/api/auth/change-password', 'POST', '']
       );
     } catch {}
 

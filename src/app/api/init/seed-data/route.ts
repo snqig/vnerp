@@ -592,13 +592,12 @@ export const POST = withPermission(async (_request: NextRequest) => {
         const fromWh = existingWarehouses[(i - 1) % existingWarehouses.length] || wh;
         const toWh = existingWarehouses[i % existingWarehouses.length] || wh;
         await conn.execute(
-          `INSERT INTO inv_transfer_order (transfer_no, from_warehouse_id, to_warehouse_id, transfer_date, transfer_type, status, operator_name) VALUES (?, ?, ?, ?, ?, 3, ?)`,
+          `INSERT INTO inv_transfer_order (transfer_no, type, from_warehouse_id, to_warehouse_id, status, operator_name) VALUES (?, ?, ?, ?, 3, ?)`,
           [
             `TF202604${String(i).padStart(3, '0')}`,
+            i % 2 === 0 ? 2 : 1,
             fromWh.id,
             toWh.id,
-            '2026-04-01',
-            i % 2 === 0 ? 2 : 1,
             `操作员${i}`,
           ]
         );
@@ -989,7 +988,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           stats.prd_process_card_material = Math.min(10, processCards.length);
         }
       } else {
-        stats.prd_process_card_material = existingPcmCount[0].cnt;
+        stats.prd_process_card_material = Number(existingPcmCount[0].cnt) || 0;
       }
     }
 
@@ -1057,7 +1056,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         const [poRows] = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const m = existingMaterials[(i - 1) % existingMaterials.length] || mat;
         const qty = 100 + i * 10;
-        const price = m.purchase_price || 10.0;
+        const price = Number(m.purchase_price) || 10.0;
         await conn.execute(
           `INSERT INTO pur_order_detail (order_id, material_id, quantity, unit, unit_price, tax_rate, amount, tax_amount, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
@@ -1092,7 +1091,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         );
         const [prRows] = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const qty = 50 + i * 10;
-        const price = m.purchase_price || 10.0;
+        const price = Number(m.purchase_price) || 10.0;
         await conn.execute(
           `INSERT INTO pur_request_item (request_id, line_no, material_code, material_name, material_spec, material_unit, quantity, price, amount, expected_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
@@ -1264,8 +1263,9 @@ export const POST = withPermission(async (_request: NextRequest) => {
       for (let i = 1; i <= 10; i++) {
         const m = existingMaterials[(i - 1) % existingMaterials.length] || mat;
         await conn.execute(
-          `INSERT INTO qc_unqualified (handle_no, inspection_id, material_id, material_code, material_name, quantity, handle_type, handle_status, responsible_dept, responsible_person, handle_result, cost_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO qc_unqualified (unqualified_no, handle_no, inspection_id, material_id, material_code, material_name, quantity, handle_type, handle_status, responsible_dept, responsible_person, handle_result, cost_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
+            `UQ202604${String(i).padStart(3, '0')}`,
             `UQH202604${String(i).padStart(3, '0')}`,
             unqualifiedRecords.length > 0
               ? unqualifiedRecords[(i - 1) % unqualifiedRecords.length].id
@@ -1367,11 +1367,10 @@ export const POST = withPermission(async (_request: NextRequest) => {
       const opMethods = ['GET', 'POST', 'PUT', 'DELETE'];
       for (let i = 1; i <= 10; i++) {
         await conn.execute(
-          `INSERT INTO sys_operation_log (title, oper_name, oper_type, oper_method, oper_url, oper_ip, status, oper_time) VALUES (?, ?, ?, ?, ?, ?, 1, NOW())`,
+          `INSERT INTO sys_operation_log (operation, username, method, request_url, ip, status, create_time) VALUES (?, ?, ?, ?, ?, 1, NOW())`,
           [
             opModules[i - 1],
             'admin',
-            opTypes[i - 1],
             opMethods[(i - 1) % 4],
             `/api/v1/module${i}`,
             `192.168.0.${100 + i}`,

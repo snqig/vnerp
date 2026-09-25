@@ -25,11 +25,8 @@ export const GET = withPermission(async (request: NextRequest) => {
   // 转换为前端友好的格式
   const result: Record<string, number[]> = {};
   for (const row of rows as DbRow[]) {
-    const ids = (row.target_ids || '')
-      .split(',')
-      .map(Number)
-      .filter((n: number) => !isNaN(n) && n > 0);
-    result[row.scope_type] = ids;
+    const ids = (String(row.target_ids || '')).split(',').map(Number).filter((n: number) => !isNaN(n) && n > 0);
+    result[String(row.scope_type) ?? ''] = ids;
   }
 
   return successResponse(result);

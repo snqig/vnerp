@@ -52,8 +52,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
 
     const result = rows.map((row: DbRow) => {
-      const avgStock = parseFloat(row.avg_stock) || 1;
-      const outboundQty = parseFloat(row.outbound_qty);
+      const avgStock = parseFloat(String(row.avg_stock)) || 1;
+      const outboundQty = parseFloat(String(row.outbound_qty));
       // 周转率 = 出库量 / 平均库存
       const turnoverRate = avgStock > 0 ? Math.round((outboundQty / avgStock) * 100) / 100 : 0;
       // 周转天数 = 统计天数 / 周转率
@@ -64,12 +64,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         materialCode: row.material_code,
         materialName: row.material_name,
         unit: row.unit,
-        inboundQty: parseFloat(row.inbound_qty),
+        inboundQty: parseFloat(String(row.inbound_qty)),
         outboundQty,
-        avgStock: parseFloat(row.avg_stock),
-        currentStock: parseFloat(row.current_stock),
-        lockedQty: parseFloat(row.locked_qty),
-        availableQty: parseFloat(row.available_qty),
+        avgStock: parseFloat(String(row.avg_stock)),
+        currentStock: parseFloat(String(row.current_stock)),
+        lockedQty: parseFloat(String(row.locked_qty)),
+        availableQty: parseFloat(String(row.available_qty)),
         turnoverRate,
         turnoverDays,
       };
@@ -80,12 +80,15 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         list: result,
         summary: {
           totalMaterials: result.length,
-          totalInbound: result.reduce((sum: number, r: DbRow) => sum + r.inboundQty, 0),
-          totalOutbound: result.reduce((sum: number, r: DbRow) => sum + r.outboundQty, 0),
+          totalInbound: result.reduce((sum: number, r: DbRow) => sum + Number(r.inboundQty ?? 0), 0),
+          totalOutbound: result.reduce(
+            (sum: number, r: DbRow) => sum + Number(r.outboundQty ?? 0),
+            0
+          ),
           avgTurnoverRate:
             result.length > 0
               ? Math.round(
-                  (result.reduce((sum: number, r: DbRow) => sum + r.turnoverRate, 0) /
+                  (result.reduce((sum: number, r: DbRow) => sum + Number(r.turnoverRate ?? 0), 0) /
                     result.length) *
                     100
                 ) / 100
@@ -117,8 +120,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
 
     const result = rows.map((row: DbRow) => {
-      const totalStock = parseFloat(row.total_stock) || 1;
-      const outboundQty = parseFloat(row.outbound_qty);
+      const totalStock = parseFloat(String(row.total_stock)) || 1;
+      const outboundQty = parseFloat(String(row.outbound_qty));
       const turnoverRate = totalStock > 0 ? Math.round((outboundQty / totalStock) * 100) / 100 : 0;
 
       return {
@@ -126,10 +129,10 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         warehouseName: row.warehouse_name,
         warehouseType: row.warehouse_type,
         materialCount: row.material_count,
-        totalStock: parseFloat(row.total_stock),
-        totalLocked: parseFloat(row.total_locked),
-        totalAvailable: parseFloat(row.total_available),
-        inboundQty: parseFloat(row.inbound_qty),
+        totalStock: parseFloat(String(row.total_stock)),
+        totalLocked: parseFloat(String(row.total_locked)),
+        totalAvailable: parseFloat(String(row.total_available)),
+        inboundQty: parseFloat(String(row.inbound_qty)),
         outboundQty,
         turnoverRate,
       };
@@ -140,8 +143,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         list: result,
         summary: {
           totalWarehouses: result.length,
-          totalStock: result.reduce((sum: number, r: DbRow) => sum + r.totalStock, 0),
-          totalOutbound: result.reduce((sum: number, r: DbRow) => sum + r.outboundQty, 0),
+          totalStock: result.reduce((sum: number, r: DbRow) => sum + Number(r.totalStock ?? 0), 0),
+          totalOutbound: result.reduce(
+            (sum: number, r: DbRow) => sum + Number(r.outboundQty ?? 0),
+            0
+          ),
         },
       },
       ts('k_161bjot')

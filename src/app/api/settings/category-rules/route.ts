@@ -110,15 +110,15 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     }
 
     for (const row of rows) {
-      const code = row.code ?? '';
+      const code = String(row.code ?? '');
       if (codeRegex && !codeRegex.test(code)) {
         violations.push({
           table: meta.table,
           field: meta.codeColumn,
-          current_value: code,
+          current_value: String(code),
           expected_pattern: rules.codePatternDesc,
           record_id: Number(row.id),
-          record_name: row.name,
+          record_name: String(row.name ?? ''),
           severity: 'error',
           message: `编码"${code}"不符合规则${rules.codePatternDesc}`,
         });
@@ -131,9 +131,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
           current_value: String(row.status),
           expected_pattern: rules.statusValues.join('/'),
           record_id: Number(row.id),
-          record_name: row.name,
+          record_name: String(row.name ?? ''),
           severity: 'error',
-          message: `状态值${row.status}不在合法范围${rules.statusValues.join('/')}内`,
+          message: `状态值${String(row.status)}不在合法范围${rules.statusValues.join('/')}内`,
         });
       }
     }
@@ -170,7 +170,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
             current_value: ts('k_fvy3k3'),
             expected_pattern: ts('k_z9yhol'),
             record_id: Number(row.id),
-            record_name: row.name,
+            record_name: String(row.name ?? ''),
             severity: 'error',
             message: ts('k_3uvmos'),
           });
@@ -181,7 +181,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
             current_value: `层级深度${depth}`,
             expected_pattern: `最大${rules.maxDepth}层`,
             record_id: Number(row.id),
-            record_name: row.name,
+            record_name: String(row.name ?? ''),
             severity: 'warning',
             message: `分类层级深度${depth}超过最大限制${rules.maxDepth}`,
           });

@@ -9,6 +9,7 @@ import { getTranslations } from 'next-intl/server';
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { numericFilter } from '@/lib/query-filter';
 import {
   queryOperateLogs,
   queryLoginLogs,
@@ -28,7 +29,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const moduleName = searchParams.get('module') || undefined;
   const type = searchParams.get('type') || undefined;
   const username = searchParams.get('username') || undefined;
-  const status = searchParams.get('status');
+  const status = numericFilter(searchParams.get('status'));
   const startTime = searchParams.get('startTime') || undefined;
   const endTime = searchParams.get('endTime') || undefined;
   const page = Number(searchParams.get('page') || 1);

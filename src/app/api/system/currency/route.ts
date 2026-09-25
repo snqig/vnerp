@@ -11,11 +11,12 @@ import {
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
+import { numericFilter } from '@/lib/query-filter';
 
 // GET - 币种列表（含筛选）
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
-  const status = searchParams.get('status');
+  const status = numericFilter(searchParams.get('status'));
   const onlyActive = searchParams.get('active') === 'true';
 
   let sql = 'SELECT * FROM sys_currency WHERE deleted = 0';
@@ -23,9 +24,9 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   if (onlyActive) {
     sql += ' AND status = 1';
-  } else if (status !== undefined && status !== null && status !== '') {
+  } else if (status !== undefined) {
     sql += ' AND status = ?';
-    values.push(parseInt(status));
+    values.push(status);
   }
 
   sql += ' ORDER BY sort ASC, id ASC';

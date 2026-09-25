@@ -32,10 +32,13 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, RefreshCw, QrCode, Eye, Printer, ScanLine, History } from 'lucide-react';
+import { Plus, Search, RefreshCw, QrCode, Eye, Printer, ScanLine, History, CheckCircle, Clock, AlertTriangle, Archive } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations, useLocale } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useRowSelection } from '@/lib/useRowSelection';
 import type { ExportColumn } from '@/lib/global-export-service';
 import { formatDate } from '@/lib/date-utils';
 
@@ -96,6 +99,17 @@ export default function QRCodePage() {
   const { toast } = useToast();
   const [list, setList] = useState<QRRecord[]>([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState<{ total: number; valid: number; used: number; expired: number; invalidated: number }>({
+    total: 0,
+    valid: 0,
+    used: 0,
+    expired: 0,
+    invalidated: 0,
+  });
+  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    list,
+    (r) => String(r.id)
+  );
   const [page, setPage] = useState(1);
   const [keyword, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -129,6 +143,15 @@ export default function QRCodePage() {
         }
         setList(rawList);
         setTotal(totalCount);
+        if (rawData?.stats) {
+          setStats({
+            total: Number(rawData.stats.total || 0),
+            valid: Number(rawData.stats.valid || 0),
+            used: Number(rawData.stats.used || 0),
+            expired: Number(rawData.stats.expired || 0),
+            invalidated: Number(rawData.stats.invalidated || 0),
+          });
+        }
       }
     } catch {}
   }, [page, keyword, typeFilter]);
@@ -227,6 +250,25 @@ export default function QRCodePage() {
   return (
     <MainLayout>
       <div className="space-y-4">
+        <StatsCards
+          configs={[
+            { key: 'total', label: t('statTotal'), icon: QrCode, ...StatsTheme.blue },
+            { key: 'valid', label: t('valid'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'used', label: t('used'), icon: Clock, ...StatsTheme.orange },
+            { key: 'expired', label: t('expired'), icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'invalidated', label: t('invalidated'), icon: Archive, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: stats.total },
+            { key: 'valid', count: stats.valid },
+            { key: 'used', count: stats.used },
+            { key: 'expired', count: stats.expired },
+            { key: 'invalidated', count: stats.invalidated },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">{t('qrCodeManagement')}</h2>
           <div className="flex items-center gap-2">
@@ -266,8 +308,7 @@ export default function QRCodePage() {
             <GlobalExportToolbar
               filename={ts('k_1u3hjck')}
               title={ts('k_1u3hjck')}
-              columns={
-                [
+              columns={[
                   { key: 'qr_code', label: ts('k_7d0emt'), width: 25 },
                   { key: 'qr_type', label: ts('k_anh4cj'), width: 12 },
                   { key: 'ref_no', label: ts('k_15evjra'), width: 18 },
@@ -283,14 +324,23 @@ export default function QRCodePage() {
                     key: 'status',
                     label: ts('k_1ccx4t4'),
                     width: 10,
-                    formatter: (v: Loose) => ['', ts('k_kgwvlw'), ts('k_y7lj0n'), tc('expired'), ts('k_wph6a4')][v] || String(v),
+                    formatter: (v: Loose) => {
+                      const n = Number(v);
+                      const map: Record<number, string> = {
+                        1: ts('k_kgwvlw'),
+                        2: ts('k_y7lj0n'),
+                        3: tc('expired'),
+                        9: ts('k_wph6a4'),
+                      };
+                      return map[n] || String(v);
+                    },
                   },
                   { key: 'create_time', label: tc('createdAt'), width: 18 },
                 ] as ExportColumn[]
               }
-              data={list}
-              landscape={true}
-            />
+data={selectedCount > 0 ? list.filter((r) => isSelected(String(r.id))) : list}
+  landscape={true}
+/>
             <Button
               size="sm"
               onClick={() => {
@@ -315,6 +365,12 @@ export default function QRCodePage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-[40px]">
+                        <Checkbox
+                          checked={allSelected}
+                          onCheckedChange={() => toggleAll()}
+                        />
+                      </TableHead>
                       <TableHead>{t('qrCode')}</TableHead>
                       <TableHead>{tc('type')}</TableHead>
                       <TableHead>{t('refNo')}</TableHead>
@@ -331,13 +387,19 @@ export default function QRCodePage() {
                   <TableBody>
                     {list.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
                           {tc('noData')}
                         </TableCell>
                       </TableRow>
                     ) : (
                       list.map((r) => (
                         <TableRow key={r.id}>
+                          <TableCell>
+                            <Checkbox
+                              checked={isSelected(String(r.id))}
+                              onCheckedChange={() => toggle(String(r.id))}
+                            />
+                          </TableCell>
                           <TableCell className="font-mono text-xs">{r.qr_code}</TableCell>
                           <TableCell>
                             <Badge variant="outline">{typeMap[r.qr_type] || r.qr_type}</Badge>
@@ -609,68 +671,68 @@ export default function QRCodePage() {
                 <TabsContent value="info" className="space-y-3">
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-muted-foreground">{t('qrCode')}：</span>
+                      <span className="text-muted-foreground">{t('qrCode')}{t('fieldSep')}</span>
                       <span className="font-mono">{traceData.record?.qr_code}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{tc('type')}：</span>
+                      <span className="text-muted-foreground">{tc('type')}{t('fieldSep')}</span>
                       {typeMap[traceData.record?.qr_type] || traceData.record?.qr_type}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('refNo')}：</span>
+                      <span className="text-muted-foreground">{t('refNo')}{t('fieldSep')}</span>
                       {traceData.record?.ref_no || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{tc('batchNo')}：</span>
+                      <span className="text-muted-foreground">{tc('batchNo')}{t('fieldSep')}</span>
                       {traceData.record?.batch_no || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{tc('materialCode')}：</span>
+                      <span className="text-muted-foreground">{tc('materialCode')}{t('fieldSep')}</span>
                       {traceData.record?.material_code || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('materialName')}：</span>
+                      <span className="text-muted-foreground">{t('materialName')}{t('fieldSep')}</span>
                       {traceData.record?.material_name || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{tc('specification')}：</span>
+                      <span className="text-muted-foreground">{tc('specification')}{t('fieldSep')}</span>
                       {traceData.record?.specification || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{tc('quantity')}：</span>
+                      <span className="text-muted-foreground">{tc('quantity')}{t('fieldSep')}</span>
                       {traceData.record?.quantity}
                       {traceData.record?.unit}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{tc('warehouse')}：</span>
+                      <span className="text-muted-foreground">{tc('warehouse')}{t('fieldSep')}</span>
                       {traceData.record?.warehouse_name || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{tc('supplier')}：</span>
+                      <span className="text-muted-foreground">{tc('supplier')}{t('fieldSep')}</span>
                       {traceData.record?.supplier_name || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{tc('customer')}：</span>
+                      <span className="text-muted-foreground">{tc('customer')}{t('fieldSep')}</span>
                       {traceData.record?.customer_name || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('workOrderNo')}：</span>
+                      <span className="text-muted-foreground">{t('workOrderNo')}{t('fieldSep')}</span>
                       {traceData.record?.work_order_no || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('productionDate')}：</span>
+                      <span className="text-muted-foreground">{t('productionDate')}{t('fieldSep')}</span>
                       {formatDate(traceData.record?.production_date) || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('expiryDate')}：</span>
+                      <span className="text-muted-foreground">{t('expiryDate')}{t('fieldSep')}</span>
                       {formatDate(traceData.record?.expiry_date) || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('printCount')}：</span>
+                      <span className="text-muted-foreground">{t('printCount')}{t('fieldSep')}</span>
                       {traceData.record?.print_count}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('scanCount')}：</span>
+                      <span className="text-muted-foreground">{t('scanCount')}{t('fieldSep')}</span>
                       {traceData.record?.scan_count}
                     </div>
                   </div>

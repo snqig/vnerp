@@ -9,6 +9,7 @@ import {
   validateRequestBody,
   logOperation,
 } from '@/lib/api-response';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 
@@ -175,7 +176,7 @@ export const POST = withPermission(
     // 使用事务创建用户和绑定角色
     const userId = await transaction<number>(async (connection) => {
       // 创建用户
-      const [result] = await connection.execute(
+      const result = (await connection.execute<DbResultSetHeader>(
         `INSERT INTO sys_user (username, password, real_name, email, phone, department_id, status, first_login, create_time)
        VALUES (?, ?, ?, ?, ?, ?, 1, 1, NOW())`,
         [
@@ -186,7 +187,7 @@ export const POST = withPermission(
           phone || null,
           department_id || null,
         ]
-      );
+      )) as unknown as DbResultSetHeader;
 
       const newUserId = result.insertId;
 

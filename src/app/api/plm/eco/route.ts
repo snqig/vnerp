@@ -1,10 +1,12 @@
 import { getTranslations } from 'next-intl/server';
 
 ;
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { generateDocumentNo } from '@/lib/document-numbering';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -12,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const ecoNo = searchParams.get('ecoNo') || '';
   const ecoType = searchParams.get('ecoType') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
 
   let where = 'WHERE deleted = 0';
   const params: SqlValue[] = [];
@@ -24,7 +26,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     where += ' AND eco_type = ?';
     params.push(ecoType);
   }
-  if (status !== '') {
+  if (status !== undefined) {
     where += ' AND status = ?';
     params.push(Number(status));
   }
@@ -59,13 +61,7 @@ export const POST = withPermission(
 
     if (!eco_type) return errorResponse(ts('k_1998m55'), 400, 400);
 
-    const now = new Date();
-    const ecoNo =
-      'ECO' +
-      now.getFullYear() +
-      String(now.getMonth() + 1).padStart(2, '0') +
-      String(now.getDate()).padStart(2, '0') +
-      String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    const ecoNo = await generateDocumentNo('eco');
 
     const result = await execute(
       `INSERT INTO plm_eco (eco_no, eco_title, eco_type, product_id, product_code, product_name, old_version, new_version, change_reason, change_content, impact_analysis, applicant, apply_time, remark)

@@ -96,12 +96,12 @@ export default function CostAnalysisPage() {
                     <td className="text-right p-2">¥{Number(p.directCost).toLocaleString()}</td>
                     <td className="text-right p-2">¥{Number(p.overhead).toLocaleString()}</td>
                     <td
-                      className={`text-right p-2 ${p.grossMargin < 20 ? 'text-red-500' : 'text-green-500'}`}
+                      className={`text-right p-2 ${p.grossMargin < 20 ? 'text-red-500 dark:text-red-400' : 'text-green-500 dark:text-green-400'}`}
                     >
                       {p.grossMargin.toFixed(1)}%
                     </td>
                     <td
-                      className={`text-right p-2 ${p.netMargin < 10 ? 'text-red-500' : 'text-green-500'}`}
+                      className={`text-right p-2 ${p.netMargin < 10 ? 'text-red-500 dark:text-red-400' : 'text-green-500 dark:text-green-400'}`}
                     >
                       {p.netMargin.toFixed(1)}%
                     </td>

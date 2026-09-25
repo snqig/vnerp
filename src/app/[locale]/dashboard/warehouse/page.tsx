@@ -215,13 +215,10 @@ export default function WarehouseDashboard() {
     <MainLayout>
       <div
         ref={dashboardRef}
-        className="min-h-screen text-white p-4 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #091637 0%, #010205 100%)',
-        }}
+        className="dash-scope dark:bg-[linear-gradient(135deg,#091637_0%,#010205_100%)] min-h-screen text-slate-900 dark:text-gray-200 dark:text-white p-4 relative overflow-hidden"
       >
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl animate-blob" />
+          <div className="absolute top-0 left-0 w-96 h-96 bg-[#A0522D]/5 rounded-full blur-3xl animate-blob dark:bg-cyan-500/5" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-blob animation-delay-2000" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-3xl animate-blob animation-delay-4000" />
         </div>
@@ -232,31 +229,31 @@ export default function WarehouseDashboard() {
             <div className="tech-title-row">
               <div className="tech-title-line-left" />
               <div>
-                <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
+                <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-[#8A4A22] via-[#A0522D] to-[#8A4A22] dark:from-cyan-300 dark:via-blue-400 dark:to-cyan-300 bg-clip-text text-transparent">
                   {companyName}
                 </h1>
-                <p className="text-[10px] text-white/50">{t('warehouseBoard')}</p>
+                <p className="text-[10px] text-slate-500 dark:text-white/50">{t('warehouseBoard')}</p>
               </div>
               <div className="tech-title-line-right" />
             </div>
             <div className="tech-title-bottom-line" />
           </div>
           <div className="flex items-center gap-3 mt-1.5">
-            <div className="text-sm font-mono font-bold text-cyan-400">
+            <div className="text-sm font-mono font-bold text-[#8A4A22] dark:text-cyan-400">
               {currentTime && formatTime(currentTime)}
             </div>
             <button
               onClick={toggleFullscreen}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+              className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 transition-colors"
               title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
             >
               {isFullscreen ? (
-                <Minimize className="h-3.5 w-3.5 text-cyan-400" />
+                <Minimize className="h-3.5 w-3.5 text-[#8A4A22] dark:text-cyan-400" />
               ) : (
-                <Maximize className="h-3.5 w-3.5 text-cyan-400" />
+                <Maximize className="h-3.5 w-3.5 text-[#8A4A22] dark:text-cyan-400" />
               )}
             </button>
-            <div className="px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-[10px] text-cyan-300">
+            <div className="px-2 py-0.5 rounded-full bg-[#A0522D]/15 border border-[#A0522D]/30 text-[10px] text-[#8A4A22] dark:bg-cyan-500/20 dark:border-cyan-500/30 dark:text-cyan-300">
               {loading ? tc('loading') : '● ' + t('realtime')}
             </div>
           </div>
@@ -304,13 +301,13 @@ export default function WarehouseDashboard() {
             <div key={i} className={`tech-card tech-glow tech-card-delay-${i + 1} p-4`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-white/60">{s.title}</p>
-                  <p className="text-xl font-bold mt-1 bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">
+                  <p className="text-xs text-slate-500 dark:text-white/60">{s.title}</p>
+                  <p className="text-xl font-bold mt-1 bg-gradient-to-r from-[#8A4A22] to-[#9C5527] dark:from-cyan-300 dark:to-blue-300 bg-clip-text text-transparent">
                     {s.value}
                   </p>
                 </div>
                 <div className={`p-2 rounded-lg bg-gradient-to-br ${s.color}`}>
-                  <s.icon className="h-5 w-5 text-white" />
+                  <s.icon className="h-5 w-5 text-slate-900 dark:text-gray-200 dark:text-white" />
                 </div>
               </div>
             </div>
@@ -319,14 +316,14 @@ export default function WarehouseDashboard() {
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="tech-card tech-glow p-0 lg:col-span-2">
-            <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
-              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
-              <Warehouse className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">{t('warehouseUtilization')}</span>
+            <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-white dark:bg-white/5">
+              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#C2763C] to-[#8A4A22] dark:from-cyan-400 dark:to-blue-600" />
+              <Warehouse className="h-4 w-4 text-[#8A4A22] dark:text-cyan-400" />
+              <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">{t('warehouseUtilization')}</span>
             </div>
             <div className="p-4 h-[300px]">
               {data.warehouseOccupancy.length === 0 ? (
-                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+                <p className="text-slate-400 dark:text-white/40 text-center py-8">{tc('noData')}</p>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
@@ -384,10 +381,10 @@ export default function WarehouseDashboard() {
           </div>
 
           <div className="tech-card tech-glow p-0">
-            <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
-              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
-              <BarChart3 className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">{t('warehouseUtilization')}</span>
+            <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-white dark:bg-white/5">
+              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#C2763C] to-[#8A4A22] dark:from-cyan-400 dark:to-blue-600" />
+              <BarChart3 className="h-4 w-4 text-[#8A4A22] dark:text-cyan-400" />
+              <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">{t('warehouseUtilization')}</span>
             </div>
             <div className="p-4 flex flex-col items-center">
               <div className="relative">
@@ -414,7 +411,7 @@ export default function WarehouseDashboard() {
               <div className="mt-3 w-full space-y-2">
                 {warehouses3D.slice(0, 5).map((w, i) => (
                   <div key={i} className="flex items-center justify-between text-sm">
-                    <span className="text-white/60 text-xs">{w.name}</span>
+                    <span className="text-slate-500 dark:text-white/60 text-xs">{w.name}</span>
                     <span
                       className={`font-bold text-xs ${
                         w.occupancy > 80
@@ -435,10 +432,10 @@ export default function WarehouseDashboard() {
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="tech-card tech-glow p-0">
-            <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
-              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
-              <PieChartIcon className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">
+            <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-white dark:bg-white/5">
+              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#C2763C] to-[#8A4A22] dark:from-cyan-400 dark:to-blue-600" />
+              <PieChartIcon className="h-4 w-4 text-[#8A4A22] dark:text-cyan-400" />
+              <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">
                 {t('materialCategoryDistribution')}
               </span>
             </div>
@@ -487,10 +484,10 @@ export default function WarehouseDashboard() {
           </div>
 
           <div className="tech-card tech-glow p-0 lg:col-span-2">
-            <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
+            <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-white dark:bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-green-400 to-emerald-600" />
               <TrendingDown className="h-4 w-4 text-green-400" />
-              <span className="text-sm font-medium text-white/80">{t('inoutTrend')}</span>
+              <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">{t('inoutTrend')}</span>
             </div>
             <div className="p-4 h-[300px]">
               {data.recentTransactions.length === 0 ? (
@@ -530,17 +527,17 @@ export default function WarehouseDashboard() {
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div className="tech-card tech-glow p-0">
-            <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
-              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
-              <BarChart3 className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">
+            <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-white dark:bg-white/5">
+              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#C2763C] to-[#8A4A22] dark:from-cyan-400 dark:to-blue-600" />
+              <BarChart3 className="h-4 w-4 text-[#8A4A22] dark:text-cyan-400" />
+              <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">
                 {t('materialCategoryDistribution')}
               </span>
             </div>
             <AutoScroll maxHeight={320}>
               <div className="p-4">
                 {data.categoryDistribution.length === 0 ? (
-                  <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+                  <p className="text-slate-400 dark:text-white/40 text-center py-8">{tc('noData')}</p>
                 ) : (
                   <div className="space-y-2">
                     {data.categoryDistribution.map((c, i) => {
@@ -556,10 +553,10 @@ export default function WarehouseDashboard() {
                             className="w-2 h-2 rounded-full"
                             style={{ backgroundColor: COLORS[i % COLORS.length] }}
                           />
-                          <span className="text-sm flex-1 text-white/70">
+                          <span className="text-sm flex-1 text-slate-600 dark:text-white/70">
                             {c.material_type || tc('unclassified')}
                           </span>
-                          <div className="flex-1 bg-white/10 rounded-full h-5 relative overflow-hidden">
+                          <div className="flex-1 bg-slate-200 dark:bg-white/10 rounded-full h-5 relative overflow-hidden">
                             <div
                               className="h-full rounded-full transition-[width] duration-500"
                               style={{
@@ -567,7 +564,7 @@ export default function WarehouseDashboard() {
                                 background: 'linear-gradient(90deg, #06b6d4, #3b82f6)',
                               }}
                             />
-                            <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
+                            <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-slate-900 dark:text-gray-200 dark:text-white">
                               {c.count}
                             </span>
                           </div>
@@ -580,16 +577,16 @@ export default function WarehouseDashboard() {
             </AutoScroll>
           </div>
 
-          <div className="tech-card tech-glow p-0">
-            <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
+          <div className="tech-card tech-glow tech-flat p-0">
+            <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-white dark:bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-red-400 to-orange-500" />
               <AlertTriangle className="h-4 w-4 text-red-400" />
-              <span className="text-sm font-medium text-white/80">{t('stockWarning')}</span>
+              <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">{t('stockWarning')}</span>
             </div>
             <AutoScroll maxHeight={320}>
               <div className="p-4">
                 {data.lowStockItems.length === 0 ? (
-                  <p className="text-white/40 text-center py-8">{t('noAlerts')}</p>
+                  <p className="text-slate-400 dark:text-white/40 text-center py-8">{t('noAlerts')}</p>
                 ) : (
                   <div className="space-y-2">
                     {data.lowStockItems.map((item, i) => (
@@ -598,8 +595,8 @@ export default function WarehouseDashboard() {
                         className="flex items-center justify-between p-2 rounded-lg bg-red-500/5 border border-red-500/20"
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-white/80 truncate">{item.material_name}</p>
-                          <p className="text-[10px] text-white/40 font-mono">
+                          <p className="text-xs text-slate-700 dark:text-gray-200 dark:text-white/80 truncate">{item.material_name}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-white/40 font-mono">
                             {item.material_code}
                           </p>
                         </div>
@@ -607,7 +604,7 @@ export default function WarehouseDashboard() {
                           <p className="text-xs text-red-400 font-bold">
                             {Number(item.stock_qty).toLocaleString()} {item.unit}
                           </p>
-                          <p className="text-[10px] text-white/30">
+                          <p className="text-[10px] text-slate-400 dark:text-white/30">
                             {tc('lowest')} {Number(item.min_stock).toLocaleString()}
                           </p>
                         </div>
@@ -620,22 +617,22 @@ export default function WarehouseDashboard() {
           </div>
         </div>
 
-        <div className="relative z-10 tech-card tech-glow p-0">
-          <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
-            <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
-            <Clock className="h-4 w-4 text-cyan-400" />
-            <span className="text-sm font-medium text-white/80">{t('recentInoutRecords')}</span>
+        <div className="relative z-10 tech-card tech-glow tech-flat p-0">
+          <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-white dark:bg-white/5">
+            <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#C2763C] to-[#8A4A22] dark:from-cyan-400 dark:to-blue-600" />
+            <Clock className="h-4 w-4 text-[#8A4A22] dark:text-cyan-400" />
+            <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">{t('recentInoutRecords')}</span>
           </div>
           <div className="p-4">
             {data.recentTransactions.length === 0 ? (
-              <p className="text-white/40 text-center py-8">{tc('noRecords')}</p>
+              <p className="text-slate-400 dark:text-white/40 text-center py-8">{tc('noRecords')}</p>
             ) : (
               <VerticalMarquee maxHeight={320} speed={28}>
                 <div className="space-y-2">
                   {data.recentTransactions.slice(0, 12).map((t, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10"
+                      className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <span
@@ -652,17 +649,17 @@ export default function WarehouseDashboard() {
                               : t.transaction_type}
                         </span>
                         <div className="min-w-0">
-                          <p className="text-xs text-white/80 truncate">{t.material_name}</p>
-                          <p className="text-[10px] text-white/40 font-mono truncate">
+                          <p className="text-xs text-slate-700 dark:text-gray-200 dark:text-white/80 truncate">{t.material_name}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-white/40 font-mono truncate">
                             {t.material_code}
                           </p>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-xs text-white/70 font-medium">
+                        <p className="text-xs text-slate-600 dark:text-white/70 font-medium">
                           {Number(t.quantity).toLocaleString()} {t.unit}
                         </p>
-                        <p className="text-[10px] text-white/40">{t.create_time?.substring(5, 16)}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-white/40">{t.create_time?.substring(5, 16)}</p>
                       </div>
                     </div>
                   ))}

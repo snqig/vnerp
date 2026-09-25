@@ -218,7 +218,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     );
     const customerMap: Record<string, number> = {};
     for (const row of customerRows) {
-      customerMap[row.customer_name] = row.id;
+      customerMap[String(row.customer_name)] = Number(row.id ?? 0);
     }
 
     const salesOrders = [
@@ -258,7 +258,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const [orderRows] = await conn.execute('SELECT id, order_no FROM sal_order ORDER BY id');
     const orderMap: Record<string, number> = {};
     for (const row of orderRows) {
-      orderMap[row.order_no] = row.id;
+      orderMap[String(row.order_no)] = Number(row.id ?? 0);
     }
 
     const receivables = [
@@ -852,7 +852,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         'SELECT id, material_code FROM inv_material WHERE deleted = 0 LIMIT 20'
       );
       for (const row of matRows) {
-        matMap[row.material_code] = row.id;
+        matMap[String(row.material_code)] = Number(row.id ?? 0);
       }
     } catch (_e) {}
 
@@ -968,7 +968,10 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const [matRows2] = await conn.execute(
       'SELECT id, material_name FROM inv_material WHERE deleted = 0 ORDER BY id LIMIT 5'
     );
-    const matList: Array<{ id: number; material_name: string }> = matRows2;
+    const matList: Array<{ id: number; material_name: string }> = matRows2.map((r) => ({
+      id: Number(r.id ?? 0),
+      material_name: String(r.material_name ?? ''),
+    }));
     for (const bom of boms) {
       await safeInsert(
         `INSERT INTO prd_bom (bom_name, product_id, version, total_cost, status, remark, create_time, update_time, deleted) VALUES (?, ?, '1.0', ?, 1, ?, NOW(), NOW(), 0)`,

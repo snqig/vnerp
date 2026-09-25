@@ -54,8 +54,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   // 提取唯一的分类，并按最小sort_order排序
   const categoryOrder = new Map<string, number>();
   rows.forEach((row: DbRow) => {
-    if (!categoryOrder.has(row.category)) {
-      categoryOrder.set(row.category, row.sort_order);
+    if (!categoryOrder.has(String(row.category))) {
+      categoryOrder.set(String(row.category), Number(row.sort_order ?? 0));
     }
   });
 
@@ -68,13 +68,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     .map(([cat]) => cat);
 
   rows.forEach((row: DbRow) => {
-    if (!categories.includes(row.category)) {
-      categories.push(row.category);
+    if (!categories.includes(String(row.category))) {
+      categories.push(String(row.category));
     }
-    if (!grouped[row.category]) {
-      grouped[row.category] = [];
+    if (!grouped[String(row.category)]) {
+      grouped[String(row.category)] = [];
     }
-    grouped[row.category].push({
+    grouped[String(row.category)].push({
       ...row,
       is_required: Boolean(row.is_required),
       approval_required: Boolean(row.approval_required),

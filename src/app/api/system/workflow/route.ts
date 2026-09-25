@@ -188,7 +188,7 @@ export const DELETE = withPermission(async (request: NextRequest) => {
     [workflowId]
   )) as DbRow[];
 
-  if (activeInstances[0]?.count > 0) {
+  if (Number(activeInstances[0]?.count ?? 0) > 0) {
     return errorResponse(ts('k_g6yayz'), 400, 400);
   }
 

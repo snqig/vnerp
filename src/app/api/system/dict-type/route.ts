@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(
   async (request: NextRequest, _userInfo) => {
@@ -13,7 +14,7 @@ export const GET = withPermission(
     const pageSize = Number(searchParams.get('pageSize') || 20);
     const dictName = searchParams.get('dictName') || '';
     const dictType = searchParams.get('dictType') || '';
-    const status = searchParams.get('status') || '';
+    const status = numericFilter(searchParams.get('status'));
 
     let where = 'WHERE 1=1';
     const params: SqlValue[] = [];
@@ -25,7 +26,7 @@ export const GET = withPermission(
       where += ' AND dict_code LIKE ?';
       params.push(`%${dictType}%`);
     }
-    if (status !== '') {
+    if (status !== undefined) {
       where += ' AND status = ?';
       params.push(Number(status));
     }

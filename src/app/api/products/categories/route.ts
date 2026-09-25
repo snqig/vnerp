@@ -17,14 +17,15 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   let sql = `
     SELECT
       id,
-      category_code as categoryCode,
-      category_name as categoryName,
-      parent_id as parentId,
+      -- ④ 命名统一：SQL 别名 snake_case（消费端 orders/products/page.tsx 已双读）
+      category_code as category_code,
+      category_name as category_name,
+      parent_id as parent_id,
       level,
-      sort_order as sortOrder,
+      sort_order as sort_order,
       description,
       status,
-      create_time as createTime
+      create_time as create_time
     FROM mdm_product_category
     WHERE deleted = 0
   `;
@@ -90,7 +91,7 @@ export const POST = withPermission(
       [categoryCode, categoryName, parentId, level, sortOrder, description || '']
     );
 
-    const insertId = (result as DbRow).insertId;
+    const insertId = (result as unknown as DbRow).insertId;
 
     return successResponse({ id: insertId, categoryCode }, ts('k_13059ni'));
   },

@@ -63,13 +63,13 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  单据编码规则: 'bg-blue-50 border-blue-200',
-  '刀模/网版寿命管理': 'bg-orange-50 border-orange-200',
-  油墨保质期管理: 'bg-purple-50 border-purple-200',
-  小料拆分标准: 'bg-green-50 border-green-200',
-  仓库7步闭环规则: 'bg-yellow-50 border-yellow-200',
-  生产报工规则: 'bg-red-50 border-red-200',
-  参数修改审批规则: 'bg-indigo-50 border-indigo-200',
+  单据编码规则: 'bg-blue-500/10 border-blue-200',
+  '刀模/网版寿命管理': 'bg-orange-500/10 border-orange-200',
+  油墨保质期管理: 'bg-purple-500/10 border-purple-200',
+  小料拆分标准: 'bg-green-500/10 border-green-200',
+  仓库7步闭环规则: 'bg-yellow-500/10 border-yellow-200',
+  生产报工规则: 'bg-red-500/10 border-red-200',
+  参数修改审批规则: 'bg-indigo-500/10 border-indigo-200',
 };
 /* eslint-enable i18n/no-chinese-hardcode */
 
@@ -238,18 +238,18 @@ export default function SystemConfigPage() {
         </div>
 
         {hasChanges && (
-          <Card className="border-yellow-200 bg-yellow-50">
+          <Card className="border-yellow-200 dark:border-yellow-800 bg-yellow-500/10">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
                 <div className="flex-1">
-                  <p className="font-medium text-yellow-800">
+                  <p className="font-medium text-yellow-800 dark:text-yellow-300">
                     {tc('modifiedConfigPrefix')}
                     {Object.keys(modifiedConfigs).length}
                     {tc('modifiedConfigSuffix')}
                   </p>
                   <div className="mt-2">
-                    <Label className="text-xs text-yellow-700">{tc('modifyReasonLabel')}</Label>
+                    <Label className="text-xs text-yellow-700 dark:text-yellow-400">{tc('modifyReasonLabel')}</Label>
                     <Input
                       value={remark}
                       onChange={(e) => setRemark(e.target.value)}
@@ -291,8 +291,8 @@ export default function SystemConfigPage() {
                         key={item.id}
                         className={`flex items-center justify-between p-3 rounded-lg border ${
                           modifiedConfigs[item.config_key] !== undefined
-                            ? 'border-blue-300 bg-blue-50'
-                            : 'border-gray-200 bg-white'
+                            ? 'border-blue-300 bg-blue-500/10'
+                            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-card'
                         }`}
                       >
                         <div className="flex-1 mr-4">
@@ -301,14 +301,14 @@ export default function SystemConfigPage() {
                             {item.is_required && (
                               <Badge
                                 variant="outline"
-                                className="text-xs text-red-600 border-red-200"
+                                className="text-xs text-red-600 dark:text-red-400 border-red-200 dark:border-red-800"
                               >
                                 {ts('k_166c1v5')}</Badge>
                             )}
                             {item.approval_required && (
                               <Badge
                                 variant="outline"
-                                className="text-xs text-orange-600 border-orange-200"
+                                className="text-xs text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800"
                               >
                                 {ts('k_36td5l')}</Badge>
                             )}

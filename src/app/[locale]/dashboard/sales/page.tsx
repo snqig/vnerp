@@ -138,10 +138,10 @@ function HorizontalBarChart({
     <div className="space-y-3">
       {data.slice(0, 5).map((d, i) => (
         <div key={i} className="flex items-center gap-3">
-          <span className="text-xs w-24 text-right text-cyan-300 truncate">
+          <span className="text-xs w-24 text-right text-[#8A4A22] dark:text-cyan-300 truncate">
             {d[labelKey] || unknownText}
           </span>
-          <div className="flex-1 bg-white/10 rounded-full h-5 relative overflow-hidden">
+          <div className="flex-1 bg-slate-200 dark:bg-white/10 rounded-full h-5 relative overflow-hidden">
             <div
               className="h-full rounded-full transition-[width] duration-500"
               style={{
@@ -149,7 +149,7 @@ function HorizontalBarChart({
                 background: 'linear-gradient(90deg, #06b6d4, #3b82f6)',
               }}
             />
-            <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
+            <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-slate-900 dark:text-gray-200 dark:text-white">
               {typeof d[valueKey] === 'number' ? d[valueKey].toLocaleString() : d[valueKey]}
             </span>
           </div>
@@ -255,11 +255,10 @@ export default function SalesDashboard() {
     <MainLayout>
       <div
         ref={dashboardRef}
-        className="min-h-screen text-white p-4 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #091637 0%, #010205 100%)' }}
+        className="dash-scope dark:bg-[linear-gradient(135deg,#091637_0%,#010205_100%)] min-h-screen text-slate-900 dark:text-gray-200 dark:text-white p-4 relative overflow-hidden"
       >
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl animate-blob" />
+          <div className="absolute top-0 left-0 w-96 h-96 bg-[#A0522D]/5 rounded-full blur-3xl animate-blob dark:bg-cyan-500/5" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-blob animation-delay-2000" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-3xl animate-blob animation-delay-4000" />
         </div>
@@ -270,31 +269,31 @@ export default function SalesDashboard() {
             <div className="tech-title-row">
               <div className="tech-title-line-left" />
               <div>
-                <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
+                <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-[#8A4A22] via-[#A0522D] to-[#8A4A22] dark:from-cyan-300 dark:via-blue-400 dark:to-cyan-300 bg-clip-text text-transparent">
                   {companyName}
                 </h1>
-                <p className="text-[10px] text-white/50">{t('salesBoard')}</p>
+                <p className="text-[10px] text-slate-500 dark:text-white/50">{t('salesBoard')}</p>
               </div>
               <div className="tech-title-line-right" />
             </div>
             <div className="tech-title-bottom-line" />
           </div>
           <div className="flex items-center gap-3 mt-1.5">
-            <div className="text-sm font-mono font-bold text-cyan-400">
+            <div className="text-sm font-mono font-bold text-[#8A4A22] dark:text-cyan-400">
               {currentTime && formatTime(currentTime)}
             </div>
             <button
               onClick={toggleFullscreen}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+              className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 transition-colors"
               title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
             >
               {isFullscreen ? (
-                <Minimize className="h-3.5 w-3.5 text-cyan-400" />
+                <Minimize className="h-3.5 w-3.5 text-[#8A4A22] dark:text-cyan-400" />
               ) : (
-                <Maximize className="h-3.5 w-3.5 text-cyan-400" />
+                <Maximize className="h-3.5 w-3.5 text-[#8A4A22] dark:text-cyan-400" />
               )}
             </button>
-            <div className="px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-[10px] text-cyan-300">
+            <div className="px-2 py-0.5 rounded-full bg-[#A0522D]/15 border border-[#A0522D]/30 text-[10px] text-[#8A4A22] dark:bg-cyan-500/20 dark:border-cyan-500/30 dark:text-cyan-300">
               {loading ? tc('loading') : '● ' + t('realtime')}
             </div>
           </div>
@@ -336,13 +335,13 @@ export default function SalesDashboard() {
             <div key={i} className={`tech-card tech-glow tech-card-delay-${i + 1} p-4`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-white/60">{s.title}</p>
-                  <p className="text-xl font-bold mt-1 bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">
+                  <p className="text-xs text-slate-500 dark:text-white/60">{s.title}</p>
+                  <p className="text-xl font-bold mt-1 bg-gradient-to-r from-[#8A4A22] to-[#9C5527] dark:from-cyan-300 dark:to-blue-300 bg-clip-text text-transparent">
                     {s.value}
                   </p>
                 </div>
                 <div className={`p-3 rounded-lg bg-gradient-to-br ${s.color}`}>
-                  <s.icon className="h-5 w-5 text-white" />
+                  <s.icon className="h-5 w-5 text-slate-900 dark:text-gray-200 dark:text-white" />
                 </div>
               </div>
             </div>
@@ -351,24 +350,24 @@ export default function SalesDashboard() {
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div className="tech-card tech-glow p-5">
-            <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-[#8A4A22] dark:text-cyan-300 mb-4 flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               {t('orderTrend')}
             </h3>
             {data.orderTrend.length === 0 ? (
-              <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+              <p className="text-slate-400 dark:text-white/40 text-center py-8">{tc('noData')}</p>
             ) : (
               <LineChart data={data.orderTrend} width={600} height={200} />
             )}
           </div>
 
           <div className="tech-card tech-glow p-5">
-            <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-[#8A4A22] dark:text-cyan-300 mb-4 flex items-center gap-2">
               <PieChart className="h-4 w-4" />
               {t('orderStatusDistribution')}
             </h3>
             {data.statusDistribution.length === 0 ? (
-              <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+              <p className="text-slate-400 dark:text-white/40 text-center py-8">{tc('noData')}</p>
             ) : (
               <div className="space-y-4">
                 {data.statusDistribution.map((s, i) => {
@@ -384,13 +383,13 @@ export default function SalesDashboard() {
                         <span className={`px-2 py-0.5 rounded text-xs ${cfg.className}`}>
                           {tc(cfg.labelKey)}
                         </span>
-                        <span className="text-white/50">
+                        <span className="text-slate-500 dark:text-white/50">
                           {s.count}
                           {tc('percentSign')}
                           {pct}%)
                         </span>
                       </div>
-                      <div className="bg-white/10 rounded-full h-3 relative overflow-hidden">
+                      <div className="bg-slate-200 dark:bg-white/10 rounded-full h-3 relative overflow-hidden">
                         <div
                           className="h-full rounded-full transition-[width]"
                           style={{
@@ -409,27 +408,27 @@ export default function SalesDashboard() {
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div className="tech-card tech-glow p-5">
-            <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-[#8A4A22] dark:text-cyan-300 mb-4 flex items-center gap-2">
               <Users className="h-4 w-4" />
               {t('customerTop5')}
             </h3>
             {data.topCustomers.length === 0 ? (
-              <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+              <p className="text-slate-400 dark:text-white/40 text-center py-8">{tc('noData')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                    <tr className="border-b border-slate-200 dark:border-gray-600 dark:border-white/10">
+                      <th className="text-left py-2 px-3 text-slate-500 dark:text-white/60 font-medium">
                         {tc('rank')}
                       </th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                      <th className="text-left py-2 px-3 text-slate-500 dark:text-white/60 font-medium">
                         {tc('customerName')}
                       </th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                      <th className="text-left py-2 px-3 text-slate-500 dark:text-white/60 font-medium">
                         {tc('orderCount')}
                       </th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                      <th className="text-left py-2 px-3 text-slate-500 dark:text-white/60 font-medium">
                         {tc('totalAmount')}
                       </th>
                     </tr>
@@ -438,12 +437,12 @@ export default function SalesDashboard() {
                     {data.topCustomers.map((c, i) => (
                       <tr
                         key={i}
-                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                        className="border-b border-slate-200 dark:border-white/5 hover:bg-white dark:bg-white/5 transition-colors"
                       >
-                        <td className="py-2 px-3 text-cyan-400 font-bold text-xs">{i + 1}</td>
-                        <td className="py-2 px-3 text-white/80 text-xs">{c.customer_name}</td>
-                        <td className="py-2 px-3 text-white/60 text-xs">{c.order_count}</td>
-                        <td className="py-2 px-3 text-cyan-300 font-medium text-xs">
+                        <td className="py-2 px-3 text-[#8A4A22] dark:text-cyan-400 font-bold text-xs">{i + 1}</td>
+                        <td className="py-2 px-3 text-slate-700 dark:text-gray-200 dark:text-white/80 text-xs">{c.customer_name}</td>
+                        <td className="py-2 px-3 text-slate-500 dark:text-white/60 text-xs">{c.order_count}</td>
+                        <td className="py-2 px-3 text-[#8A4A22] dark:text-cyan-300 font-medium text-xs">
                           {formatMoney(c.total_amount)}
                         </td>
                       </tr>
@@ -455,12 +454,12 @@ export default function SalesDashboard() {
           </div>
 
           <div className="tech-card tech-glow p-5">
-            <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-[#8A4A22] dark:text-cyan-300 mb-4 flex items-center gap-2">
               <Package className="h-4 w-4" />
               {t('productTop5')}
             </h3>
             {data.topProducts.length === 0 ? (
-              <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+              <p className="text-slate-400 dark:text-white/40 text-center py-8">{tc('noData')}</p>
             ) : (
               <HorizontalBarChart
                 data={data.topProducts}
@@ -472,13 +471,13 @@ export default function SalesDashboard() {
           </div>
         </div>
 
-        <div className="relative z-10 tech-card tech-glow p-5">
-          <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
+        <div className="relative z-10 tech-card tech-glow tech-flat p-5">
+          <h3 className="text-sm font-semibold text-[#8A4A22] dark:text-cyan-300 mb-4 flex items-center gap-2">
             <FileText className="h-4 w-4" />
             {t('recentOrders')}
           </h3>
           {data.recentOrders.length === 0 ? (
-            <p className="text-white/40 text-center py-8">{tc('noRecords')}</p>
+            <p className="text-slate-400 dark:text-white/40 text-center py-8">{tc('noRecords')}</p>
           ) : (
             <VerticalMarquee maxHeight={300} speed={30}>
               <div className="space-y-2">
@@ -490,25 +489,25 @@ export default function SalesDashboard() {
                   return (
                     <div
                       key={i}
-                      className="px-3 py-2 rounded-lg bg-white/5 border border-white/10"
+                      className="px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-cyan-300 text-xs truncate">
+                        <span className="font-mono text-[#8A4A22] dark:text-cyan-300 text-xs truncate">
                           {o.order_no}
                         </span>
-                        <span className="text-cyan-300 font-medium text-xs">
+                        <span className="text-[#8A4A22] dark:text-cyan-300 font-medium text-xs">
                           {formatMoney(o.total_amount)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between gap-2 mt-1">
-                        <span className="text-white/80 text-xs truncate">
+                        <span className="text-slate-700 dark:text-gray-200 dark:text-white/80 text-xs truncate">
                           {o.customer_name}
                         </span>
                         <span className={`px-2 py-0.5 rounded text-xs ${cfg.className}`}>
                           {tc(cfg.labelKey)}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between gap-2 mt-0.5 text-white/50 text-[11px]">
+                      <div className="flex items-center justify-between gap-2 mt-0.5 text-slate-500 dark:text-white/50 text-[11px]">
                         <span>{ts('k_1etflqc')}{o.delivery_date?.substring(0, 10) || '-'}</span>
                         <span>{o.create_time?.substring(5, 16)}</span>
                       </div>

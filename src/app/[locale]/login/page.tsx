@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { useTranslations } from 'next-intl';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface PupilProps {
   size?: number;
@@ -342,7 +343,7 @@ export default function LoginPage() {
     }
     setChangePwdLoading(true);
     try {
-      const res = await fetch('/api/auth/change-password', {
+      const res = await authFetch('/api/auth/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -808,7 +809,7 @@ export default function LoginPage() {
         >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-orange-500" />
+              <KeyRound className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               {t('firstLogin')}
             </DialogTitle>
           </DialogHeader>

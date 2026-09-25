@@ -5,7 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import { query, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbValue } from '@/types/db';
 
 export const GET = withPermission(
   async (request: NextRequest, _userInfo) => {
@@ -151,7 +151,7 @@ export const POST = withPermission(
 
       const csv = [headers, ...csvRows]
         .map((row) =>
-          row.map((cell: string | number) => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+          row.map((cell: DbValue) => `"${String(cell).replace(/"/g, '""')}"`).join(',')
         )
         .join('\n');
 

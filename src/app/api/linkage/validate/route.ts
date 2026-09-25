@@ -99,7 +99,7 @@ async function updateBizOrderStatus(orderId: number, triggerBy: string) {
   if ((order as DbRow[]).length === 0) return;
 
   const orderData = (order as DbRow[])[0];
-  const oldStatus = orderData.status;
+  const oldStatus = Number(orderData.status ?? 0);
 
   // 计算汇总指标
   const lines = await query(
@@ -113,13 +113,13 @@ async function updateBizOrderStatus(orderId: number, triggerBy: string) {
   );
 
   const summary = (lines as DbRow[])[0];
-  const totalReq = summary.total_req || 0;
-  const totalOrdered = summary.total_ordered || 0;
-  const totalReceived = summary.total_received || 0;
-  const totalConsumed = summary.total_consumed || 0;
+  const totalReq = Number(summary.total_req ?? 0);
+  const totalOrdered = Number(summary.total_ordered ?? 0);
+  const totalReceived = Number(summary.total_received ?? 0);
+  const totalConsumed = Number(summary.total_consumed ?? 0);
 
   // 容差计算
-  const tolerance = orderData.tolerance_percent || 5;
+  const tolerance = Number(orderData.tolerance_percent ?? 5);
   const _maxReq = totalReq * (1 + tolerance / 100);
 
   let newStatus = oldStatus;
@@ -142,7 +142,7 @@ async function updateBizOrderStatus(orderId: number, triggerBy: string) {
       orderId,
     ]);
 
-    await recordStatusHistory('BIZ', orderId, orderData.order_no, oldStatus, newStatus, triggerBy);
+    await recordStatusHistory('BIZ', orderId, String(orderData.order_no), oldStatus, newStatus, triggerBy);
 
     return { orderId, oldStatus, newStatus, changed: true };
   }
@@ -184,11 +184,11 @@ export const POST = withPermission(
       }
 
       // 2. 检查业务订单状态
-      if (orderLine.status < BIZ_ORDER_STATUS.CONFIRMED) {
+      if (Number(orderLine.status ?? 0) < BIZ_ORDER_STATUS.CONFIRMED) {
         throw new Error(ts('k_1tqn3ep'));
       }
 
-      if (orderLine.status >= BIZ_ORDER_STATUS.CLOSED) {
+      if (Number(orderLine.status ?? 0) >= BIZ_ORDER_STATUS.CLOSED) {
         throw new Error(ts('k_7bl0bx'));
       }
 
@@ -197,9 +197,9 @@ export const POST = withPermission(
       }
 
       // 3. 计算剩余可采购数量
-      const tolerance = orderLine.tolerance_percent || 5;
-      const maxQty = orderLine.req_qty * (1 + tolerance / 100);
-      const remainingQty = maxQty - orderLine.ordered_qty;
+      const tolerance = Number(orderLine.tolerance_percent ?? 5);
+      const maxQty = Number(orderLine.req_qty ?? 0) * (1 + tolerance / 100);
+      const remainingQty = maxQty - Number(orderLine.ordered_qty ?? 0);
 
       // 4. 容差校验
       if (poQty > remainingQty) {
@@ -278,7 +278,7 @@ export const PUT = withPermission(
             [poLine.order_qty, poLine.source_order_line_id]
           );
 
-          updatedOrders.add(poLine.source_order_id);
+          updatedOrders.add(Number(poLine.source_order_id ?? 0));
         }
 
         // 更新业务订单状态
@@ -328,7 +328,7 @@ export const PUT = withPermission(
             [item.quantity, item.id]
           );
 
-          updatedOrders.add(item.source_order_id);
+          updatedOrders.add(Number(item.source_order_id ?? 0));
         }
 
         // 更新业务订单状态
@@ -366,7 +366,7 @@ export const PUT = withPermission(
 
         // 严格按单采购的物料，检查专用库存
         if (orderLine.is_strict_by_order) {
-          if (qty > orderLine.available_to_receive) {
+          if (qty > Number(orderLine.available_to_receive ?? 0)) {
             throw new Error(
               `物料${orderLine.material_code}为按单采购，专用库存${orderLine.available_to_receive}不足，需求${qty}`
             );
@@ -408,7 +408,7 @@ export const PUT = withPermission(
         }
 
         // 更新业务订单状态
-        const result = await updateBizOrderStatus(orderLine.order_id, 'CONSUMPTION');
+        const result = await updateBizOrderStatus(Number(orderLine.order_id ?? 0), 'CONSUMPTION');
 
         return successResponse(
           { order_line_id: orderLineId, consumed_qty: qty, status_result: result },
@@ -470,9 +470,9 @@ export const GET = withPermission(
     const totalConsumed = lineSummary.total_consumed || 0;
 
     // 计算差异
-    const diffOrdered = totalOrdered - totalReq;
-    const diffReceived = totalReceived - totalReq;
-    const fulfillmentRate = totalReq > 0 ? ((totalConsumed / totalReq) * 100).toFixed(2) : 0;
+    const diffOrdered = Number(totalOrdered ?? 0) - Number(totalReq ?? 0);
+    const diffReceived = Number(totalReceived ?? 0) - Number(totalReq ?? 0);
+    const fulfillmentRate = Number(totalReq ?? 0) > 0 ? ((Number(totalConsumed ?? 0) / Number(totalReq ?? 0)) * 100).toFixed(2) : 0;
 
     // 查询关联的PO信息
     const linkedPOs = await query(

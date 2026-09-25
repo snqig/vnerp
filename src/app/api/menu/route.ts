@@ -6,16 +6,22 @@ import { query, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbValue } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
+
+interface MenuNode {
+  [key: string]: DbValue | MenuNode[];
+  children: MenuNode[];
+}
 
 // 构建菜单树
-function buildMenuTree(menus: DbRow[], parentId: number = 0): DbRow[] {
+function buildMenuTree(menus: DbRow[], parentId: number = 0): MenuNode[] {
   return menus
-    .filter((menu) => (menu.parent_id ?? 0) === parentId)
-    .sort((a, b) => a.sort_order - b.sort_order)
+    .filter((menu) => Number(menu.parent_id ?? 0) === Number(parentId))
+    .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
     .map((menu) => ({
       ...menu,
-      children: buildMenuTree(menus, menu.id),
+      children: buildMenuTree(menus, Number(menu.id)),
     }));
 }
 
@@ -24,7 +30,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   const ts = await getTranslations('Common');
   try {
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
+    const status = numericFilter(searchParams.get('status'));
 
     let sql = `
       SELECT 
@@ -47,9 +53,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     `;
     const params: SqlValue[] = [];
 
-    if (status !== null && status !== '') {
+    if (status !== undefined) {
       sql += ' AND status = ?';
-      params.push(parseInt(status));
+      params.push(status);
     }
 
     sql += ' ORDER BY sort_order ASC';

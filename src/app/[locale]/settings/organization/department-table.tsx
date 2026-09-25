@@ -19,7 +19,10 @@ interface Department {
   id: number;
   dept_code: string;
   dept_name: string;
-  parent_id: number;
+  /** 顶级部门在库中为 NULL（parent_id 有外键约束，0 非法）；兼容历史 0 */
+  parent_id?: number | null;
+  /** 部门负责人 → sys_employee.id（leader_name 由接口 LEFT JOIN 带出） */
+  leader_id?: number | null;
   leader_name: string;
   sort_order: number;
   description: string;
@@ -45,16 +48,24 @@ function buildDepartmentTree(departments: Department[]): Department[] {
   });
 
   // 构建树形结构
+  // 「顶级」在库中的表示是 parent_id IS NULL —— sys_department.parent_id 建有外键
+  // fk_sys_department_parent 指向 sys_department(id)，写 0 会被 MySQL 以 errno 1452 拒绝，
+  // 因此 0 只是历史数据/前端默认值，必须与 NULL 一并当作顶级。
+  // 旧实现只判断 `dept.parent_id === 0`，于是 parent_id 为 NULL 的部门全部落入 else 分支，
+  // 又找不到父节点（deptMap.get(null) 为 undefined）而被静默丢弃，
+  // roots 最终为空 → 表格渲染「暂无部门数据」。
+  // 另外：父节点在 parent_id 中但不在当前集合（已软删 / 被分页截断）时降级为根节点，
+  // 避免整棵子树消失（例如挂在已软删「生产部(id=97)」下的模切车间、商标车间）。
   departments.forEach((dept) => {
     const node = deptMap.get(dept.id)!;
-    if (dept.parent_id === 0) {
-      roots.push(node);
+    const rawParentId = dept.parent_id;
+    const parentId = rawParentId === null || rawParentId === undefined ? 0 : Number(rawParentId);
+    const parent = parentId ? deptMap.get(parentId) : undefined;
+    if (parent && parent !== node) {
+      parent.children = parent.children || [];
+      parent.children.push(node);
     } else {
-      const parent = deptMap.get(dept.parent_id);
-      if (parent) {
-        parent.children = parent.children || [];
-        parent.children.push(node);
-      }
+      roots.push(node);
     }
   });
 
@@ -76,7 +87,7 @@ function buildDepartmentTree(departments: Department[]): Department[] {
 function StatusBadge({ status }: { status: number }) {
   const ts = useTranslations('Common');
   return status === 1 ? (
-    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{ts('k_5pm2ma')}</Badge>
+    <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 hover:bg-green-100 dark:bg-green-900/30">{ts('k_5pm2ma')}</Badge>
   ) : (
     <Badge className="bg-muted text-muted-foreground hover:bg-muted">{ts('k_6q9o5l')}</Badge>
   );
@@ -90,6 +101,7 @@ export function getStatusBadge(status: number) {
 function DepartmentRow({
   dept,
   level,
+  parentName,
   expandedRows,
   onToggleExpand,
   onEdit,
@@ -98,6 +110,8 @@ function DepartmentRow({
 }: {
   dept: Department;
   level: number;
+  /** 上级部门名称；顶级部门传 undefined */
+  parentName?: string;
   expandedRows: Set<number>;
   onToggleExpand: (id: number) => void;
   onEdit: (dept: Department) => void;
@@ -110,7 +124,7 @@ function DepartmentRow({
 
   return (
     <>
-      <TableRow className={level > 0 ? 'bg-gray-50/50' : ''}>
+      <TableRow className={level > 0 ? 'bg-muted/50' : ''}>
         <TableCell className="font-medium">
           <div className="flex items-center" style={{ paddingLeft: `${level * 24}px` }}>
             {hasChildren ? (
@@ -135,22 +149,23 @@ function DepartmentRow({
         <TableCell>
           <div style={{ paddingLeft: `${level * 24}px` }}>
             <span className={level === 0 ? 'font-semibold' : ''}>{dept.dept_name}</span>
-            {level === 0 && <span className="ml-2 text-xs text-gray-400">{ts('k_dz0m8d')}</span>}
+            <span className="ml-2 text-xs text-muted-foreground">L{level + 1}</span>
           </div>
         </TableCell>
         <TableCell>{dept.leader_name || '-'}</TableCell>
+        <TableCell className="text-muted-foreground">{parentName || '—'}</TableCell>
         <TableCell>{dept.sort_order}</TableCell>
         <TableCell>{getStatusBadge(dept.status)}</TableCell>
         <TableCell className="text-right">
           <div className="flex items-center justify-end gap-1">
             <Button variant="ghost" size="sm" onClick={() => onAdd(dept.id)} title={ts('k_rvte1m')}>
-              <Plus className="w-4 h-4 text-blue-500" />
+              <Plus className="w-4 h-4 text-blue-500 dark:text-blue-400" />
             </Button>
             <Button variant="ghost" size="sm" onClick={() => onEdit(dept)} title={ts('k_qreyeg')}>
               <Edit className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="sm" onClick={() => onDelete(dept.id)} title={ts('k_1t2vi4h')}>
-              <Trash2 className="w-4 h-4 text-red-500" />
+              <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
             </Button>
           </div>
         </TableCell>
@@ -161,6 +176,7 @@ function DepartmentRow({
             key={child.id}
             dept={child}
             level={level + 1}
+            parentName={dept.dept_name}
             expandedRows={expandedRows}
             onToggleExpand={onToggleExpand}
             onEdit={onEdit}
@@ -220,11 +236,12 @@ export function DepartmentTable({ departments, onEdit, onDelete, onAdd }: Depart
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50">
+            <TableRow className="bg-muted">
               <TableHead className="w-[180px]">{ts('k_1flqf8g')}</TableHead>
               <TableHead>{ts('k_1dwuqb4')}</TableHead>
-              <TableHead className="w-[120px]">{ts('k_17eokaf')}</TableHead>
-              <TableHead className="w-[80px]">{ts('k_dqvmz2')}</TableHead>
+              <TableHead className="w-[150px]">{ts('k_17eokaf')}</TableHead>
+              <TableHead className="w-[170px]">{ts('parentDepartmentLabel')}</TableHead>
+              <TableHead className="w-[70px]">{ts('k_dqvmz2')}</TableHead>
               <TableHead className="w-[80px]">{ts('k_1ccx4t4')}</TableHead>
               <TableHead className="text-right w-[180px]">{ts('k_501w24')}</TableHead>
             </TableRow>
@@ -232,7 +249,7 @@ export function DepartmentTable({ departments, onEdit, onDelete, onAdd }: Depart
           <TableBody>
             {treeData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                   {ts('k_9sue4h')}</TableCell>
               </TableRow>
             ) : (

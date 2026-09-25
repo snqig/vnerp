@@ -190,7 +190,7 @@ function Sparkline({
 }) {
   if (data.length < 2)
     return (
-      <div className="flex items-center justify-center text-white/20 text-xs" style={{ height }}>
+      <div className="flex items-center justify-center text-slate-300 dark:text-white/20 text-xs" style={{ height }}>
         —
       </div>
     );
@@ -439,7 +439,7 @@ export default function CEODashboard() {
             <div className="tech-title-row">
               <div className="tech-title-line-left" />
               <div className="text-center">
-                <h1 className="text-2xl font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold tracking-wider bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 dark:from-cyan-300 dark:via-blue-400 dark:to-cyan-300 bg-clip-text text-transparent">
                   {ts('k_1b5qbpo')}</h1>
                 <p className="text-xs mt-0.5" style={{ color: C.silver + '88' }}>
                   CEO

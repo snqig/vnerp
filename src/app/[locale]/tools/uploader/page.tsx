@@ -17,7 +17,10 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FileText, HardDrive, CheckSquare, CheckCircle } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useTranslations } from 'next-intl';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface FileInfo {
   path: string;
@@ -123,7 +126,7 @@ export default function ProjectUploaderPage() {
 
   const generateGitignore = async () => {
     try {
-      const res = await fetch('/api/project-files/gitignore', { method: 'POST' });
+      const res = await authFetch('/api/project-files/gitignore', { method: 'POST' });
       const data = await res.json();
       setStatus(data.message);
     } catch {
@@ -136,7 +139,7 @@ export default function ProjectUploaderPage() {
     setStatus(tc('toolsUploadingStatus'));
 
     try {
-      const res = await fetch('/api/project-files/upload', {
+      const res = await authFetch('/api/project-files/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -177,15 +180,26 @@ export default function ProjectUploaderPage() {
       </div>
 
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{tc('toolsFileTotal')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{files.length}</div>
-          </CardContent>
-        </Card>
+      <StatsCards
+        configs={[
+          { key: 'fileTotal', label: tc('toolsFileTotal'), icon: FileText, ...StatsTheme.blue },
+          { key: 'totalSize', label: tc('toolsTotalSize'), icon: HardDrive, ...StatsTheme.green },
+          { key: 'selected', label: tc('selected'), icon: CheckSquare, ...StatsTheme.orange },
+          { key: 'selectedSize', label: tc('toolsSelectedSize'), icon: CheckCircle, ...StatsTheme.purple },
+        ]}
+        stats={[
+          { key: 'fileTotal', count: files.length },
+          { key: 'totalSize', count: files.reduce((sum, f) => sum + f.size, 0) },
+          { key: 'selected', count: selectedCount },
+          { key: 'selectedSize', count: selectedSize },
+        ]}
+        countFormatter={(c, key) => {
+          if (key === 'totalSize' || key === 'selectedSize') return formatSize(c);
+          return String(c);
+        }}
+        cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+      />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">{tc('toolsTotalSize')}</CardTitle>
@@ -201,7 +215,7 @@ export default function ProjectUploaderPage() {
             <CardTitle className="text-sm font-medium">{tc('selected')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-500">{selectedCount}</div>
+            <div className="text-2xl font-bold text-blue-500 dark:text-blue-400">{selectedCount}</div>
           </CardContent>
         </Card>
         <Card>
@@ -209,7 +223,7 @@ export default function ProjectUploaderPage() {
             <CardTitle className="text-sm font-medium">{tc('toolsSelectedSize')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">{formatSize(selectedSize)}</div>
+            <div className="text-2xl font-bold text-green-500 dark:text-green-400">{formatSize(selectedSize)}</div>
           </CardContent>
         </Card>
       </div>

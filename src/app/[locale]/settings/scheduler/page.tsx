@@ -250,7 +250,7 @@ export default function SchedulerPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 text-yellow-600"
+                              className="h-7 text-yellow-600 dark:text-yellow-400"
                               onClick={() => handleAction(item.id, 'pause')}
                             >
                               <Pause className="h-3 w-3 mr-1" />
@@ -260,7 +260,7 @@ export default function SchedulerPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 text-green-600"
+                              className="h-7 text-green-600 dark:text-green-400"
                               onClick={() => handleAction(item.id, 'resume')}
                             >
                               <Play className="h-3 w-3 mr-1" />

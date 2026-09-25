@@ -78,7 +78,7 @@ export const GET = withPermission(
       try {
         const po1Count = await query('SELECT COUNT(*) as cnt FROM pur_order WHERE deleted = 0');
         const cnt1 = (po1Count as DbRow[])[0]?.cnt || 0;
-        if (cnt1 > 0) {
+        if (Number(cnt1) > 0) {
           await execute(`
           INSERT IGNORE INTO std_purchase_order (order_no, supplier_id, supplier_name, order_date, delivery_date, currency, exchange_rate, total_amount, tax_amount, grand_total, status, payment_terms, delivery_address, contact_person, contact_phone, remark, create_by, create_time, update_by, update_time, legacy_source, legacy_id)
           SELECT order_no, supplier_id, '', order_date, delivery_date, currency, exchange_rate, total_amount, tax_amount, total_with_tax,
@@ -99,7 +99,7 @@ export const GET = withPermission(
           'SELECT COUNT(*) as cnt FROM pur_purchase_order WHERE deleted = 0'
         );
         const cnt2 = (po2Count as DbRow[])[0]?.cnt || 0;
-        if (cnt2 > 0) {
+        if (Number(cnt2) > 0) {
           await execute(`
           INSERT IGNORE INTO std_purchase_order (order_no, supplier_id, supplier_name, supplier_code, order_date, delivery_date, currency, exchange_rate, total_amount, total_quantity, tax_rate, tax_amount, grand_total, status, over_receipt_tolerance, payment_terms, delivery_address, contact_person, contact_phone, remark, create_by, create_time, update_by, update_time, approve_by, approve_time, close_by, close_time, close_reason, legacy_source, legacy_id)
           SELECT po_no, supplier_id, supplier_name, supplier_code, order_date, delivery_date, currency, exchange_rate, total_amount, total_quantity, tax_rate, tax_amount, grand_total,
@@ -118,7 +118,7 @@ export const GET = withPermission(
       try {
         const pod1Count = await query('SELECT COUNT(*) as cnt FROM pur_order_detail');
         const cnt1 = (pod1Count as DbRow[])[0]?.cnt || 0;
-        if (cnt1 > 0) {
+        if (Number(cnt1) > 0) {
           await execute(`
           INSERT IGNORE INTO std_purchase_order_line (order_id, line_no, material_id, material_code, material_name, material_spec, unit, order_qty, received_qty, unit_price, amount, tax_rate, tax_amount, line_total, require_date, remark, create_time)
           SELECT spo.id, ROW_NUMBER() OVER(PARTITION BY pod.order_id ORDER BY pod.id), pod.material_id, im.material_code, im.material_name, im.specification, pod.unit, pod.quantity, pod.received_qty, pod.unit_price, pod.amount, pod.tax_rate, pod.tax_amount, pod.total_amount, pod.delivery_date, pod.remark, pod.create_time
@@ -136,7 +136,7 @@ export const GET = withPermission(
       try {
         const pod2Count = await query('SELECT COUNT(*) as cnt FROM pur_purchase_order_line');
         const cnt2 = (pod2Count as DbRow[])[0]?.cnt || 0;
-        if (cnt2 > 0) {
+        if (Number(cnt2) > 0) {
           await execute(`
           INSERT IGNORE INTO std_purchase_order_line (order_id, line_no, material_id, material_code, material_name, material_spec, unit, order_qty, received_qty, returned_qty, unit_price, amount, tax_rate, tax_amount, line_total, require_date, closed_flag, closed_reason, remark, create_time, update_time)
           SELECT spo.id, pol.line_no, pol.material_id, pol.material_code, pol.material_name, pol.material_spec, pol.unit, pol.order_qty, pol.received_qty, pol.returned_qty, pol.unit_price, pol.amount, pol.tax_rate, pol.tax_amount, pol.line_total, pol.require_date, pol.closed_flag, pol.closed_reason, pol.remark, pol.create_time, pol.update_time
@@ -174,7 +174,7 @@ export const GET = withPermission(
       try {
         const bom1Count = await query('SELECT COUNT(*) as cnt FROM prd_bom WHERE deleted = 0');
         const cnt1 = (bom1Count as DbRow[])[0]?.cnt || 0;
-        if (cnt1 > 0) {
+        if (Number(cnt1) > 0) {
           await execute(`
           INSERT IGNORE INTO std_bom_header (bom_no, product_id, product_code, product_name, version, status, total_cost, remark, create_by, create_time, legacy_source, legacy_id)
           SELECT CONCAT('BOM-PRD-', pb.id), pb.product_id, '', pb.bom_name, pb.version,
@@ -191,7 +191,7 @@ export const GET = withPermission(
       try {
         const bomDetailCount = await query('SELECT COUNT(*) as cnt FROM prd_bom_detail');
         const cnt = (bomDetailCount as DbRow[])[0]?.cnt || 0;
-        if (cnt > 0) {
+        if (Number(cnt) > 0) {
           await execute(`
           INSERT IGNORE INTO std_bom_line (bom_id, line_no, material_id, material_code, material_name, unit, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost, material_type, remark, create_time)
           SELECT sbh.id, ROW_NUMBER() OVER(PARTITION BY pbd.bom_id ORDER BY pbd.id), pbd.material_id, '', pbd.material_name, pbd.unit, pbd.quantity, pbd.loss_rate, pbd.quantity, pbd.unit_cost, pbd.total_cost,
@@ -210,7 +210,7 @@ export const GET = withPermission(
       try {
         const bom2Count = await query('SELECT COUNT(*) as cnt FROM bom_header WHERE deleted = 0');
         const cnt2 = (bom2Count as DbRow[])[0]?.cnt || 0;
-        if (cnt2 > 0) {
+        if (Number(cnt2) > 0) {
           await execute(`
           INSERT IGNORE INTO std_bom_header (bom_no, product_id, product_code, product_name, product_spec, version, is_default, status, unit, base_qty, total_material_count, total_cost, remark, create_by, create_time, update_by, update_time, approve_by, approve_time, publish_time, legacy_source, legacy_id)
           SELECT bh.bom_no, bh.product_id, bh.product_code, bh.product_name, bh.product_spec, bh.version, bh.is_default,
@@ -227,7 +227,7 @@ export const GET = withPermission(
       try {
         const bomLineCount = await query('SELECT COUNT(*) as cnt FROM bom_line');
         const cnt = (bomLineCount as DbRow[])[0]?.cnt || 0;
-        if (cnt > 0) {
+        if (Number(cnt) > 0) {
           await execute(`
           INSERT IGNORE INTO std_bom_line (bom_id, line_no, parent_line_id, level, material_id, material_code, material_name, material_spec, unit, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost, material_type, is_key_material, position_no, process_seq, process_name, remark, create_time, update_time)
           SELECT sbh.id, bl.line_no, bl.parent_line_id, bl.level, bl.material_id, bl.material_code, bl.material_name, bl.material_spec, bl.unit, bl.consumption_qty, bl.loss_rate, bl.actual_qty, bl.unit_cost, bl.total_cost,
@@ -246,7 +246,7 @@ export const GET = withPermission(
       try {
         const bom3Count = await query('SELECT COUNT(*) as cnt FROM mdm_product_bom');
         const cnt3 = (bom3Count as DbRow[])[0]?.cnt || 0;
-        if (cnt3 > 0) {
+        if (Number(cnt3) > 0) {
           results.push(`mdm_product_bom has ${cnt3} rows - requires manual mapping`);
         } else {
           results.push('No data in mdm_product_bom');
@@ -274,7 +274,7 @@ export const GET = withPermission(
           'SELECT COUNT(*) as cnt FROM inv_material WHERE deleted = 0'
         );
         const cnt = (invMatCount as DbRow[])[0]?.cnt || 0;
-        if (cnt > 0) {
+        if (Number(cnt) > 0) {
           await execute(`
           INSERT IGNORE INTO std_material (material_code, material_name, specification, category_id, material_type, unit, barcode, brand, safety_stock, max_stock, min_stock, purchase_price, sale_price, cost_price, warehouse_id, shelf_life, warning_days, is_batch_managed, is_serial_managed, status, remark, create_by, create_time, update_by, update_time, legacy_source, legacy_id)
           SELECT material_code, material_name, specification, category_id, material_type, unit, barcode, brand, safety_stock, max_stock, min_stock, purchase_price, sale_price, cost_price, warehouse_id, shelf_life, warning_days, is_batch_managed, is_serial_managed, status, remark, create_by, create_time, update_by, update_time, 'inv_material', id
@@ -291,7 +291,7 @@ export const GET = withPermission(
           'SELECT COUNT(*) as cnt FROM bom_material WHERE deleted = 0'
         );
         const cnt = (bomMatCount as DbRow[])[0]?.cnt || 0;
-        if (cnt > 0) {
+        if (Number(cnt) > 0) {
           await execute(`
           INSERT IGNORE INTO std_material (material_code, material_name, specification, material_type, unit, cost_price, safety_stock, default_supplier_id, default_supplier_name, is_active, remark, create_time, update_time, legacy_source, legacy_id)
           SELECT material_code, material_name, material_spec,
@@ -308,7 +308,7 @@ export const GET = withPermission(
       try {
         const mdmMatCount = await query('SELECT COUNT(*) as cnt FROM mdm_material');
         const cnt = (mdmMatCount as DbRow[])[0]?.cnt || 0;
-        if (cnt > 0) {
+        if (Number(cnt) > 0) {
           results.push(`mdm_material has ${cnt} rows - requires field mapping`);
         }
       } catch (e) {
@@ -347,7 +347,7 @@ export const GET = withPermission(
             'SELECT COUNT(*) as cnt FROM hr_attendance WHERE employee_id_int IS NULL AND employee_id IS NOT NULL AND deleted = 0'
           );
           const nullCnt = (nullCount as DbRow[])[0]?.cnt || 0;
-          if (nullCnt > 0) {
+          if (Number(nullCnt) > 0) {
             results.push(`WARNING: ${nullCnt} rows could not be matched to sys_employee`);
           }
 

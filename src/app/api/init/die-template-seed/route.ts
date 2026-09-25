@@ -6,6 +6,7 @@ import { queryOne, transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
+import type { DbRow } from '@/types/db';
 import { CREATE_TABLE_PRD_DIE_MAINTENANCE, CREATE_TABLE_PRD_DIE_USAGE_LOG } from '@/lib/db/ddl/init-die-template-seed';
 export const POST = withPermission(
   async (_request: NextRequest) => {
@@ -565,7 +566,7 @@ export const POST = withPermission(
         'SELECT id, template_code FROM prd_die_template ORDER BY id'
       );
       const dieMap: Record<string, number> = {};
-      for (const row of dieRows) dieMap[row.template_code] = row.id;
+      for (const row of dieRows) dieMap[String(row.template_code) ?? ''] = Number((row as DbRow).id ?? 0);
 
       const maintenances = [
         {

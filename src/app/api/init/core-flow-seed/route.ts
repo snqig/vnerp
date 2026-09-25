@@ -157,7 +157,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
       const [whRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      whMap[whCodes[i]] = whRow[0].id;
+      whMap[whCodes[i]] = Number(whRow[0].id ?? 0);
     }
     stats.inv_warehouse = whNames.length;
 
@@ -243,7 +243,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
       const [matRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      matMap[code] = matRow[0].id;
+      matMap[code] = Number(matRow[0].id ?? 0);
       matInfoMap[code] = {
         id: matRow[0].id,
         material_code: code,
@@ -303,7 +303,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
       const [cusRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      cusIds.push(cusRow[0].id);
+      cusIds.push(Number(cusRow[0].id ?? 0));
     }
     stats.crm_customer = 30;
 
@@ -335,7 +335,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
       const [supRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      supIds.push(supRow[0].id);
+      supIds.push(Number(supRow[0].id ?? 0));
     }
     stats.pur_supplier = 30;
 
@@ -387,7 +387,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       const productName = customerProductMap[customer.id] || `产品${i}`;
       const prodMat = productMats[(i - 1) % productMats.length];
       const qty = randomInt(5000, 100000);
-      const unitPrice = prodMat?.sale_price || randomAmount(0.05, 2.0);
+      const unitPrice = Number(prodMat?.sale_price ?? 0) || randomAmount(0.05, 2.0);
       const amount = Math.round(qty * unitPrice * 100) / 100;
       const taxRate = 13;
       const tax = Math.round(((amount * taxRate) / 100) * 100) / 100;
@@ -416,7 +416,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
       const [orderRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      const orderId = orderRow[0].id;
+      const orderId = Number(orderRow[0].id ?? 0);
       orderIds.push(orderId);
 
       await conn.execute(
@@ -455,7 +455,9 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const woData: DbRow[] = [];
     for (let i = 1; i <= TOTAL_ORDERS; i++) {
       const od = orderData[(i - 1) % orderData.length];
-      const planStart = new Date(new Date(od.orderDate).getTime() + randomInt(3, 10) * 86400000)
+      const planStart = new Date(
+        new Date(String(od.orderDate)).getTime() + randomInt(3, 10) * 86400000
+      )
         .toISOString()
         .slice(0, 10);
       const planEnd = new Date(new Date(planStart).getTime() + randomInt(5, 20) * 86400000)
@@ -492,7 +494,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
       const [woRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      woIds.push(woRow[0].id);
+      woIds.push(Number(woRow[0].id ?? 0));
       woData.push({
         id: woRow[0].id,
         woNo: `WO-${pad(i, 5)}`,
@@ -516,11 +518,14 @@ export const POST = withPermission(async (_request: NextRequest) => {
       const supplier = suppliers[(i - 1) % suppliers.length];
       const mainMat = mainMats[(i - 1) % mainMats.length];
       const inkMat = inkMats[(i - 1) % inkMats.length];
-      const inboundDate = new Date(new Date(wo.planStart).getTime() - randomInt(5, 15) * 86400000)
+      const inboundDate = new Date(
+        new Date(String(wo.planStart)).getTime() - randomInt(5, 15) * 86400000
+      )
         .toISOString()
         .slice(0, 10);
       const totalQty = randomInt(500, 5000);
-      const totalAmount = Math.round(totalQty * (mainMat?.purchase_price || 2) * 100) / 100;
+      const totalAmount =
+        Math.round(totalQty * (Number(mainMat?.purchase_price ?? 0) || 2) * 100) / 100;
 
       await conn.execute(
         `INSERT INTO inv_inbound_order (order_no, order_type, warehouse_id, supplier_id, supplier_name, po_id, po_no, grn_type, total_amount, total_quantity, status, inbound_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -587,7 +592,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
       const [lblRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      labelIds.push(lblRow[0].id);
+      labelIds.push(Number(lblRow[0].id ?? 0));
       labelData.push({
         id: lblRow[0].id,
         labelNo,
@@ -626,7 +631,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           ]
         );
         const [inkLblRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-        labelIds.push(inkLblRow[0].id);
+        labelIds.push(Number(inkLblRow[0].id ?? 0));
         labelData.push({
           id: inkLblRow[0].id,
           labelNo: inkLabelNo,
@@ -651,7 +656,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       const srcLabel = labelData[(i - 1) % labelData.length];
       if (!srcLabel.width) continue;
       const cutWidths = [];
-      let remainW = srcLabel.width;
+      let remainW = Number(srcLabel.width ?? 0);
       const numCuts = randomInt(2, 4);
       for (let j = 0; j < numCuts && remainW > 100; j++) {
         const cw = Math.round((remainW / (numCuts - j + 1)) * 0.9);
@@ -670,7 +675,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           srcLabel.labelNo,
           cutWidthStr,
           srcLabel.width,
-          srcLabel.width - remainW,
+          Number(srcLabel.width ?? 0) - remainW,
           remainW,
           whUser.id,
           whUser.real_name,
@@ -687,7 +692,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           `INSERT INTO inv_material_label (label_no, purchase_order_no, supplier_name, receive_date, material_code, material_name, specification, unit, batch_no, quantity, width, warehouse_id, is_main_material, is_used, is_cut, parent_label_id, label_type, remaining_width, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             newLabelNo,
-            srcLabel.labelNo.replace('LBL-', 'INB-'),
+            String(srcLabel.labelNo ?? '').replace('LBL-', 'INB-'),
             srcLabel.supplierName,
             srcLabel.receiveDate,
             srcLabel.materialCode,
@@ -695,7 +700,9 @@ export const POST = withPermission(async (_request: NextRequest) => {
             null,
             'M',
             srcLabel.batchNo,
-            Math.round((srcLabel.qty * cutWidths[j]) / srcLabel.width),
+            Math.round(
+              (Number(srcLabel.qty ?? 0) * cutWidths[j]) / Number(srcLabel.width ?? 0)
+            ),
             cutWidths[j],
             srcLabel.warehouseId,
             1,
@@ -708,14 +715,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
           ]
         );
         const [newLblRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-        cuttingLabelIds.push(newLblRow[0].id);
+        cuttingLabelIds.push(Number(newLblRow[0].id ?? 0));
         cuttingLabelData.push({
           id: newLblRow[0].id,
           labelNo: newLabelNo,
           materialCode: srcLabel.materialCode,
           materialName: srcLabel.materialName,
           batchNo: srcLabel.batchNo,
-          qty: Math.round((srcLabel.qty * cutWidths[j]) / srcLabel.width),
+          qty: Math.round(
+            (Number(srcLabel.qty ?? 0) * cutWidths[j]) / Number(srcLabel.width ?? 0)
+          ),
           width: cutWidths[j],
           warehouseId: srcLabel.warehouseId,
           supplierName: srcLabel.supplierName,
@@ -737,7 +746,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       const wo = woData[(i - 1) % woData.length];
       const mainLabel = labelData[(i - 1) % labelData.length];
       const cardNo = `PC-${pad(i, 5)}`;
-      const burdeningStatus = ['producing', 'completed'].includes(wo.status) ? 1 : 0;
+      const burdeningStatus = ['producing', 'completed'].includes(String(wo.status)) ? 1 : 0;
       const lockStatus = wo.status === 'completed' ? 1 : 0;
 
       await conn.execute(
@@ -746,7 +755,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           cardNo,
           wo.id,
           wo.woNo,
-          wo.productName.substring(0, 2) + '-' + pad(i, 3),
+          String(wo.productName ?? '').substring(0, 2) + '-' + pad(i, 3),
           wo.productName,
           mainMats[(i - 1) % mainMats.length]?.specification,
           wo.planStart,
@@ -760,7 +769,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
       const [cardRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      const cardId = cardRow[0].id;
+      const cardId = Number(cardRow[0].id ?? 0);
       cardIds.push(cardId);
       cardData.push({
         id: cardId,
@@ -794,7 +803,9 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
       if (i <= 30) {
         const inkLabel = labelData.find(
-          (l: DbRow) => l.materialCode?.startsWith('MAT-INK') && l.id > mainLabel.id
+          (l: DbRow) =>
+            String(l.materialCode ?? '').startsWith('MAT-INK') &&
+            Number(l.id ?? 0) > Number(mainLabel.id ?? 0)
         );
         if (inkLabel) {
           await conn.execute(
@@ -845,7 +856,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       const _card = cardData[(i - 1) % cardData.length];
       const mainLabel = labelData[(i - 1) % labelData.length];
       const issueDate = randomDate(yearStart, now);
-      const issueQty = Math.round(mainLabel.qty * randomAmount(0.3, 0.8));
+      const issueQty = Math.round(Number(mainLabel.qty ?? 0) * randomAmount(0.3, 0.8));
 
       await conn.execute(
         `INSERT INTO prd_material_issue (issue_no, work_order_id, work_order_no, warehouse_id, issue_date, issue_type, status, operator_id, operator_name, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -880,7 +891,9 @@ export const POST = withPermission(async (_request: NextRequest) => {
       );
 
       if (i <= 20) {
-        const inkLabel = labelData.find((l: DbRow) => l.materialCode?.startsWith('MAT-INK'));
+        const inkLabel = labelData.find((l: DbRow) =>
+          String(l.materialCode ?? '').startsWith('MAT-INK')
+        );
         if (inkLabel) {
           await conn.execute(
             `INSERT INTO prd_material_issue_item (issue_id, material_id, material_code, material_name, required_qty, issued_qty, unit, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -890,7 +903,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
               inkLabel.materialCode,
               inkLabel.materialName,
               inkLabel.qty,
-              Math.round(inkLabel.qty * 0.5),
+              Math.round(Number(inkLabel.qty ?? 0) * 0.5),
               'kg',
               inkLabel.batchNo,
             ]
@@ -905,7 +918,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     for (let i = 1; i <= 30; i++) {
       const wo = woData[(i - 1) % woData.length];
       const reportDate = randomDate(yearStart, now);
-      const planQty = Math.round(wo.qty * randomAmount(0.3, 1.0));
+      const planQty = Math.round(Number(wo.qty ?? 0) * randomAmount(0.3, 1.0));
       const completedQty = Math.round(planQty * randomAmount(0.8, 1.0));
       const qualifiedQty = Math.round(completedQty * randomAmount(0.95, 1.0));
       const defectiveQty = completedQty - qualifiedQty;
@@ -936,7 +949,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
       const [rptRow] = await conn.execute('SELECT LAST_INSERT_ID() as id');
-      reportIds.push(rptRow[0].id);
+      reportIds.push(Number(rptRow[0].id ?? 0));
     }
     stats.prd_work_report = 30;
 
@@ -945,7 +958,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       const wo = woData[(i - 1) % woData.length];
       const _card = cardData[(i - 1) % cardData.length];
       const inboundDate = randomDate(yearStart, now);
-      const prodQty = Math.round(wo.qty * randomAmount(0.5, 1.0));
+      const prodQty = Math.round(Number(wo.qty ?? 0) * randomAmount(0.5, 1.0));
       const prodMat = productMats[(i - 1) % productMats.length];
 
       await conn.execute(
@@ -1018,7 +1031,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           card.id,
           card.cardNo,
           wo.woNo,
-          wo.productName.substring(0, 2) + '-' + pad(i, 3),
+          String(wo.productName ?? '').substring(0, 2) + '-' + pad(i, 3),
           mainLabel.id,
           1,
           qcUser.id,
@@ -1045,7 +1058,9 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
 
-      const inkLabel = labelData.find((l: DbRow) => l.materialCode?.startsWith('MAT-INK'));
+      const inkLabel = labelData.find((l: DbRow) =>
+        String(l.materialCode ?? '').startsWith('MAT-INK')
+      );
       if (inkLabel) {
         await conn.execute(
           `INSERT INTO inv_trace_detail (trace_id, label_id, label_no, material_code, material_name, specification, batch_no, supplier_name, receive_date, material_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -1085,7 +1100,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           0,
           mat.unit,
           mat.purchase_price,
-          Math.round(qty * mat.purchase_price * 100) / 100,
+          Math.round(qty * Number(mat.purchase_price ?? 0) * 100) / 100,
           100,
         ]
       );
