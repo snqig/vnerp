@@ -28,6 +28,7 @@ import {
 } from '@/lib/reference-validation';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction, query } from '@/lib/db';
+import { generateDocumentNo } from '@/lib/document-numbering';
 
 // 应收单来源类型：1-销售订单, 2-手工录入, 3-退货红字
 const RECEIVABLE_SOURCE_TYPE_RETURN = 3;
@@ -277,7 +278,10 @@ export class ReturnOrderApplicationService {
   }
 
   private async createReceivableForReturn(ret: ReturnOrder): Promise<ReceivableResult> {
+    // 红字应收单号必须显式生成：聚合不会自动编号，留空会让 complete() 的校验失败
+    const receivableNo = await generateDocumentNo('receivable');
     const receivableProps: ReceivableProps = {
+      receivableNo,
       sourceType: RECEIVABLE_SOURCE_TYPE_RETURN,
       sourceId: ret.id,
       sourceNo: ret.returnNo,
@@ -294,7 +298,7 @@ export class ReturnOrderApplicationService {
 
     return {
       receivableId,
-      receivableNo: receivable.receivableNo,
+      receivableNo: receivable.receivableNo || receivableNo,
     };
   }
 
