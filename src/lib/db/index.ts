@@ -356,6 +356,11 @@ export function isRetryableTransactionError(error: unknown): boolean {
 
   const message = `${err.message ?? ''} ${err.sqlMessage ?? ''}`;
 
+  // 0. FIFO 乐观锁专用错误类型（@/lib/fifo-allocation 抛出）。
+  //    其文案为中文「批次X乐观锁冲突: 期望版本Y」，不含 version/affectedRows 等英文关键字，
+  //    若只按文案匹配会漏判导致永不重试。此处按错误名判定，避免与 fifo-allocation 循环依赖。
+  if (err.name === 'FifoOptimisticLockConflictError') return true;
+
   // 1. 乐观锁 / 版本冲突（保持既有行为不变）
   if (
     message.includes('已被其他操作修改') ||
