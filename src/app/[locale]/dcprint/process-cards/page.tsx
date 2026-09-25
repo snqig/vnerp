@@ -300,7 +300,7 @@ export default function ProcessCardsPage() {
               <div className="flex items-center gap-4 mb-4">
                 <div
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                    scanState === 'workOrder' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'
+                    scanState === 'workOrder' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700'
                   }`}
                 >
                   <FileText className="h-4 w-4" />
@@ -310,10 +310,10 @@ export default function ProcessCardsPage() {
                 <div
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
                     scanState === 'mainMaterial'
-                      ? 'bg-blue-100 text-blue-700'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
                       : scanState === 'auxiliary'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100'
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                        : 'bg-gray-100 dark:bg-gray-700'
                   }`}
                 >
                   <QrCode className="h-4 w-4" />
@@ -322,7 +322,7 @@ export default function ProcessCardsPage() {
                 <div className="text-muted-foreground">→</div>
                 <div
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                    scanState === 'auxiliary' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'
+                    scanState === 'auxiliary' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700'
                   }`}
                 >
                   <Plus className="h-4 w-4" />
@@ -363,16 +363,16 @@ export default function ProcessCardsPage() {
                 </Alert>
               )}
               {success && (
-                <Alert className="bg-green-50 border-green-200">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-700">{success}</AlertDescription>
+                <Alert className="bg-green-500/10 border-green-200 dark:border-green-800">
+                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <AlertDescription className="text-green-700 dark:text-green-400">{success}</AlertDescription>
                 </Alert>
               )}
 
               {/* 已扫描信息 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* 工单信息 */}
-                <Card className={workOrder ? 'border-blue-200' : ''}>
+                <Card className={workOrder ? 'border-blue-200 dark:border-blue-800' : ''}>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm">{t('workOrderInfo')}</CardTitle>
                   </CardHeader>
@@ -405,7 +405,7 @@ export default function ProcessCardsPage() {
                 </Card>
 
                 {/* 主材信息 */}
-                <Card className={mainMaterial ? 'border-green-200' : ''}>
+                <Card className={mainMaterial ? 'border-green-200 dark:border-green-800' : ''}>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm">{t('mainMaterialInfo')}</CardTitle>
                   </CardHeader>
@@ -467,7 +467,7 @@ export default function ProcessCardsPage() {
                             size="sm"
                             onClick={() => removeAuxiliaryMaterial(material.id)}
                           >
-                            <Trash2 className="h-4 w-4 text-red-500" />
+                            <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
                           </Button>
                         </div>
                       ))}

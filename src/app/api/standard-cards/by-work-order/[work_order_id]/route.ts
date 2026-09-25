@@ -39,7 +39,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo, context
 
   const cards = await query<StandardCard>(
     `SELECT sc.* FROM prd_standard_card sc
-     LEFT JOIN prd_work_order wo ON wo.material_id = sc.material_id
+     LEFT JOIN prod_work_order wo ON wo.material_id = sc.material_id
      WHERE wo.id = ? AND sc.status = 3 AND sc.deleted = 0
      ORDER BY sc.type, sc.version DESC`,
     [workOrderId]

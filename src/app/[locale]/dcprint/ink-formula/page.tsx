@@ -375,7 +375,7 @@ export default function InkFormulaPage() {
                         <TableCell>
                           {ver.total_weight} {ver.unit}
                         </TableCell>
-                        <TableCell>¥{ver.theoretical_cost?.toFixed(2) || '0.00'}</TableCell>
+                        <TableCell>¥{Number(ver.theoretical_cost || 0).toFixed(2)}</TableCell>
                         <TableCell>
                           <Badge variant={STATUS_MAP[ver.status]?.variant || 'secondary'}>
                             {STATUS_MAP[ver.status]?.label || ts('k_1lpnuh4')}
@@ -398,7 +398,7 @@ export default function InkFormulaPage() {
                                   size="sm"
                                   onClick={() => handleActivateVersion(ver.id)}
                                 >
-                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                  <CheckCircle className="h-4 w-4 text-green-500 dark:text-green-400" />
                                 </Button>
                                 <Button
                                   variant="ghost"
@@ -415,7 +415,7 @@ export default function InkFormulaPage() {
                                 size="sm"
                                 onClick={() => handleCancelVersion(ver.id)}
                               >
-                                <XCircle className="h-4 w-4 text-red-500" />
+                                <XCircle className="h-4 w-4 text-red-500 dark:text-red-400" />
                               </Button>
                             )}
                           </div>
@@ -439,7 +439,7 @@ export default function InkFormulaPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>
-                {ts('k_vjmear')}<span className="text-red-500">*</span>
+                {ts('k_vjmear')}<span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 value={colorForm.color_code}
@@ -448,7 +448,7 @@ export default function InkFormulaPage() {
             </div>
             <div className="space-y-1">
               <Label>
-                {ts('k_1r6bl4j')}<span className="text-red-500">*</span>
+                {ts('k_1r6bl4j')}<span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 value={colorForm.color_name}

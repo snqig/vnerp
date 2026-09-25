@@ -4,16 +4,18 @@ import { getTranslations } from 'next-intl/server';
 import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 import { withPermission } from '@/lib/api-permissions';
 import { randomUUID } from 'crypto';
 import { SELECT_STMT } from '@/lib/db/ddl/dcprint-ink-dispatch';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const keyword = searchParams.get('keyword') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
   const workorderNo = searchParams.get('workorderNo') || '';
 
   let where = 'WHERE d.deleted = 0';
@@ -92,7 +94,7 @@ export const POST = withPermission(
 
       const batchNo = `INK${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
 
-      const [insertResult] = await conn.execute(
+      const insertResult = (await conn.execute<DbResultSetHeader>(
         `INSERT INTO ink_dispatch (dispatch_no, batch_no, workorder_id, workorder_no, formula_id, formula_no, color_name, color_code, pantone_code, total_weight, unit, tare_weight, net_weight, gross_weight, operator_id, operator_name, machine_id, machine_name, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
         [
@@ -116,7 +118,7 @@ export const POST = withPermission(
           machine_name || null,
           remark || null,
         ]
-      );
+      )) as unknown as DbResultSetHeader;
       const dispatchId = insertResult.insertId;
 
       for (let i = 0; i < items.length; i++) {

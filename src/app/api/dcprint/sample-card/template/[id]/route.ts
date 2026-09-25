@@ -5,7 +5,7 @@ import { NextRequest } from 'next/server';
 import { successResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { SampleProcessTemplateService } from '@/application/services/SampleProcessTemplateService';
-import type { DbRow } from '@/types/db';
+import { UserInfo } from '@/lib/auth';
 
 const service = new SampleProcessTemplateService();
 
@@ -24,7 +24,7 @@ export const GET = withPermission(
 export const PUT = withPermission(
   async (
     request: NextRequest,
-    userInfo: DbRow,
+    userInfo: UserInfo,
     { params }: { params: Promise<{ id: string }> }
   ) => {
   const ts = await getTranslations('Common');

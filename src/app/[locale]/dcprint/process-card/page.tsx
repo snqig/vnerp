@@ -29,7 +29,9 @@ import {
   CheckCircle,
   XCircle,
   Send,
+  AlertTriangle,
 } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -176,7 +178,23 @@ export default function ProcessCardPage() {
   return (
     <MainLayout title={t('processCardManagement')}>
       <div className="space-y-6">
-        <div className="grid grid-cols-4 gap-4">
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('totalProcessCards'), icon: FileText, ...StatsTheme.blue },
+            { key: 'pending', label: tc('pendingConfirm'), icon: Eye, ...StatsTheme.orange },
+            { key: 'completed', label: tc('completed'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'abnormal', label: tc('abnormal'), icon: AlertTriangle, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'total', count: stats.total },
+            { key: 'pending', count: stats.draft + stats.sampling },
+            { key: 'completed', count: stats.confirmed },
+            { key: 'abnormal', count: stats.cancelled },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
+        <div className="flex justify-between items-center">
           <Card className="cursor-pointer hover:bg-muted" onClick={() => setFilterStatus('all')}>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold">{stats.total}</div>
@@ -191,13 +209,13 @@ export default function ProcessCardPage() {
           </Card>
           <Card className="cursor-pointer hover:bg-muted" onClick={() => setFilterStatus('2')}>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-500">{stats.sampling}</div>
+              <div className="text-2xl font-bold text-blue-500 dark:text-blue-400">{stats.sampling}</div>
               <div className="text-sm text-muted-foreground">{ts('k_1lta3ye')}</div>
             </CardContent>
           </Card>
           <Card className="cursor-pointer hover:bg-muted" onClick={() => setFilterStatus('3')}>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-500">{stats.confirmed}</div>
+              <div className="text-2xl font-bold text-green-500 dark:text-green-400">{stats.confirmed}</div>
               <div className="text-sm text-muted-foreground">{ts('k_nmir1b')}</div>
             </CardContent>
           </Card>
@@ -265,7 +283,7 @@ export default function ProcessCardPage() {
                       <TableCell>{card.substrate_material_name || '-'}</TableCell>
                       <TableCell>{card.print_color || '-'}</TableCell>
                       <TableCell>{card.estimated_hour ? `${card.estimated_hour}h` : '-'}</TableCell>
-                      <TableCell>¥{card.total_cost?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>¥{Number(card.total_cost || 0).toFixed(2)}</TableCell>
                       <TableCell>
                         <Badge variant={STATUS_MAP[card.status]?.variant || 'secondary'}>
                           {STATUS_MAP[card.status]?.label || ts('k_1lpnuh4')}
@@ -298,7 +316,7 @@ export default function ProcessCardPage() {
                                   <Send className="h-4 w-4 mr-2" />
                                   {ts('k_ybr38x')}</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleDelete(card.id)}>
-                                  <Trash2 className="h-4 w-4 mr-2 text-red-500" />
+                                  <Trash2 className="h-4 w-4 mr-2 text-red-500 dark:text-red-400" />
                                   {tc('delete')}
                                 </DropdownMenuItem>
                               </>
@@ -306,10 +324,10 @@ export default function ProcessCardPage() {
                             {card.status === 2 && (
                               <>
                                 <DropdownMenuItem onClick={() => handleConfirm(card.id)}>
-                                  <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                                  <CheckCircle className="h-4 w-4 mr-2 text-green-500 dark:text-green-400" />
                                   {ts('k_kre8wf')}</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleCancel(card.id)}>
-                                  <XCircle className="h-4 w-4 mr-2 text-red-500" />
+                                  <XCircle className="h-4 w-4 mr-2 text-red-500 dark:text-red-400" />
                                   {ts('k_wph6a4')}</DropdownMenuItem>
                               </>
                             )}

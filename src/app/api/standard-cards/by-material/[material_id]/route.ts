@@ -86,33 +86,33 @@ export const GET = withPermission(async (request: NextRequest, userInfo, context
 
   switch (card.type) {
     case 'color':
-      items = await query<ColorStandardItem>(
+      items = await query<DbRow>(
         'SELECT * FROM color_standard_items WHERE standard_card_id = ?',
         [card.id!]
       );
       break;
     case 'process':
-      items = await query<ProcessStandardItem>(
+      items = await query<DbRow>(
         'SELECT * FROM process_standard_items WHERE standard_card_id = ?',
         [card.id!]
       );
       break;
     case 'quality':
-      items = await query<QualityStandardItem>(
+      items = await query<DbRow>(
         'SELECT * FROM quality_standard_items WHERE standard_card_id = ?',
         [card.id!]
       );
       break;
     case 'comprehensive':
-      const colorItems = await query<ColorStandardItem & { item_type: string }>(
+      const colorItems = await query<DbRow>(
         'SELECT *, "color" as item_type FROM color_standard_items WHERE standard_card_id = ?',
         [card.id!]
       );
-      const processItems = await query<ProcessStandardItem & { item_type: string }>(
+      const processItems = await query<DbRow>(
         'SELECT *, "process" as item_type FROM process_standard_items WHERE standard_card_id = ?',
         [card.id!]
       );
-      const qualityItems = await query<QualityStandardItem & { item_type: string }>(
+      const qualityItems = await query<DbRow>(
         'SELECT *, "quality" as item_type FROM quality_standard_items WHERE standard_card_id = ?',
         [card.id!]
       );

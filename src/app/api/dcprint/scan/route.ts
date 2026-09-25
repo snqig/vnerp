@@ -125,7 +125,7 @@ async function queryMaterialLabel(labelNo: string) {
 
   // 查询分切记录（如果是母材）
   if (label.isMainMaterial === 1) {
-    const cuttingRecords = await query<unknown[]>(
+    const cuttingRecords = await query<DbRow>(
       `SELECT
         r.id,
         r.record_no as recordNo,
@@ -149,7 +149,7 @@ async function queryMaterialLabel(labelNo: string) {
 
   // 查询子标签（如果有）
   if (label.isCut === 1) {
-    const childLabels = await query<unknown[]>(
+    const childLabels = await query<DbRow>(
       `SELECT
         label_no as labelNo,
         width,
@@ -195,7 +195,7 @@ async function queryWorkOrder(workOrderNo: string) {
   if (!workOrder) return null;
 
   // 查询关联的流程卡
-  const processCards = await query<unknown[]>(
+  const processCards = await query<DbRow>(
     `SELECT
       card_no as cardNo,
       main_label_no as mainLabelNo,
@@ -249,7 +249,7 @@ async function queryProcessCard(cardNo: string) {
   if (!card) return null;
 
   // 查询流程卡关联的物料
-  const materials = await query<unknown[]>(
+  const materials = await query<DbRow>(
     `SELECT
       label_no as labelNo,
       material_type as materialType,
@@ -267,9 +267,9 @@ async function queryProcessCard(cardNo: string) {
     [card.id]
   );
 
-  card.materials = materials || [];
-  card.mainMaterials = materials?.filter((m: DbRow) => m.materialType === 'main') || [];
-  card.auxiliaryMaterials = materials?.filter((m: DbRow) => m.materialType === 'auxiliary') || [];
+  (card as DbRow & { materials?: DbRow[]; mainMaterials?: DbRow[]; auxiliaryMaterials?: DbRow[] }).materials = materials || [];
+  (card as DbRow & { materials?: DbRow[]; mainMaterials?: DbRow[]; auxiliaryMaterials?: DbRow[] }).mainMaterials = materials?.filter((m: DbRow) => (m.materialType as string) === 'main') || [];
+  (card as DbRow & { materials?: DbRow[]; mainMaterials?: DbRow[]; auxiliaryMaterials?: DbRow[] }).auxiliaryMaterials = materials?.filter((m: DbRow) => (m.materialType as string) === 'auxiliary') || [];
 
   return card;
 }

@@ -5,6 +5,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Droplet, CheckCircle, Clock, AlertTriangle, XCircle, PackagePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -52,6 +53,7 @@ interface Item {
   color_code: string;
   brand: string;
   unit: string;
+  specification?: string;
   stock_qty: number;
   safety_stock: number;
   status: number;
@@ -104,6 +106,13 @@ export default function InkManagementPage() {
   const [searchName, setSearchName] = useState('');
   const [searchType, setSearchType] = useState('');
   const [searchStatus, setSearchStatus] = useState('');
+  const [stats, setStats] = useState({
+    total: 0,
+    enough: 0,
+    warning: 0,
+    low: 0,
+    monthlyInQty: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
   const [sortField, setSortField] = useState<SortField>('ink_code');
@@ -125,11 +134,27 @@ export default function InkManagementPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch {}
+    } catch (error) {
+      console.error('Failed to fetch ink list:', error);
+      setList([]);
+    }
   }, [page, searchCode, searchName, searchType, searchStatus]);
+
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/dcprint/ink/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
 
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [fetchData]);
 
   const handleSort = (field: SortField) => {
@@ -167,9 +192,9 @@ export default function InkManagementPage() {
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
     return sortDir === 'asc' ? (
-      <ArrowUp className="h-3 w-3 ml-1 text-blue-600" />
+      <ArrowUp className="h-3 w-3 ml-1 text-blue-600 dark:text-blue-400" />
     ) : (
-      <ArrowDown className="h-3 w-3 ml-1 text-blue-600" />
+      <ArrowDown className="h-3 w-3 ml-1 text-blue-600 dark:text-blue-400" />
     );
   };
 
@@ -197,6 +222,11 @@ export default function InkManagementPage() {
   };
 
   const handleSave = async () => {
+    // ink_code/ink_name 库列 NOT NULL 无默认，缺失会裸抛 ER_NO_DEFAULT_FOR_FIELD
+    if (!editItem.id && (!editItem.ink_code || !editItem.ink_name)) {
+      toast({ title: tc('required'), variant: 'destructive' });
+      return;
+    }
     try {
       const method = editItem.id ? 'PUT' : 'POST';
       const res = await authFetch('/api/prepress/ink', {
@@ -234,6 +264,25 @@ export default function InkManagementPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: '油墨总数', icon: Droplet, ...StatsTheme.blue },
+            { key: 'enough', label: '库存充足', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'warning', label: '库存预警', icon: AlertTriangle, ...StatsTheme.orange },
+            { key: 'low', label: '库存不足', icon: XCircle, ...StatsTheme.red },
+            { key: 'monthlyInQty', label: '本月入库量', icon: PackagePlus, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: stats.total },
+            { key: 'enough', count: stats.enough },
+            { key: 'warning', count: stats.warning },
+            { key: 'low', count: stats.low },
+            { key: 'monthlyInQty', count: stats.monthlyInQty },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{t('inkManagement')}</h1>
           <div className="flex gap-2">
@@ -432,7 +481,7 @@ export default function InkManagementPage() {
                       <TableCell className="text-xs">
                         {item.stock_qty ?? 0}
                         {item.stock_qty < item.safety_stock && (
-                          <span className="text-red-500 ml-1">⚠</span>
+                          <span className="text-red-500 dark:text-red-400 ml-1">⚠</span>
                         )}
                       </TableCell>
                       <TableCell className="text-xs">{item.safety_stock}</TableCell>
@@ -457,7 +506,7 @@ export default function InkManagementPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />
@@ -558,6 +607,13 @@ export default function InkManagementPage() {
                 <Input
                   value={editItem.brand || ''}
                   onChange={(e) => setEditItem({ ...editItem, brand: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>{tc('specification')}</Label>
+                <Input
+                  value={editItem.specification ?? ''}
+                  onChange={(e) => setEditItem({ ...editItem, specification: e.target.value })}
                 />
               </div>
               <div>

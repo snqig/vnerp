@@ -88,10 +88,10 @@ export const POST = withPermission(
         parameter_name: actual.parameter_name,
         standard_value: standard.standard_value,
         actual_value: actual.actual_value,
-        tolerance: standard.tolerance,
+        tolerance: standard.tolerance ?? null,
         deviation: deviation >= 0 ? `+${deviation}` : `${deviation}`,
         is_within_tolerance: isWithinTolerance,
-        unit: standard.unit,
+        unit: standard.unit ?? null,
       });
     }
 

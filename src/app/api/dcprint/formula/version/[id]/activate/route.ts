@@ -5,13 +5,13 @@ import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { activateVersion } from '@/application/services/InkFormulaVersionService';
-import type { DbRow } from '@/types/db';
+import { UserInfo } from '@/lib/auth';
 
 // POST /api/dcprint/formula/version/:id/activate — 版本生效
 export const POST = withPermission(
   async (
     request: NextRequest,
-    userInfo: DbRow,
+    userInfo: UserInfo,
     { params }: { params: Promise<{ id: string }> }
   ) => {
   const ts = await getTranslations('Common');

@@ -149,7 +149,8 @@ const LIST_FIELDS = `
   id, card_no, customer_name, customer_code, product_name, version, status,
   print_type, material_type, glue_type, packing_type, mold_type,
   finished_size, tolerance, material_name, layout_type,
-  date, document_code, creator, create_time, update_time
+  date, document_code, creator, create_time, update_time,
+  template_category, tags
 `;
 
 // GET - 获取标准卡列表或单个标准卡
@@ -164,7 +165,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   // 查询单个标准卡
   if (id) {
-    const card = await queryOne<StandardCard>(
+    const card = await queryOne<DbRow>(
       `SELECT * FROM prd_standard_card WHERE id = ? AND deleted = 0`,
       [parseInt(id)]
     );
@@ -174,10 +175,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     }
 
     // 解析sequences字段为JSON对象（如果是字符串）
-    const cardAny = card as DbRow;
-    if (cardAny.sequences && typeof cardAny.sequences === 'string') {
+    if (card.sequences && typeof card.sequences === 'string') {
       try {
-        cardAny.sequences = JSON.parse(cardAny.sequences);
+        card.sequences = JSON.parse(card.sequences);
       } catch {
         // 保持原样
       }
@@ -207,7 +207,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   sql += ' ORDER BY create_time DESC';
 
   // 使用分页查询工具
-  const result = await queryPaginated<StandardCard>(sql, countSql, values, {
+  const result = await queryPaginated<DbRow>(sql, countSql, values, {
     page,
     pageSize,
   });
@@ -217,9 +217,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 // POST - 创建标准卡
 export const POST = withPermission(
-  async (request: NextRequest, _userInfo) => {
+  async (request: NextRequest, userInfo) => {
   const ts = await getTranslations('Common');
     const body = await request.json();
+
+    // 自动填充创建人
+    const creatorName = body.creator || userInfo.realName || userInfo.username;
+    const creatorId = body.creator_id ?? userInfo.userId;
 
     // 生成标准卡编号
     const cardNo = body.card_no || generateDocNo(getSamplePrefix());
@@ -320,14 +324,16 @@ export const POST = withPermission(
       etch_mold: body.etch_mold || '',
       storage_location: body.storage_location || '',
       extra_field: body.extra_field || '',
-      creator: body.creator || '',
+      creator: creatorName,
       reviewer: body.reviewer || '',
       factory_manager: body.factory_manager || '',
       quality_manager: body.quality_manager || '',
       sales: body.sales || '',
       approver: body.approver || '',
-      create_by: body.creator_id || null,
+      create_by: creatorId,
       reviewer_id: body.reviewer_id || null,
+      template_category: body.template_category || null,
+      tags: body.tags ? JSON.stringify(body.tags) : null,
       deleted: 0,
     };
 
@@ -474,6 +480,8 @@ export const PUT = withPermission(
       approver: 'approver',
       creator_id: 'create_by',
       reviewer_id: 'reviewer_id',
+      template_category: 'template_category',
+      tags: 'tags',
     };
 
     // 处理传入的body字段

@@ -6,14 +6,14 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { SampleProcessCardService } from '@/application/services/SampleProcessCardService';
 import { sampleProcessCardSchema } from '@/lib/validators/sample-card.schema';
-import type { DbRow } from '@/types/db';
+import { UserInfo } from '@/lib/auth';
 
 const service = new SampleProcessCardService();
 
 export const GET = withPermission(
   async (
     _request: NextRequest,
-    _userInfo: DbRow,
+    _userInfo: UserInfo,
     { params }: { params: Promise<{ id: string }> }
   ) => {
   const ts = await getTranslations('Common');
@@ -28,7 +28,7 @@ export const GET = withPermission(
 export const PUT = withPermission(
   async (
     request: NextRequest,
-    userInfo: DbRow,
+    userInfo: UserInfo,
     { params }: { params: Promise<{ id: string }> }
   ) => {
   const ts = await getTranslations('Common');
@@ -55,7 +55,7 @@ export const PUT = withPermission(
 export const DELETE = withPermission(
   async (
     _request: NextRequest,
-    _userInfo: DbRow,
+    _userInfo: UserInfo,
     { params }: { params: Promise<{ id: string }> }
   ) => {
   const ts = await getTranslations('Common');

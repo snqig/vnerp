@@ -5,7 +5,7 @@ import { NextRequest } from 'next/server';
 import { query, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 import { SELECT_STMT } from '@/lib/db/ddl/dcprint-ink-surplus';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
@@ -136,7 +136,7 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
     }
   }
 
-  recommendations.sort((a, b) => b.match_score - a.match_score);
+  recommendations.sort((a, b) => Number(b.match_score ?? 0) - Number(a.match_score ?? 0));
 
   const totalAvailable = surplusInks.reduce(
     (sum: number, ink: DbRow) => sum + Number(ink.available_qty || 0),
@@ -246,7 +246,7 @@ export const POST = withPermission(
 
       const batch = batchRows[0];
 
-      if (batch.expire_date && new Date(batch.expire_date) < new Date()) {
+      if (batch.expire_date && new Date(String(batch.expire_date)) < new Date()) {
         throw new Error(`油墨批次 ${batch_no} 已过期，不能退回`);
       }
 
@@ -263,7 +263,7 @@ export const POST = withPermission(
         String(now.getDate()).padStart(2, '0') +
         String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-      const [insertResult] = await conn.execute(
+      const insertResult = (await conn.execute<DbResultSetHeader>(
         `INSERT INTO ink_usage (usage_no, usage_type, batch_no, workorder_no, color_name, weight, unit, operator_id, operator_name, location_id, location_name, status, remark)
        VALUES (?, 'return', ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
         [
@@ -279,7 +279,7 @@ export const POST = withPermission(
           location_name || null,
           remark || ts('k_vb4fl2'),
         ]
-      );
+      )) as unknown as DbResultSetHeader;
 
       return { id: insertResult.insertId, usage_no: usageNo, batch_no, return_weight };
     });

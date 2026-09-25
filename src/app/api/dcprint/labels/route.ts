@@ -7,6 +7,7 @@ import { query, execute, queryOne, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { stringFilter } from '@/lib/query-filter';
 
 // 物料标签接口
 interface MaterialLabel {
@@ -50,11 +51,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const batchNo = searchParams.get('batchNo') || '';
   const purchaseOrderNo = searchParams.get('purchaseOrderNo') || '';
   const supplierName = searchParams.get('supplierName') || '';
-  const warehouseId = searchParams.get('warehouseId') || '';
+  const warehouseId = stringFilter(searchParams.get('warehouseId'));
   const isMainMaterial = searchParams.get('isMainMaterial') || '';
   const isUsed = searchParams.get('isUsed') || '';
   const isCut = searchParams.get('isCut') || '';
-  const status = searchParams.get('status') || '';
+  const status = stringFilter(searchParams.get('status'));
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 

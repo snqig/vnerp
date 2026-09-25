@@ -133,7 +133,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: (result as DbRow).insertId }, ts('k_qmisx5'));
+    return successResponse({ id: (result as unknown as DbRow).insertId }, ts('k_qmisx5'));
   },
   { logTitle: '记录油墨耗用', logType: 'business' }
 );

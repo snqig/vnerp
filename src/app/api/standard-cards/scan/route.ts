@@ -41,7 +41,7 @@ export const POST = withPermission(
     // 如果没有直接关联工单，尝试通过 ref_no 查找
     if (!workOrderNo && qrRecord.ref_no) {
       const workOrder = await queryOne<{ work_order_no: string; id: number }>(
-        'SELECT work_order_no, id FROM prd_work_order WHERE order_no = ? AND deleted = 0',
+        'SELECT work_order_no, id FROM prod_work_order WHERE order_no = ? AND deleted = 0',
         [qrRecord.ref_no]
       );
       if (workOrder) {
@@ -57,46 +57,46 @@ export const POST = withPermission(
     // 查询工单关联的标准卡
     const cards = await query<StandardCard>(
       `SELECT sc.* FROM prd_standard_card sc
-     LEFT JOIN prd_work_order wo ON wo.material_id = sc.material_id
+     LEFT JOIN prod_work_order wo ON wo.material_id = sc.material_id
      WHERE wo.id = ? AND sc.status = 3 AND sc.deleted = 0`,
       [workOrderId]
     );
 
     // 为每个标准卡加载明细数据
-    const cardsWithItems: DbRow[] = [];
+    const cardsWithItems: (DbRow & { items?: DbRow[] })[] = [];
     for (const card of cards) {
       let items: DbRow[] = [];
 
       switch (card.type as StandardCardType) {
         case 'color':
-          items = await query<ColorStandardItem>(
+          items = await query<DbRow>(
             'SELECT * FROM color_standard_items WHERE standard_card_id = ?',
             [card.id!]
           );
           break;
         case 'process':
-          items = await query<ProcessStandardItem>(
+          items = await query<DbRow>(
             'SELECT * FROM process_standard_items WHERE standard_card_id = ?',
             [card.id!]
           );
           break;
         case 'quality':
-          items = await query<QualityStandardItem>(
+          items = await query<DbRow>(
             'SELECT * FROM quality_standard_items WHERE standard_card_id = ?',
             [card.id!]
           );
           break;
         case 'comprehensive':
           // 综合类型：返回所有明细
-          const colorItems = await query<ColorStandardItem>(
+          const colorItems = await query<DbRow>(
             'SELECT *, "color" as item_type FROM color_standard_items WHERE standard_card_id = ?',
             [card.id!]
           );
-          const processItems = await query<ProcessStandardItem>(
+          const processItems = await query<DbRow>(
             'SELECT *, "process" as item_type FROM process_standard_items WHERE standard_card_id = ?',
             [card.id!]
           );
-          const qualityItems = await query<QualityStandardItem>(
+          const qualityItems = await query<DbRow>(
             'SELECT *, "quality" as item_type FROM quality_standard_items WHERE standard_card_id = ?',
             [card.id!]
           );
@@ -105,9 +105,9 @@ export const POST = withPermission(
       }
 
       cardsWithItems.push({
-        ...card,
+        ...(card as unknown as Record<string, unknown>),
         items,
-      });
+      } as DbRow & { items?: DbRow[] });
     }
 
     return successResponse({

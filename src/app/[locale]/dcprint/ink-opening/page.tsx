@@ -33,20 +33,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Plus,
-  Search,
-  RefreshCw,
-  Clock,
-  AlertTriangle,
-  Droplets,
-  Eye,
-  Trash2,
-  Timer,
-} from 'lucide-react';
+import { Plus, Search, RefreshCw, Clock, AlertTriangle, Droplets, Eye, Trash2, Timer, Droplet, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface InkOpeningRecord {
   id: number;
@@ -275,56 +266,21 @@ export default function InkOpeningPage() {
   return (
     <MainLayout title={ts('k_1iipc14')}>
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{ts('k_kr2h4d')}</CardTitle>
-              <Droplets className="h-4 w-4 text-green-600 dark:text-green-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {summary.using_count}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{tc('dcInUseDesc')}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{ts('k_1g217or')}</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {summary.expired_count}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{tc('dcExpiredDesc')}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{ts('k_1fdyuoa')}</CardTitle>
-              <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {summary.overdue_using_count}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{tc('dcSoonExpiredDesc')}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{ts('k_oy744d')}</CardTitle>
-              <Trash2 className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">
-                {summary.scrapped_count}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{tc('dcScrappedDesc')}</p>
-            </CardContent>
-          </Card>
-        </div>
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('total'), icon: Droplet, ...StatsTheme.blue },
+            { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
+            { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'total', count: records.length },
+            { key: 'active', count: records.length },
+            { key: 'pending', count: records.length },
+            { key: 'warning', count: records.length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
 
         {overdueList.length > 0 && (
           <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30">
@@ -353,7 +309,7 @@ export default function InkOpeningPage() {
                       <TableCell className="font-mono">{r.record_no}</TableCell>
                       <TableCell>{r.material_name}</TableCell>
                       <TableCell>
-                        <Badge className={INK_TYPE_MAP[r.ink_type]?.color || 'bg-gray-100'}>
+                        <Badge className={INK_TYPE_MAP[r.ink_type]?.color || 'bg-gray-100 dark:bg-gray-700'}>
                           {INK_TYPE_MAP[r.ink_type]?.label || r.ink_type}
                         </Badge>
                       </TableCell>
@@ -475,7 +431,7 @@ export default function InkOpeningPage() {
                           {r.material_name || r.material_code}
                         </TableCell>
                         <TableCell>
-                          <Badge className={INK_TYPE_MAP[r.ink_type]?.color || 'bg-gray-100'}>
+                          <Badge className={INK_TYPE_MAP[r.ink_type]?.color || 'bg-gray-100 dark:bg-gray-700'}>
                             {INK_TYPE_MAP[r.ink_type]?.label || r.ink_type || '-'}
                           </Badge>
                         </TableCell>
@@ -488,7 +444,7 @@ export default function InkOpeningPage() {
                         <TableCell>
                           {timeRemaining ? (
                             <span
-                              className={`flex items-center gap-1 font-medium ${timeRemaining.isOverdue ? 'text-red-600' : timeRemaining.isWarning ? 'text-yellow-600' : 'text-green-600'}`}
+                              className={`flex items-center gap-1 font-medium ${timeRemaining.isOverdue ? 'text-red-600 dark:text-red-400' : timeRemaining.isWarning ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}
                             >
                               {timeRemaining.isOverdue && <AlertTriangle className="h-3 w-3" />}
                               {timeRemaining.isWarning && <Clock className="h-3 w-3" />}
@@ -505,7 +461,7 @@ export default function InkOpeningPage() {
                           {r.remaining_qty ? `${r.remaining_qty} ${r.unit || ''}` : '-'}
                         </TableCell>
                         <TableCell>
-                          <Badge className={STATUS_MAP[r.status]?.color || 'bg-gray-100'}>
+                          <Badge className={STATUS_MAP[r.status]?.color || 'bg-gray-100 dark:bg-gray-700'}>
                             {STATUS_MAP[r.status]?.label || r.status}
                           </Badge>
                         </TableCell>
@@ -522,7 +478,7 @@ export default function InkOpeningPage() {
                                   onClick={() => handleStatusChange(r.id, 2)}
                                   title={ts('k_p3zbds')}
                                 >
-                                  <Clock className="h-4 w-4 text-yellow-500" />
+                                  <Clock className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />
                                 </Button>
                                 <Button
                                   variant="ghost"
@@ -530,7 +486,7 @@ export default function InkOpeningPage() {
                                   onClick={() => handleStatusChange(r.id, 3)}
                                   title={ts('k_1tuzpv2')}
                                 >
-                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                  <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
                                 </Button>
                               </>
                             )}
@@ -541,7 +497,7 @@ export default function InkOpeningPage() {
                                 onClick={() => handleStatusChange(r.id, 3)}
                                 title={ts('k_1tuzpv2')}
                               >
-                                <Trash2 className="h-4 w-4 text-red-500" />
+                                <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
                               </Button>
                             )}
                           </div>
@@ -733,7 +689,7 @@ export default function InkOpeningPage() {
                   </div>
                   <div>
                     <span className="text-muted-foreground">{tc('dcInkType')}</span>
-                    <Badge className={INK_TYPE_MAP[detailData.ink_type]?.color || 'bg-gray-100'}>
+                    <Badge className={INK_TYPE_MAP[detailData.ink_type]?.color || 'bg-gray-100 dark:bg-gray-700'}>
                       {INK_TYPE_MAP[detailData.ink_type]?.label || detailData.ink_type}
                     </Badge>
                   </div>
@@ -765,7 +721,7 @@ export default function InkOpeningPage() {
                   </div>
                   <div>
                     <span className="text-muted-foreground">{ts('k_1pwh7dy')}</span>
-                    <Badge className={STATUS_MAP[detailData.status]?.color || 'bg-gray-100'}>
+                    <Badge className={STATUS_MAP[detailData.status]?.color || 'bg-gray-100 dark:bg-gray-700'}>
                       {STATUS_MAP[detailData.status]?.label || detailData.status}
                     </Badge>
                   </div>

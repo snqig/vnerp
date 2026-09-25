@@ -6,6 +6,7 @@ import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { isInkUnopenedShelfLife } from '@/lib/global-config';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -13,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const keyword = searchParams.get('keyword') || '';
   const colorName = searchParams.get('colorName') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
   const workorderNo = searchParams.get('workorderNo') || '';
 
   let where = 'WHERE f.is_deleted = 0';

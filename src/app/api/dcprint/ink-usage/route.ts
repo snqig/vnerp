@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 import { withPermission } from '@/lib/api-permissions';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
@@ -124,7 +125,7 @@ export const POST = withPermission(
         throw new Error(`油墨批次 ${actualBatchNo} 已冻结，不能使用`);
       }
 
-      if (batch.expire_date && new Date(batch.expire_date) < now) {
+      if (batch.expire_date && new Date(String(batch.expire_date)) < now) {
         throw new Error(`油墨批次 ${actualBatchNo} 已过期，不能使用`);
       }
 
@@ -180,7 +181,7 @@ export const POST = withPermission(
         }
       }
 
-      const [insertResult] = await conn.execute(
+      const insertResult = (await conn.execute<DbResultSetHeader>(
         `INSERT INTO ink_usage (usage_no, usage_type, batch_no, qr_code, workorder_id, workorder_no, formula_id, formula_no, color_name, weight, unit, operator_id, operator_name, machine_id, machine_name, location_id, location_name, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
         [
@@ -203,7 +204,7 @@ export const POST = withPermission(
           location_name || null,
           remark || null,
         ]
-      );
+      )) as unknown as DbResultSetHeader;
 
       try {
         await conn.execute(

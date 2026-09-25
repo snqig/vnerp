@@ -6,7 +6,7 @@ import { escapeId } from 'mysql2';
 import { query, execute, queryOne, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 
 // 生成流程卡卡号
 function generateCardNo(): string {
@@ -168,7 +168,7 @@ export const POST = withPermission(
     // 开始事务
     const result = await transaction(async (conn) => {
       // 1. 创建流程卡
-      const cardResult = await conn.execute(
+      const cardResult = (await conn.execute<DbResultSetHeader>(
         `INSERT INTO prd_process_card (
         card_no, qr_code, work_order_id, work_order_no, product_code, product_name,
         material_spec, work_order_date, plan_qty, main_label_id, main_label_no,
@@ -189,9 +189,9 @@ export const POST = withPermission(
           createUserId,
           createUserName,
         ]
-      );
+      )) as unknown as DbResultSetHeader;
 
-      const cardId = (cardResult as DbRow).insertId;
+      const cardId = cardResult.insertId;
 
       // 2. 更新主材标签为已使用
       await conn.execute(`UPDATE inv_material_label SET is_used = 1 WHERE id = ?`, [mainLabelId]);
@@ -252,10 +252,7 @@ async function addMaterialToCard(cardIdentifier: string | number, data: DbRow) {
   const { labelId, labelNo, createUserId: _createUserId, createUserName: _createUserName } = data;
 
   // 获取流程卡信息
-  const card = await queryOne(
-    `SELECT id, card_no, lock_status FROM prd_process_card WHERE ${typeof cardIdentifier === 'number' ? 'id' : 'card_no'} = ? AND deleted = 0`,
-    [cardIdentifier]
-  );
+  const card = await queryOne<DbRow>(`SELECT id, card_no, lock_status FROM prd_process_card WHERE ${typeof cardIdentifier === 'number' ? 'id' : 'card_no'} = ? AND deleted = 0`, [cardIdentifier]);
 
   if (!card) {
     return errorResponse(ts('k_qc7rob'), 404, 404);
@@ -266,11 +263,11 @@ async function addMaterialToCard(cardIdentifier: string | number, data: DbRow) {
   }
 
   // 获取标签信息
-  const label = await queryOne(
-    `SELECT material_code, material_name, specification, batch_no, quantity, unit
-     FROM inv_material_label WHERE id = ? AND deleted = 0`,
-    [labelId]
-  );
+  const label = await queryOne<DbRow>(
+      `SELECT material_code, material_name, specification, batch_no, quantity, unit
+       FROM inv_material_label WHERE id = ? AND deleted = 0`,
+      [labelId]
+    );
 
   if (!label) {
     return errorResponse(ts('k_vg72ml'), 404, 404);

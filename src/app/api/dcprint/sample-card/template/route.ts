@@ -5,7 +5,7 @@ import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { SampleProcessTemplateService } from '@/application/services/SampleProcessTemplateService';
-import type { DbRow } from '@/types/db';
+import { UserInfo } from '@/lib/auth';
 
 const service = new SampleProcessTemplateService();
 
@@ -23,7 +23,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 
 // 创建模板
 export const POST = withPermission(
-  async (request: NextRequest, userInfo: DbRow) => {
+  async (request: NextRequest, userInfo: UserInfo) => {
   const ts = await getTranslations('Common');
     const body = await request.json();
     if (!body.template_name?.trim()) {

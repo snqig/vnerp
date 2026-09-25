@@ -194,9 +194,9 @@ export default function ToolManagePage() {
 
   const getLifeStatus = (tool: Tool) => {
     const remainPercent = tool.total_life > 0 ? (tool.remain_life / tool.total_life) * 100 : 0;
-    if (remainPercent <= 5) return { color: 'text-red-500', label: ts('k_15ytcv3') };
-    if (remainPercent <= 20) return { color: 'text-yellow-500', label: ts('k_894hs9') };
-    return { color: 'text-green-500', label: ts('k_tt5vxa') };
+    if (remainPercent <= 5) return { color: 'text-red-500 dark:text-red-400', label: ts('k_15ytcv3') };
+    if (remainPercent <= 20) return { color: 'text-yellow-500 dark:text-yellow-400', label: ts('k_894hs9') };
+    return { color: 'text-green-500 dark:text-green-400', label: ts('k_tt5vxa') };
   };
 
   return (
@@ -309,7 +309,7 @@ export default function ToolManagePage() {
                             {tool.used_count}/{tool.remain_life}
                           </span>
                         </TableCell>
-                        <TableCell>¥{tool.unit_cost?.toFixed(2) || '0.00'}</TableCell>
+                        <TableCell>¥{Number(tool.unit_cost || 0).toFixed(2)}</TableCell>
                         <TableCell>
                           <Badge variant={STATUS_MAP[tool.status]?.variant || 'secondary'}>
                             {STATUS_MAP[tool.status]?.label || ts('k_1lpnuh4')}
@@ -357,7 +357,7 @@ export default function ToolManagePage() {
                               )}
                               {tool.status !== 5 && (
                                 <DropdownMenuItem onClick={() => handleScrap(tool.id)}>
-                                  <XCircle className="h-4 w-4 mr-2 text-red-500" />
+                                  <XCircle className="h-4 w-4 mr-2 text-red-500 dark:text-red-400" />
                                   {ts('k_19qx965')}</DropdownMenuItem>
                               )}
                             </DropdownMenuContent>
@@ -382,7 +382,7 @@ export default function ToolManagePage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>
-                {ts('k_l1tjwl')}<span className="text-red-500">*</span>
+                {ts('k_l1tjwl')}<span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Select
                 value={String(form.tool_type)}
@@ -399,7 +399,7 @@ export default function ToolManagePage() {
             </div>
             <div className="space-y-1">
               <Label>
-                {ts('k_1i0rj5g')}<span className="text-red-500">*</span>
+                {ts('k_1i0rj5g')}<span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 value={form.tool_code}
@@ -408,7 +408,7 @@ export default function ToolManagePage() {
             </div>
             <div className="space-y-1">
               <Label>
-                {ts('k_mr44aa')}<span className="text-red-500">*</span>
+                {ts('k_mr44aa')}<span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 value={form.tool_name}

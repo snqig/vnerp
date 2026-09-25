@@ -5,6 +5,7 @@ import { useCompanyName } from '@/hooks/useCompanyName';
 import { useState, useRef, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import {
   Table,
   TableBody,
@@ -17,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { QrCode, Search, Printer, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { QrCode, Search, Printer, CheckCircle, AlertCircle, RefreshCw, Clock, AlertTriangle, Calendar, Package, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 // 追溯结果类型
@@ -76,10 +77,30 @@ export default function TracePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [stats, setStats] = useState({
+    tracedBatches: 0,
+    involvedProducts: 0,
+    involvedCustomers: 0,
+    monthlyTraceCount: 0,
+    abnormalBatches: 0,
+  });
   const qrInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/dcprint/trace/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
 
   useEffect(() => {
     fetchRecords();
+    fetchStats();
     qrInputRef.current?.focus();
   }, []);
 
@@ -246,6 +267,25 @@ export default function TracePage() {
   return (
     <MainLayout title={ts('k_1iaqhub')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'tracedBatches', label: '已追溯批次', icon: Search, ...StatsTheme.blue },
+            { key: 'involvedProducts', label: '涉及产品数', icon: Package, ...StatsTheme.green },
+            { key: 'involvedCustomers', label: '涉及客户数', icon: Users, ...StatsTheme.cyan },
+            { key: 'monthlyTraceCount', label: '本月追溯次数', icon: Calendar, ...StatsTheme.purple },
+            { key: 'abnormalBatches', label: '异常批次', icon: AlertTriangle, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'tracedBatches', count: stats.tracedBatches },
+            { key: 'involvedProducts', count: stats.involvedProducts },
+            { key: 'involvedCustomers', count: stats.involvedCustomers },
+            { key: 'monthlyTraceCount', count: stats.monthlyTraceCount },
+            { key: 'abnormalBatches', count: stats.abnormalBatches },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         {/* 扫码追溯区域 */}
         <Card>
           <CardHeader>
@@ -287,9 +327,9 @@ export default function TracePage() {
                 </Alert>
               )}
               {success && (
-                <Alert className="bg-green-50 border-green-200">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-700">{success}</AlertDescription>
+                <Alert className="bg-green-500/10 border-green-200 dark:border-green-800">
+                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <AlertDescription className="text-green-700 dark:text-green-400">{success}</AlertDescription>
                 </Alert>
               )}
             </div>
@@ -345,7 +385,7 @@ export default function TracePage() {
                   </Card>
 
                   {/* 主材信息 */}
-                  <Card className="border-green-200">
+                  <Card className="border-green-200 dark:border-green-800">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm">{ts('k_17hv1vq')}</CardTitle>
                     </CardHeader>
@@ -402,13 +442,13 @@ export default function TracePage() {
                       <div className="space-y-4">
                         <div className="bg-muted p-3 rounded-lg">
                           <div className="text-sm text-muted-foreground">{tc('dcMainCount')}</div>
-                          <div className="text-2xl font-bold text-green-600">
+                          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                             {traceResult.materials.filter((m) => m.materialType === 'main').length}
                           </div>
                         </div>
                         <div className="bg-muted p-3 rounded-lg">
                           <div className="text-sm text-muted-foreground">{tc('dcAuxCount')}</div>
-                          <div className="text-2xl font-bold text-blue-600">
+                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                             {
                               traceResult.materials.filter((m) => m.materialType === 'auxiliary')
                                 .length
@@ -459,9 +499,9 @@ export default function TracePage() {
                             <TableCell className="font-medium">{material.labelNo}</TableCell>
                             <TableCell>
                               {material.materialType === 'main' ? (
-                                <Badge className="bg-green-100 text-green-700">{ts('k_1gqlef2')}</Badge>
+                                <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">{ts('k_1gqlef2')}</Badge>
                               ) : (
-                                <Badge className="bg-blue-100 text-blue-700">{ts('k_14rp9uj')}</Badge>
+                                <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">{ts('k_14rp9uj')}</Badge>
                               )}
                             </TableCell>
                             <TableCell>{material.materialCode}</TableCell>
@@ -516,9 +556,9 @@ export default function TracePage() {
                         <TableCell>{record.productCode}</TableCell>
                         <TableCell>
                           {record.traceType === 'forward' ? (
-                            <Badge className="bg-blue-100 text-blue-700">{ts('k_1yh2yft')}</Badge>
+                            <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">{ts('k_1yh2yft')}</Badge>
                           ) : (
-                            <Badge className="bg-purple-100 text-purple-700">{ts('k_19f7liv')}</Badge>
+                            <Badge className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">{ts('k_19f7liv')}</Badge>
                           )}
                         </TableCell>
                         <TableCell>{record.operatorName}</TableCell>

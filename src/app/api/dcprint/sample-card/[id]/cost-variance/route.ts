@@ -2,14 +2,14 @@ import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { SampleProcessCardService } from '@/application/services/SampleProcessCardService';
-import type { DbRow } from '@/types/db';
+import { UserInfo } from '@/lib/auth';
 
 const service = new SampleProcessCardService();
 
 export const GET = withPermission(
   async (
     _request: NextRequest,
-    _userInfo: DbRow,
+    _userInfo: UserInfo,
     { params }: { params: Promise<{ id: string }> }
   ) => {
     const { id } = await params;

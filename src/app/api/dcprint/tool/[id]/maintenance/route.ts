@@ -3,14 +3,14 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { ToolManagementService } from '@/application/services/ToolManagementService';
 import { MysqlToolRepository } from '@/infrastructure/repositories/MysqlToolRepository';
-import type { DbRow } from '@/types/db';
+import { UserInfo } from '@/lib/auth';
 
 const service = new ToolManagementService(new MysqlToolRepository());
 
 export const GET = withPermission(
   async (
     request: NextRequest,
-    _userInfo: DbRow,
+    _userInfo: UserInfo,
     { params }: { params: Promise<{ id: string }> }
   ) => {
     const { id } = await params;
@@ -23,7 +23,7 @@ export const GET = withPermission(
 export const POST = withPermission(
   async (
     request: NextRequest,
-    userInfo: DbRow,
+    userInfo: UserInfo,
     { params }: { params: Promise<{ id: string }> }
   ) => {
     const { id } = await params;

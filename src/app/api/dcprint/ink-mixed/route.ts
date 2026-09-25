@@ -7,6 +7,7 @@ import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { randomUUID } from 'crypto';
 import { getMrPrefix, generateDocNo } from '@/lib/global-config';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -14,7 +15,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const recordNo = searchParams.get('recordNo') || '';
   const colorName = searchParams.get('colorName') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
 
   let where = 'WHERE deleted = 0';
   const params: SqlValue[] = [];

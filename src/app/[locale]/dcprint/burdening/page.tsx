@@ -200,13 +200,13 @@ export default function BurdeningPage() {
                 </Alert>
               )}
               {success && (
-                <Alert className="bg-green-50 border-green-200">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-700">{success}</AlertDescription>
+                <Alert className="bg-green-500/10 border-green-200 dark:border-green-800">
+                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <AlertDescription className="text-green-700 dark:text-green-400">{success}</AlertDescription>
                 </Alert>
               )}
               {selectedCard && (
-                <Card className="border-blue-200">
+                <Card className="border-blue-200 dark:border-blue-800">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <FileText className="h-4 w-4" />
@@ -273,8 +273,8 @@ export default function BurdeningPage() {
                     <Badge
                       className={
                         card.burdeningStatus === 'completed'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-yellow-100 text-yellow-700'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                          : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                       }
                     >
                       {card.burdeningStatus === 'completed' ? t('burdened') : t('notBurdened')}

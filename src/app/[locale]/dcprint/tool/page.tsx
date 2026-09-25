@@ -472,25 +472,25 @@ export default function ToolManagementPage() {
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">{ts('k_16d9hd9')}</p>
-              <p className="text-2xl font-bold text-green-600">{dashboard.activeTools}</p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{dashboard.activeTools}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">{ts('k_1qswpkf')}</p>
-              <p className="text-2xl font-bold text-orange-600">{dashboard.warningTools}</p>
+              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{dashboard.warningTools}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">{ts('k_1jvastq')}</p>
-              <p className="text-2xl font-bold text-blue-600">{dashboard.maintenanceTools}</p>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{dashboard.maintenanceTools}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">{ts('k_oy744d')}</p>
-              <p className="text-2xl font-bold text-red-600">{dashboard.scrappedTools}</p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{dashboard.scrappedTools}</p>
             </CardContent>
           </Card>
           <Card>
@@ -571,7 +571,7 @@ export default function ToolManagementPage() {
                       <TableCell>{tool.tool_name}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                             <div
                               className={`h-full ${lifePercent(tool) >= 80 ? 'bg-red-500' : lifePercent(tool) >= 60 ? 'bg-orange-500' : 'bg-green-500'}`}
                               style={{ width: `${lifePercent(tool)}%` }}
@@ -1174,7 +1174,7 @@ export default function ToolManagementPage() {
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-orange-600">
+              <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
                 <AlertTriangle className="h-5 w-5" />
                 <span>{ts('k_1vmfys2')}</span>
               </div>

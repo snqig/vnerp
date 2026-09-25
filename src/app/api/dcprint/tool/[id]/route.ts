@@ -3,6 +3,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { ToolManagementService } from '@/application/services/ToolManagementService';
 import { MysqlToolRepository } from '@/infrastructure/repositories/MysqlToolRepository';
+import { UserInfo } from '@/lib/auth';
 import type { DbRow } from '@/types/db';
 
 const service = new ToolManagementService(new MysqlToolRepository());
@@ -10,7 +11,7 @@ const service = new ToolManagementService(new MysqlToolRepository());
 export const GET = withPermission(
   async (
     request: NextRequest,
-    _userInfo: DbRow,
+    _userInfo: UserInfo,
     { params }: { params: Promise<{ id: string }> }
   ) => {
     const { id } = await params;
@@ -24,7 +25,7 @@ export const GET = withPermission(
 export const PUT = withPermission(
   async (
     request: NextRequest,
-    _userInfo: DbRow,
+    _userInfo: UserInfo,
     { params }: { params: Promise<{ id: string }> }
   ) => {
     const { id } = await params;
@@ -38,7 +39,7 @@ export const PUT = withPermission(
 export const DELETE = withPermission(
   async (
     request: NextRequest,
-    _userInfo: DbRow,
+    _userInfo: UserInfo,
     { params }: { params: Promise<{ id: string }> }
   ) => {
     const { id } = await params;

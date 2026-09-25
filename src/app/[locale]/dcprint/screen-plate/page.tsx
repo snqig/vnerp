@@ -305,7 +305,7 @@ export default function ScreenPlatePage() {
                       <TableCell className="text-xs">{item.customer_name || '-'}</TableCell>
                       <TableCell className="text-xs">
                         {warn ? (
-                          <span className="text-red-500 font-bold">
+                          <span className="text-red-500 dark:text-red-400 font-bold">
                             {item.life_count}/{item.max_use_count}
                           </span>
                         ) : (
@@ -347,7 +347,7 @@ export default function ScreenPlatePage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                             title={tc('delete')}
                           >

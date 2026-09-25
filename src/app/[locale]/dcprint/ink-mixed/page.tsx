@@ -32,10 +32,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Beaker, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface InkMixedRecord {
   id: number;
@@ -270,6 +271,22 @@ export default function InkMixedPage() {
           </div>
         </div>
 
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('total'), icon: Beaker, ...StatsTheme.blue },
+            { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
+            { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'total', count: list.length },
+            { key: 'active', count: list.length },
+            { key: 'pending', count: list.length },
+            { key: 'warning', count: list.length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <Card>
           <CardContent className="p-0">
             <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
@@ -359,7 +376,7 @@ export default function InkMixedPage() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-6 text-xs px-2 text-orange-600"
+                                className="h-6 text-xs px-2 text-orange-600 dark:text-orange-400"
                                 onClick={() => handleStatusChange(item.id, 3)}
                               >
                                 {ts('k_1g217or')}</Button>
@@ -380,7 +397,7 @@ export default function InkMixedPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />

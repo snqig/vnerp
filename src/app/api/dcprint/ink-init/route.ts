@@ -1,7 +1,4 @@
 import { getTranslations } from 'next-intl/server';
-import type { DbRow } from '@/types/db';
-
-;
 import { NextRequest } from 'next/server';
 import { execute, query, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
@@ -20,7 +17,7 @@ async function safeCreateTable(tableName: string, sql: string) {
 export const POST = withPermission(
   async (_request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
-    const results: DbRow[] = [];
+    const results: unknown[] = [];
 
     results.push(
       await safeCreateTable(

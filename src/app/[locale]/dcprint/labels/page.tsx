@@ -4,6 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -31,7 +32,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Search, QrCode, Scissors, Printer, RefreshCw, Trash2, Settings } from 'lucide-react';
+import { Search, QrCode, Scissors, Printer, RefreshCw, Trash2, Settings, Tag, CheckCircle, Clock, AlertTriangle, Power, PlusCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { LabelPrintTrigger, LabelData } from '@/components/printing/LabelPrintPreview';
@@ -120,6 +121,13 @@ export default function MaterialLabelsPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    inactive: 0,
+    monthlyNew: 0,
+    printedCount: 0,
+  });
   const [selectedLabels, setSelectedLabels] = useState<Set<number>>(new Set());
   const [showPrinterSettings, setShowPrinterSettings] = useState(false);
 
@@ -174,6 +182,19 @@ export default function MaterialLabelsPage() {
     };
 
     fetchData();
+
+    const fetchStats = async () => {
+      try {
+        const res = await authFetch('/api/dcprint/labels/stats');
+        const data = await res.json();
+        if (data.success) {
+          setStats(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+      }
+    };
+    fetchStats();
 
     return () => controller.abort();
   }, [page, isMainMaterial, isCut, keyword]);
@@ -260,6 +281,25 @@ export default function MaterialLabelsPage() {
   return (
     <MainLayout title={t('labelManagement')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: '标签总数', icon: Tag, ...StatsTheme.blue },
+            { key: 'active', label: '已启用', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'inactive', label: '已停用', icon: Power, ...StatsTheme.gray },
+            { key: 'monthlyNew', label: '本月新增', icon: PlusCircle, ...StatsTheme.cyan },
+            { key: 'printedCount', label: '已打印标签数', icon: Printer, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: stats.total },
+            { key: 'active', count: stats.active },
+            { key: 'inactive', count: stats.inactive },
+            { key: 'monthlyNew', count: stats.monthlyNew },
+            { key: 'printedCount', count: stats.printedCount },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         {/* 搜索栏 */}
         <Card>
           <CardHeader>

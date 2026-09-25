@@ -54,10 +54,10 @@ const quickActions = [
 
 // 统计数据
 const stats = [
-  { label: '今日刀具', value: '0', icon: Scissors, color: 'text-green-600' },
-  { label: '今日流程卡', value: '0', icon: FileText, color: 'text-purple-600' },
-  { label: '今日追溯', value: '0', icon: Search, color: 'text-orange-600' },
-  { label: '标签总数', value: '0', icon: QrCode, color: 'text-blue-600' },
+  { label: '今日刀具', value: '0', icon: Scissors, color: 'text-green-600 dark:text-green-400' },
+  { label: '今日流程卡', value: '0', icon: FileText, color: 'text-purple-600 dark:text-purple-400' },
+  { label: '今日追溯', value: '0', icon: Search, color: 'text-orange-600 dark:text-orange-400' },
+  { label: '标签总数', value: '0', icon: QrCode, color: 'text-blue-600 dark:text-blue-400' },
 ];
 
 export default function DCPrintPage() {
@@ -78,14 +78,14 @@ export default function DCPrintPage() {
               </div>
               <div className="flex gap-3">
                 <Link href="/warehouse/inbound/cutting">
-                  <Button variant="secondary" className="bg-white text-blue-600 hover:bg-blue-50">
+                  <Button variant="secondary" className="bg-white dark:bg-card text-blue-600 dark:text-blue-400 hover:bg-blue-500/10">
                     <Scissors className="h-4 w-4 mr-2" />
                     {ts('k_owy2cr')}</Button>
                 </Link>
                 <Link href="/dcprint/process-cards">
                   <Button
                     variant="secondary"
-                    className="bg-white text-purple-600 hover:bg-purple-50"
+                    className="bg-white dark:bg-card text-purple-600 dark:text-purple-400 hover:bg-purple-500/10"
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     {ts('k_9jljyl')}</Button>
@@ -168,7 +168,7 @@ export default function DCPrintPage() {
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded bg-blue-100 text-blue-600">
+                <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
                   <Package className="h-4 w-4" />
                 </div>
                 <div>
@@ -178,7 +178,7 @@ export default function DCPrintPage() {
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded bg-green-100 text-green-600">
+                <div className="p-2 rounded bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
                   <Scissors className="h-4 w-4" />
                 </div>
                 <div>
@@ -188,7 +188,7 @@ export default function DCPrintPage() {
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded bg-purple-100 text-purple-600">
+                <div className="p-2 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
                   <FileText className="h-4 w-4" />
                 </div>
                 <div>
@@ -198,7 +198,7 @@ export default function DCPrintPage() {
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded bg-orange-100 text-orange-600">
+                <div className="p-2 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
                   <Search className="h-4 w-4" />
                 </div>
                 <div>

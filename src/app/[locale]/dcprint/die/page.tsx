@@ -30,7 +30,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Diamond, CheckCircle, Wrench, Circle, AlertTriangle } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 
@@ -90,7 +91,10 @@ export default function DieManagementPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch {}
+    } catch (error) {
+      console.error('Failed to fetch die list:', error);
+      setList([]);
+    }
   };
   useEffect(() => {
     fetchData();
@@ -133,6 +137,22 @@ export default function DieManagementPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('totalDies'), icon: Diamond, ...StatsTheme.blue },
+            { key: 'active', label: tc('inUse'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'maintenance', label: tc('underMaintenance'), icon: Wrench, ...StatsTheme.orange },
+            { key: 'scrapped', label: tc('scrapped'), icon: AlertTriangle, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'total', count: list.length },
+            { key: 'active', count: list.filter((d) => d.status === 1).length },
+            { key: 'maintenance', count: list.filter((d) => d.status === 2).length },
+            { key: 'scrapped', count: list.filter((d) => d.status === 3).length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{tc('dcDieMgmtTitle')}</h1>
           <div className="flex gap-2">
@@ -149,7 +169,7 @@ export default function DieManagementPage() {
                 onChange={(e) => setSearchName(e.target.value)}
                 className="w-28 h-8 text-sm"
               />
-              <Button size="sm" variant="outline" onClick={fetchData}>
+              <Button size="sm" variant="outline" onClick={() => { fetchData(); }}>
                 <Search className="h-3 w-3" />
               </Button>
             </div>
@@ -196,7 +216,7 @@ export default function DieManagementPage() {
                       <TableCell className="text-xs">{item.used_count ?? 0}</TableCell>
                       <TableCell className="text-xs">
                         {warn ? (
-                          <span className="text-red-500 font-bold">{item.remaining_count}</span>
+                          <span className="text-red-500 dark:text-red-400 font-bold">{item.remaining_count}</span>
                         ) : (
                           item.remaining_count
                         )}
@@ -222,7 +242,7 @@ export default function DieManagementPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />

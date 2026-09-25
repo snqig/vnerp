@@ -13,16 +13,17 @@ import { withPermission } from '@/lib/api-permissions';
 import { randomUUID } from 'crypto';
 import { isInkUnopenedShelfLife, getInkOpenedShelfLife } from '@/lib/global-config';
 import type { DbRow } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const keyword = searchParams.get('keyword') || '';
-  const status = searchParams.get('status');
+  const status = numericFilter(searchParams.get('status'));
   const ink_type = searchParams.get('ink_type');
-  const page = parseInt(searchParams.get('page') || '1');
-  const pageSize = parseInt(searchParams.get('pageSize') || '20');
+  const page = parseInt(searchParams.get('page') ?? '1');
+  const pageSize = parseInt(searchParams.get('pageSize') ?? '20');
 
   if (id) {
     const record = await queryOne('SELECT * FROM ink_opening_record WHERE id = ? AND deleted = 0', [
@@ -42,7 +43,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
   if (status) {
     sql += ' AND status = ?';
-    values.push(parseInt(status));
+    values.push(status);
   }
   if (ink_type) {
     sql += ' AND ink_type = ?';
@@ -73,15 +74,15 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   return successResponse({
     list,
-    total: countResult?.total || 0,
+    total: (countResult?.total as number | undefined) ?? 0,
     page,
     pageSize,
     summary: {
-      total_count: parseInt(summary?.total_count || 0),
-      using_count: parseInt(summary?.using_count || 0),
-      expired_count: parseInt(summary?.expired_count || 0),
-      scrapped_count: parseInt(summary?.scrapped_count || 0),
-      overdue_using_count: parseInt(summary?.overdue_using_count || 0),
+      total_count: Number(summary?.total_count ?? 0),
+      using_count: Number(summary?.using_count ?? 0),
+      expired_count: Number(summary?.expired_count ?? 0),
+      scrapped_count: Number(summary?.scrapped_count ?? 0),
+      overdue_using_count: Number(summary?.overdue_using_count ?? 0),
     },
     overdue_list: overdueList,
   });
@@ -172,7 +173,7 @@ export const POST = withPermission(
           [batch_no]
         );
         if (batchRows.length > 0 && batchRows[0].expire_date) {
-          const batchExpire = new Date(batchRows[0].expire_date);
+          const batchExpire = new Date(String(batchRows[0].expire_date ?? ''));
           const calculatedExpire = new Date(expireTime);
           if (batchExpire < calculatedExpire) {
             finalExpireTime = batchExpire.toISOString().slice(0, 19).replace('T', ' ');
@@ -200,8 +201,8 @@ export const POST = withPermission(
           operator_name || null,
           remark || null,
         ]
-      );
-      const insertId = insertResult.insertId;
+      ) as [unknown, unknown];
+      const insertId = (insertResult as { insertId: number }).insertId;
 
       if (workorder_id || workorder_no) {
         try {

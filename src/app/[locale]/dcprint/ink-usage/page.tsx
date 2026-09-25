@@ -30,7 +30,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Trash2, Calendar } from 'lucide-react';
+import { Plus, Search, Trash2, Calendar, Droplets, CalendarDays, TrendingUp, AlertTriangle } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { useTranslations } from 'next-intl';
@@ -73,6 +74,22 @@ export default function InkUsagePage() {
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<InkUsage>>({});
   const [inkList, setInkList] = useState<Ink[]>([]);
+
+  const inkStats = (() => {
+    const now = new Date();
+    const thisMonth = now.toISOString().slice(0, 7);
+    const totalUsage = list.reduce((s, it) => s + (it.usage_qty || 0), 0);
+    const monthUsage = list
+      .filter((it) => it.usage_date && it.usage_date.startsWith(thisMonth))
+      .reduce((s, it) => s + (it.usage_qty || 0), 0);
+    const anomalies = list.filter((it) => it.usage_qty === 0).length;
+    return [
+      { key: 'total', count: totalUsage },
+      { key: 'month', count: monthUsage },
+      { key: 'change', count: 0 },
+      { key: 'anomalies', count: anomalies },
+    ];
+  })();
 
   const fetchInks = async () => {
     try {
@@ -147,6 +164,17 @@ export default function InkUsagePage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: ts('k_totalUsage'), icon: Droplets, ...StatsTheme.blue },
+            { key: 'month', label: ts('k_monthUsage'), icon: CalendarDays, ...StatsTheme.green },
+            { key: 'change', label: ts('k_yoyChange'), icon: TrendingUp, ...StatsTheme.orange },
+            { key: 'anomalies', label: ts('k_anomalyCount'), icon: AlertTriangle, ...StatsTheme.red },
+          ]}
+          stats={inkStats}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{tc('dcInkUsageTitle')}</h1>
           <div className="flex gap-2">
@@ -222,7 +250,7 @@ export default function InkUsagePage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-6 w-6 p-0 text-red-600"
+                        className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                         onClick={() => handleDelete(item.id)}
                       >
                         <Trash2 className="h-3 w-3" />
