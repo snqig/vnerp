@@ -8,6 +8,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import type { ResultSetHeader } from 'mysql2/promise';
 // 生成单号
 function generateRecordNo(): string {
   const date = new Date();
@@ -194,7 +195,7 @@ export const POST = withPermission(
       return errorResponse(ts('k_14v58i'), 400, 400);
     }
 
-    const currentQty = parseFloat(sourceLabel.quantity) || 0;
+    const currentQty = parseFloat(String(sourceLabel.quantity)) || 0;
     if (currentQty <= 0) {
       return errorResponse(ts('k_1d308dk'), 400, 400);
     }
@@ -212,9 +213,9 @@ export const POST = withPermission(
     }
 
     let originalW =
-      parseFloat(sourceLabel.width) ||
+      parseFloat(String(sourceLabel.width)) ||
       originalWidth ||
-      parseSpecWidth(sourceLabel.specification) ||
+      parseSpecWidth(String(sourceLabel.specification)) ||
       0;
 
     // 标签缺 width/specification 时，从 inv_material 表补查
@@ -287,14 +288,14 @@ export const POST = withPermission(
           ]
         );
 
-        const recordId = (recordResult as DbRow).insertId;
+        const recordId = (recordResult as unknown as ResultSetHeader).insertId;
 
         await conn.execute(`UPDATE inv_material_label SET is_cut = 1, status = 4 WHERE id = ?`, [
           sourceLabel.id,
         ]);
 
         const newLabels = [];
-        const originalSpec = sourceLabel.specification || '';
+        const originalSpec = String(sourceLabel.specification || '');
 
         for (let i = 0; i < cutWidths.length; i++) {
           const newLabelNo = generateLabelNo();
@@ -314,8 +315,8 @@ export const POST = withPermission(
 
           const cutQty =
             originalW > 0
-              ? Math.round(parseFloat(sourceLabel.quantity) * (cutWidth / originalW) * 100) / 100
-              : parseFloat(sourceLabel.quantity);
+              ? Math.round(parseFloat(String(sourceLabel.quantity)) * (cutWidth / originalW) * 100) / 100
+              : parseFloat(String(sourceLabel.quantity));
 
           const qrCode = JSON.stringify({
             ID: newLabelNo,
@@ -352,7 +353,7 @@ export const POST = withPermission(
             ]
           );
 
-          const newLabelId = (labelResult as DbRow).insertId;
+          const newLabelId = (labelResult as unknown as ResultSetHeader).insertId;
 
           await conn.execute(
             `INSERT INTO inv_cutting_detail (record_id, new_label_id, new_label_no, cut_width, sequence)
@@ -385,7 +386,7 @@ export const POST = withPermission(
           }
           const remQty =
             originalW > 0
-              ? Math.round(parseFloat(sourceLabel.quantity) * (remainWidth / originalW) * 100) / 100
+              ? Math.round(parseFloat(String(sourceLabel.quantity)) * (remainWidth / originalW) * 100) / 100
               : 0;
 
           const remQrCode = JSON.stringify({
@@ -424,7 +425,7 @@ export const POST = withPermission(
             ]
           );
 
-          const remLabelId = (remLabelResult as DbRow).insertId;
+          const remLabelId = (remLabelResult as unknown as ResultSetHeader).insertId;
           newLabels.push({
             id: remLabelId,
             labelNo: remLabelNo,

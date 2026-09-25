@@ -4,7 +4,8 @@ import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
 import { query, SqlValue } from '@/lib/db';
 import { getTranslator } from '@/lib/i18n-server';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbValue } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 /**
  * 库存流水导出 API
@@ -15,8 +16,8 @@ import type { DbRow } from '@/types/db';
 export const GET = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
-    const materialId = searchParams.get('materialId');
-    const warehouseId = searchParams.get('warehouseId');
+    const materialId = numericFilter(searchParams.get('materialId'));
+    const warehouseId = numericFilter(searchParams.get('warehouseId'));
     const movementType = searchParams.get('movementType') || '';
     const startDate = searchParams.get('startDate') || '';
     const endDate = searchParams.get('endDate') || '';
@@ -102,20 +103,20 @@ export const GET = withPermission(
         r.material_code || '',
         r.material_name || '',
         r.warehouse_name || '',
-        typeMap[r.trans_type] || r.trans_type,
+        typeMap[String(r.trans_type) ?? ''] || r.trans_type,
         r.quantity,
         r.unit || '',
         r.unit_price || 0,
         r.source_type || '',
         r.source_no || '',
         r.operator_name || '',
-        (r.remark || '').replace(/"/g, '""'),
+        (String(r.remark) || '').replace(/"/g, '""'),
         r.create_time,
       ]);
 
       const csvContent = [
         headers.join(','),
-        ...csvRows.map((row: DbRow[]) => row.map((v: DbRow) => `"${v}"`).join(',')),
+        ...csvRows.map((row: DbValue[]) => row.map((v: DbValue) => `"${v}"`).join(',')),
       ].join('\n');
 
       const bom = '\uFEFF';

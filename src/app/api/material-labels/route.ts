@@ -7,6 +7,7 @@ import type { NextRequest } from 'next/server';
 
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { stringFilter } from '@/lib/query-filter';
 function generateLabelNo(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -73,7 +74,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     params.push(isCut === 'true' ? 1 : 0);
   }
 
-  const warehouseId = searchParams.get('warehouseId');
+  const warehouseId = stringFilter(searchParams.get('warehouseId'));
   if (warehouseId) {
     whereClause += ' AND ml.warehouse_id = ?';
     params.push(warehouseId);
@@ -178,7 +179,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     ]
   );
 
-  return successResponse({ id: (result as DbRow).insertId, labelNo }, ts('k_14r8ecs'));
+  return successResponse({ id: result.insertId, labelNo }, ts('k_14r8ecs'));
 });
 
 async function handleCut(body: DbRow) {
@@ -208,7 +209,7 @@ async function handleCut(body: DbRow) {
 
   const totalCutWidth = cutWidths.reduce((sum: number, w: number) => sum + w, 0);
 
-  if (totalCutWidth > parent.width) {
+  if (totalCutWidth > Number(parent.width ?? 0)) {
     return errorResponse(`分切总宽度 ${totalCutWidth} 超过原宽度 ${parent.width}`, 400);
   }
 
@@ -216,8 +217,8 @@ async function handleCut(body: DbRow) {
 
   for (const cutWidth of cutWidths) {
     const newLabelNo = generateLabelNo();
-    const ratio = cutWidth / parent.width;
-    const newQuantity = Math.floor(parent.quantity * ratio);
+    const ratio = cutWidth / Number(parent.width ?? 0);
+    const newQuantity = Math.floor(Number(parent.quantity ?? 0) * ratio);
 
     const result = await execute(
       `
@@ -238,7 +239,7 @@ async function handleCut(body: DbRow) {
         parent.unit,
         parent.batch_no,
         newQuantity,
-        parent.package_qty ? parent.package_qty * ratio : null,
+        parent.package_qty ? Number(parent.package_qty) * ratio : null,
         cutWidth,
         parent.length_per_roll ?? null,
         parent.color_code ?? null,
@@ -257,7 +258,7 @@ async function handleCut(body: DbRow) {
     );
 
     newLabels.push({
-      id: (result as DbRow).insertId,
+      id: result.insertId,
       labelNo: newLabelNo,
       width: cutWidth,
       quantity: newQuantity,
@@ -277,7 +278,7 @@ async function handleCut(body: DbRow) {
     {
       parentLabelId,
       newLabels,
-      remainingWidth: parent.width - totalCutWidth,
+      remainingWidth: Number(parent.width ?? 0) - totalCutWidth,
     },
     ts('k_1rj81pv')
   );

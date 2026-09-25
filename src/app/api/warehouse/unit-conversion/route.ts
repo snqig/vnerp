@@ -6,6 +6,7 @@ import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-r
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query, execute, SqlValue } from '@/lib/db';
+import { numericFilter } from '@/lib/query-filter';
 
 /**
  * 多单位换算 API
@@ -18,7 +19,7 @@ import { query, execute, SqlValue } from '@/lib/db';
 export const GET = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
-    const materialId = searchParams.get('materialId');
+    const materialId = numericFilter(searchParams.get('materialId'));
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
 

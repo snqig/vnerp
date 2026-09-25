@@ -57,7 +57,7 @@ export function CuttingDialog({
               <div className="space-y-4 py-4">
                 <div className="bg-slate-50 dark:bg-gray-800 rounded-lg p-4 space-y-2">
                   <div className="flex items-center gap-2 mb-2">
-                    <Package className="h-4 w-4 text-blue-600" />
+                    <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     <span className="font-medium">{t('sourceLabelInfo')}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm">
@@ -126,14 +126,14 @@ export function CuttingDialog({
                     const isValid = totalWidth <= specWidth && widths.length > 0;
                     return (
                       <div
-                        className={`rounded-lg p-4 space-y-3 ${isValid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}
+                        className={`rounded-lg p-4 space-y-3 ${isValid ? 'bg-green-500/10 border border-green-200 dark:border-green-800' : 'bg-red-500/10 border border-red-200 dark:border-red-800'}`}
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-sm">{t('cutPreview')}</span>
                           {isValid ? (
-                            <Badge className="bg-green-100 text-green-700">{tc('valid')}</Badge>
+                            <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">{tc('valid')}</Badge>
                           ) : (
-                            <Badge className="bg-red-100 text-red-700">{t('widthExceeded')}</Badge>
+                            <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">{t('widthExceeded')}</Badge>
                           )}
                         </div>
                         <div className="space-y-1">
@@ -180,11 +180,11 @@ export function CuttingDialog({
                                     ) / 100
                                   : 0;
                               return (
-                                <div className="flex items-center justify-between text-sm bg-yellow-50 rounded px-3 py-2 border border-yellow-200">
+                                <div className="flex items-center justify-between text-sm bg-yellow-500/10 rounded px-3 py-2 border border-yellow-200 dark:border-yellow-800">
                                   <span>
                                     {t('remainderMaterial')}：{remainWidth}mm
                                   </span>
-                                  <span className="text-yellow-700">
+                                  <span className="text-yellow-700 dark:text-yellow-400">
                                     {tc('specification')}：{remSpec} / {tc('quantity')}：{remQty}{' '}
                                     {currentLabel.unit || currentLabel.item?.unit || ''}
                                   </span>

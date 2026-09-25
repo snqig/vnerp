@@ -653,7 +653,7 @@ export default function InboundManagementPage() {
                         key={label.id}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${selectedLabels.has(label.id) ? 'border-blue-400 bg-blue-50/50' : ''}`}
+                        className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${selectedLabels.has(label.id) ? 'border-blue-400 bg-blue-500/10' : ''}`}
                       >
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
@@ -676,7 +676,7 @@ export default function InboundManagementPage() {
                               <p className="text-sm text-gray-600">{label.materialName}</p>
                             </div>
                           </div>
-                          <Badge className="bg-green-100 text-green-700">{tc('stockedIn')}</Badge>
+                          <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">{tc('stockedIn')}</Badge>
                         </div>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
@@ -719,7 +719,7 @@ export default function InboundManagementPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="flex-1 min-w-[80px] text-blue-600 border-blue-200 hover:bg-blue-50"
+                            className="flex-1 min-w-[80px] text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-500/10"
                             onClick={() => {
                               setPrintLabels([label]);
                               setIsPrintPreviewOpen(true);
@@ -747,7 +747,7 @@ export default function InboundManagementPage() {
                                 setCuttingForm((prev) => ({ ...prev, cutWidths: '', remark: '' }));
                                 setIsCuttingDialogOpen(true);
                               }}
-                              className="flex-1 min-w-[80px] text-orange-600 border-orange-200 hover:bg-orange-50"
+                              className="flex-1 min-w-[80px] text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800 hover:bg-orange-500/10"
                             >
                               <Scissors className="w-3 h-3 mr-1" />
                               {t('cut')}

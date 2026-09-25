@@ -174,7 +174,7 @@ export function PrintPreviewDialog({ open, onOpenChange, printLabels }: PrintPre
                         {label.materialName}
                       </p>
                     </div>
-                    <Badge className="bg-green-100 text-green-700 text-xs shrink-0 ml-2">
+                    <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs shrink-0 ml-2">
                       {tc('stockedIn')}
                     </Badge>
                   </div>

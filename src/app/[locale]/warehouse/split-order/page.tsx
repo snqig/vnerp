@@ -371,7 +371,7 @@ export default function SplitOrderPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="text-green-600"
+                              className="text-green-600 dark:text-green-400"
                               onClick={() => handleAudit(item.id)}
                             >
                               <CheckCircle className="h-4 w-4" />
@@ -379,7 +379,7 @@ export default function SplitOrderPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="text-red-600"
+                              className="text-red-600 dark:text-red-400"
                               onClick={() => handleVoid(item.id)}
                             >
                               <XCircle className="h-4 w-4" />
@@ -452,7 +452,7 @@ export default function SplitOrderPage() {
                   {ts('k_17gr6it')}{parentInfo.specification || '-'} {ts('k_1up8rq3')}{parentInfo.width || '-'}
                 </div>
                 {!parentSplittable && (
-                  <div className="mt-1 text-red-600 font-medium">
+                  <div className="mt-1 text-red-600 dark:text-red-400 font-medium">
                     {ts('k_enbil6')}{parentInfo.material_name}
                     {ts('k_21761g')}</div>
                 )}
@@ -531,7 +531,7 @@ export default function SplitOrderPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-red-500"
+                            className="text-red-500 dark:text-red-400"
                             onClick={() => removeDetailRow(i)}
                           >
                             ×

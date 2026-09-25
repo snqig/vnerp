@@ -91,7 +91,7 @@ export function InboundToolbar({
       <Button
         onClick={onOpenSourceLabelQuery}
         variant="outline"
-        className="gap-2 text-orange-600 border-orange-200 hover:bg-orange-50"
+        className="gap-2 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800 hover:bg-orange-500/10"
       >
         <Scissors className="w-4 h-4" />
         {t('materialCutting')}

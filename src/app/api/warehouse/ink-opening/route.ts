@@ -5,12 +5,14 @@ import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 import { withPermission } from '@/lib/api-permissions';
+import { numericFilter } from '@/lib/query-filter';
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
   const keyword = searchParams.get('keyword') || '';
   const ink_type = searchParams.get('ink_type') || '';
 
@@ -76,7 +78,7 @@ export const POST = withPermission(async (request: NextRequest) => {
       .slice(0, 19)
       .replace('T', ' ');
 
-    const [insertResult] = await conn.execute(
+    const [insertResult] = await conn.execute<DbResultSetHeader>(
       `INSERT INTO ink_opening_record (record_no, material_id, material_code, material_name, batch_no, ink_type, open_time, expire_hours, expire_time, remaining_qty, unit, operator_id, operator_name, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
       [

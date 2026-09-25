@@ -179,7 +179,7 @@ export function TransferOutDialog({
             </div>
             <div className="space-y-1">
               <Label>
-                {ts('k_1g9nv0z')}<span className="text-red-500">*</span>
+                {ts('k_1g9nv0z')}<span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <select
                 value={toWarehouseId}

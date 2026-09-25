@@ -41,8 +41,8 @@ export const GET = withPermission(
   const ts = t;
   return  ({
         ...item,
-        split_flag_name: SPLIT_FLAG_MAP[item.split_flag] || ts('k_1lpnuh4'),
-        status_name: STATUS_MAP[item.status] || ts('k_1lpnuh4'),
+        split_flag_name: SPLIT_FLAG_MAP[Number(item.split_flag ?? 0)] || ts('k_1lpnuh4'),
+        status_name: STATUS_MAP[Number(item.status ?? 0)] || ts('k_1lpnuh4'),
       });
 })
     );

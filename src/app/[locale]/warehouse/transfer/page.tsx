@@ -4,7 +4,7 @@ import { useRowSelection } from '@/lib/useRowSelection';
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +34,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Plus,
+  RefreshCw,
   Search,
   Trash2,
   ArrowUpDown,
@@ -135,8 +136,10 @@ export default function TransferPage() {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [detailItems, setDetailItems] = useState<TransferItem[]>([]);
   const [currentTransfer, setCurrentTransfer] = useState<TransferOrder | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       const params = new URLSearchParams({
         page: String(page),
@@ -150,6 +153,9 @@ export default function TransferPage() {
         setTotal(result.data.total || 0);
       }
     } catch {}
+    finally {
+      setLoading(false);
+    }
   };
 
   const fetchLocations = async (whId: number) => {
@@ -408,41 +414,73 @@ export default function TransferPage() {
   );
 
   return (
-    <MainLayout>
+    <MainLayout title={t('transfer')}>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t('transfer')}</h1>
-          <div className="flex gap-2">
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder={tc('searchOrderNo')}
-                value={searchNo}
-                onChange={(e) => setSearchNo(e.target.value)}
-                className="w-36 h-8 text-sm"
-              />
-              <Button size="sm" variant="outline" onClick={fetchData}>
-                <Search className="h-3 w-3" />
-              </Button>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PackageOpen className="h-5 w-5" />
+              {t('transfer')}
+            </CardTitle>
+            <CardDescription>{t('transferQueryDesc')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-4 items-end">
+              <div className="flex-1 min-w-[200px]">
+                <label className="text-sm font-medium mb-2 block">{tc('orderNo')}</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={tc('searchOrderNo')}
+                    className="pl-10"
+                    value={searchNo}
+                    onChange={(e) => setSearchNo(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && fetchData()}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => { setSearchNo(''); setPage(1); }}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t('reset')}
+                </Button>
+                <Button onClick={fetchData}>
+                  <Search className="h-4 w-4 mr-2" />
+                  {t('query')}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setEditItem({});
+                    setShowDialog(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('addTransfer')}
+                </Button>
+              </div>
             </div>
-            <Button
-              size="sm"
-              onClick={() => {
-                setEditItem({});
-                setShowDialog(true);
-              }}
-            >
-              <Plus className="h-3 w-3 mr-1" />
-              {t('addTransfer')}
-            </Button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <Card>
-          <CardContent className="p-0">
-            <Table className="border-collapse border border-border">
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center w-12">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>{t('transferList')}</CardTitle>
+                <CardDescription>{tc('total', { count: total })}</CardDescription>
+              </div>
+              <Button variant="outline" onClick={fetchData}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                {t('refresh')}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[40px]">
                     <Checkbox
                       checked={allSelected}
                       onCheckedChange={toggleSelectAll}
@@ -454,35 +492,47 @@ export default function TransferPage() {
                     {t('sourceWarehouse')}
                   </SortableHeader>
                   <SortableHeader field="to_warehouse_name">{t('targetWarehouse')}</SortableHeader>
-                  <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">
+                  <TableHead>
                     {tc('status')}
                   </TableHead>
-                  <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">
+                  <TableHead>
                     {t('applicant')}
                   </TableHead>
-                  <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">
+                  <TableHead>
                     {tc('actions')}
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedList().map((item) => {
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      {t('loading')}
+                    </TableCell>
+                  </TableRow>
+                ) : sortedList().length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      {t('noTransferRecords')}
+                    </TableCell>
+                  </TableRow>
+                ) : sortedList().map((item) => {
                   const st = STATUS_MAP[item.status] || STATUS_MAP[0];
                   return (
-                    <TableRow key={item.id} className="hover:bg-muted/30 even:bg-muted/20">
-                      <TableCell className="border border-border text-center">
+                    <TableRow key={item.id}>
+                      <TableCell>
                         <Checkbox
                           checked={isSelected(String(item.id))}
                           onCheckedChange={() => toggleSelect(item.id)}
                         />
                       </TableCell>
-                      <TableCell className="border border-border text-center font-mono text-xs">
+                      <TableCell className="font-mono text-xs">
                         {item.transfer_no}
                       </TableCell>
-                      <TableCell className="border border-border text-center text-xs">
+                      <TableCell className="text-xs">
                         {TYPE_MAP[item.type] || '-'}
                       </TableCell>
-                      <TableCell className="border border-border text-center text-xs">
+                      <TableCell className="text-xs">
                         <div>{item.from_warehouse_name || '-'}</div>
                         {item.from_location && (
                           <div className="text-muted-foreground text-[10px]">
@@ -490,7 +540,7 @@ export default function TransferPage() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="border border-border text-center text-xs">
+                      <TableCell className="text-xs">
                         <div>{item.to_warehouse_name || '-'}</div>
                         {item.to_location && (
                           <div className="text-muted-foreground text-[10px]">
@@ -498,15 +548,15 @@ export default function TransferPage() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="border border-border text-center">
+                      <TableCell>
                         <Badge variant={st.variant} className="text-xs">
                           {st.label}
                         </Badge>
                       </TableCell>
-                      <TableCell className="border border-border text-center text-xs">
+                      <TableCell className="text-xs">
                         {item.applicant_name || '-'}
                       </TableCell>
-                      <TableCell className="border border-border text-center">
+                      <TableCell>
                         <div className="flex gap-1 justify-center">
                           {[0, 1].includes(item.status) && (
                             <Button
@@ -562,7 +612,7 @@ export default function TransferPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 w-6 p-0 text-red-600"
+                              className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                               onClick={() => handleDelete(item.id)}
                             >
                               <Trash2 className="h-3 w-3" />
@@ -573,42 +623,38 @@ export default function TransferPage() {
                     </TableRow>
                   );
                 })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      className="text-center text-muted-foreground py-8 border border-border"
-                    >
-                      {t('noTransferRecords')}
-                    </TableCell>
-                  </TableRow>
-                )}
               </TableBody>
             </Table>
+            </div>
+
+            <div className="flex items-center justify-between mt-4">
+              <span className="text-sm text-muted-foreground">
+                {tc('total', { count: total })}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  {tc('previousPage')}
+                </Button>
+                <span className="flex items-center px-3 text-sm text-muted-foreground">
+                  {tc('pageOf', { page, pages: Math.ceil(total / 20) })}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={page * 20 >= total}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  {tc('nextPage')}
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{t('totalRecordsCount', { count: total })}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('previousPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
@@ -618,7 +664,7 @@ export default function TransferPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>
-                  {t('transferType')} <span className="text-red-500">*</span>
+                  {t('transferType')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Select
                   value={String(editItem.type || 1)}
@@ -641,7 +687,7 @@ export default function TransferPage() {
               </div>
               <div>
                 <Label>
-                  {t('sourceWarehouse')} <span className="text-red-500">*</span>
+                  {t('sourceWarehouse')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <WarehouseSelect
                   value={editItem.from_warehouse_id}
@@ -697,7 +743,7 @@ export default function TransferPage() {
               )}
               <div>
                 <Label>
-                  {t('targetWarehouse')} <span className="text-red-500">*</span>
+                  {t('targetWarehouse')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <WarehouseSelect
                   value={editItem.to_warehouse_id}
@@ -785,7 +831,7 @@ export default function TransferPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 p-0 text-red-600"
+                          className="h-8 w-8 p-0 text-red-600 dark:text-red-400"
                           onClick={() => removeScanItem(index)}
                         >
                           <Trash2 className="h-3 w-3" />
@@ -864,7 +910,7 @@ export default function TransferPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 p-0 text-red-600"
+                          className="h-8 w-8 p-0 text-red-600 dark:text-red-400"
                           onClick={() => removeScanItem(index)}
                         >
                           <Trash2 className="h-3 w-3" />

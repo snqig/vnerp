@@ -20,12 +20,13 @@ import {
 import { checkMaterialsCategorized } from '@/lib/category-validation';
 import {secureLog, logger} from '@/lib/logger';
 import type { DbRow } from '@/types/db';
+import { stringFilter } from '@/lib/query-filter';
 
 // 获取出库单列表
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
-  const status = searchParams.get('status') || '';
+  const status = stringFilter(searchParams.get('status'));
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
   const page = parseInt(searchParams.get('page') || '1');
@@ -106,7 +107,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         unit_price,
         amount,
         batch_no as batchNo,
-        remark
+        remark,
+        width,
+        is_raw_material as isRawMaterial
       FROM inv_outbound_item
       WHERE order_id IN (${placeholders})`,
       orderIds
@@ -165,7 +168,7 @@ export const POST = withPermission(
     const orderNo = await generateDocumentNo('outbound');
 
     // 系统设置 category.require_on_business：出库单要求物料已归类
-    const materialIds = (items as DbRow[]).map((item: DbRow) => item.materialId).filter(Boolean);
+    const materialIds = (items as DbRow[]).map((item: DbRow) => Number(item.materialId)).filter((v): v is number => typeof v === 'number' && !isNaN(v));
     secureLog('info', ts('k_8974re'), {
       itemCount: items.length,
       materialIds,
@@ -193,12 +196,12 @@ export const POST = withPermission(
       result = await transaction(async (connection) => {
         // 计算总金额
         const totalQty = items.reduce(
-          (sum: number, item: DbRow) => sum + (parseFloat(item.qty) || 0),
+          (sum: number, item: DbRow) => sum + (parseFloat(String(item.qty)) || 0),
           0
         );
         const totalAmount = items.reduce(
           (sum: number, item: DbRow) =>
-            sum + (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0),
+            sum + (parseFloat(String(item.qty)) || 0) * (parseFloat(String(item.unitPrice)) || 0),
           0
         );
 
@@ -225,7 +228,7 @@ export const POST = withPermission(
           ]
         );
 
-        const orderId = (orderResult as DbRow).insertId;
+        const orderId = (orderResult as unknown as import('@/types/db').DbResultSetHeader).insertId;
 
         // 批量插入出库单明细
         if (items.length > 0) {
@@ -237,17 +240,18 @@ export const POST = withPermission(
             item.qty,
             item.unit || ts('k_d5a1x9'),
             item.unitPrice || 0,
-            (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0),
+            (parseFloat(String(item.qty)) || 0) * (parseFloat(String(item.unitPrice)) || 0),
             item.batchNo || '',
             item.remark || '',
-            item.width != null ? parseFloat(item.width) : null,
+            item.width != null ? parseFloat(String(item.width)) : null,
+            item.isRawMaterial ? 1 : 0,
           ]);
 
           await connection.query(
             `INSERT INTO inv_outbound_item (
           order_id, material_id, material_name,
           material_spec, quantity, unit, unit_price, amount,
-          batch_no, remark, width
+          batch_no, remark, width, is_raw_material
         ) VALUES ?`,
             [itemValues]
           );

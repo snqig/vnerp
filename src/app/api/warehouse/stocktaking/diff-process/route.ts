@@ -153,10 +153,12 @@ export const POST = withPermission(
         }
 
         // 记录库存变动
+        const transNo = `TRN-STK-${Date.now()}-${item.material_id}`;
         await execute(
-          `INSERT INTO inv_inventory_transaction (material_id, warehouse_id, trans_type, quantity, unit_price, source_type, source_no, create_by, create_time)
-           VALUES (?, ?, ?, ?, 0, 'stocktaking', ?, ?, NOW())`,
+          `INSERT INTO inv_inventory_transaction (trans_no, material_id, warehouse_id, trans_type, quantity, unit_price, source_type, source_no, create_by, create_time)
+           VALUES (?, ?, ?, ?, ?, 0, 'stocktaking', ?, ?, NOW())`,
           [
+            transNo,
             item.material_id,
             item.warehouse_id,
             difference > 0 ? 'in' : 'out',

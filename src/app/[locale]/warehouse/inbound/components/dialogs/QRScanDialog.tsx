@@ -35,8 +35,8 @@ export function QRScanDialog({ open, onOpenChange, scanResult }: QRScanDialogPro
           {scanResult ? (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Package className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
                   <h3 className="font-medium text-lg">{scanResult.materialName}</h3>
@@ -61,8 +61,8 @@ export function QRScanDialog({ open, onOpenChange, scanResult }: QRScanDialogPro
                   <Badge
                     className={
                       scanResult.status === 'IN'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-orange-100 text-orange-700'
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                        : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
                     }
                   >
                     {scanResult.status === 'IN' ? tc('stockedIn') : tc('stockedOut')}

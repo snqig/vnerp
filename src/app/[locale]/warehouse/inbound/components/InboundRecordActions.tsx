@@ -101,7 +101,7 @@ export function InboundRecordActions({
           </>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-red-600" onClick={onDelete}>
+        <DropdownMenuItem className="text-red-600 dark:text-red-400" onClick={onDelete}>
           <Trash2 className="w-4 h-4" />
           {tc('delete')}
         </DropdownMenuItem>

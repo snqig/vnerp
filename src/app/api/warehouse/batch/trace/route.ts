@@ -220,10 +220,10 @@ export const GET = withPermission(
 
     const totalIn = logRows
       .filter((l: DbRow) => l.operation_type === 1)
-      .reduce((sum: number, l: DbRow) => sum + parseFloat(l.operation_qty), 0);
+      .reduce((sum: number, l: DbRow) => sum + parseFloat(String(l.operation_qty)), 0);
     const totalOut = logRows
       .filter((l: DbRow) => l.operation_type === 2)
-      .reduce((sum: number, l: DbRow) => sum + parseFloat(l.operation_qty), 0);
+      .reduce((sum: number, l: DbRow) => sum + parseFloat(String(l.operation_qty)), 0);
 
     return successResponse({
       batch: {

@@ -1,9 +1,9 @@
 'use client';
 
 import { TrendingUp, Boxes, Clock, QrCode } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
 import type { InboundRecord } from '../types';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface InboundStatsCardsProps {
   totalInboundToday: number;
@@ -27,36 +27,21 @@ export function InboundStatsCards({
     .filter((r) => r.status === 'approved' || r.status === 'completed')
     .reduce((sum, r) => sum + (r.items?.length || 0), 0);
 
-  const stats = [
-    { label: t('todayInbound'), value: totalInboundToday, unit: t('unitOrders'), icon: TrendingUp },
-    { label: t('monthInboundTotal'), value: totalInboundMonth, unit: t('unitOrders'), icon: Boxes },
-    {
-      label: tc('pending'),
-      value: pendingCount,
-      unit: t('unitOrders'),
-      icon: Clock,
-      highlight: true,
-    },
-    { label: t('labelsGenerated'), value: labelsCount, unit: t('unitLabels'), icon: QrCode },
-  ];
-
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map(({ label, value, unit, icon: Icon, highlight }) => (
-        <Card
-          key={label}
-          className={highlight && pendingCount > 0 ? 'border-t-2 border-t-yellow-500' : ''}
-        >
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Icon className="w-4 h-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">{label}</p>
-            </div>
-            <p className="text-2xl font-semibold text-foreground">{value.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{unit}</p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    <StatsCards
+      configs={[
+        { key: 'today', label: t('todayInbound'), icon: TrendingUp, ...StatsTheme.blue },
+        { key: 'month', label: t('monthInboundTotal'), icon: Boxes, ...StatsTheme.green },
+        { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
+        { key: 'labels', label: t('labelsGenerated'), icon: QrCode, ...StatsTheme.purple },
+      ]}
+      stats={[
+        { key: 'today', count: totalInboundToday },
+        { key: 'month', count: totalInboundMonth },
+        { key: 'pending', count: pendingCount },
+        { key: 'labels', count: labelsCount },
+      ]}
+      cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+    />
   );
 }

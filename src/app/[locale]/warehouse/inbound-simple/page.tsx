@@ -58,11 +58,11 @@ export default function SimpleInboundPage() {
   };
 
   const statusColors: Record<string, string> = {
-    draft: 'bg-yellow-100 text-yellow-700',
-    pending: 'bg-blue-100 text-blue-700',
-    approved: 'bg-green-100 text-green-700',
-    completed: 'bg-green-100 text-green-700',
-    cancelled: 'bg-gray-100 text-gray-700',
+    draft: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+    pending: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+    approved: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    completed: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    cancelled: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200',
   };
 
   return (
@@ -75,7 +75,7 @@ export default function SimpleInboundPage() {
           <CardContent>
             {loading && <p>{t('loading')}</p>}
             {error && (
-              <p className="text-red-600">
+              <p className="text-red-600 dark:text-red-400">
                 {tc('error')}: {error}
               </p>
             )}
@@ -98,7 +98,7 @@ export default function SimpleInboundPage() {
                             {record.supplier_name} | {record.total_quantity}{ts('k_w0gthl')}</p>
                           <p className="text-sm text-gray-400">{record.inbound_date}</p>
                         </div>
-                        <Badge className={statusColors[record.status] || 'bg-gray-100'}>
+                        <Badge className={statusColors[record.status] || 'bg-gray-100 dark:bg-gray-700'}>
                           {statusLabels[record.status] || record.status}
                         </Badge>
                       </div>

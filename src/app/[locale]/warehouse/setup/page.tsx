@@ -4,6 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,9 +63,9 @@ interface Warehouse {
   includeInCalculation: boolean;
   address: string;
   manager: string;
-  contact: string;
+  contactPhone: string;
   capacity: number;
-  usedCapacity: number;
+  categoryId?: number;
   status: 'active' | 'inactive';
   remark: string;
   createTime: string;
@@ -109,11 +110,24 @@ export default function WarehouseSetupPage() {
     includeInCalculation: true,
     address: '',
     manager: '',
-    contact: '',
+    contactPhone: '',
     capacity: 0,
+    categoryId: undefined,
     remark: '',
     status: 'active',
   });
+
+  // 仓库分类（所属分类下拉数据源）
+  const [categories, setCategories] = useState<{ id: number; code: string; name: string }[]>([]);
+
+  useEffect(() => {
+    authFetch('/api/organization/warehouse-category')
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success) setCategories(Array.isArray(res.data) ? res.data : res.data?.list || []);
+      })
+      .catch(() => {});
+  }, []);
 
   // 获取仓库列表
   const fetchWarehouses = async () => {
@@ -173,8 +187,9 @@ export default function WarehouseSetupPage() {
       includeInCalculation: true,
       address: '',
       manager: '',
-      contact: '',
+      contactPhone: '',
       capacity: 0,
+      categoryId: undefined,
       remark: '',
       status: 'active',
     });
@@ -265,7 +280,28 @@ export default function WarehouseSetupPage() {
         </div>
 
         {/* 统计卡片 */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatsCards
+          configs={[
+            { key: 'totalWarehouses', label: t('totalWarehouses'), icon: Warehouse, ...StatsTheme.blue },
+            { key: 'activeWarehouses', label: t('activeWarehouses'), icon: Building2, ...StatsTheme.green },
+            { key: 'includedInCalc', label: t('includedInCalc'), icon: Package, ...StatsTheme.purple },
+            { key: 'totalCapacity', label: tc('totalCapacity'), icon: Archive, ...StatsTheme.orange },
+          ]}
+          stats={[
+            { key: 'totalWarehouses', count: warehouses.length },
+            { key: 'activeWarehouses', count: warehouses.filter((w) => w.status === 'active').length },
+            { key: 'includedInCalc', count: warehouses.filter((w) => w.includeInCalculation).length },
+            { key: 'totalCapacity', count: Number((warehouses.reduce((sum, w) => sum + w.capacity, 0) / 1000).toFixed(1)), suffix: 'k' },
+          ]}
+          countFormatter={(c, key) => {
+            if (key === 'totalCapacity') return `${c}k`;
+            return String(c);
+          }}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
+        {/* 仓库概览卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="card-dashboard">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -290,7 +326,7 @@ export default function WarehouseSetupPage() {
                   </p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <Building2 className="h-5 w-5 text-emerald-500" />
+                  <Building2 className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
                 </div>
               </div>
             </CardContent>
@@ -306,7 +342,7 @@ export default function WarehouseSetupPage() {
                   </p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                  <Package className="h-5 w-5 text-blue-500" />
+                  <Package className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                 </div>
               </div>
             </CardContent>
@@ -322,7 +358,7 @@ export default function WarehouseSetupPage() {
                   </p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <Archive className="h-5 w-5 text-amber-500" />
+                  <Archive className="h-5 w-5 text-amber-500 dark:text-amber-400" />
                 </div>
               </div>
             </CardContent>
@@ -354,7 +390,7 @@ export default function WarehouseSetupPage() {
                   <TableHead>{t('nature')}</TableHead>
                   <TableHead>{t('typeLabel')}</TableHead>
                   <TableHead>{t('includedInCalc')}</TableHead>
-                  <TableHead>{t('capacityUsage')}</TableHead>
+                  <TableHead>{t('capacityLabel')}</TableHead>
                   <TableHead>{tc('responsiblePerson')}</TableHead>
                   <TableHead>{tc('status')}</TableHead>
                   <TableHead className="text-right">{tc('actions')}</TableHead>
@@ -384,7 +420,7 @@ export default function WarehouseSetupPage() {
                       </TableCell>
                       <TableCell>
                         {warehouse.includeInCalculation ? (
-                          <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+                          <Badge className="bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20">
                             {ts('k_btshni')}</Badge>
                         ) : (
                           <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">
@@ -392,40 +428,17 @@ export default function WarehouseSetupPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="w-24">
-                          {(() => {
-                            const cap = Number(warehouse.capacity) || 0;
-                            const used = Number(warehouse.usedCapacity) || 0;
-                            const ratio = cap > 0 ? used / cap : 0;
-                            return (
-                              <>
-                                <div className="flex items-center justify-between text-xs mb-1">
-                                  <span>{cap > 0 ? `${Math.round(ratio * 100)}%` : '—'}</span>
-                                  <span className="text-muted-foreground">
-                                    {used}/{cap}
-                                  </span>
-                                </div>
-                                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full ${
-                                      ratio > 0.9
-                                        ? 'bg-red-500'
-                                        : ratio > 0.7
-                                          ? 'bg-amber-500'
-                                          : 'bg-emerald-500'
-                                    }`}
-                                    style={{ width: `${ratio * 100}%` }}
-                                  />
-                                </div>
-                              </>
-                            );
-                          })()}
-                        </div>
+                        {/* 已用容量字段已废弃（无写入方），此列只展示仓库容量 */}
+                        <span className="text-sm">
+                          {Number(warehouse.capacity) > 0
+                            ? Number(warehouse.capacity).toLocaleString()
+                            : '—'}
+                        </span>
                       </TableCell>
                       <TableCell>{warehouse.manager}</TableCell>
                       <TableCell>
                         {warehouse.status === 'active' ? (
-                          <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+                          <Badge className="bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20">
                             {tc('active')}
                           </Badge>
                         ) : (
@@ -447,7 +460,7 @@ export default function WarehouseSetupPage() {
                               {ts('k_qreyeg')}</DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDeleteClick(warehouse)}
-                              className="text-red-600"
+                              className="text-red-600 dark:text-red-400"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
                               {ts('k_1t2vi4h')}</DropdownMenuItem>
@@ -471,7 +484,7 @@ export default function WarehouseSetupPage() {
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="code">
-                  {ts('k_1067h9m')}<span className="text-red-500">*</span>
+                  {ts('k_1067h9m')}<span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   id="code"
@@ -482,7 +495,7 @@ export default function WarehouseSetupPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="name">
-                  {ts('k_sfsp66')}<span className="text-red-500">*</span>
+                  {ts('k_sfsp66')}<span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   id="name"
@@ -532,6 +545,26 @@ export default function WarehouseSetupPage() {
                 </Select>
               </div>
               <div className="space-y-2">
+                <Label htmlFor="category">{tc('warehouseCategoryLabel')}</Label>
+                <Select
+                  value={formData.categoryId ? String(formData.categoryId) : ''}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, categoryId: value ? Number(value) : undefined })
+                  }
+                >
+                  <SelectTrigger id="category">
+                    <SelectValue placeholder={tc('selectCategory')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {`${c.code} ${c.name}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="manager">{tc('responsiblePerson')}</Label>
                 <Input
                   id="manager"
@@ -545,8 +578,8 @@ export default function WarehouseSetupPage() {
                 <Input
                   id="contact"
                   placeholder={t('contactPlaceholder')}
-                  value={formData.contact}
-                  onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+                  value={formData.contactPhone}
+                  onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -615,7 +648,7 @@ export default function WarehouseSetupPage() {
                 {ts('k_1gu6y8a')}<strong>{warehouseToDelete?.name}</strong>
                 {tc('confirmDeleteSuffix')}
               </p>
-              <p className="text-sm text-red-500 mt-2">{t('irreversibleWarning')}</p>
+              <p className="text-sm text-red-500 dark:text-red-400 mt-2">{t('irreversibleWarning')}</p>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>

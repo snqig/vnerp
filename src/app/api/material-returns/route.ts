@@ -9,6 +9,7 @@ import { generateDocNo } from '@/lib/global-config';
 import { withPermission } from '@/lib/api-permissions';
 import { MATERIAL_RETURN_STATUS_LABEL } from '@/lib/status-labels';
 import type { DbRow } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 const STATUS_MAP = MATERIAL_RETURN_STATUS_LABEL;
 
@@ -21,7 +22,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
   const workOrderId = searchParams.get('workOrderId') || '';
 
   let where = 'WHERE mr.deleted = 0';
@@ -58,7 +59,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     {
       list: rows.map((row: DbRow) => ({
         ...row,
-        status_name: STATUS_MAP[row.status] || ts('k_1lpnuh4'),
+        status_name: STATUS_MAP[Number(row.status) ?? 0] || ts('k_1lpnuh4'),
       })),
       total,
       page,

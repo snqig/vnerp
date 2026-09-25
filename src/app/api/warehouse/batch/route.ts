@@ -11,6 +11,7 @@ import {
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query, execute, SqlValue } from '@/lib/db';
+import { numericFilter } from '@/lib/query-filter';
 
 /**
  * 批次/序列号管理 API
@@ -22,8 +23,8 @@ import { query, execute, SqlValue } from '@/lib/db';
 export const GET = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
-    const materialId = searchParams.get('materialId');
-    const warehouseId = searchParams.get('warehouseId');
+    const materialId = numericFilter(searchParams.get('materialId'));
+    const warehouseId = numericFilter(searchParams.get('warehouseId'));
     const batchNo = searchParams.get('batchNo') || '';
     const serialNo = searchParams.get('serialNo') || '';
     const expiryWarning = searchParams.get('expiryWarning') === 'true';
@@ -99,15 +100,10 @@ export const POST = withPermission(
       material_id,
       warehouse_id,
       batch_no,
-      serial_no,
       quantity,
       unit_price,
-      cost_price,
       production_date,
       expiry_date,
-      supplier_id,
-      supplier_name,
-      remark,
     } = body;
 
     // 检查批次是否已存在
@@ -119,42 +115,39 @@ export const POST = withPermission(
     if (existing.length > 0) {
       // 批次已存在，增加数量
       const newQty = Number(existing[0].quantity) + Number(quantity);
-      const newCostPrice = cost_price
-        ? (Number(existing[0].quantity) * Number(existing[0].cost_price || 0) +
-            Number(quantity) * Number(cost_price)) /
-          newQty
-        : existing[0].cost_price;
-
       await execute(
-        `UPDATE inv_inventory_batch SET quantity = ?, cost_price = ?, update_time = NOW()
-         WHERE id = ?`,
-        [newQty, newCostPrice, existing[0].id]
+        `UPDATE inv_inventory_batch SET quantity = ?, update_time = NOW() WHERE id = ?`,
+        [newQty, existing[0].id]
       );
-
       return successResponse({ id: existing[0].id }, ts('k_zrvck8'));
     }
 
-    // 创建新批次
+    // 查物料名称（DB inv_inventory_batch.material_name 为 NOT NULL）
+    const [matRows] = await query(
+      'SELECT material_name, material_code FROM inv_material WHERE id = ? AND deleted = 0 LIMIT 1',
+      [material_id]
+    );
+    const materialName = (matRows as any)?.material_name || '';
+    const materialCode = (matRows as any)?.material_code || '';
+
+    // 创建新批次（严格按 DB 真实列）
     const result = await execute(
       `INSERT INTO inv_inventory_batch
-       (material_id, warehouse_id, batch_no, serial_no, quantity, available_qty,
-        unit_price, cost_price, produce_date, expire_date,
-        supplier_id, supplier_name, remark, create_time, update_time)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+       (material_id, material_name, material_code, warehouse_id, batch_no,
+        quantity, available_qty, unit_price, produce_date, expire_date,
+        create_time, update_time)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
         material_id,
+        materialName,
+        materialCode,
         warehouse_id,
         batch_no,
-        serial_no || null,
         quantity,
         quantity,
         unit_price || 0,
-        cost_price || 0,
         production_date || null,
         expiry_date || null,
-        supplier_id || null,
-        supplier_name || null,
-        remark || null,
       ]
     );
 

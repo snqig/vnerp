@@ -11,6 +11,7 @@ import {
 } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
+import { stringFilter } from '@/lib/query-filter';
 // 物料标签接口
 interface InboundLabel {
   id: number;
@@ -48,7 +49,7 @@ export const GET = withPermission(
   async (request: NextRequest) => {
     const { searchParams } = new URL(request.url);
     const keyword = searchParams.get('keyword') || '';
-    const status = searchParams.get('status') || '';
+    const status = stringFilter(searchParams.get('status'));
     const materialCode = searchParams.get('materialCode') || '';
     const batchNo = searchParams.get('batchNo') || '';
     const page = parseInt(searchParams.get('page') || '1');

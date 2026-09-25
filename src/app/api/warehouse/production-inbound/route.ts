@@ -11,7 +11,8 @@ import { AppError } from '@/lib/error-handling';
 import { WorkOrderStatus, WORK_ORDER_STATUSES_ALLOW_INBOUND } from '@/lib/constants';
 import { FinishOrderApprovedEvent } from '@/domain/production/events/FinishOrderEvents';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 /**
  * prod_work_order.status 为 varchar 状态机（与 src/lib/constants.ts 的 WorkOrderStatus 对齐）。
@@ -31,7 +32,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const inboundNo = searchParams.get('inboundNo') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
   const workOrderNo = searchParams.get('workOrderNo') || '';
 
   let where = 'WHERE p.deleted = 0';
@@ -140,7 +141,7 @@ export const POST = withPermission(async (request: NextRequest) => {
         remark || null,
       ]
     );
-    const inboundId = orderResult.insertId;
+    const inboundId = (orderResult as unknown as DbResultSetHeader).insertId;
 
     for (const item of items) {
       await conn.execute(
@@ -185,7 +186,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
       const inbound = inboundRows[0];
 
-      if (inbound.status >= 3) {
+      if (Number(inbound.status ?? 0) >= 3) {
         throw new Error(ts('k_1bwwx89'));
       }
 
@@ -257,13 +258,13 @@ export const PUT = withPermission(async (request: NextRequest) => {
       await getDomainEventOutbox().saveEvents(conn, 'ProductionInbound', id, [
         new FinishOrderApprovedEvent({
           finishOrderId: id,
-          finishNo: inbound.inbound_no,
-          workOrderId: inbound.work_order_id || 0,
-          workOrderNo: inbound.work_order_no || '',
-          productName: itemRows[0]?.material_name || '',
+          finishNo: String(inbound.inbound_no || ''),
+          workOrderId: Number(inbound.work_order_id || 0),
+          workOrderNo: String(inbound.work_order_no || ''),
+          productName: String(itemRows[0]?.material_name || ''),
           qualifiedQty: totalQualifiedQty,
           defectiveQty: 0,
-          warehouseId: inbound.warehouse_id,
+          warehouseId: Number(inbound.warehouse_id || 0),
           userId: 0,
         }),
       ]);
@@ -346,15 +347,23 @@ export const PUT = withPermission(async (request: NextRequest) => {
         const qcResult = qc_results.find((q: DbRow) => q.item_id === item.id);
         if (qcResult && qcResult.result === 'fail') {
           const now = new Date();
+          const pad = (n: number, w = 2) => String(n).padStart(w, '0');
           const handleNo =
             'QH' +
             now.getFullYear() +
-            String(now.getMonth() + 1).padStart(2, '0') +
-            String(now.getDate()).padStart(2, '0') +
-            String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+            pad(now.getMonth() + 1) +
+            pad(now.getDate()) +
+            pad(Math.floor(Math.random() * 10000), 4);
+          const unqualifiedNo =
+            'UQ' +
+            now.getFullYear() +
+            pad(now.getMonth() + 1) +
+            pad(now.getDate()) +
+            pad(Math.floor(Math.random() * 10000), 4);
           await execute(
-            'INSERT INTO qc_unqualified (handle_no, inspection_id, material_id, material_code, material_name, quantity, handle_type, handle_status, remark) VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?)',
+            'INSERT INTO qc_unqualified (unqualified_no, handle_no, inspection_id, material_id, material_code, material_name, quantity, handle_type, handle_status, remark) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, ?)',
             [
+              unqualifiedNo,
               handleNo,
               id,
               item.material_id,

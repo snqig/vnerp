@@ -104,8 +104,8 @@ export const GET = withPermission(
     for (const row of rows) {
       const key = `${row.material_id}_${row.warehouse_id || 0}`;
       if (!grouped[key]) {
-        const w = parseFloat(row.width) || 0;
-        const l = parseFloat(row.length) || 0;
+        const w = parseFloat(String(row.width)) || 0;
+        const l = parseFloat(String(row.length)) || 0;
         let specDisplay = row.specification || '';
         if (viewMode === 'large' && w > 0) {
           specDisplay = l > 0 ? `${w}*${l}` : `${w}`;
@@ -129,20 +129,20 @@ export const GET = withPermission(
         };
       }
 
-      const day = parseInt(row.day_num);
+      const day = parseInt(String(row.day_num));
       if (day < 1 || day > 31) continue;
 
-      const opType = parseInt(row.operation_type) || 0;
+      const opType = parseInt(String(row.operation_type)) || 0;
       const opKey = OP_TYPE_MAP[opType] || 'other';
-      const qty = parseFloat(row.operation_qty) || 0;
-      const price = parseFloat(row.unit_price) || 0;
+      const qty = parseFloat(String(row.operation_qty)) || 0;
+      const price = parseFloat(String(row.unit_price)) || 0;
       const amount = Math.abs(qty * price);
 
       const qtyKey = getDateColumnKey(day, opKey, 'qty');
       const amtKey = getDateColumnKey(day, opKey, 'amount');
 
-      grouped[key][qtyKey] = (grouped[key][qtyKey] || 0) + Math.abs(qty);
-      grouped[key][amtKey] = (grouped[key][amtKey] || 0) + amount;
+      grouped[key][qtyKey] = Number(grouped[key][qtyKey] || 0) + Math.abs(qty);
+      grouped[key][amtKey] = Number(grouped[key][amtKey] || 0) + amount;
     }
 
     let result = Object.values(grouped);
@@ -151,8 +151,8 @@ export const GET = withPermission(
       const kw = keyword.toLowerCase();
       result = result.filter(
         (r) =>
-          (r.materialCode || '').toLowerCase().includes(kw) ||
-          (r.materialName || '').toLowerCase().includes(kw)
+          String(r.materialCode || '').toLowerCase().includes(kw) ||
+          String(r.materialName || '').toLowerCase().includes(kw)
       );
     }
 

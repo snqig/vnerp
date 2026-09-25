@@ -10,6 +10,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { checkMaterialsCategorized } from '@/lib/category-validation';
 import { secureLog } from '@/lib/logger';
 import type { DbRow } from '@/types/db';
+import { numericFilter, stringFilter } from '@/lib/query-filter';
 
 function generateIssueNo(): string {
   return generateDocNo(getMrPrefix());
@@ -20,8 +21,8 @@ export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
-  const type = searchParams.get('type') || '';
-  const status = searchParams.get('status') || '';
+  const type = stringFilter(searchParams.get('type'));
+  const status = numericFilter(searchParams.get('status'));
   const workOrderId = searchParams.get('workOrderId') || '';
 
   let where = 'WHERE mr.deleted = 0';
@@ -102,7 +103,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   }
 
   // 系统设置 category.require_on_business：领料单要求物料已归类
-  const materialIds = (items as DbRow[]).map((item: DbRow) => item.materialId).filter(Boolean);
+  const materialIds = (items as DbRow[]).map((item: DbRow) => Number(item.materialId) || null).filter((v): v is number => v != null);
   secureLog('info', ts('k_i23jzv'), {
     itemCount: items.length,
     materialIds,

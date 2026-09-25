@@ -5,13 +5,15 @@ import { NextRequest } from 'next/server';
 import { query, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 import { withPermission } from '@/lib/api-permissions';
 import { INSERT_INTO_INV_INVENTORY_TRANSACTION } from '@/lib/db/ddl/warehouse-ink-mixing';
+import { numericFilter } from '@/lib/query-filter';
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
   const keyword = searchParams.get('keyword') || '';
 
   let where = 'WHERE mb.deleted = 0';
@@ -72,7 +74,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     const now = new Date();
     const batchNo = `MIX${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
 
-    const [insertResult] = await conn.execute(
+    const [insertResult] = await conn.execute<DbResultSetHeader>(
       `INSERT INTO ink_mixed_batch (batch_no, formula_no, formula_name, total_qty, unit, mixed_date, expire_date, operator_id, operator_name, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
       [

@@ -7,6 +7,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query, execute, SqlValue } from '@/lib/db';
 import { logger, generateTraceId } from '@/lib/logger';
+import { numericFilter } from '@/lib/query-filter';
 
 /**
  * 库存冻结/解冻 API
@@ -19,8 +20,8 @@ import { logger, generateTraceId } from '@/lib/logger';
 export const GET = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
-    const materialId = searchParams.get('materialId');
-    const warehouseId = searchParams.get('warehouseId');
+    const materialId = numericFilter(searchParams.get('materialId'));
+    const warehouseId = numericFilter(searchParams.get('warehouseId'));
     const freezeType = searchParams.get('freezeType') || '';
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
@@ -145,12 +146,23 @@ export const POST = withPermission(
     );
     logger.db(ctx, 'INSERT', 'inv_stock_freeze', { insertId: result.insertId });
 
-    // 更新库存冻结数量
+    // 更新库存冻结数量（汇总表 + 批次表双写，保持一致）
     await execute(
       'UPDATE inv_inventory SET frozen_qty = COALESCE(frozen_qty, 0) + ?, update_time = NOW() WHERE material_id = ? AND warehouse_id = ?',
       [freeze_quantity, material_id, warehouse_id]
     );
-    logger.db(ctx, 'UPDATE', 'stock', { material_id, warehouse_id, freeze_quantity });
+    // 批次表同步：按可用比例分配冻结数量到各批次（从最早批次开始冻结）
+    await execute(
+      `UPDATE inv_inventory_batch
+       SET locked_qty = COALESCE(locked_qty, 0) + LEAST(available_qty, ?),
+           available_qty = available_qty - LEAST(available_qty, ?),
+           update_time = NOW()
+       WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0
+       ORDER BY inbound_date ASC
+       LIMIT 10`,
+      [freeze_quantity, freeze_quantity, material_id, warehouse_id]
+    );
+    logger.db(ctx, 'UPDATE', 'stock+batch', { material_id, warehouse_id, freeze_quantity });
 
     logger.stepEnd(ctx, ts('k_ouse9g'), { insertId: result.insertId });
     return successResponse({ id: result.insertId }, ts('k_q0ku2x'));
@@ -202,12 +214,23 @@ export const PUT = withPermission(
       );
       logger.db(ctx, 'UPDATE', 'inv_stock_freeze', { id, status: 'released' });
 
-      // 减少库存冻结数量
+      // 减少库存冻结数量（汇总表 + 批次表双写）
       await execute(
         'UPDATE inv_inventory SET frozen_qty = GREATEST(COALESCE(frozen_qty, 0) - ?, 0), update_time = NOW() WHERE material_id = ? AND warehouse_id = ?',
         [record.freeze_quantity, record.material_id, record.warehouse_id]
       );
-      logger.db(ctx, 'UPDATE', 'stock', {
+      // 批次表同步：从最早批次释放锁定数量
+      await execute(
+        `UPDATE inv_inventory_batch
+         SET locked_qty = GREATEST(COALESCE(locked_qty, 0) - ?, 0),
+             available_qty = available_qty + ?,
+             update_time = NOW()
+         WHERE material_id = ? AND warehouse_id = ? AND locked_qty > 0 AND deleted = 0
+         ORDER BY inbound_date ASC
+         LIMIT 10`,
+        [record.freeze_quantity, record.freeze_quantity, record.material_id, record.warehouse_id]
+      );
+      logger.db(ctx, 'UPDATE', 'stock+batch', {
         material_id: record.material_id,
         warehouse_id: record.warehouse_id,
         unfreeze_qty: record.freeze_quantity,

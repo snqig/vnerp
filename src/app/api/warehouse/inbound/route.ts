@@ -17,10 +17,11 @@ import { MysqlCurrencyRepository } from '@/infrastructure/repositories/MysqlCurr
 import { RepositoryRegistry } from '@/infrastructure/RepositoryRegistry';
 import { registerEventHandlers } from '@/application/EventRegistry';
 import { createInboundOrderSchema, updateInboundOrderSchema } from '@/lib/validations/inbound';
+import type { CreateInboundOrderInput, UpdateInboundOrderInput } from '@/lib/validations/inbound';
 import { ZodError } from 'zod/v4';
 import { checkMaterialsCategorized } from '@/lib/category-validation';
 import { secureLog } from '@/lib/logger';
-import type { DbRow } from '@/types/db';
+import { stringFilter } from '@/lib/query-filter';
 
 function getInboundService(): InboundApplicationService {
   registerEventHandlers();
@@ -37,7 +38,7 @@ export const GET = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const keyword = searchParams.get('keyword') || '';
-    const status = searchParams.get('status') || '';
+    const status = stringFilter(searchParams.get('status')) ?? '';
     const startDate = searchParams.get('startDate') || '';
     const endDate = searchParams.get('endDate') || '';
     const poId = searchParams.get('poId');
@@ -104,13 +105,13 @@ export const POST = withPermission(
   const ts = await getTranslations('Common');
     const body = await request.json();
 
-    let validated: DbRow;
+    let validated: CreateInboundOrderInput;
     try {
       validated = createInboundOrderSchema.parse(body);
     } catch (e) {
       if (e instanceof ZodError) {
         const messages = e.issues
-          .map((iss: DbRow) => `${iss.path.join('.')}: ${iss.message}`)
+          .map((iss) => `${iss.path.join('.')}: ${iss.message}`)
           .join('; ');
         return errorResponse(`输入校验失败: ${messages}`, 422, 422);
       }
@@ -118,7 +119,7 @@ export const POST = withPermission(
     }
 
     // 系统设置 category.require_on_business：入库单要求物料已归类
-    const materialIds = (validated.items as DbRow[])
+    const materialIds = validated.items
       .map((item) => item.material_id)
       .filter(Boolean);
     secureLog('info', ts('k_a0z1x7'), {
@@ -152,7 +153,7 @@ export const POST = withPermission(
       sourceType: validated.source_type,
       sourceOrderId: validated.source_order_id,
       operatorId: userInfo.userId,
-      items: validated.items.map((item: DbRow) => ({
+      items: validated.items.map((item) => ({
         materialId: item.material_id,
         materialCode: item.material_code,
         materialName: item.material_name,
@@ -183,13 +184,13 @@ export const PUT = withPermission(
   const ts = await getTranslations('Common');
     const body = await request.json();
 
-    let validated: DbRow;
+    let validated: UpdateInboundOrderInput;
     try {
       validated = updateInboundOrderSchema.parse(body);
     } catch (e) {
       if (e instanceof ZodError) {
         const messages = e.issues
-          .map((iss: DbRow) => `${iss.path.join('.')}: ${iss.message}`)
+          .map((iss) => `${iss.path.join('.')}: ${iss.message}`)
           .join('; ');
         return errorResponse(`输入校验失败: ${messages}`, 422, 422);
       }
@@ -227,7 +228,7 @@ export const PUT = withPermission(
       }
 
       if (action === 'update') {
-        const mappedItems = (validated.items ?? []).map((it: DbRow) => ({
+        const mappedItems = (validated.items ?? []).map((it) => ({
           materialId: it.material_id,
           materialName: it.material_name,
           materialSpec: it.material_spec,
@@ -237,11 +238,11 @@ export const PUT = withPermission(
           unitPrice: it.unit_price,
         }));
         const result = await service.updateOrderContent(id, {
-          supplierName: validated.supplier_name ?? null,
-          warehouseId: validated.warehouse_id,
-          inboundDate: validated.inbound_date ?? null,
+          supplierName: validated.supplier_name,
+          warehouseId: validated.warehouse_id ?? 0,
+          inboundDate: validated.inbound_date,
           currency: validated.currency ?? 'CNY',
-          remark: validated.remark ?? null,
+          remark: validated.remark,
           items: mappedItems,
         });
         return successResponse(result, ts('k_1io7zcd'));

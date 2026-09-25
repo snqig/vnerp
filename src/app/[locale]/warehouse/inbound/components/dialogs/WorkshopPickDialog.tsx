@@ -161,7 +161,7 @@ export function WorkshopPickDialog({
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <Label>
-                {ts('k_1yxsmpc')}<span className="text-red-500">*</span>
+                {ts('k_1yxsmpc')}<span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Button
                 type="button"

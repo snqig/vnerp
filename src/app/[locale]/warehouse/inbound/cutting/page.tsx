@@ -17,7 +17,8 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, RefreshCw, Trash2, Scissors } from 'lucide-react';
+import { Search, RefreshCw, Trash2, Scissors, CheckCircle, Clock, AlertTriangle, PackageOpen, Boxes } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useAuth } from '@/contexts/AuthContext';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from 'next-intl';
@@ -37,7 +38,7 @@ interface CuttingRecord {
   operatorName: string;
   cutTime: string;
   remark: string;
-  status: string;
+  status: number;
   createTime: string;
   materialCode: string;
   materialName: string;
@@ -50,24 +51,20 @@ export default function CuttingRecordsPage() {
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
 
-  // 状态徽章
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; className: string }> = {
-      active: {
+  // 状态徽章：inv_cutting_record.status 为 tinyint（1=正常，4=已作废）
+  const getStatusBadge = (status: number) => {
+    const statusMap: Record<number, { label: string; className: string }> = {
+      1: {
         label: tc('normal'),
         className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
       },
-      frozen: {
-        label: tc('frozen'),
-        className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-      },
-      disabled: {
+      4: {
         label: tc('disabled'),
         className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
       },
     };
     const config = statusMap[status] || {
-      label: status,
+      label: String(status),
       className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
     };
     return <Badge className={config.className}>{config.label}</Badge>;
@@ -85,6 +82,14 @@ export default function CuttingRecordsPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState({
+    pending: 0,
+    processing: 0,
+    completed: 0,
+    partial: 0,
+    todayCount: 0,
+    monthlyQty: 0,
+  });
 
   const _exportColumns = [
     { key: 'recordNo', header: t('recordNoCol') },
@@ -114,12 +119,24 @@ export default function CuttingRecordsPage() {
       operator: r.operatorName,
       cutTime: new Date(r.cutTime).toLocaleString(),
       status:
-        r.status === 'active'
+        Number(r.status) === 1
           ? tc('normal')
-          : r.status === 'frozen'
-            ? tc('frozen')
-            : tc('disabled'),
+          : Number(r.status) === 4
+            ? tc('disabled')
+            : String(r.status),
     }));
+
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/warehouse/inbound/cutting/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -127,6 +144,7 @@ export default function CuttingRecordsPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
+        fetchStats();
         const params = new URLSearchParams();
         if (keyword) params.append('keyword', keyword);
         if (sourceLabelNo) params.append('sourceLabelNo', sourceLabelNo);
@@ -175,6 +193,25 @@ export default function CuttingRecordsPage() {
   return (
     <MainLayout title={t('cuttingRecordManagement')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'pending', label: '待入库', icon: Clock, ...StatsTheme.orange },
+            { key: 'partial', label: '部分入库', icon: PackageOpen, ...StatsTheme.yellow },
+            { key: 'completed', label: '已入库', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'todayCount', label: '今日入库单数', icon: Scissors, ...StatsTheme.blue },
+            { key: 'monthlyQty', label: '本月入库数量', icon: Boxes, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'partial', count: stats.partial },
+            { key: 'completed', count: stats.completed },
+            { key: 'todayCount', count: stats.todayCount },
+            { key: 'monthlyQty', count: stats.monthlyQty },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          showTrend={false}
+        />
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -255,11 +292,11 @@ export default function CuttingRecordsPage() {
                       label: tc('status'),
                       width: 10,
                       formatter: (v) =>
-                        v === 'active'
+                        Number(v) === 1
                           ? tc('normal')
-                          : v === 'frozen'
-                            ? tc('frozen')
-                            : tc('disabled'),
+                          : Number(v) === 4
+                            ? tc('disabled')
+                            : String(v),
                     },
                   ]}
                   data={

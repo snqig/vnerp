@@ -204,12 +204,12 @@ export function PurchaseReturnDialog({
           </div>
 
           {!consistency.ok && (
-            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+            <div className="rounded-md border border-red-200 dark:border-red-800 bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400">
               {consistency.message}
             </div>
           )}
           {consistency.ok && poLookupMsg && (
-            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+            <div className="rounded-md border border-red-200 dark:border-red-800 bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400">
               {poLookupMsg}
             </div>
           )}
@@ -218,7 +218,7 @@ export function PurchaseReturnDialog({
 
           <div className="space-y-1">
             <Label>
-              {ts('k_63q1tb')}<span className="text-red-500">*</span>
+              {ts('k_63q1tb')}<span className="text-red-500 dark:text-red-400">*</span>
             </Label>
             <input
               value={reason}

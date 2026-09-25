@@ -4,6 +4,7 @@ import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import { stringFilter } from '@/lib/query-filter';
 const CATEGORY_TYPE_MAP: Record<string, string[]> = {
   ink: ['油墨', '墨水', 'ink', 'INK'],
   substrate: ['PET', 'PP', 'PVC', 'BOPP', 'PE', '薄膜', '卷材', '片材'],
@@ -14,7 +15,7 @@ const CATEGORY_TYPE_MAP: Record<string, string[]> = {
 
 export const GET = withPermission(async (request: NextRequest) => {
   const searchParams = request.nextUrl.searchParams;
-  const type = searchParams.get('type');
+  const type = stringFilter(searchParams.get('type'));
   const category = searchParams.get('category');
   const keyword = searchParams.get('keyword');
   const page = parseInt(searchParams.get('page') || '1');

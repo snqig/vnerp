@@ -7,6 +7,7 @@ import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { logger, generateTraceId } from '@/lib/logger';
 import type { DbRow } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
@@ -17,8 +18,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '100');
   const page = parseInt(searchParams.get('page') || '1');
   const keyword = searchParams.get('keyword');
-  const categoryId = searchParams.get('categoryId');
-  const warehouseId = searchParams.get('warehouseId');
+  const categoryId = numericFilter(searchParams.get('categoryId'));
+  const warehouseId = numericFilter(searchParams.get('warehouseId'));
   const lowStock = searchParams.get('lowStock');
 
   logger.stepStart(ctx, ts('k_1hkqatm'), {
@@ -56,13 +57,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   if (categoryId) {
     logger.branch(ctx, ts('k_1klma2y'), ts('k_1hw6hmy'), true, { categoryId });
     sql += ` AND m.category_id = ?`;
-    values.push(parseInt(categoryId));
+    values.push(parseInt(String(categoryId)));
   }
 
   if (warehouseId) {
     logger.branch(ctx, ts('k_1klma2y'), ts('k_xy6beb'), true, { warehouseId });
     sql += ` AND m.warehouse_id = ?`;
-    values.push(parseInt(warehouseId));
+    values.push(parseInt(String(warehouseId)));
   }
 
   if (lowStock === 'true') {
@@ -86,15 +87,15 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     unit: item.unit,
     barcode: item.barcode,
     brand: item.brand,
-    safety_stock: parseFloat(item.safety_stock || '0'),
-    max_stock: parseFloat(item.max_stock || '0'),
-    min_stock: parseFloat(item.min_stock || '0'),
-    stock_qty: parseFloat(item.stock_qty || '0'),
-    quantity: parseFloat(item.stock_qty || '0'),
-    min_quantity: parseFloat(item.min_stock || item.safety_stock || '0'),
-    purchase_price: parseFloat(item.purchase_price || '0'),
-    sale_price: parseFloat(item.sale_price || '0'),
-    cost_price: parseFloat(item.cost_price || '0'),
+    safety_stock: parseFloat(String(item.safety_stock || '0')),
+    max_stock: parseFloat(String(item.max_stock || '0')),
+    min_stock: parseFloat(String(item.min_stock || '0')),
+    stock_qty: parseFloat(String(item.stock_qty || '0')),
+    quantity: parseFloat(String(item.stock_qty || '0')),
+    min_quantity: parseFloat(String(item.min_stock || item.safety_stock || '0')),
+    purchase_price: parseFloat(String(item.purchase_price || '0')),
+    sale_price: parseFloat(String(item.sale_price || '0')),
+    cost_price: parseFloat(String(item.cost_price || '0')),
     warehouse_id: item.warehouse_id,
     warehouse_name: item.warehouse_name,
     shelf_life: item.shelf_life,
@@ -118,11 +119,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
   if (categoryId) {
     countSql += ` AND m.category_id = ?`;
-    countValues.push(parseInt(categoryId));
+    countValues.push(parseInt(String(categoryId)));
   }
   if (warehouseId) {
     countSql += ` AND m.warehouse_id = ?`;
-    countValues.push(parseInt(warehouseId));
+    countValues.push(parseInt(String(warehouseId)));
   }
   if (lowStock === 'true') {
     countSql += ` AND m.safety_stock > 0 AND COALESCE(ib.stock_qty, 0) <= m.safety_stock`;

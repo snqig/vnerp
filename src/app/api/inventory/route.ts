@@ -16,6 +16,7 @@ import { generateTransNo, generateBatchNo } from '@/lib/utils';
 
 import { withPermission } from '@/lib/api-permissions';
 import type { DbRow } from '@/types/db';
+import type { ResultSetHeader } from 'mysql2/promise';
 class InventoryError extends Error {
   type: 'notFound' | 'conflict' | 'insufficient';
   constructor(message: string, type: 'notFound' | 'conflict' | 'insufficient') {
@@ -122,8 +123,8 @@ export const GET = withPermission(
     const processedData = (data as DbRow[]).map((item) => ({
       ...item,
       alertLevel: calculateAlertLevel(
-        parseFloat(item.available_qty) || 0,
-        item.safety_stock ? parseFloat(item.safety_stock) : undefined
+        parseFloat(String(item.available_qty)) || 0,
+        item.safety_stock ? parseFloat(String(item.safety_stock)) : undefined
       ),
     }));
 
@@ -298,7 +299,7 @@ export const POST = withPermission(
 
             const batch = batchRows[0];
 
-            if (parseFloat(batch.available_qty) < quantity) {
+            if (parseFloat(String(batch.available_qty)) < quantity) {
               throw new InventoryError(ts('k_1qlv7ud'), 'insufficient');
             }
 
@@ -318,10 +319,10 @@ export const POST = withPermission(
 
             const isFifoRecommended = fifoBatches.length > 0 && fifoBatches[0].batch_no === batchNo;
 
-            const newAvailableQty = parseFloat(batch.available_qty) - quantity;
-            const newQuantity = parseFloat(batch.quantity) - quantity;
+            const newAvailableQty = parseFloat(String(batch.available_qty)) - quantity;
+            const newQuantity = parseFloat(String(batch.quantity)) - quantity;
 
-            const [updateResult] = await conn.execute(
+            const [updateResult] = await conn.execute<ResultSetHeader>(
               'UPDATE inv_inventory_batch SET available_qty = ?, quantity = ?, version = version + 1, update_time = NOW() WHERE id = ? AND version = ? AND deleted = 0',
               [newAvailableQty, newQuantity, batch.id, batch.version]
             );
@@ -334,12 +335,12 @@ export const POST = withPermission(
               transType: 'out',
               sourceType: sourceType || 'manual',
               sourceId: 0,
-              materialId: batch.material_id,
+              materialId: Number(batch.material_id ?? 0),
               batchNo: batchNo,
-              warehouseId: batch.warehouse_id,
+              warehouseId: Number(batch.warehouse_id ?? 0),
               quantity,
-              unitPrice: parseFloat(batch.unit_price) || 0,
-              totalAmount: quantity * parseFloat(batch.unit_price || 0),
+              unitPrice: parseFloat(String(batch.unit_price)) || 0,
+              totalAmount: quantity * parseFloat(String(batch.unit_price || 0)),
               referenceNo: sourceNo || transNo,
               remark: isFifoRecommended
                 ? ts('k_it9jso')
@@ -348,17 +349,17 @@ export const POST = withPermission(
             });
 
             // 批次明细已扣减：派生重算汇总表，杜绝双写漂移。
-            await recomputeInventorySummary(conn, batch.material_id, batch.warehouse_id);
+            await recomputeInventorySummary(conn, Number(batch.material_id ?? 0), Number(batch.warehouse_id ?? 0));
 
             await appendInventoryLog(conn, {
-              materialId: batch.material_id,
-              warehouseId: batch.warehouse_id,
+              materialId: Number(batch.material_id ?? 0),
+              warehouseId: Number(batch.warehouse_id ?? 0),
               batchNo: batchNo,
               operationType: 2,
               operationQty: quantity,
-              beforeQty: parseFloat(batch.available_qty),
+              beforeQty: parseFloat(String(batch.available_qty)),
               afterQty: newAvailableQty,
-              unit: batch.unit,
+              unit: String(batch.unit ?? ''),
               businessType: sourceType || 'manual',
               businessNo: sourceNo || transNo,
             });
@@ -377,8 +378,8 @@ export const POST = withPermission(
                   batch.id,
                   batchNo,
                   quantity,
-                  parseFloat(batch.unit_price) || 0,
-                  quantity * (parseFloat(batch.unit_price) || 0),
+                  parseFloat(String(batch.unit_price)) || 0,
+                  quantity * (parseFloat(String(batch.unit_price)) || 0),
                 ]
               );
             } catch {}
@@ -470,11 +471,12 @@ export const POST = withPermission(
               await appendInventoryLog(conn, {
                 materialId,
                 warehouseId,
-                batchNo: detail.batch_no,
+                batchNo: String(detail.batch_no ?? ''),
                 operationType: 2,
-                operationQty: detail.deducted_qty,
-                beforeQty: detail.available_qty_before || 0,
-                afterQty: (detail.available_qty_before || 0) - detail.deducted_qty,
+                operationQty: Number(detail.deducted_qty ?? 0),
+                beforeQty: Number(detail.available_qty_before ?? 0),
+                afterQty:
+                  Number(detail.available_qty_before ?? 0) - Number(detail.deducted_qty ?? 0),
                 unit: material.unit || ts('k_d5a1x9'),
                 businessType: sourceType || 'fifo',
                 businessNo: sourceNo || transNo,
@@ -488,11 +490,11 @@ export const POST = withPermission(
                 sourceType: 'inventory_out',
                 sourceId: 0,
                 materialId,
-                batchNo: detail.batch_no,
+                batchNo: String(detail.batch_no ?? ''),
                 warehouseId,
-                quantity: detail.deducted_qty,
-                unitPrice: parseFloat(detail.unit_cost) || 0,
-                totalAmount: parseFloat(detail.line_cost) || 0,
+                quantity: Number(detail.deducted_qty ?? 0),
+                unitPrice: parseFloat(String(detail.unit_cost)) || 0,
+                totalAmount: parseFloat(String(detail.line_cost)) || 0,
                 referenceNo: sourceNo || transNo,
                 remark: ts('k_mw6d3g'),
                 createBy: null,
@@ -582,7 +584,7 @@ export const POST = withPermission(
           const fromWarehouseId = batch.warehouse_id;
           const fromWarehouseName = batch.warehouse_name;
 
-          const [updateResult] = await conn.execute(
+          const [updateResult] = await conn.execute<ResultSetHeader>(
             'UPDATE inv_inventory_batch SET warehouse_id = ?, warehouse_name = ?, version = version + 1, update_time = NOW() WHERE id = ? AND version = ? AND deleted = 0',
             [warehouseId, targetWarehouse.warehouse_name, batch.id, batch.version]
           );
@@ -595,30 +597,31 @@ export const POST = withPermission(
             transType: 'transfer',
             sourceType: sourceType || 'manual',
             sourceId: 0,
-            materialId: batch.material_id,
+            materialId: Number(batch.material_id ?? 0),
             batchNo: batchNo,
             warehouseId: warehouseId,
-            quantity: parseFloat(batch.quantity),
-            unitPrice: parseFloat(batch.unit_price) || 0,
-            totalAmount: parseFloat(batch.quantity) * parseFloat(batch.unit_price || 0),
+            quantity: parseFloat(String(batch.quantity)),
+            unitPrice: parseFloat(String(batch.unit_price)) || 0,
+            totalAmount:
+              parseFloat(String(batch.quantity)) * parseFloat(String(batch.unit_price || 0)),
             referenceNo: sourceNo || transNo,
             remark: ts('k_1b33syn'),
             createBy: null,
           });
 
           // 批次已转移至新仓库：源/目标两仓汇总均需派生重算，杜绝双写漂移。
-          await recomputeInventorySummary(conn, batch.material_id, fromWarehouseId);
-          await recomputeInventorySummary(conn, batch.material_id, warehouseId);
+          await recomputeInventorySummary(conn, Number(batch.material_id ?? 0), Number(fromWarehouseId ?? 0));
+          await recomputeInventorySummary(conn, Number(batch.material_id ?? 0), warehouseId);
 
           await appendInventoryLog(conn, {
-            materialId: batch.material_id,
-            warehouseId: fromWarehouseId,
+            materialId: Number(batch.material_id ?? 0),
+            warehouseId: Number(fromWarehouseId ?? 0),
             batchNo: batchNo,
             operationType: 4,
-            operationQty: parseFloat(batch.quantity),
-            beforeQty: parseFloat(batch.available_qty),
-            afterQty: parseFloat(batch.available_qty),
-            unit: batch.unit,
+            operationQty: parseFloat(String(batch.quantity)),
+            beforeQty: parseFloat(String(batch.available_qty)),
+            afterQty: parseFloat(String(batch.available_qty)),
+            unit: String(batch.unit ?? ''),
             businessType: sourceType || 'manual',
             businessNo: sourceNo || transNo,
           });

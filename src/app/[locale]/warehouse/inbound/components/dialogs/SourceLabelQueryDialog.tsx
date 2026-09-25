@@ -139,11 +139,11 @@ export function SourceLabelQueryDialog({
           )}
 
           {error && (
-            <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
-              <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
+            <div className="flex items-start gap-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-500/10 p-4">
+              <AlertCircle className="h-5 w-5 shrink-0 text-red-500 dark:text-red-400" />
               <div>
-                <p className="text-sm font-medium text-red-700">{t('queryFailed')}</p>
-                <p className="text-sm text-red-600 mt-1">{error}</p>
+                <p className="text-sm font-medium text-red-700 dark:text-red-400">{t('queryFailed')}</p>
+                <p className="text-sm text-red-600 dark:text-red-400 mt-1">{error}</p>
               </div>
             </div>
           )}
@@ -151,12 +151,12 @@ export function SourceLabelQueryDialog({
           {foundLabel && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                <span className="text-sm font-medium text-green-700">{ts('k_whm46j')}</span>
+                <CheckCircle2 className="h-5 w-5 text-green-500 dark:text-green-400" />
+                <span className="text-sm font-medium text-green-700 dark:text-green-400">{ts('k_whm46j')}</span>
               </div>
-              <div className="rounded-lg border border-green-200 bg-green-50 p-4 space-y-2">
+              <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-500/10 p-4 space-y-2">
                 <div className="flex items-center gap-2 mb-2">
-                  <Package className="h-4 w-4 text-blue-600" />
+                  <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span className="font-medium">{t('sourceLabelInfo')}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -190,7 +190,7 @@ export function SourceLabelQueryDialog({
                   </div>
                 </div>
               </div>
-              <Badge className="bg-green-100 text-green-700 border-0">
+              <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-0">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
                 {ts('k_l0rftp')}
               </Badge>

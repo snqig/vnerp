@@ -22,7 +22,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, ArrowRightLeft, CheckCircle, Clock, AlertTriangle, PackageOpen, Boxes } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
@@ -30,6 +30,7 @@ import { StatusBadge, usePaginatedList } from '@/components/common';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface Item {
   id: number;
@@ -69,6 +70,13 @@ export default function ProductionInboundPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
   const [warehouses, setWarehouses] = useState<{ id: number; name: string; code: string }[]>([]);
+  const [stats, setStats] = useState({
+    pending: 0,
+    partial: 0,
+    completed: 0,
+    todayCount: 0,
+    monthlyQty: 0,
+  });
 
   const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
     useRowSelection(list, (r) => String(r.id));
@@ -101,8 +109,21 @@ export default function ProductionInboundPage() {
       if (result.success) setWarehouses(result.data || []);
     } catch {}
   };
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/warehouse/production-inbound/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchWarehouses();
+    fetchStats();
   }, []);
 
   const handleSave = async () => {
@@ -181,7 +202,25 @@ export default function ProductionInboundPage() {
               <Plus className="h-3 w-3 mr-1" />
               {ts('k_5sawab')}</Button>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'pending', label: '待入库', icon: Clock, ...StatsTheme.orange },
+            { key: 'partial', label: '部分入库', icon: PackageOpen, ...StatsTheme.yellow },
+            { key: 'completed', label: '已入库', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'todayCount', label: '今日入库单数', icon: ArrowRightLeft, ...StatsTheme.blue },
+            { key: 'monthlyQty', label: '本月入库数量', icon: Boxes, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'partial', count: stats.partial },
+            { key: 'completed', count: stats.completed },
+            { key: 'todayCount', count: stats.todayCount },
+            { key: 'monthlyQty', count: stats.monthlyQty },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
         <Card>
           <CardContent className="p-0">
             <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
@@ -243,7 +282,7 @@ export default function ProductionInboundPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-6 w-6 p-0 text-red-600"
+                          className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                           onClick={() => handleDelete(item.id)}
                         >
                           <Trash2 className="h-3 w-3" />

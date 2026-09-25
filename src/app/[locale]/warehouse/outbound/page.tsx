@@ -33,6 +33,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -150,7 +151,8 @@ const outboundTypeOptions = [
 
 // 列表接口返回的是「单据 + 明细数组」，表格按扁平字段渲染，这里做一次字段映射
 function mapOutboundRow(o: DbRow, ts: (key: string) => string): OutboundRecord {
-  const firstItem = Array.isArray((o as DbRow).items) ? (o as DbRow).items[0] : undefined;
+  const itemsArr: Loose[] = Array.isArray((o.items as unknown)) ? (o.items as unknown as Loose[]) : [];
+  const firstItem = itemsArr[0] as Loose;
   const typeLabel: Record<string, string> = {
     production: ts('k_g4v5tc'),
     sales: ts('k_270k8'),
@@ -162,29 +164,29 @@ function mapOutboundRow(o: DbRow, ts: (key: string) => string): OutboundRecord {
   };
   return {
     id: String(o.id),
-    orderNo: o.orderNo,
-    date: o.orderDate,
+    orderNo: String(o.orderNo || ''),
+    date: String(o.orderDate || ''),
     materialName: firstItem?.materialName || '',
     spec: firstItem?.specification || '',
-    quantity: firstItem?.qty ?? o.totalQty,
+    quantity: firstItem?.qty ?? Number(o.totalQty),
     unit: firstItem?.unit || '',
-    total_amount: o.totalAmount,
-    currency: o.currency,
-    base_total_amount: o.baseTotalAmount,
-    base_currency: o.baseCurrency,
-    warehouse: o.warehouseName,
+    total_amount: Number(o.totalAmount),
+    currency: String(o.currency || ''),
+    base_total_amount: Number(o.baseTotalAmount),
+    base_currency: String(o.baseCurrency || ''),
+    warehouse: String(o.warehouseName || ''),
     batchNo: firstItem?.batchNo || '',
     batch_no: firstItem?.batchNo || '',
-    type: typeLabel[o.outboundType] || o.outboundType || '',
-    outboundType: o.outboundType || '',
-    status: o.status,
-    auditStatus: o.auditStatus,
+    type: typeLabel[String(o.outboundType)] || String(o.outboundType) || '',
+    outboundType: String(o.outboundType || ''),
+    status: String(o.status || ''),
+    auditStatus: String(o.auditStatus || ''),
     isRawMaterial: false,
-    operator: o.operatorName,
+    operator: String(o.operatorName || ''),
     materialId: firstItem?.materialId,
-    warehouseId: o.warehouseId,
+    warehouseId: Number(o.warehouseId),
     materialCode: firstItem?.materialCode || '',
-    remark: o.remark,
+    remark: String(o.remark || ''),
   };
 }
 
@@ -502,7 +504,7 @@ export default function OutboundManagementPage() {
           material: d.material || null,
           batches,
           totalAvailable: d.total_available ?? 0,
-          error: undefined,
+          error: null,
         });
         // 物料主数据回填（仅当对应字段为空时，避免覆盖用户已输入内容）
         const mat = d.material;
@@ -736,10 +738,10 @@ export default function OutboundManagementPage() {
     setFormData((prev) => ({
       ...prev,
       materialCode: String(scanMaterial.materialCode ?? ''),
-      materialName: scanMaterial.materialName || '',
-      specification: scanMaterial.specification || '',
-      batchNo: scanMaterial.batchNo || '',
-      unit: scanMaterial.unit || '',
+      materialName: (scanMaterial as Loose).materialName || '',
+      specification: (scanMaterial as Loose).specification || '',
+      batchNo: (scanMaterial as Loose).batchNo || '',
+      unit: (scanMaterial as Loose).unit || '',
       quantity: scanQty,
       warehouse: scanWarehouse,
     }));
@@ -1014,7 +1016,7 @@ export default function OutboundManagementPage() {
               setIsScanDialogOpen(true);
             }}
             variant="outline"
-            className="gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+            className="gap-2 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-500/10"
           >
             <ScanLine className="w-4 h-4" />
             {ts('k_1vlzpeu')}</Button>
@@ -1079,103 +1081,22 @@ export default function OutboundManagementPage() {
         </motion.div>
 
         {/* 统计卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="border rounded-lg border-border bg-background shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t('todayOutbound')}</p>
-                    <p className="text-xl font-semibold mt-1 text-blue-500">
-                      {totalOutboundToday.toLocaleString()}
-                    </p>
-                    <p className="text-xs mt-1 text-muted-foreground">{t('unitPiecesM')}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-muted">
-                    <TrendingDown className="w-5 h-5 text-blue-500" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+        <StatsCards
+          configs={[
+            { key: 'today', label: t('todayOutbound'), icon: TrendingDown, ...StatsTheme.blue },
+            { key: 'month', label: t('monthOutboundTotal'), icon: Boxes, ...StatsTheme.green },
+            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
+            { key: 'total', label: t('outboundTotal'), icon: FileText, ...StatsTheme.gray },
+          ]}
+          stats={[
+            { key: 'today', count: totalOutboundToday },
+            { key: 'month', count: totalOutboundMonth },
+            { key: 'pending', count: outboundRecords.filter((r) => r.auditStatus === 'draft' || r.auditStatus === 'pending').length },
+            { key: 'total', count: outboundRecords.length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card className="border rounded-lg border-border bg-background shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t('monthOutboundTotal')}</p>
-                    <p className="text-xl font-semibold mt-1 text-green-500">
-                      {totalOutboundMonth.toLocaleString()}
-                    </p>
-                    <p className="text-xs mt-1 text-muted-foreground">{t('unitPiecesM')}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-muted">
-                    <Boxes className="w-5 h-5 text-green-500" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card className="border rounded-lg border-border bg-background shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{tc('pending')}</p>
-                    <p className="text-xl font-semibold mt-1 text-yellow-500">
-                      {
-                        outboundRecords.filter(
-                          (r) => r.auditStatus === 'draft' || r.auditStatus === 'pending'
-                        ).length
-                      }
-                    </p>
-                    <p className="text-xs mt-1 text-muted-foreground">{t('pendingCount')}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-muted">
-                    <Clock className="w-5 h-5 text-yellow-500" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card className="border rounded-lg border-border bg-background shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t('outboundTotal')}</p>
-                    <p className="text-xl font-semibold mt-1 text-foreground">
-                      {outboundRecords.length}
-                    </p>
-                    <p className="text-xs mt-1 text-muted-foreground">{t('monthTotal')}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-muted">
-                    <FileText className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
 
         {/* 出库记录表格 */}
         <motion.div
@@ -1363,23 +1284,23 @@ export default function OutboundManagementPage() {
             )}
             {!invLoading && invLookup?.error && (
               <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
-                {invLookup.error}
+                {String(invLookup.error)}
               </div>
             )}
             {!invLoading && invLookup && !invLookup.error && (
               <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">{ts('k_1kki8nq')}</span>
-                  <span className="font-medium text-green-700">
-                    {ts('k_1e31cad')}{invLookup.totalAvailable}
-                    {invLookup.batches?.[0]?.unit ? ` ${invLookup.batches[0].unit}` : ''}
+                  <span className="font-medium text-green-700 dark:text-green-400">
+                    {ts('k_1e31cad')}{String(invLookup.totalAvailable)}
+                    {(invLookup.batches as unknown as Loose[])?.[0]?.unit ? ` ${(invLookup.batches as unknown as Loose[])[0].unit}` : ''}
                   </span>
                 </div>
                 <div className="text-muted-foreground">
-                  {invLookup.material?.materialName || formData.materialName || '—'}
-                  {invLookup.material?.specification ? `（${invLookup.material.specification}）` : ''}
+                  {(invLookup.material as Loose)?.materialName || formData.materialName || '—'}
+                  {(invLookup.material as Loose)?.specification ? `（${(invLookup.material as Loose).specification}）` : ''}
                 </div>
-                {invLookup.batches && invLookup.batches.length > 0 ? (
+                {(invLookup.batches as unknown as Loose[]) && (invLookup.batches as unknown as Loose[]).length > 0 ? (
                   <div className="max-h-28 overflow-y-auto rounded border bg-background">
                     <table className="w-full text-[11px]">
                       <thead className="text-muted-foreground">
@@ -1390,7 +1311,7 @@ export default function OutboundManagementPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {invLookup.batches.map((b: Loose) => (
+                        {(invLookup.batches as unknown as Loose[]).map((b: Loose) => (
                           <tr key={b.id} className="border-t">
                             <td className="px-2 py-1">{b.batch_no}</td>
                             <td className="px-2 py-1 text-right">{b.available_qty}</td>
@@ -1545,23 +1466,23 @@ export default function OutboundManagementPage() {
                 <div className="rounded-lg border p-3 space-y-2 bg-muted/40">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">{tc('materialName')}</span>
-                    <span className="font-medium">{scanMaterial.materialName || '-'}</span>
+                    <span className="font-medium">{String((scanMaterial as Loose).materialName || '-')}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">{tc('materialCode')}</span>
-                    <span>{scanMaterial.materialCode || '-'}</span>
+                    <span>{String((scanMaterial as Loose).materialCode || '-')}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">{ts('k_1h40xod')}</span>
-                    <span>{scanMaterial.specification || '-'}</span>
+                    <span>{String((scanMaterial as Loose).specification || '-')}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">{tc('batch')}</span>
-                    <span>{scanMaterial.batchNo || '-'}</span>
+                    <span>{String((scanMaterial as Loose).batchNo || '-')}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">{ts('k_1xadx6v')}</span>
-                    <span>{scanMaterial.unit || '-'}</span>
+                    <span>{String((scanMaterial as Loose).unit || '-')}</span>
                   </div>
                 </div>
 
@@ -1581,8 +1502,8 @@ export default function OutboundManagementPage() {
                     {scanAvailable == null ? (
                       <span className="text-muted-foreground">{ts('k_dvvwkd')}</span>
                     ) : (
-                      <span className="font-medium text-green-700">
-                        {scanAvailable} {scanMaterial.unit || ''}
+                      <span className="font-medium text-green-700 dark:text-green-400">
+                        {String(scanAvailable)} {(scanMaterial as Loose).unit || ''}
                       </span>
                     )}
                   </div>
@@ -1659,23 +1580,23 @@ export default function OutboundManagementPage() {
             )}
             {!invLoading && invLookup?.error && (
               <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
-                {invLookup.error}
+                {String(invLookup.error)}
               </div>
             )}
             {!invLoading && invLookup && !invLookup.error && (
               <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">{ts('k_1kki8nq')}</span>
-                  <span className="font-medium text-green-700">
-                    {ts('k_1e31cad')}{invLookup.totalAvailable}
-                    {invLookup.batches?.[0]?.unit ? ` ${invLookup.batches[0].unit}` : ''}
+                  <span className="font-medium text-green-700 dark:text-green-400">
+                    {ts('k_1e31cad')}{String(invLookup.totalAvailable)}
+                    {(invLookup.batches as unknown as Loose[])?.[0]?.unit ? ` ${(invLookup.batches as unknown as Loose[])[0].unit}` : ''}
                   </span>
                 </div>
                 <div className="text-muted-foreground">
-                  {invLookup.material?.materialName || formData.materialName || '—'}
-                  {invLookup.material?.specification ? `（${invLookup.material.specification}）` : ''}
+                  {(invLookup.material as Loose)?.materialName || formData.materialName || '—'}
+                  {(invLookup.material as Loose)?.specification ? `（${(invLookup.material as Loose).specification}）` : ''}
                 </div>
-                {invLookup.batches && invLookup.batches.length > 0 ? (
+                {(invLookup.batches as unknown as Loose[]) && (invLookup.batches as unknown as Loose[]).length > 0 ? (
                   <div className="max-h-28 overflow-y-auto rounded border bg-background">
                     <table className="w-full text-[11px]">
                       <thead className="text-muted-foreground">
@@ -1686,7 +1607,7 @@ export default function OutboundManagementPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {invLookup.batches.map((b: Loose) => (
+                        {(invLookup.batches as unknown as Loose[]).map((b: Loose) => (
                           <tr key={b.id} className="border-t">
                             <td className="px-2 py-1">{b.batch_no}</td>
                             <td className="px-2 py-1 text-right">{b.available_qty}</td>
@@ -1824,7 +1745,7 @@ export default function OutboundManagementPage() {
           <DialogHeader>
             <DialogTitle>{t('deleteOutboundOrder')}</DialogTitle>
             <DialogDescription>
-              {t('confirmDeleteOutbound', { id: currentRecord?.id })}
+              {t('confirmDeleteOutbound', { id: String(currentRecord?.id) })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1849,8 +1770,8 @@ export default function OutboundManagementPage() {
             </DialogTitle>
             <DialogDescription>
               {currentRecord?.auditAction === 'approve'
-                ? t('confirmApproveOutbound', { id: currentRecord?.id })
-                : t('confirmUnauditOutbound', { id: currentRecord?.id })}
+                ? t('confirmApproveOutbound', { id: String(currentRecord?.id) })
+                : t('confirmUnauditOutbound', { id: String(currentRecord?.id) })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1876,68 +1797,71 @@ export default function OutboundManagementPage() {
         <DialogContent className="sm:max-w-2xl max-h-[80vh]" resizable>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Layers className="w-5 h-5 text-blue-500" />
+              <Layers className="w-5 h-5 text-blue-500 dark:text-blue-400" />
               {t('fifoAllocationTitle')}
             </DialogTitle>
             <DialogDescription>
               {t('fifoAllocationDesc', {
-                id: currentRecord?.id,
-                materialName: currentRecord?.materialName,
-                quantity: currentRecord?.quantity || currentRecord?.qty,
+                id: String(currentRecord?.id),
+                materialName: String(currentRecord?.materialName || ''),
+                quantity: String(currentRecord?.quantity || currentRecord?.qty),
               })}
             </DialogDescription>
           </DialogHeader>
 
           {fifoLoading ? (
             <div className="flex items-center justify-center py-12">
-              <RefreshCw className="w-8 h-8 text-blue-600 animate-spin" />
+              <RefreshCw className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
               <span className="ml-3 text-muted-foreground">{t('calculatingFifo')}</span>
             </div>
           ) : fifoAllocation ? (
             <div className="space-y-4">
-              {/* 汇总信息 */}
+              {(() => {
+                const fa = fifoAllocation as Loose;
+                return <>
+                {/* 汇总信息 */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 text-center">
-                  <p className="text-xs text-blue-500">{t('requiredOutbound')}</p>
+                  <p className="text-xs text-blue-500 dark:text-blue-400">{t('requiredOutbound')}</p>
                   <p className="text-xl font-bold text-blue-700 dark:text-blue-300">
-                    {fifoAllocation.required_qty || currentRecord?.quantity || currentRecord?.qty}
+                    {String(fa.required_qty || currentRecord?.quantity || currentRecord?.qty)}
                   </p>
                 </div>
                 <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 text-center">
-                  <p className="text-xs text-green-500">{t('availableStock')}</p>
+                  <p className="text-xs text-green-500 dark:text-green-400">{t('availableStock')}</p>
                   <p className="text-xl font-bold text-green-700 dark:text-green-300">
-                    {fifoAllocation.total_available?.toFixed(3) || '0'}
+                    {(fa.total_available as number | undefined)?.toFixed(3) || '0'}
                   </p>
                 </div>
                 <div
-                  className={`rounded-lg p-3 text-center ${fifoAllocation.shortage > 0 ? 'bg-red-50 dark:bg-red-900/30' : 'bg-emerald-50 dark:bg-emerald-900/30'}`}
+                  className={`rounded-lg p-3 text-center ${(fa.shortage as number) > 0 ? 'bg-red-50 dark:bg-red-900/30' : 'bg-emerald-50 dark:bg-emerald-900/30'}`}
                 >
                   <p
-                    className={`text-xs ${fifoAllocation.shortage > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}
+                    className={`text-xs ${(fa.shortage as number) > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}
                   >
-                    {fifoAllocation.shortage > 0 ? t('shortage') : tc('status')}
+                    {(fa.shortage as number) > 0 ? t('shortage') : tc('status')}
                   </p>
                   <p
-                    className={`text-xl font-bold ${fifoAllocation.shortage > 0 ? 'text-red-700 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300'}`}
+                    className={`text-xl font-bold ${(fa.shortage as number) > 0 ? 'text-red-700 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300'}`}
                   >
-                    {fifoAllocation.shortage > 0
-                      ? fifoAllocation.shortage.toFixed(3)
+                    {(fa.shortage as number) > 0
+                      ? Number(fa.shortage).toFixed(3)
                       : t('sufficient')}
                   </p>
                 </div>
               </div>
 
-              {fifoAllocation.shortage > 0 && (
+              {(fa.shortage as number) > 0 && (
                 <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center gap-2">
                   <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
                   <span className="text-sm text-red-600 dark:text-red-400">
-                    {t('stockInsufficient', { shortage: fifoAllocation.shortage.toFixed(3) })}
+                    {t('stockInsufficient', { shortage: Number(fa.shortage).toFixed(3) })}
                   </span>
                 </div>
               )}
 
               {/* 分配明细表 */}
-              {fifoAllocation.allocation_plan && fifoAllocation.allocation_plan.length > 0 && (
+              {fa.allocation_plan && (fa.allocation_plan as Loose[]).length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium mb-2 text-muted-foreground">
                     {t('allocationDetails')}
@@ -1955,7 +1879,7 @@ export default function OutboundManagementPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {fifoAllocation.allocation_plan.map((alloc: Loose, idx: number) => (
+                        {(fa.allocation_plan as Loose[]).map((alloc: Loose, idx: number) => (
                           <TableRow key={idx}>
                             <TableCell className="font-mono text-sm">{alloc.batch_no}</TableCell>
                             <TableCell>{alloc.inbound_date || '-'}</TableCell>
@@ -1963,7 +1887,7 @@ export default function OutboundManagementPage() {
                             <TableCell className="font-semibold text-blue-700 dark:text-blue-300">
                               {alloc.allocate_qty?.toFixed(3)}
                             </TableCell>
-                            <TableCell>{alloc.unit_cost?.toFixed(2)}</TableCell>
+                            <TableCell>{Number(alloc.unit_cost || 0).toFixed(2)}</TableCell>
                             <TableCell>
                               {(alloc.allocate_qty * alloc.unit_cost)?.toFixed(2)}
                             </TableCell>
@@ -1976,9 +1900,9 @@ export default function OutboundManagementPage() {
               )}
 
               {/* 可用批次列表 */}
-              {fifoAllocation.batches &&
-                fifoAllocation.batches.length > 0 &&
-                !fifoAllocation.allocation_plan?.length && (
+              {fa.batches &&
+                (fa.batches as Loose[]).length > 0 &&
+                !(fa.allocation_plan as Loose[])?.length && (
                   <div>
                     <h4 className="text-sm font-medium mb-2 text-muted-foreground">
                       {t('availableBatches')}
@@ -1996,7 +1920,7 @@ export default function OutboundManagementPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {fifoAllocation.batches.map((batch: Loose, idx: number) => (
+                          {(fa.batches as Loose[]).map((batch: Loose, idx: number) => (
                             <TableRow key={idx}>
                               <TableCell className="font-mono text-sm">{batch.batch_no}</TableCell>
                               <TableCell>{batch.inbound_date || '-'}</TableCell>
@@ -2021,15 +1945,17 @@ export default function OutboundManagementPage() {
                   </div>
                 )}
 
-              {(!fifoAllocation.batches || fifoAllocation.batches.length === 0) &&
-                (!fifoAllocation.allocation_plan ||
-                  fifoAllocation.allocation_plan.length === 0) && (
+              {(!(fa.batches as Loose[]) || (fa.batches as Loose[]).length === 0) &&
+                (!(fa.allocation_plan as Loose[]) ||
+                  (fa.allocation_plan as Loose[]).length === 0) && (
                   <div className="text-center py-8">
                     <AlertCircle className="w-12 h-12 text-yellow-500 dark:text-yellow-400 mx-auto mb-3" />
                     <p className="text-muted-foreground">{t('noAvailableBatch')}</p>
                     <p className="text-sm mt-1 text-muted-foreground">{t('pleaseInboundFirst')}</p>
                   </div>
                 )}
+                </>;
+              })()}
             </div>
           ) : (
             <div className="text-center py-8">

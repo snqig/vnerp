@@ -21,12 +21,13 @@ import {
 } from '@/lib/inventory-ledger';
 import Decimal from 'decimal.js';
 import type { DbRow } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(
   async (request: NextRequest) => {
     const { searchParams } = new URL(request.url);
     const keyword = searchParams.get('keyword') || '';
-    const status = searchParams.get('status') || '';
+    const status = numericFilter(searchParams.get('status'));
     const startDate = searchParams.get('startDate') || '';
     const endDate = searchParams.get('endDate') || '';
     const page = parseInt(searchParams.get('page') || '1');
@@ -37,7 +38,7 @@ export const GET = withPermission(
 
     if (status) {
       where += ' AND s.status = ?';
-      params.push(parseInt(status));
+      params.push(status);
     }
     if (keyword) {
       where += ' AND (s.split_no LIKE ? OR m.material_name LIKE ? OR m.material_code LIKE ?)';
@@ -57,7 +58,7 @@ export const GET = withPermission(
       `SELECT COUNT(*) as total FROM split_order s LEFT JOIN inv_material m ON s.material_id = m.id ${where}`,
       params
     );
-    const total = (countResult as DbRow[])[0]?.total || 0;
+    const total = Number((countResult as DbRow[])[0]?.total || 0);
 
     const offset = (page - 1) * pageSize;
     const rows = await query(
@@ -112,7 +113,7 @@ export const POST = withPermission(
         isSplittable: mat?.is_splittable as number | null | undefined,
       });
 
-      const availableQty = parseFloat(batch.available_qty);
+      const availableQty = parseFloat(String(batch.available_qty));
       let totalOutQty = new Decimal(0);
       let totalWasteQty = new Decimal(0);
 
@@ -138,7 +139,7 @@ export const POST = withPermission(
         [`FJ${dateStr}%`]
       );
       const maxNo = (maxOrder as DbRow[])[0]?.maxNo;
-      const seq = maxNo ? String(parseInt(maxNo.slice(-4)) + 1).padStart(4, '0') : '0001';
+      const seq = maxNo ? String(parseInt(String(maxNo).slice(-4)) + 1).padStart(4, '0') : '0001';
       const splitNo = `FJ${dateStr}${seq}`;
 
       const [orderResult] = await conn.execute(
@@ -162,7 +163,7 @@ export const POST = withPermission(
         ]
       );
 
-      const splitId = (orderResult as { insertId: number }).insertId;
+      const splitId = (orderResult as unknown as { insertId: number }).insertId;
 
       for (const d of details) {
         await conn.execute(
@@ -246,12 +247,12 @@ export const PATCH = withPermission(
           throw new Error(ts('k_1wx1fpz'));
         }
 
-        const parentAvailableQty = parseFloat(order.available_qty);
+        const parentAvailableQty = parseFloat(String(order.available_qty));
         let totalOutQty = new Decimal(0);
         let totalWasteQty = new Decimal(0);
 
         for (const d of details) {
-          const qty = new Decimal(d.total_qty);
+          const qty = new Decimal(Number(d.total_qty ?? 0));
           if (d.is_waste) {
             totalWasteQty = totalWasteQty.plus(qty);
           } else {
@@ -262,8 +263,8 @@ export const PATCH = withPermission(
         const totalQty = totalOutQty.plus(totalWasteQty);
 
         // 尺寸类物料(宽×长>0)按"面积"守恒；其它(重量/件数)按卷/重量直接扣。
-        const motherWidth = new Decimal(parseFloat(order.width) || 0);
-        const motherLength = new Decimal(parseFloat(order.length) || 0);
+        const motherWidth = new Decimal(parseFloat(String(order.width)) || 0);
+        const motherLength = new Decimal(parseFloat(String(order.length)) || 0);
         const isDimensional = motherWidth.greaterThan(0) && motherLength.greaterThan(0);
         const motherAreaPerRoll = motherWidth.times(motherLength);
 
@@ -275,10 +276,10 @@ export const PATCH = withPermission(
           for (const d of details) {
             if (d.is_waste) continue;
             const childWidth = new Decimal(
-              parseFloat(d.width) || parseFloat(order.m_width || order.width) || 0
+              parseFloat(String(d.width)) || parseFloat(String(order.m_width || order.width)) || 0
             );
             childrenArea = childrenArea.plus(
-              childWidth.times(motherLength).times(new Decimal(d.total_qty))
+              childWidth.times(motherLength).times(new Decimal(Number(d.total_qty ?? 0)))
             );
           }
           const wasteArea = totalWasteQty.times(motherAreaPerRoll);
@@ -299,18 +300,23 @@ export const PATCH = withPermission(
           );
         }
 
-        const totalCostDecimal = new Decimal(order.out_qty || 0).times(order.unit_price || 0);
+        const totalCostDecimal = new Decimal(Number(order.out_qty ?? 0)).times(
+          Number(order.unit_price ?? 0)
+        );
         const childBatchIds: number[] = [];
-        const parentBatchId = order.parent_batch_id;
-        const warehouseId = order.warehouse_id;
+        const parentBatchId = Number(order.parent_batch_id ?? 0);
+        const warehouseId = Number(order.warehouse_id ?? 0);
 
         for (const d of details) {
           if (d.is_waste) continue;
 
-          const childWidth = parseFloat(d.width) || parseFloat(order.m_width || order.width) || 0;
+          const childWidth = parseFloat(String(d.width)) || parseFloat(String(order.m_width || order.width)) || 0;
           const childLength = isDimensional ? motherLength.toNumber() : 0;
           const childArea = isDimensional
-            ? new Decimal(childWidth).times(motherLength).times(new Decimal(d.total_qty)).toNumber()
+            ? new Decimal(childWidth)
+                .times(motherLength)
+                .times(new Decimal(Number(d.total_qty ?? 0)))
+                .toNumber()
             : null;
 
           const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -320,11 +326,13 @@ export const PATCH = withPermission(
           );
           const maxChildNo = (maxChildBatch as DbRow[])[0]?.maxNo;
           const childSeq = maxChildNo
-            ? String(parseInt(maxChildNo.slice(-4)) + 1).padStart(4, '0')
+            ? String(parseInt(String(maxChildNo).slice(-4)) + 1).padStart(4, '0')
             : '0001';
           const childBatchNo = `SC${dateStr}${childSeq}`;
 
-          const pieceCost = totalCostDecimal.times(new Decimal(d.total_qty)).div(totalOutQty);
+          const pieceCost = totalCostDecimal
+            .times(new Decimal(Number(d.total_qty ?? 0)))
+            .div(totalOutQty);
 
           const [batchResult] = await conn.execute(
             `INSERT INTO inv_inventory_batch (
@@ -351,7 +359,7 @@ export const PATCH = withPermission(
             ]
           );
 
-          const childBatchId = (batchResult as { insertId: number }).insertId;
+          const childBatchId = (batchResult as unknown as { insertId: number }).insertId;
           childBatchIds.push(childBatchId);
 
           await conn.execute(
@@ -368,7 +376,7 @@ export const PATCH = withPermission(
              ) VALUES (?, 'material', ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
             [
               childQrCode,
-              order.split_no,
+              String(order.split_no),
               childBatchNo,
               order.material_id,
               order.material_code || '',
@@ -376,7 +384,7 @@ export const PATCH = withPermission(
               d.total_qty,
               order.unit || ts('k_1wdvptu'),
               warehouseId,
-              `分切子批-${order.split_no}`,
+              `分切子批-${String(order.split_no)}`,
             ]
           );
 
@@ -385,26 +393,28 @@ export const PATCH = withPermission(
             transType: 'in',
             sourceType: 'split_order',
             sourceId: splitId,
-            sourceLineId: d.id,
-            materialId: order.material_id,
+            sourceLineId: Number(d.id ?? 0),
+            materialId: Number(order.material_id ?? 0),
             batchNo: childBatchNo,
             warehouseId,
-            quantity: d.total_qty,
+            quantity: Number(d.total_qty ?? 0),
             unitPrice: pieceCost.toNumber(),
             totalAmount: pieceCost.toNumber(),
-            referenceNo: order.split_no,
-            remark: `分切入库-${order.split_no}`,
+            referenceNo: String(order.split_no),
+            remark: `分切入库-${String(order.split_no)}`,
             createBy: operatorId || null,
           });
         }
 
-        const parentCost = new Decimal(order.out_qty || 0).times(order.unit_price || 0);
+        const parentCost = new Decimal(Number(order.out_qty ?? 0)).times(
+          Number(order.unit_price ?? 0)
+        );
 
         const deductNum = deductQty.toNumber();
         let motherUpdRes: unknown;
         if (isDimensional) {
           // 母批面积 = 宽×长×当前数量；扣减 consumedArea（面积守恒，卷数按当量折算）。
-          const motherQty = new Decimal(parseFloat(order.quantity) || 0);
+          const motherQty = new Decimal(parseFloat(String(order.quantity)) || 0);
           const newArea = motherWidth
             .times(motherLength)
             .times(motherQty)
@@ -442,47 +452,47 @@ export const PATCH = withPermission(
           transType: 'out',
           sourceType: 'split_order',
           sourceId: splitId,
-          materialId: order.material_id,
-          batchNo: order.batch_no || null,
+          materialId: Number(order.material_id ?? 0),
+          batchNo: order.batch_no ? String(order.batch_no) : null,
           warehouseId,
           quantity: deductQty.toNumber(),
           unitPrice: Number(order.unit_price) || 0,
           totalAmount: parentCost.toNumber(),
-          referenceNo: order.split_no,
-          remark: `分切母料出库-${order.split_no}`,
+          referenceNo: String(order.split_no),
+          remark: `分切母料出库-${String(order.split_no)}`,
           createBy: operatorId || null,
         });
 
         // 批次明细已更新：派生重算汇总表，杜绝双写漂移。
-        await recomputeInventorySummary(conn, order.material_id, warehouseId);
+        await recomputeInventorySummary(conn, Number(order.material_id), warehouseId);
 
         await appendInventoryLog(conn, {
-          materialId: order.material_id,
+          materialId: Number(order.material_id ?? 0),
           warehouseId,
-          batchNo: order.batch_no || '',
+          batchNo: String(order.batch_no || ''),
           operationType: 2,
           operationQty: deductQty.toNumber(),
           beforeQty: parentAvailableQty,
           afterQty: parentAvailableQty - deductQty.toNumber(),
           businessType: 'split_order',
-          businessNo: order.split_no,
-          remark: `分切出库-${order.split_no}`,
+          businessNo: String(order.split_no),
+          remark: `分切出库-${String(order.split_no)}`,
           operatorId,
         });
 
         if (totalWasteQty.greaterThan(0)) {
           const _wasteCost = totalCostDecimal.times(totalWasteQty).div(totalQty);
           await appendInventoryLog(conn, {
-            materialId: order.material_id,
+            materialId: Number(order.material_id ?? 0),
             warehouseId,
-            batchNo: order.batch_no || '',
+            batchNo: String(order.batch_no || ''),
             operationType: 3,
             operationQty: totalWasteQty.toNumber(),
             beforeQty: 0,
             afterQty: totalWasteQty.negated().toNumber(),
             businessType: 'split_order',
-            businessNo: order.split_no,
-            remark: `分切损耗-${order.split_no}(${totalWasteQty.toNumber()})`,
+            businessNo: String(order.split_no),
+            remark: `分切损耗-${String(order.split_no)}(${totalWasteQty.toNumber()})`,
             operatorId,
           });
         }
@@ -490,16 +500,16 @@ export const PATCH = withPermission(
         for (const d of details) {
           if (d.is_waste) continue;
           await appendInventoryLog(conn, {
-            materialId: order.material_id,
+            materialId: Number(order.material_id ?? 0),
             warehouseId,
-            batchNo: d.child_batch_no || '',
+            batchNo: String(d.child_batch_no || ''),
             operationType: 1,
-            operationQty: d.total_qty,
+            operationQty: Number(d.total_qty ?? 0),
             beforeQty: 0,
-            afterQty: d.total_qty,
+            afterQty: Number(d.total_qty ?? 0),
             businessType: 'split_order',
-            businessNo: order.split_no,
-            remark: `分切入库-${order.split_no}`,
+            businessNo: String(order.split_no),
+            remark: `分切入库-${String(order.split_no)}`,
             operatorId,
           });
         }
@@ -517,9 +527,9 @@ export const PATCH = withPermission(
         await eventBus.publish(
           new SplitOrderAuditedEvent({
             splitId,
-            splitNo: order.split_no,
+            splitNo: String(order.split_no),
             parentBatchId,
-            materialId: order.material_id,
+            materialId: Number(order.material_id ?? 0),
             warehouseId,
             childBatchIds,
             totalCost: totalCostDecimal.toNumber(),
@@ -535,14 +545,14 @@ export const PATCH = withPermission(
           oper_method: 'PATCH',
           oper_url: '/api/warehouse/split-order',
           oper_param: JSON.stringify({ splitId, action: 'audit' }),
-          oper_result: `分切单 ${order.split_no} 审核通过`,
+          oper_result: `分切单 ${String(order.split_no)} 审核通过`,
           status: 1,
         });
 
         return successResponse(
           {
             splitId,
-            splitNo: order.split_no,
+            splitNo: String(order.split_no),
             status: 1,
             childBatchIds,
             childCount: childBatchIds.length,

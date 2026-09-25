@@ -6,6 +6,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
 import { query, execute } from '@/lib/db';
+import { numericFilter } from '@/lib/query-filter';
 
 /**
  * 移动加权平均成本核算 API
@@ -18,7 +19,7 @@ import { query, execute } from '@/lib/db';
 export const GET = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
-    const materialId = searchParams.get('materialId');
+    const materialId = numericFilter(searchParams.get('materialId'));
     const warehouseId = searchParams.get('warehouseId');
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '20');

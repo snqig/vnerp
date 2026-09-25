@@ -5,7 +5,8 @@ import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Search, Download } from 'lucide-react';
+import { Search, Download, Package, Warehouse, Calendar } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { QrScanner } from '@/components/common/QrScanner';
 import { TraceTimeline } from '@/components/trace/TraceTimeline';
 import { authFetch } from '@/lib/auth-fetch';
@@ -40,6 +41,22 @@ export default function TraceQueryPage() {
     }
   }, [t]);
 
+  const traceStats = (() => {
+    const matTypes = new Set(timeline.map((i) => i.materialName).filter(Boolean)).size;
+    const whCount = new Set(timeline.map((i) => i.eventName).filter(Boolean)).size;
+    const times = timeline.map((i) => new Date(i.time).getTime()).filter(Boolean);
+    const spanDays =
+      times.length >= 2
+        ? Math.max(1, Math.round((Math.max(...times) - Math.min(...times)) / 86400000))
+        : 0;
+    return [
+      { key: 'total', count: timeline.length },
+      { key: 'materials', count: matTypes },
+      { key: 'warehouses', count: whCount },
+      { key: 'span', count: spanDays },
+    ];
+  })();
+
   const handleExportPdf = useCallback(async () => {
     const { default: html2canvas } = await import('html2canvas');
     const { default: jsPDF } = await import('jspdf');
@@ -58,6 +75,17 @@ export default function TraceQueryPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: t('scan.totalRecords'), icon: Search, ...StatsTheme.blue },
+            { key: 'materials', label: t('scan.materialTypes'), icon: Package, ...StatsTheme.green },
+            { key: 'warehouses', label: t('scan.warehouseCount'), icon: Warehouse, ...StatsTheme.orange },
+            { key: 'span', label: t('scan.timeSpan'), icon: Calendar, ...StatsTheme.purple },
+          ]}
+          stats={traceStats}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Search className="w-6 h-6" />

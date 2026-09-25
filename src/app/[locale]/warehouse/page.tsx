@@ -586,7 +586,7 @@ export default function WarehousePage() {
                     <TableCell>
                       {batch.outbound_quantity} {batch.unit}
                     </TableCell>
-                    <TableCell className="font-semibold text-green-600">
+                    <TableCell className="font-semibold text-green-600 dark:text-green-400">
                       {batch.available_quantity} {batch.unit}
                     </TableCell>
                     <TableCell>{batch.inbound_date}</TableCell>

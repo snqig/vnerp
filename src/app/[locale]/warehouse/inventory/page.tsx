@@ -27,6 +27,8 @@ import {
 import {
   AlertTriangle,
   TrendingDown,
+  Package,
+  DollarSign,
   Barcode,
   BoxIcon,
   Layers,
@@ -43,6 +45,7 @@ import { BatchToolbar, BatchAction } from '@/components/ui/batch-toolbar';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { useToast } from '@/hooks/use-toast';
 import { authFetch } from '@/lib/auth-fetch';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 export default function InventoryPage() {
   const ts = useTranslations('Warehouse');
@@ -221,8 +224,57 @@ export default function InventoryPage() {
   );
 
   useEffect(() => {
-    fetchInventory();
+    fetchBaseList();
   }, []);
+
+  const fetchBaseList = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ pageSize: '100' });
+      const response = await authFetch(`/api/inventory?${params.toString()}`);
+      const result = await response.json();
+      if (result.success && result.data) {
+        const list = result.data.list || [];
+        setInventoryItems(list);
+
+        const alertItems = list.filter(
+          (item: Loose) => item.alertLevel === 'warning' || item.alertLevel === 'critical'
+        );
+        setAlerts(
+          alertItems.map((item: Loose) => ({
+            material: item.material_name,
+            current: parseFloat(item.available_qty) || 0,
+            safety: parseFloat(item.safety_stock) || 0,
+            unit: item.unit,
+            type: item.alertLevel === 'critical' ? 'out' : 'low',
+          }))
+        );
+
+        const whMap = new Map<number, { name: string; count: number; value: number }>();
+        list.forEach((item: Loose) => {
+          const wid = item.warehouse_id;
+          if (!whMap.has(wid)) {
+            whMap.set(wid, { name: item.warehouse_name || t('unknown'), count: 0, value: 0 });
+          }
+          const wh = whMap.get(wid)!;
+          wh.count++;
+          wh.value += (parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0);
+        });
+        const stats = Array.from(whMap.entries()).map(([id, wh], i) => ({
+          id,
+          name: wh.name,
+          code: `WH-${String(i + 1).padStart(3, '0')}`,
+          utilization: Math.min(Math.round((wh.count / 50) * 100), 100),
+          items: wh.count,
+          value: Math.round(wh.value),
+        }));
+        setWarehouseStats(stats);
+      }
+    } catch {
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchInventory = async () => {
     setLoading(true);
@@ -285,6 +337,22 @@ export default function InventoryPage() {
   return (
     <MainLayout title={t('inventory')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'sku', label: tc('totalSKUs'), icon: Package, ...StatsTheme.blue },
+            { key: 'value', label: tc('inventoryValue'), icon: DollarSign, ...StatsTheme.green },
+            { key: 'alerts', label: tc('warningCount'), icon: AlertTriangle, ...StatsTheme.orange },
+            { key: 'lowStock', label: tc('lowStockCount'), icon: TrendingDown, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'sku', count: inventoryItems.length },
+            { key: 'value', count: inventoryItems.reduce((sum, item) => sum + (item.total_cost || 0), 0) },
+            { key: 'alerts', count: alerts.length },
+            { key: 'lowStock', count: inventoryItems.filter((item) => item.qty < (item.min_stock || 0)).length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         {warehouseStats.length > 0 && (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {warehouseStats.map((wh) => (
@@ -416,7 +484,7 @@ export default function InventoryPage() {
                     <SelectItem value="expired">{tc('expired')}</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm" onClick={handleSearch}>
+                <Button variant="outline" size="sm" onClick={() => { handleSearch(); }}>
                   <RefreshCw className="h-4 w-4 mr-1" />
                   {tc('refresh')}
                 </Button>

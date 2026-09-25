@@ -10,6 +10,7 @@ import { getTrPrefix, generateDocNo } from '@/lib/global-config';
 import { TRANSFER_TYPE_LABEL, TRANSFER_STATUS_LABEL } from '@/lib/status-labels';
 import { checkMaterialsCategorized } from '@/lib/category-validation';
 import { secureLog } from '@/lib/logger';
+import { numericFilter } from '@/lib/query-filter';
 import type { DbRow } from '@/types/db';
 
 const TYPE_MAP = TRANSFER_TYPE_LABEL;
@@ -24,8 +25,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const transferNo = searchParams.get('transferNo') || '';
-  const statusParam = searchParams.get('status');
-  const status = statusParam !== null && statusParam !== '' ? Number(statusParam) : undefined;
+  const status = numericFilter(searchParams.get('status'));
 
   let where = 'WHERE t.deleted = 0';
   const params: SqlValue[] = [];
@@ -65,8 +65,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const ts = t;
   return  ({
       ...row,
-      type_name: TYPE_MAP[row.type] || ts('k_1lpnuh4'),
-      status_name: STATUS_MAP[row.status] || ts('k_1lpnuh4'),
+      type_name: TYPE_MAP[Number(row.type)] || ts('k_1lpnuh4'),
+      status_name: STATUS_MAP[Number(row.status)] || ts('k_1lpnuh4'),
     });
 }),
     total,
@@ -122,7 +122,7 @@ export const POST = withPermission(async (request: NextRequest, _userInfo) => {
       itemCount: items.length,
       materialIds,
     });
-    const categoryCheck = await checkMaterialsCategorized(materialIds);
+    const categoryCheck = await checkMaterialsCategorized(materialIds.map((v) => Number(v)));
     secureLog('info', ts('k_19cbevo'), {
       blocked: categoryCheck.blocked,
       uncategorizedCount: categoryCheck.uncategorized.length,

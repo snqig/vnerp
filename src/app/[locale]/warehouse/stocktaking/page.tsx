@@ -32,12 +32,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Trash2, QrCode, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, QrCode, CheckCircle, XCircle, Eye, ClipboardCheck, Clock, AlertTriangle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 
 interface InventoryCheck {
@@ -113,6 +114,13 @@ export default function StocktakingPage() {
   const [searchNo, setSearchNo] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<InventoryCheck>>({});
+  const [stats, setStats] = useState({
+    pending: 0,
+    counting: 0,
+    completed: 0,
+    difference: 0,
+    monthlyCount: 0,
+  });
 
   const [showScanDialog, setShowScanDialog] = useState(false);
   const [currentCheckId, setCurrentCheckId] = useState<number | null>(null);
@@ -158,13 +166,26 @@ export default function StocktakingPage() {
     } catch {}
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/warehouse/stocktaking/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
 
   const handleSave = async () => {
     try {
-      const res = await fetch('/api/warehouse/stocktaking', {
+      const res = await authFetch('/api/warehouse/stocktaking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -334,7 +355,25 @@ export default function StocktakingPage() {
               {t('addStocktaking')}
             </Button>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'pending', label: '待盘点', icon: Clock, ...StatsTheme.orange },
+            { key: 'counting', label: '盘点中', icon: ClipboardCheck, ...StatsTheme.blue },
+            { key: 'completed', label: '已完成', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'difference', label: '差异待审批', icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'monthlyCount', label: '本月盘点次数', icon: Calendar, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'counting', count: stats.counting },
+            { key: 'completed', count: stats.completed },
+            { key: 'difference', count: stats.difference },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
 
         <Card>
           <CardContent className="p-0">
@@ -444,7 +483,7 @@ export default function StocktakingPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 w-6 p-0 text-red-600"
+                              className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                               onClick={() => handleDelete(item.id)}
                             >
                               <Trash2 className="h-3 w-3" />
@@ -497,7 +536,7 @@ export default function StocktakingPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>
-                  {t('warehouse')} <span className="text-red-500">*</span>
+                  {t('warehouse')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <WarehouseSelect
                   value={editItem.warehouse_id || ''}
@@ -554,7 +593,7 @@ export default function StocktakingPage() {
             <div className="space-y-4">
               <div>
                 <Label>
-                  {t('scanCheckQrCode')} <span className="text-red-500">*</span>
+                  {t('scanCheckQrCode')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   value={scanQrCode}
@@ -565,7 +604,7 @@ export default function StocktakingPage() {
               </div>
               <div>
                 <Label>
-                  {t('scanCheckQuantity')} <span className="text-red-500">*</span>
+                  {t('scanCheckQuantity')} <span className="text-red-500 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   type="number"
@@ -602,7 +641,7 @@ export default function StocktakingPage() {
                       {scanResult.actual_quantity}
                     </div>
                     <div
-                      className={`col-span-2 font-bold ${scanResult.difference !== 0 ? 'text-red-600' : 'text-green-600'}`}
+                      className={`col-span-2 font-bold ${scanResult.difference !== 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}
                     >
                       {t('diffLabel')}:{scanResult.difference > 0 ? '+' : ''}
                       {scanResult.difference}
@@ -653,7 +692,7 @@ export default function StocktakingPage() {
                       {item.actual_quantity || '-'}
                     </TableCell>
                     <TableCell
-                      className={`text-xs text-center font-bold ${item.difference !== 0 ? 'text-red-600' : ''}`}
+                      className={`text-xs text-center font-bold ${item.difference !== 0 ? 'text-red-600 dark:text-red-400' : ''}`}
                     >
                       {item.difference > 0 ? '+' : ''}
                       {item.difference}

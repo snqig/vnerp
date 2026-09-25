@@ -10,6 +10,7 @@ import { getIcPrefix, generateDocNo, getConfig } from '@/lib/global-config';
 import { withPermission } from '@/lib/api-permissions';
 import { STOCKTAKING_TYPE_LABEL, STOCKTAKING_STATUS_LABEL } from '@/lib/status-labels';
 import { appendInventoryLog } from '@/lib/inventory-ledger';
+import { numericFilter } from '@/lib/query-filter';
 import type { DbRow } from '@/types/db';
 
 const TYPE_MAP = STOCKTAKING_TYPE_LABEL;
@@ -24,10 +25,8 @@ export const GET = withPermission(async (request: NextRequest) => {
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const checkNo = searchParams.get('checkNo') || '';
-  const statusRaw = searchParams.get('status');
-  const status = statusRaw !== null && statusRaw !== '' ? Number(statusRaw) : undefined;
-  const typeRaw = searchParams.get('type');
-  const type = typeRaw !== null && typeRaw !== '' ? Number(typeRaw) : undefined;
+  const status = numericFilter(searchParams.get('status'));
+  const type = numericFilter(searchParams.get('type'));
 
   let where = 'WHERE s.deleted = 0';
   const params: SqlValue[] = [];
@@ -71,8 +70,8 @@ export const GET = withPermission(async (request: NextRequest) => {
   return  ({
       ...row,
       check_no: row.taking_no,
-      type_name: TYPE_MAP[row.taking_type] || ts('k_1lpnuh4'),
-      status_name: STATUS_MAP[row.status] || ts('k_1lpnuh4'),
+      type_name: TYPE_MAP[Number(row.taking_type)] || ts('k_1lpnuh4'),
+      status_name: STATUS_MAP[Number(row.status)] || ts('k_1lpnuh4'),
     });
 }),
     total,
@@ -238,7 +237,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
             )
             .then(([rows]) => (rows as DbRow[])[0]);
 
-          if (currentStock && currentStock.quantity + item.diff_qty < 0) {
+          if (currentStock && Number(currentStock.quantity ?? 0) + Number(item.diff_qty ?? 0) < 0) {
             throw new Error(`物料ID ${item.material_id} 盘点后将产生负库存，请检查盘点数据`);
           }
 

@@ -41,14 +41,43 @@ interface Warehouse {
   nature?: string;
   includeInCalculation?: boolean;
   capacity?: number;
-  usedCapacity?: number;
   manager?: string;
   managerId?: number;
+  categoryId?: number;
   address?: string;
+  contactPhone?: string;
   remark?: string;
   status: string | number;
   createTime?: string;
   updateTime?: string;
+}
+
+/**
+ * 校验分类归属：传了 categoryId 就必须指向存在且未删除的仓库分类。
+ * 仓库分类是 inv_warehouse.category_id 的关联数据，「分类列表 → 仓库数量」
+ * 完全依赖它，放任写入不存在的 id 会让统计恒为 0。
+ *
+ * 只返回错误原因码，文案由调用方用 i18n 组装（项目禁止硬编码中文）。
+ */
+type CategoryCheckResult =
+  | { ok: true; value: number | null }
+  | { ok: false; reason: 'invalid' }
+  | { ok: false; reason: 'notFound'; id: number };
+
+async function validateCategoryId(raw: unknown): Promise<CategoryCheckResult> {
+  if (raw === undefined || raw === null || raw === '') return { ok: true, value: null };
+  const id = Number(raw);
+  if (!Number.isInteger(id) || id <= 0) {
+    return { ok: false, reason: 'invalid' };
+  }
+  const exists = await queryOne<{ id: number }>(
+    'SELECT id FROM sys_warehouse_category WHERE id = ? AND deleted = 0',
+    [id]
+  );
+  if (!exists) {
+    return { ok: false, reason: 'notFound', id };
+  }
+  return { ok: true, value: id };
 }
 
 // 构建查询条件
@@ -71,11 +100,12 @@ function buildQueryConditions(params: {
       inv_warehouse.nature,
       inv_warehouse.include_in_calculation,
       inv_warehouse.capacity,
-      inv_warehouse.used_capacity,
+      inv_warehouse.contact_phone,
       inv_warehouse.manager_id,
       mu.real_name as manager,
-      inv_warehouse.create_time as createTime,
-      inv_warehouse.update_time as updateTime
+      -- ④ 命名统一：SQL 别名 snake_case（消费端 8 个页面均已双读，见 docs/qa/命名统一清单-SQL别名-20260923.md）
+      inv_warehouse.create_time as create_time,
+      inv_warehouse.update_time as update_time
     FROM inv_warehouse
     LEFT JOIN sys_user mu ON inv_warehouse.manager_id = mu.id
     WHERE inv_warehouse.deleted = 0
@@ -119,17 +149,18 @@ function buildQueryConditions(params: {
 function formatWarehouse(warehouse: DbRow): Warehouse {
   return {
     ...warehouse,
-    code: warehouse.code,
-    name: warehouse.name,
-    type: warehouseTypeReverseMap[warehouse.warehouse_type] || 'other',
+    code: String(warehouse.code),
+    name: String(warehouse.name),
+    type: warehouseTypeReverseMap[Number(warehouse.warehouse_type ?? 0)] || 'other',
     status: warehouse.status === 1 ? 'active' : 'inactive',
-    nature: warehouse.nature || '',
+    nature: String(warehouse.nature || ''),
     includeInCalculation:
       warehouse.include_in_calculation === 1 || warehouse.include_in_calculation === true,
     capacity: Number(warehouse.capacity) || 0,
-    usedCapacity: Number(warehouse.used_capacity) || 0,
-    manager: warehouse.manager || '',
-    managerId: warehouse.manager_id,
+    categoryId: warehouse.category_id ? Number(warehouse.category_id) : undefined,
+    contactPhone: (warehouse.contact_phone as string) || '',
+    manager: String(warehouse.manager || ''),
+    managerId: warehouse.manager_id ? Number(warehouse.manager_id) : undefined,
   };
 }
 
@@ -226,17 +257,36 @@ export const POST = withPermission(
       return errorResponse(ts('k_wmnua0'), 409, 409);
     }
 
+    // 分类归属校验：关联数据必须存在
+    const categoryCheck = await validateCategoryId(body.categoryId);
+    if (!categoryCheck.ok) {
+      return errorResponse(
+        categoryCheck.reason === 'invalid'
+          ? ts('warehouseCategoryIdInvalid')
+          : ts('warehouseCategoryNotFound', { id: categoryCheck.id }),
+        400,
+        400
+      );
+    }
+
     // 使用事务创建仓库并记录日志
     const result = await transaction(async (connection) => {
-      const [insertResult] = await (connection as DbRow).execute(
+      const [insertResult] = await connection.execute<mysql.ResultSetHeader>(
         `INSERT INTO inv_warehouse (
           warehouse_code, warehouse_name, warehouse_type,
+          category_id, nature, include_in_calculation,
+          capacity, contact_phone,
           address, remark, status
-        ) VALUES (?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           body.code,
           body.name,
           warehouseTypeMap[body.type] || 5,
+          categoryCheck.value,
+          body.nature || 'own',
+          body.includeInCalculation === false ? 0 : 1,
+          Number(body.capacity) || 0,
+          body.contactPhone || '',
           body.address,
           body.remark,
           body.status === 'active' ? 1 : 0,
@@ -298,13 +348,30 @@ export const PUT = withPermission(
       return errorResponse(ts('k_wmnua0'), 409, 409);
     }
 
+    // 分类归属校验：关联数据必须存在
+    const categoryCheck = await validateCategoryId(body.categoryId);
+    if (!categoryCheck.ok) {
+      return errorResponse(
+        categoryCheck.reason === 'invalid'
+          ? ts('warehouseCategoryIdInvalid')
+          : ts('warehouseCategoryNotFound', { id: categoryCheck.id }),
+        400,
+        400
+      );
+    }
+
     // 使用事务更新仓库并记录日志
     await transaction(async (connection) => {
-      const [updateResult] = await (connection as DbRow).execute(
+      const [updateResult] = await connection.execute<mysql.ResultSetHeader>(
         `UPDATE inv_warehouse SET
         warehouse_code = ?,
         warehouse_name = ?,
         warehouse_type = ?,
+        category_id = ?,
+        nature = ?,
+        include_in_calculation = ?,
+        capacity = ?,
+        contact_phone = ?,
         address = ?,
         remark = ?,
         status = ?
@@ -313,6 +380,11 @@ export const PUT = withPermission(
           body.code,
           body.name,
           warehouseTypeMap[body.type] || 5,
+          categoryCheck.value,
+          body.nature || 'own',
+          body.includeInCalculation === false ? 0 : 1,
+          Number(body.capacity) || 0,
+          body.contactPhone || '',
           body.address,
           body.remark,
           body.status === 'active' ? 1 : 0,

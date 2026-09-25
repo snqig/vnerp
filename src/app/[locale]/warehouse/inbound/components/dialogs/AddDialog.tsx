@@ -344,7 +344,7 @@ export function AddDialog({
                                     <ChevronRight className="h-3 w-3 text-gray-400" />
                                   )
                                 ) : null}
-                                <span className="font-mono text-sm font-medium text-blue-600">
+                                <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">
                                   {po.po_no}
                                 </span>
                               </span>
@@ -361,7 +361,7 @@ export function AddDialog({
                                 {tc('amount')}: ¥{Number(po.grand_total || 0).toFixed(2)}
                               </span>
                               {hasLines && (
-                                <span className="text-xs text-blue-500">
+                                <span className="text-xs text-blue-500 dark:text-blue-400">
                                   {isExpanded ? ts('k_c3apla') : `展开 ${po.lines.length} 行明细`}
                                 </span>
                               )}
@@ -385,7 +385,7 @@ export function AddDialog({
                                     title={fullyReceived ? ts('k_12r0uxt') : ts('k_n5h1r')}
                                   >
                                     <div className="flex items-center gap-2 min-w-0">
-                                      <Package className="h-3 w-3 text-blue-500 flex-shrink-0" />
+                                      <Package className="h-3 w-3 text-blue-500 dark:text-blue-400 flex-shrink-0" />
                                       <span className="text-sm truncate">
                                         {line.material_name || line.material_code || '-'}
                                       </span>
@@ -402,7 +402,7 @@ export function AddDialog({
                                       <span className="text-gray-500">
                                         {ts('k_r0v8nt')}{receivedQty}
                                       </span>
-                                      <span className={fullyReceived ? 'text-red-500' : 'text-green-600 font-medium'}>
+                                      <span className={fullyReceived ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400 font-medium'}>
                                         {ts('k_1p58vpw')}{remaining}
                                         {line.unit || ''}
                                       </span>

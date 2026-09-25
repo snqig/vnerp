@@ -31,12 +31,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, ArrowLeftRight, CheckCircle, Clock, AlertTriangle, XCircle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 
 interface Item {
@@ -79,6 +80,13 @@ export default function StockAdjustPage() {
   const [searchNo, setSearchNo] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
+  const [stats, setStats] = useState({
+    pending: 0,
+    approved: 0,
+    executed: 0,
+    rejected: 0,
+    monthlyCount: 0,
+  });
 
   const _exportColumns = [
     { key: t('adjustNo'), header: t('adjustNo') },
@@ -113,8 +121,21 @@ export default function StockAdjustPage() {
       }
     } catch {}
   };
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/warehouse/stock-adjust/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
 
   const handleSave = async () => {
@@ -240,7 +261,25 @@ export default function StockAdjustPage() {
               {t('addAdjust')}
             </Button>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'pending', label: '待审批', icon: Clock, ...StatsTheme.orange },
+            { key: 'approved', label: '已审批', icon: CheckCircle, ...StatsTheme.blue },
+            { key: 'executed', label: '已执行', icon: ArrowLeftRight, ...StatsTheme.green },
+            { key: 'rejected', label: '已驳回', icon: XCircle, ...StatsTheme.red },
+            { key: 'monthlyCount', label: '本月调整单数', icon: Calendar, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'approved', count: stats.approved },
+            { key: 'executed', count: stats.executed },
+            { key: 'rejected', count: stats.rejected },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
         <Card>
           <CardContent className="p-0">
             <Table>
@@ -315,7 +354,7 @@ export default function StockAdjustPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />

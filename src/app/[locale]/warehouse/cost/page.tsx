@@ -23,7 +23,8 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Calculator, RefreshCw, Eye, TrendingUp, DollarSign } from 'lucide-react';
+import { Calculator, RefreshCw, Eye, TrendingUp, DollarSign, Package, Truck, Archive } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useToast } from '@/hooks/use-toast';
 
 interface CostItem {
@@ -106,6 +107,22 @@ export default function CostPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('totalCost'), icon: DollarSign, ...StatsTheme.blue },
+            { key: 'inStock', label: tc('inStockCost'), icon: Package, ...StatsTheme.green },
+            { key: 'inTransit', label: tc('inTransitCost'), icon: Truck, ...StatsTheme.orange },
+            { key: 'shipped', label: tc('shippedCost'), icon: Archive, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: totalCostAmount },
+            { key: 'inStock', count: list.reduce((sum, item) => sum + (item.total_cost_amount || 0), 0) },
+            { key: 'inTransit', count: 0 },
+            { key: 'shipped', count: 0 },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -124,7 +141,7 @@ export default function CostPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-green-600" />
+                <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
                 <div>
                   <div className="text-sm text-muted-foreground">{tc('totalCostAmount')}</div>
                   <div className="text-2xl font-bold">
@@ -141,7 +158,7 @@ export default function CostPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-blue-600" />
+                <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <div>
                   <div className="text-sm text-muted-foreground">{tc('materialTypeCount')}</div>
                   <div className="text-2xl font-bold">{total}</div>
@@ -152,7 +169,7 @@ export default function CostPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <Calculator className="w-5 h-5 text-orange-600" />
+                <Calculator className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                 <div>
                   <div className="text-sm text-muted-foreground">{tc('costMethod')}</div>
                   <div className="text-2xl font-bold">{ts('k_1ln1c5')}</div>
@@ -230,7 +247,7 @@ export default function CostPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 text-orange-600"
+                            className="h-7 text-orange-600 dark:text-orange-400"
                             onClick={() => recalculate(item.material_id)}
                           >
                             <Calculator className="h-3 w-3 mr-1" />

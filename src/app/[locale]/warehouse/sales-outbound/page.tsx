@@ -30,9 +30,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Truck, CheckCircle, Clock, AlertTriangle, PackageOpen, Banknote } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
@@ -71,6 +72,13 @@ export default function SalesOutboundPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    partial: 0,
+    completed: 0,
+    todayCount: 0,
+    monthlyAmount: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
   const [warehouses, setWarehouses] = useState<{ id: number; name: string; code: string }[]>([]);
@@ -131,8 +139,21 @@ export default function SalesOutboundPage() {
       if (result.success) setCustomers(result.data?.list || result.data || []);
     } catch {}
   };
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/warehouse/sales-outbound/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
   useEffect(() => {
     fetchWarehouses();
@@ -213,7 +234,25 @@ export default function SalesOutboundPage() {
               <Plus className="h-3 w-3 mr-1" />
               {ts('k_1r8y9zs')}</Button>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'pending', label: '待出库', icon: Clock, ...StatsTheme.orange },
+            { key: 'partial', label: '部分出库', icon: PackageOpen, ...StatsTheme.yellow },
+            { key: 'completed', label: '已出库', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'todayCount', label: '今日出库单数', icon: Truck, ...StatsTheme.blue },
+            { key: 'monthlyAmount', label: '本月出库金额', icon: Banknote, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'partial', count: stats.partial },
+            { key: 'completed', count: stats.completed },
+            { key: 'todayCount', count: stats.todayCount },
+            { key: 'monthlyAmount', count: stats.monthlyAmount, prefix: '¥' },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
         <Card>
           <CardContent className="p-0">
             <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
@@ -277,7 +316,7 @@ export default function SalesOutboundPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                             onClick={() => handleDelete(item.id)}
                           >
                             <Trash2 className="h-3 w-3" />

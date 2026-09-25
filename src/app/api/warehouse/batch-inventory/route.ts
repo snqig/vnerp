@@ -6,15 +6,16 @@ import { query, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
-import type { DbRow } from '@/types/db';
+import type { DbRow, DbResultSetHeader } from '@/types/db';
 import { INSERT_INTO_INV_PRODUCTION_INBOUND } from '@/lib/db/ddl/warehouse-batch-inventory';
+import { stringFilter } from '@/lib/query-filter';
 // 获取批次库存列表
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const materialKeyword = searchParams.get('materialKeyword') || '';
   const batchNo = searchParams.get('batchNo') || '';
-  const warehouseId = searchParams.get('warehouseId') || '';
-  const status = searchParams.get('status') || '';
+  const warehouseId = stringFilter(searchParams.get('warehouseId'));
+  const status = stringFilter(searchParams.get('status'));
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
@@ -118,7 +119,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     batches: rows,
     allocation_plan: allocationPlan,
     total_available: rows.reduce(
-      (sum: number, b: DbRow) => sum + parseFloat(b.available_quantity),
+      (sum: number, b: DbRow) => sum + parseFloat(String(b.available_quantity)),
       0
     ),
     shortage: remaining > 0 ? remaining : 0,
@@ -137,7 +138,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
   return await transaction(async (conn) => {
     // 1. 创建入库单
-    const [orderResult] = await conn.execute(
+    const [orderResult] = await conn.execute<DbResultSetHeader>(
       INSERT_INTO_INV_PRODUCTION_INBOUND,
       [
         inbound_no || `IN${Date.now()}`,
@@ -253,8 +254,8 @@ export const PATCH = withPermission(async (request: NextRequest) => {
 
   return await transaction(async (conn) => {
     // 1. 创建出库单
-    const [orderResult] = await conn.execute(
-      `INSERT INTO inv_sales_outbound (outbound_no, customer_id, customer_name, warehouse_id, outbound_date, status, remark) 
+    const [orderResult] = await conn.execute<DbResultSetHeader>(
+      `INSERT INTO inv_sales_outbound (outbound_no, customer_id, customer_name, warehouse_id, outbound_date, status, remark)
        VALUES (?, ?, ?, ?, ?, 2, ?)`,
       [
         outbound_no || `SO${Date.now()}`,
@@ -298,7 +299,7 @@ export const PATCH = withPermission(async (request: NextRequest) => {
 
         // 找到第一个有足够库存的批次
         for (const batch of availableBatches) {
-          if (parseFloat(batch.available_quantity) >= quantity) {
+          if (parseFloat(String(batch.available_quantity)) >= quantity) {
             targetBatchId = batch.id;
             targetBatchNo = batch.batch_no;
             break;
@@ -323,7 +324,7 @@ export const PATCH = withPermission(async (request: NextRequest) => {
         return errorResponse(ts('k_t62g5v'), 400, 400);
       }
 
-      const availableQty = parseFloat(batch[0].available_quantity);
+      const availableQty = parseFloat(String(batch[0].available_quantity));
       if (availableQty < quantity) {
         return errorResponse(
           `批次 ${batch[0].batch_no} 可用库存不足：可用 ${availableQty} ${batch[0].unit}，需要 ${quantity} ${unit || batch[0].unit}`,

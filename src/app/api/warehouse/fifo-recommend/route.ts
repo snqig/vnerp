@@ -28,17 +28,19 @@ function computeCompatibilityScore(
 ): number {
   let score = 0;
   if (batch.material_code && pantoneCode) {
-    if (batch.material_code.includes(pantoneCode)) score += 50;
+    if (String(batch.material_code).includes(pantoneCode)) score += 50;
   }
   if (batch.batch_no && workOrderNo) {
     const woPrefix = workOrderNo.replace(/[^A-Z]/g, '').slice(0, 3);
-    if (batch.batch_no.includes(woPrefix)) score += 20;
+    if (String(batch.batch_no).includes(woPrefix)) score += 20;
   }
   return score;
 }
 
 function computeOverrideRiskScore(batch: DbRow): number {
-  const expiryWeight = computeExpiryWeight(batch.expire_date);
+  const expiryWeight = computeExpiryWeight(
+    batch.expire_date == null ? null : String(batch.expire_date)
+  );
   const availableQty = Number(batch.available_qty || 0);
   let risk = 0;
   if (expiryWeight >= 90) risk += 40;
@@ -113,7 +115,9 @@ export const GET = withPermission(async (request: NextRequest) => {
   const availableBatches: DbRow[] = batchRows
     .filter((b: DbRow) => b.fifo_status === 'AVAILABLE')
     .map((b: DbRow) => {
-      const expiryWeight = computeExpiryWeight(b.expire_date);
+      const expiryWeight = computeExpiryWeight(
+        b.expire_date == null ? null : String(b.expire_date)
+      );
       const compatibilityScore = computeCompatibilityScore(b, workOrderNo, pantoneCode);
       const overrideRiskScore = computeOverrideRiskScore(b);
       return {
@@ -129,8 +133,8 @@ export const GET = withPermission(async (request: NextRequest) => {
       if (a.is_urgent_expiry && !b.is_urgent_expiry) return -1;
       if (!a.is_urgent_expiry && b.is_urgent_expiry) return 1;
       if (a.compatibility_score !== b.compatibility_score)
-        return b.compatibility_score - a.compatibility_score;
-      return new Date(a.inbound_date).getTime() - new Date(b.inbound_date).getTime();
+        return Number(b.compatibility_score ?? 0) - Number(a.compatibility_score ?? 0);
+      return new Date(String(a.inbound_date)).getTime() - new Date(String(b.inbound_date)).getTime();
     });
 
   const frozenBatches = batchRows.filter((b: DbRow) => b.fifo_status === 'FROZEN');
@@ -162,7 +166,7 @@ export const GET = withPermission(async (request: NextRequest) => {
         is_fifo_recommended: true,
         allocation_reason: batch.is_urgent_expiry
           ? ts('k_81p0p')
-          : batch.compatibility_score > 0
+          : Number(batch.compatibility_score ?? 0) > 0
             ? ts('k_p2hptd')
             : ts('k_1xnmzi5'),
       });
@@ -229,7 +233,7 @@ export const GET = withPermission(async (request: NextRequest) => {
           overrideRiskScore: firstBatch.override_risk_score,
           allocationReason: firstBatch.is_urgent_expiry
             ? ts('k_81p0p')
-            : firstBatch.compatibility_score > 0
+            : Number(firstBatch.compatibility_score ?? 0) > 0
               ? ts('k_p2hptd')
               : ts('k_1xnmzi5'),
         }

@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 
 ;
 import { NextRequest, NextResponse } from 'next/server';
+import type { ResultSetHeader } from 'mysql2/promise';
 import { query, queryOne, execute, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse, logOperation } from '@/lib/api-response';
 import { randomUUID } from 'crypto';
@@ -12,12 +13,13 @@ import { secureLog } from '@/lib/logger';
 import { appendInventoryTransaction } from '@/lib/inventory-ledger';
 import type { DbRow } from '@/types/db';
 import { INSERT_INTO_INV_FIFO_OVERRIDE_LOG, INSERT_INTO_FIN_VOUCHER } from '@/lib/db/ddl/warehouse-sales-outbound';
+import { numericFilter } from '@/lib/query-filter';
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const outboundNo = searchParams.get('outboundNo') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
   const orderNo = searchParams.get('orderNo') || '';
 
   let where = 'WHERE s.deleted = 0';
@@ -85,7 +87,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     itemCount: items.length,
     materialIds,
   });
-  const categoryCheck = await checkMaterialsCategorized(materialIds);
+  const categoryCheck = await checkMaterialsCategorized(materialIds.map((v) => Number(v)));
   secureLog('info', ts('k_vyvuy4'), {
     blocked: categoryCheck.blocked,
     uncategorizedCount: categoryCheck.uncategorized.length,
@@ -119,10 +121,10 @@ export const POST = withPermission(async (request: NextRequest) => {
       if (orderRows.length === 0) {
         throw new Error(ts('k_1gccwsl'));
       }
-      if (orderRows[0].status < 20) {
+      if (Number(orderRows[0].status ?? 0) < 20) {
         throw new Error(ts('k_1gn0r8m'));
       }
-      if (orderRows[0].status >= 90) {
+      if (Number(orderRows[0].status ?? 0) >= 90) {
         throw new Error(ts('k_1ybsap9'));
       }
     }
@@ -148,7 +150,7 @@ export const POST = withPermission(async (request: NextRequest) => {
       }
     }
 
-    const [orderResult] = await conn.execute(
+    const [orderResult] = await conn.execute<ResultSetHeader>(
       'INSERT INTO inv_sales_outbound (outbound_no, order_id, order_no, customer_id, customer_name, warehouse_id, outbound_date, delivery_person, status, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)',
       [
         outboundNo,
@@ -214,7 +216,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
       const outbound = outboundRows[0];
 
-      if (outbound.status >= 3) {
+      if (Number(outbound.status ?? 0) >= 3) {
         throw new Error(ts('k_ir4gpo'));
       }
 
@@ -304,14 +306,14 @@ export const PUT = withPermission(async (request: NextRequest) => {
             transType: 'out',
             sourceType: 'sales_outbound',
             sourceId: id,
-            sourceLineId: item.id,
-            materialId: item.material_id,
-            batchNo: batch.batch_no || null,
-            warehouseId: outbound.warehouse_id,
+            sourceLineId: Number(item.id),
+            materialId: Number(item.material_id),
+            batchNo: batch.batch_no ? String(batch.batch_no) : null,
+            warehouseId: Number(outbound.warehouse_id),
             quantity: deductQty,
             unitPrice: Number(batch.unit_price || 0),
             totalAmount: batchCost,
-            referenceNo: outbound.outbound_no,
+            referenceNo: outbound.outbound_no ? String(outbound.outbound_no) : null,
             remark: `销售出库扣减: ${item.material_name} (批次 ${batch.batch_no})`,
             createBy: null,
           });
@@ -319,7 +321,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
         try {
           const voucherNo = 'FV' + Date.now() + String(item.id).slice(-4);
-          const avgCost = item.quantity ? totalCost / item.quantity : 0;
+          const avgCost = item.quantity ? totalCost / Number(item.quantity) : 0;
           await conn.execute(
             INSERT_INTO_FIN_VOUCHER,
             [

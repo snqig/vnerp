@@ -35,13 +35,16 @@ import { Label } from '@/components/ui/label';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import {
   Layers,
+  Clock,
   RefreshCw,
   Search,
   AlertTriangle,
   Snowflake,
   ThermometerSun,
   Eye,
+  CheckCircle,
 } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useToast } from '@/hooks/use-toast';
 
 interface BatchItem {
@@ -226,6 +229,22 @@ export default function BatchPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('totalBatches'), icon: Layers, ...StatsTheme.blue },
+            { key: 'expiring', label: tc('expiringSoon'), icon: Clock, ...StatsTheme.orange },
+            { key: 'expired', label: tc('expired'), icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'available', label: tc('availableBatches'), icon: CheckCircle, ...StatsTheme.green },
+          ]}
+          stats={[
+            { key: 'total', count: total },
+            { key: 'expiring', count: list.filter((b) => { const s = getExpiryStatus(b.expiry_date); return s?.label === t('expiringSoon'); }).length },
+            { key: 'expired', count: list.filter((b) => { const s = getExpiryStatus(b.expiry_date); return s?.label === t('expired'); }).length },
+            { key: 'available', count: list.filter((b) => b.available_qty > 0 && b.status !== 'frozen').length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -250,7 +269,7 @@ export default function BatchPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <Layers className="w-5 h-5 text-blue-600" />
+                <Layers className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <div>
                   <div className="text-sm text-muted-foreground">{t('totalBatches')}</div>
                   <div className="text-2xl font-bold">{total}</div>
@@ -261,7 +280,7 @@ export default function BatchPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <Snowflake className="w-5 h-5 text-cyan-600" />
+                <Snowflake className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
                 <div>
                   <div className="text-sm text-muted-foreground">{t('frozenBatches')}</div>
                   <div className="text-2xl font-bold">
@@ -274,7 +293,7 @@ export default function BatchPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-orange-600" />
+                <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                 <div>
                   <div className="text-sm text-muted-foreground">{t('expiryWarning')}</div>
                   <div className="text-2xl font-bold">{expiryWarningCount}</div>
@@ -407,7 +426,7 @@ export default function BatchPage() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-7 text-green-600"
+                                className="h-7 text-green-600 dark:text-green-400"
                                 onClick={() => handleFreeze(item.id, 'unfreeze')}
                               >
                                 <ThermometerSun className="h-3 w-3 mr-1" />
@@ -417,7 +436,7 @@ export default function BatchPage() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-7 text-cyan-600"
+                                className="h-7 text-cyan-600 dark:text-cyan-400"
                                 onClick={() => handleFreeze(item.id, 'freeze')}
                               >
                                 <Snowflake className="h-3 w-3 mr-1" />

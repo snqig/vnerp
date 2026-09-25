@@ -172,7 +172,7 @@ export function CuttingResultDialog({
       <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto" resizable>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Scissors className="h-5 w-5 text-orange-600" />
+            <Scissors className="h-5 w-5 text-orange-600 dark:text-orange-400" />
             {t('cuttingComplete')} - {t('qrCodeLabel')}
           </DialogTitle>
           <DialogDescription>
@@ -186,7 +186,7 @@ export function CuttingResultDialog({
               return (
                 <div
                   key={label.id || index}
-                  className={`border-2 rounded-lg p-3 ${isRemainder ? 'border-yellow-400 bg-yellow-50/30' : 'border-orange-300 bg-orange-50/30'}`}
+                  className={`border-2 rounded-lg p-3 ${isRemainder ? 'border-yellow-400 bg-yellow-500/10' : 'border-orange-300 dark:border-orange-800 bg-orange-500/10'}`}
                   style={{ minHeight: '200px' }}
                 >
                   <div className="flex items-start justify-between mb-2">
@@ -199,7 +199,7 @@ export function CuttingResultDialog({
                       </p>
                     </div>
                     <Badge
-                      className={`${isRemainder ? 'bg-yellow-100 text-yellow-700' : 'bg-orange-100 text-orange-700'} text-xs shrink-0 ml-2`}
+                      className={`${isRemainder ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'} text-xs shrink-0 ml-2`}
                     >
                       {isRemainder ? t('remainderMaterial') : t('cut')}
                     </Badge>
@@ -216,7 +216,7 @@ export function CuttingResultDialog({
                     <div className="flex justify-between">
                       <span>{isRemainder ? t('remainderWidth') : t('cutWidth')}：</span>
                       <span
-                        className={`font-medium ${isRemainder ? 'text-yellow-700' : 'text-orange-700'}`}
+                        className={`font-medium ${isRemainder ? 'text-yellow-700 dark:text-yellow-400' : 'text-orange-700 dark:text-orange-400'}`}
                       >
                         {label.cutWidth}mm
                       </span>
@@ -247,7 +247,7 @@ export function CuttingResultDialog({
           </Button>
           <Button
             variant="outline"
-            className="gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+            className="gap-2 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 hover:bg-blue-500/10"
             onClick={handlePreview}
             disabled={isGenerating}
           >
