@@ -5,7 +5,7 @@ import { query, execute } from '@/lib/db';
 import { SignJWT } from 'jose';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, resetRateLimit, getClientIP } from '@/lib/rate-limit';
 import { storeRefreshToken } from '@/lib/token-blacklist';
 import { logger, generateTraceId } from '@/lib/logger';
 import { generateCsrfToken, setCsrfCookie } from '@/lib/csrf';
@@ -65,14 +65,7 @@ async function verifyPassword(password: string, hashedPassword: string): Promise
   return await bcrypt.compare(password, hashedPassword);
 }
 
-function getClientIP(request: NextRequest): string {
-  const xff = request.headers.get('x-forwarded-for');
-  if (xff) {
-    const ips = xff.split(',').map((ip) => ip.trim());
-    return ips[0] || '127.0.0.1';
-  }
-  return request.headers.get('x-real-ip') || '127.0.0.1';
-}
+// getClientIP 已统一由 @/lib/rate-limit 导出（E2E 全挂牌修复时去除重复实现）
 
 export async function POST(request: NextRequest) {
   const ts = await getTranslations('Common');
@@ -278,6 +271,18 @@ export async function POST(request: NextRequest) {
       'UPDATE sys_user SET login_fail_count = 0, lock_time = NULL, last_login_ip = ?, last_login_time = NOW() WHERE id = ?',
       [getClientIP(request), user.id]
     );
+
+    // 登录成功后清零该 IP 的限流计数。
+    // 历史缺陷：限流按 clientIP 计窗口（默认 15min / 20 次），而登录成功**不清零**，
+    // 于是「合法高频登录」（E2E 并发跑多个 spec × 多浏览器、或同一 NAT 出口的多名员工）
+    // 会一路累积到阈值后被 429 集体拒绝；且 reset-lock 只清 DB 的 login_fail_count，
+    // 清不掉这里的计数 → 运维/测试完全没有解锁手段。
+    // 安全性不变：爆破行为只会失败，失败计数不进此分支，仍会被正常限流。
+    try {
+      await resetRateLimit(clientIP, 'login');
+    } catch {
+      // 限流计数清理失败不影响登录结果
+    }
 
     const userRoles = await query<UserRoleRow>(
       `SELECT r.id, r.role_code, r.role_name, r.data_scope

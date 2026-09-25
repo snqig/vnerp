@@ -218,7 +218,16 @@ export const POST = withPermission(
         }
       }
 
-      const orderResult = await execute(
+      // 必须用 conn.execute 走同一事务连接。
+      // 历史缺陷（自死锁）：此处原用**模块级 execute()**，会从连接池另开一条连接；
+      // 而本次事务已在上面用 `SELECT ... FROM prod_work_order ... FOR UPDATE` 锁住了工单行，
+      // prd_material_issue.work_order_id 又有外键指向 prod_work_order.id，
+      // 于是 INSERT 做参照完整性检查时需要给父行加 S 锁 → 被自己那条事务的 X 锁挡住 → LOCK WAIT；
+      // 而事务又要等这条 INSERT 返回才 COMMIT —— 自己等自己，直到 innodb_lock_wait_timeout。
+      // 运行时证据：INNODB_TRX 同时出现
+      //   trx(RUNNING, rowsLocked=3) 持有 FOR UPDATE；trx(LOCK WAIT) 卡在本 INSERT。
+      // 接口表现：POST /api/production/material-issue 永久挂起（无响应），E2E TC-PROD-003 超时。
+      const [issueHeader] = await conn.execute(
         'INSERT INTO prd_material_issue (issue_no, work_order_id, work_order_no, warehouse_id, issue_date, issue_type, operator_name, status, remark) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)',
         [
           issueNo,
@@ -231,7 +240,7 @@ export const POST = withPermission(
           remark || null,
         ]
       );
-      const issueId = orderResult.insertId;
+      const issueId = (issueHeader as DbResultSetHeader).insertId;
 
       for (const item of items) {
         await conn.execute(

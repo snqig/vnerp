@@ -7,7 +7,7 @@ import { successResponse, errorResponse, logOperation } from '@/lib/api-response
 import { randomUUID } from 'crypto';
 
 import { withPermission } from '@/lib/api-permissions';
-import { AppError } from '@/lib/error-handling';
+import { AppError, BusinessError } from '@/lib/error-handling';
 import { WorkOrderStatus, WORK_ORDER_STATUSES_ALLOW_INBOUND } from '@/lib/constants';
 import { FinishOrderApprovedEvent } from '@/domain/production/events/FinishOrderEvents';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
@@ -110,7 +110,7 @@ export const POST = withPermission(async (request: NextRequest) => {
         [work_order_id]
       );
       if (woRows.length === 0) {
-        throw new Error(ts('k_lmufdi'));
+        throw new BusinessError(ts('k_lmufdi'), 'WORK_ORDER_NOT_FOUND');
       }
       const wo = woRows[0];
       // prod_work_order.status 是 varchar 状态机，禁止数值比较：旧写法 `status < 20` /
@@ -181,17 +181,19 @@ export const PUT = withPermission(async (request: NextRequest) => {
       );
 
       if (inboundRows.length === 0) {
-        throw new Error(ts('k_5pww03'));
+        throw new BusinessError(ts('k_5pww03'), 'INBOUND_NOT_FOUND');
       }
 
       const inbound = inboundRows[0];
 
       if (Number(inbound.status ?? 0) >= 3) {
-        throw new Error(ts('k_1bwwx89'));
+        throw new BusinessError(ts('k_1bwwx89'), 'INBOUND_ALREADY_POSTED');
       }
 
       if (inbound.qc_status === 'fail') {
-        throw new Error(ts('k_kq1av2'));
+        // 业务规则错误必须走 AppError 家族，否则 handleError 会把普通 Error
+        // 统一吞成 500「服务器内部错误」，用户看不到可读原因（DTO 校验同款问题）。
+        throw new BusinessError(ts('k_kq1av2'), 'QC_FAILED_REJECT_POST');
       }
 
       const [itemRows] = await conn.execute(
