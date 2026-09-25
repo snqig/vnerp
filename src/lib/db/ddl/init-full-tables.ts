@@ -1623,3 +1623,19 @@ export const CREATE_TABLE_EQP_DOCUMENT = `CREATE TABLE IF NOT EXISTS eqp_documen
       KEY idx_equipment (equipment_id),
       KEY idx_doc_type (doc_type)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备文档管理表'`;
+
+export const CREATE_TABLE_EQP_STATUS_LOG = `CREATE TABLE IF NOT EXISTS eqp_status_log (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      equipment_id BIGINT UNSIGNED NOT NULL COMMENT '设备ID',
+      equipment_code VARCHAR(50) COMMENT '设备编码',
+      equipment_name VARCHAR(100) COMMENT '设备名称',
+      from_status TINYINT COMMENT '变更前状态: 1-运行, 2-待机, 3-维修, 4-停机',
+      to_status TINYINT NOT NULL COMMENT '变更后状态: 1-运行, 2-待机, 3-维修, 4-停机',
+      operator_id BIGINT UNSIGNED COMMENT '操作人ID',
+      operator_name VARCHAR(50) COMMENT '操作人姓名',
+      remark VARCHAR(500) COMMENT '变更原因/备注',
+      create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      KEY idx_equipment (equipment_id),
+      KEY idx_create_time (create_time)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备状态变更日志表'`;
