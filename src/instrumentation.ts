@@ -25,4 +25,12 @@ export async function register(): Promise<void> {
   // DB 未就绪或权限不足只会告警，绝不阻塞服务启动。
   const { bootstrapSystemConfig } = await import('@/lib/system-config-seed');
   await bootstrapSystemConfig();
+
+  // ── 启动任务：事件总线（OutboxPoller / StreamConsumer）──────────────────
+  // 原先 poller 只由「首个 API 请求」经 withApplicationInitialization 启动，
+  // 而该函数全仓并无引用 → 冷启动后若无人访问，outbox 事件会一直积压。
+  // 此处改为进程启动即启动；initializeApplication() 内部有幂等守卫
+  // （globalThis 单例状态 + OutboxPoller.isRunning()），重复调用安全。
+  const { initializeApplication } = await import('@/application/AppInitializer');
+  initializeApplication();
 }

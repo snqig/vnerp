@@ -238,3 +238,10 @@ docker-compose.monitoring.yml
 
 # 归档目录（本地产物，不入仓；已被 .* 隐式忽略，显式声明）
 .workbuddy/archive/
+
+# 临时诊断/工具产物（本地生成，不入仓）—— 2026-09-26 上线前整理补入
+add_stats_cards.py
+tmp-query.mjs
+temp_statscards_found.txt
+tsc_errors.txt
+rail-dashboard/

@@ -548,15 +548,22 @@
     100% { transform: rotate(360deg); }
   }
   
-  /* 科技感卡片 */
+  /* 科技感卡片：浅色 = 暖米白底 + 深赭石描边；深色 = 原科技蓝（见 .dark 覆盖） */
   .tech-card {
     animation: techCardIn 0.6s ease-out both;
-    background: rgba(9, 22, 55, 0.6);
-    border: 1px solid rgba(6, 182, 212, 0.15);
+    background: linear-gradient(135deg, #FDFBF6 0%, #F7F0E2 100%);
+    border: 1px solid rgba(138, 74, 34, 0.22);
     backdrop-filter: blur(12px);
     border-radius: 0.75rem;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 2px 10px rgba(120, 72, 30, 0.06);
+  }
+
+  .dark .tech-card {
+    background: rgba(9, 22, 55, 0.6);
+    border-color: rgba(6, 182, 212, 0.15);
+    box-shadow: none;
   }
   
   .tech-card::before {
@@ -566,8 +573,12 @@
     left: -100%;
     width: 100%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.6), transparent);
+    background: linear-gradient(90deg, transparent, rgba(138, 74, 34, 0.5), transparent);
     animation: scanLine 3s linear infinite;
+  }
+
+  .dark .tech-card::before {
+    background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.6), transparent);
   }
   
   @keyframes techCardIn {
@@ -588,11 +599,26 @@
   .tech-card-delay-6 { animation-delay: 0.6s; }
   
   .tech-glow {
+    box-shadow: 0 2px 10px rgba(120, 72, 30, 0.08), inset 0 1px 0 rgba(138, 74, 34, 0.10);
+  }
+
+  .dark .tech-glow {
     box-shadow: 0 0 15px rgba(6, 182, 212, 0.1), inset 0 1px 0 rgba(6, 182, 212, 0.1);
   }
   
   .tech-glow:hover {
+    box-shadow: 0 6px 18px rgba(120, 72, 30, 0.14), inset 0 1px 0 rgba(138, 74, 34, 0.16);
+  }
+
+  .dark .tech-glow:hover {
     box-shadow: 0 0 25px rgba(6, 182, 212, 0.2), inset 0 1px 0 rgba(6, 182, 212, 0.15);
+  }
+
+  /* tech-flat：浅色模式下彻底去阴影（含 hover），用于列表/监控类容器。
+     仅浅色生效，深色模式仍保留 .tech-glow 的科技发光。 */
+  html:not(.dark) .tech-flat,
+  html:not(.dark) .tech-flat:hover {
+    box-shadow: none;
   }
   
   .tech-border-glow {
@@ -755,6 +781,117 @@
  * VNERP 企业级主题扩展样式
  * 与现有浅色/深色模式完全独立，互不干扰
  */
+
+/* 仪表盘根容器 / header 卡片背景：跟随全局主题。
+   浅色 = 暖米白渐变（暖米白底）；深色 = 保留原科技蓝渐变。
+   配合 .dark 类（ThemeToggle 在 <html> 上切换）。 */
+.dashboard-gradient {
+  background: linear-gradient(135deg, #FDFBF6 0%, #F1E7D6 100%);
+}
+.dark .dashboard-gradient {
+  background: linear-gradient(135deg, #091637 0%, #010205 100%);
+}
+
+/* ============================================================================
+   仪表盘浅色模式：暖米白底 + 深赭石强调
+   仅浅色生效（html:not(.dark)），深色模式保持原「科技蓝」外观完全不变。
+   - .dash-scope  仪表盘页面根容器：把图表里硬编码的「白色墨」重着色为深墨
+   - .glass-scope 玻璃仪表 GlassGauge：同上
+   （CSS 规则优先级高于 SVG presentation attribute，故无需改 JSX 属性）
+   ========================================================================== */
+
+/* 图表 / 手写 SVG 的白色描边与文字。
+   浅色下必须加深：轴标签/图例原先落到 #94A3B8，在暖米白(#FDFBF6)上对比度仅 ~2.3:1，
+   肉眼「看不清」；统一压到 slate-600/700 级别（≥4.5:1）。 */
+html:not(.dark) .dash-scope [stroke="rgba(255,255,255,0.1)"] { stroke: #CBD5E1; }
+html:not(.dark) .dash-scope [stroke="rgba(255,255,255,0.15)"] { stroke: #CBD5E1; }
+html:not(.dark) .dash-scope [fill="white"] { fill: #0F172A; }
+html:not(.dark) .dash-scope [fill="rgba(255,255,255,0.8)"] { fill: #1E293B; }
+html:not(.dark) .dash-scope [fill="rgba(255,255,255,0.7)"] { fill: #334155; }
+html:not(.dark) .dash-scope [fill="rgba(255,255,255,0.6)"] { fill: #334155; }
+html:not(.dark) .dash-scope [fill="rgba(255,255,255,0.5)"] { fill: #475569; }
+html:not(.dark) .dash-scope [fill="rgba(255,255,255,0.4)"] { fill: #475569; }
+html:not(.dark) .dash-scope [fill="rgba(255,255,255,0.25)"] { fill: #64748B; }
+html:not(.dark) .dash-scope [fill="rgba(255,255,255,0.3)"] { fill: #475569; }
+html:not(.dark) .dash-scope [fill="rgba(255,255,255,0.35)"] { fill: #475569; }
+
+/* Recharts：坐标轴刻度 / 图例 / 提示框 */
+html:not(.dark) .dash-scope .recharts-cartesian-axis-tick-value { fill: #64748B; }
+html:not(.dark) .dash-scope .recharts-legend-item-text { color: #475569 !important; }
+html:not(.dark) .dash-scope .recharts-default-tooltip {
+  background-color: #FDFBF6 !important;
+  border-color: rgba(138, 74, 34, 0.3) !important;
+}
+html:not(.dark) .dash-scope .recharts-tooltip-label,
+html:not(.dark) .dash-scope .recharts-tooltip-item { color: #334155 !important; }
+
+/* 玻璃仪表 GlassGauge：白色玻璃墨 → 深墨 */
+html:not(.dark) .glass-scope [stroke="rgba(255,255,255,0.04)"] { stroke: rgba(51, 65, 85, 0.10); }
+html:not(.dark) .glass-scope [stroke="rgba(255,255,255,0.05)"] { stroke: rgba(51, 65, 85, 0.10); }
+html:not(.dark) .glass-scope [stroke="rgba(255,255,255,0.1)"] { stroke: rgba(51, 65, 85, 0.16); }
+html:not(.dark) .glass-scope [stroke="rgba(255,255,255,0.12)"] { stroke: rgba(51, 65, 85, 0.22); }
+html:not(.dark) .glass-scope [fill="rgba(255,255,255,0.03)"] { fill: rgba(51, 65, 85, 0.05); }
+html:not(.dark) .glass-scope [fill="rgba(255,255,255,0.12)"] { fill: rgba(51, 65, 85, 0.20); }
+html:not(.dark) .glass-scope [fill="rgba(255,255,255,0.3)"] { fill: rgba(51, 65, 85, 0.45); }
+html:not(.dark) .glass-scope [fill="rgba(255,255,255,0.35)"] { fill: rgba(51, 65, 85, 0.50); }
+html:not(.dark) .glass-scope [fill="rgba(255,255,255,0.4)"] { fill: rgba(51, 65, 85, 0.55); }
+html:not(.dark) .glass-scope [fill="white"] { fill: #1E293B; }
+html:not(.dark) .glass-scope [stop-color="rgba(255,255,255,0.03)"] { stop-color: rgba(51, 65, 85, 0.05); }
+html:not(.dark) .glass-scope [stop-color="rgba(255,255,255,0.06)"] { stop-color: rgba(51, 65, 85, 0.10); }
+html:not(.dark) .glass-scope [stop-color="rgba(255,255,255,0.08)"] { stop-color: rgba(51, 65, 85, 0.14); }
+html:not(.dark) .glass-scope [stop-color="rgba(255,255,255,0.12)"] { stop-color: rgba(51, 65, 85, 0.20); }
+html:not(.dark) .glass-scope [stop-color="rgba(0,0,0,0.2)"] { stop-color: rgba(120, 90, 60, 0.05); }
+
+/* ============================================================================
+   仪表盘浅色模式：浅色系强调文字加深
+   300/400 级 Tailwind 色（#4ade80 / #f87171 / #fbbf24 …）是为深色底设计的，
+   直接落在暖米白卡面上对比度只有 1.6~2.6:1 —— 数值、图例、仪表读数「看不清」。
+   这里仅在浅色模式把它们压到 600/700 级（≥4.5:1）。深色模式完全不受影响
+   （选择器带 html:not(.dark)，且 dark:text-* 变体是另一个类名，不会被命中）。
+   ========================================================================== */
+html:not(.dark) .dash-scope .text-green-300,
+html:not(.dark) .dash-scope .text-green-400 { color: #15803d; }
+html:not(.dark) .dash-scope .text-emerald-300,
+html:not(.dark) .dash-scope .text-emerald-400 { color: #047857; }
+html:not(.dark) .dash-scope .text-teal-300,
+html:not(.dark) .dash-scope .text-teal-400 { color: #0f766e; }
+html:not(.dark) .dash-scope .text-red-300,
+html:not(.dark) .dash-scope .text-red-400 { color: #b91c1c; }
+html:not(.dark) .dash-scope .text-rose-300,
+html:not(.dark) .dash-scope .text-rose-400 { color: #be123c; }
+html:not(.dark) .dash-scope .text-amber-300,
+html:not(.dark) .dash-scope .text-amber-400 { color: #b45309; }
+html:not(.dark) .dash-scope .text-yellow-300,
+html:not(.dark) .dash-scope .text-yellow-400 { color: #a16207; }
+html:not(.dark) .dash-scope .text-orange-300,
+html:not(.dark) .dash-scope .text-orange-400 { color: #c2410c; }
+html:not(.dark) .dash-scope .text-cyan-300,
+html:not(.dark) .dash-scope .text-cyan-400 { color: #0e7490; }
+html:not(.dark) .dash-scope .text-sky-300,
+html:not(.dark) .dash-scope .text-sky-400 { color: #0369a1; }
+html:not(.dark) .dash-scope .text-blue-300,
+html:not(.dark) .dash-scope .text-blue-400 { color: #1d4ed8; }
+html:not(.dark) .dash-scope .text-indigo-300,
+html:not(.dark) .dash-scope .text-indigo-400 { color: #4338ca; }
+html:not(.dark) .dash-scope .text-violet-300,
+html:not(.dark) .dash-scope .text-violet-400 { color: #6d28d9; }
+html:not(.dark) .dash-scope .text-purple-300,
+html:not(.dark) .dash-scope .text-purple-400 { color: #7e22ce; }
+html:not(.dark) .dash-scope .text-pink-300,
+html:not(.dark) .dash-scope .text-pink-400 { color: #be185d; }
+html:not(.dark) .dash-scope .text-slate-300,
+html:not(.dark) .dash-scope .text-slate-400 { color: #64748b; }
+
+/* 玻璃仪表 / 玻璃旋钮内部同类强调色 */
+html:not(.dark) .glass-scope .text-green-300,
+html:not(.dark) .glass-scope .text-green-400 { color: #15803d; }
+html:not(.dark) .glass-scope .text-red-300,
+html:not(.dark) .glass-scope .text-red-400 { color: #b91c1c; }
+html:not(.dark) .glass-scope .text-cyan-300,
+html:not(.dark) .glass-scope .text-cyan-400 { color: #0e7490; }
+html:not(.dark) .glass-scope .text-slate-300,
+html:not(.dark) .glass-scope .text-slate-400 { color: #64748b; }
+
 
 /* 侧边栏深色模式 - 使用企业级蓝色 */
 .snow-sidebar-dark aside,

@@ -127,7 +127,7 @@ export default function DashboardPage() {
           const producingCount = orders.filter((o: Loose) => o.status === 3).length;
           const completedCount = orders.filter((o: Loose) => o.status === 4).length;
           const totalValue = orders.reduce(
-            (sum: number, o: Loose) => sum + (o.total_amount || 0),
+            (sum: number, o: Loose) => sum + Number(o.total_amount || 0),
             0
           );
 
@@ -137,7 +137,7 @@ export default function DashboardPage() {
               customer: o.customer_name,
               product: o.items?.[0]?.material_name || '-',
               quantity:
-                o.items?.reduce((sum: number, item: Loose) => sum + (item.quantity || 0), 0) || 0,
+                o.items?.reduce((sum: number, item: Loose) => sum + Number(item.quantity || 0), 0) || 0,
               status: STATUS_MAP[o.status]?.labelKey
                 ? t(STATUS_MAP[o.status].labelKey)
                 : t('unknown'),

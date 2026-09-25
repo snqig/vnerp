@@ -7,7 +7,9 @@ import { notFound } from 'next/navigation';
 import { locales, type Locale } from '@/i18n/locales';
 import { AuthProvider, type InitialAuthData } from '@/contexts/AuthContext';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { RoutePermissionGuard } from '@/components/auth/RoutePermissionGuard';
 import { ToastProviderComponent } from '@/components/ui/toast';
+import { Toaster } from '@/components/ui/sonner';
 import { SnowAdminThemeProvider } from '@/hooks/useSnowAdminTheme';
 import SystemConfigInitializer from '@/components/SystemConfigInitializer';
 import { HtmlLangSetter } from '@/components/HtmlLangSetter';
@@ -118,8 +120,13 @@ export default async function LocaleLayout({
             <AuthProvider initialAuth={initialAuth}>
               <SystemConfigInitializer />
               <ToastProviderComponent>
-                <AuthGuard>{children}</AuthGuard>
+                <AuthGuard>
+                  <RoutePermissionGuard>{children}</RoutePermissionGuard>
+                </AuthGuard>
               </ToastProviderComponent>
+              {/* sonner 管线：全站 76 个文件用 `import { toast } from 'sonner'`，
+                  此前 <Toaster/> 从未挂载 → 提示静默丢失。此处挂载即恢复。 */}
+              <Toaster position="top-right" />
             </AuthProvider>
           </SnowAdminThemeProvider>
         </CompanyProfileProvider>

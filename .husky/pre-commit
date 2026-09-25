@@ -1,2 +1,3 @@
 node node_modules/lint-staged/bin/lint-staged.js --no-stash &&
-node scripts/verify-codemod-consistency.mjs
+node scripts/verify-codemod-consistency.mjs &&
+node scripts/permission-gate.mjs
