@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -13,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const auditNo = searchParams.get('auditNo') || '';
   const supplierName = searchParams.get('supplierName') || '';
   const auditType = searchParams.get('auditType') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
 
   let where = 'WHERE deleted = 0';
   const params: SqlValue[] = [];
@@ -29,7 +30,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     where += ' AND audit_type = ?';
     params.push(auditType);
   }
-  if (status !== '') {
+  if (status !== undefined) {
     where += ' AND status = ?';
     params.push(Number(status));
   }

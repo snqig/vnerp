@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { queryOne, execute } from '@/lib/db';
 import { UnqualifiedApplicationService } from '@/application/services/UnqualifiedApplicationService';
 import { MysqlUnqualifiedRepository } from '@/infrastructure/repositories/MysqlUnqualifiedRepository';
 import {
@@ -111,6 +112,17 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
     if (!inspection_id || inspection_id <= 0) {
       return errorResponse(ts('k_sldnwj'), 400);
     }
+    // 物料编码必填 + 存在性校验
+    if (!material_code || !material_code.trim()) {
+      return errorResponse(ts('materialCodeRequired'), 400);
+    }
+    const material = await queryOne(
+      'SELECT id, material_code, material_name FROM inv_material WHERE material_code = ? AND deleted = 0 LIMIT 1',
+      [material_code.trim()]
+    );
+    if (!material) {
+      return errorResponse(ts('materialNotFound', { code: material_code.trim() }), 404);
+    }
     if (quantity === undefined || quantity <= 0) {
       return errorResponse(ts('k_1r79tz4'), 400);
     }
@@ -122,9 +134,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       inspectionId: Number(inspection_id),
       sourceType: source_type,
       sourceNo: source_no,
-      materialId: material_id ? Number(material_id) : undefined,
-      materialCode: material_code,
-      materialName: material_name,
+      materialId: Number(material.id),
+      materialCode: material.material_code,
+      materialName: material.material_name,
       quantity: Number(quantity),
       defectType: defect_type,
       defectDesc: defect_desc,
@@ -202,6 +214,55 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
       });
 
       return successResponse(result, ts('k_da7gln'));
+    }
+
+    // 通用更新：允许修改物料/数量/缺陷/责任人等编辑期字段
+    if (action === 'update') {
+      const allowed = [
+        'quantity',
+        'defect_type',
+        'defect_desc',
+        'responsible_dept',
+        'responsible_person',
+        'remark',
+      ];
+      const setClauses: string[] = [];
+      const params: any[] = [];
+
+      // 物料编码单独处理：查 DB 自动填 material_id/material_name
+      if (body.material_code !== undefined) {
+        const code = String(body.material_code || '').trim();
+        if (!code) {
+          return errorResponse(ts('materialCodeRequired'), 400);
+        }
+        const material = await queryOne(
+          'SELECT id, material_code, material_name FROM inv_material WHERE material_code = ? AND deleted = 0 LIMIT 1',
+          [code]
+        );
+        if (!material) {
+          return errorResponse(ts('materialNotFound', { code }), 404);
+        }
+        setClauses.push('material_code = ?', 'material_id = ?', 'material_name = ?');
+        params.push(material.material_code, Number(material.id), material.material_name);
+      }
+
+      for (const f of allowed) {
+        if (body[f] !== undefined) {
+          setClauses.push(f + ' = ?');
+          params.push(f === 'quantity' ? Number(body[f]) : body[f]);
+        }
+      }
+
+      if (setClauses.length === 0) {
+        return errorResponse(ts('k_17a0jsi'), 400);
+      }
+      params.push(userInfo.userId, Number(id));
+      const sql =
+        'UPDATE qc_unqualified SET ' +
+        setClauses.join(', ') +
+        ', update_by = ?, update_time = NOW() WHERE id = ? AND deleted = 0';
+      const result = await execute(sql, params);
+      return successResponse({ id, affected: result.affectedRows }, ts('k_gchcqi'));
     }
 
     return errorResponse(ts('k_17a0jsi'), 400);

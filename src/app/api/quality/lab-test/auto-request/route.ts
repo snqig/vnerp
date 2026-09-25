@@ -21,7 +21,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const plan = await aql.getSamplingPlan(Number(lotSize));
 
   if (!plan) {
-    return errorResponse(`未找到批量 ${lotSize} 对应的 AQL 抽样方案`, 400, 400);
+    return errorResponse(ts('aqlPlanNotFound', { lotSize }), 400, 400);
   }
 
   // 2. Generate lab test number

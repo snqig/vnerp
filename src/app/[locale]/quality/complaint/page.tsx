@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, MessageSquare, CheckCircle, Clock, AlertTriangle, Archive } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   buildQualityFormMessages,
@@ -44,6 +44,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface ComplaintRecord {
   id?: number;
@@ -58,7 +59,7 @@ interface ComplaintRecord {
   defect_date: string;
   defect_qty: number;
   defect_desc: string;
-  defect_type: string;
+  complaint_type: string;
   severity: number;
   reporter: string;
   report_date: string;
@@ -89,13 +90,10 @@ const sourceMap: Record<string, string> = {
   audit: 'auditDiscovery',
   other: 'other',
 };
-const defectTypeMap: Record<string, string> = {
-  appearance: 'appearanceDefect',
-  dimension: 'dimensionDefect',
-  function: 'functionDefect',
-  color: 'colorDefect',
-  adhesion: 'adhesionDefect',
-  other: 'other',
+const complaintTypeMap: Record<string, string> = {
+  delivery: 'complaintTypeDelivery',
+  quality: 'complaintTypeQuality',
+  service: 'complaintTypeService',
 };
 const severityMap: Record<
   number,
@@ -131,6 +129,13 @@ export default function Complaint8DPage() {
   const [searchCustomer, setSearchCustomer] = useState('');
   const [searchProduct, setSearchProduct] = useState('');
   const [searchStatus, setSearchStatus] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    processing: 0,
+    resolved: 0,
+    closed: 0,
+    monthlyCount: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [show8DDialog, setShow8DDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<ComplaintRecord>>({});
@@ -159,8 +164,21 @@ export default function Complaint8DPage() {
     } catch {}
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/quality/complaint/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
 
   const handleSave = async () => {
@@ -229,7 +247,25 @@ export default function Complaint8DPage() {
 
   return (
     <MainLayout title={t('complaint8DManagement')}>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6">        <StatsCards
+          configs={[
+            { key: 'pending', label: '待处理', icon: Clock, ...StatsTheme.orange },
+            { key: 'processing', label: '处理中', icon: MessageSquare, ...StatsTheme.blue },
+            { key: 'resolved', label: '已解决', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'closed', label: '已关闭', icon: Archive, ...StatsTheme.gray },
+            { key: 'monthlyCount', label: '本月客诉数', icon: AlertTriangle, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'processing', count: stats.processing },
+            { key: 'resolved', count: stats.resolved },
+            { key: 'closed', count: stats.closed },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
@@ -275,7 +311,7 @@ export default function Complaint8DPage() {
               </div>
               <Button
                 onClick={() => {
-                  setEditItem({ complaint_source: 'customer', defect_type: 'other', severity: 2 });
+                  setEditItem({ complaint_source: 'customer', complaint_type: 'quality', severity: 2 });
                   setShowDialog(true);
                 }}
               >
@@ -290,10 +326,10 @@ export default function Complaint8DPage() {
                   { key: 'customer_name', label: tc('customerName'), width: 20 },
                   { key: 'product_name', label: tc('productName'), width: 20 },
                   {
-                    key: 'defect_type',
+                    key: 'complaint_type',
                     label: t('defectType'),
                     width: 12,
-                    formatter: (v) => t(defectTypeMap[v] || v),
+                    formatter: (v) => t(complaintTypeMap[v] || v),
                   },
                   { key: 'defect_qty', label: t('defectQty'), width: 10 },
                   {
@@ -372,20 +408,20 @@ export default function Complaint8DPage() {
                     </TableCell>
                     <TableCell className="font-mono text-sm">{item.complaint_no}</TableCell>
                     <TableCell>
-                      {t(sourceMap[item.complaint_source] || item.complaint_source)}
+                      {t(sourceMap[item.complaint_source] || 'other')}
                     </TableCell>
                     <TableCell>{item.customer_name}</TableCell>
                     <TableCell>{item.product_name}</TableCell>
-                    <TableCell>{t(defectTypeMap[item.defect_type] || item.defect_type)}</TableCell>
+                    <TableCell>{t(complaintTypeMap[item.complaint_type] || 'other')}</TableCell>
                     <TableCell>
                       <Badge variant={severityMap[item.severity]?.variant || 'outline'}>
-                        {t(severityMap[item.severity]?.label || tc('unknown'))}
+                        {severityMap[item.severity] ? t(severityMap[item.severity].label) : t('unknown')}
                       </Badge>
                     </TableCell>
                     <TableCell>{item.defect_qty}</TableCell>
                     <TableCell>
                       <Badge variant={statusMap[item.status]?.variant || 'outline'}>
-                        {t(statusMap[item.status]?.label || tc('unknown'))}
+                        {t(statusMap[item.status]?.label || 'unknown')}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -538,14 +574,14 @@ export default function Complaint8DPage() {
               <div>
                 <Label>{t('defectType')}</Label>
                 <Select
-                  value={editItem.defect_type || 'other'}
-                  onValueChange={(v: string) => setEditItem({ ...editItem, defect_type: v })}
+                  value={editItem.complaint_type || 'other'}
+                  onValueChange={(v: string) => setEditItem({ ...editItem, complaint_type: v })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(defectTypeMap).map(([k, v]) => (
+                    {Object.entries(complaintTypeMap).map(([k, v]) => (
                       <SelectItem key={k} value={k}>
                         {t(v)}
                       </SelectItem>

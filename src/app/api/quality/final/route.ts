@@ -12,6 +12,7 @@ import {
   firstZodMessage,
 } from '@/lib/validators/quality-form';
 import type { DbRow } from '@/types/db';
+import { stringFilter } from '@/lib/query-filter';
 
 // 本地分页查询辅助函数
 async function queryPaginatedLocal(
@@ -43,7 +44,7 @@ async function queryPaginatedLocal(
 // 获取终检列表
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
-  const status = searchParams.get('status');
+  const status = stringFilter(searchParams.get('status'));
   const cardNo = searchParams.get('cardNo');
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '10');
@@ -51,31 +52,33 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   let sql = `
     SELECT 
       pc.id,
-      pc.card_no as cardNo,
-      pc.qr_code as qrCode,
-      pc.work_order_no as workOrderNo,
-      pc.product_code as productCode,
-      pc.product_name as productName,
-      pc.material_spec as materialSpec,
-      pc.work_order_date as workOrderDate,
-      pc.plan_qty as planQty,
-      pc.main_label_no as mainLabelNo,
-      pc.burdening_status as burdeningStatus,
-      pc.lock_status as lockStatus,
-      pc.create_user_name as createUserName,
-      pc.create_time as createTime,
-      pc.update_time as updateTime,
-      COALESCE(sc.customer_name, '') as customerName,
-      COALESCE(sc.customer_code, '') as customerCode,
-      COALESCE(sc.process_flow1, '') as processFlow1,
-      COALESCE(sc.process_flow2, '') as processFlow2,
-      COALESCE(sc.print_type, pc.material_spec) as printType,
-      COALESCE(sc.finished_size, '') as finishedSize,
+      -- ④ 命名统一：SQL 别名一律 snake_case（与库内列名一致，消除响应键驼峰）。
+      -- 消费端 src/app/[locale]/quality/final/page.tsx 已对以下 25 个键全部实现「snake ?? camel」双读兜底。
+      pc.card_no as card_no,
+      pc.qr_code as qr_code,
+      pc.work_order_no as work_order_no,
+      pc.product_code as product_code,
+      pc.product_name as product_name,
+      pc.material_spec as material_spec,
+      pc.work_order_date as work_order_date,
+      pc.plan_qty as plan_qty,
+      pc.main_label_no as main_label_no,
+      pc.burdening_status as burdening_status,
+      pc.lock_status as lock_status,
+      pc.create_user_name as create_user_name,
+      pc.create_time as create_time,
+      pc.update_time as update_time,
+      COALESCE(sc.customer_name, '') as customer_name,
+      COALESCE(sc.customer_code, '') as customer_code,
+      COALESCE(sc.process_flow1, '') as process_flow1,
+      COALESCE(sc.process_flow2, '') as process_flow2,
+      COALESCE(sc.print_type, pc.material_spec) as print_type,
+      COALESCE(sc.finished_size, '') as finished_size,
       COALESCE(sc.tolerance, '') as tolerance,
-      COALESCE(sc.quality_manager, '') as qualityManager,
-      COALESCE(sc.packing_type, '') as packingType,
-      COALESCE(sc.slice_per_box, '') as slicePerBox,
-      COALESCE(sc.slice_per_bundle, '') as slicePerBundle
+      COALESCE(sc.quality_manager, '') as quality_manager,
+      COALESCE(sc.packing_type, '') as packing_type,
+      COALESCE(sc.slice_per_box, '') as slice_per_box,
+      COALESCE(sc.slice_per_bundle, '') as slice_per_bundle
     FROM prd_process_card pc
     LEFT JOIN prd_standard_card sc ON CAST(pc.product_code AS UNSIGNED) = sc.id
     WHERE pc.deleted = 0 AND pc.burdening_status >= 2

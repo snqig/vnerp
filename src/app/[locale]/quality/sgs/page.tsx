@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Edit, Trash2, AlertTriangle, FileCheck, ShieldCheck } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, AlertTriangle, FileCheck, ShieldCheck, CheckCircle, Clock, FileSearch, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   buildQualityFormMessages,
@@ -43,6 +43,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface CertItem {
   id?: number;
@@ -100,6 +101,8 @@ const testResultMap: Record<
   PASS: { label: 'qualified', variant: 'default' },
   FAIL: { label: 'unqualified', variant: 'destructive' },
   PENDING: { label: 'pendingTest', variant: 'outline' },
+  合格: { label: 'qualified', variant: 'default' },
+  不合格: { label: 'unqualified', variant: 'destructive' },
 };
 
 const rohsTestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
@@ -238,6 +241,8 @@ export default function SGSManagementPage() {
   const t = useTranslations('Quality');
   const tc = useTranslations('Common');
 
+  const displayCertType = (type: string) => type === '其他' ? t('other') : type;
+
   const { toast } = useToast();
   const [list, setList] = useState<Cert[]>([]);
   const [total, setTotal] = useState(0);
@@ -246,6 +251,13 @@ export default function SGSManagementPage() {
   const [searchMaterial, setSearchMaterial] = useState('');
   const [searchCertType, setSearchCertType] = useState('');
   const [searchStatus, setSearchStatus] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    inspecting: 0,
+    passed: 0,
+    failed: 0,
+    monthlyCount: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Cert>>({});
@@ -290,8 +302,21 @@ export default function SGSManagementPage() {
     } catch {}
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/quality/sgs/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
   useEffect(() => {
     fetchWarning();
@@ -398,7 +423,7 @@ export default function SGSManagementPage() {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <ShieldCheck className="h-6 w-6 text-blue-600" />
+            <ShieldCheck className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             <h1 className="text-2xl font-bold">{t('sgsCertManagement')}</h1>
           </div>
           <div className="flex gap-2">
@@ -486,10 +511,28 @@ export default function SGSManagementPage() {
           </div>
         </div>
 
+        <StatsCards
+          configs={[
+            { key: 'pending', label: '待检验', icon: Clock, ...StatsTheme.orange },
+            { key: 'inspecting', label: '检验中', icon: FileSearch, ...StatsTheme.blue },
+            { key: 'passed', label: '已通过', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'failed', label: '未通过', icon: XCircle, ...StatsTheme.red },
+            { key: 'monthlyCount', label: '本月检验次数', icon: FileCheck, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'inspecting', count: stats.inspecting },
+            { key: 'passed', count: stats.passed },
+            { key: 'failed', count: stats.failed },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
         {warningData.total > 0 && (
-          <Card className="border-amber-200 bg-amber-50">
+          <Card className="border-amber-200 dark:border-amber-800 bg-amber-500/10">
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-amber-700">
+              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
                 <AlertTriangle className="h-4 w-4" />
                 <span className="text-sm font-medium">
                   {t('sgsCertWarning', {
@@ -569,7 +612,7 @@ export default function SGSManagementPage() {
                     <TableCell className="text-xs">{item.supplier_name || '-'}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-xs">
-                        {item.cert_type}
+                        {displayCertType(item.cert_type)}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -577,7 +620,7 @@ export default function SGSManagementPage() {
                         variant={testResultMap[item.test_result]?.variant || 'outline'}
                         className="text-xs"
                       >
-                        {t(testResultMap[item.test_result]?.label || item.test_result)}
+                        {t(testResultMap[item.test_result]?.label || 'pendingTest')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs">{item.test_org || '-'}</TableCell>
@@ -586,9 +629,9 @@ export default function SGSManagementPage() {
                       <span
                         className={
                           isExpired(item.expire_date)
-                            ? 'text-red-600 font-medium'
+                            ? 'text-red-600 dark:text-red-400 font-medium'
                             : isExpiring(item.expire_date)
-                              ? 'text-amber-600'
+                              ? 'text-amber-600 dark:text-amber-400'
                               : ''
                         }
                       >
@@ -633,7 +676,7 @@ export default function SGSManagementPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-6 w-6 p-0 text-red-600"
+                          className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                           onClick={() => {
                             if (item.id) handleDelete(item.id);
                           }}
@@ -885,7 +928,7 @@ export default function SGSManagementPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-6 w-6 p-0 text-red-600"
+                          className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
                           onClick={() => handleRemoveItem(idx)}
                         >
                           <Trash2 className="h-3 w-3" />
@@ -937,7 +980,7 @@ export default function SGSManagementPage() {
                   </div>
                   <div>
                     <span className="text-gray-500">{t('certType')}：</span>
-                    {detailItem.cert_type}
+                    {displayCertType(detailItem.cert_type)}
                   </div>
                   <div>
                     <span className="text-gray-500">{t('testResult')}：</span>
@@ -945,7 +988,7 @@ export default function SGSManagementPage() {
                       variant={testResultMap[detailItem.test_result]?.variant || 'outline'}
                       className="text-xs"
                     >
-                      {t(testResultMap[detailItem.test_result]?.label || detailItem.test_result)}
+                      {t(testResultMap[detailItem.test_result]?.label || 'pendingTest')}
                     </Badge>
                   </div>
                   <div>
@@ -965,9 +1008,9 @@ export default function SGSManagementPage() {
                     <span
                       className={
                         isExpired(detailItem.expire_date)
-                          ? 'text-red-600 font-medium'
+                          ? 'text-red-600 dark:text-red-400 font-medium'
                           : isExpiring(detailItem.expire_date)
-                            ? 'text-amber-600'
+                            ? 'text-amber-600 dark:text-amber-400'
                             : ''
                       }
                     >

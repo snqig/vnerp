@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -13,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const complaintNo = searchParams.get('complaintNo') || '';
   const customerName = searchParams.get('customerName') || '';
   const productName = searchParams.get('productName') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
 
   let where = 'WHERE deleted = 0';
   const params: SqlValue[] = [];
@@ -29,7 +30,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     where += ' AND product_name LIKE ?';
     params.push('%' + productName + '%');
   }
-  if (status !== '') {
+  if (status !== undefined) {
     where += ' AND status = ?';
     params.push(Number(status));
   }
@@ -58,7 +59,7 @@ export const POST = withPermission(
       defect_date,
       defect_qty,
       defect_desc,
-      defect_type,
+      complaint_type,
       severity,
       reporter,
       report_date,
@@ -77,8 +78,8 @@ export const POST = withPermission(
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
     const result = await execute(
-      `INSERT INTO qms_complaint (complaint_no, complaint_source, customer_id, customer_name, product_id, product_code, product_name, order_no, defect_date, defect_qty, defect_desc, defect_type, severity, reporter, report_date, remark)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO qms_complaint (complaint_no, complaint_source, customer_id, customer_name, product_id, product_code, product_name, order_no, defect_date, defect_qty, defect_desc, complaint_type, severity, reporter, report_date, remark, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         complaintNo,
         complaint_source || 'customer',
@@ -91,11 +92,12 @@ export const POST = withPermission(
         defect_date || null,
         defect_qty || 0,
         defect_desc || null,
-        defect_type || 'other',
+        complaint_type || 'quality',
         severity || 2,
         reporter || null,
         report_date || null,
         remark || null,
+        1, // 初始状态：registered（页面 statusMap 从 1 起，DB 默认 0 无法渲染）
       ]
     );
 
@@ -120,7 +122,7 @@ export const PUT = withPermission(
       defect_date,
       defect_qty,
       defect_desc,
-      defect_type,
+      complaint_type,
       severity,
       reporter,
       report_date,
@@ -189,9 +191,9 @@ export const PUT = withPermission(
       fields.push('defect_desc = ?');
       values.push(defect_desc);
     }
-    if (defect_type !== undefined) {
-      fields.push('defect_type = ?');
-      values.push(defect_type);
+    if (complaint_type !== undefined) {
+      fields.push('complaint_type = ?');
+      values.push(complaint_type);
     }
     if (severity !== undefined) {
       fields.push('severity = ?');

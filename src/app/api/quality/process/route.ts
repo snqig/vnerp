@@ -7,6 +7,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { StateMachineValidator, InspectStatus, StateTransitionLogger } from '@/lib/state-machine';
 import { generateDocNo, getQiPrefix } from '@/lib/global-config';
 import type { DbRow } from '@/types/db';
+import { stringFilter } from '@/lib/query-filter';
 
 // 本地分页查询辅助函数
 async function queryPaginatedLocal(
@@ -68,7 +69,7 @@ async function getCurrentInspectStatus(cardNo: string): Promise<InspectStatus> {
 // 获取品质检验列表
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
-  const status = searchParams.get('status');
+  const status = stringFilter(searchParams.get('status'));
   const cardNo = searchParams.get('cardNo');
   const cardId = searchParams.get('cardId');
   const page = parseInt(searchParams.get('page') || '1');
@@ -77,9 +78,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 按流程卡查询检验记录（检验记录弹窗用）
   if (cardId) {
     const records = await query(
-      `SELECT qi.id, qi.inspection_no AS inspectNo, qi.inspection_result AS inspectResult,
-              qi.qualified_qty AS qualifiedQty, qi.unqualified_qty AS defectQty,
-              qi.inspector, qi.remark, qi.inspection_date AS inspectTime
+      `SELECT qi.id, qi.inspection_no AS inspection_no, qi.inspection_result AS inspection_result,
+              qi.qualified_qty AS qualified_qty, qi.unqualified_qty AS unqualified_qty,
+              qi.inspector, qi.remark, qi.inspection_date AS inspection_date
        FROM qc_inspection qi
        JOIN prd_process_card pc ON qi.source_type = 'process_card' AND qi.source_no = pc.card_no
        WHERE pc.id = ? AND qi.deleted = 0
@@ -92,27 +93,27 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   let sql = `
     SELECT
       pc.id,
-      pc.card_no as cardNo,
-      pc.qr_code as qrCode,
-      pc.work_order_no as workOrderNo,
-      pc.product_code as productCode,
-      pc.product_name as productName,
-      pc.material_spec as materialSpec,
-      pc.work_order_date as workOrderDate,
-      pc.plan_qty as planQty,
-      pc.main_label_no as mainLabelNo,
-      pc.burdening_status as burdeningStatus,
-      pc.create_user_name as createUserName,
-      pc.create_time as createTime,
-      pc.update_time as updateTime,
-      sc.customer_name as customerName,
-      sc.customer_code as customerCode,
-      sc.process_flow1 as processFlow1,
-      sc.process_flow2 as processFlow2,
-      sc.print_type as printType,
-      sc.finished_size as finishedSize,
+      pc.card_no as card_no,
+      pc.qr_code as qr_code,
+      pc.work_order_no as work_order_no,
+      pc.product_code as product_code,
+      pc.product_name as product_name,
+      pc.material_spec as material_spec,
+      pc.work_order_date as work_order_date,
+      pc.plan_qty as plan_qty,
+      pc.main_label_no as main_label_no,
+      pc.burdening_status as burdening_status,
+      pc.create_user_name as create_user_name,
+      pc.create_time as create_time,
+      pc.update_time as update_time,
+      sc.customer_name as customer_name,
+      sc.customer_code as customer_code,
+      sc.process_flow1 as process_flow1,
+      sc.process_flow2 as process_flow2,
+      sc.print_type as print_type,
+      sc.finished_size as finished_size,
       sc.tolerance,
-      sc.quality_manager as qualityManager
+      sc.quality_manager as quality_manager
     FROM prd_process_card pc
     LEFT JOIN prd_standard_card sc ON CAST(pc.product_code AS UNSIGNED) = sc.id
     WHERE pc.deleted = 0 AND pc.burdening_status >= 1
@@ -154,7 +155,7 @@ export const POST = withPermission(
     // 验证检验结果值是否合法
     const validResults = ['pass', 'fail', 'concession', 'rework', 'scrap'];
     if (!validResults.includes(inspectResult)) {
-      return errorResponse(`无效的检验结果: ${inspectResult}`, 400);
+      return errorResponse(ts('invalidInspectResult', { value: inspectResult }), 400);
     }
 
     // 状态机验证
@@ -163,7 +164,10 @@ export const POST = withPermission(
 
     if (!StateMachineValidator.canTransitionInspect(currentStatus, targetStatus)) {
       return errorResponse(
-        `状态流转不合法: ${StateMachineValidator.getInspectStatusLabel(currentStatus)} -> ${StateMachineValidator.getInspectStatusLabel(targetStatus)}`,
+        ts('invalidStatusTransition', {
+          current: StateMachineValidator.getInspectStatusLabel(currentStatus),
+          target: StateMachineValidator.getInspectStatusLabel(targetStatus),
+        }),
         400
       );
     }
@@ -239,7 +243,7 @@ export const PUT = withPermission(
     // 验证检验结果值是否合法
     const validResults = ['pass', 'fail', 'concession', 'rework', 'scrap'];
     if (!validResults.includes(inspectResult)) {
-      return errorResponse(`无效的检验结果: ${inspectResult}`, 400);
+      return errorResponse(ts('invalidInspectResult', { value: inspectResult }), 400);
     }
 
     // 获取当前检验记录
@@ -259,7 +263,10 @@ export const PUT = withPermission(
 
     if (!StateMachineValidator.canTransitionInspect(currentStatus, targetStatus)) {
       return errorResponse(
-        `状态流转不合法: ${StateMachineValidator.getInspectStatusLabel(currentStatus)} -> ${StateMachineValidator.getInspectStatusLabel(targetStatus)}`,
+        ts('invalidStatusTransition', {
+          current: StateMachineValidator.getInspectStatusLabel(currentStatus),
+          target: StateMachineValidator.getInspectStatusLabel(targetStatus),
+        }),
         400
       );
     }

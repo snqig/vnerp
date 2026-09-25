@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, ClipboardCheck, CheckCircle, Clock, AlertTriangle, Calendar, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   buildQualityFormMessages,
@@ -43,6 +43,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface SupplierAuditRecord {
   id?: number;
@@ -52,6 +53,7 @@ interface SupplierAuditRecord {
   audit_type: string;
   audit_date: string;
   auditor: string;
+  auditor_name?: string;
   audit_scope: string;
   quality_system_score: number;
   delivery_score: number;
@@ -67,6 +69,7 @@ interface SupplierAuditRecord {
 }
 
 const auditTypeMap: Record<string, string> = {
+  annual: 'auditTypeAnnual',
   initial: 'initialAudit',
   routine: 'routineAudit',
   follow_up: 'followUpAudit',
@@ -102,6 +105,13 @@ export default function SupplierAuditPage() {
   const [page, setPage] = useState(1);
   const [searchSupplier, setSearchSupplier] = useState('');
   const [searchType, setSearchType] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    auditing: 0,
+    passed: 0,
+    failed: 0,
+    monthlyCount: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<SupplierAuditRecord>>({});
   const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'audit_no');
@@ -127,8 +137,21 @@ export default function SupplierAuditPage() {
     } catch {}
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/quality/supplier-audit/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
 
   const handleSave = async () => {
@@ -185,7 +208,25 @@ export default function SupplierAuditPage() {
 
   return (
     <MainLayout title={t('supplierQualityAudit')}>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6">        <StatsCards
+          configs={[
+            { key: 'pending', label: '待审核', icon: Clock, ...StatsTheme.orange },
+            { key: 'auditing', label: '审核中', icon: ClipboardCheck, ...StatsTheme.blue },
+            { key: 'passed', label: '已通过', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'failed', label: '未通过', icon: XCircle, ...StatsTheme.red },
+            { key: 'monthlyCount', label: '本月审核数', icon: Calendar, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'auditing', count: stats.auditing },
+            { key: 'passed', count: stats.passed },
+            { key: 'failed', count: stats.failed },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
@@ -219,7 +260,7 @@ export default function SupplierAuditPage() {
               <Button
                 onClick={() => {
                   setEditItem({
-                    audit_type: 'initial',
+                    audit_type: 'annual',
                     audit_result: 'pending',
                     quality_system_score: 0,
                     delivery_score: 0,
@@ -330,7 +371,7 @@ export default function SupplierAuditPage() {
                           size="sm"
                           variant="ghost"
                           onClick={() => {
-                            setEditItem(item);
+                            setEditItem({ ...item, auditor: (item.auditor ?? item.auditor_name ?? '') as string });
                             setShowDialog(true);
                           }}
                         >
@@ -361,7 +402,7 @@ export default function SupplierAuditPage() {
 
             <div className="flex items-center justify-between mt-4">
               <span className="text-sm text-muted-foreground">
-                {tc('totalRecords', { total })}
+                {tc('totalRecords', { count: total })}
               </span>
               <div className="flex gap-2">
                 <Button
@@ -401,7 +442,7 @@ export default function SupplierAuditPage() {
               <div>
                 <Label>{t('auditType')}</Label>
                 <Select
-                  value={editItem.audit_type || 'initial'}
+                  value={editItem.audit_type || 'annual'}
                   onValueChange={(v) => setEditItem({ ...editItem, audit_type: v })}
                 >
                   <SelectTrigger>

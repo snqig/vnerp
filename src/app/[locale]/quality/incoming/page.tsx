@@ -3,21 +3,10 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { authFetch } from '@/lib/auth-fetch';
 import { useRowSelection } from '@/lib/useRowSelection';
-import {
-  Search,
-  Plus,
-  Calendar,
-  CheckCircle2,
-  AlertCircle,
-  RefreshCw,
-  RotateCcw,
-  Edit,
-  Trash2,
-  BarChart2,
-  ClipboardList,
-} from 'lucide-react';
+import { Search, Plus, Calendar, CheckCircle2, AlertCircle, RefreshCw, RotateCcw, Edit, Trash2, BarChart2, BarChart3, ClipboardList, ClipboardCheck, CheckCircle, Clock, AlertTriangle, Loader, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,6 +55,7 @@ const getInspectionTypeOptions = (t: (key: string) => string) => [
   { value: 'full', label: t('fullInspection') },
   { value: 'sampling', label: t('samplingInspection') },
   { value: 'visual', label: t('visualInspection') },
+  { value: 'appearance', label: t('appearanceInspection') },
   { value: 'functional', label: t('functionalTest') },
 ];
 
@@ -98,27 +88,34 @@ const getStatusConfig = (
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > => ({
   pass: { label: tc('qualified'), variant: 'default' },
-  reject: { label: tc('unqualified'), variant: 'destructive' },
+  fail: { label: tc('unqualified'), variant: 'destructive' },
   pending: { label: t('pendingInspection'), variant: 'outline' },
 });
 
-// 将 API 返回的 camelCase 字段映射为页面内部格式
+// 将 API 返回的字段映射为页面内部格式。
+// ④ 命名统一过渡期：API 的 SQL 别名已由 camelCase 改为 snake_case，
+// 此处对每个来自响应行的字段做「snake ?? camel」双读，使改动前后都能正常取值。
 function mapApiToInternal(item: Loose): Loose {
   return {
     dbId: item.id,
-    id: item.inspectionNo,
-    date: item.inspectionDate,
-    supplier: item.supplierName,
-    materialCode: item.materialCode,
-    materialName: item.materialName,
+    id: item.inspection_no ?? item.inspectionNo,
+    date: item.inspection_date ?? item.inspectionDate,
+    supplier: item.supplier_name ?? item.supplierName,
+    materialCode: item.material_code ?? item.materialCode,
+    materialName: item.material_name ?? item.materialName,
+    // 暴露已建未使用字段（报告合法 P1）：下游可做精确筛选 + 合格率统计
+    supplierId: item.supplier_id ?? null,
+    materialId: item.material_id ?? null,
+    qualifiedQty: item.qualified_qty != null ? parseFloat(item.qualified_qty) : null,
+    unqualifiedQty: item.unqualified_qty != null ? parseFloat(item.unqualified_qty) : null,
     specification: item.specification,
-    batchNo: item.batchNo,
+    batchNo: item.batch_no ?? item.batchNo,
     quantity: parseFloat(item.quantity) || 0,
     unit: item.unit,
-    inspectionType: item.inspectionType || 'sampling',
-    inspectionTypeRaw: item.inspectionType || 'sampling',
-    result: item.inspectionResult,
-    inspector: item.inspectorName,
+    inspectionType: (item.inspection_type ?? item.inspectionType) || 'sampling',
+    inspectionTypeRaw: (item.inspection_type ?? item.inspectionType) || 'sampling',
+    result: item.inspection_result ?? item.inspectionResult,
+    inspector: item.inspector_name ?? item.inspectorName,
     remark: item.remark || '',
     items: Array.isArray(item.items) ? item.items : [],
   };
@@ -137,7 +134,7 @@ export default function IncomingInspectionPage() {
   const statusOptions = [
     { value: 'all', label: tc('all') },
     { value: 'pass', label: tc('qualified') },
-    { value: 'reject', label: tc('unqualified') },
+    { value: 'fail', label: tc('unqualified') },
     { value: 'pending', label: t('pendingInspection') },
   ];
 
@@ -145,6 +142,13 @@ export default function IncomingInspectionPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
   const [incomingInspections, setIncomingInspections] = useState<Loose[]>([]);
+  const [stats, setStats] = useState({
+    pending: 0,
+    inspecting: 0,
+    passed: 0,
+    failed: 0,
+    monthlyCount: 0,
+  });
 
   // 从 API 获取来料检验数据
   const fetchInspections = useCallback(async () => {
@@ -163,8 +167,21 @@ export default function IncomingInspectionPage() {
     }
   }, [tc]);
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/quality/incoming/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchInspections();
+    fetchStats();
   }, [fetchInspections]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -279,11 +296,11 @@ export default function IncomingInspectionPage() {
       items:
         inspection.items.length > 0
           ? inspection.items.map((item: Loose) => ({
-              itemName: item.itemName,
+              itemName: item.item_name ?? item.itemName,
               standard: item.standard,
-              actualValue: item.actualValue,
+              actualValue: item.actual_value ?? item.actualValue,
               result: item.result,
-              itemRemark: item.itemRemark || '',
+              itemRemark: item.item_remark ?? item.itemRemark ?? '',
             }))
           : inspectionItems.map((item) => ({
               itemName: item.name,
@@ -389,7 +406,7 @@ export default function IncomingInspectionPage() {
     (i) => i.date === new Date().toISOString().slice(0, 10)
   ).length;
   const totalPassInspections = incomingInspections.filter((i) => i.result === 'pass').length;
-  const totalRejectInspections = incomingInspections.filter((i) => i.result === 'reject').length;
+  const totalRejectInspections = incomingInspections.filter((i) => i.result === 'fail').length;
   const passRate =
     incomingInspections.length > 0
       ? Math.round((totalPassInspections / incomingInspections.length) * 100)
@@ -516,7 +533,7 @@ export default function IncomingInspectionPage() {
             <SelectContent>
               <SelectItem value="pending">{t('pendingInspection')}</SelectItem>
               <SelectItem value="pass">{tc('qualified')}</SelectItem>
-              <SelectItem value="reject">{tc('unqualified')}</SelectItem>
+              <SelectItem value="fail">{tc('unqualified')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -592,7 +609,7 @@ export default function IncomingInspectionPage() {
                     <SelectContent>
                       <SelectItem value="pending">{t('pendingInspection')}</SelectItem>
                       <SelectItem value="pass">{tc('qualified')}</SelectItem>
-                      <SelectItem value="reject">{tc('unqualified')}</SelectItem>
+                      <SelectItem value="fail">{tc('unqualified')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -687,70 +704,29 @@ export default function IncomingInspectionPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('todayInspection')}</p>
-                  <p className="text-3xl font-bold mt-1">{totalInspectionsToday}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{t('inspectionRecords')}</p>
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('qualifiedCount')}</p>
-                  <p className="text-3xl font-bold text-green-600 mt-1">{totalPassInspections}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{t('qualifiedRecords')}</p>
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('unqualifiedCount')}</p>
-                  <p className="text-3xl font-bold text-red-600 mt-1">{totalRejectInspections}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{t('unqualifiedRecords')}</p>
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900 flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('passRate')}</p>
-                  <p className="text-3xl font-bold text-blue-600 mt-1">{passRate}%</p>
-                  <p className="text-xs text-muted-foreground mt-1">{t('inspectionPassRate')}</p>
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                  <BarChart2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <StatsCards
+          configs={[
+            { key: 'pending', label: '待检验', icon: Clock, ...StatsTheme.orange },
+            { key: 'inspecting', label: '检验中', icon: Loader, ...StatsTheme.blue },
+            { key: 'passed', label: '已通过', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'failed', label: '未通过', icon: XCircle, ...StatsTheme.red },
+            { key: 'monthlyCount', label: '本月检验次数', icon: Calendar, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'inspecting', count: stats.inspecting },
+            { key: 'passed', count: stats.passed },
+            { key: 'failed', count: stats.failed },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between border-b">
             <CardTitle>{t('incomingInspectionRecord')}</CardTitle>
             <span className="text-sm text-muted-foreground">
-              {tc('totalRecords')}: {sortedData.length}
+              {tc('totalRecords', { count: sortedData.length })}
             </span>
           </CardHeader>
           <CardContent>

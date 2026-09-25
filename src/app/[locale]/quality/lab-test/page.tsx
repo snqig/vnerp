@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, FlaskConical, CheckCircle, Clock, AlertTriangle, Calendar, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   buildQualityFormMessages,
@@ -43,6 +43,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface LabTestRecord {
   id?: number;
@@ -66,6 +67,9 @@ interface LabTestRecord {
 }
 
 const testTypeMap: Record<string, string> = {
+  physical: 'physicalTest',
+  chemical: 'chemicalTest',
+  environmental: 'environmentalTest',
   color: 'colorTest',
   adhesion: 'adhesionTest',
   wear: 'wearTest',
@@ -103,6 +107,13 @@ export default function LabTestPage() {
   const [page, setPage] = useState(1);
   const [searchProduct, setSearchProduct] = useState('');
   const [searchType, setSearchType] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    testing: 0,
+    completed: 0,
+    failed: 0,
+    monthlyCount: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<LabTestRecord>>({});
   const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'test_no');
@@ -128,8 +139,21 @@ export default function LabTestPage() {
     } catch {}
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/quality/lab-test/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [page]);
 
   const handleSave = async () => {
@@ -174,7 +198,25 @@ export default function LabTestPage() {
 
   return (
     <MainLayout title={t('labTestManagement')}>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6">        <StatsCards
+          configs={[
+            { key: 'pending', label: '待检测', icon: Clock, ...StatsTheme.orange },
+            { key: 'testing', label: '检测中', icon: FlaskConical, ...StatsTheme.blue },
+            { key: 'completed', label: '已完成', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'failed', label: '不合格数', icon: XCircle, ...StatsTheme.red },
+            { key: 'monthlyCount', label: '本月检测数', icon: Calendar, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'testing', count: stats.testing },
+            { key: 'completed', count: stats.completed },
+            { key: 'failed', count: stats.failed },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
@@ -207,7 +249,7 @@ export default function LabTestPage() {
               </div>
               <Button
                 onClick={() => {
-                  setEditItem({ test_type: 'color', conclusion: 'pending' });
+                  setEditItem({ test_type: 'physical', conclusion: 'pending' });
                   setShowDialog(true);
                 }}
               >
@@ -400,7 +442,7 @@ export default function LabTestPage() {
               <div>
                 <Label>{t('testType')}</Label>
                 <Select
-                  value={editItem.test_type || 'color'}
+                  value={editItem.test_type || 'physical'}
                   onValueChange={(v) => setEditItem({ ...editItem, test_type: v })}
                 >
                   <SelectTrigger>

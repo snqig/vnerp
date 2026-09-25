@@ -34,7 +34,10 @@ import {
   Target,
   Shield,
   PieChart,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import {
   ComposedChart,
   Line,
@@ -271,6 +274,22 @@ export default function SPCPage() {
   return (
     <MainLayout title={ts('k_evgxn6')}>
       <div className="space-y-6">
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('totalInspections'), icon: CheckCircle, ...StatsTheme.blue },
+            { key: 'qualified', label: tc('qualifiedCount'), icon: XCircle, ...StatsTheme.green },
+            { key: 'defective', label: tc('defectiveCount'), icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'rate', label: tc('passRate'), icon: BarChart3, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: xbarResult ? xbarResult.data_points.length : 0 },
+            { key: 'qualified', count: (() => { if (!xbarResult) return 0; const oocIds = new Set(xbarResult.out_of_control_points.map(p => p.subgroup_id)); return xbarResult.data_points.filter((dp) => !oocIds.has(dp.subgroup_id)).length; })() },
+            { key: 'defective', count: xbarResult ? xbarResult.out_of_control_points.length : 0 },
+            { key: 'rate', count: xbarResult && xbarResult.data_points.length > 0 ? Math.round(((xbarResult.data_points.length - xbarResult.out_of_control_points.length) / xbarResult.data_points.length) * 100) : 0 },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="xbar-r">
@@ -387,7 +406,7 @@ export default function SPCPage() {
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                           <CardTitle className="text-sm font-medium">Cp</CardTitle>
-                          <Target className="h-4 w-4 text-blue-600" />
+                          <Target className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </CardHeader>
                         <CardContent>
                           <div
@@ -403,7 +422,7 @@ export default function SPCPage() {
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                           <CardTitle className="text-sm font-medium">Cpk</CardTitle>
-                          <Shield className="h-4 w-4 text-green-600" />
+                          <Shield className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </CardHeader>
                         <CardContent>
                           <div
@@ -419,7 +438,7 @@ export default function SPCPage() {
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                           <CardTitle className="text-sm font-medium">Pp</CardTitle>
-                          <TrendingUp className="h-4 w-4 text-orange-600" />
+                          <TrendingUp className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                         </CardHeader>
                         <CardContent>
                           <div
@@ -435,7 +454,7 @@ export default function SPCPage() {
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                           <CardTitle className="text-sm font-medium">Ppk</CardTitle>
-                          <AlertTriangle className="h-4 w-4 text-red-600" />
+                          <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
                         </CardHeader>
                         <CardContent>
                           <div

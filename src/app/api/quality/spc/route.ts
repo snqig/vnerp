@@ -68,7 +68,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
     const pareto = calculatePareto(
       defects.map((d: DbRow) => ({
-        defect_type: d.defect_type || tc('unclassified'),
+        defect_type: String(d.defect_type ?? ''),
         count: Number(d.count),
       }))
     );
@@ -97,7 +97,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
     const pChart = calculatePChart(
       data.map((d: DbRow) => ({
-        period: d.period,
+        period: String(d.period ?? ''),
         inspected: Number(d.inspected),
         defective: Number(d.defective),
       }))

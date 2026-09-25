@@ -43,6 +43,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import {
   Search,
   MoreHorizontal,
@@ -387,68 +388,28 @@ export default function QualityFinalPage() {
   return (
     <MainLayout title={t('finalInspection')}>
       <div className="space-y-6">
-        {/* 统计卡片 */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pendingFinalInspection')}</CardTitle>
-              <Clock className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pending}</div>
-            </CardContent>
-          </Card>
+                {/* 统计卡片 */}
+        <StatsCards
+          configs={[
+            { key: 'pending', label: t('pendingFinalInspection'), icon: Clock, ...StatsTheme.blue },
+            { key: 'inspecting', label: t('finalInspecting'), icon: ClipboardCheck, ...StatsTheme.orange },
+            { key: 'passed', label: t('finalInspectionCompleted'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'today', label: t('todayFinalInspection'), icon: Calendar, ...StatsTheme.purple },
+            { key: 'week', label: t('weekFinalInspection'), icon: TrendingUp, ...StatsTheme.cyan },
+            { key: 'passRate', label: t('passRate'), icon: Percent, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'inspecting', count: stats.inspecting },
+            { key: 'passed', count: stats.passed },
+            { key: 'today', count: stats.today },
+            { key: 'week', count: stats.week },
+            { key: 'passRate', count: stats.passRate, suffix: '%' },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 6 }}
+          clickable={false}
+        />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('finalInspecting')}</CardTitle>
-              <ClipboardCheck className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.inspecting}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('finalInspectionCompleted')}</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.passed}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('todayFinalInspection')}</CardTitle>
-              <Calendar className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.today}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('weekFinalInspection')}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-indigo-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.week}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('passRate')}</CardTitle>
-              <Percent className="h-4 w-4 text-pink-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.passRate}%</div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* 工具栏 */}
         <Card>
@@ -809,7 +770,7 @@ export default function QualityFinalPage() {
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-muted rounded-lg p-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">{tc('product')}:</span>
@@ -836,7 +797,7 @@ export default function QualityFinalPage() {
 
                   <div className="space-y-3">
                     <Label>
-                      {t('finalInspectionItems')} <span className="text-red-500">*</span>
+                      {t('finalInspectionItems')} <span className="text-red-500 dark:text-red-400">*</span>
                     </Label>
                     <div className="grid grid-cols-2 gap-3">
                       {finalInspectItems.map((item) => (
@@ -869,19 +830,19 @@ export default function QualityFinalPage() {
                       <SelectContent>
                         <SelectItem value="pass">
                           <div className="flex items-center">
-                            <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                            <CheckCircle className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
                             {t('qualifiedInbound')}
                           </div>
                         </SelectItem>
                         <SelectItem value="fail">
                           <div className="flex items-center">
-                            <XCircle className="h-4 w-4 mr-2 text-red-600" />
+                            <XCircle className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />
                             {t('unqualifiedRework')}
                           </div>
                         </SelectItem>
                         <SelectItem value="concession">
                           <div className="flex items-center">
-                            <AlertTriangle className="h-4 w-4 mr-2 text-orange-600" />
+                            <AlertTriangle className="h-4 w-4 mr-2 text-orange-600 dark:text-orange-400" />
                             {t('concessionAccept')}
                           </div>
                         </SelectItem>
@@ -1004,7 +965,7 @@ export default function QualityFinalPage() {
               <div className="grid grid-cols-6 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-blue-600">{stats.pending}</div>
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.pending}</div>
                     <div className="text-sm text-muted-foreground">
                       {t('pendingFinalInspection')}
                     </div>
@@ -1012,13 +973,13 @@ export default function QualityFinalPage() {
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-orange-600">{stats.inspecting}</div>
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.inspecting}</div>
                     <div className="text-sm text-muted-foreground">{t('finalInspecting')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-green-600">{stats.passed}</div>
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.passed}</div>
                     <div className="text-sm text-muted-foreground">
                       {t('finalInspectionCompleted')}
                     </div>
@@ -1026,19 +987,19 @@ export default function QualityFinalPage() {
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-600">{stats.today}</div>
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.today}</div>
                     <div className="text-sm text-muted-foreground">{t('todayFinalInspection')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-indigo-600">{stats.week}</div>
+                    <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.week}</div>
                     <div className="text-sm text-muted-foreground">{t('weekFinalInspection')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-pink-600">{stats.passRate}%</div>
+                    <div className="text-2xl font-bold text-pink-600 dark:text-pink-400">{stats.passRate}%</div>
                     <div className="text-sm text-muted-foreground">{t('passRate')}</div>
                   </CardContent>
                 </Card>
@@ -1126,13 +1087,13 @@ export default function QualityFinalPage() {
                       className="w-64 h-64 border rounded-lg p-2"
                     />
                   ) : (
-                    <div className="w-64 h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="w-64 h-64 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
                       <span className="text-muted-foreground">{t('generating')}</span>
                     </div>
                   )}
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                <div className="bg-muted rounded-lg p-4 space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t('cardNo')}:</span>
                     <span className="font-medium">{selectedFinal.card_no}</span>

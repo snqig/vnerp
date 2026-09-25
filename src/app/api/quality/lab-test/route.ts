@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
+import { numericFilter } from '@/lib/query-filter';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -13,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const testNo = searchParams.get('testNo') || '';
   const productName = searchParams.get('productName') || '';
   const testType = searchParams.get('testType') || '';
-  const status = searchParams.get('status') || '';
+  const status = numericFilter(searchParams.get('status'));
 
   let where = 'WHERE deleted = 0';
   const params: SqlValue[] = [];
@@ -29,7 +30,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     where += ' AND test_type = ?';
     params.push(testType);
   }
-  if (status !== '') {
+  if (status !== undefined) {
     where += ' AND status = ?';
     params.push(Number(status));
   }

@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
 import QRCode from 'qrcode';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -403,7 +404,7 @@ export default function QualityProcessPage() {
       printWindow.document.write(`
         <html>
           <head>
-            <title>品质检验报告</title>
+            <title>${tc('printInspectionReportTitle')}</title>
             <style>
               body { font-family: Arial, sans-serif; padding: 20px; }
               table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -440,57 +441,24 @@ export default function QualityProcessPage() {
     <MainLayout title={t('processInspection')}>
       <div className="space-y-6">
         {/* 统计卡片 */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pendingInspection')}</CardTitle>
-              <Clock className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pending}</div>
-            </CardContent>
-          </Card>
+        <StatsCards
+          configs={[
+            { key: 'pending', label: t('pendingInspection'), icon: Clock, ...StatsTheme.blue },
+            { key: 'inspecting', label: t('inspecting'), icon: ClipboardCheck, ...StatsTheme.orange },
+            { key: 'passed', label: t('inspected'), icon: CheckCircle, ...StatsTheme.green },
+            { key: 'today', label: t('todayInspection'), icon: Calendar, ...StatsTheme.purple },
+            { key: 'week', label: t('weekInspection'), icon: TrendingUp, ...StatsTheme.cyan },
+          ]}
+          stats={[
+            { key: 'pending', count: stats.pending },
+            { key: 'inspecting', count: stats.inspecting },
+            { key: 'passed', count: stats.passed },
+            { key: 'today', count: stats.today },
+            { key: 'week', count: stats.week },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('inspecting')}</CardTitle>
-              <ClipboardCheck className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.inspecting}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('inspected')}</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.passed}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('todayInspection')}</CardTitle>
-              <Calendar className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.today}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('weekInspection')}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-indigo-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.week}</div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* 工具栏 */}
         <Card>
@@ -842,7 +810,7 @@ export default function QualityProcessPage() {
 
                 <div className="space-y-6 py-4">
                   {/* 流程卡信息 */}
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-muted rounded-lg p-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">{tc('product')}:</span>
@@ -883,7 +851,7 @@ export default function QualityProcessPage() {
                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                           >
                             {item.name}
-                            {item.required && <span className="text-red-500 ml-1">*</span>}
+                            {item.required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
                           </label>
                         </div>
                       ))}
@@ -903,19 +871,19 @@ export default function QualityProcessPage() {
                       <SelectContent>
                         <SelectItem value="pass">
                           <div className="flex items-center">
-                            <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                            <CheckCircle className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
                             {tc('qualified')}
                           </div>
                         </SelectItem>
                         <SelectItem value="fail">
                           <div className="flex items-center">
-                            <XCircle className="h-4 w-4 mr-2 text-red-600" />
+                            <XCircle className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />
                             {tc('unqualified')}
                           </div>
                         </SelectItem>
                         <SelectItem value="concession">
                           <div className="flex items-center">
-                            <AlertTriangle className="h-4 w-4 mr-2 text-orange-600" />
+                            <AlertTriangle className="h-4 w-4 mr-2 text-orange-600 dark:text-orange-400" />
                             {t('concessionAccept')}
                           </div>
                         </SelectItem>
@@ -1040,31 +1008,31 @@ export default function QualityProcessPage() {
               <div className="grid grid-cols-5 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-blue-600">{stats.pending}</div>
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.pending}</div>
                     <div className="text-sm text-muted-foreground">{t('pendingInspection')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-orange-600">{stats.inspecting}</div>
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.inspecting}</div>
                     <div className="text-sm text-muted-foreground">{t('inspecting')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-green-600">{stats.passed}</div>
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.passed}</div>
                     <div className="text-sm text-muted-foreground">{t('inspected')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-600">{stats.today}</div>
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.today}</div>
                     <div className="text-sm text-muted-foreground">{t('todayInspection')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-indigo-600">{stats.week}</div>
+                    <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.week}</div>
                     <div className="text-sm text-muted-foreground">{t('weekInspection')}</div>
                   </CardContent>
                 </Card>
@@ -1152,14 +1120,14 @@ export default function QualityProcessPage() {
                       className="w-64 h-64 border rounded-lg p-2"
                     />
                   ) : (
-                    <div className="w-64 h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="w-64 h-64 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
                       <span className="text-muted-foreground">{t('generating')}</span>
                     </div>
                   )}
                 </div>
 
                 {/* 流程卡信息 */}
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                <div className="bg-muted rounded-lg p-4 space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t('cardNo')}:</span>
                     <span className="font-medium">{selectedProcess.card_no}</span>
@@ -1221,25 +1189,27 @@ export default function QualityProcessPage() {
                 </TableHeader>
                 <TableBody>
                   {inspectRecords.length > 0 ? (
-                    inspectRecords.map((record) => (
+                    inspectRecords.map((record: Loose) => (
                       <TableRow key={record.id}>
-                        <TableCell className="font-medium">{record.inspectNo}</TableCell>
+                        <TableCell className="font-medium">
+                          {record.inspectNo || record.inspection_no}
+                        </TableCell>
                         <TableCell>{record.inspectType}</TableCell>
                         <TableCell>
                           <Badge
                             className={
                               record.result === ts('k_109sg5t')
-                                ? 'bg-green-100 text-green-700'
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                                 : record.result === ts('k_1ujsxic')
-                                  ? 'bg-red-100 text-red-700'
-                                  : 'bg-orange-100 text-orange-700'
+                                  ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                                  : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
                             }
                           >
                             {record.result}
                           </Badge>
                         </TableCell>
                         <TableCell>{record.inspector}</TableCell>
-                        <TableCell>{record.inspectTime}</TableCell>
+                        <TableCell>{record.inspectTime || record.inspection_date}</TableCell>
                         <TableCell>{record.remark}</TableCell>
                       </TableRow>
                     ))
@@ -1255,22 +1225,22 @@ export default function QualityProcessPage() {
 
               {/* 统计信息 */}
               {inspectRecords.length > 0 && (
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-muted rounded-lg p-4">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
-                      <div className="text-2xl font-bold text-green-600">
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {inspectRecords.filter((r) => r.result === tc('qualified')).length}
                       </div>
                       <div className="text-sm text-muted-foreground">{t('qualifiedItems')}</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-red-600">
+                      <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {inspectRecords.filter((r) => r.result === tc('unqualified')).length}
                       </div>
                       <div className="text-sm text-muted-foreground">{t('unqualifiedItems')}</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-blue-600">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {inspectRecords.length}
                       </div>
                       <div className="text-sm text-muted-foreground">

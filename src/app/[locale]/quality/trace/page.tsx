@@ -1,5 +1,5 @@
-'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
+'use client';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useCallback } from 'react';
@@ -33,23 +33,13 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Search,
-  Scan,
-  QrCode,
-  Layers,
-  Package,
-  Factory,
-  CheckCircle,
-  AlertCircle,
-  ArrowRight,
-  RefreshCw,
-} from 'lucide-react';
+import { Search, Scan, QrCode, Layers, Package, Factory, CheckCircle, AlertCircle, ArrowRight, RefreshCw, Clock, AlertTriangle, Calendar, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface TraceRecord {
   id: number;
@@ -62,7 +52,7 @@ interface TraceRecord {
   main_material_code?: string;
   main_material_name?: string;
   main_batch_no?: string;
-  trace_type: number;
+  trace_type: string | number;
   operator_name: string;
   trace_time: string;
   remark: string;
@@ -99,9 +89,9 @@ interface TraceDetail {
   }[];
 }
 
-const TRACE_TYPE_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: 'forwardTrace', color: 'bg-blue-100 text-blue-800' },
-  2: { label: 'backwardTrace', color: 'bg-purple-100 text-purple-800' },
+const TRACE_TYPE_MAP: Record<string, { label: string; color: string }> = {
+  forward: { label: 'forwardTrace', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
+  backward: { label: 'backwardTrace', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300' },
 };
 
 export default function TracePage() {
@@ -116,13 +106,20 @@ export default function TracePage() {
   const [records, setRecords] = useState<TraceRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [stats, setStats] = useState({
+    totalBatches: 0,
+    productCount: 0,
+    customerCount: 0,
+    monthlyCount: 0,
+    abnormalBatches: 0,
+  });
   const [_keyword, _setKeyword] = useState('');
   const [traceTypeFilter, setTraceTypeFilter] = useState('all');
   const { sortField, sortDirection, handleSort, sortedData } = useTableSort(records, 'trace_no');
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    sortedData,
-    (r) => String(r.id)
-  );
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+    sortedData,
+    (r) => String(r.id)
+  );
 
   const fetchRecords = useCallback(async () => {
     try {
@@ -147,7 +144,7 @@ export default function TracePage() {
           main_material_code: item.mainMaterialCode || item.main_material_code,
           main_material_name: item.mainMaterialName || item.main_material_name,
           main_batch_no: item.mainBatchNo || item.main_batch_no,
-          trace_type: item.traceType || item.trace_type || 1,
+          trace_type: item.traceType || item.trace_type || 'forward',
           operator_name: item.operatorName || item.operator_name,
           trace_time: item.traceTime || item.trace_time,
           remark: item.remark,
@@ -157,8 +154,21 @@ export default function TracePage() {
     } catch {}
   }, [_keyword, traceTypeFilter]);
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/quality/trace/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchRecords();
+    fetchStats();
   }, [fetchRecords]);
 
   const handleSearch = async () => {
@@ -215,7 +225,7 @@ export default function TracePage() {
         method: 'POST',
         body: JSON.stringify({
           cardNo: record.card_no,
-          traceType: record.trace_type === 2 ? 'backward' : 'forward',
+          traceType: record.trace_type === 'backward' ? 'backward' : 'forward',
           operatorId: 1,
           operatorName: tc('operator'),
         }),
@@ -237,7 +247,25 @@ export default function TracePage() {
 
   return (
     <MainLayout title={t('traceQuery')}>
-      <div className="space-y-6">
+      <div className="space-y-6">        <StatsCards
+          configs={[
+            { key: 'totalBatches', label: '已追溯批次', icon: Search, ...StatsTheme.blue },
+            { key: 'productCount', label: '涉及产品数', icon: Package, ...StatsTheme.green },
+            { key: 'customerCount', label: '涉及客户数', icon: Users, ...StatsTheme.cyan },
+            { key: 'monthlyCount', label: '本月追溯次数', icon: Calendar, ...StatsTheme.purple },
+            { key: 'abnormalBatches', label: '异常批次', icon: AlertTriangle, ...StatsTheme.red },
+          ]}
+          stats={[
+            { key: 'totalBatches', count: stats.totalBatches },
+            { key: 'productCount', count: stats.productCount },
+            { key: 'customerCount', count: stats.customerCount },
+            { key: 'monthlyCount', count: stats.monthlyCount },
+            { key: 'abnormalBatches', count: stats.abnormalBatches },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
         <Card>
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -368,7 +396,7 @@ export default function TracePage() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between overflow-x-auto pb-4">
-                      <div className="flex flex-col items-center p-4 rounded-lg min-w-[100px] bg-blue-50 border border-blue-200">
+                      <div className="flex flex-col items-center p-4 rounded-lg min-w-[100px] bg-blue-500/10 border border-blue-200 dark:border-blue-800">
                         <div className="p-2 rounded-full mb-2 bg-blue-500">
                           <Package className="h-4 w-4 text-white" />
                         </div>
@@ -385,7 +413,7 @@ export default function TracePage() {
                         .filter((m) => m.materialType === '2' || m.materialType === ts('k_14rp9uj'))
                         .map((mat, idx) => (
                           <div key={idx} className="flex items-center">
-                            <div className="flex flex-col items-center p-4 rounded-lg min-w-[100px] bg-green-50 border border-green-200">
+                            <div className="flex flex-col items-center p-4 rounded-lg min-w-[100px] bg-green-500/10 border border-green-200 dark:border-green-800">
                               <div className="p-2 rounded-full mb-2 bg-green-500">
                                 <CheckCircle className="h-4 w-4 text-white" />
                               </div>
@@ -405,7 +433,7 @@ export default function TracePage() {
                           </div>
                         ))}
                       <ArrowRight className="h-5 w-5 text-muted-foreground mx-2" />
-                      <div className="flex flex-col items-center p-4 rounded-lg min-w-[100px] bg-purple-50 border border-purple-200">
+                      <div className="flex flex-col items-center p-4 rounded-lg min-w-[100px] bg-purple-500/10 border border-purple-200 dark:border-purple-800">
                         <div className="p-2 rounded-full mb-2 bg-purple-500">
                           <Factory className="h-4 w-4 text-white" />
                         </div>
@@ -458,8 +486,8 @@ export default function TracePage() {
                               <Badge
                                 className={
                                   mat.materialType === '1' || mat.materialType === ts('k_1gqlef2')
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : 'bg-green-100 text-green-800'
+                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                                    : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                                 }
                               >
                                 {mat.materialType === '1' || mat.materialType === ts('k_1gqlef2')
@@ -498,8 +526,8 @@ export default function TracePage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{tc('allTypes')}</SelectItem>
-                    <SelectItem value="1">{t('forwardTrace')}</SelectItem>
-                    <SelectItem value="2">{t('backwardTrace')}</SelectItem>
+                    <SelectItem value="forward">{t('forwardTrace')}</SelectItem>
+                    <SelectItem value="backward">{t('backwardTrace')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="outline" onClick={fetchRecords}>
@@ -588,9 +616,9 @@ export default function TracePage() {
                   sortedData.map((r, index) => (
                     <TableRow key={r.id}>
                       <TableCell>
-                        <Checkbox
-                          checked={isSelected(String(r.id))}
-                          onCheckedChange={() => toggle(String(r.id))}
+                        <Checkbox
+                          checked={isSelected(String(r.id))}
+                          onCheckedChange={() => toggle(String(r.id))}
                         />
                       </TableCell>
                       <TableCell className="text-center text-muted-foreground">
@@ -603,7 +631,7 @@ export default function TracePage() {
                       <TableCell>{r.product_name || '-'}</TableCell>
                       <TableCell>{r.main_material_name || '-'}</TableCell>
                       <TableCell>
-                        <Badge className={TRACE_TYPE_MAP[r.trace_type]?.color || 'bg-gray-100'}>
+                        <Badge className={TRACE_TYPE_MAP[r.trace_type]?.color || 'bg-gray-100 dark:bg-gray-700'}>
                           {t(TRACE_TYPE_MAP[r.trace_type]?.label || String(r.trace_type))}
                         </Badge>
                       </TableCell>
