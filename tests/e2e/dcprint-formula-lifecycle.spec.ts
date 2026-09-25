@@ -43,6 +43,13 @@ function buildDraftVersionBody(colorId: number, materialId: number) {
 }
 
 test.describe('印前模块：油墨配方版本迭代', () => {
+  // 全部用例共享同一色号（TEST_COLOR_ID）且会改写该色号下的版本状态。
+  // config 的 fullyParallel: true 下多 worker 并发会导致数据竞争：
+  // TC-FORMULA-005 作废版本的同时 TC-FORMULA-006 正在统计 active 数量，
+  // 造成「同色号出现多个 active」的假象（业务代码 archiveOtherActiveVersions 本身正确）。
+  // 故本 describe 强制串行，保证状态断言可复现。
+  test.describe.configure({ mode: 'serial' });
+
   test.beforeEach(async ({ page }) => {
     await login(page);
   });

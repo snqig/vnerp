@@ -56,6 +56,10 @@ async function getToolDetail(page: Page, toolId: number): Promise<Loose> {
 }
 
 test.describe('印前模块：工装寿命全周期', () => {
+  // 与 formula-lifecycle 同理：本组用例共享工装资源并连续改写其寿命/状态，
+  // 多 worker 并发会造成跨用例干扰，强制串行以保证断言可复现。
+  test.describe.configure({ mode: 'serial' });
+
   test.beforeEach(async ({ page }) => {
     await login(page);
   });
