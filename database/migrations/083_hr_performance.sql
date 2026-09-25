@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS `hr_performance` (
   UNIQUE KEY `uk_hr_performance_employee` (`employee_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='HR绩效考核表';
 
+
 -- 迁移后自检
 --   SHOW COLUMNS FROM hr_performance;
---   SELECT COUNT(*) FROM hr_performance WHERE deleted = 0;
+
+--   SELECT COUNT(*) FROM hr_performance WHERE deleted = 0

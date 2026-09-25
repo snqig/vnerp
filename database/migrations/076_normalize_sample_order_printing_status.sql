@@ -4,4 +4,4 @@
 -- 前端已补 printing->待打样 映射，但根因在库内，本迁移将其统一为 pending，
 -- 避免与正常 pending 记录重复显示「待打样」。
 -- 幂等：若已无 printing 行，UPDATE 影响 0 行，可重复执行。
-UPDATE sal_sample_order SET status = 'pending', update_time = NOW() WHERE status = 'printing' AND deleted = 0;
+UPDATE sal_sample_order SET status = 'pending', update_time = NOW() WHERE status = 'printing' AND deleted = 0

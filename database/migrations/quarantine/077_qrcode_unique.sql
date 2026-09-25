@@ -13,16 +13,22 @@
 --   因此改为在 qr_code（二维码天然唯一标识）上加唯一约束。
 --
 --   幂等模式：使用 INFORMATION_SCHEMA.STATISTICS 检查索引是否存在再添加；
---   迁移运行器按 `;` 同连接顺序执行，会话变量跨语句保持。
+--   迁移运行器按 `;
+` 同连接顺序执行，会话变量跨语句保持。
 -- ============================================================
 
 -- 检查唯一索引 uk_qr_code 是否已存在，不存在则添加
 SET @idx = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'qrcode_record' AND INDEX_NAME = 'uk_qr_code');
+
 SET @sql = IF(@idx = 0,
   'ALTER TABLE qrcode_record ADD UNIQUE INDEX uk_qr_code (qr_code)',
   'SELECT ''uk_qr_code already exists'' AS info');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+PREPARE stmt FROM @sql;
+ EXECUTE stmt;
+ DEALLOCATE PREPARE stmt;
+
 
 -- 验证：确认索引已创建
 SELECT
@@ -31,4 +37,4 @@ FROM INFORMATION_SCHEMA.STATISTICS
 WHERE TABLE_SCHEMA = DATABASE()
   AND TABLE_NAME = 'qrcode_record'
   AND INDEX_NAME = 'uk_qr_code'
-ORDER BY SEQ_IN_INDEX;
+ORDER BY SEQ_IN_INDEX

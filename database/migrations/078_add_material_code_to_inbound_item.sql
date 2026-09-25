@@ -9,18 +9,23 @@ SET @col_exists = (
     AND COLUMN_NAME = 'material_code'
 );
 
+
 SET @sql = IF(
   @col_exists = 0,
   'ALTER TABLE inv_inbound_item ADD COLUMN material_code VARCHAR(50) NULL COMMENT ''物料编码（冗余，便于查询）'' AFTER material_id',
   'SELECT 1'
 );
 
+
 PREPARE stmt FROM @sql;
+
 EXECUTE stmt;
+
 DEALLOCATE PREPARE stmt;
+
 
 -- 回填历史数据：根据 material_id 关联 inv_material 补齐 material_code
 UPDATE inv_inbound_item ii
 LEFT JOIN inv_material m ON m.id = ii.material_id AND m.deleted = 0
 SET ii.material_code = m.material_code
-WHERE ii.material_code IS NULL AND ii.material_id IS NOT NULL;
+WHERE ii.material_code IS NULL AND ii.material_id IS NOT NULL

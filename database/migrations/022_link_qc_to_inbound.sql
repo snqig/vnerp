@@ -35,7 +35,7 @@ PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- 3. 回填历史数据:通过 QR code 关联
 UPDATE inv_inbound_order iio
-LEFT JOIN qrcode_record qr ON iio.order_no = qr.ref_no
+LEFT JOIN qrcode_record qr ON iio.order_no = qr.ref_no COLLATE utf8mb4_0900_ai_ci
 LEFT JOIN qc_incoming_inspection qci ON qr.batch_no = qci.batch_no
 SET iio.mandatory_qc = 1
 WHERE iio.status IN ('draft', 'pending')
