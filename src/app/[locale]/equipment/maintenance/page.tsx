@@ -110,7 +110,7 @@ interface MaintenanceRecord {
 
 const MAINT_TYPE = EQUIPMENT_MAINT_TYPE_LABEL;
 
-// 计划（plan）侧枚举：对齐 /api/equipment/plan 与 eq_maintenance_plan 的真实 VARCHAR 枚举
+// 计划（plan）侧枚举：对齐 /api/equipment/plan 与 eqp_maintenance_plan 的真实 VARCHAR 枚举
 const PLAN_MAINT_TYPE: Record<string, string> = {
   routine: '日常保养',
   periodic: '定期维保',

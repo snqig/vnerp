@@ -12,6 +12,11 @@ import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query, execute, SqlValue } from '@/lib/db';
 
+/** 金额统一按分取整，避免浮点累加误差（DECIMAL 经驱动返回字符串，必须显式转数值） */
+function round2(n: number): number {
+  return Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
+}
+
 /**
  * 发票管理 API
  * 支持采购发票、销售发票的记录和应收应付核销
@@ -218,7 +223,7 @@ export const PUT = withPermission(
     }
 
     if (action === 'write_off') {
-      // 核销：关联应收/应付单
+      // 核销：关联应收/应付单，回写已收/已付金额与余额（同一事务内完成，避免流水与余额不一致）
       if (invoice.status !== 'approved') {
         return errorResponse(ts('k_1q13io8'), 400, 400);
       }
@@ -226,25 +231,97 @@ export const PUT = withPermission(
       if (!writeOffAmount || writeOffAmount <= 0) {
         return errorResponse(ts('k_4is2uy'), 400, 400);
       }
+      if (!payableId && !receivableId) {
+        return errorResponse(ts('k_1afmu7x'), 400, 400);
+      }
 
-      await execute(
-        `INSERT INTO finance_write_off
-         (invoice_id, invoice_no, invoice_type, payable_id, receivable_id,
-          write_off_amount, write_off_by, write_off_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [
-          id,
-          invoice.invoice_no,
-          invoice.invoice_type,
-          payableId || null,
-          receivableId || null,
-          writeOffAmount,
-          userInfo.userId,
-        ]
-      );
+      const requested = round2(Number(writeOffAmount));
+      const conn = await (await import('@/lib/db')).getConnection();
 
-      await execute('UPDATE finance_invoice SET status = ? WHERE id = ?', ['written_off', id]);
-      return successResponse(null, ts('k_1k57w9'));
+      try {
+        await conn.beginTransaction();
+
+        let actualAmount = 0;
+        let notice = '';
+
+        if (receivableId) {
+          const [rows] = await conn.execute(
+            'SELECT id, amount, received_amount, balance FROM fin_receivable WHERE id = ? AND deleted = 0 FOR UPDATE',
+            [receivableId]
+          );
+          const ar = (rows as Array<Record<string, unknown>>)[0];
+          if (!ar) {
+            await conn.rollback();
+            conn.release();
+            return errorResponse(ts('k_1rur8q3'), 404, 404);
+          }
+          const balance = round2(Number(ar.balance ?? 0));
+          if (balance <= 0) {
+            await conn.rollback();
+            conn.release();
+            return errorResponse(ts('k_xxe1ga'), 400, 400);
+          }
+          actualAmount = Math.min(requested, balance);
+          if (requested > balance) notice = ts('k_6ndmox');
+          const received = round2(Number(ar.received_amount ?? 0) + actualAmount);
+          const newBalance = round2(Math.max(0, Number(ar.amount ?? 0) - received));
+          await conn.execute(
+            'UPDATE fin_receivable SET received_amount = ?, balance = ?, status = ? WHERE id = ?',
+            [received, newBalance, newBalance <= 0 ? 3 : 2, Number(ar.id)]
+          );
+        } else {
+          const [rows] = await conn.execute(
+            'SELECT id, amount, paid_amount, balance FROM fin_payable WHERE id = ? AND deleted = 0 FOR UPDATE',
+            [payableId]
+          );
+          const ap = (rows as Array<Record<string, unknown>>)[0];
+          if (!ap) {
+            await conn.rollback();
+            conn.release();
+            return errorResponse(ts('k_1rur8q3'), 404, 404);
+          }
+          const balance = round2(Number(ap.balance ?? 0));
+          if (balance <= 0) {
+            await conn.rollback();
+            conn.release();
+            return errorResponse(ts('k_vygjfs'), 400, 400);
+          }
+          actualAmount = Math.min(requested, balance);
+          if (requested > balance) notice = ts('k_e5to9b');
+          const paid = round2(Number(ap.paid_amount ?? 0) + actualAmount);
+          const newBalance = round2(Math.max(0, Number(ap.amount ?? 0) - paid));
+          await conn.execute(
+            'UPDATE fin_payable SET paid_amount = ?, balance = ?, status = ? WHERE id = ?',
+            [paid, newBalance, newBalance <= 0 ? 3 : 2, Number(ap.id)]
+          );
+        }
+
+        await conn.execute(
+          `INSERT INTO finance_write_off
+           (invoice_id, invoice_no, invoice_type, payable_id, receivable_id,
+            write_off_amount, write_off_by, write_off_time)
+           VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+          [
+            id,
+            invoice.invoice_no,
+            invoice.invoice_type,
+            payableId || null,
+            receivableId || null,
+            actualAmount,
+            userInfo.userId,
+          ]
+        );
+
+        await conn.execute('UPDATE finance_invoice SET status = ? WHERE id = ?', ['written_off', id]);
+
+        await conn.commit();
+        conn.release();
+        return successResponse({ writeOffAmount: actualAmount }, notice || ts('k_1k57w9'));
+      } catch (error) {
+        await conn.rollback();
+        conn.release();
+        throw error;
+      }
     }
 
     return errorResponse(ts('k_12cy0bd'), 400, 400);
