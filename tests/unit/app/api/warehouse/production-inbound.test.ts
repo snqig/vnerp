@@ -426,10 +426,11 @@ describe('production-inbound PUT action=qc — 质检流程', () => {
     expect(insertCalls).toHaveLength(1);
     // 验证不合格记录参数
     const insertParams = insertCalls[0][1] as unknown[];
-    expect(insertParams[2]).toBe(10); // material_id
-    expect(insertParams[3]).toBe('MAT-001'); // material_code
-    expect(insertParams[4]).toBe('PET薄膜'); // material_name
-    expect(insertParams[5]).toBe(100); // quantity
+    // 参数顺序：unqualified_no, handle_no, inspection_id(此处传入库单 id), material_id, material_code, material_name, quantity, remark
+    expect(insertParams[3]).toBe(10); // material_id
+    expect(insertParams[4]).toBe('MAT-001'); // material_code
+    expect(insertParams[5]).toBe('PET薄膜'); // material_name
+    expect(insertParams[6]).toBe(100); // quantity
   });
 });
 

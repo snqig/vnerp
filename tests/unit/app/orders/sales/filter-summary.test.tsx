@@ -146,18 +146,20 @@ describe('SalesStatsCards — 激活态', () => {
     expect(card5).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('激活卡片含有 ring-blue-500 类名', () => {
+  // 激活态视觉由 ring-blue-500 改为 border-2 border-blue-500 + shadow-md
+  it('激活卡片含有 border-blue-500 类名', () => {
     renderCards({ statusFilter: '1' });
 
     const [card1] = getStatCards();
-    expect(card1.className).toContain('ring-blue-500');
+    expect(card1.className).toContain('border-blue-500');
+    expect(card1.className).toContain('shadow-md');
   });
 
-  it('非激活卡片不含 ring-blue-500 类名', () => {
+  it('非激活卡片不含 border-blue-500 类名', () => {
     renderCards({ statusFilter: '1' });
 
     const [, card2] = getStatCards();
-    expect(card2.className).not.toContain('ring-blue-500');
+    expect(card2.className).not.toContain('border-blue-500');
   });
 });
 
@@ -257,7 +259,7 @@ describe('SalesStatsCards — 数据渲染', () => {
     expect(counts).toEqual(['0', '0', '0', '0', '0']);
   });
 
-  it('stats 缺少某个状态时，该状态卡片 count 显示 0，amount 显示 ¥0.00', () => {
+  it('stats 缺少某个状态时，该状态卡片 count 补 0（金额缺省时不渲染金额行）', () => {
     renderCards({
       stats: [
         { status: 2, count: 7, amount: 5000 },
@@ -271,7 +273,8 @@ describe('SalesStatsCards — 数据渲染', () => {
 
     const [card1] = getStatCards();
     expect(card1.textContent).toContain('0');
-    expect(card1.textContent).toContain('¥0.00');
+    // 通用 StatsCards 仅在 stat.amount !== undefined 时渲染金额行，缺失状态不渲染
+    expect(card1.textContent).not.toContain('¥');
   });
 });
 

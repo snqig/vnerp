@@ -362,10 +362,11 @@ describe('getAvailableEquipment regression', () => {
     expect(sqlArg).toContain('deleted = 0');
   });
 
-  it('should return equipment with numeric status from tinyint', async () => {
+  it('should return equipment with string status (Equipment.status is string)', async () => {
     const result = await getAvailableEquipment();
     expect(result).toHaveLength(1);
-    expect(result[0].status).toBe(1);
+    // Equipment 接口 status 声明为 string，实现亦为 String(r.status)
+    expect(result[0].status).toBe('1');
   });
 });
 
