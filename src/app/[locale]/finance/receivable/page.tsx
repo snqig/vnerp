@@ -30,9 +30,10 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { MoneyDisplay } from '@/components/ui/money-display';
-import { Search, RefreshCw, Eye, FileText } from 'lucide-react';
+import { Search, RefreshCw, Eye, FileText, Receipt, CheckCircle, Clock, AlertTriangle, Wallet, Banknote } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { authFetch } from '@/lib/auth-fetch';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
@@ -99,7 +100,14 @@ export default function ReceivablePage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [detailItem, setDetailItem] = useState<ReceivableDetail | null>(null);
-  const [receiptForm, setReceiptForm] = useState({ amount: 0, receipt_date: '', remark: '' });
+  const [receiptForm, setReceiptForm] = useState({ amount: 0, receipt_date: '', remark: '', receipt_method: 'bank_transfer' });
+  const [stats, setStats] = useState({
+    totalReceivable: 0,
+    receivedAmount: 0,
+    unreceivedAmount: 0,
+    overdueAmount: 0,
+    monthlyReceived: 0,
+  });
 
   const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
     useRowSelection(list, (r) => String(r.id));
@@ -139,11 +147,27 @@ export default function ReceivablePage() {
         setList(list);
         setTotal(rawData?.total || list.length || 0);
       }
-    } catch {}
+    } catch (error) {
+      console.error('Failed to fetch receivables:', error);
+      setList([]);
+    }
   }, [page, keyword, statusFilter]);
+
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/finance/receivable/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
 
   useEffect(() => {
     fetchData();
+    fetchStats();
   }, [fetchData]);
 
   const handleViewDetail = async (id: number) => {
@@ -168,6 +192,7 @@ export default function ReceivablePage() {
           receivable_id: detailItem.id,
           amount: receiptForm.amount,
           receipt_date: receiptForm.receipt_date,
+          receipt_method: receiptForm.receipt_method,
           remark: receiptForm.remark,
         }),
       });
@@ -244,7 +269,25 @@ export default function ReceivablePage() {
               {tc('refresh')}
             </Button>
           </div>
-        </div>
+        </div>        <StatsCards
+          configs={[
+            { key: 'totalReceivable', label: '应收总额', icon: Wallet, ...StatsTheme.blue },
+            { key: 'receivedAmount', label: '已收金额', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'unreceivedAmount', label: '未收金额', icon: Clock, ...StatsTheme.orange },
+            { key: 'overdueAmount', label: '逾期金额', icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'monthlyReceived', label: '本月回款', icon: Banknote, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'totalReceivable', count: stats.totalReceivable, prefix: '¥' },
+            { key: 'receivedAmount', count: stats.receivedAmount, prefix: '¥' },
+            { key: 'unreceivedAmount', count: stats.unreceivedAmount, prefix: '¥' },
+            { key: 'overdueAmount', count: stats.overdueAmount, prefix: '¥' },
+            { key: 'monthlyReceived', count: stats.monthlyReceived, prefix: '¥' },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
+
+
 
         <Card>
           <CardContent className="p-0">
@@ -305,7 +348,7 @@ export default function ReceivablePage() {
                         />
                       </TableCell>
                       <TableCell
-                        className={`text-right ${Number(r.balance) > 0 ? 'text-red-600 font-medium' : ''}`}
+                        className={`text-right ${Number(r.balance) > 0 ? 'text-red-600 dark:text-red-400 font-medium' : ''}`}
                       >
                         <MoneyDisplay amount={toAmount(r.balance)} currency={r.currency || 'CNY'} />
                       </TableCell>
@@ -409,16 +452,33 @@ export default function ReceivablePage() {
                           }
                         />
                       </div>
-                      <div>
-                        <Label>{t('receiptDate')}</Label>
-                        <Input
-                          type="date"
-                          value={receiptForm.receipt_date}
-                          onChange={(e) =>
-                            setReceiptForm({ ...receiptForm, receipt_date: e.target.value })
-                          }
-                        />
-                      </div>
+                    <div>
+                      <Label>{t('receiptDate')}</Label>
+                      <Input
+                        type="date"
+                        value={receiptForm.receipt_date}
+                        onChange={(e) =>
+                          setReceiptForm({ ...receiptForm, receipt_date: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>{tc('paymentMethod')}</Label>
+                      <Select
+                        value={receiptForm.receipt_method}
+                        onValueChange={(v) => setReceiptForm({ ...receiptForm, receipt_method: v })}
+                      >
+                        <SelectTrigger className="w-full h-9">
+                          <SelectValue placeholder={tc('paymentMethod')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="bank_transfer">{tc('bankTransfer')}</SelectItem>
+                          <SelectItem value="cash">{tc('cash')}</SelectItem>
+                          <SelectItem value="check">{tc('check')}</SelectItem>
+                          <SelectItem value="wechat">{tc('wechat')}</SelectItem>
+                          <SelectItem value="alipay">{tc('alipay')}</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label>{tc('remark')}</Label>
@@ -426,6 +486,7 @@ export default function ReceivablePage() {
                         value={receiptForm.remark}
                         onChange={(e) => setReceiptForm({ ...receiptForm, remark: e.target.value })}
                       />
+                    </div>
                     </div>
                   </div>
                 )}

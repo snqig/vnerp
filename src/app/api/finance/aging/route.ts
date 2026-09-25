@@ -8,6 +8,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query } from '@/lib/db';
 import type { DbRow } from '@/types/db';
+import { stringFilter } from '@/lib/query-filter';
 
 /**
  * 往来账龄分析 API
@@ -18,7 +19,7 @@ import type { DbRow } from '@/types/db';
 export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
-  const type = searchParams.get('type') || 'receivable';
+  const type = stringFilter(searchParams.get('type')) ?? 'receivable';
   const asOfDate = searchParams.get('asOfDate') || new Date().toISOString().slice(0, 10);
 
   const isReceivable = type === 'receivable';
@@ -96,11 +97,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   };
 
   for (const summary of Object.values(partnerSummary) as DbRow[]) {
-    totalSummary.total_amount += summary.total_amount;
-    totalSummary.remaining_amount += summary.remaining_amount;
-    for (let i = 0; i < summary.buckets.length; i++) {
-      totalSummary.buckets[i].amount += summary.buckets[i].amount;
-      totalSummary.buckets[i].count += summary.buckets[i].count;
+    totalSummary.total_amount += Number(summary.total_amount ?? 0);
+    totalSummary.remaining_amount += Number(summary.remaining_amount ?? 0);
+    const summaryBuckets = (summary.buckets ?? []) as unknown as DbRow[];
+    for (let i = 0; i < summaryBuckets.length; i++) {
+      totalSummary.buckets[i].amount += Number(summaryBuckets[i].amount ?? 0);
+      totalSummary.buckets[i].count += Number(summaryBuckets[i].count ?? 0);
     }
   }
 

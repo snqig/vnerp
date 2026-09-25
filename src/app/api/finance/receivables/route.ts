@@ -7,6 +7,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { generateReceivable } from '@/lib/finance-core';
 
 import { withPermission } from '@/lib/api-permissions';
+import { numericFilter } from '@/lib/query-filter';
 // 查询应收单列表
 export const GET = withPermission(async (request: NextRequest) => {
   const ts = await getTranslations('Common');
@@ -36,8 +37,8 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
-  const status = searchParams.get('status') || '';
-  const customerId = searchParams.get('customerId') || '';
+  const status = numericFilter(searchParams.get('status'));
+  const customerId = numericFilter(searchParams.get('customerId'));
 
   // 注意：列表查询中 fin_receivable 被别名化为 r，MySQL 要求用别名 r 而非表名限定列，
   // 否则会报 Unknown column 'fin_receivable.deleted'。COUNT 查询同样加别名 r 以保持一致。

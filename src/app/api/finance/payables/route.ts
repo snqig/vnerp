@@ -7,14 +7,15 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { generatePayable } from '@/lib/finance-core';
 
 import { withPermission } from '@/lib/api-permissions';
+import { numericFilter } from '@/lib/query-filter';
 // 查询应付单列表
 export const GET = withPermission(async (request: NextRequest) => {
   const ts = await getTranslations('Common');
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
-  const status = searchParams.get('status') || '';
-  const supplierId = searchParams.get('supplierId') || '';
+  const status = numericFilter(searchParams.get('status'));
+  const supplierId = numericFilter(searchParams.get('supplierId'));
 
   // 注意：列表查询中 fin_payable 被别名化为 p，MySQL 要求用别名 p 而非表名限定列，
   // 否则会报 Unknown column 'fin_payable.deleted'。COUNT 查询同样加别名 p 以保持一致。

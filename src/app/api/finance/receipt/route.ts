@@ -8,6 +8,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { FinanceApplicationService } from '@/application/services/FinanceApplicationService';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
+import { numericFilter } from '@/lib/query-filter';
 
 const financeService = FinanceApplicationService.create();
 
@@ -17,7 +18,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
   const keyword = searchParams.get('keyword') || '';
-  const customerId = searchParams.get('customerId') || '';
+  const customerId = numericFilter(searchParams.get('customerId'));
 
   let where = 'WHERE r.deleted = 0';
   const params: SqlValue[] = [];

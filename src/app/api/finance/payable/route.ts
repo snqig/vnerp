@@ -5,14 +5,15 @@ import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { FinanceApplicationService } from '@/application/services/FinanceApplicationService';
 import type { DbRow } from '@/types/db';
+import { numericFilter } from '@/lib/query-filter';
 
 const financeService = FinanceApplicationService.create();
 
 export const GET = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
-    const supplierId = searchParams.get('supplierId');
-    const status = searchParams.get('status');
+    const supplierId = numericFilter(searchParams.get('supplierId'));
+    const status = numericFilter(searchParams.get('status'));
     const startDate = searchParams.get('startDate') || '';
     const endDate = searchParams.get('endDate') || '';
     const sourceNo = searchParams.get('sourceNo') || '';
@@ -22,8 +23,8 @@ export const GET = withPermission(
     const result = await financeService.getPayableList({
       page,
       pageSize,
-      supplierId: supplierId ? parseInt(supplierId) : undefined,
-      status: status ? parseInt(status) : undefined,
+      supplierId: supplierId || undefined,
+      status: status || undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
       sourceNo: sourceNo || undefined,

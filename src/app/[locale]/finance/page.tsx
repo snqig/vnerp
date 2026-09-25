@@ -107,15 +107,15 @@ interface PaymentRecord {
 
 
 const RECEIVABLE_STATUS: Record<number, { label: string; color: string }> = {
-  1: { label: RECEIVABLE_STATUS_LABEL[1], color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: RECEIVABLE_STATUS_LABEL[2], color: 'bg-blue-100 text-blue-800' },
-  3: { label: RECEIVABLE_STATUS_LABEL[3], color: 'bg-green-100 text-green-800' },
+  1: { label: RECEIVABLE_STATUS_LABEL[1], color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' },
+  2: { label: RECEIVABLE_STATUS_LABEL[2], color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
+  3: { label: RECEIVABLE_STATUS_LABEL[3], color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
 };
 
 const PAYABLE_STATUS: Record<number, { label: string; color: string }> = {
-  1: { label: PAYABLE_STATUS_LABEL[1], color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: PAYABLE_STATUS_LABEL[2], color: 'bg-blue-100 text-blue-800' },
-  3: { label: PAYABLE_STATUS_LABEL[3], color: 'bg-green-100 text-green-800' },
+  1: { label: PAYABLE_STATUS_LABEL[1], color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' },
+  2: { label: PAYABLE_STATUS_LABEL[2], color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
+  3: { label: PAYABLE_STATUS_LABEL[3], color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
 };
 
 const PAYMENT_METHODS = PAYMENT_METHOD_LABEL;
@@ -509,10 +509,10 @@ export default function FinancePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('totalReceivable')}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
+              <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 ¥{formatAmount(summary.receivable.total_amount)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -524,10 +524,10 @@ export default function FinancePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('totalPayable')}</CardTitle>
-              <TrendingDown className="h-4 w-4 text-red-600" />
+              <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                 ¥{formatAmount(summary.payable.total_amount)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -539,10 +539,10 @@ export default function FinancePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{tc('receivedAmount')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-blue-600" />
+              <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 ¥{formatAmount(summary.receivable.total_received)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -554,10 +554,10 @@ export default function FinancePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{tc('paidAmount')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-orange-600" />
+              <DollarSign className="h-4 w-4 text-orange-600 dark:text-orange-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                 ¥{formatAmount(summary.payable.total_paid)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -685,18 +685,18 @@ export default function FinancePage() {
                           <TableCell className="font-medium">{r.receivable_no}</TableCell>
                           <TableCell>{r.customer_name || '-'}</TableCell>
                           <TableCell>{r.source_no || '-'}</TableCell>
-                          <TableCell className="text-green-600">
+                          <TableCell className="text-green-600 dark:text-green-400">
                             ¥{formatAmount(r.amount)}
                           </TableCell>
                           <TableCell>¥{formatAmount(r.received_amount)}</TableCell>
                           <TableCell
-                            className={Number(r.balance) > 0 ? 'text-red-600 font-medium' : ''}
+                            className={Number(r.balance) > 0 ? 'text-red-600 dark:text-red-400 font-medium' : ''}
                           >
                             ¥{formatAmount(r.balance)}
                           </TableCell>
                           <TableCell>{r.due_date || '-'}</TableCell>
                           <TableCell>
-                            <Badge className={RECEIVABLE_STATUS[r.status]?.color || 'bg-gray-100'}>
+                            <Badge className={RECEIVABLE_STATUS[r.status]?.color || 'bg-gray-100 dark:bg-gray-700'}>
                               {RECEIVABLE_STATUS[r.status]?.label || r.status}
                             </Badge>
                           </TableCell>
@@ -715,7 +715,7 @@ export default function FinancePage() {
                                   size="sm"
                                   onClick={() => handleDeleteReceivable(r.id)}
                                 >
-                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                  <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
                                 </Button>
                               )}
                             </div>
@@ -759,16 +759,16 @@ export default function FinancePage() {
                           <TableCell className="font-medium">{p.payable_no}</TableCell>
                           <TableCell>{p.supplier_name || '-'}</TableCell>
                           <TableCell>{p.source_no || '-'}</TableCell>
-                          <TableCell className="text-red-600">¥{formatAmount(p.amount)}</TableCell>
+                          <TableCell className="text-red-600 dark:text-red-400">¥{formatAmount(p.amount)}</TableCell>
                           <TableCell>¥{formatAmount(p.paid_amount)}</TableCell>
                           <TableCell
-                            className={Number(p.balance) > 0 ? 'text-orange-600 font-medium' : ''}
+                            className={Number(p.balance) > 0 ? 'text-orange-600 dark:text-orange-400 font-medium' : ''}
                           >
                             ¥{formatAmount(p.balance)}
                           </TableCell>
                           <TableCell>{p.due_date || '-'}</TableCell>
                           <TableCell>
-                            <Badge className={PAYABLE_STATUS[p.status]?.color || 'bg-gray-100'}>
+                            <Badge className={PAYABLE_STATUS[p.status]?.color || 'bg-gray-100 dark:bg-gray-700'}>
                               {PAYABLE_STATUS[p.status]?.label || p.status}
                             </Badge>
                           </TableCell>
@@ -787,7 +787,7 @@ export default function FinancePage() {
                                   size="sm"
                                   onClick={() => handleDeletePayable(p.id)}
                                 >
-                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                  <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
                                 </Button>
                               )}
                             </div>
@@ -827,7 +827,7 @@ export default function FinancePage() {
                         <TableRow key={r.id}>
                           <TableCell className="font-medium">{r.receipt_no}</TableCell>
                           <TableCell>{r.customer_name || '-'}</TableCell>
-                          <TableCell className="text-green-600">
+                          <TableCell className="text-green-600 dark:text-green-400">
                             ¥{formatAmount(r.amount)}
                           </TableCell>
                           <TableCell>
@@ -869,7 +869,7 @@ export default function FinancePage() {
                         <TableRow key={p.id}>
                           <TableCell className="font-medium">{p.payment_no}</TableCell>
                           <TableCell>{p.supplier_name || '-'}</TableCell>
-                          <TableCell className="text-red-600">¥{formatAmount(p.amount)}</TableCell>
+                          <TableCell className="text-red-600 dark:text-red-400">¥{formatAmount(p.amount)}</TableCell>
                           <TableCell>
                             {PAYMENT_METHODS[p.payment_method] || p.payment_method || '-'}
                           </TableCell>
@@ -1250,7 +1250,7 @@ export default function FinancePage() {
                       <div>
                         <span className="text-muted-foreground">{tc('status')}：</span>
                         <Badge
-                          className={RECEIVABLE_STATUS[detailData.status]?.color || 'bg-gray-100'}
+                          className={RECEIVABLE_STATUS[detailData.status]?.color || 'bg-gray-100 dark:bg-gray-700'}
                         >
                           {RECEIVABLE_STATUS[detailData.status]?.label || detailData.status}
                         </Badge>
@@ -1289,7 +1289,7 @@ export default function FinancePage() {
                       <div>
                         <span className="text-muted-foreground">{tc('status')}：</span>
                         <Badge
-                          className={PAYABLE_STATUS[detailData.status]?.color || 'bg-gray-100'}
+                          className={PAYABLE_STATUS[detailData.status]?.color || 'bg-gray-100 dark:bg-gray-700'}
                         >
                           {PAYABLE_STATUS[detailData.status]?.label || detailData.status}
                         </Badge>

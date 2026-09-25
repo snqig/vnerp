@@ -21,8 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { RefreshCw, BarChart3, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { RefreshCw, BarChart3, TrendingUp, TrendingDown, DollarSign, CheckCircle, Clock, AlertTriangle, CreditCard, PiggyBank } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import type { ExportColumn } from '@/lib/global-export-service';
 
@@ -52,6 +53,13 @@ export default function FinanceReportPage() {
     total_profit: 0,
     profit_rate: 0,
   });
+  const [stats, setStats] = useState({
+    monthlyIncome: 0,
+    monthlyExpense: 0,
+    receivable: 0,
+    payable: 0,
+    monthlyProfit: 0,
+  });
 
   const fetchData = useCallback(async () => {
     try {
@@ -66,7 +74,10 @@ export default function FinanceReportPage() {
         setList(result.data?.list || []);
         setTotal(result.data?.total || 0);
       }
-    } catch {}
+    } catch (error) {
+      console.error('Failed to fetch report:', error);
+      setList([]);
+    }
   }, [page, periodType]);
 
   const fetchSummary = useCallback(async () => {
@@ -82,12 +93,27 @@ export default function FinanceReportPage() {
           profit_rate: d.profit_rate || 0,
         });
       }
-    } catch {}
+    } catch (error) {
+      console.error('Failed to fetch summary:', error);
+    }
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/finance/report/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
 
   useEffect(() => {
     fetchData();
     fetchSummary();
+    fetchStats();
   }, [fetchData, fetchSummary]);
 
   const formatAmount = (amount: number) => ((amount || 0) / 100).toFixed(2);
@@ -123,48 +149,23 @@ export default function FinanceReportPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-green-500" />
-                <span className="text-sm text-muted-foreground">{t('totalRevenue')}</span>
-              </div>
-              <div className="text-2xl font-bold text-green-600">
-                ¥{formatAmount(summary.total_revenue)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2">
-                <TrendingDown className="h-5 w-5 text-red-500" />
-                <span className="text-sm text-muted-foreground">{t('totalCost')}</span>
-              </div>
-              <div className="text-2xl font-bold text-red-600">
-                ¥{formatAmount(summary.total_cost)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-blue-500" />
-                <span className="text-sm text-muted-foreground">{t('totalProfit')}</span>
-              </div>
-              <div className="text-2xl font-bold">¥{formatAmount(summary.total_profit)}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-purple-500" />
-                <span className="text-sm text-muted-foreground">{t('profitRate')}</span>
-              </div>
-              <div className="text-2xl font-bold">{(summary.profit_rate || 0).toFixed(1)}%</div>
-            </CardContent>
-          </Card>
-        </div>
+        <StatsCards
+          configs={[
+            { key: 'monthlyIncome', label: '本月收入', icon: TrendingUp, ...StatsTheme.green },
+            { key: 'monthlyExpense', label: '本月支出', icon: TrendingDown, ...StatsTheme.red },
+            { key: 'receivable', label: '应收总额', icon: DollarSign, ...StatsTheme.blue },
+            { key: 'payable', label: '应付总额', icon: CreditCard, ...StatsTheme.orange },
+            { key: 'monthlyProfit', label: '本月利润', icon: PiggyBank, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'monthlyIncome', count: stats.monthlyIncome, prefix: '¥' },
+            { key: 'monthlyExpense', count: stats.monthlyExpense, prefix: '¥' },
+            { key: 'receivable', count: stats.receivable, prefix: '¥' },
+            { key: 'payable', count: stats.payable, prefix: '¥' },
+            { key: 'monthlyProfit', count: stats.monthlyProfit, prefix: '¥' },
+          ]}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+        />
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -236,14 +237,14 @@ export default function FinanceReportPage() {
                         <Badge variant="outline">{tc(r.type)}</Badge>
                       </TableCell>
                       <TableCell>{tc(r.category)}</TableCell>
-                      <TableCell className="text-right text-green-600">
+                      <TableCell className="text-right text-green-600 dark:text-green-400">
                         ¥{formatAmount(r.revenue)}
                       </TableCell>
-                      <TableCell className="text-right text-red-600">
+                      <TableCell className="text-right text-red-600 dark:text-red-400">
                         ¥{formatAmount(r.cost)}
                       </TableCell>
                       <TableCell
-                        className={`text-right ${r.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                        className={`text-right ${r.profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
                       >
                         ¥{formatAmount(r.profit)}
                       </TableCell>

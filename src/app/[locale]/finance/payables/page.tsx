@@ -26,7 +26,8 @@ import { ApiClient } from '@/lib/api-client';
 import { formatDate, formatAmount } from '@/lib/utils';
 import { toast } from 'sonner';
 import { MoneyDisplay } from '@/components/ui/money-display';
-import { RefreshCw, CreditCard, FileText } from 'lucide-react';
+import { RefreshCw, CreditCard, FileText, TrendingDown, AlertTriangle, Clock } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface Payable {
   id: number;
@@ -118,7 +119,27 @@ export default function PayablesPage() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex justify-between items-center">
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('totalPayable'), icon: FileText, ...StatsTheme.blue },
+            { key: 'unpaid', label: tc('unpaidAmount'), icon: TrendingDown, ...StatsTheme.orange },
+            { key: 'overdue', label: tc('overdue'), icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'monthly', label: tc('monthlyDue'), icon: Clock, ...StatsTheme.green },
+          ]}
+          stats={[
+            { key: 'total', count: payables.reduce((sum, p) => sum + (p.amount || 0), 0) },
+            { key: 'unpaid', count: payables.reduce((sum, p) => sum + (p.balance || 0), 0) },
+            { key: 'overdue', count: payables.filter((p) => p.balance! > 0 && new Date(p.due_date) < new Date()).length },
+            { key: 'monthly', count: payables.filter((p) => {
+              const d = new Date(p.due_date);
+              const now = new Date();
+              return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            }).length },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
+        <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{tc('tabPayable')}</h1>
         <Button onClick={loadPayables} disabled={loading}>
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -170,7 +191,7 @@ export default function PayablesPage() {
                   <TableCell>
                     <MoneyDisplay amount={pay.paid_amount} currency={pay.currency || 'CNY'} />
                   </TableCell>
-                  <TableCell className={pay.balance > 0 ? 'text-orange-600 font-medium' : ''}>
+                  <TableCell className={pay.balance > 0 ? 'text-orange-600 dark:text-orange-400 font-medium' : ''}>
                     <MoneyDisplay amount={pay.balance} currency={pay.currency || 'CNY'} />
                   </TableCell>
                   <TableCell>

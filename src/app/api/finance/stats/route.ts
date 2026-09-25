@@ -1,4 +1,4 @@
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
@@ -79,21 +79,21 @@ export const GET = withPermission(
       total_profit: totalProfit,
       profit_rate: profitRate,
       receivable: {
-        total_amount: parseFloat(receivableSummary?.total_amount || 0),
-        total_received: parseFloat(receivableSummary?.total_received || 0),
-        total_balance: parseFloat(receivableSummary?.total_balance || 0),
-        unpaid_balance: parseFloat(receivableSummary?.unpaid_balance || 0),
-        partial_balance: parseFloat(receivableSummary?.partial_balance || 0),
-        overdue_balance: parseFloat(receivableSummary?.overdue_balance || 0),
+        total_amount: parseFloat(String(receivableSummary?.total_amount || 0)),
+        total_received: parseFloat(String(receivableSummary?.total_received || 0)),
+        total_balance: parseFloat(String(receivableSummary?.total_balance || 0)),
+        unpaid_balance: parseFloat(String(receivableSummary?.unpaid_balance || 0)),
+        partial_balance: parseFloat(String(receivableSummary?.partial_balance || 0)),
+        overdue_balance: parseFloat(String(receivableSummary?.overdue_balance || 0)),
         by_status: receivableByStatus,
       },
       payable: {
-        total_amount: parseFloat(payableSummary?.total_amount || 0),
-        total_paid: parseFloat(payableSummary?.total_paid || 0),
-        total_balance: parseFloat(payableSummary?.total_balance || 0),
-        unpaid_balance: parseFloat(payableSummary?.unpaid_balance || 0),
-        partial_balance: parseFloat(payableSummary?.partial_balance || 0),
-        overdue_balance: parseFloat(payableSummary?.overdue_balance || 0),
+        total_amount: parseFloat(String(payableSummary?.total_amount || 0)),
+        total_paid: parseFloat(String(payableSummary?.total_paid || 0)),
+        total_balance: parseFloat(String(payableSummary?.total_balance || 0)),
+        unpaid_balance: parseFloat(String(payableSummary?.unpaid_balance || 0)),
+        partial_balance: parseFloat(String(payableSummary?.partial_balance || 0)),
+        overdue_balance: parseFloat(String(payableSummary?.overdue_balance || 0)),
         by_status: payableByStatus,
       },
       recent_receipts: recentReceipts,

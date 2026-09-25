@@ -188,7 +188,7 @@ export const GET = withPermission(async (request: NextRequest) => {
       (varianceType === 'material' && Math.abs(materialVariance) > 0) ||
       (varianceType === 'labor' && Math.abs(laborVariance) > 0)
     ) {
-      varianceDetails.push(detail);
+      varianceDetails.push(detail as DbRow);
     }
   }
 

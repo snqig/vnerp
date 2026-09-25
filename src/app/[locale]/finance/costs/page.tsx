@@ -24,7 +24,8 @@ import { Label } from '@/components/ui/label';
 import { ApiClient } from '@/lib/api-client';
 import { formatDate, formatAmount } from '@/lib/utils';
 import { toast } from 'sonner';
-import { RefreshCw, Calculator } from 'lucide-react';
+import { RefreshCw, Calculator, DollarSign, Box, Users, MoreHorizontal } from 'lucide-react';
+import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface CostRecord {
   id: number;
@@ -98,7 +99,23 @@ export default function CostsPage() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex justify-between items-center">
+        <StatsCards
+          configs={[
+            { key: 'total', label: tc('totalCost'), icon: DollarSign, ...StatsTheme.blue },
+            { key: 'material', label: tc('materialCost'), icon: Box, ...StatsTheme.green },
+            { key: 'labor', label: tc('laborCost'), icon: Users, ...StatsTheme.orange },
+            { key: 'other', label: tc('otherCost'), icon: MoreHorizontal, ...StatsTheme.purple },
+          ]}
+          stats={[
+            { key: 'total', count: costs.reduce((sum, c) => sum + (c.total_cost || 0), 0) },
+            { key: 'material', count: costs.reduce((sum, c) => sum + (c.material_cost || 0), 0) },
+            { key: 'labor', count: costs.reduce((sum, c) => sum + (c.labor_cost || 0), 0) },
+            { key: 'other', count: costs.reduce((sum, c) => sum + (c.manufacturing_cost || 0), 0) },
+          ]}
+          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+        />
+
+        <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{tc('costAccountingTitle')}</h1>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowCalc(true)}>
@@ -141,7 +158,7 @@ export default function CostsPage() {
                   <TableCell>{formatAmount(cost.labor_cost)}</TableCell>
                   <TableCell>{formatAmount(cost.manufacturing_cost)}</TableCell>
                   <TableCell className="font-bold">{formatAmount(cost.total_cost)}</TableCell>
-                  <TableCell className="text-blue-600 font-medium">
+                  <TableCell className="text-blue-600 dark:text-blue-400 font-medium">
                     {formatAmount(cost.unit_cost)}
                   </TableCell>
                   <TableCell>{formatDate(cost.calculate_time)}</TableCell>

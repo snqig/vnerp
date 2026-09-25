@@ -21,25 +21,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, RefreshCw, DollarSign, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { Search, RefreshCw, DollarSign, FileText } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { authFetch } from '@/lib/auth-fetch';
 import { formatDate } from '@/lib/date-utils';
-import { useToast } from '@/hooks/use-toast';
-import { useRowSelection } from '@/lib/useRowSelection';
-import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
-interface CostItem {
+interface CostRecord {
   id: number;
   cost_no: string;
   cost_type: string;
   source_type: string;
-  order_no: string;
+  source_no: string;
+  work_order_no: string | null;
   department: string;
   amount: number;
+  currency: string;
   cost_date: string;
   description: string;
+  remark: string;
   status: number;
 }
 
@@ -51,49 +51,30 @@ const costTypeMap: Record<string, string> = {
   other: 'otherCost',
 };
 
-export default function CostPage() {
-  // 翻译钩子
+const typeColors: Record<string, string> = {
+  material: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  labor: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  overhead: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+  outsource: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  other: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300',
+};
+
+export default function CostDetailPage() {
   const t = useTranslations('Finance');
   const tc = useTranslations('Common');
 
-  const [list, setList] = useState<CostItem[]>([]);
+  const [list, setList] = useState<CostRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [keyword, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [costType, setCostType] = useState('');
+  const [workOrderNo, setWorkOrderNo] = useState('');
   const [summary, setSummary] = useState({
     material: 0,
     labor: 0,
-    overhead: 0,
-    outsource: 0,
+    manufacturing: 0,
     total: 0,
   });
-
-  const { toast } = useToast();
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
-  const [deleting, setDeleting] = useState(false);
-
-  const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
-    if (ids.length === 0) return;
-    if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
-    setDeleting(true);
-    let okCount = 0; let failMsg = '';
-    for (const id of ids) {
-      try {
-        const res = await authFetch(`/api/finance/cost?id=${id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (data.success) okCount++; else failMsg = data.message || failMsg;
-      } catch { failMsg = tc('error'); }
-    }
-    setDeleting(false);
-    if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
-    if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
-    fetchData();
-    fetchSummary();
-  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -101,42 +82,35 @@ export default function CostPage() {
         page: String(page),
         pageSize: '20',
         keyword,
-        cost_type: typeFilter,
+        workOrderNo,
       });
-      const res = await authFetch('/api/finance/cost?' + params);
+      if (costType) params.set('cost_type', costType);
+      const res = await authFetch('/api/finance/costs?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data?.list || []);
         setTotal(result.data?.total || 0);
+        setSummary(result.data?.cost_summary || summary);
       }
-    } catch {}
-  }, [page, keyword, typeFilter]);
-
-  const fetchSummary = useCallback(async () => {
-    try {
-      const res = await authFetch('/api/finance/cost');
-      const result = await res.json();
-      if (result.success && result.data) {
-        setSummary(result.data.cost_summary || summary);
-      }
-    } catch {}
-  }, []);
+    } catch (error) {
+      console.error('Failed to fetch cost detail:', error);
+      setList([]);
+    }
+  }, [page, keyword, costType, workOrderNo]);
 
   useEffect(() => {
     fetchData();
-    fetchSummary();
-  }, [fetchData, fetchSummary]);
+  }, [fetchData]);
 
-  // fin_cost_record.amount 以「元」存储（如 1250.00 = ¥1250.00），直接格式化即可，无需 /100。
   const formatAmount = (amount: number) => Number(amount || 0).toFixed(2);
 
   return (
     <MainLayout>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">{t('costManagement')}</h2>
+          <h2 className="text-2xl font-bold">{t('costDetail')}</h2>
           <div className="flex items-center gap-2">
-            <div className="relative w-64">
+            <div className="relative w-48">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t('searchNoOrDesc')}
@@ -145,10 +119,16 @@ export default function CostPage() {
                 className="pl-10 h-9"
               />
             </div>
+            <Input
+              placeholder={t('searchWorkOrder')}
+              value={workOrderNo}
+              onChange={(e) => setWorkOrderNo(e.target.value)}
+              className="h-9 w-40"
+            />
             <Select
-              value={typeFilter}
+              value={costType}
               onValueChange={(v) => {
-                setTypeFilter(v === 'all' ? '' : v);
+                setCostType(v === 'all' ? '' : v);
                 setPage(1);
               }}
             >
@@ -159,12 +139,13 @@ export default function CostPage() {
                 <SelectItem value="all">{tc('all')}</SelectItem>
                 <SelectItem value="material">{t('materialCost')}</SelectItem>
                 <SelectItem value="labor">{t('laborCost')}</SelectItem>
-                <SelectItem value="overhead">{t('overheadCost')}</SelectItem>
+                <SelectItem value="overhead">{t('manufacturingCost')}</SelectItem>
                 <SelectItem value="outsource">{t('outsourceCost')}</SelectItem>
+                <SelectItem value="other">{t('otherCost')}</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" onClick={fetchData}>
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="h-4 w-4 mr-1" />
               {tc('refresh')}
             </Button>
           </div>
@@ -172,34 +153,30 @@ export default function CostPage() {
 
         <StatsCards
           configs={[
-            { key: 'total', label: tc('total'), icon: DollarSign, ...StatsTheme.blue },
-            { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
-            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
-            { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'total', label: t('totalCostRecords'), icon: FileText, ...StatsTheme.blue },
+            { key: 'material', label: t('materialCost'), icon: DollarSign, ...StatsTheme.green },
+            { key: 'labor', label: t('laborCost'), icon: DollarSign, ...StatsTheme.orange },
+            { key: 'manufacturing', label: t('manufacturingCost'), icon: DollarSign, ...StatsTheme.red },
           ]}
           stats={[
-            { key: 'total', count: list.length },
-            { key: 'active', count: list.length },
-            { key: 'pending', count: list.length },
-            { key: 'warning', count: list.length },
+            { key: 'total', count: total },
+            { key: 'material', count: summary.material },
+            { key: 'labor', count: summary.labor },
+            { key: 'manufacturing', count: summary.manufacturing },
           ]}
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
 
         <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-10">
-                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                  </TableHead>
                   <TableHead>{t('costNo')}</TableHead>
+                  <TableHead>{tc('workOrderNo')}</TableHead>
                   <TableHead>{t('costType')}</TableHead>
-                  <TableHead>{t('sourceNo')}</TableHead>
-                  <TableHead>{tc('department')}</TableHead>
                   <TableHead className="text-right">{tc('amount')}</TableHead>
+                  <TableHead>{tc('currency')}</TableHead>
                   <TableHead>{tc('date')}</TableHead>
                   <TableHead>{t('description')}</TableHead>
                 </TableRow>
@@ -207,25 +184,27 @@ export default function CostPage() {
               <TableBody>
                 {list.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       {t('noData')}
                     </TableCell>
                   </TableRow>
                 ) : (
                   list.map((c) => (
                     <TableRow key={c.id}>
-                      <TableCell>
-                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(c.id))} onChange={() => toggle(String(c.id))} aria-label={tc('selectRow', { id: c.id })} />
-                      </TableCell>
                       <TableCell className="font-mono text-sm">{c.cost_no}</TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {c.work_order_no || '-'}
+                      </TableCell>
                       <TableCell>
-                        <Badge variant="outline">
+                        <Badge
+                          variant="outline"
+                          className={typeColors[c.cost_type] || 'bg-gray-100 text-gray-700'}
+                        >
                           {t(costTypeMap[c.cost_type]) || c.cost_type}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-sm">{c.order_no}</TableCell>
-                      <TableCell>{c.department}</TableCell>
-                      <TableCell className="text-right">¥{formatAmount(c.amount)}</TableCell>
+                      <TableCell className="text-right font-medium">¥{formatAmount(c.amount)}</TableCell>
+                      <TableCell>{c.currency || 'CNY'}</TableCell>
                       <TableCell>{formatDate(c.cost_date)}</TableCell>
                       <TableCell className="max-w-xs truncate">{c.description}</TableCell>
                     </TableRow>
