@@ -28,7 +28,7 @@
 import mysql from 'mysql2/promise';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '..');
@@ -121,7 +121,7 @@ async function executeMigration(conn, fileName, direction = 'up') {
         await conn.query(stmt);
       }
     } else {
-      const migration = await import(filePath);
+      const migration = await import(pathToFileURL(filePath).href);
       const fn = migration[direction];
 
       if (typeof fn !== 'function') {

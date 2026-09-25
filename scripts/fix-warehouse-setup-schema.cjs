@@ -1,7 +1,10 @@
 // 修复 /api/warehouse + setup 列表页字段缺失：
-// setup 页渲染 nature / includeInCalculation / capacity / usedCapacity / manager，
+// setup 页渲染 nature / includeInCalculation / capacity / manager，
 // 但 inv_warehouse 仅有 manager_id + warehouse_type，缺少上述列。
 // 本脚本幂等追加列（仅 ADD COLUMN，不影响既有数据）。
+//
+// 注意：used_capacity 已于迁移 089 删除（无任何写入方，属闲置字段），
+// 本脚本不再补该列，否则重跑会把废弃列加回来。
 const mysql = require('mysql2/promise');
 const CFG = { host: '127.0.0.1', port: 3306, user: 'root', password: 'Snqig521223', database: 'vnerpdacahng' };
 
@@ -25,7 +28,6 @@ async function addCol(c, table, col, def) {
     await addCol(c, 'inv_warehouse', 'nature', "VARCHAR(50) DEFAULT '' COMMENT '仓库性质(自有/租赁/外协)'");
     await addCol(c, 'inv_warehouse', 'include_in_calculation', "TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否计入核算 1是 0否'");
     await addCol(c, 'inv_warehouse', 'capacity', "DECIMAL(18,4) NOT NULL DEFAULT 0 COMMENT '仓库容量'");
-    await addCol(c, 'inv_warehouse', 'used_capacity', "DECIMAL(18,4) NOT NULL DEFAULT 0 COMMENT '已用容量'");
     console.log('ALL DONE');
   } catch (e) {
     console.log('ERR', e.message);

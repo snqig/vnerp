@@ -56,7 +56,7 @@ async function main() {
     console.log('   ', summarize('taking_type', first.taking_type), '| total_items=', first.total_items, '| diff_items=', first.diff_items, '| diff_amount=', first.diff_amount);
   }
 
-  // 4. warehouse (setup): nature / includeInCalculation / capacity / usedCapacity / manager
+  // 4. warehouse (setup): nature / includeInCalculation / capacity / categoryId / contactPhone / manager
   {
     const res = await fetch(`${BASE}/api/warehouse?pageSize=2`, { headers: auth });
     const json = await res.json();
@@ -64,7 +64,7 @@ async function main() {
     const first = list[0] || {};
     console.log('[warehouse] status=', res.status, 'count=', list.length);
     console.log('   ', summarize('keys', Object.keys(first)));
-    console.log('   ', summarize('nature', first.nature), '| includeInCalculation=', first.includeInCalculation, '| capacity=', first.capacity, '| usedCapacity=', first.usedCapacity, '| manager=', first.manager, '| managerId=', first.managerId);
+    console.log('   ', summarize('nature', first.nature), '| includeInCalculation=', first.includeInCalculation, '| capacity=', first.capacity, '| categoryId=', first.categoryId, '| contactPhone=', first.contactPhone, '| manager=', first.manager, '| managerId=', first.managerId);
   }
 }
 
