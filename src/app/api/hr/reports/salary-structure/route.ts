@@ -8,6 +8,8 @@ const db = getDrizzleDb();
 
 const COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#eab308'];
 
+const STATUS_FILTER = sql`status IN ('calculated', 'confirmed')`;
+
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const month = searchParams.get('month');
@@ -15,7 +17,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   let calcMonth = month;
   if (!calcMonth) {
     const [latest] = await db.execute(sql`
-      SELECT MAX(calc_month) as m FROM hr_salary_calculation WHERE status = 'confirmed'
+      SELECT MAX(calc_month) as m FROM hr_salary_calculation WHERE ${STATUS_FILTER}
     `) as unknown as { m: string }[];
     calcMonth = latest?.m || '';
   }
@@ -37,7 +39,7 @@ export const GET = withPermission(async (request: NextRequest) => {
       COALESCE(ROUND(AVG(allowances)), 0) as avgAllowances,
       COALESCE(ROUND(AVG(net_pay)), 0) as avgNetPay
     FROM hr_salary_calculation
-    WHERE calc_month = ${calcMonth} AND status = 'confirmed'
+    WHERE calc_month = ${calcMonth} AND ${STATUS_FILTER}
   `) as unknown as {
     avgBase: number; avgPiece: number; avgOvertime: number;
     avgPerformance: number; avgAllowances: number; avgNetPay: number;
@@ -53,7 +55,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   const netPays = await db.execute(sql`
     SELECT net_pay FROM hr_salary_calculation
-    WHERE calc_month = ${calcMonth} AND status = 'confirmed'
+    WHERE calc_month = ${calcMonth} AND ${STATUS_FILTER}
     ORDER BY net_pay
   `) as unknown as { net_pay: number }[];
 

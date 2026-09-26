@@ -6,6 +6,8 @@ import { successResponse } from '@/lib/api-response';
 
 const db = getDrizzleDb();
 
+const STATUS_FILTER = sql`status IN ('calculated', 'confirmed')`;
+
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const month = searchParams.get('month');
@@ -13,7 +15,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   let calcMonth = month;
   if (!calcMonth) {
     const [latest] = await db.execute(sql`
-      SELECT MAX(calc_month) as m FROM hr_salary_calculation WHERE status = 'confirmed'
+      SELECT MAX(calc_month) as m FROM hr_salary_calculation WHERE ${STATUS_FILTER}
     `) as unknown as { m: string }[];
     calcMonth = latest?.m || '';
   }
@@ -40,7 +42,7 @@ export const GET = withPermission(async (request: NextRequest) => {
       COALESCE(SUM(social_insurance_personal + housing_fund_personal), 0) as totalInsurance,
       COUNT(DISTINCT employee_id) as headcount
     FROM hr_salary_calculation
-    WHERE calc_month = ${calcMonth} AND status = 'confirmed'
+    WHERE calc_month = ${calcMonth} AND ${STATUS_FILTER}
   `) as unknown as {
     totalCost: number; totalBase: number; totalPiece: number;
     totalOvertime: number; totalPerformance: number; totalInsurance: number;
@@ -59,7 +61,7 @@ export const GET = withPermission(async (request: NextRequest) => {
       COALESCE(SUM(s.gross_pay), 0) as cost
     FROM hr_salary_calculation s
     JOIN sys_employee e ON s.employee_id = e.id
-    WHERE s.calc_month = ${calcMonth} AND s.status = 'confirmed'
+    WHERE s.calc_month = ${calcMonth} AND s.${STATUS_FILTER}
     GROUP BY e.dept_id, e.dept_name
     ORDER BY cost DESC
   `) as unknown as { dept_name: string; headcount: number; cost: number }[];
@@ -81,7 +83,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
   const [lastMonthTotal] = await db.execute(sql`
     SELECT COALESCE(SUM(gross_pay), 0) as totalCost FROM hr_salary_calculation
-    WHERE calc_month = ${lastMonth} AND status = 'confirmed'
+    WHERE calc_month = ${lastMonth} AND status IN ('calculated', 'confirmed')
   `) as unknown as { totalCost: number }[];
   const costTrend = lastMonthTotal && lastMonthTotal.totalCost > 0
     ? Number((((grandTotal - Number(lastMonthTotal.totalCost)) / Number(lastMonthTotal.totalCost)) * 100).toFixed(2))
@@ -96,7 +98,7 @@ export const GET = withPermission(async (request: NextRequest) => {
       COALESCE(SUM(performance_salary), 0) as performance,
       COALESCE(SUM(social_insurance_personal + housing_fund_personal), 0) as insurance
     FROM hr_salary_calculation
-    WHERE calc_month >= DATE_SUB(${calcMonth}, INTERVAL 5 MONTH) AND status = 'confirmed'
+    WHERE calc_month >= DATE_SUB(${calcMonth}, INTERVAL 5 MONTH) AND status IN ('calculated', 'confirmed')
     GROUP BY calc_month
     ORDER BY calc_month
   `) as unknown as { month: string; base: number; piece: number; overtime: number; performance: number; insurance: number }[];

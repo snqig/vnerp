@@ -13,29 +13,22 @@ interface SalaryStructureChartProps {
   data: SalaryStructureData[];
 }
 
-// renderCenterLabel 已移入 SalaryStructureChart 组件内部（避免在非组件函数中调用 hook）
+function CenterLabel({ cx, cy, total, t }: { cx: number; cy: number; total: number; t: (key: string) => string }) {
+  return (
+    <g>
+        <text x={cx} y={cy - 8} textAnchor="middle" className="fill-muted-foreground text-xs">
+          {t('total')}
+        </text>
+      <text x={cx} y={cy + 16} textAnchor="middle" className="fill-foreground text-lg font-bold">
+        ¥{total.toLocaleString()}
+      </text>
+    </g>
+  );
+}
 
 export function SalaryStructureChart({ data }: SalaryStructureChartProps) {
   const ts = useTranslations('Common');
   const t = useTranslations('Hr');
-
-  const renderCenterLabel = (t: (key: string) => string, total: number) => {
-    function CenterLabel({ viewBox }: { viewBox?: { cx: number; cy: number } }) {
-      if (!viewBox) return null;
-      const { cx, cy } = viewBox;
-      return (
-        <g>
-          <text x={cx} y={cy - 8} textAnchor="middle" className="fill-muted-foreground text-xs">
-            {t('total') || ts('k_byap0k')}
-          </text>
-          <text x={cx} y={cy + 16} textAnchor="middle" className="fill-foreground text-lg font-bold">
-            ¥{total.toLocaleString()}
-          </text>
-        </g>
-      );
-    }
-    return CenterLabel;
-  };
 
   const labelMap: Record<string, string> = {
     baseSalary: t('baseSalary') || ts('k_60tcky'),
@@ -55,7 +48,7 @@ export function SalaryStructureChart({ data }: SalaryStructureChartProps) {
 
   const total = data.reduce((sum, d) => sum + d.value, 0);
   const chartData = data.map((d) => ({ ...d, name: labelMap[d.name] || d.name }));
-  const centerLabel = renderCenterLabel(t, total);
+  const centerLabel = <CenterLabel cx={200} cy={200} total={total} t={t} />;
 
   return (
     <ResponsiveContainer width="100%" height={400}>
@@ -83,7 +76,7 @@ export function SalaryStructureChart({ data }: SalaryStructureChartProps) {
           formatter={(value: number, name: string) => [`¥${value.toLocaleString()}`, name]}
         />
         <Legend />
-        {centerLabel({ viewBox: { cx: 200, cy: 200 } } as any)}
+        {centerLabel}
       </PieChart>
     </ResponsiveContainer>
   );

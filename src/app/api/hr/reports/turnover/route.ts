@@ -10,8 +10,8 @@ export const GET = withPermission(
     const [totals] = await query<DbRow>(
       `SELECT
         COUNT(*) as totalEmployees,
-        SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as resignedCount
-      FROM sys_employee WHERE deleted = 0`
+        SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as resignedCount
+      FROM sys_employee WHERE deleted = 0 AND status = 1`
     );
 
     const monthRows = await query<DbRow>(
