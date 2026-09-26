@@ -21,7 +21,7 @@ export const GET = withPermission(
     const batchRows = await query(
       `SELECT
       id, batch_no, material_id, material_code, material_name,
-      quantity, available_qty, locked_qty, unit_cost, unit_price,
+      quantity, available_qty, locked_qty, unit_price,
       warehouse_id, location, inbound_date, produce_date, expire_date,
       status, deleted, create_time, update_time
     FROM inv_inventory_batch
@@ -118,7 +118,7 @@ export const GET = withPermission(
         } else if (log.business_type === 'outbound_order' || log.business_type === 'outbound') {
           const [order] = await query(
             `SELECT o.id, o.order_no, o.status, o.outbound_type, o.customer_name,
-                  o.work_order_no, o.total_amount, o.order_date
+                  o.sales_order_no, o.total_amount, o.order_date
            FROM inv_outbound_order o
            WHERE o.order_no = ? AND o.deleted = 0`,
             [log.business_no]
@@ -132,7 +132,7 @@ export const GET = withPermission(
               details: {
                 outbound_type: order.outbound_type,
                 customer_name: order.customer_name,
-                work_order_no: order.work_order_no,
+                sales_order_no: order.sales_order_no,
                 total_amount: parseFloat(order.total_amount),
                 order_date: order.order_date,
               },
@@ -171,23 +171,23 @@ export const GET = withPermission(
           log.business_type === 'stocktaking_order'
         ) {
           const [order] = await query(
-            `SELECT s.id, s.check_no, s.status, s.type, s.warehouse_name,
-                  s.diff_items, s.total_diff_amount
+            `SELECT s.id, s.taking_no, s.status, s.taking_type, s.warehouse_id,
+                  s.total_items, s.create_time
            FROM inv_stocktaking s
-           WHERE s.check_no = ? AND s.deleted = 0`,
+           WHERE s.taking_no = ? AND s.deleted = 0`,
             [log.business_no]
           );
           if (order) {
             entry.document = {
               type: 'stocktaking',
               id: order.id,
-              no: order.check_no,
+              no: order.taking_no,
               status: order.status,
               details: {
-                stocktaking_type: order.type,
+                stocktaking_type: order.taking_type,
                 warehouse_name: order.warehouse_name,
-                diff_items: order.diff_items,
-                total_diff_amount: parseFloat(order.total_diff_amount),
+                total_items: order.total_items,
+                create_time: order.create_time,
               },
             };
           }
@@ -236,7 +236,7 @@ export const GET = withPermission(
         quantity: parseFloat(batchSnapshot.quantity),
         available_qty: parseFloat(batchSnapshot.available_qty),
         locked_qty: parseFloat(batchSnapshot.locked_qty),
-        unit_cost: parseFloat(batchSnapshot.unit_cost || batchSnapshot.unit_price || 0),
+        unit_cost: parseFloat(batchSnapshot.unit_price || 0),
         inbound_date: batchSnapshot.inbound_date,
         produce_date: batchSnapshot.produce_date,
         expire_date: batchSnapshot.expire_date,

@@ -55,7 +55,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         active: (activeResult as { count: number }[])[0]?.count || 0,
         inactive: (inactiveResult as { count: number }[])[0]?.count || 0,
         monthlyNew: (monthlyResult as { count: number }[])[0]?.count || 0,
-        usedCount: (usedResult as { count: number }[])[0]?.count || 0,
+        printedCount: (usedResult as { count: number }[])[0]?.count || 0,
       },
     });
   } catch (error) {

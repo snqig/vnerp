@@ -82,6 +82,29 @@ jobs:
       - name: Run lint gate
         run: pnpm lint:gate
 
+      # 权限码词汇表一致性门槛：纯静态解析 permissions-catalog.ts + messages/*.json，
+      # 不连库，可放在最前面快速失败。
+      - name: Run permission vocabulary gate
+        run: pnpm validate:permissions
+
+      # SQL 可执行性门槛需要一个装了结构的库：CI 的 MySQL service 只建了空库，
+      # 先跑 setup:db 把结构导入，EXPLAIN 才有意义。
+      # 这里刻意用 database/ci_schema.sql 而不是默认的 vnerpdacahng_schema.sql：
+      # 后者是 2026-07-07 的二手快照（162 表），只有 prod（349 表 + 6 视图）的 45%，
+      # EXPLAIN 会把所有「引用缺失表」的语句判成缺陷 —— 实测 2000+ 条误报。
+      - name: Prepare DB schema for SQL gate
+        run: pnpm setup:db --schema=database/ci_schema.sql
+
+      - name: Run SQL executable gate
+        run: pnpm validate:sql
+
+      # 幽灵列/幽灵表门槛（validate-sql-ghost）：同样是 EXPLAIN 反证，但补上了
+      # validate:sql 的两个盲区 —— ① 范围扩到全 src（后者只扫 src/app/api）；
+      # ② 覆盖 INSERT/UPDATE/DELETE（后者只抽 ^(SELECT|WITH)）。
+      # 与前者共用「Prepare DB schema for SQL gate」导入的结构，必须跟在它后面。
+      - name: Run SQL ghost-column gate
+        run: pnpm validate:sql-ghost
+
       - name: Run TypeScript check
         run: pnpm ts-check
 

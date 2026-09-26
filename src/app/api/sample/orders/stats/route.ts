@@ -15,38 +15,38 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const params: any[] = [];
 
     if (startDate && endDate) {
-      dateFilter = ' AND DATE(created_at) BETWEEN ? AND ?';
+      dateFilter = ' AND DATE(create_time) BETWEEN ? AND ?';
       params.push(startDate, endDate);
     }
 
     // 待确认
     const [pendingResult] = await query(
-      `SELECT COUNT(*) as count FROM sample_order WHERE deleted = 0 AND status = 1${dateFilter}`,
+      `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND status = 1${dateFilter}`,
       params
     );
 
     // 生产中
     const [producingResult] = await query(
-      `SELECT COUNT(*) as count FROM sample_order WHERE deleted = 0 AND status = 2${dateFilter}`,
+      `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND status = 2${dateFilter}`,
       params
     );
 
     // 待发货
     const [shippingResult] = await query(
-      `SELECT COUNT(*) as count FROM sample_order WHERE deleted = 0 AND status = 3${dateFilter}`,
+      `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND status = 3${dateFilter}`,
       params
     );
 
     // 已完成
     const [completedResult] = await query(
-      `SELECT COUNT(*) as count FROM sample_order WHERE deleted = 0 AND status = 4${dateFilter}`,
+      `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND status = 4${dateFilter}`,
       params
     );
 
     // 本月打样订单数
     const [monthlyResult] = await query(
-      `SELECT COUNT(*) as count FROM sample_order 
-       WHERE deleted = 0 AND YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE())`
+      `SELECT COUNT(*) as count FROM sal_sample_order 
+       WHERE deleted = 0 AND YEAR(create_time) = YEAR(CURDATE()) AND MONTH(create_time) = MONTH(CURDATE())`
     );
 
     return NextResponse.json({

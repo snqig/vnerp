@@ -1,54 +1,21 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Plus,
-  RefreshCw,
-  Search,
-  Trash2,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  QrCode,
-  PackageOpen,
-  PackageCheck,
-  Eye,
-} from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, RefreshCw, Search, Eye, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { UserSelect } from '@/components/ui/user-select';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
-import { useTranslations } from 'next-intl';
+import { UserSelect } from '@/components/ui/user-select';
 
 interface TransferOrder {
   id: number;
@@ -56,51 +23,33 @@ interface TransferOrder {
   type: number;
   from_warehouse_id: number;
   to_warehouse_id: number;
-  from_location: string | null;
-  to_location: string | null;
   status: number;
   applicant_id: number | null;
-  approver_id: number | null;
-  out_time: string | null;
-  in_time: string | null;
-  remark: string | null;
-  create_time: string;
-  update_time: string;
+  remark?: string | null;
+  operator_name?: string;
   from_warehouse_name?: string;
   to_warehouse_name?: string;
-  applicant_name?: string;
-  approver_name?: string;
   type_name?: string;
   status_name?: string;
 }
 
-interface TransferItem {
-  id: number;
-  transfer_id: number;
-  material_id: number;
-  qr_code: string | null;
-  quantity: number;
-  out_quantity: number;
-  in_quantity: number;
-  unit: string | null;
-  batch_no: string | null;
-  material_name?: string;
-}
-
 export default function TransferPage() {
-  // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
+  const { toast } = useToast();
 
-  const TYPE_MAP: Record<number, string> = {
-    1: t('locationTransfer'),
-    2: t('warehouseTransfer'),
-  };
+  const [list, setList] = useState<TransferOrder[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [searchNo, setSearchNo] = useState('');
+  const [showDialog, setShowDialog] = useState(false);
+  const [editItem, setEditItem] = useState<Partial<TransferOrder>>({});
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [currentTransfer, setCurrentTransfer] = useState<TransferOrder | null>(null);
+  const [items, setItems] = useState<Loose[]>([]);
 
-  const STATUS_MAP: Record<
-    number,
-    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-  > = {
+  const STATUS_MAP: Record<number, { label: string; variant: string }> = {
     0: { label: tc('draft'), variant: 'outline' },
     1: { label: tc('pending'), variant: 'secondary' },
     2: { label: t('outbound'), variant: 'default' },
@@ -108,72 +57,26 @@ export default function TransferPage() {
     4: { label: t('cancelled'), variant: 'destructive' },
   };
 
-  const { toast } = useToast();
-  const [list, setList] = useState<TransferOrder[]>([]);
-  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    list,
-    (r) => String(r.id)
-  );
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [searchNo, setSearchNo] = useState('');
-  const [showDialog, setShowDialog] = useState(false);
-  const [editItem, setEditItem] = useState<Partial<TransferOrder>>({});
-  const [locations, setLocations] = useState<
-    { id: number; code: string; name: string; wh_id: number }[]
-  >([]);
-  const [sortField, setSortField] = useState<string>('');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-
-  const [showOutboundDialog, setShowOutboundDialog] = useState(false);
-  const [showInboundDialog, setShowInboundDialog] = useState(false);
-  const [currentTransferId, setCurrentTransferId] = useState<number | null>(null);
-  const [_transferItems, _setTransferItems] = useState<TransferItem[]>([]);
-  const [scanItems, setScanItems] = useState<
-    { material_id: number; qr_code: string; quantity: number }[]
-  >([]);
-
-  const [showDetailDialog, setShowDetailDialog] = useState(false);
-  const [detailItems, setDetailItems] = useState<TransferItem[]>([]);
-  const [currentTransfer, setCurrentTransfer] = useState<TransferOrder | null>(null);
-  const [loading, setLoading] = useState(false);
-
   const fetchData = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: String(page),
-        pageSize: '20',
-        transferNo: searchNo,
-      });
+      const params = new URLSearchParams({ page: String(page), pageSize: '20', transferNo: searchNo });
       const res = await authFetch('/api/warehouse/transfer?' + params);
       const result = await res.json();
       if (result.success) {
-        setList(result.data.list || []);
-        setTotal(result.data.total || 0);
+        setList(result.data?.list || []);
+        setTotal(result.data?.total || 0);
       }
-    } catch {}
-    finally {
+    } catch {} finally {
       setLoading(false);
     }
-  };
-
-  const fetchLocations = async (whId: number) => {
-    try {
-      const res = await authFetch(`/api/warehouse/locations?wh_id=${whId}`);
-      const result = await res.json();
-      if (result.success) {
-        const locationsList = Array.isArray(result.data) ? result.data : result.data?.list || [];
-        setLocations(locationsList);
-      }
-    } catch {}
   };
 
   useEffect(() => {
     fetchData();
   }, [page]);
 
-  const handleSave = async () => {
+  const handleCreate = async () => {
     if (!editItem.from_warehouse_id) {
       toast({ title: t('selectSourceWarehouseFirst'), variant: 'destructive' });
       return;
@@ -182,50 +85,42 @@ export default function TransferPage() {
       toast({ title: t('selectTargetWarehouseFirst'), variant: 'destructive' });
       return;
     }
-
     try {
       const res = await authFetch('/api/warehouse/transfer', {
         method: 'POST',
         body: JSON.stringify({
-          type: editItem.type || 1,
+          type: Number(editItem.type || 2),
           from_warehouse_id: editItem.from_warehouse_id,
           to_warehouse_id: editItem.to_warehouse_id,
-          from_location: editItem.from_location,
-          to_location: editItem.to_location,
-          applicant_id: editItem.applicant_id,
-          remark: editItem.remark,
+          applicant_id: editItem.applicant_id || null,
+          remark: editItem.remark || null,
         }),
       });
       const result = await res.json();
-
       if (result.success) {
         toast({ title: t('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
+        toast({ title: result.message || tc('error'), variant: 'destructive' });
       }
     } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
-  const handleAction = async (id: number, action: string, extraData?: Loose) => {
+  const handleAction = async (id: number, action: string) => {
     try {
-      const body: Loose = { id, action };
-      if (extraData) Object.assign(body, extraData);
-
       const res = await authFetch('/api/warehouse/transfer', {
         method: 'PUT',
-        body: JSON.stringify(body),
+        body: JSON.stringify({ id, action }),
       });
       const result = await res.json();
-
       if (result.success) {
         toast({ title: tc('success') });
         fetchData();
       } else {
-        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
+        toast({ title: result.message || tc('error'), variant: 'destructive' });
       }
     } catch {
       toast({ title: tc('error'), variant: 'destructive' });
@@ -241,190 +136,31 @@ export default function TransferPage() {
         toast({ title: t('deleteSuccess') });
         fetchData();
       } else {
-        toast({ title: t('deleteFailed'), description: result.message, variant: 'destructive' });
+        toast({ title: result.message || t('deleteFailed'), variant: 'destructive' });
       }
     } catch {
       toast({ title: t('deleteFailed'), variant: 'destructive' });
     }
   };
 
-  const openOutboundDialog = async (transfer: TransferOrder) => {
-    setCurrentTransferId(transfer.id);
+  const openDetail = async (order: TransferOrder) => {
+    setCurrentTransfer(order);
     try {
-      const res = await authFetch(`/api/warehouse/transfer/${transfer.id}/items`);
+      const res = await authFetch(`/api/warehouse/transfer/${order.id}/items`);
       const result = await res.json();
       if (result.success) {
-        const transferitemsList = Array.isArray(result.data)
-          ? result.data
-          : result.data?.list || [];
-        _setTransferItems(transferitemsList);
-        setScanItems([]);
-        setShowOutboundDialog(true);
-      }
-    } catch {}
-  };
-
-  const executeOutbound = async () => {
-    if (!currentTransferId || scanItems.length === 0) {
-      toast({ title: t('addOutboundItemsFirst'), variant: 'destructive' });
-      return;
-    }
-
-    try {
-      const res = await authFetch(`/api/warehouse/transfer/${currentTransferId}/outbound`, {
-        method: 'POST',
-        body: JSON.stringify({ items: scanItems }),
-      });
-      const result = await res.json();
-
-      if (result.success) {
-        toast({ title: t('outboundSuccessQty', { qty: result.data.out_quantity }) });
-        setShowOutboundDialog(false);
-        fetchData();
-      } else {
-        toast({ title: t('outboundFailed'), description: result.message, variant: 'destructive' });
-      }
-    } catch {
-      toast({ title: t('outboundFailed'), variant: 'destructive' });
-    }
-  };
-
-  const openInboundDialog = async (transfer: TransferOrder) => {
-    setCurrentTransferId(transfer.id);
-    try {
-      const res = await authFetch(`/api/warehouse/transfer/${transfer.id}/items`);
-      const result = await res.json();
-      if (result.success) {
-        const transferitemsList = Array.isArray(result.data)
-          ? result.data
-          : result.data?.list || [];
-        _setTransferItems(transferitemsList);
-        setScanItems([]);
-        setShowInboundDialog(true);
-      }
-    } catch {}
-  };
-
-  const openDetailDialog = async (transfer: TransferOrder) => {
-    setCurrentTransfer(transfer);
-    try {
-      const res = await authFetch(`/api/warehouse/transfer/${transfer.id}/items`);
-      const result = await res.json();
-      if (result.success) {
-        const detailitemsList = Array.isArray(result.data) ? result.data : result.data?.list || [];
-        setDetailItems(detailitemsList);
+        setItems(Array.isArray(result.data) ? result.data : result.data?.list || []);
         setShowDetailDialog(true);
       }
     } catch {}
   };
 
-  const executeInbound = async () => {
-    if (!currentTransferId || scanItems.length === 0) {
-      toast({ title: t('addInboundItemsFirst'), variant: 'destructive' });
-      return;
-    }
-
-    try {
-      const res = await authFetch(`/api/warehouse/transfer/${currentTransferId}/inbound`, {
-        method: 'POST',
-        body: JSON.stringify({ items: scanItems }),
-      });
-      const result = await res.json();
-
-      if (result.success) {
-        toast({ title: t('inboundSuccessQty', { qty: result.data.in_quantity }) });
-        setShowInboundDialog(false);
-        fetchData();
-      } else {
-        toast({ title: t('inboundFailed'), description: result.message, variant: 'destructive' });
-      }
-    } catch {
-      toast({ title: t('inboundFailed'), variant: 'destructive' });
-    }
-  };
-
-  const addScanItem = () => {
-    setScanItems([...scanItems, { material_id: 0, qr_code: '', quantity: 0 }]);
-  };
-
-  const updateScanItem = (
-    index: number,
-    field: 'material_id' | 'qr_code' | 'quantity',
-    value: Loose
-  ) => {
-    const updated = [...scanItems];
-    updated[index] = { ...updated[index], [field]: value };
-    setScanItems(updated);
-  };
-
-  const removeScanItem = (index: number) => {
-    setScanItems(scanItems.filter((_, i) => i !== index));
-  };
-
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  const sortedList = useCallback(() => {
-    if (!sortField) return list;
-    return [...list].sort((a, b) => {
-      const aVal = (a as Loose)[sortField];
-      const bVal = (b as Loose)[sortField];
-      if (aVal === null || aVal === undefined) return 1;
-      if (bVal === null || bVal === undefined) return -1;
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return sortDirection === 'asc'
-          ? aVal.localeCompare(bVal, 'zh-CN')
-          : bVal.localeCompare(aVal, 'zh-CN');
-      }
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
-      }
-      return 0;
-    });
-  }, [list, sortField, sortDirection]);
-
-  const toggleSelectAll = () => toggleAll();
-
-  const toggleSelect = (id: number) => toggle(String(id));
-
-  const SortableHeader = ({ field, children }: { field: string; children: React.ReactNode }) => (
-    <TableHead
-      className="cursor-pointer select-none border border-border bg-muted/50 text-muted-foreground text-center whitespace-nowrap hover:bg-muted/70 transition-colors"
-      onClick={() => handleSort(field)}
-    >
-      <div className="flex items-center justify-center gap-1">
-        {children}
-        {sortField === field ? (
-          sortDirection === 'asc' ? (
-            <ArrowUp className="w-3 h-3" />
-          ) : (
-            <ArrowDown className="w-3 h-3" />
-          )
-        ) : (
-          <ArrowUpDown className="w-3 h-3 opacity-30" />
-        )}
-      </div>
-    </TableHead>
-  );
-
   return (
-    <MainLayout title={t('transfer')}>
+    <MainLayout>
       <div className="p-6 space-y-6">
+        {/* 搜索区域 */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PackageOpen className="h-5 w-5" />
-              {t('transfer')}
-            </CardTitle>
-            <CardDescription>{t('transferQueryDesc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 min-w-[200px]">
                 <label className="text-sm font-medium mb-2 block">{tc('orderNo')}</label>
@@ -441,20 +177,15 @@ export default function TransferPage() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => { setSearchNo(''); setPage(1); }}>
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <RefreshCw className="h-4 w-4 mr-1" />
                   {t('reset')}
                 </Button>
                 <Button onClick={fetchData}>
-                  <Search className="h-4 w-4 mr-2" />
+                  <Search className="h-4 w-4 mr-1" />
                   {t('query')}
                 </Button>
-                <Button
-                  onClick={() => {
-                    setEditItem({});
-                    setShowDialog(true);
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button onClick={() => { setEditItem({ type: 2 }); setShowDialog(true); }}>
+                  <Plus className="h-4 w-4 mr-1" />
                   {t('addTransfer')}
                 </Button>
               </div>
@@ -462,150 +193,75 @@ export default function TransferPage() {
           </CardContent>
         </Card>
 
+        {/* 列表区域 */}
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
+          <CardContent className="p-0">
+            <div className="px-4 py-3 border-b flex items-center justify-between">
               <div>
-                <CardTitle>{t('transferList')}</CardTitle>
-                <CardDescription>{tc('total', { count: total })}</CardDescription>
+                <div className="font-medium">{t('transferList')}</div>
+                <div className="text-xs text-muted-foreground">{tc('total', { count: total })}</div>
               </div>
-              <Button variant="outline" onClick={fetchData}>
-                <RefreshCw className="h-4 w-4 mr-2" />
+              <Button size="sm" variant="outline" onClick={fetchData}>
+                <RefreshCw className="h-3 w-3 mr-1" />
                 {t('refresh')}
               </Button>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40px]">
-                    <Checkbox
-                      checked={allSelected}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
-                  <SortableHeader field="transfer_no">{t('transferNo')}</SortableHeader>
-                  <SortableHeader field="type">{tc('type')}</SortableHeader>
-                  <SortableHeader field="from_warehouse_name">
-                    {t('sourceWarehouse')}
-                  </SortableHeader>
-                  <SortableHeader field="to_warehouse_name">{t('targetWarehouse')}</SortableHeader>
-                  <TableHead>
-                    {tc('status')}
-                  </TableHead>
-                  <TableHead>
-                    {t('applicant')}
-                  </TableHead>
-                  <TableHead>
-                    {tc('actions')}
-                  </TableHead>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[120px]">{t('transferNo')}</TableHead>
+                  <TableHead className="w-[80px]">{t('transferType')}</TableHead>
+                  <TableHead>{t('sourceWarehouse')}</TableHead>
+                  <TableHead>{t('targetWarehouse')}</TableHead>
+                  <TableHead>{tc('status')}</TableHead>
+                  <TableHead>{t('applicant')}</TableHead>
+                  <TableHead className="text-right">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      {t('loading')}
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      {tc('loading')}
                     </TableCell>
                   </TableRow>
-                ) : sortedList().length === 0 ? (
+                ) : list.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       {t('noTransferRecords')}
                     </TableCell>
                   </TableRow>
-                ) : sortedList().map((item) => {
+                ) : list.map((item) => {
                   const st = STATUS_MAP[item.status] || STATUS_MAP[0];
                   return (
                     <TableRow key={item.id}>
+                      <TableCell className="font-mono text-xs">{item.transfer_no}</TableCell>
+                      <TableCell className="text-xs">{item.type_name || '-'}</TableCell>
+                      <TableCell className="text-xs">{item.from_warehouse_name || '-'}</TableCell>
+                      <TableCell className="text-xs">{item.to_warehouse_name || '-'}</TableCell>
                       <TableCell>
-                        <Checkbox
-                          checked={isSelected(String(item.id))}
-                          onCheckedChange={() => toggleSelect(item.id)}
-                        />
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {item.transfer_no}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {TYPE_MAP[item.type] || '-'}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        <div>{item.from_warehouse_name || '-'}</div>
-                        {item.from_location && (
-                          <div className="text-muted-foreground text-[10px]">
-                            {item.from_location}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        <div>{item.to_warehouse_name || '-'}</div>
-                        {item.to_location && (
-                          <div className="text-muted-foreground text-[10px]">
-                            {item.to_location}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
+                        <Badge variant={st.variant as any} className="text-xs">
                           {st.label}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs">
-                        {item.applicant_name || '-'}
-                      </TableCell>
+                      <TableCell className="text-xs">{item.operator_name || '-'}</TableCell>
                       <TableCell>
-                        <div className="flex gap-1 justify-center">
+                        <div className="flex items-center justify-end gap-1">
                           {[0, 1].includes(item.status) && (
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 text-xs px-2"
+                              className="h-7 text-xs px-2"
                               onClick={() => handleAction(item.id, 'cancel')}
                             >
                               {tc('cancel')}
                             </Button>
                           )}
-                          {/* 审批不推进 status（避免与调出接口 status===1 前置死锁），已审批以 approver_id 标识 */}
-                          {item.status === 1 && !item.approver_id && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleAction(item.id, 'approve', { approver_id: 1 })}
-                            >
-                              {t('approveTransfer')}
-                            </Button>
-                          )}
-                          {item.status === 1 && !!item.approver_id && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => openOutboundDialog(item)}
-                            >
-                              <PackageOpen className="h-3 w-3 mr-1" />
-                              {t('scanOut')}
-                            </Button>
-                          )}
-                          {item.status === 2 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => openInboundDialog(item)}
-                            >
-                              <PackageCheck className="h-3 w-3 mr-1" />
-                              {t('scanIn')}
-                            </Button>
-                          )}
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => openDetailDialog(item)}
+                            className="h-7 w-7 p-0"
+                            onClick={() => openDetail(item)}
                           >
                             <Eye className="h-3 w-3" />
                           </Button>
@@ -613,7 +269,7 @@ export default function TransferPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+                              className="h-7 w-7 p-0 text-red-600 dark:text-red-400"
                               onClick={() => handleDelete(item.id)}
                             >
                               <Trash2 className="h-3 w-3" />
@@ -626,30 +282,16 @@ export default function TransferPage() {
                 })}
               </TableBody>
             </Table>
-            </div>
-
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">
-                {tc('total', { count: total })}
-              </span>
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <span className="text-sm text-muted-foreground">{tc('total', { count: total })}</span>
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
+                <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
                   {tc('previousPage')}
                 </Button>
                 <span className="flex items-center px-3 text-sm text-muted-foreground">
-                  {tc('pageOf', { page, pages: Math.ceil(total / 20) })}
+                  {tc('pageOf', { page, pages: Math.ceil(total / 20) || 1 })}
                 </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page * 20 >= total}
-                  onClick={() => setPage((p) => p + 1)}
-                >
+                <Button size="sm" variant="outline" disabled={page * 20 >= total} onClick={() => setPage((p) => p + 1)}>
                   {tc('nextPage')}
                 </Button>
               </div>
@@ -657,25 +299,18 @@ export default function TransferPage() {
           </CardContent>
         </Card>
 
+        {/* 新增/编辑对话框 */}
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogContent className="max-w-lg" resizable>
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>{t('addTransferOrder')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>
-                  {t('transferType')} <span className="text-red-500 dark:text-red-400">*</span>
-                </Label>
+                <Label>{t('transferType')} <span className="text-red-500">*</span></Label>
                 <Select
-                  value={String(editItem.type || 1)}
-                  onValueChange={(v) => {
-                    const type = Number(v);
-                    setEditItem({ ...editItem, type });
-                    if (type === 1 && editItem.from_warehouse_id) {
-                      fetchLocations(editItem.from_warehouse_id);
-                    }
-                  }}
+                  value={String(editItem.type || 2)}
+                  onValueChange={(v) => setEditItem({ ...editItem, type: Number(v) })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -687,73 +322,23 @@ export default function TransferPage() {
                 </Select>
               </div>
               <div>
-                <Label>
-                  {t('sourceWarehouse')} <span className="text-red-500 dark:text-red-400">*</span>
-                </Label>
+                <Label>{t('sourceWarehouse')} <span className="text-red-500">*</span></Label>
                 <WarehouseSelect
-                  value={editItem.from_warehouse_id}
-                  onChange={(v) => {
-                    const whId = Number(v);
-                    setEditItem({ ...editItem, from_warehouse_id: whId });
-                    if (editItem.type === 1) {
-                      fetchLocations(whId);
-                    }
-                  }}
+                  value={editItem.from_warehouse_id ? String(editItem.from_warehouse_id) : ''}
+                  onChange={(v) => setEditItem({ ...editItem, from_warehouse_id: Number(v) })}
                   placeholder={t('selectSourceWarehouse')}
                 />
               </div>
-              {editItem.type === 1 && (
-                <>
-                  <div>
-                    <Label>{t('outLocationRequired')}</Label>
-                    <Select
-                      value={editItem.from_location || ''}
-                      onValueChange={(v) => setEditItem({ ...editItem, from_location: v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('selectOutLocation')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {locations.map((l) => (
-                          <SelectItem key={l.id} value={l.code}>
-                            {l.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>{t('inLocationRequired')}</Label>
-                    <Select
-                      value={editItem.to_location || ''}
-                      onValueChange={(v) => setEditItem({ ...editItem, to_location: v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('selectInLocation')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {locations.map((l) => (
-                          <SelectItem key={l.id} value={l.code}>
-                            {l.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              )}
               <div>
-                <Label>
-                  {t('targetWarehouse')} <span className="text-red-500 dark:text-red-400">*</span>
-                </Label>
+                <Label>{t('targetWarehouse')} <span className="text-red-500">*</span></Label>
                 <WarehouseSelect
-                  value={editItem.to_warehouse_id}
+                  value={editItem.to_warehouse_id ? String(editItem.to_warehouse_id) : ''}
                   onChange={(v) => setEditItem({ ...editItem, to_warehouse_id: Number(v) })}
                   placeholder={t('selectTargetWarehouse')}
                 />
               </div>
               <div>
-                <Label>{tc('applicant')}</Label>
+                <Label>{t('applicant')}</Label>
                 <UserSelect
                   value={editItem.applicant_id ? String(editItem.applicant_id) : ''}
                   onChange={(v) => setEditItem({ ...editItem, applicant_id: Number(v) })}
@@ -768,241 +353,59 @@ export default function TransferPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDialog(false)}>
-                {tc('cancel')}
-              </Button>
-              <Button onClick={handleSave}>{tc('save')}</Button>
+              <Button variant="outline" onClick={() => setShowDialog(false)}>{tc('cancel')}</Button>
+              <Button onClick={handleCreate}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        <Dialog open={showOutboundDialog} onOpenChange={setShowOutboundDialog}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto" resizable>
-            <DialogHeader>
-              <DialogTitle>{t('scanOut')}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="border rounded p-3 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">{t('transferDetail')}</span>
-                  <Button size="sm" variant="outline" onClick={addScanItem}>
-                    <QrCode className="h-3 w-3 mr-1" />
-                    {t('addScanItem')}
-                  </Button>
-                </div>
-                {scanItems.length === 0 ? (
-                  <p className="text-muted-foreground text-sm text-center py-4">
-                    {t('clickToAddOutbound')}
-                  </p>
-                ) : (
-                  scanItems.map((item, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-2 items-end">
-                      <div className="col-span-5">
-                        <Label className="text-xs">{t('qrCodeCol')}</Label>
-                        <Input
-                          value={item.qr_code}
-                          onChange={(e) => updateScanItem(index, 'qr_code', e.target.value)}
-                          placeholder={tc('scanOrEnterQrCode')}
-                          className="font-mono text-xs"
-                        />
-                      </div>
-                      <div className="col-span-3">
-                        <Label className="text-xs">{tc('quantity')}</Label>
-                        <Input
-                          type="number"
-                          value={item.quantity || ''}
-                          onChange={(e) =>
-                            updateScanItem(index, 'quantity', Number(e.target.value))
-                          }
-                          className="text-xs"
-                        />
-                      </div>
-                      <div className="col-span-3">
-                        <Label className="text-xs">{t('materialId')}</Label>
-                        <Input
-                          type="number"
-                          value={item.material_id || ''}
-                          onChange={(e) =>
-                            updateScanItem(index, 'material_id', Number(e.target.value))
-                          }
-                          className="text-xs"
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 text-red-600 dark:text-red-400"
-                          onClick={() => removeScanItem(index)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowOutboundDialog(false)}>
-                {tc('close')}
-              </Button>
-              <Button onClick={executeOutbound}>
-                <PackageOpen className="h-4 w-4 mr-1" />
-                {t('confirmOutbound')}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={showInboundDialog} onOpenChange={setShowInboundDialog}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto" resizable>
-            <DialogHeader>
-              <DialogTitle>{t('scanIn')}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="border rounded p-3 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">{t('inboundDetail')}</span>
-                  <Button size="sm" variant="outline" onClick={addScanItem}>
-                    <QrCode className="h-3 w-3 mr-1" />
-                    {t('addScanItem')}
-                  </Button>
-                </div>
-                {scanItems.length === 0 ? (
-                  <p className="text-muted-foreground text-sm text-center py-4">
-                    {t('clickToAddInbound')}
-                  </p>
-                ) : (
-                  scanItems.map((item, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-2 items-end">
-                      <div className="col-span-5">
-                        <Label className="text-xs">{t('qrCodeCol')}</Label>
-                        <Input
-                          value={item.qr_code}
-                          onChange={(e) => updateScanItem(index, 'qr_code', e.target.value)}
-                          placeholder={tc('scanOrEnterQrCode')}
-                          className="font-mono text-xs"
-                        />
-                      </div>
-                      <div className="col-span-3">
-                        <Label className="text-xs">{tc('quantity')}</Label>
-                        <Input
-                          type="number"
-                          value={item.quantity || ''}
-                          onChange={(e) =>
-                            updateScanItem(index, 'quantity', Number(e.target.value))
-                          }
-                          className="text-xs"
-                        />
-                      </div>
-                      <div className="col-span-3">
-                        <Label className="text-xs">{t('materialId')}</Label>
-                        <Input
-                          type="number"
-                          value={item.material_id || ''}
-                          onChange={(e) =>
-                            updateScanItem(index, 'material_id', Number(e.target.value))
-                          }
-                          className="text-xs"
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 text-red-600 dark:text-red-400"
-                          onClick={() => removeScanItem(index)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowInboundDialog(false)}>
-                {tc('close')}
-              </Button>
-              <Button onClick={executeInbound}>
-                <PackageCheck className="h-4 w-4 mr-1" />
-                {t('confirmInbound')}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
+        {/* 详情对话框 */}
         <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto" resizable>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
             <DialogHeader>
-              <DialogTitle>
-                {t('transferDetailTitle', { transferNo: currentTransfer?.transfer_no || '' })}
-              </DialogTitle>
+              <DialogTitle>{t('transferDetailTitle', { transferNo: currentTransfer?.transfer_no || '' })}</DialogTitle>
+              <DialogDescription>
+                {t('transferDetail')}
+              </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              {currentTransfer && (
-                <div className="grid grid-cols-4 gap-4 p-3 border rounded bg-muted/30 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">{tc('type')}：</span>
-                    {TYPE_MAP[currentTransfer.type]}
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">{t('sourceWarehouse')}：</span>
-                    {currentTransfer.from_warehouse_name || '-'}
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">{t('targetWarehouse')}：</span>
-                    {currentTransfer.to_warehouse_name || '-'}
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">{tc('status')}：</span>
-                    <Badge variant={(STATUS_MAP[currentTransfer.status] || STATUS_MAP[0]).variant}>
-                      {(STATUS_MAP[currentTransfer.status] || STATUS_MAP[0]).label}
-                    </Badge>
-                  </div>
+            {currentTransfer && (
+              <div className="grid grid-cols-4 gap-4 p-3 border rounded bg-muted/30 text-sm">
+                <div><span className="text-muted-foreground">{tc('type')}：</span>{currentTransfer.type_name || '-'}</div>
+                <div><span className="text-muted-foreground">{t('sourceWarehouse')}：</span>{currentTransfer.from_warehouse_name || '-'}</div>
+                <div><span className="text-muted-foreground">{t('targetWarehouse')}：</span>{currentTransfer.to_warehouse_name || '-'}</div>
+                <div><span className="text-muted-foreground">{tc('status')}：</span>
+                  <Badge variant={(STATUS_MAP[currentTransfer.status] || STATUS_MAP[0]).variant as any}>
+                    {(STATUS_MAP[currentTransfer.status] || STATUS_MAP[0]).label}
+                  </Badge>
                 </div>
-              )}
-              <Table>
-                <TableHeader>
+              </div>
+            )}
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('materialName')}</TableHead>
+                  <TableHead>{tc('batchNo')}</TableHead>
+                  <TableHead>{t('qtyPlan')}</TableHead>
+                  <TableHead>{tc('unit')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.length === 0 ? (
                   <TableRow>
-                    <TableHead>{t('materialName')}</TableHead>
-                    <TableHead>{t('qrCodeCol')}</TableHead>
-                    <TableHead>{tc('batchNo')}</TableHead>
-                    <TableHead>{t('qtyPlan')}</TableHead>
-                    <TableHead>{tc('stockedOut')}</TableHead>
-                    <TableHead>{tc('stockedIn')}</TableHead>
-                    <TableHead>{tc('unit')}</TableHead>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-4">{t('noDetailData')}</TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {detailItems.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-4">
-                        {t('noDetailData')}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    detailItems.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.material_name || '-'}</TableCell>
-                        <TableCell className="font-mono text-xs">{item.qr_code || '-'}</TableCell>
-                        <TableCell>{item.batch_no || '-'}</TableCell>
-                        <TableCell className="text-center">{item.quantity}</TableCell>
-                        <TableCell className="text-center">{item.out_quantity}</TableCell>
-                        <TableCell className="text-center">{item.in_quantity}</TableCell>
-                        <TableCell>{item.unit || '-'}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                ) : items.map((item, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell>{item.material_name || '-'}</TableCell>
+                    <TableCell>{item.batch_no || '-'}</TableCell>
+                    <TableCell className="text-right">{Number(item.quantity || 0).toLocaleString()}</TableCell>
+                    <TableCell>{item.unit || '-'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
-                {tc('close')}
-              </Button>
+              <Button variant="outline" onClick={() => setShowDetailDialog(false)}>{tc('close')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

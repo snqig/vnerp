@@ -66,7 +66,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     inkTypeSummary = await query(
       `
       SELECT
-        f.ink_type,
+        COALESCE(c.base_ink_type, d.color_name) as ink_type,
         COUNT(DISTINCT d.id) as dispatch_count,
         SUM(d.total_weight) as total_formula_weight,
         SUM(d.net_weight) as total_actual_weight,
@@ -74,10 +74,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         COALESCE(SUM(CASE WHEN u.usage_type = 'return' THEN u.weight ELSE 0 END), 0) as total_returned,
         COALESCE(SUM(CASE WHEN u.usage_type = 'scrap' THEN u.weight ELSE 0 END), 0) as total_scraped
       FROM ink_dispatch d
-      LEFT JOIN ink_formula f ON d.formula_id = f.id
+      LEFT JOIN dcprint_ink_formula_version fv ON fv.id = d.formula_id
+      LEFT JOIN dcprint_ink_color c ON c.id = fv.color_id
       LEFT JOIN ink_usage u ON u.batch_no = d.batch_no AND u.deleted = 0 ${dateFilter.replace('u.', 'u.')}
       WHERE d.deleted = 0
-      GROUP BY f.ink_type
+      GROUP BY COALESCE(c.base_ink_type, d.color_name)
     `,
       params
     );

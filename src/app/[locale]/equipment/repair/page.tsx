@@ -45,14 +45,14 @@ interface Item {
   equipment_name: string;
   fault_date: string;
   fault_desc: string;
-  repair_type: number;
+  repair_type: string;
   repair_person: string;
   status: number;
 }
-const typeMap: Record<number, string> = {
-  1: '预防性维修',
-  2: '故障维修',
-  3: '紧急维修',
+const typeMap: Record<string, string> = {
+  corrective: '故障维修',
+  preventive: '预防性维修',
+  emergency: '紧急维修',
 };
 
 export default function EquipmentRepairPage() {
@@ -121,6 +121,26 @@ export default function EquipmentRepairPage() {
   }, [page]);
 
   const handleSave = async () => {
+    // P1-1 前端守卫：与后端同口径（设备身份/故障日期/故障描述/维修人必填）
+    if (
+      String(editItem.equipment_code ?? '').trim() === '' &&
+      String(editItem.equipment_name ?? '').trim() === ''
+    ) {
+      toast({ title: tc('equipmentIdentityRequired'), variant: 'destructive' });
+      return;
+    }
+    if (String(editItem.fault_date ?? '').trim() === '') {
+      toast({ title: tc('repairFaultDateRequired'), variant: 'destructive' });
+      return;
+    }
+    if (String(editItem.fault_desc ?? '').trim() === '') {
+      toast({ title: tc('repairFaultDescRequired'), variant: 'destructive' });
+      return;
+    }
+    if (String(editItem.repair_person ?? '').trim() === '') {
+      toast({ title: tc('repairPersonRequired'), variant: 'destructive' });
+      return;
+    }
     try {
       const res = await authFetch('/api/equipment/repair', {
         method: 'POST',
@@ -401,16 +421,16 @@ export default function EquipmentRepairPage() {
               <div>
                 <Label>{ts('k_1migccd')}</Label>
                 <Select
-                  value={String(editItem.repair_type || 2)}
-                  onValueChange={(v) => setEditItem({ ...editItem, repair_type: Number(v) })}
+                  value={editItem.repair_type || 'corrective'}
+                  onValueChange={(v) => setEditItem({ ...editItem, repair_type: v })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">{ts('k_1s9r742')}</SelectItem>
-                    <SelectItem value="2">{ts('k_4ebikq')}</SelectItem>
-                    <SelectItem value="3">{ts('k_xa2tkr')}</SelectItem>
+                    <SelectItem value="preventive">{ts('k_1s9r742')}</SelectItem>
+                    <SelectItem value="corrective">{ts('k_4ebikq')}</SelectItem>
+                    <SelectItem value="emergency">{ts('k_xa2tkr')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

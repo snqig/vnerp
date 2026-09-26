@@ -3,7 +3,7 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
-import { EQUIPMENT_MAINT_TYPE_LABEL, EQUIPMENT_PLAN_STATUS_LABEL } from '@/lib/status-labels';
+import { EQUIPMENT_PLAN_STATUS_LABEL } from '@/lib/status-labels';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -50,7 +50,7 @@ interface MaintenancePlan {
   equipment_name: string;
   maintenance_type: string;
   cycle_type: string;
-  cycle_days: number;
+  cycle_value: number;
   next_execute_date: string;
   status: number;
   remark: string;
@@ -71,7 +71,7 @@ interface MaintenanceForm {
   equipment_code?: string;
   equipment_name?: string;
   // 记录（record）侧字段
-  maintenance_type?: number;
+  maintenance_type?: string;
   maintenance_date?: string;
   start_time?: string;
   end_time?: string;
@@ -79,12 +79,12 @@ interface MaintenanceForm {
   cost?: number;
   fault_desc?: string;
   maintenance_content?: string;
-  result?: number;
+  result?: string;
   // 计划（plan）侧字段（对齐 /api/equipment/plan 契约）
   plan_name?: string;
   plan_maint_type?: string;
   plan_cycle_type?: string;
-  cycle_days?: number;
+  cycle_value?: number;
   status?: number;
   remark?: string;
 }
@@ -96,19 +96,24 @@ interface MaintenanceRecord {
   equipment_id: number;
   equipment_code: string;
   equipment_name: string;
-  maintenance_type: number;
+  maintenance_type: string;
   fault_desc: string;
   maintenance_content: string;
   start_time: string;
   end_time: string;
-  actual_hours: number;
-  actual_cost: number;
+  downtime_hours: number;
+  cost: number;
   responsible_id: number;
-  result: number;
+  result: string;
   remark: string;
 }
 
-const MAINT_TYPE = EQUIPMENT_MAINT_TYPE_LABEL;
+// 维护记录侧枚举：DB 存的是 varchar 字符串，与 PLAN_MAINT_TYPE 保持一致
+const MAINT_TYPE: Record<string, string> = {
+  routine: '日常保养',
+  periodic: '定期维保',
+  major: '大修',
+};
 
 // 计划（plan）侧枚举：对齐 /api/equipment/plan 与 eqp_maintenance_plan 的真实 VARCHAR 枚举
 const PLAN_MAINT_TYPE: Record<string, string> = {
@@ -136,10 +141,10 @@ export default function EquipmentMaintenancePage() {
   // 翻译钩子
   const tc = useTranslations('Common');
 
-  const RECORD_RESULT: Record<number, { label: string; color: string }> = {
-    1: { label: tc('normal'), color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
-    2: { label: ts('k_1uz4mvb'), color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' },
-    3: { label: ts('k_1qw8bup'), color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' },
+  const RECORD_RESULT: Record<string, { label: string; color: string }> = {
+    completed: { label: tc('normal'), color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
+    partial: { label: ts('k_1uz4mvb'), color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' },
+    failed: { label: ts('k_1qw8bup'), color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' },
   };
 
   const { toast } = useToast();
@@ -198,10 +203,8 @@ export default function EquipmentMaintenancePage() {
       const params = new URLSearchParams({
         page: String(recordPage),
         pageSize: '20',
-        type: 'record',
       });
-      if (searchNo) params.append('recordNo', searchNo);
-      const res = await fetch('/api/equipment/maintenance?' + params);
+      const res = await authFetch('/api/equipment/maintenance?' + params);
       const result = await res.json();
       if (result.success) {
         setRecords(result.data?.list || []);
@@ -212,7 +215,7 @@ export default function EquipmentMaintenancePage() {
     } finally {
       setLoading(false);
     }
-  }, [recordPage, searchNo, tc, toast]);
+  }, [recordPage, tc, toast]);
 
   useEffect(() => {
     fetchEquipment();
@@ -251,22 +254,23 @@ export default function EquipmentMaintenancePage() {
 
       if (dialogType === 'record') {
         url = '/api/equipment/maintenance';
-        method = 'POST';
+        method = form.id ? 'PUT' : 'POST';
         payload = {
-          id: form.id,
+          ...(form.id ? { id: form.id } : {}),
           plan_id: form.plan_id,
           equipment_id: form.equipment_id,
-          maintenance_type: form.maintenance_type,
+          maintenance_type: form.maintenance_type || 'routine',
           maintenance_date:
             form.maintenance_date ||
-            (form.start_time ? String(form.start_time).slice(0, 10) : ''),
-          start_time: form.start_time,
-          end_time: form.end_time,
-          actual_hours: form.downtime_hours ?? 0,
-          actual_cost: form.cost ?? 0,
-          description: form.maintenance_content || form.fault_desc || '',
-          result: form.result ?? 1,
-          remark: form.remark,
+            (form.start_time ? String(form.start_time).slice(0, 10) : null),
+          start_time: form.start_time || null,
+          end_time: form.end_time || null,
+          downtime_hours: Number(form.downtime_hours || 0),
+          cost: Number(form.cost || 0),
+          fault_desc: form.fault_desc || null,
+          maintenance_content: form.maintenance_content || null,
+          result: form.result || 'completed',
+          remark: form.remark || null,
         };
       } else {
         // 计划：走独立的 /api/equipment/plan，字段对齐 eq_maintenance_plan 契约
@@ -278,7 +282,7 @@ export default function EquipmentMaintenancePage() {
           equipment_id: form.equipment_id,
           maintenance_type: form.plan_maint_type || 'routine',
           cycle_type: form.plan_cycle_type || 'monthly',
-          cycle_days: Number(form.cycle_days || 30),
+          cycle_value: Number(form.cycle_value || 30),
           status: form.status ?? 1,
           remark: form.remark,
         };
@@ -488,7 +492,7 @@ export default function EquipmentMaintenancePage() {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              {p.cycle_days || 0}
+                              {p.cycle_value || 0}
                               {PLAN_CYCLE_TYPE[p.cycle_type] || ''}
                             </TableCell>
                             <TableCell>{p.next_execute_date || '-'}</TableCell>
@@ -528,7 +532,7 @@ export default function EquipmentMaintenancePage() {
                                       equipment_name: p.equipment_name,
                                       plan_maint_type: p.maintenance_type,
                                       plan_cycle_type: p.cycle_type,
-                                      cycle_days: p.cycle_days,
+                                      cycle_value: p.cycle_value,
                                       status: p.status,
                                       remark: p.remark,
                                     });
@@ -616,7 +620,7 @@ export default function EquipmentMaintenancePage() {
                     </TableHeader>
                     <TableBody>
                       {records.map((r) => {
-                        const rs = RECORD_RESULT[r.result] || RECORD_RESULT[1];
+                        const rs = RECORD_RESULT[r.result] || Object.values(RECORD_RESULT)[0];
                         return (
                           <TableRow key={r.id}>
                             <TableCell>
@@ -632,8 +636,8 @@ export default function EquipmentMaintenancePage() {
                             </TableCell>
                             <TableCell className="text-sm">{r.start_time || '-'}</TableCell>
                             <TableCell className="text-sm">{r.end_time || '-'}</TableCell>
-                            <TableCell>{Number(r.actual_hours || 0)}h</TableCell>
-                            <TableCell>¥{Number(r.actual_cost || 0).toFixed(2)}</TableCell>
+                            <TableCell>{Number(r.downtime_hours || 0)}h</TableCell>
+                            <TableCell>¥{Number(r.cost || 0).toFixed(2)}</TableCell>
                             <TableCell>
                               <Badge className={rs.color}>{rs.label}</Badge>
                             </TableCell>
@@ -800,9 +804,9 @@ export default function EquipmentMaintenancePage() {
                     <Label>{tc('cycleValue')}</Label>
                     <Input
                       type="number"
-                      value={form.cycle_days || ''}
+                      value={form.cycle_value || ''}
                       onChange={(e) =>
-                        setForm({ ...form, cycle_days: parseInt(e.target.value) || 0 })
+                        setForm({ ...form, cycle_value: parseInt(e.target.value) || 0 })
                       }
                       placeholder="30"
                     />
@@ -853,11 +857,11 @@ export default function EquipmentMaintenancePage() {
                   <div className="space-y-2">
                     <Label>{tc('maintenanceType')}</Label>
                     <Select
-                      value={String(form.maintenance_type ?? 1)}
-                      onValueChange={(v) => setForm({ ...form, maintenance_type: Number(v) })}
+                      value={form.maintenance_type || ''}
+                      onValueChange={(v) => setForm({ ...form, maintenance_type: v })}
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="请选择保养类型" />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(MAINT_TYPE).map(([k, v]) => (
@@ -921,11 +925,11 @@ export default function EquipmentMaintenancePage() {
                   <div className="space-y-2">
                     <Label>{tc('maintenanceResult')}</Label>
                     <Select
-                      value={String(form.result ?? 1)}
-                      onValueChange={(v) => setForm({ ...form, result: Number(v) })}
+                      value={form.result || ''}
+                      onValueChange={(v) => setForm({ ...form, result: v })}
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="请选择结果" />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(RECORD_RESULT).map(([k, v]) => (

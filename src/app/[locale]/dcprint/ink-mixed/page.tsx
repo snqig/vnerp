@@ -103,7 +103,7 @@ export default function InkMixedPage() {
   });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<InkMixedRecord>>({});
-  const [activeStatKey, setActiveStatKey] = useState<string | null>(null);
+  const [activeStatKey, setActiveStatKey] = useState<string | undefined>(undefined);
 
   const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
     useRowSelection(list, (r) => String(r.id));
@@ -238,7 +238,7 @@ export default function InkMixedPage() {
 
   const handleStatClick = (key: string) => {
     if (key === 'total') {
-      setActiveStatKey(null);
+      setActiveStatKey(undefined);
     } else {
       setActiveStatKey(key);
     }

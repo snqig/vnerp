@@ -59,3 +59,21 @@ export function toLocalDateStr(date: Date = new Date()): string {
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+
+/**
+ * 返回本月的「起（含）—止（不含）」本地日期区间，形如 `{ start: '2026-09-01', end: '2026-10-01' }`。
+ *
+ * 背景：统计里常见 `YEAR(col) = YEAR(CURDATE()) AND MONTH(col) = MONTH(CURDATE())` 的写法，
+ * 这个表达式把函数套在列上，**索引直接失效**，数据量上来后就是全表扫描。
+ * 改成半开区间后 `col >= ? AND col < ?` 可以走 range 扫描，且边界在 JS 侧按本地日历算，不受时区影响。
+ *
+ * 用法：`WHERE create_time >= ? AND create_time < ?` + `params.push(range.start, range.end)`。
+ */
+export function currentMonthRange(now: Date = new Date()): { start: string; end: string } {
+  const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return {
+    start: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`,
+    end: `${next.getFullYear()}-${pad(next.getMonth() + 1)}-01`,
+  };
+}

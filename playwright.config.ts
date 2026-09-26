@@ -96,7 +96,7 @@ export default defineConfig({
   webServer: {
     command: 'pnpm run dev:webpack',
     url: 'http://localhost:5000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     timeout: 180000,
   },
 });

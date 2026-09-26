@@ -38,8 +38,10 @@ export const GET = withPermission(async (request: NextRequest, userInfo, context
   }
 
   const cards = await query<StandardCard>(
+    // 修复：prod_work_order 上没有 material_id 列（物料号在 legacy_material_id 上），
+    // 原 JOIN 条件运行期必然报 Unknown column。同一物料的标准卡直接按 material_id 关联。
     `SELECT sc.* FROM prd_standard_card sc
-     LEFT JOIN prod_work_order wo ON wo.material_id = sc.material_id
+     LEFT JOIN prod_work_order wo ON wo.legacy_material_id = sc.material_id
      WHERE wo.id = ? AND sc.status = 3 AND sc.deleted = 0
      ORDER BY sc.type, sc.version DESC`,
     [workOrderId]

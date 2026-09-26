@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 ;
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
-import { successResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { getJdPrefix, generateDocNo } from '@/lib/global-config';
 import { numericFilter } from '@/lib/query-filter';
@@ -51,6 +51,24 @@ export const POST = withPermission(
       calibration_cost,
       remark,
     } = body;
+    // P1-2 硬校验：设备身份（编码/名称至少一项）、校准日期必填；
+    // calibration_result 值域 qualified/unqualified（DB 列 DEFAULT 'qualified'，缺省按合格处理）。
+    if (
+      String(equipment_code ?? '').trim() === '' &&
+      String(equipment_name ?? '').trim() === ''
+    ) {
+      return errorResponse(ts('equipmentIdentityRequired'), 400, 400);
+    }
+    if (String(calibration_date ?? '').trim() === '') {
+      return errorResponse(ts('calibrationDateRequired'), 400, 400);
+    }
+    const resultValue =
+      String(calibration_result ?? '').trim() === ''
+        ? 'qualified'
+        : String(calibration_result).trim();
+    if (resultValue !== 'qualified' && resultValue !== 'unqualified') {
+      return errorResponse(ts('calibrationResultInvalid'), 400, 400);
+    }
     const _now = new Date();
     const calibrationNo = generateDocNo(getJdPrefix());
 
@@ -64,7 +82,7 @@ export const POST = withPermission(
         calibration_date,
         next_calibration_date || null,
         calibration_org || null,
-        calibration_result || null,
+        resultValue,
         certificate_no || null,
         calibration_cost || 0,
         remark || null,

@@ -51,7 +51,6 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       data: {
         pending: pendingResult?.count || 0,
         auditing: auditingResult?.count || 0,
-        completed: completedResult?.count || 0,
         passed: passedResult?.count || 0,
         failed: failedResult?.count || 0,
         monthlyCount: monthlyResult?.count || 0,

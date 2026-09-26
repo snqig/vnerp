@@ -142,6 +142,61 @@ export async function verifyTokenLight(token: string): Promise<{
   }
 }
 
+/**
+ * 把 `sys_role.data_scope` 的数字编码解析成 DataScope。
+ *
+ * 该列注释为「1-全部, 2-本部门, 3-本部门及下级, 4-仅本人」，另有 5-自定义
+ * （收窄维度落在 `sys_data_scope` 表的 scope_type / target_ids）。
+ *
+ * 历史实现用字符串键（self/dept/…）去匹配这里存的数字，映射整段落空，
+ * `scopePriority[s] || 0` 恒为 0，而 scopePriority 里没有取值为 0 的项 → 一律回落 self。
+ * 表现为「角色页配了数据范围，实际不生效」（详见 buildDataScopeSql 的说明）。
+ */
+export function resolveDataScope(rawScopes: string[], departmentId: number | null): DataScope {
+  const SCOPE_BY_CODE: Record<number, DataScope['type']> = {
+    1: 'all',
+    2: 'dept',
+    3: 'dept_and_self',
+    4: 'self',
+    5: 'custom',
+  };
+  const PRIORITY: Record<DataScope['type'], number> = {
+    self: 1,
+    dept: 2,
+    dept_and_self: 3,
+    custom: 4,
+    all: 5,
+  };
+
+  // 多角色时按最小权限原则取最严格的那一个。
+  // 无法识别的编码直接忽略；全部无法识别才回落到 self（fail-safe，宁严不宽）。
+  const resolved = rawScopes
+    .map((s) => SCOPE_BY_CODE[Number(s)])
+    .filter((t): t is DataScope['type'] => Boolean(t));
+
+  if (resolved.length === 0) {
+    return { type: 'self' };
+  }
+
+  const mostRestrictive = resolved.reduce((a, b) => (PRIORITY[a] <= PRIORITY[b] ? a : b));
+  const deptIds = departmentId ? [departmentId] : [];
+
+  switch (mostRestrictive) {
+    case 'all':
+      return { type: 'all' };
+    case 'dept_and_self':
+      return { type: 'dept_and_self', deptIds };
+    case 'dept':
+      return { type: 'dept', deptIds };
+    case 'custom':
+      // custom 的收窄维度是仓库/客户/供应商，由 buildDataScopeSql 的
+      // warehouseField / customerField / supplierField 在查询层生效。
+      return { type: 'custom', deptIds };
+    default:
+      return { type: 'self' };
+  }
+}
+
 // 获取用户完整信息（包括权限和数据范围）
 export async function getUserInfo(userId: number): Promise<UserInfo | null> {
   // 查询用户基本信息
@@ -166,38 +221,16 @@ export async function getUserInfo(userId: number): Promise<UserInfo | null> {
   );
 
   const roleCodes = roles.map((r) => r.role_code);
-  const dataScopes = roles.map((r) => r.data_scope).filter(Boolean);
 
-  // 确定数据权限范围（最小权限原则：取最严格的范围）
-  let dataScope: DataScope = { type: 'self' };
-  if (dataScopes.length > 0) {
-    const scopePriority: Record<string, number> = {
-      self: 1,
-      dept: 2,
-      dept_and_self: 3,
-      custom: 4,
-      all: 5,
-    };
-
-    const minPriority = Math.min(...dataScopes.map((s) => scopePriority[s] || 0));
-    const mostRestrictive =
-      Object.entries(scopePriority).find(([_, p]) => p === minPriority)?.[0] || 'self';
-
-    if (mostRestrictive === 'all') {
-      dataScope = { type: 'all' };
-    } else if (mostRestrictive === 'dept_and_self') {
-      dataScope = {
-        type: 'dept_and_self',
-        deptIds: user.department_id ? [user.department_id] : [],
-      };
-    } else if (mostRestrictive === 'dept') {
-      dataScope = { type: 'dept', deptIds: user.department_id ? [user.department_id] : [] };
-    } else if (mostRestrictive === 'custom') {
-      dataScope = { type: 'custom', deptIds: user.department_id ? [user.department_id] : [] };
-    } else {
-      dataScope = { type: 'self' };
-    }
-  }
+  // super_admin 恒为 all，与 hasPermission() 的 super_admin 硬编码放行保持一致。
+  // 不做这层短路的话，一个同时挂着 sales(自定义) 角色的 super_admin 会被下面的
+  // 「取最严格」逻辑降级成 custom，反而看不到全量单据。
+  const dataScope: DataScope = roleCodes.includes('super_admin')
+    ? { type: 'all' }
+    : resolveDataScope(
+        roles.map((r) => r.data_scope).filter((s): s is string => s !== null && s !== undefined),
+        user.department_id
+      );
 
   // 查询角色的仓库、客户、供应商数据权限
   const roleIds = roles.map((r) => r.id).filter((id): id is number => Boolean(id));
@@ -266,7 +299,16 @@ export function hasRole(userInfo: UserInfo, role: string): boolean {
   return userInfo.roles.includes(role);
 }
 
-// 构建数据权限SQL条件
+/**
+ * 构建数据权限 SQL 条件（返回的是追加到 WHERE 之后的 ` AND ...`）。
+ *
+ * ⚠️ 本函数目前**在全仓没有任何调用点**。也就是说 getUserInfo() 算出的 dataScope
+ * 一路走到接口层都没有真正生效过——「角色页配了数据范围」只是配了个样子。
+ *
+ * 要接通需要逐个列表接口显式调用，并为每张表指定「创建人列」「部门列」
+ * （不同表列名不统一：销售订单是 create_by，出入库是 operator_id，工单是 create_by 等）。
+ * 这属于行为变更，需先按模块做影响面评估再排期，不要在修复映射正确性时顺手打开。
+ */
 export function buildDataScopeSql(
   userInfo: UserInfo,
   tableAlias: string = 't',
@@ -345,7 +387,10 @@ export async function validateResourceAccess(
       params = [resourceId];
       break;
     case 'workorder':
-      sql = 'SELECT create_by FROM prod_work_order WHERE work_order_no = ? AND deleted = 0';
+      // 必须把 department_id 一起查出来：下方 dataScope.type === 'dept' 分支要读它，
+      // 缺列时该分支恒为 undefined，会把本部门的人也判成无权限（403）。
+      sql =
+        'SELECT create_by, department_id FROM prod_work_order WHERE work_order_no = ? AND deleted = 0';
       params = [resourceId];
       break;
     case 'inbound':
@@ -387,6 +432,15 @@ export async function validateResourceAccess(
   }
 
   if (dataScope?.type === 'dept_and_self') {
+    return (
+      resource.department_id === userInfo.departmentId || resource.create_by === userInfo.userId
+    );
+  }
+
+  // custom 的收窄维度是仓库/客户/供应商（sys_data_scope），而这里校验的单据
+  // （订单/工单/出入库）上没有这几个外键，按「本部门或本人」放行即可，
+  // 否则 custom 会一路掉到下面的 return false，把合法用户全部挡成 403。
+  if (dataScope?.type === 'custom') {
     return (
       resource.department_id === userInfo.departmentId || resource.create_by === userInfo.userId
     );

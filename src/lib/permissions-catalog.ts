@@ -5,6 +5,30 @@
  * 本文件仅包含权限常量与分组定义，不导入任何服务端专用模块（如数据库、next/server），
  * 因此可同时被服务端（`api-permissions.ts` 的网关校验）与客户端
  * （`usePermission.ts` 的角色权限勾选 UI）安全引用，从根本上避免权限码分处定义导致的漂移。
+ *
+ * ## 关于「权限码词汇表」（2026-09-26 收敛说明，改权限码前必读）
+ *
+ * 系统里曾并存三套长得像但作用不同的码，`scripts/validate-permissions.mjs` 会卡住不一致：
+ *
+ * | 词汇表 | 形态 | 作用 |
+ * |--------|------|------|
+ * | `API_PERMISSIONS`（本文件） | 精确码 `模块:操作`，如 `system:user` | **网关真正校验**的词汇 |
+ * | `PERMISSION_MODULES`（本文件） | 把上面这些码分组，供角色页勾选 | 界面词汇；勾了写进 `sys_role.permissions` |
+ * | `sys_menu.permission`（库） | 通配码 `模块:页面:*`，如 `settings:user:*` | 决定 `UserInfo.permissions`，**授权链路的主词汇** |
+ *
+ * 关键口径（容易踩）：
+ * - 角色页「按钮权限」标签页勾的是 `PERMISSION_MODULES`，保存后写 `sys_role.permissions`，
+ *   而该列**不参与服务端鉴权**（库注释已明示）。授权必须同时勾「菜单」标签页。
+ * - 新增权限码时，必须**同时**做三件事，否则门禁会红：
+ *   ① 在 `API_PERMISSIONS` 加常量；② 在 `PERMISSION_MODULES` 对应模块里引用它；
+ *   ③ 在四种语言的 `messages/*.json` 补 `perm.<code 把 : _ >`（例：`system:user` → `perm.system_user`）。
+ * - 模块 id 与 `permModule.<id>` 一一对应，模块 id 改了要同步改 messages。
+ * - `PERMISSION_MODULES` 里的**权限项**必须写成 `API_PERMISSIONS.XXX` 常量引用，
+ *   不允许写死字符串（历史上 4 条孤儿码就是这么漏出去的）；模块对象的 `id` 本身是
+ *   模块 id，保持字符串字面量。
+ *
+ * 门禁：`pnpm validate:permissions`（= `node scripts/validate-permissions.mjs`），
+ * 已接入 `.husky/pre-commit` 与 CI。可用 `PERM_CATALOG=<路径>` 指向副本做负向自测。
  */
 
 /**
@@ -223,6 +247,7 @@ export const API_PERMISSIONS = {
   WAREHOUSE_TRANSFER: 'warehouse:transfer',
   WAREHOUSE_STOCK_ADJUST: 'warehouse:stock-adjust',
   WAREHOUSE_BATCH: 'warehouse:batch',
+  WAREHOUSE_COST: 'warehouse:cost',
   WAREHOUSE_INK: 'warehouse:ink',
   WAREHOUSE_CATEGORY: 'warehouse:category',
 
@@ -318,6 +343,7 @@ export const PERMISSION_MODULES: Array<{
       { id: API_PERMISSIONS.WAREHOUSE_STOCKTAKE, name: '库存盘点' },
       { id: API_PERMISSIONS.WAREHOUSE_STOCK_ADJUST, name: '库存调整' },
       { id: API_PERMISSIONS.WAREHOUSE_BATCH, name: '批次管理' },
+      { id: API_PERMISSIONS.WAREHOUSE_COST, name: '成本核算' },
       { id: API_PERMISSIONS.WAREHOUSE_INK, name: '油墨库存' },
     ],
   },
@@ -449,6 +475,8 @@ export const PERMISSION_MODULES: Array<{
       { id: API_PERMISSIONS.EQUIPMENT_SPARE_PART, name: '备件管理' },
       { id: API_PERMISSIONS.EQUIPMENT_SPARE_ISSUE, name: '备件领用' },
       { id: API_PERMISSIONS.EQUIPMENT_STATUS, name: '设备状态监控' },
+      { id: API_PERMISSIONS.EQUIPMENT_DOCUMENT, name: '设备文档' },
+      { id: API_PERMISSIONS.EQUIPMENT_INSPECTION, name: '设备点检' },
     ],
   },
   {
@@ -571,6 +599,8 @@ export const PERMISSION_MODULES: Array<{
       { id: API_PERMISSIONS.SAGA_VIEW, name: '查看 Saga' },
       { id: API_PERMISSIONS.SAGA_RETRY, name: 'Saga 重试' },
       { id: API_PERMISSIONS.SAGA_COMPENSATE, name: 'Saga 补偿' },
+      { id: API_PERMISSIONS.SYSTEM_SETUP, name: '系统初始化' },
+      { id: API_PERMISSIONS.SYSTEM_MIGRATE, name: '数据库迁移' },
     ],
   },
 ];

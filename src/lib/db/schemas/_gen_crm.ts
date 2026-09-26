@@ -109,6 +109,7 @@ export const crmFollowRecord = mysqlTable('crm_follow_record', {
   deleted: tinyint('deleted').default(0),
   createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
   updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    createBy: varchar('create_by', { length: 100 }), // create_by
 }, (t) => ({
   idxCreateTime: index('idx_create_time').on(t.createTime),
   idxCustomer: index('idx_customer').on(t.customerId),

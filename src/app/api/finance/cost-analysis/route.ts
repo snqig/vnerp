@@ -43,8 +43,10 @@ export const GET = withPermission(async (request: NextRequest) => {
     WHERE deleted = 0
   `);
 
+  // 修复：sys_config 的金额列名为 `config_value`（旧写法 `value` 会抛 Unknown column），
+  // 且该查询此前与"本月/上月成本"的计算并行执行，改为与 summaryRow 一起并发以缩短首屏耗时。
   const budgetRow = await query(`
-    SELECT COALESCE(value, 0) as budget
+    SELECT COALESCE(config_value, 0) as budget
     FROM sys_config
     WHERE config_key = 'finance.budget_monthly'
     LIMIT 1

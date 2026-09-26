@@ -41,6 +41,9 @@ export const salDeliveryHdr = mysqlTable('sal_delivery', {
   deleted: tinyint('deleted').notNull().default(0),
   version: int('version').default(0),
   updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    baseCurrency: varchar('base_currency', { length: 10 }), // 本位币
+    baseTotalAmount: decimal('base_total_amount', { precision: 18, scale: 4 }).default('0.0000'), // 本位币金额
+    currency: varchar('currency', { length: 10 }), // 币种
 }, (t) => ({
   idxCustomer: index('idx_customer').on(t.customerId),
   idxOrder: index('idx_order').on(t.orderId),
@@ -154,28 +157,7 @@ export const salReconciliationWriteoff = mysqlTable('sal_reconciliation_writeoff
   pk: primaryKey({ columns: [t.id] }),
 }));
 
-export const salReturnOrderItem = mysqlTable('sal_return_order_item', {
-  id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().notNull(),
-  returnId: bigint('return_id', { mode: 'number', unsigned: true }).notNull(),
-  deliveryItemId: bigint('delivery_item_id', { mode: 'number', unsigned: true }),
-  materialId: bigint('material_id', { mode: 'number', unsigned: true }).notNull(),
-  materialName: varchar('material_name', { length: 100 }),
-  materialSpec: varchar('material_spec', { length: 255 }),
-  quantity: decimal('quantity', { precision: 18, scale: 4 }).notNull(),
-  unit: varchar('unit', { length: 20 }),
-  unitPrice: decimal('unit_price', { precision: 18, scale: 4 }),
-  amount: decimal('amount', { precision: 18, scale: 4 }),
-  batchNo: varchar('batch_no', { length: 50 }),
-  inspectionQty: decimal('inspection_qty', { precision: 18, scale: 4 }).default('0.0000'),
-  qualifiedQty: decimal('qualified_qty', { precision: 18, scale: 4 }).default('0.0000'),
-  remark: varchar('remark', { length: 255 }),
-  createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
-}, (t) => ({
-  idxMaterial: index('idx_material').on(t.materialId),
-  idxReturn: index('idx_return').on(t.returnId),
-  pk: primaryKey({ columns: [t.id] }),
-  fkSalReturnOrderItemReturn: foreignKey({ columns: [t.returnId], foreignColumns: [salReturnOrder.id] }),
-}));
+
 
 export const salSampleInventory = mysqlTable('sal_sample_inventory', {
   id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().notNull(),
@@ -264,6 +246,12 @@ export const salReturn = mysqlTable('sal_return', {
   updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
   createBy: bigint('create_by', { mode: 'number', unsigned: true }),
   updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    baseCurrency: varchar('base_currency', { length: 10 }), // 本位币
+    baseTotalAmount: decimal('base_total_amount', { precision: 18, scale: 4 }).default('0.0000'), // 本位币金额
+    currency: varchar('currency', { length: 10 }), // 币种
+    inspectionStatus: tinyint('inspection_status').default(0), // 验货状态 0未验 1验货中 2已验
+    returnType: tinyint('return_type').default(1), // 退货类型 1质量 2数量 3规格 4其他
+    totalQty: decimal('total_qty', { precision: 18, scale: 4 }).default('0.0000'), // 退货数量
 }, (t) => ({
   idxCustomer: index('idx_customer').on(t.customerId),
   idxDelivery: index('idx_delivery').on(t.deliveryId),

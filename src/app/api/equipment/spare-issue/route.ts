@@ -44,20 +44,42 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const rows = await query(
     `SELECT si.*, sp.part_name, sp.part_code, eq.equipment_code, eq.equipment_name
      FROM eqp_spare_issue si
-     LEFT JOIN eqp_spare_part sp ON sp.id = si.part_id AND sp.deleted = 0
+     LEFT JOIN eqp_spare_part sp ON sp.id = si.spare_part_id AND sp.deleted = 0
      LEFT JOIN eqp_equipment eq ON eq.id = si.equipment_id AND eq.deleted = 0
      ${where}
      ORDER BY si.create_time DESC LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
-  return successResponse({ list: rows, total, page, pageSize });
+
+  // 统计概览
+  const pendingRows = await query(
+    'SELECT COUNT(*) as cnt FROM eqp_spare_issue WHERE deleted = 0 AND status = 1',
+    []
+  );
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayRows = await query(
+    'SELECT COUNT(*) as cnt FROM eqp_spare_issue WHERE deleted = 0 AND issue_date = ?',
+    [todayStr]
+  );
+
+  return successResponse({
+    list: rows,
+    total,
+    page,
+    pageSize,
+    stats: {
+      totalIssues: total,
+      pendingCount: pendingRows[0]?.cnt || 0,
+      todayCount: todayRows[0]?.cnt || 0,
+    },
+  });
 });
 
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
     const ts = await getTranslations('Common');
     const body = await request.json();
-    const { part_id, equipment_id, quantity, issue_date, requester, purpose, status, remark } = body;
+    const { part_id, equipment_id, quantity, issue_date, applicant_id, applicant_name, reason, status, remark } = body;
 
     if (!part_id || !quantity) {
       return errorResponse(ts('k_1nrusyc'), 400, 400);
@@ -68,23 +90,24 @@ export const POST = withPermission(
     const result = await transaction<number>(async (connection) => {
       const insertResult = (await connection.execute(
         `INSERT INTO eqp_spare_issue
-         (issue_no, part_id, equipment_id, quantity, issue_date, requester, purpose, status, remark)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (issue_no, spare_part_id, equipment_id, quantity, issue_date, applicant_id, applicant_name, reason, status, remark)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           issueNo,
           Number(part_id),
           equipment_id ? Number(equipment_id) : null,
           Number(quantity),
           issue_date || null,
-          requester || null,
-          purpose || null,
+          applicant_id || null,
+          applicant_name || null,
+          reason || null,
           status || 1,
           remark || null,
         ]
       )) as unknown as { insertId: number };
 
       await connection.execute(
-        'UPDATE eqp_spare_part SET stock_quantity = stock_quantity - ? WHERE id = ? AND deleted = 0',
+        'UPDATE eqp_spare_part SET stock_qty = stock_qty - ? WHERE id = ? AND deleted = 0',
         [Number(quantity), Number(part_id)]
       );
 
@@ -100,7 +123,7 @@ export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
     const ts = await getTranslations('Common');
     const body = await request.json();
-    const { id, equipment_id, quantity, issue_date, requester, purpose, status, remark } = body;
+    const { id, equipment_id, quantity, issue_date, applicant_id, applicant_name, reason, status, remark } = body;
     if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     const updateFields: string[] = [];
@@ -118,13 +141,17 @@ export const PUT = withPermission(
       updateFields.push('issue_date = ?');
       updateValues.push(issue_date || null);
     }
-    if (requester !== undefined) {
-      updateFields.push('requester = ?');
-      updateValues.push(requester || null);
+    if (applicant_id !== undefined) {
+      updateFields.push('applicant_id = ?');
+      updateValues.push(applicant_id || null);
     }
-    if (purpose !== undefined) {
-      updateFields.push('purpose = ?');
-      updateValues.push(purpose || null);
+    if (applicant_name !== undefined) {
+      updateFields.push('applicant_name = ?');
+      updateValues.push(applicant_name || null);
+    }
+    if (reason !== undefined) {
+      updateFields.push('reason = ?');
+      updateValues.push(reason || null);
     }
     if (status !== undefined) {
       updateFields.push('status = ?');
@@ -157,14 +184,14 @@ export const DELETE = withPermission(
 
     await transaction(async (connection) => {
       const [row] = await connection.execute(
-        'SELECT part_id, quantity FROM eqp_spare_issue WHERE id = ? AND deleted = 0 LIMIT 1',
+        'SELECT spare_part_id, quantity FROM eqp_spare_issue WHERE id = ? AND deleted = 0 LIMIT 1',
         [Number(id)]
-      ) as unknown as Array<{ part_id: number; quantity: number }>;
+      ) as unknown as Array<{ spare_part_id: number; quantity: number }>;
 
-      if (row && row.part_id) {
+      if (row && row.spare_part_id) {
         await connection.execute(
-          'UPDATE eqp_spare_part SET stock_quantity = stock_quantity + ? WHERE id = ? AND deleted = 0',
-          [row.quantity, row.part_id]
+          'UPDATE eqp_spare_part SET stock_qty = stock_qty + ? WHERE id = ? AND deleted = 0',
+          [row.quantity, row.spare_part_id]
         );
       }
 

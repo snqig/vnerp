@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server';
+﻿import { getTranslations } from 'next-intl/server';
 
 ;
 import { NextRequest } from 'next/server';
@@ -7,6 +7,7 @@ import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
 import { query, execute } from '@/lib/db';
 import { numericFilter } from '@/lib/query-filter';
+import { getCacheManager } from '@/lib/cache';
 
 /**
  * 移动加权平均成本核算 API
@@ -52,30 +53,47 @@ export const GET = withPermission(
       return successResponse({ stock: rows, costHistory: history });
     }
 
-    // 查询所有物料的成本汇总
+    // 查询所有物料的成本汇总（加 30 秒缓存）
+    const cacheKey = `warehouse:cost:list:${page}:${pageSize}`;
+    const cache = getCacheManager();
+
+    // 先读缓存
+    const cached = await cache.get<{ list: any[]; total: number }>(cacheKey);
+    if (cached) {
+      return successResponse({
+        ...cached,
+        page,
+        pageSize,
+        fromCache: true,
+      });
+    }
+
     const countRows = await query(
       `SELECT COUNT(DISTINCT s.material_id) as total
        FROM inv_inventory s
-       WHERE s.quantity > 0`
+       WHERE s.quantity > 0 AND s.deleted = 0`
     );
     const total = countRows[0]?.total || 0;
 
     const rows = await query(
       `SELECT s.material_id, m.material_name, m.material_code, m.specification, m.unit,
               SUM(s.quantity) as total_quantity,
-              SUM(s.quantity * s.cost_price) as total_cost_amount,
-              AVG(s.cost_price) as avg_cost_price,
-              MIN(s.cost_price) as min_cost_price,
-              MAX(s.cost_price) as max_cost_price,
+              SUM(s.quantity * s.unit_cost) as total_cost_amount,
+              AVG(s.unit_cost) as avg_cost_price,
+              MIN(s.unit_cost) as min_cost_price,
+              MAX(s.unit_cost) as max_cost_price,
               COUNT(DISTINCT s.warehouse_id) as warehouse_count
        FROM inv_inventory s
        LEFT JOIN inv_material m ON s.material_id = m.id
-       WHERE s.quantity > 0
+       WHERE s.quantity > 0 AND s.deleted = 0
        GROUP BY s.material_id, m.material_name, m.material_code, m.specification, m.unit
        ORDER BY total_cost_amount DESC
        LIMIT ? OFFSET ?`,
       [pageSize, (page - 1) * pageSize]
     );
+
+    // 写入缓存（30秒）
+    await cache.set(cacheKey, { list: rows, total }, 30);
 
     return successResponse({
       list: rows,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import QRCode from 'qrcode';
 import { MainLayout } from '@/components/layout';
@@ -129,11 +129,7 @@ export default function InboundManagementPage() {
   const [selectedLabels, setSelectedLabels] = useState<Set<string>>(new Set());
 
   // 入库记录显示方式（列表 / 表格 / 看板），持久化到 localStorage
-  const [viewMode, setViewMode] = useState<InboundViewMode>(() => {
-    if (typeof window === 'undefined') return 'list';
-    const saved = window.localStorage.getItem('inbound:viewMode');
-    return saved === 'table' || saved === 'kanban' ? saved : 'list';
-  });
+  const [viewMode, setViewMode] = useState<InboundViewMode>('list');
   const changeViewMode = (mode: InboundViewMode) => {
     setViewMode(mode);
     if (typeof window !== 'undefined') {
@@ -141,10 +137,16 @@ export default function InboundManagementPage() {
     }
   };
 
-  // 二维码状态
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
-  const [, setQrCodeLabelId] = useState<string>('');
+  // 客户端挂载后再从 localStorage 读取，避免 hydration 不一致
+  useEffect(() => {
+    const saved = window.localStorage.getItem('inbound:viewMode');
+    if (saved === 'table' || saved === 'kanban') {
+      setViewMode(saved);
+    }
+  }, []);
   const [scanResult, _setScanResult] = useState<ScanResult | null>(null);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  const [qrCodeLabelId, setQrCodeLabelId] = useState<string>('');
 
   // 母材查询对话框状态
   const [isSourceLabelQueryOpen, setIsSourceLabelQueryOpen] = useState(false);

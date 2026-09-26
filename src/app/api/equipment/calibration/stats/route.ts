@@ -19,16 +19,28 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params.push(startDate, endDate);
     }
 
-    // 总校准数
-    const [totalCount] = await query(
-      `SELECT COUNT(*) as count FROM eqp_calibration WHERE deleted = 0${dateFilter}`,
+    // 待校准：status = 1
+    const [pendingResult] = await query(
+      `SELECT COUNT(*) as count FROM eqp_calibration WHERE deleted = 0 AND status = 1${dateFilter}`,
       params
     );
 
-    // 逾期未校准：next_calibration_date < CURDATE() AND deleted=0
+    // 检定中：status = 2
+    const [calibratingResult] = await query(
+      `SELECT COUNT(*) as count FROM eqp_calibration WHERE deleted = 0 AND status = 2${dateFilter}`,
+      params
+    );
+
+    // 已合格：status = 3
+    const [completedResult] = await query(
+      `SELECT COUNT(*) as count FROM eqp_calibration WHERE deleted = 0 AND status = 3${dateFilter}`,
+      params
+    );
+
+    // 不合格：status = 4（计入逾期辅助显示）
     const [overdueResult] = await query(
       `SELECT COUNT(*) as count FROM eqp_calibration
-       WHERE deleted = 0 AND next_calibration_date < CURDATE()`
+       WHERE deleted = 0 AND (next_calibration_date < CURDATE() OR status = 4)`
     );
 
     // 本月校准次数
@@ -40,7 +52,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return NextResponse.json({
       success: true,
       data: {
-        totalCount: totalCount?.count || 0,
+        pending: pendingResult?.count || 0,
+        calibrating: calibratingResult?.count || 0,
+        completed: completedResult?.count || 0,
         overdue: overdueResult?.count || 0,
         monthlyCount: monthlyResult?.count || 0,
       },

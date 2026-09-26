@@ -49,7 +49,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const [monthlyResult] = await query(
       `SELECT COALESCE(SUM(received_amount), 0) as total 
        FROM fin_receivable 
-       WHERE deleted = 0 AND YEAR(updated_at) = YEAR(CURDATE()) AND MONTH(updated_at) = MONTH(CURDATE())`
+       WHERE deleted = 0 AND YEAR(update_time) = YEAR(CURDATE()) AND MONTH(update_time) = MONTH(CURDATE())`
     );
 
     return NextResponse.json({

@@ -101,19 +101,51 @@ describe('物料领用管理 - material-requisition', () => {
 
     it('BOM 不存在时返回失败', async () => {
       vi.mocked(query)
-        .mockResolvedValueOnce([{ id: 1, work_order_no: 'WO001', material_id: 101, plan_qty: 100, warehouse_id: 1 }])
+        .mockResolvedValueOnce([
+          { id: 1, work_order_no: 'WO001', bom_id: 5, plan_qty: 100, warehouse_id: 1 },
+        ])
         .mockResolvedValueOnce([]);
 
       const result = await autoGenerateRequisition(1);
 
       expect(result.success).toBe(false);
       expect(result.message).toContain('BOM');
+      // 幽灵列回归守护：prd_bom 无 material_id 列，SQL 不得引用 b.material_id
+      for (const call of vi.mocked(query).mock.calls) {
+        expect(String(call[0])).not.toContain('b.material_id');
+      }
+    });
+
+    it('无 bom_id 时按 product_id 兜底查 BOM（同为 mdm_product 空间）', async () => {
+      vi.mocked(query)
+        .mockResolvedValueOnce([{ id: 1, work_order_no: 'WO001', product_id: 44, plan_qty: 10 }])
+        .mockResolvedValueOnce([]);
+
+      const result = await autoGenerateRequisition(1);
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('BOM');
+      const fallbackSql = String(vi.mocked(query).mock.calls[1][0]);
+      expect(fallbackSql).toContain('b.product_id = ?');
+      expect(fallbackSql).not.toContain('b.material_id');
+    });
+
+    it('既无 bom_id 也无 product_id：直接失败，不发 BOM 查询', async () => {
+      vi.mocked(query).mockResolvedValueOnce([
+        { id: 1, work_order_no: 'WO001', plan_qty: 10 },
+      ]);
+
+      const result = await autoGenerateRequisition(1);
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('BOM');
+      expect(vi.mocked(query).mock.calls.length).toBe(1);
     });
 
     it('成功生成领料单（含 FIFO 推荐）', async () => {
       // query 1: 工单信息
       vi.mocked(query).mockResolvedValueOnce([
-        { id: 1, work_order_no: 'WO001', material_id: 101, plan_qty: 100, warehouse_id: 1 },
+        { id: 1, work_order_no: 'WO001', bom_id: 5, plan_qty: 100, warehouse_id: 1 },
       ]);
       // query 2: BOM 明细
       vi.mocked(query).mockResolvedValueOnce([
@@ -153,11 +185,15 @@ describe('物料领用管理 - material-requisition', () => {
       expect(result.requisitionId).toBe(1);
       expect(result.requisitionNo).toBeDefined();
       expect(secureLog).toHaveBeenCalledWith('info', expect.stringContaining('成功'), expect.anything());
+      // 幽灵列回归守护：BOM 查询走 bd.bom_id，不引用 prd_bom.material_id
+      const bomSql = String(vi.mocked(query).mock.calls[1][0]);
+      expect(bomSql).toContain('bd.bom_id = ?');
+      expect(bomSql).not.toContain('b.material_id');
     });
 
     it('事务异常时返回失败并记录日志', async () => {
       vi.mocked(query).mockResolvedValueOnce([
-        { id: 1, work_order_no: 'WO001', material_id: 101, plan_qty: 100, warehouse_id: 1 },
+        { id: 1, work_order_no: 'WO001', bom_id: 5, plan_qty: 100, warehouse_id: 1 },
       ]);
       vi.mocked(query).mockResolvedValueOnce([
         { material_id: 201, material_code: 'M201', material_name: '物料A', quantity: '2', unit: '米' },
@@ -458,7 +494,7 @@ describe('物料领用管理 - material-requisition', () => {
   describe('分支覆盖 - 空可选参数与异常路径', () => {
     it('autoGenerateRequisition 不传申请人且 warehouse_id 为 null', async () => {
       vi.mocked(query)
-        .mockResolvedValueOnce([{ id: 1, work_order_no: 'WO001', material_id: 101, plan_qty: 100, warehouse_id: null }])
+        .mockResolvedValueOnce([{ id: 1, work_order_no: 'WO001', bom_id: 5, plan_qty: 100, warehouse_id: null }])
         .mockResolvedValueOnce([{ material_id: 201, material_code: 'M201', material_name: 'A', quantity: '1', unit: 'pcs' }]);
       vi.mocked(planFIFOBatches).mockResolvedValueOnce({ allocations: [], shortage: false, shortageQty: 0 } as any);
 
@@ -558,7 +594,7 @@ describe('物料领用管理 - material-requisition', () => {
     it('autoGenerateRequisition 配置 mr_prefix 为空时使用默认 MR', async () => {
       vi.mocked(getConfig).mockReturnValueOnce(''); // mr_prefix 为空
       vi.mocked(query)
-        .mockResolvedValueOnce([{ id: 1, work_order_no: 'WO001', material_id: 101, plan_qty: 100, warehouse_id: 1 }])
+        .mockResolvedValueOnce([{ id: 1, work_order_no: 'WO001', bom_id: 5, plan_qty: 100, warehouse_id: 1 }])
         .mockResolvedValueOnce([{ material_id: 201, material_code: 'M201', material_name: 'A', quantity: '1', unit: 'pcs' }]);
       vi.mocked(planFIFOBatches).mockResolvedValueOnce({ allocations: [], shortage: false, shortageQty: 0 } as any);
 
@@ -617,7 +653,7 @@ describe('物料领用管理 - material-requisition', () => {
 
     it('autoGenerateRequisition FIFO 推荐批次字段为空时使用默认值', async () => {
       vi.mocked(query)
-        .mockResolvedValueOnce([{ id: 1, work_order_no: 'WO001', material_id: 101, plan_qty: 100, warehouse_id: 1 }])
+        .mockResolvedValueOnce([{ id: 1, work_order_no: 'WO001', bom_id: 5, plan_qty: 100, warehouse_id: 1 }])
         .mockResolvedValueOnce([{ material_id: 201, material_code: 'M201', material_name: 'A', quantity: '1', unit: 'pcs' }]);
       // allocation 存在但字段为空字符串
       vi.mocked(planFIFOBatches).mockResolvedValueOnce({

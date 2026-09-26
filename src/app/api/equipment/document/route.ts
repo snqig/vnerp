@@ -58,11 +58,22 @@ export const GET = withPermission(async (request: NextRequest) => {
     [...params, pageSize, offset]
   );
 
+  // 统计概览
+  const docTypeRows = await query(
+    `SELECT doc_type, COUNT(*) as cnt FROM eqp_document WHERE deleted = 0 GROUP BY doc_type`,
+    []
+  );
+  const typeStats: Record<string, number> = {};
+  for (const row of docTypeRows as { doc_type: string; cnt: number }[]) {
+    typeStats[row.doc_type || ''] = row.cnt;
+  }
+
   return successResponse({
     list: rows,
     total: (countResult as { total: number }[])[0]?.total || 0,
     page,
     pageSize,
+    stats: { typeStats },
   });
 },);
 

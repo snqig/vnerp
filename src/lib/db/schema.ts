@@ -25,7 +25,6 @@ export {
 } from './schemas/warehouse';
 // Phase 0 补全：28 张核心 inv_* 缺失表（由 scripts/_audit/gen_warehouse_missing.cjs 生成）
 export {
-  invAuxiliaryInventory,
   invCuttingDetail,
   invCuttingRecord,
   invFifoOverrideLog,
@@ -35,11 +34,9 @@ export {
   invInventoryTransactionLog,
   invLocation,
   invMaterialCategory,
-  invMaterialInventory,
   invMaterialLabel,
   invMaterialStd,
   invOutboundBatchAllocation,
-  invProductInventory,
   invProductionInbound,
   invProductionInboundItem,
   invSalesOutbound,
@@ -57,7 +54,6 @@ export {
 export {
   salOrder,
   salOrderDetail,
-  salDelivery,
   salReturnOrder,
   salReconciliation,
 } from './schemas/sales';
@@ -73,7 +69,6 @@ export {
   salReconciliationWriteoff,
   salReturn,
   salReturnDetail,
-  salReturnOrderItem,
   salSampleInventory,
 } from './schemas/_gen_sal';
 export {
@@ -86,11 +81,7 @@ export {
 } from './schemas/procurement';
 // pur_ 域补全：9 张核心缺失表（含 5 张 *_deprecated 废弃表，真实存在须建模；由 scripts/_audit/gen_pur.cjs 生成）
 export {
-  purOrderDeprecated,
-  purOrderDetailDeprecated,
   purPurchaseReconciliationWriteoff,
-  purReceiptDeprecated,
-  purReceiptDetailDeprecated,
   purRequest,
   purRequestDetail,
   purRequestItem,
@@ -141,12 +132,6 @@ export {
   engSampleToMass,
   engSop,
 } from './schemas/_gen_eng';
-// eq_ 域补全（由 scripts/_audit/gen_misc.cjs 生成）
-export {
-  eqEquipment,
-  eqMaintenancePlan,
-  eqMaintenanceRecord,
-} from './schemas/_gen_eq';
 // eqp_ 域补全（由 scripts/_audit/gen_misc.cjs 生成）
 export {
   eqpCalibration,
@@ -255,11 +240,8 @@ export {
   prdProcessCardMaterial,
   prdProcessRoute,
   prdProcessRouteStep,
-  prdWorkOrderColorSeq,
-  prdWorkOrderBom,
 } from './schemas/production';
 export { prodWorkOrder, prodWorkOrderItem, prodWorkOrderMaterialReq } from './schemas/workorder';
-export { salQuote, salQuoteItem } from './schemas/quote';
 export {
   sampleProcessTemplate,
   sampleProcessTemplateItem,
@@ -270,8 +252,6 @@ export {
   dcprintSampleProcessItem,
   dcprintSampleProcessStep,
   sampleOrder,
-  salSampleFeedback,
-  salSampleQuotation,
 } from './schemas/sample';
 export {
   dcprintInkColor,
@@ -379,7 +359,6 @@ export type {
 export type {
   SalOrder,
   SalOrderDetail,
-  SalDelivery,
   SalReturnOrder,
   SalReconciliation,
 } from './schemas/sales';
@@ -400,7 +379,6 @@ export type {
   PrdFinishOrder,
   PrdSchedule,
   PrdScheduleDetail,
-  PrdWorkOrderBom,
   PrdStandardCard,
   PrdProductLabel,
   PrdBom,
@@ -411,14 +389,12 @@ export type {
   PrdProcessCardMaterial,
   PrdProcessRoute,
   PrdProcessRouteStep,
-  PrdWorkOrderColorSeq,
 } from './schemas/production';
 export type {
   ProdWorkOrder,
   ProdWorkOrderItem,
   ProdWorkOrderMaterialReq,
 } from './schemas/workorder';
-export type { SalQuote, SalQuoteItem } from './schemas/quote';
 export type {
   SampleProcessTemplate,
   SampleProcessTemplateItem,
@@ -429,8 +405,6 @@ export type {
   DcprintSampleProcessItem,
   DcprintSampleProcessStep,
   SampleOrder,
-  SalSampleFeedback,
-  SalSampleQuotation,
 } from './schemas/sample';
 export type {
   DcprintInkColor,

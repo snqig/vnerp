@@ -161,8 +161,12 @@ export const POST = withPermission(
 
         if (dispatchRows.length > 0) {
           const dispatch = dispatchRows[0];
+          // 修复：ink_formula 表不存在，配方改为 dcprint_ink_formula_version（按 version_no 匹配）
           const [formulaRows] = await conn.execute(
-            'SELECT id, formula_name, pantone_code FROM ink_formula WHERE formula_no = ? AND deleted = 0',
+            `SELECT v.id, v.version_name AS formula_name, c.pantone_code
+             FROM dcprint_ink_formula_version v
+             LEFT JOIN dcprint_ink_color c ON c.id = v.color_id
+             WHERE v.version_no = ? AND v.is_deleted = 0`,
             [dispatch.formula_no || formula_no]
           );
 

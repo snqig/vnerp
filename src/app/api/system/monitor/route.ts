@@ -29,7 +29,7 @@ export const GET = withPermission(
       try {
         const [userCount, orderCount, inventoryCount, logCount]: DbRow[][] = await Promise.all([
           query('SELECT COUNT(*) as count FROM sys_user WHERE deleted = 0'),
-          query('SELECT COUNT(*) as count FROM purchase_order WHERE deleted = 0'),
+          query('SELECT COUNT(*) as count FROM pur_purchase_order WHERE deleted = 0'),
           query('SELECT COUNT(*) as count FROM inv_inventory'),
           query(
             'SELECT COUNT(*) as count FROM sys_operation_log WHERE create_time > DATE_SUB(NOW(), INTERVAL 24 HOUR)'

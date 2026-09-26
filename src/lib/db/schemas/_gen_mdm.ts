@@ -26,6 +26,8 @@ export const mdmProduct = mysqlTable('mdm_product', {
   deleted: tinyint('deleted').default(0),
   createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
   updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    createBy: varchar('create_by', { length: 100 }), // create_by
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }),
 }, (t) => ({
   idxCategory: index('idx_category').on(t.categoryId),
   idxCustomer: index('idx_customer').on(t.customerId),

@@ -7,6 +7,7 @@ import { transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { generateDocumentNo } from '@/lib/document-numbering';
+import { DeliveryStatusEnum } from '@/domain/sales/value-objects/DeliveryStatus';
 import type mysql from 'mysql2/promise';
 import type { DbRow } from '@/types/db';
 
@@ -21,11 +22,16 @@ class ShipError extends Error {
 }
 
 // POST /api/sales/delivery/[id]/ship - 扫码发货（符合设计文档 5.2 节）
+//
+// 原实现写的是 `shipments` / `shipment_items` 两张库里不存在的表，且沿用了另一套状态机
+// （4=部分发货 / 5=已发货）。真实表是 sal_delivery / sal_delivery_detail，状态机是
+// 「1-待发货 / 2-已发货 / 3-已签收 / 9-已取消」（见 domain/sales/value-objects/DeliveryStatus），
+// 因此这里的状态判定与写回都对齐到 DeliveryStatusEnum。
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
     // withPermission不转发context.params，从URL路径提取动态路由参数
-    const shipmentId = parseInt(new URL(request.url).pathname.split('/')[4]);
+    const deliveryId = parseInt(new URL(request.url).pathname.split('/')[4]);
     const body = await request.json();
     const { items, logistics_company, tracking_no } = body;
 
@@ -38,30 +44,20 @@ export const POST = withPermission(
       // 要么全部成功要么全部回滚，杜绝中途失败导致的数据不一致。
       const result = await transaction(async (conn: DbConnection) => {
         // 锁定发货单行，防止并发点击重复发货/超发（TOCTOU）
-        const [shipmentRows] = await conn.query<mysql.RowDataPacket[]>(
-          `SELECT * FROM shipments WHERE id = ? AND deleted = 0 FOR UPDATE`,
-          [shipmentId]
+        const [deliveryRows] = await conn.query<mysql.RowDataPacket[]>(
+          `SELECT id, delivery_no, order_id, order_no, customer_id, warehouse_id, status, total_qty
+           FROM sal_delivery WHERE id = ? AND deleted = 0 FOR UPDATE`,
+          [deliveryId]
         );
-        const shipment = shipmentRows[0] as DbRow | undefined;
+        const delivery = deliveryRows[0] as DbRow | undefined;
 
-        if (!shipment) {
+        if (!delivery) {
           throw new ShipError(404, ts('k_12d7h0r'));
         }
 
-        // 验证发货单状态（只有待发货状态才能执行发货操作）
-        if (shipment.status !== 3) {
-          const statusMap: Record<number, string> = {
-            1: ts('k_oc54qp'),
-            2: ts('k_rkj3lq'),
-            3: ts('k_18crht8'),
-            4: ts('k_1yb9kf7'),
-            5: ts('k_ypt6sx'),
-            6: ts('k_1d8x36r'),
-          };
-          throw new ShipError(
-            400,
-            `当前状态为"${statusMap[shipment.status as number]}"，不能执行发货操作`
-          );
+        // 验证发货单状态（只有「待发货」才能执行发货操作）
+        if (Number(delivery.status) !== DeliveryStatusEnum.PENDING) {
+          throw new ShipError(400, `当前状态不可发货，仅支持「待发货」状态执行发货`);
         }
 
         // 验证并锁定每个二维码（防止同一二维码被两个请求同时发货）
@@ -96,12 +92,12 @@ export const POST = withPermission(
             throw new ShipError(400, `二维码 ${qr_code} 的发货数量无效`);
           }
 
-          // 更新明细表已发货数量
+          // 累加明细表数量（sal_delivery_detail 没有 shipped_quantity / qr_code 列）
           await conn.execute(
-            `UPDATE shipment_items
-           SET shipped_quantity = shipped_quantity + ?, qr_code = ?
-           WHERE shipment_id = ? AND material_id = ?`,
-            [qty, qr_code, shipmentId, material_id]
+            `UPDATE sal_delivery_detail
+           SET quantity = quantity + ?
+           WHERE delivery_id = ? AND material_id = ?`,
+            [qty, deliveryId, material_id]
           );
 
           // 扣减库存：统一到 inv_inventory（按 material_id + warehouse_id 聚合粒度）
@@ -122,51 +118,56 @@ export const POST = withPermission(
             `UPDATE qrcode_record
            SET status = 'shipped', shipped_at = NOW(), shipment_id = ?
            WHERE qr_code = ?`,
-            [shipmentId, qr_code]
+            [deliveryId, qr_code]
           );
 
           totalShippedQty += qty;
         }
 
-        // 更新发货单主表（行已被 FOR UPDATE 锁定，此处读-改-写安全）
-        const newShippedQty = (parseFloat(String(shipment.shipped_quantity)) || 0) + totalShippedQty;
-        const newStatus = newShippedQty >= parseFloat(String(shipment.total_quantity)) ? 5 : 4; // 已发货 or 部分发货
+        // 发货单主表：全部数量发完即「已发货」，否则留在「待发货」。
+        // sal_delivery 上没有 shipped_quantity 列，用本次实发量对账单据申明量。
+        const declaredQty = parseFloat(String(delivery.total_qty ?? '')) || 0;
+        const isFullyShipped = declaredQty > 0 ? totalShippedQty >= declaredQty : true;
+        const newStatus = isFullyShipped ? DeliveryStatusEnum.SHIPPED : DeliveryStatusEnum.PENDING;
 
         await conn.execute(
-          `UPDATE shipments
-         SET shipped_quantity = ?, status = ?, ship_time = NOW(),
+          `UPDATE sal_delivery
+         SET status = ?, ship_time = NOW(),
          logistics_company = COALESCE(?, logistics_company),
          tracking_no = COALESCE(?, tracking_no)
          WHERE id = ?`,
-          [newShippedQty, newStatus, logistics_company || null, tracking_no || null, shipmentId]
+          [newStatus, logistics_company || null, tracking_no || null, deliveryId]
         );
 
         // 更新销售订单已发货数量（符合设计文档"实时同步"原则）
-        await conn.execute(
-          `UPDATE sal_order
-         SET shipped_qty = IFNULL(shipped_qty, 0) + ?, status =
-           CASE WHEN IFNULL(shipped_qty, 0) + ? >= total_qty THEN 4 ELSE status END
-         WHERE id = ?`,
-          [totalShippedQty, totalShippedQty, shipment.sales_order_id]
-        );
+        // 注：sal_order 上没有 total_qty 列（只有 total_amount），订单级状态不在这里推进，
+        // 交给 sal_order 自身的状态机处理。TODO：需要订单总数量列时再补回状态推进。
+        if (delivery.order_id) {
+          await conn.execute(
+            `UPDATE sal_order
+           SET shipped_qty = IFNULL(shipped_qty, 0) + ?
+           WHERE id = ?`,
+            [totalShippedQty, delivery.order_id]
+          );
+        }
 
         // 如果全部发货完成，自动生成应收单（并发安全：命名锁保证单号唯一，与业务同事务）
-        if (newStatus === 5) {
+        if (isFullyShipped && delivery.order_id) {
           const receivableNo = await generateDocumentNo('receivable', conn);
           await conn.execute(
             `INSERT INTO fin_receivable (
-            receivable_no, order_id, order_type, customer_id,
-            amount, status, create_time
-          ) VALUES (?, ?, 'sales', ?, 0, 1, NOW())`,
-            [receivableNo, shipment.sales_order_id, shipment.customer_id]
+            receivable_no, source_type, source_no, order_id, order_type,
+            customer_id, amount, status, create_time
+          ) VALUES (?, 'sales', ?, ?, 'sales', ?, 0, 1, NOW())`,
+            [receivableNo, delivery.delivery_no ?? '', delivery.order_id, delivery.customer_id ?? null]
           );
         }
 
         return {
-          shipment_no: shipment.shipment_no,
+          delivery_no: delivery.delivery_no,
           status: newStatus,
           ship_time: new Date().toISOString(),
-          shipped_quantity: newShippedQty,
+          shipped_quantity: totalShippedQty,
         };
       });
 

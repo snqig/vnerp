@@ -1,16 +1,15 @@
 import { sysDepartment } from './common';
 import { foreignKey } from 'drizzle-orm/mysql-core';
-import {
-  bigint,
-  datetime,
-  index,
-  int,
-  mysqlTable,
-  text,
-  tinyint,
-  uniqueIndex,
-  varchar,
-} from 'drizzle-orm/mysql-core';
+import { bigint,
+datetime,
+index,
+int,
+json,
+mysqlTable,
+text,
+tinyint,
+uniqueIndex,
+varchar } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
 export const sysUser = mysqlTable(
@@ -34,6 +33,9 @@ export const sysUser = mysqlTable(
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
     deleted: tinyint('deleted').default(0),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }), // 创建人ID
+    position: varchar('position', { length: 50 }), // 职位
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }), // 更新人ID
   },
   (table) => ({
     usernameIdx: uniqueIndex('uk_username').on(table.username),
@@ -61,6 +63,13 @@ export const sysRole = mysqlTable(
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
     deleted: tinyint('deleted').default(0),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }), // 创建人ID
+    inheritMode: varchar('inherit_mode', { length: 20 }),
+    parentId: int('parent_id'), // 父角色ID（角色继承）
+    permissions: json('permissions'),
+    roleType: tinyint('role_type').default(2), // 角色类型：1-系统角色 2-自定义
+    sortOrder: int('sort_order').default(0), // 排序号
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }), // 更新人ID
   },
   (table) => ({
     codeIdx: uniqueIndex('uk_role_code').on(table.roleCode),
@@ -86,6 +95,12 @@ export const sysMenu = mysqlTable(
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
     deleted: tinyint('deleted').default(0),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }), // 创建人ID
+    isCache: tinyint('is_cache').default(1),
+    isExternal: tinyint('is_external').default(0),
+    keepAlive: tinyint('keep_alive').default(0), // 是否缓存: 0-否, 1-是
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }), // 更新人ID
+    visible: tinyint('visible').default(1), // 是否可见: 0-隐藏, 1-显示
   },
   (table) => ({
     codeIdx: uniqueIndex('uk_menu_code').on(table.menuCode),
@@ -162,6 +177,19 @@ export const sysConfig = mysqlTable(
     description: varchar('description', { length: 200 }),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    approvalRequired: tinyint('approval_required').default(0), // 是否需要审批: 1-是, 0-否
+    category: varchar('category', { length: 50 }), // 配置分类
+    configGroup: varchar('config_group', { length: 50 }), // 配置分组
+    configName: varchar('config_name', { length: 50 }), // 配置名称
+    configType: tinyint('config_type').default(1), // 配置类型: 1-系统, 2-业务
+    configTypeEnum: varchar('config_type_enum', { length: 20 }),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }), // 创建人ID
+    deleted: tinyint('deleted').default(0), // 软删除: 0-正常, 1-已删除
+    displayName: varchar('display_name', { length: 100 }), // 显示名称
+    isRequired: tinyint('is_required').default(0), // 是否必填: 1-是, 0-否
+    sortOrder: int('sort_order').default(0), // 排序号
+    status: tinyint('status').default(1), // 状态: 1-启用, 0-禁用
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }), // 更新人ID
   },
   (table) => ({
     keyIdx: uniqueIndex('uk_config_key').on(table.configKey),
@@ -178,6 +206,9 @@ export const sysLoginLog = mysqlTable(
     status: tinyint('status').default(1),
     errorMsg: varchar('error_msg', { length: 255 }),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    location: varchar('location', { length: 100 }), // 登录地点
+    loginType: tinyint('login_type'), // 登录类型: 1-账号密码, 2-手机验证码
+    userId: bigint('user_id', { mode: 'number', unsigned: true }), // 用户ID
   },
   (table) => ({
     userIdx: index('idx_login_log_user').on(table.username),
@@ -196,6 +227,7 @@ export const sysNotification = mysqlTable(
     userId: bigint('user_id', { mode: 'number', unsigned: true }),
     isRead: tinyint('is_read').default(0),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    readTime: datetime('read_time'), // 阅读时间
   },
   (table) => ({
     userIdx: index('idx_notification_user').on(table.userId),

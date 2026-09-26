@@ -203,13 +203,16 @@ export const DELETE = withPermission(
 );
 
 // 任务执行逻辑
+// `stock` / `materials` / `warehouses` 三张表在库里都不存在，真实口径是
+// inv_inventory(库存) → inv_material(物料档案) → inv_warehouse(仓库)。
+// 预警条件改为「库存量 <= 物料安全库存」，比原先写死的 quantity <= 10 更贴合业务。
 async function executeInventoryAlert(): Promise<string> {
   const alerts = await query(
     `SELECT s.material_id, m.material_name, s.quantity, w.warehouse_name
-     FROM stock s
-     LEFT JOIN materials m ON s.material_id = m.id
-     LEFT JOIN warehouses w ON s.warehouse_id = w.id
-     WHERE s.quantity <= 10`
+     FROM inv_inventory s
+     LEFT JOIN inv_material m ON s.material_id = m.id
+     LEFT JOIN inv_warehouse w ON s.warehouse_id = w.id
+     WHERE m.safety_stock > 0 AND s.quantity <= m.safety_stock`
   );
   return `库存预警检查完成，发现 ${alerts.length} 条低库存记录`;
 }

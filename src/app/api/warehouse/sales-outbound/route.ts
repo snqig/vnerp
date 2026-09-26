@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ResultSetHeader } from 'mysql2/promise';
 import { query, queryOne, execute, transaction, SqlValue } from '@/lib/db';
+import { recomputeInventorySummary } from '@/lib/inventory-ledger';
 import { successResponse, errorResponse, logOperation } from '@/lib/api-response';
 import { randomUUID } from 'crypto';
 

@@ -47,6 +47,10 @@ export const finCostRecord = mysqlTable('fin_cost_record', {
   deleted: tinyint('deleted').default(0),
   createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
   updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    createBy: varchar('create_by', { length: 100 }), // create_by
+    sourceId: bigint('source_id', { mode: 'number', unsigned: true }), // source_id
+    sourceNo: varchar('source_no', { length: 50 }), // source_no
+    sourceType: varchar('source_type', { length: 50 }), // source_type
 }, (t) => ({
   idxCostDate: index('idx_cost_date').on(t.costDate),
   idxCostType: index('idx_cost_type').on(t.costType),
@@ -65,6 +69,12 @@ export const finPaymentRecord = mysqlTable('fin_payment_record', {
   remark: text('remark'),
   createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
   deleted: tinyint('deleted').default(0),
+    baseAmount: decimal('base_amount', { precision: 18, scale: 4 }).default('0.0000'), // 本位币金额
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }), // 创建人ID
+    currency: varchar('currency', { length: 10 }), // 币种
+    exchangeRate: decimal('exchange_rate', { precision: 18, scale: 6 }).default('1.000000'), // 汇率
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }), // 更新人ID
+    updateTime: datetime('update_time'), // 更新时间
 }, (t) => ({
   idxPayable: index('idx_payable').on(t.payableId),
   idxSupplier: index('idx_supplier').on(t.supplierId),
@@ -100,6 +110,9 @@ export const finReceiptRecord = mysqlTable('fin_receipt_record', {
   remark: text('remark'),
   createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
   deleted: tinyint('deleted').default(0),
+    baseAmount: decimal('base_amount', { precision: 18, scale: 4 }).default('0.0000'), // 本位币金额
+    currency: varchar('currency', { length: 10 }), // 币种
+    exchangeRate: decimal('exchange_rate', { precision: 18, scale: 6 }).default('1.000000'), // 汇率
 }, (t) => ({
   idxCustomer: index('idx_customer').on(t.customerId),
   idxReceivable: index('idx_receivable').on(t.receivableId),

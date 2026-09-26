@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
@@ -32,6 +32,9 @@ interface CostItem {
   material_name: string;
   material_code: string;
   material_spec: string;
+  // API（api/warehouse/cost/route.ts:64）SELECT 的是 inv_material.specification，
+  // 页面表格第 217 行也读 item.specification，接口里原先漏了这行声明 → tsc 报 TS2339。
+  specification: string;
   unit: string;
   total_quantity: number;
   total_cost_amount: number;
@@ -48,6 +51,7 @@ export default function CostPage() {
   const { toast } = useToast();
   const [list, setList] = useState<CostItem[]>([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState<any>({});
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -115,8 +119,8 @@ export default function CostPage() {
             { key: 'shipped', label: tc('shippedCost'), icon: Archive, ...StatsTheme.purple },
           ]}
           stats={[
-            { key: 'total', count: totalCostAmount },
-            { key: 'inStock', count: list.reduce((sum, item) => sum + (item.total_cost_amount || 0), 0) },
+            { key: 'total', count: stats.total_cost || totalCostAmount },
+            { key: 'inStock', count: stats.in_stock_cost || list.reduce((sum, item) => sum + (item.total_cost_amount || 0), 0) },
             { key: 'inTransit', count: 0 },
             { key: 'shipped', count: 0 },
           ]}
@@ -213,7 +217,7 @@ export default function CostPage() {
                       <TableCell className="font-mono text-sm">{item.material_code}</TableCell>
                       <TableCell className="text-sm font-medium">{item.material_name}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {item.material_spec || '-'}
+                        {item.specification || '-'}
                       </TableCell>
                       <TableCell className="text-sm">{item.unit}</TableCell>
                       <TableCell className="text-sm font-mono">

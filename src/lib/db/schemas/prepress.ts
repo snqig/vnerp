@@ -27,7 +27,9 @@ export const dcprintInkColor = mysqlTable(
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
-    deleted: tinyint('deleted').default(0),
+    // 库里只有 is_deleted：代码侧早已统一用它（注释里还记着「旧写法会 500」）。
+    // 这里曾同时声明 deleted / isDeleted 两行，删掉不存在的那个。
+    isDeleted: tinyint('is_deleted').default(0), // 软删除
   },
   (table) => ({
     colorCodeIdx: uniqueIndex('uk_color_code').on(table.colorCode),
@@ -62,7 +64,9 @@ export const dcprintInkFormulaVersion = mysqlTable(
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
-    deleted: tinyint('deleted').default(0),
+    // 库里只有 is_deleted：代码侧早已统一用它（注释里还记着「旧写法会 500」）。
+    // 这里曾同时声明 deleted / isDeleted 两行，删掉不存在的那个。
+    isDeleted: tinyint('is_deleted').default(0), // 软删除
   },
   (table) => ({
     colorIdIdx: index('idx_formula_color').on(table.colorId),

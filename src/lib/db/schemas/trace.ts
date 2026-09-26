@@ -39,6 +39,10 @@ export const qrcodeRecord = mysqlTable('qrcode_record', {
   updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
   createBy: bigint('create_by', { mode: 'number', unsigned: true }),
   deleted: tinyint('deleted').default(0),
+    qrImageUrl: text('qr_image_url'), // 二维码图片(data URL)
+    shipmentId: bigint('shipment_id', { mode: 'number', unsigned: true }), // shipment_id
+    shippedAt: varchar('shipped_at', { length: 255 }), // shipped_at
+    traceUrl: varchar('trace_url', { length: 512 }), // 追溯链接
 }, (table) => ({
   qrCodeIdx: index('idx_qr_code').on(table.qrCode),
   qrTypeIdx: index('idx_qr_type').on(table.qrType),

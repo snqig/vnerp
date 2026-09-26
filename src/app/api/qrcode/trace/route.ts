@@ -101,9 +101,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   let productionUsage: DbRow[] | null = null;
   if (record.material_id && record.qr_type === 'material') {
     productionUsage = await query(
-      `SELECT wo.work_order_no, wo.status AS work_order_status, wo.plan_qty, wo.completed_qty
+      `  SELECT wo.work_order_no, wo.status AS work_order_status, wo.planned_qty, wo.completed_qty
        FROM prod_work_order wo
-       WHERE wo.material_id = ? AND wo.deleted = 0
+       WHERE wo.legacy_material_id = ? AND wo.deleted = 0
        ORDER BY wo.create_time DESC LIMIT 5`,
       [record.material_id]
     );
@@ -139,7 +139,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
   if (record.ref_no && String(record.ref_no).startsWith('PO')) {
     orderInfo = await queryOne(
-      'SELECT * FROM pur_purchase_order WHERE order_no = ? AND deleted = 0',
+      'SELECT * FROM pur_purchase_order WHERE po_no = ? AND deleted = 0',
       [record.ref_no]
     );
   }

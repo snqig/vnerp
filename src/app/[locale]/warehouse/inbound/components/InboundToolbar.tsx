@@ -10,10 +10,18 @@ import {
   Beaker,
   ScanLine,
   Scissors,
+  ChevronDown,
+  ShoppingCart,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { InboundRecord, PrintLabel } from '../types';
 import { mapRecordsToLabels, filterApprovedRecords } from '../utils/mapRecordsToLabels';
 
@@ -72,14 +80,31 @@ export function InboundToolbar({
       transition={{ delay: 0.05 }}
       className="flex flex-wrap items-center gap-3 bg-card p-4 rounded-xl shadow-sm border"
     >
-      <Button onClick={onOpenAddDialog} className="gap-2 bg-green-600 hover:bg-green-700">
-        <Plus className="w-4 h-4" />
-        {tc('add')}
-      </Button>
-      <Button onClick={onOpenMixedAddDialog} variant="outline" className="gap-2">
-        <Beaker className="w-4 h-4" />
-        {t('mixedMaterialAdd')}
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button className="gap-2 bg-green-600 hover:bg-green-700">
+            <Plus className="w-4 h-4" />
+            {tc('add')}
+            <ChevronDown className="w-4 h-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={onOpenAddDialog} className="gap-2">
+            <ShoppingCart className="w-4 h-4 text-blue-600" />
+            <div>
+              <div className="font-medium">{t('purchaseInbound')}</div>
+              <div className="text-xs text-muted-foreground">{t('purchaseInboundDesc')}</div>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onOpenMixedAddDialog} className="gap-2">
+            <Beaker className="w-4 h-4 text-orange-600" />
+            <div>
+              <div className="font-medium">{t('mixedMaterialAdd')}</div>
+              <div className="text-xs text-muted-foreground">{t('mixedMaterialAddDesc')}</div>
+            </div>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <Button onClick={onOpenGenerateDialog} variant="outline" className="gap-2">
         <Barcode className="w-4 h-4" />
         {t('generateLabel')}

@@ -211,9 +211,22 @@ async function triggerAlertPush(userInfo: UserInfo) {
   }
 
   // 获取需要通知的用户（仓库管理员和系统管理员）
+  //
+  // 修复：sys_user 上**没有 role_id 列**（用户↔角色是 sys_user_role 多对多），
+  // 旧写法 `u.role_id IN (SELECT id FROM sys_role ...)` 会抛
+  // Unknown column 'u.role_id' in 'IN/ALL/ANY subquery' —— 手动触发预警推送必然 500。
+  // 改为 sys_user_role → sys_role 两段关联，语义不变。
   const notifyUsers = await query(
-    `SELECT u.id, u.real_name, u.email FROM sys_user u
-     WHERE u.status = 1 AND (u.role_id IN (SELECT id FROM sys_role WHERE role_code IN ('admin', 'warehouse_manager')) OR u.id = ?)`,
+    `SELECT DISTINCT u.id, u.real_name, u.email
+     FROM sys_user u
+     JOIN sys_user_role ur ON ur.user_id = u.id
+     JOIN sys_role r ON r.id = ur.role_id
+     WHERE u.status = 1
+       AND r.role_code IN ('admin', 'warehouse_manager')
+     UNION
+     SELECT u.id, u.real_name, u.email
+     FROM sys_user u
+     WHERE u.status = 1 AND u.id = ?`,
     [userInfo.userId]
   );
 

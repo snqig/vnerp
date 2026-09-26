@@ -4,33 +4,7 @@
 import { mysqlTable, int, bigint, tinyint, varchar, decimal, text, date, datetime, primaryKey, index, uniqueIndex, foreignKey } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-export const purOrderDeprecated = mysqlTable('pur_order_deprecated', {
-  id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().notNull(),
-  orderNo: varchar('order_no', { length: 50 }).notNull(),
-  orderDate: date('order_date'),
-  supplierId: bigint('supplier_id', { mode: 'number', unsigned: true }).notNull(),
-  contactName: varchar('contact_name', { length: 50 }),
-  contactPhone: varchar('contact_phone', { length: 20 }),
-  deliveryAddress: varchar('delivery_address', { length: 255 }),
-  totalAmount: decimal('total_amount', { precision: 18, scale: 4 }).default('0.0000'),
-  taxAmount: decimal('tax_amount', { precision: 18, scale: 4 }).default('0.0000'),
-  totalWithTax: decimal('total_with_tax', { precision: 18, scale: 4 }).default('0.0000'),
-  currency: varchar('currency', { length: 10 }).default('CNY'),
-  exchangeRate: decimal('exchange_rate', { precision: 10, scale: 4 }).default('1.0000'),
-  paymentTerms: varchar('payment_terms', { length: 100 }),
-  deliveryDate: date('delivery_date'),
-  settlementMethod: varchar('settlement_method', { length: 50 }),
-  status: tinyint('status').default(1),
-  remark: text('remark'),
-  createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
-  updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
-  createBy: bigint('create_by', { mode: 'number', unsigned: true }),
-  updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
-  deleted: tinyint('deleted').default(0),
-}, (t) => ({
-  pk: primaryKey({ columns: [t.id] }),
-  ukOrderNo: uniqueIndex('uk_order_no').on(t.orderNo),
-}));
+
 
 export const purPurchaseReconciliationWriteoff = mysqlTable('pur_purchase_reconciliation_writeoff', {
   id: bigint('id', { mode: 'number' }).autoincrement().notNull(),
@@ -47,51 +21,9 @@ export const purPurchaseReconciliationWriteoff = mysqlTable('pur_purchase_reconc
   pk: primaryKey({ columns: [t.id] }),
 }));
 
-export const purReceiptDeprecated = mysqlTable('pur_receipt_deprecated', {
-  id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().notNull(),
-  receiptNo: varchar('receipt_no', { length: 50 }).notNull(),
-  receiptDate: date('receipt_date'),
-  orderId: bigint('order_id', { mode: 'number', unsigned: true }),
-  supplierId: bigint('supplier_id', { mode: 'number', unsigned: true }).notNull(),
-  warehouseId: bigint('warehouse_id', { mode: 'number', unsigned: true }).notNull(),
-  totalAmount: decimal('total_amount', { precision: 18, scale: 4 }).default('0.0000'),
-  inspectorId: bigint('inspector_id', { mode: 'number', unsigned: true }),
-  inspectionResult: tinyint('inspection_result'),
-  status: tinyint('status').default(1),
-  remark: text('remark'),
-  createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
-  updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
-  createBy: bigint('create_by', { mode: 'number', unsigned: true }),
-}, (t) => ({
-  idxInspector: index('idx_inspector').on(t.inspectorId),
-  idxOrder: index('idx_order').on(t.orderId),
-  idxSupplier: index('idx_supplier').on(t.supplierId),
-  idxWarehouse: index('idx_warehouse').on(t.warehouseId),
-  pk: primaryKey({ columns: [t.id] }),
-  ukReceiptNo: uniqueIndex('uk_receipt_no').on(t.receiptNo),
-}));
 
-export const purReceiptDetailDeprecated = mysqlTable('pur_receipt_detail_deprecated', {
-  id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().notNull(),
-  receiptId: bigint('receipt_id', { mode: 'number', unsigned: true }).notNull(),
-  materialId: bigint('material_id', { mode: 'number', unsigned: true }).notNull(),
-  orderDetailId: bigint('order_detail_id', { mode: 'number', unsigned: true }),
-  quantity: decimal('quantity', { precision: 18, scale: 4 }).notNull(),
-  unit: varchar('unit', { length: 20 }),
-  unitPrice: decimal('unit_price', { precision: 18, scale: 4 }),
-  amount: decimal('amount', { precision: 18, scale: 4 }),
-  batchNo: varchar('batch_no', { length: 50 }),
-  productionDate: date('production_date'),
-  expiryDate: date('expiry_date'),
-  locationCode: varchar('location_code', { length: 50 }),
-  remark: varchar('remark', { length: 255 }),
-  createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
-}, (t) => ({
-  idxMaterial: index('idx_material').on(t.materialId),
-  idxOrderDetail: index('idx_order_detail').on(t.orderDetailId),
-  idxReceipt: index('idx_receipt').on(t.receiptId),
-  pk: primaryKey({ columns: [t.id] }),
-}));
+
+
 
 export const purRequest = mysqlTable('pur_request', {
   id: int('id', { unsigned: true }).autoincrement().notNull(),
@@ -186,23 +118,5 @@ export const purSupplierMaterial = mysqlTable('pur_supplier_material', {
   ukSupplierMaterial: uniqueIndex('uk_supplier_material').on(t.supplierId, t.materialId),
 }));
 
-export const purOrderDetailDeprecated = mysqlTable('pur_order_detail_deprecated', {
-  id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().notNull(),
-  orderId: bigint('order_id', { mode: 'number', unsigned: true }).notNull(),
-  materialId: bigint('material_id', { mode: 'number', unsigned: true }).notNull(),
-  quantity: decimal('quantity', { precision: 18, scale: 4 }).notNull(),
-  unit: varchar('unit', { length: 20 }),
-  unitPrice: decimal('unit_price', { precision: 18, scale: 4 }),
-  taxRate: decimal('tax_rate', { precision: 5, scale: 2 }).default('0.00'),
-  amount: decimal('amount', { precision: 18, scale: 4 }),
-  taxAmount: decimal('tax_amount', { precision: 18, scale: 4 }),
-  totalAmount: decimal('total_amount', { precision: 18, scale: 4 }),
-  receivedQty: decimal('received_qty', { precision: 18, scale: 4 }).default('0.0000'),
-  deliveryDate: date('delivery_date'),
-  remark: varchar('remark', { length: 255 }),
-  createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
-}, (t) => ({
-  pk: primaryKey({ columns: [t.id] }),
-  fkPurOrderDetailOrder: foreignKey({ columns: [t.orderId], foreignColumns: [purOrderDeprecated.id] }),
-}));
+
 

@@ -268,6 +268,13 @@ export default function StocktakingPage() {
       return;
     }
 
+    // P0-2（2026-09-26）：数量非空 ≠ 合法——"0"/"-5"/非数字此前都会 truthy 通过
+    const qty = Number(scanQuantity);
+    if (!Number.isFinite(qty) || qty < 0) {
+      toast({ title: tc('stocktakeQtyInvalid'), variant: 'destructive' });
+      return;
+    }
+
     try {
       const res = await authFetch(`/api/warehouse/stocktaking/${currentCheckId}/scan`, {
         method: 'POST',

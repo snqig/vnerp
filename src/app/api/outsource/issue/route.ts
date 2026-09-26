@@ -172,7 +172,7 @@ export const PUT = withPermission(
           // 3) 财务级流水（保留原 raw INSERT 含 account_dr/cr，财务列治理归 T-INV-6）
           const transNo = 'TRX' + Date.now() + String(item.id).slice(-4);
           const [matRows] = (await conn.execute(
-            'SELECT material_code FROM mdm_material WHERE id = ?',
+            'SELECT material_code FROM inv_material WHERE id = ?',
             [item.material_id]
           )) as any;
           const matCode = matRows.length > 0 ? matRows[0].material_code : '';

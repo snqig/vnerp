@@ -27,18 +27,19 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
     }
 
     // 记录打印任务
+    //
+    // 修复：label_print_records 表不存在，打印流水落在 print_log
+    // （qr_id / template_id / print_time / operator / paper_type / print_count）。
     const insertResult = await execute(
-      `INSERT INTO label_print_records
-       (qr_code, label_type, label_spec, printer_id, copies, print_data, status, operator_id, create_time)
-       VALUES (?, ?, ?, ?, ?, ?, 0, ?, NOW())`,
+      `INSERT INTO print_log
+       (qr_id, template_id, print_time, operator, paper_type, print_count)
+       VALUES (?, ?, NOW(), ?, ?, ?)`,
       [
-        qr_code,
-        label_type,
+        qrRecord.id,
         label_spec || `L-${label_type}`,
-        printer_id,
+        userInfo.realName || String(userInfo.userId),
+        label_type || 'qrcode',
         copies,
-        JSON.stringify(data),
-        userInfo.userId,
       ]
     );
 
@@ -76,12 +77,17 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       return errorResponse(ts('k_m4aj8u'), 400);
     }
 
+    // print_log 用 qr_id（指向 qrcode_record.id）而非 qr_code 字符串
+    const [qrRow] = await query('SELECT id FROM qrcode_record WHERE qr_code = ? LIMIT 1', [qr_code]);
+    const qrcodeRecordId = qrRow?.id ?? 0;
+
+    // 修复：label_print_records → print_log（qr_code 改为 qr_id 关联）
     const records = await query(
-      `SELECT * FROM label_print_records 
-       WHERE qr_code = ? 
-       ORDER BY create_time DESC 
+      `SELECT * FROM print_log
+       WHERE qr_id = ?
+       ORDER BY print_time DESC
        LIMIT 20`,
-      [qr_code]
+      [qrcodeRecordId]
     );
 
     return successResponse(records, ts('k_1ibuu1d'));

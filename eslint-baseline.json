@@ -1,5 +1,153 @@
 [
   {
+    "filePath": "src/app/(dashboard)/equipment/document/page.tsx",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"说明书\"。建议使用: tc('text_kzrbg')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"合格证\"。建议使用: tc('text_ctlal')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"保修卡\"。建议使用: tc('text_c364w')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"维修记录\"。建议使用: tc('text_gctspr')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"检定证书\"。建议使用: tc('text_dlpvz3')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"其他\"。建议使用: tc('text_eae8')"
+      }
+    ]
+  },
+  {
+    "filePath": "src/app/(dashboard)/equipment/inspection/page.tsx",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"正常\"。建议使用: tc('text_is6t')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"异常\"。建议使用: tc('text_gody')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"待点检\"。建议使用: tc('text_ejf58')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"点检中\"。建议使用: tc('text_h0mp2')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"已完成\"。建议使用: tc('text_e7hbq')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"日常点检\"。建议使用: tc('text_d90h22')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"周检\"。建议使用: tc('text_exjs')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"月检\"。建议使用: tc('text_i3lk')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"年检\"。建议使用: tc('text_gn2k')"
+      }
+    ]
+  },
+  {
+    "filePath": "src/app/(dashboard)/equipment/spare-issue/page.tsx",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"待审批\"。建议使用: tc('text_efsql')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"已审批\"。建议使用: tc('text_e7hwq')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"已完成\"。建议使用: tc('text_e7hbq')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"已取消\"。建议使用: tc('text_e68dg')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在JSX中硬编码中文文本: \"今日发料\"。建议使用: {tc('text_ad3537')}"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在JSX中硬编码中文文本: \"(库存:\"。建议使用: {tc('text_ezrm5')}"
+      }
+    ]
+  },
+  {
+    "filePath": "src/app/(dashboard)/equipment/spare-part/page.tsx",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"正常\"。建议使用: tc('text_is6t')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"停用\"。建议使用: tc('text_eb7w')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"轴承\"。建议使用: tc('text_oxvv')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"齿轮\"。建议使用: tc('text_rwzz')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"皮带\"。建议使用: tc('text_kpbs')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"密封圈\"。建议使用: tc('text_dw1nx')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"传感器\"。建议使用: tc('text_c27ux')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"电路主板\"。建议使用: tc('text_fdd7r2')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"气缸\"。建议使用: tc('text_j2xw')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"阀\"。建议使用: tc('text_tmo')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"其他\"。建议使用: tc('text_eae8')"
+      }
+    ]
+  },
+  {
     "filePath": "src/app/api/base-data/material-category/route.ts",
     "messages": [
       {
@@ -66,6 +214,40 @@
     ]
   },
   {
+    "filePath": "src/app/api/equipment/document/route.ts",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在函数调用中硬编码中文参数: \"缺少必要字段：equipmentId、docType、docName\"。建议使用: tc('text_f6gonn')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在函数调用中硬编码中文参数: \"缺少文档ID\"。建议使用: tc('text_pdzpta')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在函数调用中硬编码中文参数: \"缺少文档ID\"。建议使用: tc('text_pdzpta')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在函数调用中硬编码中文参数: \"文档不存在\"。建议使用: tc('text_fpwujj')"
+      }
+    ]
+  },
+  {
+    "filePath": "src/app/api/equipment/status/route.ts",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在函数调用中硬编码中文参数: \"缺少设备ID\"。建议使用: tc('text_u59euz')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在函数调用中硬编码中文参数: \"设备不存在\"。建议使用: tc('text_aase18')"
+      }
+    ]
+  },
+  {
     "filePath": "src/app/api/hr/mes-sync/sync/route.ts",
     "messages": [
       {
@@ -88,51 +270,11 @@
     ]
   },
   {
-    "filePath": "src/app/api/init/department/route.ts",
+    "filePath": "src/app/api/hr/shifts/route.ts",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"管理部\"。建议使用: tc('text_iof7n')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"业务部\"。建议使用: tc('text_buoe9')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"生产部\"。建议使用: tc('text_hjr0g')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"打样中心\"。建议使用: tc('text_cu3n96')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"采购部\"。建议使用: tc('text_m1hlu')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"品质部\"。建议使用: tc('text_d3pkx')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"模切\"。建议使用: tc('text_ii2u')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"商标\"。建议使用: tc('text_f2pt')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"其他\"。建议使用: tc('text_eae8')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"采购\"。建议使用: tc('text_pkjq')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"仓库\"。建议使用: tc('text_dxcw')"
+        "message": "禁止在函数调用中硬编码中文参数: \"没有可更新的字段\"。建议使用: tc('text_7471mp')"
       }
     ]
   },
@@ -442,6 +584,50 @@
       {
         "ruleId": "i18n/no-chinese-hardcode",
         "message": "禁止硬编码中文文本: \"分切自 \"。建议使用: tc(`text_ap2d4n`)"
+      }
+    ]
+  },
+  {
+    "filePath": "src/app/api/materials/import/route.ts",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在函数调用中硬编码中文参数: \"items 必须为非空数组\"。建议使用: tc('text_tlsivg')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在函数调用中硬编码中文参数: \"单次导入不超过 1000 条\"。建议使用: tc('text_fv4qdi')"
+      }
+    ]
+  },
+  {
+    "filePath": "src/app/api/organization/department/route.ts",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在函数调用中硬编码中文参数: \"上级部门不能是自身或其下级部门\"。建议使用: tc('text_umuszj')"
+      }
+    ]
+  },
+  {
+    "filePath": "src/app/api/production/trace/route.ts",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"产品序列号追溯链尚未落地：库中不存在 prd_product_trace_link 表，也无 sn 列可作为追溯主键\"。建议使用: tc('text_k9yb5l')"
+      }
+    ]
+  },
+  {
+    "filePath": "src/app/api/quality/incoming/route.ts",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"合格\"。建议使用: tc('text_ev5g')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"不合格\"。建议使用: tc('text_bufb5')"
       }
     ]
   },
@@ -1106,7 +1292,20 @@
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止在函数调用中硬编码中文参数: \"缺少参数 wh_id\"。建议使用: tc('text_blv0ku')"
+        "message": "禁止在函数调用中硬编码中文参数: \"库位编码、名称和仓库不能为空\"。建议使用: tc('text_iau58j')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在函数调用中硬编码中文参数: \"库位编码已存在\"。建议使用: tc('text_vx6evx')"
+      }
+    ]
+  },
+  {
+    "filePath": "src/app/api/warehouse/locations/[id]/route.ts",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在函数调用中硬编码中文参数: \"无更新字段\"。建议使用: tc('text_eg0qzq')"
       }
     ]
   },
@@ -1172,6 +1371,15 @@
       {
         "ruleId": "i18n/no-chinese-hardcode",
         "message": "禁止硬编码中文文本: \"仓库\"。建议使用: tc('text_dxcw')"
+      }
+    ]
+  },
+  {
+    "filePath": "src/app/api/warehouse/route.ts",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"\r\n    SELECT\r\n      inv_warehouse.id,\r\n      inv_warehouse.warehouse_code as code,\r\n      inv_warehouse.warehouse_name as name,\r\n      inv_warehouse.warehouse_type,\r\n      inv_warehouse.category_id,\r\n      inv_warehouse.address,\r\n      inv_warehouse.remark,\r\n      inv_warehouse.status,\r\n      inv_warehouse.nature,\r\n      inv_warehouse.include_in_calculation,\r\n      inv_warehouse.capacity,\r\n      inv_warehouse.contact_phone,\r\n      inv_warehouse.manager_id,\r\n      mu.real_name as manager,\r\n      -- ④ 命名统一：SQL 别名 snake_case（消费端 8 个页面均已双读，见 docs/qa/命名统一清单-SQL别名-20260923.md）\r\n      inv_warehouse.create_time as create_time,\r\n      inv_warehouse.update_time as update_time\r\n    FROM inv_warehouse\r\n    LEFT JOIN sys_user mu ON inv_warehouse.manager_id = mu.id\r\n    WHERE inv_warehouse.deleted = 0\r\n  \"。建议使用: tc(`text_dean0n`)"
       }
     ]
   },
@@ -1480,8 +1688,61 @@
     ]
   },
   {
+    "filePath": "src/app/[locale]/equipment/inspection/page.tsx",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"日常点检\"。建议使用: tc('text_d90h22')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"周点检\"。建议使用: tc('text_cwtjj')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"月度点检\"。建议使用: tc('text_de8jt1')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"年度点检\"。建议使用: tc('text_cbacm1')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"待点检\"。建议使用: tc('text_ejf58')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"点检中\"。建议使用: tc('text_h0mp2')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"已完成\"。建议使用: tc('text_e7hbq')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"正常\"。建议使用: tc('text_is6t')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"异常\"。建议使用: tc('text_gody')"
+      }
+    ]
+  },
+  {
     "filePath": "src/app/[locale]/equipment/maintenance/page.tsx",
     "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"日常保养\"。建议使用: tc('text_d8ur8x')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"定期维保\"。建议使用: tc('text_bzn6r2')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"大修\"。建议使用: tc('text_flpj')"
+      },
       {
         "ruleId": "i18n/no-chinese-hardcode",
         "message": "禁止硬编码中文文本: \"日常保养\"。建议使用: tc('text_d8ur8x')"
@@ -1525,11 +1786,11 @@
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"预防性维修\"。建议使用: tc('text_nld3bh')"
+        "message": "禁止硬编码中文文本: \"故障维修\"。建议使用: tc('text_dehxv5')"
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"故障维修\"。建议使用: tc('text_dehxv5')"
+        "message": "禁止硬编码中文文本: \"预防性维修\"。建议使用: tc('text_nld3bh')"
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -1538,47 +1799,29 @@
     ]
   },
   {
-    "filePath": "src/app/[locale]/hr/attendance/page.tsx",
+    "filePath": "src/app/[locale]/finance/payments/page.tsx",
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"管理部\"。建议使用: tc('text_iof7n')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"业务部\"。建议使用: tc('text_buoe9')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"生产部\"。建议使用: tc('text_hjr0g')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"打样中心\"。建议使用: tc('text_cu3n96')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"采购部\"。建议使用: tc('text_m1hlu')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"品质部\"。建议使用: tc('text_d3pkx')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"模切\"。建议使用: tc('text_ii2u')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"商标\"。建议使用: tc('text_f2pt')"
-      },
+        "message": "禁止硬编码中文文本: \"其他\"。建议使用: tc('text_eae8')"
+      }
+    ]
+  },
+  {
+    "filePath": "src/app/[locale]/finance/receipts/page.tsx",
+    "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
         "message": "禁止硬编码中文文本: \"其他\"。建议使用: tc('text_eae8')"
-      },
+      }
+    ]
+  },
+  {
+    "filePath": "src/app/[locale]/finance/receivables/page.tsx",
+    "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"采购\"。建议使用: tc('text_pkjq')"
+        "message": "禁止硬编码中文文本: \"已坏账\"。建议使用: tc('text_e6zvt')"
       }
     ]
   },
@@ -2402,27 +2645,15 @@
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"待审核\"。建议使用: tc('text_eftvg')"
+        "message": "禁止硬编码中文文本: \"草稿\"。建议使用: tc('text_n02e')"
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"已审核\"。建议使用: tc('text_e7j1l')"
+        "message": "禁止硬编码中文文本: \"待打样\"。建议使用: tc('text_egyvd')"
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"已确认\"。建议使用: tc('text_ecmeg')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"已驳回\"。建议使用: tc('text_ei4al')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"生产中\"。建议使用: tc('text_hjdtx')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"印刷中\"。建议使用: tc('text_cmdl2')"
+        "message": "禁止硬编码中文文本: \"打样中\"。建议使用: tc('text_ewm7d')"
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -2430,15 +2661,15 @@
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"已交付\"。建议使用: tc('text_e56hy')"
+        "message": "禁止硬编码中文文本: \"已确认\"。建议使用: tc('text_ecmeg')"
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"已签收\"。建议使用: tc('text_ecxka')"
+        "message": "禁止硬编码中文文本: \"已转大货\"。建议使用: tc('text_cg0pp6')"
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"已取消\"。建议使用: tc('text_e68dg')"
+        "message": "禁止硬编码中文文本: \"已作废\"。建议使用: tc('text_e5e0l')"
       }
     ]
   },
@@ -2460,6 +2691,47 @@
       {
         "ruleId": "i18n/no-chinese-hardcode",
         "message": "禁止硬编码中文文本: \"已取消\"。建议使用: tc('text_e68dg')"
+      }
+    ]
+  },
+  {
+    "filePath": "src/app/[locale]/sample/progress/page.tsx",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"设计确认\"。建议使用: tc('text_i7k34p')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"工艺卡\"。建议使用: tc('text_edr64')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"打样中\"。建议使用: tc('text_ewm7d')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"质检\"。建议使用: tc('text_ol20')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"交付\"。建议使用: tc('text_dt4k')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"待执行\"。建议使用: tc('text_eh5oq')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"进行中\"。建议使用: tc('text_lq5q4')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"已完成\"。建议使用: tc('text_e7hbq')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"延期风险\"。建议使用: tc('text_cf13pg')"
       }
     ]
   },
@@ -3967,6 +4239,14 @@
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在JSX中硬编码中文文本: \"模板分类\"。建议使用: {tc('text_dtgfub')}"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在JSX中硬编码中文文本: \"标签\"。建议使用: {tc('text_idef')}"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
         "message": "禁止在JSX中硬编码中文文本: \"上一步\"。建议使用: {tc('text_btcrz')}"
       },
       {
@@ -4000,6 +4280,26 @@
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"标准卡总数\"。建议使用: tc('text_8rvxop')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"已启用\"。建议使用: tc('text_e6c0b')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"已停用\"。建议使用: tc('text_e5ola')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"本月新增\"。建议使用: tc('text_dg1ruy')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止硬编码中文文本: \"有版本标准卡\"。建议使用: tc('text_lh7o45')"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
         "message": "禁止硬编码中文文本: \"选择 \"。建议使用: tc(`text_lkbhc`)"
       }
     ]
@@ -4017,7 +4317,7 @@
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"\r\n      <html>\r\n        <head>\r\n          <title>标准卡打印</title>\r\n          <style>\r\n            @page { size: A4 landscape; margin: 0; }\r\n            body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: white; }\r\n            table { width: 100%; border-collapse: collapse; font-size: 12px; }\r\n            table td { padding: 2px 4px; vertical-align: middle; text-align: center; border: 1px solid #333; font-size: 12px; font-weight: normal; line-height: 1.4; color: #000; }\r\n            .border-none { border: none !important; }\r\n            .text-center { text-align: center; }\r\n            .font-bold { font-weight: bold; }\r\n            .flex { display: flex; }\r\n            .items-center { align-items: center; }\r\n            .justify-center { justify-content: center; }\r\n            .flex-1 { flex: 1; }\r\n            .mt-2 { margin-top: 8px; }\r\n            .mr-1 { margin-right: 4px; }\r\n            .text-2xl { font-size: 24px; }\r\n            .text-base { font-size: 16px; }\r\n            .text-sm { font-size: 14px; }\r\n            .text-xs { font-size: 12px; }\r\n            .text-black { color: #000; }\r\n            .text-gray-400 { color: #9ca3af; }\r\n            .bg-white { background-color: #fff; }\r\n            .bg-\\\\[\\\\#1a3c7a\\\\] { background-color: #1a3c7a; }\r\n            .text-\\\\[\\\\#1a3c7a\\\\] { color: #1a3c7a; }\r\n            .text-white { color: #fff; }\r\n            .px-3 { padding-left: 12px; padding-right: 12px; }\r\n            .py-1 { padding-top: 4px; padding-bottom: 4px; }\r\n            .rounded { border-radius: 4px; }\r\n            .gap-3 { gap: 12px; }\r\n            .gap-4 { gap: 16px; }\r\n            .w-4 { width: 16px; }\r\n            .h-4 { height: 16px; }\r\n            .w-3 { width: 12px; }\r\n            .h-3 { height: 12px; }\r\n            .align-top { vertical-align: top; }\r\n            .border-b { border-bottom: 1px solid #000; }\r\n            .border-black { border-color: #000; }\r\n            * { box-sizing: border-box; }\r\n            input[type=\"checkbox\"], input[type=\"radio\"] { margin-right: 4px; }\r\n          </style>\r\n        </head>\r\n        <body>\r\n          <div style=\"width: 297mm; height: 210mm; padding: 3mm; box-sizing: border-box; background: white;\">\r\n            \"。建议使用: tc(`text_wdzjqh`)"
+        "message": "禁止硬编码中文文本: \"\n      <html>\n        <head>\n          <title>标准卡打印</title>\n          <style>\n            @page { size: A4 landscape; margin: 0; }\n            body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: white; }\n            table { width: 100%; border-collapse: collapse; font-size: 12px; }\n            table td { padding: 2px 4px; vertical-align: middle; text-align: center; border: 1px solid #333; font-size: 12px; font-weight: normal; line-height: 1.4; color: #000; }\n            .border-none { border: none !important; }\n            .text-center { text-align: center; }\n            .font-bold { font-weight: bold; }\n            .flex { display: flex; }\n            .items-center { align-items: center; }\n            .justify-center { justify-content: center; }\n            .flex-1 { flex: 1; }\n            .mt-2 { margin-top: 8px; }\n            .mr-1 { margin-right: 4px; }\n            .text-2xl { font-size: 24px; }\n            .text-base { font-size: 16px; }\n            .text-sm { font-size: 14px; }\n            .text-xs { font-size: 12px; }\n            .text-black { color: #000; }\n            .text-gray-400 { color: #9ca3af; }\n            .bg-white { background-color: #fff; }\n            .bg-\\\\[\\\\#1a3c7a\\\\] { background-color: #1a3c7a; }\n            .text-\\\\[\\\\#1a3c7a\\\\] { color: #1a3c7a; }\n            .text-white { color: #fff; }\n            .px-3 { padding-left: 12px; padding-right: 12px; }\n            .py-1 { padding-top: 4px; padding-bottom: 4px; }\n            .rounded { border-radius: 4px; }\n            .gap-3 { gap: 12px; }\n            .gap-4 { gap: 16px; }\n            .w-4 { width: 16px; }\n            .h-4 { height: 16px; }\n            .w-3 { width: 12px; }\n            .h-3 { height: 12px; }\n            .align-top { vertical-align: top; }\n            .border-b { border-bottom: 1px solid #000; }\n            .border-black { border-color: #000; }\n            * { box-sizing: border-box; }\n            input[type=\"checkbox\"], input[type=\"radio\"] { margin-right: 4px; }\n          </style>\n        </head>\n        <body>\n          <div style=\"width: 297mm; height: 210mm; padding: 3mm; box-sizing: border-box; background: white;\">\n            \"。建议使用: tc(`text_bxeysh`)"
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5125,6 +5425,27 @@
     ]
   },
   {
+    "filePath": "src/components/auth/RoutePermissionGuard.tsx",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在JSX中硬编码中文文本: \"无权访问\"。建议使用: {tc('text_dadt4i')}"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在JSX中硬编码中文文本: \"当前账号缺少访问该页面所需的权限（\"。建议使用: {tc('text_ysh7qw')}"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在JSX中硬编码中文文本: \"），请联系管理员分配权限后重试。\"。建议使用: {tc('text_clpwu0')}"
+      },
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在JSX中硬编码中文文本: \"返回首页\"。建议使用: {tc('text_iijhd5')}"
+      }
+    ]
+  },
+  {
     "filePath": "src/components/hr/charts/LaborCostChart.tsx",
     "messages": [
       {
@@ -5277,50 +5598,6 @@
   {
     "filePath": "src/domain/production/value-objects/WorkOrderStateMachine.ts",
     "messages": [
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"待确认\"。建议使用: tc('text_ekx8b')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"已确认\"。建议使用: tc('text_ecmeg')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"备料中\"。建议使用: tc('text_dj5dn')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"备料完成\"。建议使用: tc('text_bnkfzq')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"生产中\"。建议使用: tc('text_hjdtx')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"待检验\"。建议使用: tc('text_eic5t')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"检验通过\"。建议使用: tc('text_duyw8p')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"检验失败\"。建议使用: tc('text_dupjhc')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"返工中\"。建议使用: tc('text_lisvw')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"已完成\"。建议使用: tc('text_e7hbq')"
-      },
-      {
-        "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"已取消\"。建议使用: tc('text_e68dg')"
-      },
       {
         "ruleId": "i18n/no-chinese-hardcode",
         "message": "禁止硬编码中文文本: \"待处理\"。建议使用: tc('text_efg7b')"
@@ -5764,11 +6041,11 @@
     "messages": [
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"^(MAT-CAT-\\d{3,}|[A-Za-z]{2,}[A-Za-z0-9._\\-#一-鿿 ]{0,32})$\"。建议使用: tc('text_c383oo')"
+        "message": "禁止硬编码中文文本: \"^(MAT-CAT-\\d{3,}|[A-Za-z]\\d{2}(-\\d{2})?|[A-Za-z]{2,}[A-Za-z0-9._\\-#一-鿿 ]{0,32})$\"。建议使用: tc('text_qk5zrt')"
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
-        "message": "禁止硬编码中文文本: \"MAT-CAT-XXX，或以 2 位以上字母开头的分类码（2-34 位，可含数字、下划线、连字符、点、井号、汉字、空格）\"。建议使用: tc('text_zaifg8')"
+        "message": "禁止硬编码中文文本: \"MAT-CAT-XXX 标准码、层级码（字母+2位数字，如 C01 / C01-01），或以 2 位以上字母开头的分类码（2-34 位，可含数字、下划线、连字符、点、井号、汉字、空格）\"。建议使用: tc('text_jqgrdg')"
       },
       {
         "ruleId": "i18n/no-chinese-hardcode",
@@ -5952,6 +6229,15 @@
       {
         "ruleId": "i18n/no-chinese-hardcode",
         "message": "禁止硬编码中文文本: \"系统设置\"。建议使用: tc('text_gar1ro')"
+      }
+    ]
+  },
+  {
+    "filePath": "src/lib/department-catalog.ts",
+    "messages": [
+      {
+        "ruleId": "i18n/no-chinese-hardcode",
+        "message": "禁止在函数调用中硬编码中文参数: \"部门目录同步完成\"。建议使用: tc('text_6k6r7o')"
       }
     ]
   },

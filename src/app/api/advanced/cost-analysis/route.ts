@@ -19,14 +19,20 @@ export const POST = withPermission(async (request: NextRequest) => {
     }
 
     case 'profit-analysis': {
+      // 修复：sal_order_item 上**不存在 cost_price 列**（该表只有 unit_price / total_price），
+      // 旧写法在任何请求下都会抛 Unknown column 'soi.cost_price'，
+      // 导致「产品盈利分析」整块不可用。成本改取物料标准成本 inv_material.cost_price ；
+      // 未维护标准成本的物料该项成本计 0（毛利=收入），属于数据缺口而非接口失败。
       const products = await query<{
         id: number;
         total_revenue: number;
         total_cost: number;
       }>(
         `SELECT soi.material_id as id, SUM(soi.quantity * soi.unit_price) as total_revenue,
-                SUM(soi.quantity * soi.cost_price) as total_cost
-         FROM sal_order_item soi JOIN sal_order so ON soi.order_id = so.id
+                SUM(soi.quantity * COALESCE(im.cost_price, 0)) as total_cost
+         FROM sal_order_item soi
+         JOIN sal_order so ON soi.order_id = so.id
+         LEFT JOIN inv_material im ON im.id = soi.material_id
          WHERE so.order_date >= DATE_SUB(NOW(), INTERVAL 6 MONTH) AND so.deleted = 0
          GROUP BY soi.material_id`
       );

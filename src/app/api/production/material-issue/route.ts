@@ -240,7 +240,7 @@ export const POST = withPermission(
           remark || null,
         ]
       );
-      const issueId = (issueHeader as DbResultSetHeader).insertId;
+      const issueId = (issueHeader as unknown as DbResultSetHeader).insertId;
 
       for (const item of items) {
         await conn.execute(

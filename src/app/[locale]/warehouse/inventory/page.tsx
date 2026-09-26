@@ -339,10 +339,10 @@ export default function InventoryPage() {
       <div className="space-y-6">
         <StatsCards
           configs={[
-            { key: 'sku', label: tc('totalSKUs'), icon: Package, ...StatsTheme.blue },
-            { key: 'value', label: tc('inventoryValue'), icon: DollarSign, ...StatsTheme.green },
-            { key: 'alerts', label: tc('warningCount'), icon: AlertTriangle, ...StatsTheme.orange },
-            { key: 'lowStock', label: tc('lowStockCount'), icon: TrendingDown, ...StatsTheme.red },
+            { key: 'sku', label: '物料总数', icon: Package, ...StatsTheme.blue },
+            { key: 'value', label: '库存价值', icon: DollarSign, ...StatsTheme.green },
+            { key: 'alerts', label: '预警数量', icon: AlertTriangle, ...StatsTheme.orange },
+            { key: 'lowStock', label: '低库存数量', icon: TrendingDown, ...StatsTheme.red },
           ]}
           stats={[
             { key: 'sku', count: inventoryItems.length },

@@ -113,6 +113,19 @@ export default function NewWorkOrderPage() {
       toast({ title: tc('error'), description: t('salesOrderNoItems'), variant: 'destructive' });
       return;
     }
+    // P1-3 前端守卫：交期必填、结束不早于开始、明细数量必须 >0（后端同口径硬校验）
+    if (!planStartDate || !planEndDate) {
+      toast({ title: tc('error'), description: tc('planDatesRequired'), variant: 'destructive' });
+      return;
+    }
+    if (planEndDate < planStartDate) {
+      toast({ title: tc('error'), description: tc('planDateOrderInvalid'), variant: 'destructive' });
+      return;
+    }
+    if (items.some((i) => !(Number(i.quantity) > 0))) {
+      toast({ title: tc('error'), description: tc('qtyMustBePositive'), variant: 'destructive' });
+      return;
+    }
     setLoading(true);
     try {
       const res = await authFetch('/api/workorders', {

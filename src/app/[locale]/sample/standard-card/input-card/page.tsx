@@ -285,7 +285,7 @@ function InputCardPageContent() {
           <style
             dangerouslySetInnerHTML={{
               __html: `
-                table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: Arial, sans-serif; }
+                table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: Arial, sans-serif; border-left: 1px solid #333; border-top: 1px solid #333; }
                 table td { padding: 1px 2px !important; vertical-align: middle; text-align: center; border: 1px solid #333 !important; font-size: 12px !important; font-weight: normal !important; line-height: 1.4 !important; }
                 .dark table td { border-color: rgba(255,255,255,0.2) !important; }
                 .border-none { border: none !important; }

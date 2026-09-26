@@ -42,6 +42,12 @@ export const qcIncomingInspection = mysqlTable('qc_incoming_inspection', {
   createTime: datetime('create_time').notNull().default(sql`CURRENT_TIMESTAMP`),
   updateTime: datetime('update_time').notNull().default(sql`CURRENT_TIMESTAMP`),
   deleted: tinyint('deleted').notNull().default(0),
+    inboundNo: varchar('inbound_no', { length: 50 }), // 关联入库单号
+    inboundOrderId: bigint('inbound_order_id', { mode: 'number', unsigned: true }),
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }), // material_id
+    qualifiedQty: decimal('qualified_qty', { precision: 18, scale: 4 }).default('0.0000'), // qualified_qty
+    supplierId: bigint('supplier_id', { mode: 'number', unsigned: true }), // supplier_id
+    unqualifiedQty: decimal('unqualified_qty', { precision: 18, scale: 4 }).default('0.0000'), // unqualified_qty
 }, (t) => ({
   idxBatchNo: index('idx_batch_no').on(t.batchNo),
   idxInspectionDate: index('idx_inspection_date').on(t.inspectionDate),

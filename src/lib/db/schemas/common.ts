@@ -60,16 +60,21 @@ export const sysDepartment = mysqlTable(
   'sys_department',
   {
     id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
-    code: varchar('code', { length: 50 }),
-    name: varchar('name', { length: 100 }).notNull(),
+    // 库表在 2026-09-21 部门重构后列名为 dept_code / dept_name，旧的 code / name 已下线。
+    // 曾经这里同时留着新旧两套声明（下面 deptCode / deptName 即新名），把旧声明删掉才与库对齐。
     parentId: bigint('parent_id', { mode: 'number', unsigned: true }),
     sortOrder: int('sort_order').default(0),
-    managerName: varchar('manager_name', { length: 50 }),
-    description: varchar('description', { length: 200 }),
     status: tinyint('status').default(1),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
     deleted: tinyint('deleted').default(0),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }), // 创建人ID
+    deptCode: varchar('dept_code', { length: 50 }), // 部门编码
+    deptName: varchar('dept_name', { length: 100 }), // 部门名称
+    email: varchar('email', { length: 100 }), // 邮箱
+    leaderId: bigint('leader_id', { mode: 'number', unsigned: true }), // 部门负责人ID
+    phone: varchar('phone', { length: 20 }), // 联系电话
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }), // 更新人ID
   },
   (table) => ({
     parentIdx: index('idx_dept_parent').on(table.parentId),
@@ -100,10 +105,11 @@ export const sysEmployee = mysqlTable(
     currentAddress: varchar('current_address', { length: 255 }),
     education: varchar('education', { length: 50 }),
     photo: varchar('photo', { length: 255 }),
-    skillLevel: int('skill_level').default(1),
-    contractType: varchar('contract_type', { length: 20 }),
-    contractStart: date('contract_start'),
-    contractEnd: date('contract_end'),
+    //  bank_account / emergency_contact / emergency_phone：2026-09-27 已补建到库
+    // （迁移 20260927_add_missing_business_columns.ts）。此前一度判定「无引用」而删掉声明，
+    // 是错的：「同一文件内同时出现表名+列名」这个匹配条件太严，漏掉了 EmployeeRepository 里
+    // `row.emergencyContact` / `emp.emergencyContact` 这种**经映射层取 camelCase** 的写法。
+    // 那种写法不报错、只静默丢数据（永远 undefined → `|| ''`），比坏 SQL 更隐蔽。
     bankAccount: varchar('bank_account', { length: 50 }),
     emergencyContact: varchar('emergency_contact', { length: 50 }),
     emergencyPhone: varchar('emergency_phone', { length: 20 }),
@@ -112,6 +118,8 @@ export const sysEmployee = mysqlTable(
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
     deleted: tinyint('deleted').default(0),
+    birthMonth: varchar('birth_month', { length: 10 }),
+    idCardExpiry: date('id_card_expiry'),
   },
   (table) => ({
     deptIdx: index('idx_emp_dept').on(table.deptId),

@@ -130,6 +130,8 @@ export const inkUsage = mysqlTable('ink_usage', {
   usageQty: decimal('usage_qty', { precision: 10, scale: 3 }),
   inkCode: varchar('ink_code', { length: 50 }),
   inkName: varchar('ink_name', { length: 100 }),
+    updateTime: datetime('update_time'), // update_time
+    workOrderId: bigint('work_order_id', { mode: 'number', unsigned: true }), // work_order_id
 }, (t) => ({
   idxBatchNo: index('idx_batch_no').on(t.batchNo),
   idxUsageTime: index('idx_usage_time').on(t.usageTime),

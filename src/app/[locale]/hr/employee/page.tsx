@@ -1070,26 +1070,6 @@ export default function EmployeePage() {
   return (
     <MainLayout title={tc('employeeProfile')}>
       <div className="space-y-6">
-        <StatsCards
-          configs={[
-            { key: 'total', label: tc('totalEmployees'), icon: Users, ...StatsTheme.blue },
-            { key: 'active', label: tc('activeEmployees'), icon: CheckCircle, ...StatsTheme.green },
-            { key: 'probation', label: tc('probationCount'), icon: UserCircle, ...StatsTheme.orange },
-            { key: 'new hires', label: tc('newHiresThisMonth'), icon: UserPlus, ...StatsTheme.purple },
-          ]}
-          stats={[
-            { key: 'total', count: employees.length },
-            { key: 'active', count: employees.filter((e) => e.status === 1).length },
-            { key: 'probation', count: 0 },
-            { key: 'new hires', count: employees.filter((e) => {
-              const d = new Date(e.entry_date);
-              const n = new Date();
-              return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear();
-            }).length },
-          ]}
-          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
-        />
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>

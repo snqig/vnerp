@@ -3,6 +3,7 @@ import { OutboundOrderApprovedEvent } from '@/domain/warehouse/events/OutboundOr
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import { InventoryCostService } from '@/application/services/InventoryCostService';
+import { recomputeInventorySummary } from '@/lib/inventory-ledger';
 
 const costService = new InventoryCostService();
 
@@ -17,6 +18,7 @@ export class OutboundInventoryHandler implements EventHandler<OutboundOrderAppro
           [item.materialId, warehouseId]
         );
 
+        // 检查库存是否充足（从汇总表查，用于快速判断）
         if (existingInv.length > 0) {
           const currentQty = parseFloat(String(existingInv[0].quantity));
           if (currentQty < item.quantity) {
@@ -24,10 +26,6 @@ export class OutboundInventoryHandler implements EventHandler<OutboundOrderAppro
               `物料${item.materialName}库存不足: 当前${currentQty}, 需要出库${item.quantity}`
             );
           }
-          await conn.execute(
-            'UPDATE inv_inventory SET quantity = quantity - ?, available_qty = available_qty - ?, update_time = NOW() WHERE id = ?',
-            [item.quantity, item.quantity, existingInv[0].id]
-          );
         }
 
         const [existingBatch] = await conn.execute(
@@ -79,6 +77,9 @@ export class OutboundInventoryHandler implements EventHandler<OutboundOrderAppro
             totalCost,
           ]
         );
+
+        // 从批次表重算汇总表，确保数据一致
+        await recomputeInventorySummary(conn, item.materialId, warehouseId);
       }
     });
 

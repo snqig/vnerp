@@ -1,0 +1,792 @@
+{
+  "updatedAt": "2026-09-26T09:01:57.245Z",
+  "count": 131,
+  "items": [
+    {
+      "hash": "2afcbcf4a68d",
+      "file": "src/app/api/dcprint/ink-usage/route.ts",
+      "line": 215,
+      "err": "Unknown column 'sn' in 'field list'"
+    },
+    {
+      "hash": "579153c8b165",
+      "file": "src/app/api/init/full-business-seed/route.ts",
+      "line": 330,
+      "err": "Table 'vnerpdacahng.sample_order' doesn't exist"
+    },
+    {
+      "hash": "cc4d04cfa7c9",
+      "file": "src/app/api/init/full-business-seed/route.ts",
+      "line": 562,
+      "err": "Table 'vnerpdacahng.ink_formula' doesn't exist"
+    },
+    {
+      "hash": "ea8266aee5d1",
+      "file": "src/app/api/init/reset-workorders/route.ts",
+      "line": 36,
+      "err": "Unknown column 'deleted' in 'where clause'"
+    },
+    {
+      "hash": "3842c6e176f1",
+      "file": "src/app/api/init/reset-workorders/route.ts",
+      "line": 38,
+      "err": "Unknown column 'deleted' in 'where clause'"
+    },
+    {
+      "hash": "9e3e74ea330d",
+      "file": "src/app/api/init/seed-data/route.ts",
+      "line": 1044,
+      "err": "Table 'vnerpdacahng.pur_order' doesn't exist"
+    },
+    {
+      "hash": "2565c1005133",
+      "file": "src/app/api/init/seed-data/route.ts",
+      "line": 1061,
+      "err": "Table 'vnerpdacahng.pur_order_detail' doesn't exist"
+    },
+    {
+      "hash": "8e0ffcf9845e",
+      "file": "src/app/api/init/seed-data/route.ts",
+      "line": 1111,
+      "err": "Table 'vnerpdacahng.pur_request_approve' doesn't exist"
+    },
+    {
+      "hash": "0329f967d740",
+      "file": "src/app/api/init/seed-data/route.ts",
+      "line": 1135,
+      "err": "Table 'vnerpdacahng.pur_return_order' doesn't exist"
+    },
+    {
+      "hash": "2e2202d151c9",
+      "file": "src/app/api/init/seed-data/route.ts",
+      "line": 1209,
+      "err": "Table 'vnerpdacahng.qc_process_inspection' doesn't exist"
+    },
+    {
+      "hash": "2f50f899bddc",
+      "file": "src/app/api/migrations/readmd-fixes/route.ts",
+      "line": 237,
+      "err": "Table 'vnerpdacahng.pur_order' doesn't exist"
+    },
+    {
+      "hash": "fece2465bbb7",
+      "file": "src/app/api/migrations/readmd-fixes/route.ts",
+      "line": 266,
+      "err": "Table 'vnerpdacahng.pur_order_detail' doesn't exist"
+    },
+    {
+      "hash": "5beffc385686",
+      "file": "src/app/api/sales/delivery/partial/route.ts",
+      "line": 62,
+      "err": "Table 'vnerpdacahng.shipments' doesn't exist"
+    },
+    {
+      "hash": "f3025a49702d",
+      "file": "src/application/services/DashboardDataService.ts",
+      "line": 45,
+      "err": "Unknown column 'stock_qty' in 'field list'"
+    },
+    {
+      "hash": "2f1036464799",
+      "file": "src/application/services/DashboardDataService.ts",
+      "line": 64,
+      "err": "Unknown column 'completed_qty' in 'field list'"
+    },
+    {
+      "hash": "f94c625ececd",
+      "file": "src/application/services/DemandForecastingService.ts",
+      "line": 14,
+      "err": "Unknown column 'order_date' in 'field list'"
+    },
+    {
+      "hash": "d98b06c38e7f",
+      "file": "src/application/services/FinanceApplicationService.ts",
+      "line": 351,
+      "err": "Unknown column 'receipt_method' in 'field list'"
+    },
+    {
+      "hash": "b46b4ac57f2e",
+      "file": "src/application/services/MaterialLifecycleService.ts",
+      "line": 222,
+      "err": "Unknown column 'stock_qty' in 'field list'"
+    },
+    {
+      "hash": "adbb4b9982b4",
+      "file": "src/application/services/MaterialLifecycleService.ts",
+      "line": 392,
+      "err": "Unknown column 'stock_qty' in 'field list'"
+    },
+    {
+      "hash": "de01d2e20fd5",
+      "file": "src/application/services/MaterialLifecycleService.ts",
+      "line": 419,
+      "err": "Table 'vnerpdacahng.inv_material_adjustment' doesn't exist"
+    },
+    {
+      "hash": "7aafbb89aeb7",
+      "file": "src/application/services/MaterialLifecycleService.ts",
+      "line": 427,
+      "err": "Table 'vnerpdacahng.inv_material_adjustment' doesn't exist"
+    },
+    {
+      "hash": "2ae4e7816d6b",
+      "file": "src/application/services/MaterialLifecycleService.ts",
+      "line": 463,
+      "err": "Table 'vnerpdacahng.inv_material_consume_log' doesn't exist"
+    },
+    {
+      "hash": "deb7172bccc5",
+      "file": "src/application/services/MaterialLifecycleService.ts",
+      "line": 518,
+      "err": "Table 'vnerpdacahng.inv_material_adjustment' doesn't exist"
+    },
+    {
+      "hash": "3d0bf170c146",
+      "file": "src/application/services/MaterialLifecycleService.ts",
+      "line": 564,
+      "err": "Unknown column 'expire_date' in 'field list'"
+    },
+    {
+      "hash": "f158d3411aa0",
+      "file": "src/application/services/MaterialLifecycleService.ts",
+      "line": 587,
+      "err": "Unknown column 'source_type' in 'where clause'"
+    },
+    {
+      "hash": "8f72a3379334",
+      "file": "src/application/services/ProductionApplicationService.ts",
+      "line": 266,
+      "err": "Unknown table 'pi' in field list"
+    },
+    {
+      "hash": "8f48353fb8a6",
+      "file": "src/application/services/PurchaseReturnApplicationService.ts",
+      "line": 163,
+      "err": "Unknown column 'finance_posted' in 'field list'"
+    },
+    {
+      "hash": "543833adc81b",
+      "file": "src/application/workflow/WorkflowEngine.ts",
+      "line": 484,
+      "err": "Table 'vnerpdacahng.pur_order' doesn't exist"
+    },
+    {
+      "hash": "599064fa3e82",
+      "file": "src/infrastructure/monitoring/DeadlockMonitor.ts",
+      "line": 105,
+      "err": "Table 'mysql.deadlocks' doesn't exist"
+    },
+    {
+      "hash": "738f8e36c3c0",
+      "file": "src/infrastructure/repositories/MysqlDeliveryRepository.ts",
+      "line": 154,
+      "err": "Unknown column 'exchange_rate' in 'field list'"
+    },
+    {
+      "hash": "8e879eedf0aa",
+      "file": "src/infrastructure/repositories/MysqlDeliveryRepository.ts",
+      "line": 183,
+      "err": "Unknown column 'base_unit_price' in 'field list'"
+    },
+    {
+      "hash": "dd1c175efebd",
+      "file": "src/infrastructure/repositories/MysqlEmployeeRepository.ts",
+      "line": 48,
+      "err": "Table 'vnerpdacahng.hr_employee' doesn't exist"
+    },
+    {
+      "hash": "7f79420b899c",
+      "file": "src/infrastructure/repositories/MysqlEmployeeRepository.ts",
+      "line": 56,
+      "err": "Table 'vnerpdacahng.hr_employee' doesn't exist"
+    },
+    {
+      "hash": "ed0b487a1b82",
+      "file": "src/infrastructure/repositories/MysqlEmployeeRepository.ts",
+      "line": 64,
+      "err": "Table 'vnerpdacahng.hr_employee' doesn't exist"
+    },
+    {
+      "hash": "3cf91fe74dbc",
+      "file": "src/infrastructure/repositories/MysqlEmployeeRepository.ts",
+      "line": 71,
+      "err": "Table 'vnerpdacahng.hr_employee' doesn't exist"
+    },
+    {
+      "hash": "098ab3ae38ab",
+      "file": "src/infrastructure/repositories/MysqlEmployeeRepository.ts",
+      "line": 88,
+      "err": "Table 'vnerpdacahng.hr_employee' doesn't exist"
+    },
+    {
+      "hash": "3b7b9545b6ee",
+      "file": "src/infrastructure/repositories/MysqlEmployeeRepository.ts",
+      "line": 114,
+      "err": "Table 'vnerpdacahng.hr_employee' doesn't exist"
+    },
+    {
+      "hash": "46913a8233b0",
+      "file": "src/infrastructure/repositories/MysqlEmployeeRepository.ts",
+      "line": 137,
+      "err": "Table 'vnerpdacahng.hr_employee' doesn't exist"
+    },
+    {
+      "hash": "6accc1ac2ea5",
+      "file": "src/infrastructure/repositories/MysqlEmployeeRepository.ts",
+      "line": 143,
+      "err": "Table 'vnerpdacahng.hr_employee' doesn't exist"
+    },
+    {
+      "hash": "648565ff0c04",
+      "file": "src/infrastructure/repositories/MysqlOutboundOrderRepository.ts",
+      "line": 73,
+      "err": "Unknown column 'o.work_order_id' in 'field list'"
+    },
+    {
+      "hash": "54e6556c029b",
+      "file": "src/infrastructure/repositories/MysqlOutboundOrderRepository.ts",
+      "line": 160,
+      "err": "Unknown column 'work_order_id' in 'field list'"
+    },
+    {
+      "hash": "d052a8a4732b",
+      "file": "src/infrastructure/repositories/MysqlOutboundOrderRepository.ts",
+      "line": 196,
+      "err": "Unknown column 'material_code' in 'field list'"
+    },
+    {
+      "hash": "e88358d83d69",
+      "file": "src/infrastructure/repositories/MysqlReturnOrderRepository.ts",
+      "line": 161,
+      "err": "Unknown column 'exchange_rate' in 'field list'"
+    },
+    {
+      "hash": "d68e5579e682",
+      "file": "src/infrastructure/repositories/MysqlReturnOrderRepository.ts",
+      "line": 192,
+      "err": "Unknown column 'base_unit_price' in 'field list'"
+    },
+    {
+      "hash": "04632e2f6f2f",
+      "file": "src/infrastructure/repositories/MysqlSalesOrderRepository.ts",
+      "line": 154,
+      "err": "Unknown column 'customer_name' in 'field list'"
+    },
+    {
+      "hash": "5986e4920a40",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 145,
+      "err": "Unknown column 'code' in 'where clause'"
+    },
+    {
+      "hash": "b94f05356fd5",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 165,
+      "err": "Unknown column 'is_current' in 'where clause'"
+    },
+    {
+      "hash": "4af9e7b9c623",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 329,
+      "err": "Unknown column 'code' in 'where clause'"
+    },
+    {
+      "hash": "026f1afe2b48",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 342,
+      "err": "Unknown column 'code' in 'field list'"
+    },
+    {
+      "hash": "bcc71be52f33",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 395,
+      "err": "Table 'vnerpdacahng.prd_color_standard_item' doesn't exist"
+    },
+    {
+      "hash": "ed4d39263ced",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 401,
+      "err": "Table 'vnerpdacahng.prd_color_standard_item' doesn't exist"
+    },
+    {
+      "hash": "9811e30d6b38",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 428,
+      "err": "Table 'vnerpdacahng.prd_process_standard_item' doesn't exist"
+    },
+    {
+      "hash": "a571bbd0d520",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 434,
+      "err": "Table 'vnerpdacahng.prd_process_standard_item' doesn't exist"
+    },
+    {
+      "hash": "b922eb78cc7e",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 464,
+      "err": "Table 'vnerpdacahng.prd_quality_standard_item' doesn't exist"
+    },
+    {
+      "hash": "ab9472c9b2e3",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 470,
+      "err": "Table 'vnerpdacahng.prd_quality_standard_item' doesn't exist"
+    },
+    {
+      "hash": "ce03ad50f8f4",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 497,
+      "err": "Table 'vnerpdacahng.prd_standard_card_material' doesn't exist"
+    },
+    {
+      "hash": "23d9d28d8992",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 506,
+      "err": "Table 'vnerpdacahng.prd_standard_card_material' doesn't exist"
+    },
+    {
+      "hash": "0bf8abf5876c",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 531,
+      "err": "Table 'vnerpdacahng.prd_standard_card_ink' doesn't exist"
+    },
+    {
+      "hash": "00a03f648275",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 540,
+      "err": "Table 'vnerpdacahng.prd_standard_card_ink' doesn't exist"
+    },
+    {
+      "hash": "e811662a40ad",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 563,
+      "err": "Table 'vnerpdacahng.prd_standard_card_tooling' doesn't exist"
+    },
+    {
+      "hash": "fa21e2021145",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 569,
+      "err": "Table 'vnerpdacahng.prd_standard_card_tooling' doesn't exist"
+    },
+    {
+      "hash": "2eaa54856a2d",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 591,
+      "err": "Table 'vnerpdacahng.prd_standard_card_attachment' doesn't exist"
+    },
+    {
+      "hash": "1ed145f6558e",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 610,
+      "err": "Table 'vnerpdacahng.prd_standard_card_attachment' doesn't exist"
+    },
+    {
+      "hash": "4ab785db04b4",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 614,
+      "err": "Table 'vnerpdacahng.prd_standard_card_attachment' doesn't exist"
+    },
+    {
+      "hash": "cc7932bfee3c",
+      "file": "src/infrastructure/repositories/MysqlStandardCardRepository.ts",
+      "line": 623,
+      "err": "Table 'vnerpdacahng.prd_standard_card_version_log' doesn't exist"
+    },
+    {
+      "hash": "92f39709ca3b",
+      "file": "src/infrastructure/repositories/MysqlStocktakingOrderRepository.ts",
+      "line": 79,
+      "err": "Unknown column 'check_no' in 'where clause'"
+    },
+    {
+      "hash": "d271c261da2e",
+      "file": "src/infrastructure/repositories/MysqlStocktakingOrderRepository.ts",
+      "line": 104,
+      "err": "Unknown column 's.check_no' in 'field list'"
+    },
+    {
+      "hash": "91ac811317d3",
+      "file": "src/infrastructure/repositories/MysqlStocktakingOrderRepository.ts",
+      "line": 188,
+      "err": "Unknown column 'check_no' in 'field list'"
+    },
+    {
+      "hash": "ca982e212091",
+      "file": "src/infrastructure/repositories/MysqlStocktakingOrderRepository.ts",
+      "line": 214,
+      "err": "Unknown column 'warehouse_id' in 'field list'"
+    },
+    {
+      "hash": "f3804998e452",
+      "file": "src/lib/audit-logger.ts",
+      "line": 261,
+      "err": "Unknown column 'browser' in 'field list'"
+    },
+    {
+      "hash": "36a083fd0953",
+      "file": "src/lib/audit-logger.ts",
+      "line": 300,
+      "err": "Table 'vnerpdacahng.login_abnormal' doesn't exist"
+    },
+    {
+      "hash": "f3ea5e5a0720",
+      "file": "src/lib/audit-logger.ts",
+      "line": 434,
+      "err": "Table 'vnerpdacahng.data_change_log' doesn't exist"
+    },
+    {
+      "hash": "40ec9bfd7aac",
+      "file": "src/lib/audit-logger.ts",
+      "line": 467,
+      "err": "Table 'vnerpdacahng.document_cancel_log' doesn't exist"
+    },
+    {
+      "hash": "f87ab3d0475d",
+      "file": "src/lib/auth.ts",
+      "line": 386,
+      "err": "Unknown column 'department_id' in 'field list'"
+    },
+    {
+      "hash": "3e9e430c385b",
+      "file": "src/lib/auth.ts",
+      "line": 393,
+      "err": "Unknown column 'department_id' in 'field list'"
+    },
+    {
+      "hash": "a30e3c8a5ec1",
+      "file": "src/lib/bom-expansion.ts",
+      "line": 136,
+      "err": "Table 'vnerpdacahng.products' doesn't exist"
+    },
+    {
+      "hash": "726da13a2ecb",
+      "file": "src/lib/bom-expansion.ts",
+      "line": 159,
+      "err": "Table 'vnerpdacahng.products' doesn't exist"
+    },
+    {
+      "hash": "2d00f9522f2f",
+      "file": "src/lib/bom-expansion.ts",
+      "line": 328,
+      "err": "Table 'vnerpdacahng.products' doesn't exist"
+    },
+    {
+      "hash": "accd6604a3df",
+      "file": "src/lib/bom-expansion.ts",
+      "line": 608,
+      "err": "Table 'vnerpdacahng.products' doesn't exist"
+    },
+    {
+      "hash": "dfc55558f93e",
+      "file": "src/lib/cost-engine.ts",
+      "line": 557,
+      "err": "Unknown column 'bl.deleted' in 'where clause'"
+    },
+    {
+      "hash": "fbe0e2472c68",
+      "file": "src/lib/cost-engine.ts",
+      "line": 616,
+      "err": "Table 'vnerpdacahng.pro_process_route' doesn't exist"
+    },
+    {
+      "hash": "1532296dda9d",
+      "file": "src/lib/cost-engine.ts",
+      "line": 655,
+      "err": "Table 'vnerpdacahng.pro_process_route' doesn't exist"
+    },
+    {
+      "hash": "b0bd6d3eac8f",
+      "file": "src/lib/cost-engine.ts",
+      "line": 693,
+      "err": "Table 'vnerpdacahng.outsource_order_line' doesn't exist"
+    },
+    {
+      "hash": "81455a6aee27",
+      "file": "src/lib/cutting-optimizer.ts",
+      "line": 282,
+      "err": "Unknown column 'r.deleted' in 'where clause'"
+    },
+    {
+      "hash": "8dfe26c1adc3",
+      "file": "src/lib/db/ddl/init-po-grn-tables.ts",
+      "line": 121,
+      "err": "Unknown column 'over_receipt_tolerance' in 'field list'"
+    },
+    {
+      "hash": "2335e58a5c74",
+      "file": "src/lib/db/ddl/init-po-grn-tables.ts",
+      "line": 141,
+      "err": "Unknown column 'contact_person' in 'field list'"
+    },
+    {
+      "hash": "a0a45a8faafd",
+      "file": "src/lib/db/ddl/warehouse-sales-outbound.ts",
+      "line": 10,
+      "err": "Unknown column 'source_type' in 'field list'"
+    },
+    {
+      "hash": "0943a880d754",
+      "file": "src/lib/db/ddl/warehouse-sales-outbound.ts",
+      "line": 14,
+      "err": "Unknown column 'debit_account' in 'field list'"
+    },
+    {
+      "hash": "345e0fd56253",
+      "file": "src/lib/enhanced-state-machine.ts",
+      "line": 328,
+      "err": "Table 'vnerpdacahng.sys_state_transition_log' doesn't exist"
+    },
+    {
+      "hash": "f98549f26973",
+      "file": "src/lib/enhanced-state-machine.ts",
+      "line": 369,
+      "err": "Table 'vnerpdacahng.sys_state_transition_log' doesn't exist"
+    },
+    {
+      "hash": "3fd6b19d6fdb",
+      "file": "src/lib/finance-core.ts",
+      "line": 114,
+      "err": "Unknown column 'receipt_method' in 'field list'"
+    },
+    {
+      "hash": "de96cfce5669",
+      "file": "src/lib/finance-core.ts",
+      "line": 335,
+      "err": "Unknown column 'actual_hours' in 'field list'"
+    },
+    {
+      "hash": "b8bcb6bd0ce7",
+      "file": "src/lib/label-service.ts",
+      "line": 254,
+      "err": "Unknown column 'material_code' in 'field list'"
+    },
+    {
+      "hash": "22398772fe3f",
+      "file": "src/lib/label-service.ts",
+      "line": 283,
+      "err": "Unknown column 'scan_time' in 'field list'"
+    },
+    {
+      "hash": "dcf3b0cf7a04",
+      "file": "src/lib/material-requisition.ts",
+      "line": 75,
+      "err": "Unknown column 'b.material_id' in 'where clause'"
+    },
+    {
+      "hash": "e4f1f4f47a40",
+      "file": "src/lib/mrp-engine-v2.ts",
+      "line": 537,
+      "err": "Unknown column 'sod.product_id' in 'field list'"
+    },
+    {
+      "hash": "b9e799783fa3",
+      "file": "src/lib/mrp-engine-v2.ts",
+      "line": 822,
+      "err": "Unknown column 'im.lead_time_days' in 'field list'"
+    },
+    {
+      "hash": "7f6bbc835755",
+      "file": "src/lib/mrp-engine-v2.ts",
+      "line": 892,
+      "err": "Unknown column 'wo.plan_finish_date' in 'field list'"
+    },
+    {
+      "hash": "1a17e995b000",
+      "file": "src/lib/mrp-engine-v2.ts",
+      "line": 922,
+      "err": "Unknown column 'bl.deleted' in 'where clause'"
+    },
+    {
+      "hash": "189f22c6b9c1",
+      "file": "src/lib/mrp-engine-v2.ts",
+      "line": 976,
+      "err": "Table 'vnerpdacahng.pro_process_route' doesn't exist"
+    },
+    {
+      "hash": "839c2786e0aa",
+      "file": "src/lib/mrp-engine.ts",
+      "line": 962,
+      "err": "Unknown column 'supplier_id' in 'field list'"
+    },
+    {
+      "hash": "ee09788def05",
+      "file": "src/lib/mrp-engine.ts",
+      "line": 992,
+      "err": "Unknown column 'unit' in 'field list'"
+    },
+    {
+      "hash": "360fc75e21cf",
+      "file": "src/lib/multi-color-printing.ts",
+      "line": 256,
+      "err": "Unknown column 'color_sequence' in 'field list'"
+    },
+    {
+      "hash": "64c98ee05559",
+      "file": "src/lib/qrcode-service.ts",
+      "line": 329,
+      "err": "Unknown column 'h.operator_id' in 'field list'"
+    },
+    {
+      "hash": "d005fe746a1b",
+      "file": "src/lib/services/data-fix-tool.ts",
+      "line": 199,
+      "err": "Unknown column 'fp.source_id' in 'on clause'"
+    },
+    {
+      "hash": "f4bf7d81bffa",
+      "file": "src/lib/services/purchase-request-service.ts",
+      "line": 18,
+      "err": "Unknown column 'supplier_id' in 'field list'"
+    },
+    {
+      "hash": "b868260ac3eb",
+      "file": "src/lib/services/purchase-request-service.ts",
+      "line": 34,
+      "err": "Unknown column 'unit' in 'field list'"
+    },
+    {
+      "hash": "e2497227deec",
+      "file": "src/lib/services/sales-order-service.ts",
+      "line": 84,
+      "err": "Unknown column 'material_code' in 'field list'"
+    },
+    {
+      "hash": "fa0cb4f8a98e",
+      "file": "src/lib/soft-delete.ts",
+      "line": 209,
+      "err": "Table 'vnerpdacahng.document_cancel_log' doesn't exist"
+    },
+    {
+      "hash": "c881d268fff7",
+      "file": "src/lib/soft-delete.ts",
+      "line": 264,
+      "err": "Table 'vnerpdacahng.document_cancel_log' doesn't exist"
+    },
+    {
+      "hash": "9f3c972c4fef",
+      "file": "src/lib/soft-delete.ts",
+      "line": 290,
+      "err": "Table 'vnerpdacahng.document_cancel_log' doesn't exist"
+    },
+    {
+      "hash": "e2e5279095cd",
+      "file": "src/lib/soft-delete.ts",
+      "line": 391,
+      "err": "Unknown column 'source_id' in 'where clause'"
+    },
+    {
+      "hash": "75c1eb8acb65",
+      "file": "src/lib/soft-delete.ts",
+      "line": 404,
+      "err": "Unknown column 'source_type' in 'where clause'"
+    },
+    {
+      "hash": "5f0c2ed1c849",
+      "file": "src/lib/spc-analysis.ts",
+      "line": 313,
+      "err": "Unknown column 'source_id' in 'field list'"
+    },
+    {
+      "hash": "38eff9f63554",
+      "file": "src/lib/spc-analysis.ts",
+      "line": 344,
+      "err": "Unknown column 'ref_id' in 'field list'"
+    },
+    {
+      "hash": "dbf54e71b132",
+      "file": "src/lib/standard-card-service.ts",
+      "line": 260,
+      "err": "Table 'vnerpdacahng.prd_process_card_templates' doesn't exist"
+    },
+    {
+      "hash": "608d58ba9aae",
+      "file": "src/lib/standard-card-service.ts",
+      "line": 280,
+      "err": "Unknown column 'tech_params' in 'field list'"
+    },
+    {
+      "hash": "32e4885f6cec",
+      "file": "src/lib/standard-card-service.ts",
+      "line": 308,
+      "err": "Unknown column 'customer_id' in 'field list'"
+    },
+    {
+      "hash": "3feb6239d4df",
+      "file": "src/lib/standard-card-service.ts",
+      "line": 327,
+      "err": "Table 'vnerpdacahng.prd_process_card_audit' doesn't exist"
+    },
+    {
+      "hash": "75b7dc402dab",
+      "file": "src/lib/standard-card-service.ts",
+      "line": 357,
+      "err": "Unknown column 'version' in 'field list'"
+    },
+    {
+      "hash": "210802e8297d",
+      "file": "src/lib/standard-card-service.ts",
+      "line": 423,
+      "err": "Table 'vnerpdacahng.prd_process_card_audit' doesn't exist"
+    },
+    {
+      "hash": "bab2ba71f56a",
+      "file": "src/lib/standard-card-service.ts",
+      "line": 443,
+      "err": "Table 'vnerpdacahng.prd_process_card_audit' doesn't exist"
+    },
+    {
+      "hash": "cd2fdd425475",
+      "file": "src/lib/standard-card-service.ts",
+      "line": 455,
+      "err": "Unknown column 'version' in 'field list'"
+    },
+    {
+      "hash": "3d6ecbdbd215",
+      "file": "src/lib/standard-card-service.ts",
+      "line": 523,
+      "err": "Unknown column 'version' in 'field list'"
+    },
+    {
+      "hash": "0bcb99c9a34d",
+      "file": "src/lib/standard-card-service.ts",
+      "line": 543,
+      "err": "Table 'vnerpdacahng.prd_process_card_audit' doesn't exist"
+    },
+    {
+      "hash": "707abc81aa75",
+      "file": "src/lib/standard-card-service.ts",
+      "line": 560,
+      "err": "Table 'vnerpdacahng.prd_process_card_templates' doesn't exist"
+    },
+    {
+      "hash": "823ef9002186",
+      "file": "src/lib/standard-card-service.ts",
+      "line": 618,
+      "err": "Unknown column 'customer_id' in 'field list'"
+    },
+    {
+      "hash": "be4465a20197",
+      "file": "src/lib/warehouse-core.ts",
+      "line": 272,
+      "err": "Unknown column 'remaining_quantity' in 'field list'"
+    },
+    {
+      "hash": "6fe5b1cacc5a",
+      "file": "src/lib/warehouse-core.ts",
+      "line": 298,
+      "err": "Unknown column 'remaining_quantity' in 'field list'"
+    },
+    {
+      "hash": "3019dd868fdc",
+      "file": "src/lib/__tests__/performance.test.ts",
+      "line": 156,
+      "err": "Table 'vnerpdacahng.large_table' doesn't exist"
+    },
+    {
+      "hash": "95f5f1c30116",
+      "file": "src/services/CostAmortizationService.ts",
+      "line": 92,
+      "err": "Unknown column 'material_name' in 'field list'"
+    }
+  ]
+}

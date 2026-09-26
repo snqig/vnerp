@@ -1,20 +1,19 @@
 import { purPurchaseOrder } from './procurement';
-import {
-  bigint,
-  date,
-  datetime,
-  decimal,
-  index,
-  int,
-  mysqlTable,
-  serial,
-  text,
-  timestamp,
-  tinyint,
-  uniqueIndex,
-  varchar,
-  foreignKey,
-} from 'drizzle-orm/mysql-core';
+import { bigint,
+date,
+datetime,
+decimal,
+foreignKey,
+index,
+int,
+mysqlEnum,
+mysqlTable,
+serial,
+text,
+timestamp,
+tinyint,
+uniqueIndex,
+varchar } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 import { invMaterialCategory } from './_gen_warehouse_missing';
 import { sysUser } from './system';
@@ -51,6 +50,8 @@ export const invMaterial = mysqlTable(
     createBy: bigint('create_by', { mode: 'number', unsigned: true }),
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
     deleted: tinyint('deleted').default(0),
+    length: decimal('length', { precision: 18, scale: 4 }).default('0.0000'),
+    weightedAvgCost: decimal('weighted_avg_cost', { precision: 18, scale: 4 }),
   },
   (table) => ({
     materialCodeIdx: index('idx_material_code').on(table.materialCode),
@@ -106,6 +107,19 @@ export const invInventoryBatch = mysqlTable(
     createBy: bigint('create_by', { mode: 'number', unsigned: true }),
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
     deleted: tinyint('deleted').default(0),
+    availableQuantity: decimal('available_quantity', { precision: 18, scale: 4 }).default('0.0000'), // available_quantity
+    currentWeight: decimal('current_weight', { precision: 18, scale: 4 }).default('0.0000'),
+    inboundNo: varchar('inbound_no', { length: 50 }), // 入库单号
+    inboundQuantity: decimal('inbound_quantity', { precision: 18, scale: 4 }).default('0.0000'), // inbound_quantity
+    inspectionId: bigint('inspection_id', { mode: 'number', unsigned: true }), // 关联检验单ID
+    isSurplus: tinyint('is_surplus').default(0),
+    outboundQuantity: decimal('outbound_quantity', { precision: 18, scale: 4 }).default('0.0000'), // outbound_quantity
+    qcStatus: varchar('qc_status', { length: 20 }), // 质检状态
+    remainingQty: decimal('remaining_qty', { precision: 18, scale: 2 }).default('0.00'),
+    specification: varchar('specification', { length: 200 }), // 规格
+    supplierId: bigint('supplier_id', { mode: 'number', unsigned: true }), // 供应商ID
+    supplierName: varchar('supplier_name', { length: 100 }), // 供应商名称
+    surplusStatus: varchar('surplus_status', { length: 20 }),
   },
   (table) => ({
     warehouseMaterialBatchIdx: uniqueIndex('uk_warehouse_material_batch').on(
@@ -175,6 +189,15 @@ export const invInboundOrders = mysqlTable(
     updateBy: int('update_by', { unsigned: true }),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
     deleted: tinyint('deleted').default(0),
+    asnNo: varchar('asn_no', { length: 50 }), // 到货通知单号
+    deliveryNo: varchar('delivery_no', { length: 100 }), // 送货单号/快递单号
+    mandatoryQc: tinyint('mandatory_qc').default(0), // 是否强制质检: 0-否, 1-是
+    postBy: int('post_by', { unsigned: true }), // 过账人ID
+    postTime: datetime('post_time'), // 过账时间
+    qcRemark: text('qc_remark'), // 质检备注
+    qcStatusNew: tinyint('qc_status_new').default(0), // 质检状态(新)
+    statusNew: tinyint('status_new').default(1), // 状态(新)
+    workOrderId: bigint('work_order_id', { mode: 'number', unsigned: true }),
   },
   (table) => ({
     orderNoIdx: index('idx_order_no').on(table.orderNo),
@@ -226,6 +249,20 @@ export const invInboundItems = mysqlTable(
     remark: text('remark'),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     deleted: tinyint('deleted').default(0),
+    acceptedQty: decimal('accepted_qty', { precision: 14, scale: 3 }).default('0.000'), // 合格数量
+    isConsumed: tinyint('is_consumed').default(0), // 是否已关联消耗
+    lineNo: int('line_no', { unsigned: true }), // 行号
+    poLineId: int('po_line_id', { unsigned: true }), // 关联采购单行ID
+    putawayStatus: mysqlEnum('putaway_status', ['pending', 'done']), // 上架状态
+    qcInspectorId: int('qc_inspector_id', { unsigned: true }), // 质检员ID
+    qcResult: mysqlEnum('qc_result', ['pending', 'pass', 'fail', 'partial']), // 质检结果
+    qcTime: datetime('qc_time'), // 质检时间
+    qrCode: varchar('qr_code', { length: 255 }),
+    rejectedQty: decimal('rejected_qty', { precision: 14, scale: 3 }).default('0.000'), // 不良数量
+    sourceOrderId: int('source_order_id', { unsigned: true }), // 来源业务订单ID
+    sourceOrderLineId: int('source_order_line_id', { unsigned: true }), // 来源业务订单行ID
+    supplierBatchNo: varchar('supplier_batch_no', { length: 100 }), // 供应商批次号
+    warehouseId: int('warehouse_id', { unsigned: true }), // 仓库ID
   },
   (table) => ({
     orderIdx: index('idx_order').on(table.orderId),
@@ -264,6 +301,9 @@ export const invWarehouse = mysqlTable(
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    capacity: decimal('capacity', { precision: 18, scale: 4 }).default('0.0000'), // 仓库容量
+    includeInCalculation: tinyint('include_in_calculation').default(1), // 是否计入核算 1是 0否
+    nature: varchar('nature', { length: 50 }), // 仓库性质(自有/租赁/外协)
   },
   (table) => ({
     warehouseCodeIdx: uniqueIndex('uk_warehouse_code').on(table.warehouseCode),
@@ -305,6 +345,11 @@ export const invInventory = mysqlTable(
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    costPrice: decimal('cost_price', { precision: 18, scale: 4 }).default('0.0000'),
+    frozenQty: decimal('frozen_qty', { precision: 18, scale: 4 }).default('0.0000'),
+    stocktakingFlag: tinyint('stocktaking_flag').default(0), // 盘点锁库标记
+    totalQty: decimal('total_qty', { precision: 18, scale: 4 }).default('0.0000'), // total_qty
+    turnoverRate: decimal('turnover_rate', { precision: 18, scale: 4 }).default('0.0000'),
   },
   (table) => ({
     materialWarehouseIdx: uniqueIndex('uk_material_warehouse').on(
@@ -361,6 +406,9 @@ export const invOutboundOrders = mysqlTable(
     version: int('version').default(0),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    auditStatusNew: tinyint('audit_status_new').default(0), // 审核状态(新)
+    salesOrderId: bigint('sales_order_id', { mode: 'number', unsigned: true }), // 关联销售订单 sal_order.id
+    statusNew: tinyint('status_new').default(1), // 状态(新)
   },
   (table) => ({
     orderNoIdx: uniqueIndex('uk_order_no').on(table.orderNo),
@@ -399,13 +447,12 @@ export const invOutboundItems = mysqlTable(
     amount: decimal('amount', { precision: 18, scale: 4 }),
     batchNo: varchar('batch_no', { length: 50 }),
     batchId: bigint('batch_id', { mode: 'number', unsigned: true }),
-    qrCode: varchar('qr_code', { length: 100 }),
     originalInboundDate: date('original_inbound_date'),
-    locationId: bigint('location_id', { mode: 'number', unsigned: true }),
     width: decimal('width', { precision: 10, scale: 2 }).default('0.00'),
     remark: varchar('remark', { length: 255 }),
     deleted: tinyint('deleted').default(0),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    isRawMaterial: tinyint('is_raw_material').default(0), // 是否原料出库
   },
   (table) => ({
     orderIdx: index('idx_order').on(table.orderId),
@@ -523,6 +570,8 @@ export const invStocktaking = mysqlTable(
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    approverId: bigint('approver_id', { mode: 'number', unsigned: true }), // 审批人ID
+    totalItems: int('total_items').default(0), // 盘点项数（建单时回填，列表也可子查询计算）
   },
   (table) => ({
     takingNoIdx: uniqueIndex('uk_taking_no').on(table.takingNo),

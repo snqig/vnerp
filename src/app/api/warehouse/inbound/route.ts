@@ -53,7 +53,10 @@ export const GET = withPermission(
       poId: poId ? parseInt(poId) : undefined,
     });
 
-    const serializedData = result.data.map((order) => ({
+    // 只返回采购入库单（原料入库）
+    const filteredData = result.data.filter((order) => order.orderType === 'purchase');
+    
+    const serializedData = filteredData.map((order) => ({
       id: order.id,
       order_no: order.orderNo,
       inbound_date: order.inboundDate,

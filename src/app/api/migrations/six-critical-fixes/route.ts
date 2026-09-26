@@ -75,23 +75,22 @@ export const GET = withPermission(
         results.push('Already exists: std_purchase_order_line');
       }
 
-      try {
+      // pur_order / pur_order_detail 是合并前的旧表，当前库里已不存在（数据统一在 pur_purchase_order），
+      // 直接查会抛 Table doesn't exist。这里先判存在性再走迁移，不存在就记一条说明跳过。
+      let cnt1 = 0;
+      if (await tableExists('pur_order')) {
         const po1Count = await query('SELECT COUNT(*) as cnt FROM pur_order WHERE deleted = 0');
-        const cnt1 = (po1Count as DbRow[])[0]?.cnt || 0;
-        if (Number(cnt1) > 0) {
-          await execute(`
+        cnt1 = Number((po1Count as DbRow[])[0]?.cnt || 0);
+      }
+      if (cnt1 > 0) {
+        await execute(`
           INSERT IGNORE INTO std_purchase_order (order_no, supplier_id, supplier_name, order_date, delivery_date, currency, exchange_rate, total_amount, tax_amount, grand_total, status, payment_terms, delivery_address, contact_person, contact_phone, remark, create_by, create_time, update_by, update_time, legacy_source, legacy_id)
           SELECT order_no, supplier_id, '', order_date, delivery_date, currency, exchange_rate, total_amount, tax_amount, total_with_tax,
             CASE status WHEN 1 THEN 0 WHEN 2 THEN 4 WHEN 3 THEN 5 WHEN 4 THEN 6 WHEN 5 THEN 8 ELSE 0 END,
             payment_terms, delivery_address, contact_name, contact_phone, remark, create_by, create_time, update_by, update_time, 'pur_order', id
           FROM pur_order WHERE deleted = 0
         `);
-          results.push(`Migrated ${cnt1} rows from pur_order`);
-        } else {
-          results.push('No data in pur_order to migrate');
-        }
-      } catch (e) {
-        results.push(`Migrate pur_order skipped: ${(e as Error).message}`);
+        results.push(`Migrated ${cnt1} rows from pur_order`);
       }
 
       try {
@@ -115,11 +114,15 @@ export const GET = withPermission(
         results.push(`Migrate pur_purchase_order skipped: ${(e as Error).message}`);
       }
 
-      try {
+      let cntPod1 = 0;
+      if (await tableExists('pur_order_detail')) {
         const pod1Count = await query('SELECT COUNT(*) as cnt FROM pur_order_detail');
-        const cnt1 = (pod1Count as DbRow[])[0]?.cnt || 0;
-        if (Number(cnt1) > 0) {
-          await execute(`
+        cntPod1 = Number((pod1Count as DbRow[])[0]?.cnt || 0);
+      } else {
+        results.push('源表 pur_order_detail 不存在（已合并到 pur_purchase_order_line），跳过该分支');
+      }
+      if (cntPod1 > 0) {
+        await execute(`
           INSERT IGNORE INTO std_purchase_order_line (order_id, line_no, material_id, material_code, material_name, material_spec, unit, order_qty, received_qty, unit_price, amount, tax_rate, tax_amount, line_total, require_date, remark, create_time)
           SELECT spo.id, ROW_NUMBER() OVER(PARTITION BY pod.order_id ORDER BY pod.id), pod.material_id, im.material_code, im.material_name, im.specification, pod.unit, pod.quantity, pod.received_qty, pod.unit_price, pod.amount, pod.tax_rate, pod.tax_amount, pod.total_amount, pod.delivery_date, pod.remark, pod.create_time
           FROM pur_order_detail pod
@@ -127,10 +130,7 @@ export const GET = withPermission(
           JOIN std_purchase_order spo ON spo.legacy_source = 'pur_order' AND spo.legacy_id = po.id
           LEFT JOIN inv_material im ON pod.material_id = im.id
         `);
-          results.push(`Migrated ${cnt1} rows from pur_order_detail`);
-        }
-      } catch (e) {
-        results.push(`Migrate pur_order_detail skipped: ${(e as Error).message}`);
+        results.push(`Migrated ${cntPod1} rows from pur_order_detail`);
       }
 
       try {
@@ -305,14 +305,15 @@ export const GET = withPermission(
         results.push(`Migrate bom_material skipped: ${(e as Error).message}`);
       }
 
-      try {
+      // mdm_material 在当前库里不存在，物料主档统一在 inv_material（上面一步已迁移）
+      if (await tableExists('mdm_material')) {
         const mdmMatCount = await query('SELECT COUNT(*) as cnt FROM mdm_material');
-        const cnt = (mdmMatCount as DbRow[])[0]?.cnt || 0;
-        if (Number(cnt) > 0) {
-          results.push(`mdm_material has ${cnt} rows - requires field mapping`);
-        }
-      } catch (e) {
-        results.push(`mdm_material check skipped: ${(e as Error).message}`);
+        const cnt = Number((mdmMatCount as DbRow[])[0]?.cnt || 0);
+        results.push(
+          cnt > 0 ? `mdm_material has ${cnt} rows - requires field mapping` : 'No data in mdm_material'
+        );
+      } else {
+        results.push('源表 mdm_material 不存在（已合并到 inv_material），跳过该分支');
       }
     }
 

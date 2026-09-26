@@ -24,13 +24,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   let where = 'WHERE deleted = 0';
   const params: SqlValue[] = [];
   if (keyword) {
-    where += ' AND (part_code LIKE ? OR part_name LIKE ? OR spec LIKE ?)';
+    where += ' AND (part_code LIKE ? OR part_name LIKE ? OR specification LIKE ?)';
     const kw = `%${keyword}%`;
     params.push(kw, kw, kw);
-  }
-  if (category) {
-    where += ' AND category = ?';
-    params.push(category);
   }
   if (status) {
     where += ' AND status = ?';
@@ -43,7 +39,28 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     'SELECT * FROM eqp_spare_part ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
-  return successResponse({ list: rows, total, page, pageSize });
+
+  // 统计概览
+  const lowStockRows = await query(
+    'SELECT COUNT(*) as cnt FROM eqp_spare_part WHERE deleted = 0 AND stock_qty < safety_stock AND safety_stock > 0',
+    []
+  );
+  const inactiveRows = await query(
+    'SELECT COUNT(*) as cnt FROM eqp_spare_part WHERE deleted = 0 AND status = 0',
+    []
+  );
+
+  return successResponse({
+    list: rows,
+    total,
+    page,
+    pageSize,
+    stats: {
+      totalParts: total,
+      lowStockCount: lowStockRows[0]?.cnt || 0,
+      inactiveCount: inactiveRows[0]?.cnt || 0,
+    },
+  });
 });
 
 export const POST = withPermission(
@@ -71,13 +88,12 @@ export const POST = withPermission(
     const partCode = generateSparePartCode();
     const result = await execute(
       `INSERT INTO eqp_spare_part
-       (part_code, part_name, category, spec, unit, stock_quantity, safety_stock,
+       (part_code, part_name, specification, unit, stock_qty, safety_stock,
         supplier_id, unit_price, location, status, remark)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         partCode,
         part_name,
-        category || null,
         spec || null,
         unit || null,
         stock_quantity || 0,
@@ -98,7 +114,7 @@ export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
     const ts = await getTranslations('Common');
     const body = await request.json();
-    const { id, part_name, category, spec, unit, stock_quantity, safety_stock, supplier_id, unit_price, location, status, remark } = body;
+    const { id, part_name, specification, spec, unit, stock_quantity, safety_stock, supplier_id, unit_price, location, status, remark } = body;
     if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     const updateFields: string[] = [];
@@ -108,12 +124,12 @@ export const PUT = withPermission(
       updateFields.push('part_name = ?');
       updateValues.push(part_name);
     }
-    if (category !== undefined) {
-      updateFields.push('category = ?');
-      updateValues.push(category || null);
+    if (specification !== undefined) {
+      updateFields.push('specification = ?');
+      updateValues.push(specification || null);
     }
     if (spec !== undefined) {
-      updateFields.push('spec = ?');
+      updateFields.push('specification = ?');
       updateValues.push(spec || null);
     }
     if (unit !== undefined) {
@@ -121,7 +137,7 @@ export const PUT = withPermission(
       updateValues.push(unit || null);
     }
     if (stock_quantity !== undefined) {
-      updateFields.push('stock_quantity = ?');
+      updateFields.push('stock_qty = ?');
       updateValues.push(stock_quantity || 0);
     }
     if (safety_stock !== undefined) {

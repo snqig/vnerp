@@ -1,4 +1,4 @@
-import { bigint, date, datetime, decimal, index, int, mysqlTable, serial, text, tinyint, uniqueIndex, varchar } from 'drizzle-orm/mysql-core';
+import { bigint, date, datetime, decimal, index, int, json, mysqlTable, serial, text, tinyint, uniqueIndex, varchar } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 export const dcprintTool = mysqlTable(
   'dcprint_tool',
@@ -48,9 +48,14 @@ export const dcprintTool = mysqlTable(
     scrapTime: datetime('scrap_time'),
     scrapBy: bigint('scrap_by', { mode: 'number', unsigned: true }),
     remark: text('remark'),
-    isDeleted: tinyint('deleted').default(0),
+    // 库里同时存在 deleted 与 is_deleted 两列（都是 tinyint NOT NULL DEFAULT 0）。
+    // 领域层 Tool 聚合写的是 `deleted`，这里正名；is_deleted 一并建模，避免走 Drizzle 时静默丢列。
+    deleted: tinyint('deleted').notNull().default(0),
+    isDeleted: tinyint('is_deleted').notNull().default(0),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
   },
   (table) => ({
     toolCodeIdx: uniqueIndex('uk_tool_code').on(table.toolCode),
@@ -100,6 +105,7 @@ export const dcprintToolMaintenance = mysqlTable(
     operatorName: varchar('operator_name', { length: 100 }),
     remark: text('remark'),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateTime: datetime('update_time'),
   },
   (table) => ({
     toolIdIdx: index('idx_maintenance_tool').on(table.toolId),
@@ -173,6 +179,9 @@ export const prdDieTemplate = mysqlTable(
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
     createBy: bigint('create_by', { mode: 'number', unsigned: true }),
     deleted: tinyint('deleted').default(0),
+    category: varchar('category', { length: 64 }), // 模板分类
+    factoryId: bigint('factory_id', { mode: 'number', unsigned: true }),
+    tags: json('tags'), // 标签列表
   },
   (table) => ({
     templateCodeIdx: uniqueIndex('uk_template_code').on(table.templateCode),
@@ -234,6 +243,19 @@ export const prdScreenPlate = mysqlTable(
     deleted: tinyint('deleted').default(0),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    exposureDate: datetime('exposure_date'), // 曝光日期
+    frameType: varchar('frame_type', { length: 30 }), // 框类型
+    lastCleanDate: datetime('last_clean_date'), // 最后清洗日期
+    lastReclaimDate: datetime('last_reclaim_date'), // 最后再生日期
+    lastUsedDate: datetime('last_used_date'), // 最后使用日期
+    lifeCount: int('life_count', { unsigned: true }).default(0), // 已印刷次数
+    maxLifeCount: int('max_life_count', { unsigned: true }).default(800), // 最大寿命
+    meshMaterial: varchar('mesh_material', { length: 30 }), // 丝网材质
+    reclaimCount: int('reclaim_count', { unsigned: true }).default(0), // 已再生次数
+    scrapReason: varchar('scrap_reason', { length: 200 }), // 报废原因
+    size: varchar('size', { length: 50 }), // 网版尺寸
+    tensionDate: datetime('tension_date'), // 最后测张力时间
+    tensionValue: decimal('tension_value', { precision: 6, scale: 2 }), // 张力值(N/cm)
   },
   (table) => ({
     plateCodeIdx: uniqueIndex('uk_plate_code').on(table.plateCode),

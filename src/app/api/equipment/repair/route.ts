@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 ;
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, SqlValue } from '@/lib/db';
-import { successResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { getWxPrefix, generateDocNo } from '@/lib/global-config';
 import { numericFilter } from '@/lib/query-filter';
@@ -49,6 +49,23 @@ export const POST = withPermission(
       repair_person,
       remark,
     } = body;
+    // P1-1 硬校验：设备身份（编码/名称至少一项）、故障日期、故障描述、维修人必填。
+    // eqp_repair 各列均 nullable，DB 层拦不住空单，只能靠业务层。
+    if (
+      String(equipment_code ?? '').trim() === '' &&
+      String(equipment_name ?? '').trim() === ''
+    ) {
+      return errorResponse(ts('equipmentIdentityRequired'), 400, 400);
+    }
+    if (String(fault_date ?? '').trim() === '') {
+      return errorResponse(ts('repairFaultDateRequired'), 400, 400);
+    }
+    if (String(fault_desc ?? '').trim() === '') {
+      return errorResponse(ts('repairFaultDescRequired'), 400, 400);
+    }
+    if (String(repair_person ?? '').trim() === '') {
+      return errorResponse(ts('repairPersonRequired'), 400, 400);
+    }
     const _now = new Date();
     const repairNo = generateDocNo(getWxPrefix());
 
@@ -61,7 +78,7 @@ export const POST = withPermission(
         equipment_name || null,
         fault_date,
         fault_desc || null,
-        repair_type || 1,
+        repair_type || 'corrective',
         repair_person || null,
         remark || null,
       ]

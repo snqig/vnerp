@@ -272,6 +272,19 @@ export default function ProductionReportPage() {
       toast.error(t('fillProcessName'));
       return;
     }
+    // P1-4 前端守卫：数量不得为负（与后端 qtyNonNegative 同口径）
+    const qtyChecks: Array<number | undefined> = [
+      form.plan_qty,
+      form.completed_qty,
+      form.qualified_qty,
+      form.scrap_qty,
+    ];
+    for (const v of qtyChecks) {
+      if (v !== undefined && (!Number.isFinite(v) || v < 0)) {
+        toast.error(tc('qtyNonNegative'));
+        return;
+      }
+    }
     try {
       const res = await authFetch('/api/production/work-report', {
         method: 'POST',

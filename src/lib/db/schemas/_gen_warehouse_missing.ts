@@ -29,34 +29,7 @@ import {
   invStocktaking,
 } from './warehouse';
 
-export const invAuxiliaryInventory = mysqlTable(
-  'inv_auxiliary_inventory',
-  {
-    id: int('id').autoincrement().notNull(),
-    auxCode: varchar('aux_code', { length: 100 }),
-    auxName: varchar('aux_name', { length: 255 }),
-    specification: varchar('specification', { length: 255 }),
-    category: varchar('category', { length: 100 }),
-    unit: varchar('unit', { length: 50 }),
-    warehouse: varchar('warehouse', { length: 100 }),
-    location: varchar('location', { length: 100 }),
-    supplier: varchar('supplier', { length: 255 }),
-    openingBalance: decimal('opening_balance', { precision: 18, scale: 4 }).default('0.0000'),
-    totalIn: decimal('total_in', { precision: 18, scale: 4 }).default('0.0000'),
-    totalOut: decimal('total_out', { precision: 18, scale: 4 }).default('0.0000'),
-    currentBalance: decimal('current_balance', { precision: 18, scale: 4 }).default('0.0000'),
-    sourceFile: varchar('source_file', { length: 255 }),
-    sourceSheet: varchar('source_sheet', { length: 100 }),
-    importTime: datetime('import_time').default(sql`CURRENT_TIMESTAMP`),
-    remarks: text('remarks'),
-  },
-  (t) => ({
-    idxAuxCode: index('idx_aux_code').on(t.auxCode),
-    idxAuxName: index('idx_aux_name').on(t.auxName),
-    idxSupplier: index('idx_supplier').on(t.supplier),
-    pk: primaryKey({ columns: [t.id] }),
-  })
-);
+
 
 export const invCuttingDetail = mysqlTable(
   'inv_cutting_detail',
@@ -224,6 +197,9 @@ export const invInventoryLog = mysqlTable(
     businessType: varchar('business_type', { length: 50 }),
     businessNo: varchar('business_no', { length: 50 }),
     operatorId: bigint('operator_id', { mode: 'number', unsigned: true }),
+    batchType: tinyint('batch_type').default(0),
+    supplierId: bigint('supplier_id', { mode: 'number', unsigned: true }),
+    unitPrice: decimal('unit_price', { precision: 18, scale: 4 }).default('0.0000'),
   },
   (t) => ({
     idxCreateTime: index('idx_create_time').on(t.createTime),
@@ -361,37 +337,7 @@ export const invMaterialCategory = mysqlTable(
   })
 );
 
-export const invMaterialInventory = mysqlTable(
-  'inv_material_inventory',
-  {
-    id: int('id').autoincrement().notNull(),
-    materialCode: varchar('material_code', { length: 100 }),
-    materialName: varchar('material_name', { length: 255 }),
-    specification: varchar('specification', { length: 255 }),
-    category: varchar('category', { length: 100 }),
-    materialType: varchar('material_type', { length: 50 }),
-    unit: varchar('unit', { length: 50 }),
-    warehouse: varchar('warehouse', { length: 100 }),
-    location: varchar('location', { length: 100 }),
-    supplier: varchar('supplier', { length: 255 }),
-    openingBalance: decimal('opening_balance', { precision: 18, scale: 4 }).default('0.0000'),
-    totalIn: decimal('total_in', { precision: 18, scale: 4 }).default('0.0000'),
-    totalOut: decimal('total_out', { precision: 18, scale: 4 }).default('0.0000'),
-    currentBalance: decimal('current_balance', { precision: 18, scale: 4 }).default('0.0000'),
-    safetyStock: decimal('safety_stock', { precision: 18, scale: 4 }).default('0.0000'),
-    sourceFile: varchar('source_file', { length: 255 }),
-    sourceSheet: varchar('source_sheet', { length: 100 }),
-    importTime: datetime('import_time').default(sql`CURRENT_TIMESTAMP`),
-    remarks: text('remarks'),
-  },
-  (t) => ({
-    idxCategory: index('idx_category').on(t.category),
-    idxMaterialCode: index('idx_material_code').on(t.materialCode),
-    idxMaterialName: index('idx_material_name').on(t.materialName),
-    idxSupplier: index('idx_supplier').on(t.supplier),
-    pk: primaryKey({ columns: [t.id] }),
-  })
-);
+
 
 export const invMaterialLabel = mysqlTable(
   'inv_material_label',
@@ -523,37 +469,7 @@ export const invOutboundBatchAllocation = mysqlTable(
   })
 );
 
-export const invProductInventory = mysqlTable(
-  'inv_product_inventory',
-  {
-    id: int('id').autoincrement().notNull(),
-    productCode: varchar('product_code', { length: 100 }),
-    productName: varchar('product_name', { length: 255 }),
-    specification: varchar('specification', { length: 255 }),
-    category: varchar('category', { length: 100 }),
-    customer: varchar('customer', { length: 255 }),
-    unit: varchar('unit', { length: 50 }),
-    warehouse: varchar('warehouse', { length: 100 }),
-    location: varchar('location', { length: 100 }),
-    openingBalance: decimal('opening_balance', { precision: 18, scale: 4 }).default('0.0000'),
-    totalIn: decimal('total_in', { precision: 18, scale: 4 }).default('0.0000'),
-    totalOut: decimal('total_out', { precision: 18, scale: 4 }).default('0.0000'),
-    currentBalance: decimal('current_balance', { precision: 18, scale: 4 }).default('0.0000'),
-    batchNo: varchar('batch_no', { length: 100 }),
-    supplier: varchar('supplier', { length: 255 }),
-    sourceFile: varchar('source_file', { length: 255 }),
-    sourceSheet: varchar('source_sheet', { length: 100 }),
-    importTime: datetime('import_time').default(sql`CURRENT_TIMESTAMP`),
-    remarks: text('remarks'),
-  },
-  (t) => ({
-    idxCategory: index('idx_category').on(t.category),
-    idxProductCode: index('idx_product_code').on(t.productCode),
-    idxProductName: index('idx_product_name').on(t.productName),
-    idxWarehouse: index('idx_warehouse').on(t.warehouse),
-    pk: primaryKey({ columns: [t.id] }),
-  })
-);
+
 
 // SKIP-FK (cross-domain): inv_production_inbound.workOrderId -> prod_work_order.id [SET NULL/undefined]
 export const invProductionInbound = mysqlTable(
@@ -574,6 +490,7 @@ export const invProductionInbound = mysqlTable(
     deleted: tinyint('deleted').notNull().default(0),
     createBy: bigint('create_by', { mode: 'number', unsigned: true }),
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    operatorId: bigint('operator_id', { mode: 'number', unsigned: true }), // operator_id
   },
   (t) => ({
     idxWarehouseId: index('idx_warehouse_id').on(t.warehouseId),
@@ -658,6 +575,12 @@ export const invScanLog = mysqlTable(
     operatorName: varchar('operator_name', { length: 50 }),
     scanTime: datetime('scan_time').default(sql`CURRENT_TIMESTAMP`),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    batchNo: varchar('batch_no', { length: 50 }), // 批次号
+    materialName: varchar('material_name', { length: 200 }), // 物料名称
+    qrType: varchar('qr_type', { length: 20 }), // 二维码类型
+    resultMessage: varchar('result_message', { length: 500 }), // 结果描述
+    scanResult: varchar('scan_result', { length: 20 }), // 扫码结果
+    workorderNo: varchar('workorder_no', { length: 50 }), // 工单编号
   },
   (t) => ({
     idxLabelNo: index('idx_label_no').on(t.labelNo),
@@ -741,6 +664,15 @@ export const invStocktakingItem = mysqlTable(
     remark: varchar('remark', { length: 255 }),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    checkBy: bigint('check_by', { mode: 'number', unsigned: true }),
+    diffApproveTime: datetime('diff_approve_time'),
+    diffApprover: bigint('diff_approver', { mode: 'number', unsigned: true }),
+    diffReason: varchar('diff_reason', { length: 255 }),
+    diffStatus: varchar('diff_status', { length: 20 }),
+    difference: decimal('difference', { precision: 18, scale: 4 }).default('0.0000'),
+    parentQrCode: varchar('parent_qr_code', { length: 100 }), // 拆批父件二维码
+    processTime: datetime('process_time'),
+    splitFlag: tinyint('split_flag').default(0), // 是否拆批子件
   },
   (t) => ({
     idxMaterial: index('idx_material').on(t.materialId),
@@ -828,6 +760,9 @@ export const invTransferItem = mysqlTable(
     remark: varchar('remark', { length: 255 }),
     deleted: tinyint('deleted').notNull().default(0),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    batchId: int('batch_id', { unsigned: true }), // 批次ID
+    locationId: bigint('location_id', { mode: 'number', unsigned: true }), // 库位ID
+    originalInboundDate: date('original_inbound_date'), // 原始入库日期
   },
   (t) => ({
     idxBatch: index('idx_batch').on(t.batchNo),
@@ -903,6 +838,8 @@ export const invProductionInboundItem = mysqlTable(
     unit: varchar('unit', { length: 20 }),
     batchNo: varchar('batch_no', { length: 50 }),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    remainingQty: decimal('remaining_qty', { precision: 18, scale: 4 }).default('0.0000'), // remaining_qty
+    remark: varchar('remark', { length: 100 }), // remark
   },
   (t) => ({
     idxInboundId: index('idx_inbound_id').on(t.inboundId),
@@ -934,6 +871,8 @@ export const invSalesOutboundItem = mysqlTable(
     qrCode: varchar('qr_code', { length: 100 }),
     originalInboundDate: date('original_inbound_date'),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    batchInventoryId: bigint('batch_inventory_id', { mode: 'number', unsigned: true }), // batch_inventory_id
+    remark: varchar('remark', { length: 100 }), // remark
   },
   (t) => ({
     idxOutboundId: index('idx_outbound_id').on(t.outboundId),

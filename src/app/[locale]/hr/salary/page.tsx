@@ -488,12 +488,12 @@ export default function HRSalaryPage() {
         {/* 统计卡片 */}
         <StatsCards
           configs={[
-            { key: 'totalEmployees', label: tc('totalEmployees'), icon: Users, ...StatsTheme.blue },
-            { key: 'paidEmployees', label: tc('paidEmployees'), icon: CreditCard, ...StatsTheme.green },
-            { key: 'totalSalary', label: tc('totalSalary'), icon: DollarSign, ...StatsTheme.purple },
-            { key: 'avgSalary', label: tc('avgSalary'), icon: TrendingUp, ...StatsTheme.orange },
-            { key: 'maxSalary', label: tc('maxSalary'), icon: Wallet, ...StatsTheme.cyan },
-            { key: 'minSalary', label: tc('minSalary'), icon: PieChart, ...StatsTheme.red },
+            { key: 'totalEmployees', label: '员工总数', icon: Users, ...StatsTheme.blue },
+            { key: 'paidEmployees', label: '已发薪人数', icon: CreditCard, ...StatsTheme.green },
+            { key: 'totalSalary', label: '工资总额', icon: DollarSign, ...StatsTheme.purple },
+            { key: 'avgSalary', label: '平均工资', icon: TrendingUp, ...StatsTheme.orange },
+            { key: 'maxSalary', label: '最高工资', icon: Wallet, ...StatsTheme.cyan },
+            { key: 'minSalary', label: '最低工资', icon: PieChart, ...StatsTheme.red },
           ]}
           stats={[
             { key: 'totalEmployees', count: stats.totalEmployees },

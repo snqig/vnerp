@@ -40,8 +40,7 @@ interface SparePart {
   id: number;
   part_code: string;
   part_name: string;
-  category: string | null;
-  spec: string | null;
+  specification: string | null;
   unit: string | null;
   stock_quantity: number;
   safety_stock: number;
@@ -65,9 +64,9 @@ export default function EquipmentSparePartPage() {
   const { toast } = useToast();
   const [list, setList] = useState<SparePart[]>([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState<{ totalParts: number; lowStockCount: number; inactiveCount: number }>({ totalParts: 0, lowStockCount: 0, inactiveCount: 0 });
   const [page, setPage] = useState(1);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [filterCategory, setFilterCategory] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<SparePart>>({});
@@ -82,7 +81,6 @@ export default function EquipmentSparePartPage() {
         page: String(page),
         pageSize: '20',
         keyword: searchKeyword,
-        category: filterCategory,
         status: filterStatus,
       });
       const res = await authFetch('/api/equipment/spare-part?' + params);
@@ -90,6 +88,7 @@ export default function EquipmentSparePartPage() {
       if (result.success) {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
+        setStats(result.data.stats || { totalParts: 0, lowStockCount: 0, inactiveCount: 0 });
       }
     } catch {}
   };
@@ -189,17 +188,6 @@ export default function EquipmentSparePartPage() {
                 className="w-36 h-8 text-sm"
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-28 h-8 text-sm">
-                  <SelectValue placeholder={tc('category')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">{tc('all')}</SelectItem>
-                  {categoryOptions.map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger className="w-24 h-8 text-sm">
                   <SelectValue placeholder={tc('status')} />
@@ -221,6 +209,40 @@ export default function EquipmentSparePartPage() {
           </div>
         </div>
 
+        {/* 统计概览 */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-sm text-gray-500">{tc('total')}</div>
+              <div className="text-3xl font-bold mt-1">{stats.totalParts}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-t-4 border-t-red-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">{tc('lowStock')}</span>
+                <span className="text-red-500 text-xl">!</span>
+              </div>
+              <div className="text-3xl font-bold mt-1 text-red-600">{stats.lowStockCount}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-t-4 border-t-gray-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">{ts('k_status_inactive')}</span>
+                <span className="text-gray-500 text-xl">—</span>
+              </div>
+              <div className="text-3xl font-bold mt-1 text-gray-600">{stats.inactiveCount}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-t-4 border-t-blue-500">
+            <CardContent className="p-4">
+              <div className="text-sm text-gray-500">{tc('category')}</div>
+              <div className="text-3xl font-bold mt-1">{categoryOptions.length}</div>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card>
           <CardContent className="p-0">
             <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
@@ -239,8 +261,7 @@ export default function EquipmentSparePartPage() {
                   </TableHead>
                   <TableHead className="text-xs">{tc('code')}</TableHead>
                   <TableHead className="text-xs">{tc('name')}</TableHead>
-                  <TableHead className="text-xs">{tc('category')}</TableHead>
-                  <TableHead className="text-xs">{tc('spec')}</TableHead>
+                  <TableHead className="text-xs">{tc('specification')}</TableHead>
                   <TableHead className="text-xs">{tc('unit')}</TableHead>
                   <TableHead className="text-xs">{tc('stock')}</TableHead>
                   <TableHead className="text-xs">{tc('safetyStock')}</TableHead>
@@ -265,8 +286,7 @@ export default function EquipmentSparePartPage() {
                       </TableCell>
                       <TableCell className="text-xs font-mono">{item.part_code}</TableCell>
                       <TableCell className="text-xs">{item.part_name}</TableCell>
-                      <TableCell className="text-xs">{item.category || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.spec || '-'}</TableCell>
+                      <TableCell className="text-xs">{item.specification || '-'}</TableCell>
                       <TableCell className="text-xs">{item.unit || '-'}</TableCell>
                       <TableCell className="text-xs">{item.stock_quantity}</TableCell>
                       <TableCell className="text-xs">{item.safety_stock}</TableCell>
@@ -302,7 +322,7 @@ export default function EquipmentSparePartPage() {
                 })}
                 {list.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center text-gray-400 py-8">
+                    <TableCell colSpan={10} className="text-center text-gray-400 py-8">
                       {tc('noRecords')}
                     </TableCell>
                   </TableRow>
@@ -348,10 +368,10 @@ export default function EquipmentSparePartPage() {
                 />
               </div>
               <div>
-                <Label>{tc('category')}</Label>
+                <Label>{tc('specification')}</Label>
                 <Select
-                  value={editItem.category || ''}
-                  onValueChange={(v) => setEditItem({ ...editItem, category: v || null })}
+                  value={editItem.specification || ''}
+                  onValueChange={(v) => setEditItem({ ...editItem, specification: v || null })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={tc('select')} />
@@ -362,13 +382,6 @@ export default function EquipmentSparePartPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-              <div>
-                <Label>{tc('spec')}</Label>
-                <Input
-                  value={editItem.spec || ''}
-                  onChange={(e) => setEditItem({ ...editItem, spec: e.target.value })}
-                />
               </div>
               <div>
                 <Label>{tc('unit')}</Label>

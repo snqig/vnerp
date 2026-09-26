@@ -880,6 +880,28 @@ export const POST = withPermission(async (_request: NextRequest) => {
           permission: 'trace:qr:view',
           sort_order: 10,
         },
+        {
+          parent_code: 'warehouse',
+          menu_name: ts('warehouse_batch'),
+          menu_code: 'warehouse_batch',
+          menu_type: 2,
+          icon: null,
+          path: '/warehouse/batch',
+          component: '/warehouse/batch',
+          permission: 'warehouse:batch:*',
+          sort_order: 11,
+        },
+        {
+          parent_code: 'warehouse',
+          menu_name: ts('warehouse_cost'),
+          menu_code: 'warehouse_cost',
+          menu_type: 2,
+          icon: null,
+          path: '/warehouse/cost',
+          component: '/warehouse/cost',
+          permission: 'warehouse:cost:*',
+          sort_order: 12,
+        },
 
         {
           parent_code: 'purchase',

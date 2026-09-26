@@ -151,6 +151,28 @@ export const POST = withPermission(
       return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
     }
 
+    // P0-3（2026-09-26）：validateRequestBody 只挡 undefined/null/''，0 会被当有效值——
+    // 未选仓（warehouseId=0）与 qty=0 的空单此前可直接落库。
+    if (!Array.isArray(body.items) || body.items.length === 0) {
+      return errorResponse(ts('k_15xvt0o'), 400, 400);
+    }
+    const warehouseIdNum = Number(body.warehouseId);
+    if (!Number.isFinite(warehouseIdNum) || warehouseIdNum <= 0) {
+      return errorResponse(ts('k_1hxcz4f'), 400, 400);
+    }
+    for (const item of body.items as DbRow[]) {
+      const qtyNum = Number(item.qty);
+      if (!Number.isFinite(qtyNum) || qtyNum <= 0) {
+        return errorResponse(ts('k_1rxflii'), 400, 400);
+      }
+      const hasMaterial =
+        String(item.materialCode ?? '').trim() !== '' ||
+        String(item.materialName ?? '').trim() !== '';
+      if (!hasMaterial) {
+        return errorResponse(ts('enterMaterialCode'), 400, 400);
+      }
+    }
+
     const {
       orderDate,
       outboundType,

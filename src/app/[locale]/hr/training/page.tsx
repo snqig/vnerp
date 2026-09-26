@@ -205,10 +205,10 @@ export default function TrainingPage() {
         {/* 统计卡片 */}
         <StatsCards
           configs={[
-            { key: 'total', label: t('totalTraining'), icon: GraduationCap, ...StatsTheme.blue },
-            { key: 'completed', label: t('completedTraining'), icon: CheckCircle, ...StatsTheme.green },
-            { key: 'ongoing', label: t('ongoingTraining'), icon: Clock, ...StatsTheme.orange },
-            { key: 'pending', label: t('pendingTraining'), icon: Calendar, ...StatsTheme.purple },
+            { key: 'total', label: '总培训数', icon: GraduationCap, ...StatsTheme.blue },
+            { key: 'completed', label: '已完成培训', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'ongoing', label: '进行中培训', icon: Clock, ...StatsTheme.orange },
+            { key: 'pending', label: '待开始培训', icon: Calendar, ...StatsTheme.purple },
           ]}
           stats={[
             { key: 'total', count: list.length },

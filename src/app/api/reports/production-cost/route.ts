@@ -22,26 +22,33 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const params: SqlValue[] = [];
 
   if (startDate && endDate) {
-    dateFilter = ' AND wo.work_order_date BETWEEN ? AND ?';
+    dateFilter = ' AND wo.plan_start_date BETWEEN ? AND ?';
     params.push(startDate, endDate);
   }
 
   if (groupBy === 'workshop') {
     // 按车间统计
+    //
+    // 修复（原 SQL 与真实库完全对不上，任何请求都 500）：
+    //   - prod_work_order 无 workshop / plan_qty / standard_cost / actual_cost / material_cost 等列
+    //   - status 是 varchar（pending/confirmed/producing/completed/cancelled），不能与数字比较
+    //   - 真实成本列是 total_material_cost / total_labor_cost / total_tool_cost / total_overhead_cost / unit_cost
+    //   - 车间口径用 warehouse_id 关联 inv_warehouse（输出仍名为 workshop，保持前端契约）
     const rows = await query(
       `SELECT
-        wo.workshop,
+        w.warehouse_name as workshop,
         COUNT(*) as work_order_count,
-        COALESCE(SUM(wo.plan_qty), 0) as total_plan_qty,
+        COALESCE(SUM(wo.planned_qty), 0) as total_plan_qty,
         COALESCE(SUM(wo.completed_qty), 0) as total_completed_qty,
-        COALESCE(SUM(wo.standard_cost), 0) as total_standard_cost,
-        COALESCE(SUM(wo.actual_cost), 0) as total_actual_cost,
-        COALESCE(SUM(wo.material_cost), 0) as total_material_cost,
-        COALESCE(SUM(wo.labor_cost), 0) as total_labor_cost,
-        COALESCE(SUM(wo.overhead_cost), 0) as total_overhead_cost
+        COALESCE(SUM(wo.unit_cost * wo.planned_qty), 0) as total_standard_cost,
+        COALESCE(SUM(wo.total_material_cost + wo.total_labor_cost + wo.total_tool_cost + wo.total_overhead_cost), 0) as total_actual_cost,
+        COALESCE(SUM(wo.total_material_cost), 0) as total_material_cost,
+        COALESCE(SUM(wo.total_labor_cost), 0) as total_labor_cost,
+        COALESCE(SUM(wo.total_overhead_cost), 0) as total_overhead_cost
       FROM prod_work_order wo
-      WHERE wo.deleted = 0 AND wo.status >= 2 ${dateFilter}
-      GROUP BY wo.workshop
+      LEFT JOIN inv_warehouse w ON w.id = wo.warehouse_id
+      WHERE wo.deleted = 0 AND wo.status <> 'cancelled' ${dateFilter}
+      GROUP BY w.warehouse_name
       ORDER BY total_actual_cost DESC`,
       params
     );
@@ -88,20 +95,22 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   } else {
     // 按产品统计
+    // 修复：material 表不存在（物料在 inv_material），prod_work_order 也没有 plan_qty /
+    // material_id —— 物料号列是 legacy_material_id；status 是 varchar 不能与数字比较。
     const rows = await query(
       `SELECT
-        wo.material_id,
+        wo.legacy_material_id as material_id,
         m.material_code,
         m.material_name,
         COUNT(*) as work_order_count,
-        COALESCE(SUM(wo.plan_qty), 0) as total_plan_qty,
+        COALESCE(SUM(wo.planned_qty), 0) as total_plan_qty,
         COALESCE(SUM(wo.completed_qty), 0) as total_completed_qty,
-        COALESCE(SUM(wo.standard_cost), 0) as total_standard_cost,
-        COALESCE(SUM(wo.actual_cost), 0) as total_actual_cost
+        COALESCE(SUM(wo.unit_cost * wo.planned_qty), 0) as total_standard_cost,
+        COALESCE(SUM(wo.total_material_cost + wo.total_labor_cost + wo.total_tool_cost + wo.total_overhead_cost), 0) as total_actual_cost
       FROM prod_work_order wo
-      LEFT JOIN material m ON wo.material_id = m.id
-      WHERE wo.deleted = 0 AND wo.status >= 2 ${dateFilter}
-      GROUP BY wo.material_id, m.material_code, m.material_name
+      LEFT JOIN inv_material m ON m.id = wo.legacy_material_id
+      WHERE wo.deleted = 0 AND wo.status <> 'cancelled' ${dateFilter}
+      GROUP BY wo.legacy_material_id, m.material_code, m.material_name
       ORDER BY total_actual_cost DESC
       LIMIT 50`,
       params

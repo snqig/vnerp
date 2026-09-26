@@ -4,10 +4,11 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 /**
- * 设备状态监控 API
+ * 设备状态管理 API（手工录入方式，无硬件接入）
  *
- * GET  /api/equipment/status              — 返回所有设备当前状态 + 统计概览
- * PUT  /api/equipment/status?id=N&status=1 — 更新单台设备运行状态
+ * GET  /api/equipment/status                    — 返回所有设备当前状态 + 统计概览
+ * GET  /api/equipment/status/log?equipmentId=N  — 返回某设备的状态变更历史
+ * PUT  /api/equipment/status                    — 更新单台设备运行状态（写入变更日志）
  *
  * 状态定义（eqp_equipment.current_status）:
  *   1 - 运行
@@ -23,6 +24,21 @@ export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const equipmentId = searchParams.get('equipmentId');
   const currentStatus = searchParams.get('currentStatus');
+
+  // 状态变更历史查询
+  const logOnly = searchParams.get('log');
+  if (logOnly === '1' && equipmentId) {
+    const logRows = await query(
+      `SELECT id, equipment_id, equipment_code, equipment_name,
+              from_status, to_status, operator_id, operator_name, remark, create_time
+       FROM eqp_status_log
+       WHERE equipment_id = ?
+       ORDER BY create_time DESC
+       LIMIT 50`,
+      [Number(equipmentId)]
+    );
+    return successResponse({ list: logRows });
+  }
 
   const conditions: string[] = ['e.deleted = 0'];
   const params: SqlValue[] = [];
@@ -76,33 +92,64 @@ export const GET = withPermission(async (request: NextRequest) => {
   });
 });
 
-// PUT /api/equipment/status?id=N&status=1
+// PUT /api/equipment/status
 export const PUT = withPermission(
-  async (request: NextRequest) => {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+  async (request: NextRequest, userInfo) => {
     const body = await request.json().catch(() => ({}));
-    const status = Number(searchParams.get('status') ?? body.status);
+    const { id, status, remark } = body as { id?: number; status?: number; remark?: string };
 
     if (!id) return errorResponse('缺少设备ID', 400);
-    if (!VALID_STATUS.includes(status)) {
+    const statusNum = Number(status);
+    if (!VALID_STATUS.includes(statusNum)) {
       return errorResponse(`无效的状态值，可选：${VALID_STATUS.join(', ')}`, 400);
     }
 
+    // 查询设备当前状态，用于记录变更日志
     const existRows = await query(
-      'SELECT id, equipment_code, equipment_name FROM eqp_equipment WHERE id = ? AND deleted = 0',
+      'SELECT id, equipment_code, equipment_name, current_status FROM eqp_equipment WHERE id = ? AND deleted = 0',
       [Number(id)]
     );
     if (!existRows || existRows.length === 0) {
       return errorResponse('设备不存在', 404);
     }
 
+    const equipment = existRows[0] as {
+      id: number;
+      equipment_code: string;
+      equipment_name: string;
+      current_status: number | null;
+    };
+
+    const fromStatus = equipment.current_status;
+    if (fromStatus === statusNum) {
+      return successResponse({ id: Number(id), current_status: statusNum }, '设备状态未变化');
+    }
+
+    // 更新设备状态
     await execute(
       'UPDATE eqp_equipment SET current_status = ?, update_time = NOW() WHERE id = ? AND deleted = 0',
-      [status, Number(id)]
+      [statusNum, Number(id)]
     );
 
-    return successResponse({ id: Number(id), current_status: status }, '设备状态已更新');
+    // 写入状态变更日志
+    const operatorName = userInfo?.realName || userInfo?.username || null;
+    await execute(
+      `INSERT INTO eqp_status_log
+       (equipment_id, equipment_code, equipment_name, from_status, to_status, operator_id, operator_name, remark, create_time)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        Number(id),
+        equipment.equipment_code,
+        equipment.equipment_name,
+        fromStatus,
+        statusNum,
+        userInfo?.userId || null,
+        operatorName,
+        remark || null,
+      ]
+    );
+
+    return successResponse({ id: Number(id), current_status: statusNum }, '设备状态已更新');
   },
   { logTitle: '更新设备状态', logType: 'business' }
 );

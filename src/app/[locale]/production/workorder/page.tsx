@@ -515,6 +515,15 @@ export default function WorkOrderPage() {
 
   const handleSaveEdit = async () => {
     if (!editOrder) return;
+    // P1-3 前端守卫：两日期都填时结束不得早于开始（后端 PUT 同口径）
+    if (
+      editForm.plan_start_date &&
+      editForm.plan_end_date &&
+      editForm.plan_end_date < editForm.plan_start_date
+    ) {
+      toast({ title: tc('error'), description: tc('planDateOrderInvalid'), variant: 'destructive' });
+      return;
+    }
     try {
       const res = await authFetch('/api/workorders', {
         method: 'PUT',

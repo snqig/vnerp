@@ -189,16 +189,25 @@ function getChangedFiles() {
 }
 
 const SRC_RE = /\.(ts|tsx|js|jsx)$/;
-const IGNORE_RE = /^(?:node_modules|\.next|messages|locales|scripts|dist|build|\.workbuddy)\//;
+// database/ 一并豁免：迁移与播种脚本里的中文是入库数据（菜单名/描述），不是界面文案，
+// 纳入红线会逼着迁移脚本写英文数据，属于误伤。
+const IGNORE_RE = /^(?:node_modules|\.next|messages|locales|scripts|database|dist|build|\.workbuddy)\//;
 // 生成的 API 错误码→消息映射（i18n 规范来源），等同 messages/，红线豁免
 const GENERATED_I18N_RE = /(?:^|[\\/])api-error-i18n\.ts$/;
+// Windows 下 path.relative 产出的是反斜杠分隔符，而 IGNORE_RE 按 POSIX 书写。
+// 不归一化的话本仓库（Windows 开发机）上所有忽略目录都会静默失效 ——
+// 红线会把 scripts/、database/ 等非源码目录也扫进来，报出一堆无关"新增"。
+function toPosix(p) {
+  return p.replace(/\\/g, '/');
+}
+
 function filterFiles(files) {
   return files
     .map((f) => relative(ROOT, resolve(ROOT, f)))
     .filter(
       (f) =>
         SRC_RE.test(f) &&
-        !IGNORE_RE.test(f) &&
+        !IGNORE_RE.test(toPosix(f)) &&
         !GENERATED_I18N_RE.test(f) &&
         existsSync(join(ROOT, f))
     );

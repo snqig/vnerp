@@ -25,8 +25,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 查询所有激活中的维保计划
   if (searchParams.get('action') === 'due-soon') {
     const rows = await query(
-      `SELECT p.id, p.plan_no, p.equipment_id, p.maintenance_type,
-              p.cycle_type, p.cycle_value, p.plan_date,
+      `SELECT p.id, p.plan_no, p.plan_name, p.equipment_id, p.maintenance_type,
+              p.cycle_type, p.cycle_value, p.plan_date, p.next_execute_date,
               p.status,
               e.equipment_code, e.equipment_name, e.model, e.workshop
        FROM eqp_maintenance_plan p
@@ -94,8 +94,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const total = countRows[0]?.total || 0;
 
   const rows = await query(
-    `SELECT p.id, p.plan_no, p.equipment_id, p.maintenance_type,
-            p.cycle_type, p.cycle_value, p.plan_date,
+    `SELECT p.id, p.plan_no, p.plan_name, p.equipment_id, p.maintenance_type,
+            p.cycle_type, p.cycle_value, p.plan_date, p.next_execute_date,
             p.responsible_id, p.status, p.complete_date,
             p.create_time,
             e.equipment_code, e.equipment_name, e.workshop
@@ -116,6 +116,7 @@ export const POST = withPermission(
     const body = await request.json();
     const {
       equipment_id,
+      plan_name,
       maintenance_type,
       cycle_type,
       cycle_value,
@@ -151,12 +152,13 @@ export const POST = withPermission(
 
     const result = await execute(
       `INSERT INTO eqp_maintenance_plan
-       (plan_no, equipment_id, maintenance_type, cycle_type, cycle_value, plan_date,
+       (plan_no, equipment_id, plan_name, maintenance_type, cycle_type, cycle_value, plan_date,
         responsible_id, status, remark, create_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         planNo,
         Number(equipment_id),
+        plan_name || null,
         maintenance_type || 'routine',
         effectiveCycleType,
         effectiveCycleValue,
@@ -185,6 +187,7 @@ export const PUT = withPermission(
     if (!id) return errorResponse(ts('k_32pxya'), 400, 400);
 
     const allowedFields = [
+      'plan_name',
       'maintenance_type',
       'cycle_type',
       'cycle_value',

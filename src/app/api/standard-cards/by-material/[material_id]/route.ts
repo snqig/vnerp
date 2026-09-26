@@ -84,41 +84,11 @@ export const GET = withPermission(async (request: NextRequest, userInfo, context
 
   let items: DbRow[] = [];
 
-  switch (card.type) {
-    case 'color':
-      items = await query<DbRow>(
-        'SELECT * FROM color_standard_items WHERE standard_card_id = ?',
-        [card.id!]
-      );
-      break;
-    case 'process':
-      items = await query<DbRow>(
-        'SELECT * FROM process_standard_items WHERE standard_card_id = ?',
-        [card.id!]
-      );
-      break;
-    case 'quality':
-      items = await query<DbRow>(
-        'SELECT * FROM quality_standard_items WHERE standard_card_id = ?',
-        [card.id!]
-      );
-      break;
-    case 'comprehensive':
-      const colorItems = await query<DbRow>(
-        'SELECT *, "color" as item_type FROM color_standard_items WHERE standard_card_id = ?',
-        [card.id!]
-      );
-      const processItems = await query<DbRow>(
-        'SELECT *, "process" as item_type FROM process_standard_items WHERE standard_card_id = ?',
-        [card.id!]
-      );
-      const qualityItems = await query<DbRow>(
-        'SELECT *, "quality" as item_type FROM quality_standard_items WHERE standard_card_id = ?',
-        [card.id!]
-      );
-      items = [...colorItems, ...processItems, ...qualityItems];
-      break;
-  }
+  // color_standard_items / process_standard_items / quality_standard_items 三张明细子表在当前库里
+  // 并不存在（早期代码按设想的 schema 写死，运行期必然报 Table doesn't exist → 接口 500）。
+  // 明细字段目前都在 prd_standard_card 这张宽表的列上，所以这里不额外查明细，直接回传主表。
+  // TODO(数据模型)：明细子表落地后再接回 items。
+  items = [];
 
   return successResponse({
     ...card,

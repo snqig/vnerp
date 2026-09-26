@@ -122,6 +122,29 @@ export const POST = withPermission(
       return commonErrors.badRequest(ts('k_fifqlw'));
     }
 
+    // P1-3 明细硬校验：数量必须 >0、物料名称必填。
+    // 此前 `item.quantity || 0` 会把 0/负数静默落库，空物料名的明细行也能建。
+    for (const item of items as DbRow[]) {
+      const qtyNum = Number(item.quantity);
+      if (!Number.isFinite(qtyNum) || qtyNum <= 0) {
+        return commonErrors.badRequest(ts('qtyMustBePositive'));
+      }
+      if (String(item.material_name ?? '').trim() === '') {
+        return commonErrors.badRequest(ts('materialNameRequired'));
+      }
+    }
+
+    // P1-3 交期顺序校验：两日期都传时结束不得早于开始。
+    // 注意不做必填强制 —— 销售订单「一键生成工单」不传交期，须保持兼容。
+    if (
+      plan_start_date &&
+      plan_end_date &&
+      String(plan_end_date).trim() !== '' &&
+      String(plan_end_date) < String(plan_start_date)
+    ) {
+      return commonErrors.badRequest(ts('planDateOrderInvalid'));
+    }
+
     const result = await transaction(async (connection) => {
       const [orderRows] = await connection.execute(
         `SELECT id, order_no, status FROM sal_order WHERE order_no = ? AND deleted = 0 FOR UPDATE`,
@@ -201,8 +224,10 @@ export const POST = withPermission(
 
       if (bom_id) {
         const [bomLines] = await connection.execute(
-          `SELECT material_id, material_name, quantity, unit, scrap_rate 
-         FROM bom_line WHERE bom_id = ? AND deleted = 0`,
+          // 修复：bom_line 没有 quantity / scrap_rate 列，也没有 deleted 列。
+          // 单耗取 usage_qty，损耗率取 loss_rate（两者都在应用层换算回原语义）。
+          `SELECT material_id, material_name, usage_qty as quantity, unit, loss_rate as scrap_rate
+         FROM bom_line WHERE bom_id = ?`,
           [bom_id]
         );
 
@@ -287,6 +312,11 @@ export const PUT = withPermission(
     const woKey = id || work_order_no;
     if (!woKey) {
       return commonErrors.badRequest(ts('k_1g5ryzg'));
+    }
+
+    // P1-3 交期顺序校验：两日期都传非空时结束不得早于开始
+    if (plan_start_date && plan_end_date && String(plan_end_date) < String(plan_start_date)) {
+      return commonErrors.badRequest(ts('planDateOrderInvalid'));
     }
 
     const result = await transaction(async (connection) => {

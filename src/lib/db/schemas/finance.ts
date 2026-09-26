@@ -24,25 +24,25 @@ export const finReceivable = mysqlTable(
     sourceNo: varchar('source_no', { length: 50 }),
     customerId: bigint('customer_id', { mode: 'number', unsigned: true }),
     customerName: varchar('customer_name', { length: 100 }),
-    salesOrderId: bigint('sales_order_id', { mode: 'number', unsigned: true }),
-    salesOrderNo: varchar('sales_order_no', { length: 50 }),
     amount: decimal('amount', { precision: 18, scale: 4 }).default('0.0000'),
     exchangeRate: decimal('exchange_rate', { precision: 18, scale: 4 }).default('1.0000'),
     baseAmount: decimal('base_amount', { precision: 18, scale: 4 }),
     receivedAmount: decimal('received_amount', { precision: 18, scale: 4 }).default('0.0000'),
-    pendingAmount: decimal('pending_amount', { precision: 18, scale: 4 }).default('0.0000'),
     balance: decimal('balance', { precision: 18, scale: 4 }).default('0.0000'),
     currency: varchar('currency', { length: 10 }).default('CNY'),
     dueDate: date('due_date'),
     status: tinyint('status').default(1),
-    invoiceNo: varchar('invoice_no', { length: 50 }),
-    invoiceDate: date('invoice_date'),
     remark: text('remark'),
     createBy: bigint('create_by', { mode: 'number', unsigned: true }),
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
     deleted: tinyint('deleted').default(0),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    orderId: bigint('order_id', { mode: 'number', unsigned: true }), // 关联订单ID
+    orderType: varchar('order_type', { length: 20 }), // 订单类型
+    sourceAmount: decimal('source_amount', { precision: 18, scale: 4 }).default('0.0000'), // 来源金额
+    sourceCurrency: varchar('source_currency', { length: 10 }), // 来源币种
+    sourceId: bigint('source_id', { mode: 'number' }), // 来源单ID
   },
   (table) => ({
     receivableNoIdx: uniqueIndex('uk_receivable_no').on(table.receivableNo),
@@ -81,6 +81,8 @@ export const finPayable = mysqlTable(
     deleted: tinyint('deleted').default(0),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    poId: bigint('po_id', { mode: 'number', unsigned: true }), // 来源采购订单id
+    sourceCurrency: varchar('source_currency', { length: 10 }), // 来源币种
   },
   (table) => ({
     payableNoIdx: uniqueIndex('uk_payable_no').on(table.payableNo),

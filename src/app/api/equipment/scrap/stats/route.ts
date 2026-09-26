@@ -19,9 +19,21 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params.push(startDate, endDate);
     }
 
-    // 总报废数
-    const [totalCount] = await query(
-      `SELECT COUNT(*) as count FROM eqp_scrap WHERE deleted = 0${dateFilter}`,
+    // 待审批：status = 1
+    const [pendingResult] = await query(
+      `SELECT COUNT(*) as count FROM eqp_scrap WHERE deleted = 0 AND status = 1${dateFilter}`,
+      params
+    );
+
+    // 已审批：status = 2
+    const [approvedResult] = await query(
+      `SELECT COUNT(*) as count FROM eqp_scrap WHERE deleted = 0 AND status = 2${dateFilter}`,
+      params
+    );
+
+    // 已报废：status = 3
+    const [scrappedResult] = await query(
+      `SELECT COUNT(*) as count FROM eqp_scrap WHERE deleted = 0 AND status = 3${dateFilter}`,
       params
     );
 
@@ -40,7 +52,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return NextResponse.json({
       success: true,
       data: {
-        totalCount: totalCount?.count || 0,
+        pending: pendingResult?.count || 0,
+        approved: approvedResult?.count || 0,
+        scrapped: scrappedResult?.count || 0,
         monthlyCount: monthlyResult?.count || 0,
         monthlyOriginalValue: Number(valueResult?.total) || 0,
       },

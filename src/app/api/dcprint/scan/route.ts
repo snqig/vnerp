@@ -169,25 +169,28 @@ async function queryMaterialLabel(labelNo: string) {
 }
 
 // 查询工单
+//
+// 修复：work_orders / products 两张表在库里都不存在（工单在 prod_work_order，产品主数据在
+// mdm_product），旧写法在扫任何工单二维码时都会 500。同时 prod_work_order 没有
+// qr_code / workshop / remarks 三列，分别落到 order_no、warehouse_id、remark。
 async function queryWorkOrder(workOrderNo: string) {
   const workOrder = await queryOne(
     `SELECT
       wo.id,
       wo.order_no as orderNo,
-      wo.qr_code as qrCode,
       wo.product_id as productId,
-      p.code as productCode,
-      p.name as productName,
+      p.product_code as productCode,
+      p.product_name as productName,
       p.specification as productSpec,
       wo.quantity,
+      wo.planned_qty,
       wo.plan_start_date as planStartDate,
       wo.plan_end_date as planEndDate,
       wo.status,
-      wo.workshop,
-      wo.remarks,
+      wo.remark as remarks,
       wo.create_time as createTime
-    FROM work_orders wo
-    LEFT JOIN products p ON wo.product_id = p.id
+    FROM prod_work_order wo
+    LEFT JOIN mdm_product p ON p.id = wo.product_id
     WHERE wo.order_no = ? AND wo.deleted = 0`,
     [workOrderNo]
   );

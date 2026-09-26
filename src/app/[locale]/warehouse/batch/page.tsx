@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
@@ -46,6 +46,7 @@ import {
 } from 'lucide-react';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useToast } from '@/hooks/use-toast';
+import { useRowSelection } from '@/lib/useRowSelection';
 
 interface BatchItem {
   id: number;
@@ -58,7 +59,7 @@ interface BatchItem {
   unit_price: number;
   cost_price: number;
   production_date: string | null;
-  expiry_date: string | null;
+  expire_date: string | null;
   supplier_id: number | null;
   supplier_name: string | null;
   status: string;
@@ -76,7 +77,9 @@ export default function BatchPage() {
   const { toast } = useToast();
 
   const [list, setList] = useState<BatchItem[]>([]);
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } = useRowSelection(list, (item) => String(item.id));
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState<any>({});
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [searchBatchNo, setSearchBatchNo] = useState('');
@@ -93,7 +96,7 @@ export default function BatchPage() {
     unit_price: '',
     cost_price: '',
     production_date: '',
-    expiry_date: '',
+    expire_date: '',
     supplier_name: '',
     remark: '',
   });
@@ -153,7 +156,7 @@ export default function BatchPage() {
           unit_price: Number(form.unit_price) || 0,
           cost_price: Number(form.cost_price) || 0,
           production_date: form.production_date || null,
-          expiry_date: form.expiry_date || null,
+          expire_date: form.expire_date || null,
           supplier_name: form.supplier_name || null,
           remark: form.remark || null,
         }),
@@ -171,7 +174,7 @@ export default function BatchPage() {
           unit_price: '',
           cost_price: '',
           production_date: '',
-          expiry_date: '',
+          expire_date: '',
           supplier_name: '',
           remark: '',
         });
@@ -222,7 +225,7 @@ export default function BatchPage() {
   };
 
   const expiryWarningCount = list.filter((b) => {
-    const status = getExpiryStatus(b.expiry_date);
+    const status = getExpiryStatus(b.expire_date);
     return status !== null;
   }).length;
 
@@ -238,8 +241,8 @@ export default function BatchPage() {
           ]}
           stats={[
             { key: 'total', count: total },
-            { key: 'expiring', count: list.filter((b) => { const s = getExpiryStatus(b.expiry_date); return s?.label === t('expiringSoon'); }).length },
-            { key: 'expired', count: list.filter((b) => { const s = getExpiryStatus(b.expiry_date); return s?.label === t('expired'); }).length },
+            { key: 'expiring', count: list.filter((b) => { const s = getExpiryStatus(b.expire_date); return s?.label === t('expiringSoon'); }).length },
+            { key: 'expired', count: list.filter((b) => { const s = getExpiryStatus(b.expire_date); return s?.label === t('expired'); }).length },
             { key: 'available', count: list.filter((b) => b.available_qty > 0 && b.status !== 'frozen').length },
           ]}
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
@@ -365,7 +368,7 @@ export default function BatchPage() {
                   </TableRow>
                 ) : (
                   list.map((item) => {
-                    const expiryStatus = getExpiryStatus(item.expiry_date);
+                    const expiryStatus = getExpiryStatus(item.expire_date);
                     return (
                       <TableRow key={item.id}>
                         <TableCell className="font-mono text-sm">{item.batch_no}</TableCell>
@@ -379,12 +382,12 @@ export default function BatchPage() {
                           {Number(item.available_qty).toLocaleString()}
                         </TableCell>
                         <TableCell className="text-sm font-mono">
-                          ¥{Number(item.cost_price || 0).toFixed(4)}
+                          ¥{Number(item.unit_price || 0).toFixed(4)}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {item.expiry_date ? (
+                          {item.expire_date ? (
                             <div>
-                              <div>{item.expiry_date}</div>
+                              <div>{item.expire_date}</div>
                               {expiryStatus && (
                                 <div className={`text-xs ${expiryStatus.color}`}>
                                   {expiryStatus.label}
@@ -536,7 +539,7 @@ export default function BatchPage() {
                 </div>
                 <div>
                   <span className="text-muted-foreground">{t('expiryDate')}:</span>{' '}
-                  {detailData.expiry_date || '-'}
+                  {detailData.expire_date || '-'}
                 </div>
                 <div>
                   <span className="text-muted-foreground">{tc('status')}:</span>{' '}
@@ -640,8 +643,8 @@ export default function BatchPage() {
                 <Label>{t('expiryDate')}</Label>
                 <Input
                   type="date"
-                  value={form.expiry_date}
-                  onChange={(e) => setForm((f) => ({ ...f, expiry_date: e.target.value }))}
+                  value={form.expire_date}
+                  onChange={(e) => setForm((f) => ({ ...f, expire_date: e.target.value }))}
                 />
               </div>
               <div className="space-y-1 col-span-2">

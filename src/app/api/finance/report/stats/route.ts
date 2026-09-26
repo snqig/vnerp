@@ -2,62 +2,56 @@ import { getTranslations } from 'next-intl/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
+import { currentMonthRange } from '@/lib/date-utils';
 
 // 获取财务报表统计信息
+// 修正说明：
+//   1) `fin_payment` 表不存在，收/付款的真实载体是 fin_receipt_record（收）/ fin_payment_record（付）；
+//      这两张表没有 type 列，收入/支出靠「表本身」区分，不再用 type='in'/'out'；
+//   2) fin_receivable / fin_payable 没有 total_amount 列，金额列为 amount；
+//   3) 不使用 YEAR()/MONTH() 包裹列，改用月份区间。
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Finance');
   try {
-    const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
+    const { start, end } = currentMonthRange();
+    const monthRangeParams = [start, end];
 
-    let dateFilter = '';
-    const params: any[] = [];
-
-    if (startDate && endDate) {
-      dateFilter = ' AND DATE(created_at) BETWEEN ? AND ?';
-      params.push(startDate, endDate);
-    }
-
-    // 本月收入
-    const [incomeResult] = await query(
-      `SELECT COALESCE(SUM(amount), 0) as total FROM fin_payment 
-       WHERE deleted = 0 AND type = 'in' AND YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE())`
+    // 本月收入（收款单）
+    const [incomeRows] = await query(
+      `SELECT COALESCE(SUM(amount), 0) as total FROM fin_receipt_record
+       WHERE deleted = 0 AND receipt_date >= ? AND receipt_date < ?`,
+      monthRangeParams
     );
 
-    // 本月支出
-    const [expenseResult] = await query(
-      `SELECT COALESCE(SUM(amount), 0) as total FROM fin_payment 
-       WHERE deleted = 0 AND type = 'out' AND YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE())`
+    // 本月支出（付款单）
+    const [expenseRows] = await query(
+      `SELECT COALESCE(SUM(amount), 0) as total FROM fin_payment_record
+       WHERE deleted = 0 AND payment_date >= ? AND payment_date < ?`,
+      monthRangeParams
     );
 
     // 应收总额
-    const [receivableResult] = await query(
-      `SELECT COALESCE(SUM(total_amount), 0) as total FROM fin_receivable WHERE deleted = 0 AND status != 3`
+    const [receivableRows] = await query(
+      `SELECT COALESCE(SUM(amount), 0) as total FROM fin_receivable WHERE deleted = 0 AND status != 3`
     );
 
     // 应付总额
-    const [payableResult] = await query(
-      `SELECT COALESCE(SUM(total_amount), 0) as total FROM fin_payable WHERE deleted = 0 AND status != 3`
+    const [payableRows] = await query(
+      `SELECT COALESCE(SUM(amount), 0) as total FROM fin_payable WHERE deleted = 0 AND status != 3`
     );
 
-    // 本月利润
-    const [profitResult] = await query(
-      `SELECT 
-        COALESCE(SUM(CASE WHEN type = 'in' THEN amount ELSE 0 END), 0) - 
-        COALESCE(SUM(CASE WHEN type = 'out' THEN amount ELSE 0 END) as total 
-       FROM fin_payment 
-       WHERE deleted = 0 AND YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE())`
-    );
+    // 本月利润 = 本月收款 − 本月付款
+    const income = Number(incomeRows?.total) || 0;
+    const expense = Number(expenseRows?.total) || 0;
 
     return NextResponse.json({
       success: true,
       data: {
-        monthlyIncome: Number(incomeResult?.total) || 0,
-        monthlyExpense: Number(expenseResult?.total) || 0,
-        receivable: Number(receivableResult?.total) || 0,
-        payable: Number(payableResult?.total) || 0,
-        monthlyProfit: Number(profitResult?.total) || 0,
+        monthlyIncome: income,
+        monthlyExpense: expense,
+        receivable: Number(receivableRows?.total) || 0,
+        payable: Number(payableRows?.total) || 0,
+        monthlyProfit: income - expense,
       },
     });
   } catch (error) {

@@ -39,14 +39,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
     // 已延期
     const [delayedResult] = await query(
-      `SELECT COUNT(*) as count FROM prod_work_order WHERE deleted = 0 AND status IN (1, 2) AND deadline < CURDATE()${dateFilter}`,
+      `SELECT COUNT(*) as count FROM prod_work_order WHERE deleted = 0 AND status IN (1, 2) AND plan_end_date < CURDATE()${dateFilter}`,
       params
     );
 
     // 今日产量（今日完成的工单数量）
     const [todayResult] = await query(
-      `SELECT COUNT(*) as count FROM prod_work_order 
-       WHERE deleted = 0 AND status = 3 AND DATE(updated_at) = CURDATE()`
+      `SELECT COUNT(*) as count FROM prod_work_order
+       WHERE deleted = 0 AND status = 3 AND DATE(update_time) = CURDATE()`
     );
 
     return NextResponse.json({

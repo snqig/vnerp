@@ -70,15 +70,31 @@ export async function autoGenerateRequisition(
 
     const workOrder = workOrderRows[0];
 
-    // 2. 查询BOM明细
-    const bomRows: Loose = await query(
-      `SELECT bd.*, m.material_code, m.material_name, m.unit
-       FROM prd_bom_detail bd
-       LEFT JOIN prd_bom b ON bd.bom_id = b.id
-       LEFT JOIN inv_material m ON bd.material_id = m.id
-       WHERE b.material_id = ? AND b.deleted = 0`,
-      [workOrder.material_id]
-    );
+    // 2. 查询BOM明细：优先工单直接关联的 BOM（prod_work_order.bom_id），
+    //    兜底按产品查——prd_bom.product_id 与 prod_work_order.product_id 同为 mdm_product 空间。
+    //    ⚠ prd_bom 无 material_id 列（幽灵列），且 legacy_material_id 是 inv_material 空间，
+    //    不能与 prd_bom.product_id 直接比较（2026-09-26 P0-1 修复）。
+    let bomRows: Loose = [];
+    if (workOrder.bom_id) {
+      bomRows = await query(
+        `SELECT bd.*, m.material_code, m.material_name, m.unit
+         FROM prd_bom_detail bd
+         LEFT JOIN prd_bom b ON bd.bom_id = b.id
+         LEFT JOIN inv_material m ON bd.material_id = m.id
+         WHERE bd.bom_id = ? AND b.deleted = 0`,
+        [workOrder.bom_id]
+      );
+    }
+    if (bomRows.length === 0 && workOrder.product_id) {
+      bomRows = await query(
+        `SELECT bd.*, m.material_code, m.material_name, m.unit
+         FROM prd_bom_detail bd
+         LEFT JOIN prd_bom b ON bd.bom_id = b.id
+         LEFT JOIN inv_material m ON bd.material_id = m.id
+         WHERE b.product_id = ? AND b.deleted = 0`,
+        [workOrder.product_id]
+      );
+    }
 
     if (bomRows.length === 0) {
       return { success: false, message: '未找到BOM信息，无法生成领料单' };

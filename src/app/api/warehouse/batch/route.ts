@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server';
+﻿import { getTranslations } from 'next-intl/server';
 
 ;
 import { NextRequest } from 'next/server';
@@ -12,6 +12,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query, execute, SqlValue } from '@/lib/db';
 import { numericFilter } from '@/lib/query-filter';
+import { getCacheManager } from '@/lib/cache';
 
 /**
  * 批次/序列号管理 API
@@ -56,6 +57,16 @@ export const GET = withPermission(
         ' AND b.expire_date IS NOT NULL AND b.expire_date <= DATE_ADD(NOW(), INTERVAL 30 DAY) AND b.expire_date > NOW() AND b.quantity > 0';
     }
 
+    const cacheKey = `warehouse:batch:list:${page}:${pageSize}:${materialId || ''}:${warehouseId || ''}:${batchNo}:${expiryWarning}`;
+    const cache = getCacheManager();
+
+    // 先读缓存
+    const cached = await cache.get<{ rows: any[]; total: number }>(cacheKey);
+    if (cached) {
+      const totalPages = Math.ceil(cached.total / pageSize);
+      return paginatedResponse(cached.rows, { page, pageSize, total: cached.total, totalPages, fromCache: true });
+    }
+
     const countRows = await query(
       `SELECT COUNT(*) as total FROM inv_inventory_batch b ${where}`,
       params
@@ -74,6 +85,9 @@ export const GET = withPermission(
        LIMIT ? OFFSET ?`,
       [...params, pageSize, (page - 1) * pageSize]
     );
+
+    // 写入缓存（30秒）
+    await cache.set(cacheKey, { rows, total }, 30);
 
     return paginatedResponse(rows, { page, pageSize, total, totalPages });
   },
@@ -221,3 +235,4 @@ export const PUT = withPermission(
   },
   { errorMessage: '操作失败' }
 );
+

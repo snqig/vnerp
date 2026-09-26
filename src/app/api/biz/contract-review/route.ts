@@ -69,9 +69,15 @@ export const POST = withPermission(async (request: NextRequest) => {
       String(now.getDate()).padStart(2, '0') +
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
+    // 修复：sal_order 上没有 `customer_name` 列（客户名在 crm_customer），
+    // 旧写法会让"合同评审创建"在任何入参下都抛 Unknown column 而整单失败。
+    // 改为 LEFT JOIN crm_customer 取客户名，取不到则回退前端传入值。
     const [orderRows] = await conn.execute(
-      'SELECT id, order_no, customer_id, customer_name, total_amount, delivery_date FROM sal_order WHERE id = ? AND deleted = 0',
-      [order_id]
+      'SELECT so.id, so.order_no, so.customer_id, so.total_amount, so.delivery_date, ' +
+        'COALESCE(c.customer_name, ?) as customer_name ' +
+        'FROM sal_order so LEFT JOIN crm_customer c ON c.id = so.customer_id ' +
+        'WHERE so.id = ? AND so.deleted = 0',
+      [customer_name || null, order_id]
     );
 
     const orderData = orderRows.length > 0 ? orderRows[0] : {};

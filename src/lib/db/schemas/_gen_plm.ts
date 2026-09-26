@@ -14,6 +14,20 @@ export const plmEco = mysqlTable('plm_eco', {
   description: text('description'),
   status: tinyint('status').default(0),
   createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    applicant: varchar('applicant', { length: 100 }), // applicant
+    applyTime: datetime('apply_time'), // apply_time
+    approveTime: datetime('approve_time'), // approve_time
+    approver: varchar('approver', { length: 50 }), // approver
+    changeContent: varchar('change_content', { length: 100 }), // change_content
+    changeReason: varchar('change_reason', { length: 50 }), // change_reason
+    createBy: varchar('create_by', { length: 100 }), // create_by
+    deleted: tinyint('deleted').default(0), // 逻辑删除
+    ecoType: varchar('eco_type', { length: 20 }),
+    impactAnalysis: varchar('impact_analysis', { length: 100 }), // impact_analysis
+    newVersion: varchar('new_version', { length: 100 }), // new_version
+    oldVersion: varchar('old_version', { length: 100 }), // old_version
+    productName: varchar('product_name', { length: 50 }), // product_name
+    remark: varchar('remark', { length: 100 }), // remark
 }, (t) => ({
   pk: primaryKey({ columns: [t.id] }),
 }));
@@ -46,6 +60,9 @@ export const plmProductLifecycle = mysqlTable('plm_product_lifecycle', {
   remark: text('remark'),
   createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
   deleted: tinyint('deleted').default(0),
+    approveTime: datetime('approve_time'), // approve_time
+    approver: varchar('approver', { length: 50 }), // approver
+    createBy: varchar('create_by', { length: 100 }), // create_by
 }, (t) => ({
   pk: primaryKey({ columns: [t.id] }),
 }));

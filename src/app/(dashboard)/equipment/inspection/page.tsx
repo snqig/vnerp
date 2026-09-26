@@ -44,7 +44,7 @@ interface InspectionRecord {
   equipment_name: string | null;
   inspection_type: number | null;
   inspection_date: string;
-  inspector: string | null;
+  inspector_name: string | null;
   temperature: number | null;
   vibration: number | null;
   pressure: number | null;
@@ -59,9 +59,15 @@ interface InspectionRecord {
   create_time: string;
 }
 
-const statusMap: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const resultMap: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   1: { label: '正常', variant: 'default' },
   2: { label: '异常', variant: 'destructive' },
+};
+
+const statusMap: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+  1: { label: '待点检', variant: 'outline' },
+  2: { label: '点检中', variant: 'default' },
+  3: { label: '已完成', variant: 'secondary' },
 };
 
 const inspectionTypeMap: Record<number, string> = {
@@ -77,10 +83,12 @@ export default function EquipmentInspectionPage() {
   const { toast } = useToast();
   const [list, setList] = useState<InspectionRecord[]>([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState<{ totalRecords: number; todayCount: number; abnormalCount: number; pendingCount: number }>({ totalRecords: 0, todayCount: 0, abnormalCount: 0, pendingCount: 0 });
   const [page, setPage] = useState(1);
   const [filterEquipmentId, setFilterEquipmentId] = useState('');
   const [filterType, setFilterType] = useState('');
   const [filterResult, setFilterResult] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<InspectionRecord>>({});
   const [saving, setSaving] = useState(false);
@@ -97,12 +105,14 @@ export default function EquipmentInspectionPage() {
         equipment_id: filterEquipmentId,
         inspection_type: filterType,
         result: filterResult,
+        status: filterStatus,
       });
       const res = await authFetch('/api/equipment/inspection?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
+        setStats(result.data.stats || { totalRecords: 0, todayCount: 0, abnormalCount: 0, pendingCount: 0 });
       }
     } catch {}
   };
@@ -199,7 +209,7 @@ export default function EquipmentInspectionPage() {
   };
 
   const openAdd = () => {
-    setEditItem({ inspection_type: 1, result: 1 });
+    setEditItem({ inspection_type: 1, result: 1, status: 1 });
     setShowDialog(true);
   };
 
@@ -246,8 +256,19 @@ export default function EquipmentInspectionPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">{tc('all')}</SelectItem>
+                  <SelectItem value="1">{resultMap[1]?.label}</SelectItem>
+                  <SelectItem value="2">{resultMap[2]?.label}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-20 h-8 text-sm">
+                  <SelectValue placeholder={tc('status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{tc('all')}</SelectItem>
                   <SelectItem value="1">{statusMap[1]?.label}</SelectItem>
                   <SelectItem value="2">{statusMap[2]?.label}</SelectItem>
+                  <SelectItem value="3">{statusMap[3]?.label}</SelectItem>
                 </SelectContent>
               </Select>
               <Button size="sm" variant="outline" onClick={handleSearch}>
@@ -259,6 +280,43 @@ export default function EquipmentInspectionPage() {
               {ts('k_add_inspection')}
             </Button>
           </div>
+        </div>
+
+        {/* 统计概览 */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-sm text-gray-500">{tc('total')}</div>
+              <div className="text-3xl font-bold mt-1">{stats.totalRecords}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-t-4 border-t-green-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">{ts('k_inspect_title')}</span>
+                <span className="text-green-500 text-xl">✓</span>
+              </div>
+              <div className="text-3xl font-bold mt-1 text-green-600">{stats.todayCount}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-t-4 border-t-red-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">{resultMap[2]?.label || '异常'}</span>
+                <span className="text-red-500 text-xl">!</span>
+              </div>
+              <div className="text-3xl font-bold mt-1 text-red-600">{stats.abnormalCount}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-t-4 border-t-yellow-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">{ts('k_status_pending')}</span>
+                <span className="text-yellow-500 text-xl">◷</span>
+              </div>
+              <div className="text-3xl font-bold mt-1 text-yellow-600">{stats.pendingCount}</div>
+            </CardContent>
+          </Card>
         </div>
 
         <Card>
@@ -283,13 +341,15 @@ export default function EquipmentInspectionPage() {
                   <TableHead className="text-xs">{tc('inspectionDate')}</TableHead>
                   <TableHead className="text-xs">{tc('inspector')}</TableHead>
                   <TableHead className="text-xs">{tc('result')}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
                   <TableHead className="text-xs">{tc('abnormalDesc')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {list.map((item) => {
-                  const st = statusMap[item.result || 1] || statusMap[1];
+                  const rt = resultMap[item.result || 1] || resultMap[1];
+                  const st = statusMap[item.status] || statusMap[1];
                   return (
                     <TableRow key={item.id}>
                       <TableCell>
@@ -307,7 +367,12 @@ export default function EquipmentInspectionPage() {
                       </TableCell>
                       <TableCell className="text-xs">{inspectionTypeMap[item.inspection_type || 1] || '-'}</TableCell>
                       <TableCell className="text-xs">{item.inspection_date || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.inspector || '-'}</TableCell>
+                      <TableCell className="text-xs">{item.inspector_name || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant={rt.variant} className="text-xs">
+                          {rt.label}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <Badge variant={st.variant} className="text-xs">
                           {st.label}
@@ -340,7 +405,7 @@ export default function EquipmentInspectionPage() {
                 })}
                 {list.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-gray-400 py-8">
+                    <TableCell colSpan={9} className="text-center text-gray-400 py-8">
                       {tc('noRecords')}
                     </TableCell>
                   </TableRow>
@@ -424,8 +489,8 @@ export default function EquipmentInspectionPage() {
               <div>
                 <Label>{tc('inspector')}</Label>
                 <Input
-                  value={editItem.inspector || ''}
-                  onChange={(e) => setEditItem({ ...editItem, inspector: e.target.value })}
+                  value={editItem.inspector_name || ''}
+                  onChange={(e) => setEditItem({ ...editItem, inspector_name: e.target.value })}
                 />
               </div>
               <div>
@@ -484,8 +549,24 @@ export default function EquipmentInspectionPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="1">{resultMap[1]?.label}</SelectItem>
+                    <SelectItem value="2">{resultMap[2]?.label}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>{tc('status')}</Label>
+                <Select
+                  value={String(editItem.status || 1)}
+                  onValueChange={(v) => setEditItem({ ...editItem, status: Number(v) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
                     <SelectItem value="1">{statusMap[1]?.label}</SelectItem>
                     <SelectItem value="2">{statusMap[2]?.label}</SelectItem>
+                    <SelectItem value="3">{statusMap[3]?.label}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

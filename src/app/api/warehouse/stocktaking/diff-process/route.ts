@@ -6,6 +6,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query, execute, SqlValue } from '@/lib/db';
+import { recomputeInventorySummary } from '@/lib/inventory-ledger';
 
 /**
  * 盘点差异处理 API

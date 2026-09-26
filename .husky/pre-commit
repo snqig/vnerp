@@ -1,3 +1,16 @@
 node node_modules/lint-staged/bin/lint-staged.js --no-stash &&
 node scripts/verify-codemod-consistency.mjs &&
-node scripts/permission-gate.mjs
+node scripts/permission-gate.mjs &&
+# 权限码词汇表一致性门槛：API_PERMISSIONS / PERMISSION_MODULES / perm.* 文案三处必须同步，
+# 否则会出现「角色页勾不到这个权限」「新增权限码但界面显示 key」。
+# 纯静态解析，不需要连库；脚本自身解析异常时以 exit 2 失败关闭。
+node scripts/validate-permissions.mjs &&
+# 内联 SQL 可执行性门槛：表名/列名与真实库不一致的接口会在运行期 500，
+# 编译期查不出来，只能在提交前用 EXPLAIN 拦。脚本连不上库时以 exit 2 失败关闭。
+node scripts/validate-api-sql.mjs &&
+# 幽灵列门槛（validate:sql-ghost）：上一条的补齐，覆盖 validate-api-sql 的两个盲区 ——
+#   ① 扫描范围：全 src（后者只扫 src/app/api，repositories / services / lib 全漏）
+#   ② 语句类型：INSERT / UPDATE / DELETE（后者只抽 ^(SELECT|WITH)，等于不管写操作）
+# 存量缺陷记录在 scripts/baselines/sql-ghost-baseline.json，只拦新增（含 hash 报告）。
+# 基线刷新：node scripts/validate-sql-ghost.mjs --update-baseline
+node scripts/validate-sql-ghost.mjs

@@ -51,7 +51,34 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     'SELECT i.*, e.equipment_code, e.equipment_name FROM eqp_inspection i LEFT JOIN eqp_equipment e ON i.equipment_id = e.id ' + where + ' ORDER BY i.create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
-  return successResponse({ list: rows, total, page, pageSize });
+
+  // 统计概览
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayRows = await query(
+    'SELECT COUNT(*) as cnt FROM eqp_inspection WHERE deleted = 0 AND inspection_date = ?',
+    [todayStr]
+  );
+  const abnormalRows = await query(
+    'SELECT COUNT(*) as cnt FROM eqp_inspection WHERE deleted = 0 AND result = 2',
+    []
+  );
+  const pendingRows = await query(
+    'SELECT COUNT(*) as cnt FROM eqp_inspection WHERE deleted = 0 AND status = 1',
+    []
+  );
+
+  return successResponse({
+    list: rows,
+    total,
+    page,
+    pageSize,
+    stats: {
+      totalRecords: total,
+      todayCount: todayRows[0]?.cnt || 0,
+      abnormalCount: abnormalRows[0]?.cnt || 0,
+      pendingCount: pendingRows[0]?.cnt || 0,
+    },
+  });
 });
 
 export const POST = withPermission(
@@ -62,7 +89,9 @@ export const POST = withPermission(
       equipment_id,
       inspection_type,
       inspection_date,
-      inspector,
+      inspector_id,
+      inspector_name,
+      items,
       temperature,
       vibration,
       pressure,
@@ -78,13 +107,15 @@ export const POST = withPermission(
     const inspectionNo = generateDocNo(getInspectionPrefix());
 
     const result2 = await execute(
-      'INSERT INTO eqp_inspection (inspection_no, equipment_id, inspection_type, inspection_date, inspector, temperature, vibration, pressure, noise_level, oil_level, belt_tension, result, abnormal_desc, handling_advice) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO eqp_inspection (inspection_no, equipment_id, inspection_type, inspection_date, inspector_id, inspector_name, items, temperature, vibration, pressure, noise_level, oil_level, belt_tension, result, abnormal_desc, handling_advice) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         inspectionNo,
         equipment_id,
         inspection_type || 1,
         inspection_date,
-        inspector || null,
+        inspector_id || null,
+        inspector_name || null,
+        items || '[]',
         temperature != null ? Number(temperature) : null,
         vibration || null,
         pressure != null ? Number(pressure) : null,
@@ -105,7 +136,7 @@ export const PUT = withPermission(
   async (request: NextRequest, _userInfo) => {
     const ts = await getTranslations('Equipment');
     const body = await request.json();
-    const { id, inspection_type, inspector, temperature, vibration, pressure, noise_level, oil_level, belt_tension, result, abnormal_desc, handling_advice, status } = body;
+    const { id, inspection_type, inspector_id, inspector_name, temperature, vibration, pressure, noise_level, oil_level, belt_tension, result, abnormal_desc, handling_advice, status } = body;
 
     const updateFields: string[] = [];
     const updateValues: SqlValue[] = [];
@@ -114,9 +145,13 @@ export const PUT = withPermission(
       updateFields.push('inspection_type = ?');
       updateValues.push(Number(inspection_type));
     }
-    if (inspector !== undefined) {
-      updateFields.push('inspector = ?');
-      updateValues.push(inspector || null);
+    if (inspector_id !== undefined) {
+      updateFields.push('inspector_id = ?');
+      updateValues.push(inspector_id || null);
+    }
+    if (inspector_name !== undefined) {
+      updateFields.push('inspector_name = ?');
+      updateValues.push(inspector_name || null);
     }
     if (temperature !== undefined) {
       updateFields.push('temperature = ?');

@@ -60,6 +60,7 @@ const eslintConfig = defineConfig([
           'locales/',
           'messages/',
           'api-error-i18n.ts', // 生成的 API 错误码→消息映射（i18n 规范来源，等同 messages/）
+          'database/', // 迁移/播种脚本里的中文是**入库数据**（菜单名、描述），不是 UI 文案
         ],
 
         // 忽略注释中的中文

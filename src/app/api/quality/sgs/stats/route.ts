@@ -20,16 +20,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     }
 
     // status: 1=有效 2=过期 3=撤销
-    const [validResult] = await query(
-      `SELECT COUNT(*) as count FROM qms_sgs_cert WHERE deleted = 0 AND status = 1${dateFilter}`,
-      params
-    );
-    const [expiredResult] = await query(
-      `SELECT COUNT(*) as count FROM qms_sgs_cert WHERE deleted = 0 AND status = 2${dateFilter}`,
-      params
-    );
-    const [revokedResult] = await query(
-      `SELECT COUNT(*) as count FROM qms_sgs_cert WHERE deleted = 0 AND status = 3${dateFilter}`,
+    // pending = 待检测（test_result 为空）
+    const [pendingResult] = await query(
+      `SELECT COUNT(*) as count FROM qms_sgs_cert WHERE deleted = 0 AND test_result IS NULL${dateFilter}`,
       params
     );
     const [passedResult] = await query(
@@ -48,9 +41,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return NextResponse.json({
       success: true,
       data: {
-        valid: validResult?.count || 0,
-        expired: expiredResult?.count || 0,
-        revoked: revokedResult?.count || 0,
+        pending: pendingResult?.count || 0,
+        inspecting: 0,
         passed: passedResult?.count || 0,
         failed: failedResult?.count || 0,
         monthlyCount: monthlyResult?.count || 0,

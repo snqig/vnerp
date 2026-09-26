@@ -47,8 +47,8 @@ interface SpareIssue {
   equipment_code: string | null;
   quantity: number;
   issue_date: string;
-  requester: string | null;
-  purpose: string | null;
+  applicant_name: string | null;
+  reason: string | null;
   status: number;
   remark: string | null;
 }
@@ -66,6 +66,7 @@ export default function EquipmentSpareIssuePage() {
   const { toast } = useToast();
   const [list, setList] = useState<SpareIssue[]>([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState<{ totalIssues: number; pendingCount: number; todayCount: number }>({ totalIssues: 0, pendingCount: 0, todayCount: 0 });
   const [page, setPage] = useState(1);
   const [filterEquipmentId, setFilterEquipmentId] = useState('');
   const [filterPartId, setFilterPartId] = useState('');
@@ -93,6 +94,7 @@ export default function EquipmentSpareIssuePage() {
       if (result.success) {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
+        setStats(result.data.stats || { totalIssues: 0, pendingCount: 0, todayCount: 0 });
       }
     } catch {}
   };
@@ -273,6 +275,34 @@ export default function EquipmentSpareIssuePage() {
           </div>
         </div>
 
+        {/* 统计概览 */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-sm text-gray-500">{tc('total')}</div>
+              <div className="text-3xl font-bold mt-1">{stats.totalIssues}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-t-4 border-t-yellow-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">{statusMap[1]?.label || '待审批'}</span>
+                <span className="text-yellow-500 text-xl">◷</span>
+              </div>
+              <div className="text-3xl font-bold mt-1 text-yellow-600">{stats.pendingCount}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-t-4 border-t-green-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">今日发料</span>
+                <span className="text-green-500 text-xl">✓</span>
+              </div>
+              <div className="text-3xl font-bold mt-1 text-green-600">{stats.todayCount}</div>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card>
           <CardContent className="p-0">
             <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
@@ -323,8 +353,8 @@ export default function EquipmentSpareIssuePage() {
                       </TableCell>
                       <TableCell className="text-xs">{item.quantity}</TableCell>
                       <TableCell className="text-xs">{item.issue_date || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.requester || '-'}</TableCell>
-                      <TableCell className="text-xs max-w-32 truncate">{item.purpose || '-'}</TableCell>
+                      <TableCell className="text-xs">{item.applicant_name || '-'}</TableCell>
+                      <TableCell className="text-xs max-w-32 truncate">{item.reason || '-'}</TableCell>
                       <TableCell>
                         <Badge variant={st.variant} className="text-xs">
                           {st.label}
@@ -451,8 +481,8 @@ export default function EquipmentSpareIssuePage() {
               <div>
                 <Label>{tc('requester')}</Label>
                 <Input
-                  value={editItem.requester || ''}
-                  onChange={(e) => setEditItem({ ...editItem, requester: e.target.value })}
+                  value={editItem.applicant_name || ''}
+                  onChange={(e) => setEditItem({ ...editItem, applicant_name: e.target.value })}
                 />
               </div>
               <div>
@@ -475,8 +505,8 @@ export default function EquipmentSpareIssuePage() {
               <div className="col-span-2">
                 <Label>{tc('purpose')}</Label>
                 <Input
-                  value={editItem.purpose || ''}
-                  onChange={(e) => setEditItem({ ...editItem, purpose: e.target.value })}
+                  value={editItem.reason || ''}
+                  onChange={(e) => setEditItem({ ...editItem, reason: e.target.value })}
                 />
               </div>
               <div className="col-span-2">

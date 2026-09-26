@@ -97,6 +97,28 @@ const DB_NAME = process.env.DB_NAME || 'vnerp';
 const args = process.argv.slice(2);
 const withSeed = args.includes('--seed');
 
+/**
+ * 选 schema 文件，优先级：命令行 --schema=<path> > 环境变量 SCHEMA_FILE > 默认。
+ *
+ * 为什么需要换文件
+ * ----------------
+ * 默认的 database/vnerpdacahng_schema.sql 是 2026-07-07 的二手快照（162 张表），
+ * 而真实库有 349 表 + 6 视图 —— 结构只有 prod 的 45%。
+ * 所有用 EXPLAIN 做判定的门禁（`pnpm validate:sql`、`pnpm validate:sql-ghost`）
+ * 在 CI 上都会因此把「引用了缺失表」的语句全部判成缺陷（实测 2000+ 条误报）。
+ * 故 CI 改用 database/ci_schema.sql（mysqldump --no-data 全量导出，含 FK 顺序）。
+ */
+function resolveSchemaPath() {
+  const flag = '--schema=';
+  const fromArg = process.argv.find((a) => a.startsWith(flag))?.slice(flag.length);
+  const chosen = fromArg || process.env.SCHEMA_FILE || 'database/vnerpdacahng_schema.sql';
+  const abs = path.isAbsolute(chosen) ? chosen : path.join(projectRoot, chosen);
+  if (!fs.existsSync(abs)) {
+    throw new Error(`schema 文件不存在: ${abs}（用 --schema=<path> 或 SCHEMA_FILE 指定）`);
+  }
+  return abs;
+}
+
 async function run() {
   console.log(`[setup-db] 目标: ${DB_USER}@${DB_HOST}:${DB_PORT}/${DB_NAME}`);
 
@@ -121,10 +143,8 @@ async function run() {
     console.log(`[setup-db] ✓ 数据库 ${DB_NAME} 已就绪`);
 
     // 3. 执行 schema（逐语句容错，单条失败不中断整体）
-    const schemaPath = path.join(projectRoot, 'database', 'vnerpdacahng_schema.sql');
-    if (!fs.existsSync(schemaPath)) {
-      throw new Error(`schema 文件不存在: ${schemaPath}`);
-    }
+    const schemaPath = resolveSchemaPath();
+    console.log(`[setup-db] schema 文件: ${path.relative(projectRoot, schemaPath)}`);
     let schemaSql = fs.readFileSync(schemaPath, 'utf8');
     // 预处理：移除 CREATE DATABASE / USE；CREATE TABLE → IF NOT EXISTS；
     // utf8mb4_ai_ci → utf8mb4_0900_ai_ci；INSERT → INSERT IGNORE

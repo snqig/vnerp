@@ -7,139 +7,39 @@ import { query, transaction, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withPermission(async (request: NextRequest, _userInfo) => {
-  const ts = await getTranslations('Common');
-  const { searchParams } = new URL(request.url);
-  const sn = searchParams.get('sn');
-  const batchNo = searchParams.get('batchNo');
-  const workorderNo = searchParams.get('workorderNo');
+/**
+ * 产品序列号追溯链
+ *
+ * ⚠️ 数据底座缺失（本次 SQL 可执行性扫描发现）：
+ * 本路由原先把追溯记录写进 `prd_product_trace_link`，但**库中不存在这张表**，
+ * 且全库没有任何表带 `sn` / `material_batch` 列 —— 也就是说「按序列号串起来的
+ * 父子追溯链」这个项目层次的数据模型从未真正落地，GET 必然 500、POST 必然 500。
+ *
+ * 处置（先按「不崩」止血，不擅自发明数据模型）：
+ *   - 对外明确返回 501 Not Implemented，附带原因，而不是让 mysql 的
+ *     "Table doesn't exist" 被统一折叠成 500「操作失败」。
+ *   - 真正落地需要一次方案确认：是复用 qrcode_record（已有 qr_code / batch_no / material_id）
+ *     扩出 sn + parent_sn，还是新建 prd_product_trace_link 并补迁移与种子。
+ *   - 在此之前请把该菜单/入口下线，避免用户点到就报错。
+ */
+const TRACE_NOT_IMPLEMENTED =
+  '产品序列号追溯链尚未落地：库中不存在 prd_product_trace_link 表，也无 sn 列可作为追溯主键';
 
-  if (!sn && !batchNo && !workorderNo) {
-    return errorResponse(ts('k_n38pb6'), 400, 400);
-  }
-
-  let traceLinks: DbRow[] = [];
-
-  if (sn) {
-    traceLinks = (await buildTraceChain(sn)) as DbRow[];
-  } else if (batchNo) {
-    const rows = await query(
-      'SELECT sn FROM prd_product_trace_link WHERE material_batch = ? AND deleted = 0',
-      [batchNo]
-    );
-    if (rows.length > 0) {
-      traceLinks = (await buildTraceChain(rows[0].sn)) as DbRow[];
-    }
-  } else if (workorderNo) {
-    const rows = await query(
-      'SELECT sn FROM prd_product_trace_link WHERE workorder_no = ? AND deleted = 0',
-      [workorderNo]
-    );
-    if (rows.length > 0) {
-      traceLinks = (await buildTraceChain(rows[0].sn)) as DbRow[];
-    }
-  }
-
-  return successResponse({
-    traceLinks,
-    totalLinks: traceLinks.length,
-  });
-});
+export const GET = withPermission(
+  async (_request: NextRequest, _userInfo) => {
+    return errorResponse(TRACE_NOT_IMPLEMENTED, 501, 501);
+  },
+  { errorMessage: '追溯链查询失败' }
+);
 
 export const POST = withPermission(
-  async (request: NextRequest, _userInfo) => {
-  const ts = await getTranslations('Common');
-    const body = await request.json();
-    const {
-      sn,
-      parent_sn,
-      material_batch,
-      workorder_id,
-      workorder_no,
-      material_id,
-      material_code,
-      material_name,
-      supplier_id,
-      supplier_name,
-      inbound_date,
-      inbound_no,
-      inspection_id,
-      inspection_result,
-      trace_level,
-      trace_type,
-    } = body;
-
-    if (!sn) {
-      return errorResponse(ts('k_11kb07b'), 400, 400);
-    }
-
-    const result = await transaction(async (conn) => {
-      const [existing] = await conn.execute(
-        'SELECT id FROM prd_product_trace_link WHERE sn = ? AND material_batch = ? AND deleted = 0',
-        [sn, material_batch || '']
-      );
-
-      if (existing.length > 0) {
-        await conn.execute(
-          `UPDATE prd_product_trace_link SET
-          parent_sn = ?, workorder_id = ?, workorder_no = ?,
-          material_id = ?, material_code = ?, material_name = ?,
-          supplier_id = ?, supplier_name = ?,
-          inbound_date = ?, inbound_no = ?,
-          inspection_id = ?, inspection_result = ?,
-          trace_level = ?, trace_type = ?
-        WHERE id = ?`,
-          [
-            parent_sn || null,
-            workorder_id || null,
-            workorder_no || null,
-            material_id || null,
-            material_code || null,
-            material_name || null,
-            supplier_id || null,
-            supplier_name || null,
-            inbound_date || null,
-            inbound_no || null,
-            inspection_id || null,
-            inspection_result || null,
-            trace_level || 1,
-            trace_type || 'product',
-            existing[0].id,
-          ]
-        );
-        return { id: existing[0].id, sn, updated: true };
-      }
-
-      const insertResult = (await conn.execute<DbResultSetHeader>(
-        `INSERT INTO prd_product_trace_link (sn, parent_sn, material_batch, workorder_id, workorder_no, material_id, material_code, material_name, supplier_id, supplier_name, inbound_date, inbound_no, inspection_id, inspection_result, trace_level, trace_type)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          sn,
-          parent_sn || null,
-          material_batch || null,
-          workorder_id || null,
-          workorder_no || null,
-          material_id || null,
-          material_code || null,
-          material_name || null,
-          supplier_id || null,
-          supplier_name || null,
-          inbound_date || null,
-          inbound_no || null,
-          inspection_id || null,
-          inspection_result || null,
-          trace_level || 1,
-          trace_type || 'product',
-        ]
-      )) as unknown as DbResultSetHeader;
-
-      return { id: insertResult.insertId, sn, updated: false };
-    });
-
-    return successResponse(result, ts('k_17hloy'));
+  async (_request: NextRequest, _userInfo) => {
+    // 见 GET 上方说明：追溯链的数据表不存在，写路径同样未实现（返回 501 而非 500）。
+    return errorResponse(TRACE_NOT_IMPLEMENTED, 501, 501);
   },
-  { logTitle: '创建追溯链记录', logType: 'business' }
+  { errorMessage: '创建追溯链记录失败' }
 );
+
 
 async function buildTraceChain(startSn: string): Promise<unknown[]> {
   const chain: DbRow[] = [];

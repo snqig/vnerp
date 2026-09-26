@@ -56,13 +56,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
+  const countSql = `SELECT COUNT(*) as total FROM ink_opening_record ${whereSql}`;
+  const countResult = (await queryOne(countSql, values)) as DbRow;
+
   const dataSql = `SELECT * FROM ink_opening_record ${whereSql} ORDER BY open_time DESC LIMIT ? OFFSET ?`;
   values.push(pageSize, (page - 1) * pageSize);
-
   const list = await query(dataSql, values);
-
-  const countSql = `SELECT COUNT(*) as total FROM ink_opening_record ${whereSql}`;
-  const countResult = (await queryOne(countSql)) as DbRow;
 
   const summarySql = `SELECT
     COUNT(*) as total_count,

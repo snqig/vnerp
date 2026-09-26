@@ -22,12 +22,10 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
-  CheckCircle,
   XCircle,
   UserCircle,
   UserPlus,
 } from 'lucide-react';
-import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -595,7 +593,6 @@ export default function AttendancePage() {
   const normalRecords = attendanceRecords.filter((r) => r.status === 'normal').length;
   const lateRecords = attendanceRecords.filter((r) => r.status === 'late').length;
   const absentRecords = attendanceRecords.filter((r) => r.status === 'absent').length;
-  const _leaveRecords = attendanceRecords.filter((r) => r.status === 'leave').length;
   const attendanceRate =
     totalRecords > 0 ? Math.round(((totalRecords - absentRecords) / totalRecords) * 100) : 0;
 
@@ -703,22 +700,6 @@ export default function AttendancePage() {
             </Badge>
           )}
         </div>
-
-        <StatsCards
-          configs={[
-            { key: 'expected', label: tc('expectedAttendance'), icon: Calendar, ...StatsTheme.blue },
-            { key: 'normal', label: tc('actualAttendance'), icon: CheckCircle, ...StatsTheme.green },
-            { key: 'leave', label: tc('leaveCount'), icon: XCircle, ...StatsTheme.orange },
-            { key: 'late', label: tc('lateCount'), icon: Clock, ...StatsTheme.red },
-          ]}
-          stats={[
-            { key: 'expected', count: totalRecords },
-            { key: 'normal', count: normalRecords },
-            { key: 'leave', count: _leaveRecords },
-            { key: 'late', count: lateRecords },
-          ]}
-          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
-        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50">

@@ -66,6 +66,26 @@ export const POST = withPermission(
       return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
     }
 
+    // P1-4 硬校验：四个数量列必须 >=0。此前 parseFloat(...) || 0 会把负数静默入库。
+    const qtyFields = ['completed_qty', 'qualified_qty', 'defective_qty', 'scrap_qty'] as const;
+    for (const field of qtyFields) {
+      const raw = body[field];
+      if (raw === undefined || raw === null || raw === '') continue;
+      const num = Number(raw);
+      if (!Number.isFinite(num) || num < 0) {
+        return errorResponse(ts('qtyNonNegative'), 400, 400);
+      }
+    }
+
+    // P1-4 工单存在性：幽灵 work_order_id 的报工此前可直接落库。
+    const workOrder = await queryOne(
+      'SELECT id FROM prod_work_order WHERE id = ? AND deleted = 0',
+      [body.work_order_id]
+    );
+    if (!workOrder) {
+      return errorResponse(ts('k_lmufdi'), 400, 400);
+    }
+
     const result = await transaction(async (conn) => {
       const reportNo = generateDocNo(getWrPrefix());
 

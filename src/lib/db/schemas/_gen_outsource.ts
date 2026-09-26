@@ -57,6 +57,10 @@ export const outsourceOrder = mysqlTable('outsource_order', {
   deleted: tinyint('deleted').default(0),
   createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
   updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    issuedQty: decimal('issued_qty', { precision: 18, scale: 4 }).default('0.0000'), // 已发数量
+    qualifiedQty: decimal('qualified_qty', { precision: 18, scale: 4 }).default('0.0000'), // 合格数量
+    receivedQty: decimal('received_qty', { precision: 18, scale: 4 }).default('0.0000'), // 已收数量
+    settledAmount: decimal('settled_amount', { precision: 18, scale: 2 }).default('0.00'), // 已结算金额
 }, (t) => ({
   pk: primaryKey({ columns: [t.id] }),
   ukOrderNo: uniqueIndex('uk_order_no').on(t.orderNo),
@@ -103,6 +107,7 @@ export const outsourceSettlement = mysqlTable('outsource_settlement', {
   deleted: tinyint('deleted').default(0),
   createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
   updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    paymentDate: datetime('payment_date'), // payment_date
 }, (t) => ({
   pk: primaryKey({ columns: [t.id] }),
   ukSettlementNo: uniqueIndex('uk_settlement_no').on(t.settlementNo),

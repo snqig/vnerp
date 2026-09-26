@@ -67,6 +67,7 @@ export default function EquipmentDocumentPage() {
   const { toast } = useToast();
   const [list, setList] = useState<DocumentRecord[]>([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState<{ typeStats: Record<string, number> }>({ typeStats: {} });
   const [page, setPage] = useState(1);
   const [filterEquipmentId, setFilterEquipmentId] = useState('');
   const [filterDocType, setFilterDocType] = useState('');
@@ -91,6 +92,7 @@ export default function EquipmentDocumentPage() {
       if (result.success) {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
+        setStats(result.data.stats || { typeStats: {} });
       }
     } catch {}
   };
@@ -251,6 +253,24 @@ export default function EquipmentDocumentPage() {
               {ts('k_upload_document')}
             </Button>
           </div>
+        </div>
+
+        {/* 统计概览 */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-sm text-gray-500">{tc('total')}</div>
+              <div className="text-3xl font-bold mt-1">{total}</div>
+            </CardContent>
+          </Card>
+          {Object.entries(docTypeMap).map(([key, val]) => (
+            <Card key={key}>
+              <CardContent className="p-4">
+                <div className="text-sm text-gray-500 truncate">{val.label}</div>
+                <div className="text-3xl font-bold mt-1 text-blue-600">{stats.typeStats[key] || 0}</div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         <Card>

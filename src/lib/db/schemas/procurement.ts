@@ -113,6 +113,12 @@ export const purPurchaseOrderLine = mysqlTable(
     remark: text('remark'),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    isStrictByOrder: tinyint('is_strict_by_order').default(1), // 是否严格按单
+    prId: int('pr_id', { unsigned: true }), // 来源采购申请ID
+    prLineId: int('pr_line_id', { unsigned: true }), // 来源采购申请行ID
+    sourceOrderId: int('source_order_id', { unsigned: true }), // 来源业务订单ID
+    sourceOrderLineId: int('source_order_line_id', { unsigned: true }), // 来源业务订单行ID
+    sourceOrderNo: varchar('source_order_no', { length: 50 }), // 来源业务订单号
   },
   (table) => ({
     poLineIdx: uniqueIndex('uk_po_line').on(table.poId, table.lineNo),
@@ -169,6 +175,7 @@ export const purPurchaseReturn = mysqlTable(
     deleted: tinyint('deleted').default(0),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    baseCurrency: varchar('base_currency', { length: 10 }), // 本位币
   },
   (table) => ({
     returnNoIdx: uniqueIndex('uk_return_no').on(table.returnNo),
@@ -201,8 +208,6 @@ export const purPurchaseReturnLine = mysqlTable(
     batchNo: varchar('batch_no', { length: 100 }),
     reason: varchar('reason', { length: 512 }),
     remark: text('remark'),
-    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
-    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     returnLineIdx: uniqueIndex('uk_return_line').on(table.returnId, table.lineNo),

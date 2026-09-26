@@ -33,6 +33,9 @@ export const bizContractReview = mysqlTable('biz_contract_review', {
   deleted: tinyint('deleted').default(0),
   createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
   updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    finalResult: tinyint('final_result'), // final_result
+    finalReviewer: varchar('final_reviewer', { length: 100 }), // final_reviewer
+    totalAmount: decimal('total_amount', { precision: 18, scale: 4 }).default('0.0000'), // total_amount
 }, (t) => ({
   idxCustomer: index('idx_customer').on(t.customerId),
   idxStatus: index('idx_status').on(t.status),

@@ -105,7 +105,7 @@ export default function InkOpeningPage() {
     scrapped_count: 0,
     overdue_using_count: 0,
   });
-  const [activeStatKey, setActiveStatKey] = useState<string | null>(null);
+  const [activeStatKey, setActiveStatKey] = useState<string | undefined>(undefined);
   const [isOverdueFilter, setIsOverdueFilter] = useState(false);
 
   const [form, setForm] = useState({
@@ -268,7 +268,7 @@ export default function InkOpeningPage() {
 
   const handleStatClick = (key: string) => {
     if (key === 'total') {
-      setActiveStatKey(null);
+      setActiveStatKey(undefined);
       setStatusFilter('all');
       setIsOverdueFilter(false);
     } else if (key === 'valid') {
@@ -294,10 +294,10 @@ export default function InkOpeningPage() {
           activeKey={activeStatKey}
           onCardClick={handleStatClick}
           configs={[
-            { key: 'total', label: ts('dcInkOpeningTotalLabel'), icon: Droplet, ...StatsTheme.blue, description: ts('dcInkOpeningTotalDesc') },
-            { key: 'valid', label: ts('dcInkOpeningValidLabel'), icon: CheckCircle, ...StatsTheme.green, description: ts('dcInkOpeningValidDesc') },
-            { key: 'expired', label: ts('dcInkOpeningExpiredLabel'), icon: AlertTriangle, ...StatsTheme.orange, description: ts('dcInkOpeningExpiredDesc') },
-            { key: 'overdue', label: ts('dcInkOpeningOverdueLabel'), icon: Clock, ...StatsTheme.red, description: ts('dcInkOpeningOverdueDesc') },
+            { key: 'total', label: '总开罐数', icon: Droplet, ...StatsTheme.blue, description: '累计开罐记录' },
+            { key: 'valid', label: '使用中', icon: CheckCircle, ...StatsTheme.green, description: '未过期且在使用' },
+            { key: 'expired', label: '已过期', icon: AlertTriangle, ...StatsTheme.orange, description: '已超过保质期' },
+            { key: 'overdue', label: '即将过期', icon: Clock, ...StatsTheme.red, description: '临近保质期预警' },
           ]}
           stats={[
             { key: 'total', count: summary.total_count },

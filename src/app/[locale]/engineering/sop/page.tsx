@@ -92,10 +92,12 @@ export default function SOPManagementPage() {
   const [page, setPage] = useState(1);
   const [searchProduct, setSearchProduct] = useState('');
   const [searchType, setSearchType] = useState('');
+  // 统计口径与 /api/engineering/sop/stats 返回对齐：
+  // eng_sop 表没有审核状态列，改用 effective_date 生命周期列做「已生效 / 待生效」。
   const [stats, setStats] = useState({
     total: 0,
-    approved: 0,
-    pending: 0,
+    effective: 0,
+    pendingEffective: 0,
     monthlyNew: 0,
     withVersion: 0,
   });
@@ -240,15 +242,15 @@ export default function SOPManagementPage() {
         <StatsCards
           configs={[
             { key: 'total', label: 'SOP总数', icon: FileText, ...StatsTheme.blue },
-            { key: 'approved', label: '已审核', icon: CheckCircle, ...StatsTheme.green },
-            { key: 'pending', label: '待审核', icon: Clock, ...StatsTheme.orange },
+            { key: 'effective', label: '已生效', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'pendingEffective', label: '待生效', icon: Clock, ...StatsTheme.orange },
             { key: 'monthlyNew', label: '本月新增', icon: PlusCircle, ...StatsTheme.cyan },
             { key: 'withVersion', label: '有版本SOP', icon: HistoryIcon, ...StatsTheme.purple },
           ]}
           stats={[
             { key: 'total', count: stats.total },
-            { key: 'approved', count: stats.approved },
-            { key: 'pending', count: stats.pending },
+            { key: 'effective', count: stats.effective },
+            { key: 'pendingEffective', count: stats.pendingEffective },
             { key: 'monthlyNew', count: stats.monthlyNew },
             { key: 'withVersion', count: stats.withVersion },
           ]}

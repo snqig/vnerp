@@ -33,11 +33,11 @@ export const POST = withPermission(
       return commonErrors.notFound(ts('k_10y4j6y'));
     }
 
-    // 查询标准卡的工艺参数明细
-    const standardItems = await query<ProcessStandardItem>(
-      'SELECT * FROM process_standard_items WHERE standard_card_id = ?',
-      [standard_card_id]
-    );
+    // 工艺参数明细表 process_standard_items 在当前库里并不存在（早期代码按设想的 schema 写死，
+    // 运行期必然报 Table doesn't exist → 接口 500）。在明细子表落地之前，偏差检测没有可比对的
+    // 标准值，这里明确返回空表而不是报错，调用方据此把每条实测值判为「无标准可比对」。
+    // TODO(数据模型)：补建 process_standard_items 后接回。
+    const standardItems: ProcessStandardItem[] = [];
 
     // 构建参数映射表
     const paramMap = new Map<string, ProcessStandardItem>();

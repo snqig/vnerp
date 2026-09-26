@@ -77,14 +77,25 @@ async function queryFormulaTrace(batchNo: string) {
       create_time: dispatch.create_time,
     };
 
+    // 修复：库中不存在 ink_formula / ink_formula_item 两张表（该模块早已改为
+    // 「颜色 dcprint_ink_color + 配方版本 dcprint_ink_formula_version + 配方明细 dcprint_ink_formula_item」，
+    // 且版本表用 is_deleted 而非 deleted）。旧写法在任意带 formula_id 的余墨上都会 500。
     if (dispatch.formula_id) {
-      const formulaRows = await query('SELECT * FROM ink_formula WHERE id = ? AND deleted = 0', [
-        dispatch.formula_id,
-      ]);
+      const formulaRows = await query(
+        `SELECT v.id, v.version_no AS formula_no, v.version_name AS formula_name,
+                c.pantone_code, c.color_name, v.total_weight, v.shelf_life_hours
+         FROM dcprint_ink_formula_version v
+         LEFT JOIN dcprint_ink_color c ON c.id = v.color_id
+         WHERE v.id = ? AND v.is_deleted = 0`,
+        [dispatch.formula_id]
+      );
       if (formulaRows.length > 0) {
         const formula = formulaRows[0];
         const items = await query(
-          'SELECT * FROM ink_formula_item WHERE formula_id = ? AND deleted = 0 ORDER BY sort_order',
+          `SELECT material_name AS ink_name, material_code AS ink_code, brand,
+                  ratio AS ratio_percent, weight, is_base, add_order AS sort_order
+           FROM dcprint_ink_formula_item
+           WHERE version_id = ? ORDER BY sort`,
           [formula.id]
         );
 
@@ -93,7 +104,7 @@ async function queryFormulaTrace(batchNo: string) {
           formula_name: formula.formula_name,
           pantone_code: formula.pantone_code,
           color_name: formula.color_name,
-          ink_type: formula.ink_type,
+          ink_type: formula.process_note ?? null,
           total_weight: formula.total_weight,
           shelf_life_hours: formula.shelf_life_hours,
           items: items.map((item: DbRow) => ({
@@ -185,17 +196,23 @@ async function queryProcessGuide(batchNo: string) {
         }
       }
 
+      // 修复：eng_standard_card 表不存在，标准卡统一在 prd_standard_card；
+      // 该表没有 printing_params / quality_standard 两个 JSON 列，
+      // 用真实列 standard_usage（标准用量）与 tolerance（公差）承载同样的展示语义。
       if (wo.standard_card_id) {
-        const scRows = await query('SELECT * FROM eng_standard_card WHERE id = ? AND deleted = 0', [
-          wo.standard_card_id,
-        ]);
+        const scRows = await query(
+          'SELECT card_no, product_name, version, standard_usage, tolerance, notes FROM prd_standard_card WHERE id = ? AND deleted = 0',
+          [wo.standard_card_id]
+        );
         if (scRows.length > 0) {
+          const sc = scRows[0];
           guide.sop = {
-            card_no: scRows[0].card_no,
-            product_name: scRows[0].product_name,
-            printing_params: scRows[0].printing_params,
-            quality_standard: scRows[0].quality_standard,
-            notes: scRows[0].notes,
+            card_no: sc.card_no,
+            version: sc.version,
+            product_name: sc.product_name,
+            printing_params: sc.standard_usage,
+            quality_standard: sc.tolerance,
+            notes: sc.notes,
           };
         }
       }

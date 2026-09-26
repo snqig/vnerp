@@ -53,6 +53,7 @@ export const dcprintSampleProcessCard = mysqlTable(
     updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
     deleted: tinyint('deleted').notNull().default(0),
+    diagramUrl: varchar('diagram_url', { length: 500 }), // 工艺图示URL
   },
   (table) => ({
     sampleNoIdx: uniqueIndex('uk_sample_no').on(table.sampleNo),
@@ -128,34 +129,12 @@ export const sampleOrder = mysqlTable(
   'sal_sample_order',
   {
     id: int('id', { unsigned: true }).autoincrement().primaryKey(),
-    sampleNo: varchar('sample_no', { length: 50 }).notNull(),
-    orderMonth: int('order_month'),
     orderDate: date('order_date').notNull(),
-    sampleType: varchar('sample_type', { length: 50 }),
     customerId: bigint('customer_id', { mode: 'number', unsigned: true }),
     customerName: varchar('customer_name', { length: 200 }),
-    printMethod: varchar('print_method', { length: 100 }),
-    colorSequence: varchar('color_sequence', { length: 50 }),
     productName: varchar('product_name', { length: 200 }),
-    materialCode: varchar('material_code', { length: 100 }),
     sizeSpec: varchar('size_spec', { length: 100 }),
-    materialDesc: text('material_desc'),
-    sampleOrderNo: varchar('sample_order_no', { length: 100 }),
-    requiredDate: date('required_date'),
-    progressStatus: varchar('progress_status', { length: 100 }),
-    isConfirmed: tinyint('is_confirmed').default(0),
-    isUrgent: tinyint('is_urgent').default(0),
-    isProduceTogether: tinyint('is_produce_together').default(0),
     quantity: int('quantity'),
-    progressDetail: varchar('progress_detail', { length: 200 }),
-    sampleCount: int('sample_count').default(1),
-    sampleReason: varchar('sample_reason', { length: 200 }),
-    orderTracker: varchar('order_tracker', { length: 100 }),
-    providedMaterial: varchar('provided_material', { length: 100 }),
-    receiveTime: datetime('receive_time'),
-    mylarInfo: varchar('mylar_info', { length: 200 }),
-    sampleStock: varchar('sample_stock', { length: 200 }),
-    customerConfirm: varchar('customer_confirm', { length: 200 }),
     processCardId: bigint('process_card_id', { mode: 'number', unsigned: true }),
     workOrderId: bigint('work_order_id', { mode: 'number', unsigned: true }),
     salesOrderId: bigint('sales_order_id', { mode: 'number', unsigned: true }),
@@ -163,75 +142,41 @@ export const sampleOrder = mysqlTable(
     status: tinyint('status').default(0),
     createBy: bigint('create_by', { mode: 'number', unsigned: true }),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
-    updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
     deleted: tinyint('deleted').default(0),
+    actualDeliveryDate: date('actual_delivery_date'), // 实际交付日期
+    convertedAt: datetime('converted_at'), // 转大货时间
+    convertedBy: bigint('converted_by', { mode: 'number', unsigned: true }), // 转大货操作人
+    customerRequireDate: date('customer_require_date'), // 客户需求日期
+    deliveryDate: date('delivery_date'), // 交付日期
+    deliveryStatus: varchar('delivery_status', { length: 20 }), // 交付状态
+    feeCharged: tinyint('fee_charged').default(0), // 是否收取打样费: 0-否 1-是
+    feeDeducted: tinyint('fee_deducted').default(0), // 打样费是否已抵扣: 0-否 1-是
+    feeDeductible: tinyint('fee_deductible').default(0), // 打样费是否可抵扣大货: 0-否 1-是
+    materialNo: varchar('material_no', { length: 50 }), // 物料编号
+    materialSpec: varchar('material_spec', { length: 200 }), // 材料规格
+    notifyDate: date('notify_date'), // 通知日期
+    orderNo: varchar('order_no', { length: 50 }), // 打样订单号
+    parentVersionId: bigint('parent_version_id', { mode: 'number', unsigned: true }), // 父版本打样单ID
+    sampleFee: decimal('sample_fee', { precision: 18, scale: 4 }).default('0.0000'), // 打样费用
+    sampleVersion: int('sample_version').default(1), // 打样版本号(支持多轮改样)
+    specification: varchar('specification', { length: 200 }), // 规格型号
+    version: varchar('version', { length: 20 }), // 版本
   },
   (table) => ({
-    sampleNoIdx: index('idx_sample_no').on(table.sampleNo),
     customerIdx: index('idx_customer').on(table.customerName),
     orderDateIdx: index('idx_order_date').on(table.orderDate),
     statusIdx: index('idx_status').on(table.status),
-    sampleTypeIdx: index('idx_sample_type').on(table.sampleType),
     processCardIdx: index('idx_process_card').on(table.processCardId),
     workOrderIdx: index('idx_work_order').on(table.workOrderId),
   })
 );
 
-export const salSampleFeedback = mysqlTable(
-  'sal_sample_feedback',
-  {
-    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
-    sampleOrderId: bigint('sample_order_id', { mode: 'number', unsigned: true }).notNull(),
-    round: int('round').notNull().default(1),
-    feedbackContent: text('feedback_content'),
-    modificationRequirements: text('modification_requirements'),
-    confirmationStatus: varchar('confirmation_status', { length: 20 }).default('pending'),
-    feedbackBy: varchar('feedback_by', { length: 100 }),
-    feedbackTime: datetime('feedback_time'),
-    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
-    deleted: tinyint('deleted').default(0),
-  },
-  (table) => ({
-    sampleOrderIdx: index('idx_sample_order').on(table.sampleOrderId),
-    roundIdx: index('idx_round').on(table.sampleOrderId, table.round),
-  })
-);
 
-export const salSampleQuotation = mysqlTable(
-  'sal_sample_quotation',
-  {
-    id: bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey(),
-    sampleOrderId: bigint('sample_order_id', { mode: 'number', unsigned: true }).notNull(),
-    quotationNo: varchar('quotation_no', { length: 50 }).notNull(),
-    version: int('version').notNull().default(1),
-    materialCost: decimal('material_cost', { precision: 14, scale: 4 }).default('0.0000'),
-    laborCost: decimal('labor_cost', { precision: 14, scale: 4 }).default('0.0000'),
-    toolCost: decimal('tool_cost', { precision: 14, scale: 4 }).default('0.0000'),
-    overheadCost: decimal('overhead_cost', { precision: 14, scale: 4 }).default('0.0000'),
-    totalCost: decimal('total_cost', { precision: 14, scale: 4 }).default('0.0000'),
-    currency: varchar('currency', { length: 10 }).default('CNY'),
-    exchangeRate: decimal('exchange_rate', { precision: 18, scale: 4 }).default('1.0000'),
-    profitRate: decimal('profit_rate', { precision: 6, scale: 2 }).default('20.00'),
-    quotedPrice: decimal('quoted_price', { precision: 14, scale: 4 }).default('0.0000'),
-    status: tinyint('status').default(1),
-    validUntil: date('valid_until'),
-    remark: text('remark'),
-    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
-    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
-    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
-    deleted: tinyint('deleted').default(0),
-  },
-  (table) => ({
-    sampleOrderIdx: index('idx_sample_order').on(table.sampleOrderId),
-    quotationNoIdx: uniqueIndex('uk_quotation_no').on(table.quotationNo),
-    statusIdx: index('idx_quotation_status').on(table.status),
-  })
-);
+
+
 
 export type DcprintSampleProcessCard = typeof dcprintSampleProcessCard.$inferSelect;
 export type DcprintSampleProcessItem = typeof dcprintSampleProcessItem.$inferSelect;
 export type DcprintSampleProcessStep = typeof dcprintSampleProcessStep.$inferSelect;
 export type SampleOrder = typeof sampleOrder.$inferSelect;
-export type SalSampleFeedback = typeof salSampleFeedback.$inferSelect;
-export type SalSampleQuotation = typeof salSampleQuotation.$inferSelect;

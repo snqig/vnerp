@@ -2276,8 +2276,10 @@ CREATE TABLE `prd_material_issue_item` (
   `unit` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '单位',
   `batch_no` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '批次号',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=103 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='领料明细';
+  `original_inbound_date` date DEFAULT NULL COMMENT '原始入库日期',
+  PRIMARY KEY (`id`),
+  KEY `idx_material_issue_item_material` (`material_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=597 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='领料明细'
 
 -- 生产退料单
 CREATE TABLE `prd_material_return` (
@@ -2702,15 +2704,25 @@ CREATE TABLE `prd_work_report` (
   `first_piece_status` tinyint DEFAULT NULL COMMENT '首件签样: 1-待签样, 2-已签样, 3-不合格',
   `first_piece_inspector` varchar(50) DEFAULT NULL COMMENT '首件签样人',
   `remark` text COMMENT '备注',
+  `tool_id` bigint unsigned DEFAULT NULL COMMENT '关联刀模工装ID（dcprint_tool.id）',
+  `screen_plate_id` bigint unsigned DEFAULT NULL COMMENT '关联网版工装ID（dcprint_tool.id）',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
   `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted` tinyint DEFAULT '0',
+  `equipment_name` varchar(100) DEFAULT NULL COMMENT '设备名称',
+  `shift` varchar(20) DEFAULT NULL COMMENT '班次',
+  `defect_reason` varchar(500) DEFAULT NULL COMMENT '缺陷原因',
+  `report_date` date DEFAULT NULL COMMENT '报工日期',
+  `status` tinyint NOT NULL DEFAULT '1' COMMENT '状态 1草稿 2已审核 3已取消',
+  `create_by` bigint unsigned DEFAULT NULL COMMENT '创建人ID',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_report_no` (`report_no`),
   KEY `idx_work_order` (`work_order_id`),
   KEY `idx_operator` (`operator_id`),
-  KEY `idx_create_time` (`create_time`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='生产报工表';
+  KEY `idx_create_time` (`create_time`),
+  KEY `idx_tool_id` (`tool_id`),
+  KEY `idx_screen_plate_id` (`screen_plate_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=205 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='生产报工表'
 
 -- 生产工单主表
 CREATE TABLE `prod_work_order` (
@@ -3420,31 +3432,27 @@ CREATE TABLE `sal_order_detail` (
   `remark` varchar(255) DEFAULT NULL COMMENT '备注',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
   `deleted` tinyint NOT NULL DEFAULT '0' COMMENT '删除标记',
+  `base_unit_price` decimal(18,4) DEFAULT NULL COMMENT '本币单价',
+  `base_amount` decimal(18,4) DEFAULT NULL COMMENT '本币金额',
+  `base_tax_amount` decimal(18,4) DEFAULT NULL COMMENT '本币税额',
+  `base_line_total` decimal(18,4) DEFAULT NULL COMMENT '本价合计（漂移脚本漏项）',
+  `shipped_qty` decimal(18,4) NOT NULL DEFAULT '0.0000' COMMENT '已发货数量',
+  `material_code` varchar(50) DEFAULT NULL COMMENT '物料编码',
+  `specification` varchar(255) DEFAULT NULL COMMENT '规格',
   PRIMARY KEY (`id`),
   KEY `idx_material_name` (`material_name`),
   KEY `fk_sal_order_detail_order` (`order_id`),
   KEY `fk_sal_order_detail_material` (`material_id`),
   CONSTRAINT `fk_sal_order_detail_material` FOREIGN KEY (`material_id`) REFERENCES `inv_material` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_sal_order_detail_order` FOREIGN KEY (`order_id`) REFERENCES `sal_order` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='销售订单明细表';
+) ENGINE=InnoDB AUTO_INCREMENT=160 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='销售订单明细表'
 
 -- 销售订单明细表(API)
 CREATE TABLE `sal_order_item` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `order_id` bigint unsigned NOT NULL COMMENT '订单ID',
   `material_name` varchar(200) DEFAULT NULL COMMENT '物料名称',
-  `quantity` decimal(14,3) DEFAULT '0.000' COMMENT '数量',
-  `unit` varchar(20) DEFAULT NULL COMMENT '单位',
-  `unit_price` decimal(14,4) DEFAULT '0.0000' COMMENT '单价',
-  `total_price` decimal(14,2) DEFAULT '0.00' COMMENT '总价',
-  `remark` text COMMENT '备注',
-  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_order` (`order_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='销售订单明细表(API)';
-
--- 销售对账表
-CREATE TABLE `sal_reconciliation` (
+  `quantity` decimal(14,3) DEFAULT 'CREATE TABLE `sal_reconciliation` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `reconciliation_no` varchar(50) NOT NULL COMMENT '对账单号',
   `customer_id` bigint unsigned NOT NULL COMMENT '客户ID',
@@ -3467,6 +3475,21 @@ CREATE TABLE `sal_reconciliation` (
   `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `create_by` bigint unsigned DEFAULT NULL,
   `deleted` tinyint NOT NULL DEFAULT '0' COMMENT '软删除: 0-正常, 1-已删除',
+  `currency` varchar(10) NOT NULL DEFAULT 'CNY' COMMENT '币种',
+  `exchange_rate` decimal(18,4) NOT NULL DEFAULT '1.0000' COMMENT '汇率',
+  `base_delivery_amount` decimal(18,4) NOT NULL DEFAULT '0.0000' COMMENT '本币送货金额',
+  `base_return_amount` decimal(18,4) NOT NULL DEFAULT '0.0000' COMMENT '本币退货金额',
+  `base_net_amount` decimal(18,4) NOT NULL DEFAULT '0.0000' COMMENT '本币净额',
+  `base_discount_amount` decimal(18,4) NOT NULL DEFAULT '0.0000' COMMENT '本币折扣额',
+  `base_received_amount` decimal(18,4) NOT NULL DEFAULT '0.0000' COMMENT '本币已收金额',
+  `base_balance_amount` decimal(18,4) NOT NULL DEFAULT '0.0000' COMMENT '本币余额',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_reconciliation_no` (`reconciliation_no`),
+  KEY `idx_customer` (`customer_id`),
+  KEY `idx_period` (`period_start`,`period_end`),
+  KEY `idx_status` (`status`),
+  CONSTRAINT `fk_sal_recon_customer` FOREIGN KEY (`customer_id`) REFERENCES `crm_customer` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='销售对账表'常, 1-已删除',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_reconciliation_no` (`reconciliation_no`),
   KEY `idx_customer` (`customer_id`),
@@ -3818,29 +3841,41 @@ CREATE TABLE `sys_department` (
 CREATE TABLE `sys_dict_data` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '字典数据ID',
   `dict_type_id` bigint unsigned NOT NULL COMMENT '字典类型ID',
-  `dict_label` varchar(50) NOT NULL COMMENT '字典标签',
-  `dict_value` varchar(100) NOT NULL COMMENT '字典键值',
-  `sort_order` int DEFAULT '0' COMMENT '排序序号',
-  `status` tinyint DEFAULT '1' COMMENT '状态: 0-禁用, 1-启用',
-  `remark` varchar(255) DEFAULT NULL COMMENT '备注',
-  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `create_by` bigint unsigned DEFAULT NULL COMMENT '创建人ID',
-  `update_by` bigint unsigned DEFAULT NULL COMMENT '更新人ID',
-  `deleted` tinyint NOT NULL DEFAULT '0' COMMENT '软删除: 0-正常, 1-已删除',
+  `dict_label` varchar(CREATE TABLE `sys_employee` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `employee_no` varchar(50) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `gender` int DEFAULT '1',
+  `age` int DEFAULT NULL,
+  `id_card` varchar(20) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `dept_id` int DEFAULT NULL,
+  `dept_name` varchar(100) DEFAULT NULL,
+  `section` varchar(100) DEFAULT NULL,
+  `role_id` int DEFAULT NULL,
+  `role_name` varchar(100) DEFAULT NULL,
+  `position` varchar(100) DEFAULT NULL,
+  `entry_date` date DEFAULT NULL,
+  `birth_date` date DEFAULT NULL,
+  `native_place` varchar(100) DEFAULT NULL,
+  `home_address` varchar(255) DEFAULT NULL,
+  `current_address` varchar(255) DEFAULT NULL,
+  `birth_month` varchar(10) DEFAULT NULL,
+  `id_card_expiry` date DEFAULT NULL,
+  `education` varchar(50) DEFAULT NULL,
+  `remark` text,
+  `status` int DEFAULT '1',
+  `photo` varchar(500) DEFAULT NULL,
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint NOT NULL DEFAULT '0' COMMENT '软删除',
+  `bank_account` varchar(50) DEFAULT NULL COMMENT '银行账号',
+  `emergency_contact` varchar(50) DEFAULT NULL COMMENT '紧急联系人',
+  `emergency_phone` varchar(20) DEFAULT NULL COMMENT '紧急联系电话',
   PRIMARY KEY (`id`),
-  KEY `idx_dict_type` (`dict_type_id`),
-  KEY `idx_status` (`status`),
-  CONSTRAINT `fk_dict_data_type` FOREIGN KEY (`dict_type_id`) REFERENCES `sys_dict_type` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=67 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='字典数据表';
-
--- 字典类型表
-CREATE TABLE `sys_dict_type` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '字典类型ID',
-  `dict_name` varchar(50) NOT NULL COMMENT '字典名称',
-  `dict_code` varchar(50) NOT NULL COMMENT '字典编码',
-  `description` varchar(255) DEFAULT NULL COMMENT '描述',
-  `status` tinyint DEFAULT '1' COMMENT '状态: 0-禁用, 1-启用',
+  UNIQUE KEY `uk_employee_no` (`employee_no`)
+) ENGINE=InnoDB AUTO_INCREMENT=1012 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci状态: 0-禁用, 1-启用',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `create_by` bigint unsigned DEFAULT NULL COMMENT '创建人ID',

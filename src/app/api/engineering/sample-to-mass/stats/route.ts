@@ -15,7 +15,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const params: any[] = [];
 
     if (startDate && endDate) {
-      dateFilter = ' AND DATE(created_at) BETWEEN ? AND ?';
+      dateFilter = ' AND DATE(create_time) BETWEEN ? AND ?';
       params.push(startDate, endDate);
     }
 
@@ -40,7 +40,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     // 本月转产数
     const [monthlyResult] = await query(
       `SELECT COUNT(*) as count FROM eng_sample_to_mass 
-       WHERE deleted = 0 AND YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE())`
+       WHERE deleted = 0 AND YEAR(create_time) = YEAR(CURDATE()) AND MONTH(create_time) = MONTH(CURDATE())`
     );
 
     // 转产成功率

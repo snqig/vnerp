@@ -83,11 +83,25 @@ export function calculateInkConsumption(
  * 获取油墨配方信息
  */
 export async function getInkFormula(inkFormulaId: number): Promise<Loose> {
+  // 原查询指向 prd_ink_formula——该表从未在库中存在（2026-09-23 清理脚本误删清单里没有它，
+  // 它是更早的一次「按表名猜结构」留下的幽灵引用，跑下去必然 ER_NO_SUCH_TABLE）。
+  // 真实油墨域是「色号 dcprint_ink_color + 配方版本 dcprint_ink_formula_version + 明细 _item」。
+  // 注意：物理属性列 ink_density / default_thickness / default_loss_rate / 单价 在全库均无对应列，
+  // 这里不编造映射，保持 undefined，由 calculateMultiColorInkConsumption 里的既有兜底接管。
   const rows: Loose = await query(
-    `SELECT id, formula_name, formula_code, ink_type, color_name, color_code,
-            ink_density, default_thickness, default_loss_rate, unit_price, unit
-     FROM prd_ink_formula
-     WHERE id = ? AND deleted = 0`,
+    `SELECT
+       v.id,
+       COALESCE(v.version_name, v.version_no) AS formula_name,
+       v.version_no   AS formula_code,
+       v.unit,
+       v.theoretical_cost,
+       v.status,
+       c.color_name,
+       c.color_code,
+       c.base_ink_type AS ink_type
+     FROM dcprint_ink_formula_version v
+     LEFT JOIN dcprint_ink_color c ON v.color_id = c.id
+     WHERE v.id = ? AND v.is_deleted = 0`,
     [inkFormulaId]
   );
   return rows[0] || null;
@@ -115,6 +129,14 @@ export async function calculateMultiColorInkConsumption(
     const lossRate =
       formula.default_loss_rate ??
       CalcParamService.getCachedDecimal('printing.default_loss_rate', 0.15);
+    // 全库没有油墨单价列（原 prd_ink_formula.unit_price 是幽灵引用）。
+    // 这里不臆造来源，按 0 计但不是静默 0——告警出来，避免「成本一律 0」被当成真实结果。
+    if (!formula.unit_price) {
+      secureLog('warn', '油墨配方缺单价，该色成本按 0 计', {
+        inkFormulaId: seq.inkFormulaId,
+        seqNo: seq.seqNo,
+      });
+    }
     const unitPrice = formula.unit_price || 0;
 
     const theoreticalConsumption = calculateInkConsumption(
@@ -344,11 +366,16 @@ export async function createMultiColorWorkOrder(
         const plates = await findSuitableScreenPlate(seq.colorName, seq.meshCount);
         const selectedPlate = plates.length > 0 ? plates[0] : null;
 
-        // 查找油墨配方
+        // 查找油墨配方：按颜色名匹配色号，再取其配方版本。
+        // 生效版本(status=2)优先，其次按创建时间取最新——不用「只看 status=2」，
+        // 因为存量里 64 个版本只有 1 个是 status=2，那样几乎必然匹配不到。
         const inkRows: Loose = await query(
-          `SELECT id FROM prd_ink_formula
-           WHERE color_name = ? AND deleted = 0
-           ORDER BY create_time DESC LIMIT 1`,
+          `SELECT v.id
+           FROM dcprint_ink_formula_version v
+           JOIN dcprint_ink_color c ON v.color_id = c.id
+           WHERE c.color_name = ? AND v.is_deleted = 0
+           ORDER BY (v.status = 2) DESC, v.create_time DESC
+           LIMIT 1`,
           [seq.colorName]
         );
         const inkFormulaId = inkRows.length > 0 ? inkRows[0].id : null;
@@ -408,14 +435,12 @@ export async function getWorkOrderColorSequencesDetail(workOrderId: number): Pro
       sp.plate_name as screen_plate_name,
       sp.mesh_count,
       sp.remaining_count as plate_remaining,
-      if.formula_name as ink_formula_name,
-      if.color_code as ink_color_code,
-      if.ink_density,
-      if.default_thickness,
-      if.unit_price as ink_unit_price
+      COALESCE(fv.version_name, fv.version_no) as ink_formula_name,
+      ic.color_code as ink_color_code
     FROM prd_work_order_color_seq cs
     LEFT JOIN prd_screen_plate sp ON cs.screen_plate_id = sp.id
-    LEFT JOIN prd_ink_formula if ON cs.ink_formula_id = if.id
+    LEFT JOIN dcprint_ink_formula_version fv ON cs.ink_formula_id = fv.id
+    LEFT JOIN dcprint_ink_color ic ON fv.color_id = ic.id
     WHERE cs.work_order_id = ?
     ORDER BY cs.seq_no`,
     [workOrderId]

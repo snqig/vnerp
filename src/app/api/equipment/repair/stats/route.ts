@@ -19,9 +19,21 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params.push(startDate, endDate);
     }
 
-    // 总维修数
-    const [totalCount] = await query(
-      `SELECT COUNT(*) as count FROM eqp_repair WHERE deleted = 0${dateFilter}`,
+    // 待维修：status = 1
+    const [pendingResult] = await query(
+      `SELECT COUNT(*) as count FROM eqp_repair WHERE deleted = 0 AND status = 1${dateFilter}`,
+      params
+    );
+
+    // 维修中：status = 2
+    const [repairingResult] = await query(
+      `SELECT COUNT(*) as count FROM eqp_repair WHERE deleted = 0 AND status = 2${dateFilter}`,
+      params
+    );
+
+    // 已完成：status = 3
+    const [completedResult] = await query(
+      `SELECT COUNT(*) as count FROM eqp_repair WHERE deleted = 0 AND status = 3${dateFilter}`,
       params
     );
 
@@ -33,14 +45,16 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
     // 维修费用总计
     const [costResult] = await query(
-      `SELECT COALESCE(SUM(COALESCE(cost, '0.00')), 0) as total FROM eqp_repair
+      `SELECT COALESCE(SUM(COALESCE(repair_cost, 0)), 0) as total FROM eqp_repair
        WHERE deleted = 0 AND YEAR(create_time) = YEAR(CURDATE()) AND MONTH(create_time) = MONTH(CURDATE())`
     );
 
     return NextResponse.json({
       success: true,
       data: {
-        totalCount: totalCount?.count || 0,
+        pending: pendingResult?.count || 0,
+        repairing: repairingResult?.count || 0,
+        completed: completedResult?.count || 0,
         monthlyCount: monthlyResult?.count || 0,
         monthlyCost: Number(costResult?.total) || 0,
       },

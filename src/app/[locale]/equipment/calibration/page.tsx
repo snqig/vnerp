@@ -25,6 +25,13 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2, Ruler, CheckCircle, Clock, AlertTriangle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
@@ -108,6 +115,23 @@ export default function EquipmentCalibrationPage() {
   }, [page]);
 
   const handleSave = async () => {
+    // P1-2 前端守卫：与后端同口径（设备身份/校准日期必填，结果限值域）
+    if (
+      String(editItem.equipment_code ?? '').trim() === '' &&
+      String(editItem.equipment_name ?? '').trim() === ''
+    ) {
+      toast({ title: tc('equipmentIdentityRequired'), variant: 'destructive' });
+      return;
+    }
+    if (String(editItem.calibration_date ?? '').trim() === '') {
+      toast({ title: tc('calibrationDateRequired'), variant: 'destructive' });
+      return;
+    }
+    const resultVal = String(editItem.calibration_result ?? 'qualified');
+    if (resultVal !== 'qualified' && resultVal !== 'unqualified') {
+      toast({ title: tc('calibrationResultInvalid'), variant: 'destructive' });
+      return;
+    }
     try {
       const res = await authFetch('/api/equipment/calibration', {
         method: 'POST',
@@ -406,6 +430,21 @@ export default function EquipmentCalibrationPage() {
                   value={editItem.certificate_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, certificate_no: e.target.value })}
                 />
+              </div>
+              <div>
+                <Label>{tc('calibrationResult')}</Label>
+                <Select
+                  value={editItem.calibration_result || 'qualified'}
+                  onValueChange={(v) => setEditItem({ ...editItem, calibration_result: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="qualified">{tc('qualified')}</SelectItem>
+                    <SelectItem value="unqualified">{tc('unqualified')}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>

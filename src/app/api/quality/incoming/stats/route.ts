@@ -38,6 +38,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       success: true,
       data: {
         pending: pendingResult?.count || 0,
+        inspecting: 0,
         passed: passedResult?.count || 0,
         failed: failedResult?.count || 0,
         monthlyCount: monthlyResult?.count || 0,

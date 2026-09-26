@@ -25,6 +25,13 @@ export const POST = withPermission(
       return errorResponse(ts('k_v8vb9i'), 400, 400);
     }
 
+    // P0-2（2026-09-26）：实盘数必须是 >=0 的数字——此前 0/负数/非数字全部放行，
+    // 负实盘数可直接写库（actual_qty/diff_qty）。0 是合法值（盘亏为 0）。
+    const actualQtyNum = Number(actual_quantity);
+    if (!Number.isFinite(actualQtyNum) || actualQtyNum < 0) {
+      return errorResponse(ts('stocktakeQtyInvalid'), 400, 400);
+    }
+
     const check = await queryOne(`SELECT * FROM inv_stocktaking WHERE id = ? AND deleted = 0`, [
       checkId,
     ]);
@@ -64,7 +71,7 @@ export const POST = withPermission(
       return errorResponse(ts('k_1r7887z'), 400, 400);
     }
 
-    const difference = actual_quantity - checkItem.system_qty;
+    const difference = actualQtyNum - checkItem.system_qty;
 
     const split_flag = checkItem.split_flag || 0;
     const parent_qr_code = checkItem.parent_qr_code || null;
@@ -76,7 +83,7 @@ export const POST = withPermission(
          diff_qty = ?,
          update_time = NOW()
      WHERE id = ?`,
-      [actual_quantity, difference, checkItem.id]
+      [actualQtyNum, difference, checkItem.id]
     );
 
     const stats = await queryOne(
@@ -96,7 +103,7 @@ export const POST = withPermission(
         parent_qr_code: parent_qr_code,
         warehouse_location: inventoryItem.warehouse_location,
         book_quantity: checkItem.system_qty,
-        actual_quantity: actual_quantity,
+        actual_quantity: actualQtyNum,
         difference: difference,
         progress: stats.total_count > 0 ? Math.round((stats.checked_count / stats.total_count) * 100) : 0,
       },

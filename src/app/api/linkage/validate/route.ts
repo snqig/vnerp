@@ -108,7 +108,7 @@ async function updateBizOrderStatus(orderId: number, triggerBy: string) {
        SUM(ordered_qty) as total_ordered,
        SUM(received_qty) as total_received,
        SUM(consumed_qty) as total_consumed
-     FROM biz_order_line WHERE order_id = ? AND deleted = 0`,
+     FROM biz_order_line WHERE order_id = ?`,
     [orderId]
   );
 
@@ -173,7 +173,7 @@ export const POST = withPermission(
         boh.order_no, boh.status, boh.tolerance_percent
        FROM biz_order_line bol
        JOIN biz_order_header boh ON bol.order_id = boh.id
-       WHERE bol.id = ? AND bol.deleted = 0 AND boh.deleted = 0
+       WHERE bol.id = ? AND boh.deleted = 0
        FOR UPDATE`,
         [sourceOrderLineId]
       );
@@ -183,7 +183,7 @@ export const POST = withPermission(
         throw new Error(ts('k_1xv1u4r'));
       }
 
-      // 2. 检查业务订单状态
+      // 2. 检查业务订单状态（status 来自 biz_order_header；biz_order_line 本身无状态列）
       if (Number(orderLine.status ?? 0) < BIZ_ORDER_STATUS.CONFIRMED) {
         throw new Error(ts('k_1tqn3ep'));
       }
@@ -459,7 +459,7 @@ export const GET = withPermission(
        SUM(ordered_qty) as total_ordered,
        SUM(received_qty) as total_received,
        SUM(consumed_qty) as total_consumed
-     FROM biz_order_line WHERE order_id = ? AND deleted = 0`,
+     FROM biz_order_line WHERE order_id = ?`,
       [orderId]
     );
 

@@ -54,11 +54,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(maintenanceType);
   }
   if (startDate) {
-    where += ' AND DATE(r.start_time) >= ?';
+    where += ' AND r.maintenance_date >= ?';
     params.push(startDate);
   }
   if (endDate) {
-    where += ' AND DATE(r.start_time) <= ?';
+    where += ' AND r.maintenance_date <= ?';
     params.push(endDate);
   }
 
@@ -70,14 +70,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   const rows = await query(
     `SELECT r.id, r.record_no, r.equipment_id, r.plan_id, r.maintenance_type,
-            r.start_time, r.end_time, r.downtime_hours,
+            r.maintenance_date, r.start_time, r.end_time, r.downtime_hours,
             r.cost, r.responsible_id, r.result, r.remark,
             r.create_time,
             e.equipment_code, e.equipment_name, e.model
      FROM eqp_maintenance_record r
      LEFT JOIN eqp_equipment e ON r.equipment_id = e.id
      ${where}
-     ORDER BY r.start_time DESC, r.id DESC
+     ORDER BY r.maintenance_date DESC, r.start_time DESC, r.id DESC
      LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -93,6 +93,7 @@ export const POST = withPermission(
       equipment_id,
       plan_id,
       maintenance_type,
+      maintenance_date,
       start_time,
       end_time,
       downtime_hours,
@@ -108,13 +109,9 @@ export const POST = withPermission(
       return errorResponse(ts('k_1trm375'), 400, 400);
     }
 
-    // 字段别名兼容（前端表单字段名为 downtime_hours/cost/maintenance_content/fault_desc）
-    const realDesc =
-      maintenance_content != null
-        ? maintenance_content
-        : fault_desc != null
-          ? fault_desc
-          : null;
+    // 字段别名兼容：优先使用 maintenance_content，回退到 fault_desc
+    const finalMaintenanceContent =
+      maintenance_content != null ? maintenance_content : (fault_desc != null ? fault_desc : null);
 
     // result 兼容：前端可能传 1/2/3，后端按语义字符串存储
     const resultMap: Record<string, string> = {
@@ -146,16 +143,17 @@ export const POST = withPermission(
 
     const result2 = await execute(
       `INSERT INTO eqp_maintenance_record
-       (record_no, equipment_id, plan_id, maintenance_type, fault_desc, maintenance_content,
+       (record_no, equipment_id, plan_id, maintenance_type, maintenance_date, fault_desc, maintenance_content,
         start_time, end_time, downtime_hours, cost, responsible_id, result, remark, create_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         recordNo,
         Number(equipment_id),
         plan_id || null,
         maintenance_type || 'routine',
+        maintenance_date || null,
         fault_desc || null,
-        realDesc,
+        finalMaintenanceContent,
         start_time || null,
         end_time || null,
         downtime_hours || 0,
@@ -192,6 +190,7 @@ export const PUT = withPermission(
 
     const allowedFields = [
       'maintenance_type',
+      'maintenance_date',
       'start_time',
       'end_time',
       'downtime_hours',

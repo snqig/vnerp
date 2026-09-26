@@ -563,6 +563,21 @@ export default function OutboundManagementPage() {
 
   // 保存出库单
   const handleSave = async () => {
+    // P0-3（2026-09-26）：此前零校验——未选仓/空物料/数量 0 或负数都会直接提交
+    if (!formData.warehouse) {
+      toast.error(t('selectWarehouse'));
+      return;
+    }
+    if (!formData.materialCode.trim() && !formData.materialName.trim()) {
+      toast.error(tc('enterMaterialName'));
+      return;
+    }
+    const qtyNum = parseFloat(formData.quantity);
+    if (!Number.isFinite(qtyNum) || qtyNum <= 0) {
+      toast.error(tc('qtyMustBePositive'));
+      return;
+    }
+
     try {
       const warehouseData = warehouses.find((w) => String(w.id) === formData.warehouse);
 
@@ -614,6 +629,21 @@ export default function OutboundManagementPage() {
   // 更新出库单
   const handleUpdate = async () => {
     if (!currentRecord) return;
+
+    // P0-3（2026-09-26）：编辑弹窗此前同样零校验
+    if (!formData.warehouse) {
+      toast.error(t('selectWarehouse'));
+      return;
+    }
+    if (!formData.materialCode.trim() && !formData.materialName.trim()) {
+      toast.error(tc('enterMaterialName'));
+      return;
+    }
+    const qtyNum = parseFloat(formData.quantity);
+    if (!Number.isFinite(qtyNum) || qtyNum <= 0) {
+      toast.error(tc('qtyMustBePositive'));
+      return;
+    }
 
     try {
       const warehouseData = warehouses.find((w) => String(w.id) === formData.warehouse);

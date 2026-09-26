@@ -25,11 +25,12 @@ export const hrAttendance = mysqlTable(
     status: varchar('status', { length: 20 }).default('normal'),
     workingHours: decimal('working_hours', { precision: 5, scale: 2 }),
     overtimeHours: decimal('overtime_hours', { precision: 5, scale: 2 }),
-    shiftId: bigint('shift_id', { mode: 'number', unsigned: true }),
     remark: text('remark'),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
     deleted: tinyint('deleted').default(0),
+    empId: int('emp_id', { unsigned: true }), // 关联员工ID
+    employeeIdInt: bigint('employee_id_int', { mode: 'number', unsigned: true }),
   },
   (table) => ({
     empIdx: index('idx_att_employee').on(table.employeeId),
@@ -55,6 +56,7 @@ export const hrTraining = mysqlTable(
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
     deleted: tinyint('deleted').default(0),
+    createBy: varchar('create_by', { length: 100 }), // create_by
   },
   (table) => ({
     noIdx: uniqueIndex('idx_tr_no').on(table.trainingNo),
@@ -187,6 +189,7 @@ export const hrSalaryCalculation = mysqlTable(
     calcLog: text('calc_log'),
     createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
     updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    confirmTime: datetime('confirm_time'),
   },
   (table) => ({
     empMonthUk: uniqueIndex('uk_sc_emp_month').on(table.employeeId, table.calcMonth),

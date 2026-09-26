@@ -55,9 +55,10 @@ export const POST = withPermission(
     }
 
     // 查询工单关联的标准卡
+    // 修复：prod_work_order 上没有 material_id 列（物料号在 legacy_material_id 上）。
     const cards = await query<StandardCard>(
       `SELECT sc.* FROM prd_standard_card sc
-     LEFT JOIN prod_work_order wo ON wo.material_id = sc.material_id
+     LEFT JOIN prod_work_order wo ON wo.legacy_material_id = sc.material_id
      WHERE wo.id = ? AND sc.status = 3 AND sc.deleted = 0`,
       [workOrderId]
     );
@@ -67,40 +68,16 @@ export const POST = withPermission(
     for (const card of cards) {
       let items: DbRow[] = [];
 
+      // color_standard_items / process_standard_items / quality_standard_items 三张明细子表在当前库里
+      // 并不存在（早期代码按设想的 schema 写死，运行期必然报 Table doesn't exist → 接口 500）。
+      // 标准卡的明细目前全部落在 prd_standard_card 这张宽表的列上，因此这里直接回传主表。
+      // TODO(数据模型)：若标准卡确实需要明细行，需先补建三张明细表 + 迁移，再接回这里的 items。
       switch (card.type as StandardCardType) {
         case 'color':
-          items = await query<DbRow>(
-            'SELECT * FROM color_standard_items WHERE standard_card_id = ?',
-            [card.id!]
-          );
-          break;
         case 'process':
-          items = await query<DbRow>(
-            'SELECT * FROM process_standard_items WHERE standard_card_id = ?',
-            [card.id!]
-          );
-          break;
         case 'quality':
-          items = await query<DbRow>(
-            'SELECT * FROM quality_standard_items WHERE standard_card_id = ?',
-            [card.id!]
-          );
-          break;
         case 'comprehensive':
-          // 综合类型：返回所有明细
-          const colorItems = await query<DbRow>(
-            'SELECT *, "color" as item_type FROM color_standard_items WHERE standard_card_id = ?',
-            [card.id!]
-          );
-          const processItems = await query<DbRow>(
-            'SELECT *, "process" as item_type FROM process_standard_items WHERE standard_card_id = ?',
-            [card.id!]
-          );
-          const qualityItems = await query<DbRow>(
-            'SELECT *, "quality" as item_type FROM quality_standard_items WHERE standard_card_id = ?',
-            [card.id!]
-          );
-          items = [...colorItems, ...processItems, ...qualityItems];
+          items = [];
           break;
       }
 

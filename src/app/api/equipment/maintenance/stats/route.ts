@@ -15,32 +15,38 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const params: any[] = [];
 
     if (startDate && endDate) {
-      dateFilter = ' AND DATE(create_time) BETWEEN ? AND ?';
+      dateFilter = ' AND DATE(r.create_time) BETWEEN ? AND ?';
       params.push(startDate, endDate);
     }
 
-    // 待保养：result IS NULL OR end_time IS NULL
+    // 待保养：激活计划中 next_execute_date <= 今天（即将到期或刚好到期）
     const [pendingResult] = await query(
-      `SELECT COUNT(*) as count FROM eqp_maintenance_record WHERE deleted = 0 AND (result IS NULL OR end_time IS NULL)${dateFilter}`,
-      params
+      `SELECT COUNT(*) as count FROM eqp_maintenance_plan p
+       WHERE p.deleted = 0 AND p.status = 1
+         AND (p.next_execute_date IS NULL OR p.next_execute_date <= CURDATE())`
     );
 
-    // 保养中：result IS NULL AND end_time IS NOT NULL
+    // 保养中：已创建记录、已开始（start_time 有值）、但未完成（result IS NULL 或 result = 'partial'）
     const [maintainingResult] = await query(
-      `SELECT COUNT(*) as count FROM eqp_maintenance_record WHERE deleted = 0 AND result IS NULL AND end_time IS NOT NULL${dateFilter}`,
+      `SELECT COUNT(*) as count FROM eqp_maintenance_record r
+       WHERE r.deleted = 0
+         AND r.start_time IS NOT NULL
+         AND (r.result IS NULL OR r.result = 'partial')${dateFilter}`,
       params
     );
 
     // 已完成：result = 'completed'
     const [completedResult] = await query(
-      `SELECT COUNT(*) as count FROM eqp_maintenance_record WHERE deleted = 0 AND result = 'completed'${dateFilter}`,
+      `SELECT COUNT(*) as count FROM eqp_maintenance_record r
+       WHERE r.deleted = 0 AND r.result = 'completed'${dateFilter}`,
       params
     );
 
-    // 逾期未保养：result IS NULL AND DATE(end_time) < CURDATE()
+    // 逾期未保养：激活计划 next_execute_date < 今天（严格逾期）
     const [overdueResult] = await query(
-      `SELECT COUNT(*) as count FROM eqp_maintenance_record
-       WHERE deleted = 0 AND result IS NULL AND DATE(end_time) < CURDATE()`
+      `SELECT COUNT(*) as count FROM eqp_maintenance_plan p
+       WHERE p.deleted = 0 AND p.status = 1
+         AND p.next_execute_date < CURDATE()`
     );
 
     // 保养计划总数

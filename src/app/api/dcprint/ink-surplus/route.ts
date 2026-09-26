@@ -181,14 +181,27 @@ async function getSurplusDetail(batchNo: string) {
 
   if (dispatchRows.length > 0) {
     const dispatch = dispatchRows[0];
-    const formulaRows = await query('SELECT * FROM ink_formula WHERE id = ? AND deleted = 0', [
-      dispatch.formula_id,
-    ]);
+    // 修复：ink_formula / ink_formula_item 表不存在，改查 dcprint_ink_formula_version + _item。
+    const formulaRows = await query(
+      `SELECT v.id, v.version_no, v.version_name, v.total_weight, v.cost_calc_status,
+              c.pantone_code, c.color_name
+       FROM dcprint_ink_formula_version v
+       LEFT JOIN dcprint_ink_color c ON c.id = v.color_id
+       WHERE v.id = ? AND v.is_deleted = 0`,
+      [dispatch.formula_id]
+    );
     if (formulaRows.length > 0) {
-      formulaInfo = formulaRows[0];
+      const version = formulaRows[0];
+      formulaInfo = {
+        formula_no: version.version_no,
+        formula_name: version.version_name,
+        pantone_code: version.pantone_code,
+        color_name: version.color_name,
+        total_weight: version.total_weight,
+      };
       const items = await query(
-        'SELECT * FROM ink_formula_item WHERE formula_id = ? AND deleted = 0 ORDER BY sort_order',
-        [formulaInfo.id]
+        'SELECT material_name AS ink_name, material_code AS ink_code, brand, ratio, weight, unit, is_base FROM dcprint_ink_formula_item WHERE version_id = ? ORDER BY sort',
+        [version.id]
       );
       rawInks = items;
     }
