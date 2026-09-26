@@ -22,6 +22,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const keyword = searchParams.get('keyword') || '';
   const status = numericFilter(searchParams.get('status'));
   const ink_type = searchParams.get('ink_type');
+  const isOverdue = searchParams.get('is_overdue') === '1';
   const page = parseInt(searchParams.get('page') ?? '1');
   const pageSize = parseInt(searchParams.get('pageSize') ?? '20');
 
@@ -33,34 +34,39 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return successResponse(record);
   }
 
-  let sql = `SELECT * FROM ink_opening_record WHERE deleted = 0`;
+  const whereClauses: string[] = ['deleted = 0'];
   const values: SqlValue[] = [];
 
   if (keyword) {
-    sql += ` AND (record_no LIKE ? OR material_code LIKE ? OR material_name LIKE ? OR batch_no LIKE ?)`;
+    whereClauses.push('(record_no LIKE ? OR material_code LIKE ? OR material_name LIKE ? OR batch_no LIKE ?)');
     const like = `%${keyword}%`;
     values.push(like, like, like, like);
   }
   if (status) {
-    sql += ' AND status = ?';
+    whereClauses.push('status = ?');
     values.push(status);
   }
   if (ink_type) {
-    sql += ' AND ink_type = ?';
+    whereClauses.push('ink_type = ?');
     values.push(ink_type);
   }
+  if (isOverdue) {
+    whereClauses.push('status = 1 AND expire_time < NOW()');
+  }
 
-  sql += ' ORDER BY open_time DESC LIMIT ? OFFSET ?';
+  const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+  const dataSql = `SELECT * FROM ink_opening_record ${whereSql} ORDER BY open_time DESC LIMIT ? OFFSET ?`;
   values.push(pageSize, (page - 1) * pageSize);
 
-  const list = await query(sql, values);
+  const list = await query(dataSql, values);
 
-  const countSql = `SELECT COUNT(*) as total FROM ink_opening_record WHERE deleted = 0`;
+  const countSql = `SELECT COUNT(*) as total FROM ink_opening_record ${whereSql}`;
   const countResult = (await queryOne(countSql)) as DbRow;
 
   const summarySql = `SELECT
     COUNT(*) as total_count,
-    COALESCE(SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END), 0) as using_count,
+    COALESCE(SUM(CASE WHEN status = 1 AND expire_time >= NOW() THEN 1 ELSE 0 END), 0) as valid_using_count,
     COALESCE(SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END), 0) as expired_count,
     COALESCE(SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END), 0) as scrapped_count,
     COALESCE(SUM(CASE WHEN status = 1 AND expire_time < NOW() THEN 1 ELSE 0 END), 0) as overdue_using_count
@@ -79,7 +85,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     pageSize,
     summary: {
       total_count: Number(summary?.total_count ?? 0),
-      using_count: Number(summary?.using_count ?? 0),
+      valid_using_count: Number(summary?.valid_using_count ?? 0),
       expired_count: Number(summary?.expired_count ?? 0),
       scrapped_count: Number(summary?.scrapped_count ?? 0),
       overdue_using_count: Number(summary?.overdue_using_count ?? 0),
