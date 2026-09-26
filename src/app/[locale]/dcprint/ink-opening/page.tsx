@@ -100,11 +100,13 @@ export default function InkOpeningPage() {
   const [detailData, setDetailData] = useState<InkOpeningRecord | null>(null);
   const [summary, setSummary] = useState({
     total_count: 0,
-    using_count: 0,
+    valid_using_count: 0,
     expired_count: 0,
     scrapped_count: 0,
     overdue_using_count: 0,
   });
+  const [activeStatKey, setActiveStatKey] = useState<string | null>(null);
+  const [isOverdueFilter, setIsOverdueFilter] = useState(false);
 
   const [form, setForm] = useState({
     material_id: '',
@@ -129,6 +131,7 @@ export default function InkOpeningPage() {
       if (keyword) params.set('keyword', keyword);
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (inkTypeFilter !== 'all') params.set('ink_type', inkTypeFilter);
+      if (isOverdueFilter) params.set('is_overdue', '1');
       params.set('pageSize', '50');
       const res = await authFetch(`/api/dcprint/ink-opening?${params}`);
       const data = await res.json();
@@ -142,7 +145,7 @@ export default function InkOpeningPage() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, statusFilter, inkTypeFilter]);
+  }, [keyword, statusFilter, inkTypeFilter, isOverdueFilter]);
 
   const fetchMaterials = async () => {
     try {
@@ -161,7 +164,7 @@ export default function InkOpeningPage() {
   useEffect(() => {
     fetchRecords();
     fetchMaterials();
-  }, [fetchRecords]);
+  }, [fetchRecords, isOverdueFilter]);
 
   const handleCreate = async () => {
     if (!form.material_id || !form.open_time || !form.expire_hours) {
@@ -263,82 +266,47 @@ export default function InkOpeningPage() {
     setDetailOpen(true);
   };
 
+  const handleStatClick = (key: string) => {
+    if (key === 'total') {
+      setActiveStatKey(null);
+      setStatusFilter('all');
+      setIsOverdueFilter(false);
+    } else if (key === 'valid') {
+      setActiveStatKey('valid');
+      setStatusFilter('1');
+      setIsOverdueFilter(false);
+    } else if (key === 'expired') {
+      setActiveStatKey('expired');
+      setStatusFilter('2');
+      setIsOverdueFilter(false);
+    } else if (key === 'overdue') {
+      setActiveStatKey('overdue');
+      setStatusFilter('1');
+      setIsOverdueFilter(true);
+    }
+  };
+
   return (
     <MainLayout title={ts('k_1iipc14')}>
       <div className="space-y-6">
-        <StatsCards
+      <StatsCards
+          clickable
+          activeKey={activeStatKey}
+          onCardClick={handleStatClick}
           configs={[
-            { key: 'total', label: tc('total'), icon: Droplet, ...StatsTheme.blue },
-            { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
-            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
-            { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'total', label: ts('dcInkOpeningTotalLabel'), icon: Droplet, ...StatsTheme.blue, description: ts('dcInkOpeningTotalDesc') },
+            { key: 'valid', label: ts('dcInkOpeningValidLabel'), icon: CheckCircle, ...StatsTheme.green, description: ts('dcInkOpeningValidDesc') },
+            { key: 'expired', label: ts('dcInkOpeningExpiredLabel'), icon: AlertTriangle, ...StatsTheme.orange, description: ts('dcInkOpeningExpiredDesc') },
+            { key: 'overdue', label: ts('dcInkOpeningOverdueLabel'), icon: Clock, ...StatsTheme.red, description: ts('dcInkOpeningOverdueDesc') },
           ]}
           stats={[
-            { key: 'total', count: records.length },
-            { key: 'active', count: records.length },
-            { key: 'pending', count: records.length },
-            { key: 'warning', count: records.length },
+            { key: 'total', count: summary.total_count },
+            { key: 'valid', count: summary.valid_using_count ?? 0 },
+            { key: 'expired', count: summary.expired_count },
+            { key: 'overdue', count: summary.overdue_using_count },
           ]}
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
-
-        {overdueList.length > 0 && (
-          <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
-                <AlertTriangle className="h-5 w-5" />
-                {ts('k_1tqco41')}</CardTitle>
-              <CardDescription className="text-red-600 dark:text-red-400">
-                {ts('k_3677rg')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{ts('k_4gtnya')}</TableHead>
-                    <TableHead>{ts('k_pegwq9')}</TableHead>
-                    <TableHead>{ts('k_10yyuf6')}</TableHead>
-                    <TableHead>{tc('dcOpenTimeLabel')}</TableHead>
-                    <TableHead>{ts('k_1oc35yx')}</TableHead>
-                    <TableHead>{tc('actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {overdueList.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-mono">{r.record_no}</TableCell>
-                      <TableCell>{r.material_name}</TableCell>
-                      <TableCell>
-                        <Badge className={INK_TYPE_MAP[r.ink_type]?.color || 'bg-gray-100 dark:bg-gray-700'}>
-                          {INK_TYPE_MAP[r.ink_type]?.label || r.ink_type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{r.open_time}</TableCell>
-                      <TableCell className="text-red-600 font-medium dark:text-red-400">
-                        {r.expire_time}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleStatusChange(r.id, 2)}
-                        >
-                          {ts('k_p3zbds')}</Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="ml-1"
-                          onClick={() => handleStatusChange(r.id, 3)}
-                        >
-                          {ts('k_1tuzpv2')}</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
 
         <Card>
           <CardHeader>

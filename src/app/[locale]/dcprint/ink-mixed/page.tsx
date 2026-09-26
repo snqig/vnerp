@@ -95,8 +95,15 @@ export default function InkMixedPage() {
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
   const [searchColor, setSearchColor] = useState('');
+  const [stats, setStats] = useState({
+    total: 0,
+    inStock: 0,
+    inUse: 0,
+    expired: 0,
+  });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<InkMixedRecord>>({});
+  const [activeStatKey, setActiveStatKey] = useState<string | null>(null);
 
   const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
     useRowSelection(list, (r) => String(r.id));
@@ -111,6 +118,10 @@ export default function InkMixedPage() {
         recordNo: searchNo,
         colorName: searchColor,
       });
+      if (activeStatKey && activeStatKey !== 'total') {
+        const statusMap: Record<string, string> = { inStock: '1', inUse: '2', expired: '3' };
+        if (statusMap[activeStatKey]) params.set('status', statusMap[activeStatKey]);
+      }
       const res = await authFetch('/api/dcprint/ink-mixed?' + params);
       const result = await res.json();
       if (result.success) {
@@ -120,9 +131,22 @@ export default function InkMixedPage() {
     } catch {}
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/api/dcprint/ink-mixed/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch ink-mixed stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
-  }, [page]);
+    fetchStats();
+  }, [page, activeStatKey]);
 
   const fetchDialogOptions = async () => {
     try {
@@ -212,6 +236,14 @@ export default function InkMixedPage() {
     }
   };
 
+  const handleStatClick = (key: string) => {
+    if (key === 'total') {
+      setActiveStatKey(null);
+    } else {
+      setActiveStatKey(key);
+    }
+  };
+
   const handleBatchDelete = async () => {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
@@ -272,17 +304,20 @@ export default function InkMixedPage() {
         </div>
 
         <StatsCards
+          clickable
+          activeKey={activeStatKey}
+          onCardClick={handleStatClick}
           configs={[
-            { key: 'total', label: tc('total'), icon: Beaker, ...StatsTheme.blue },
-            { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
-            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
-            { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'total', label: ts('dcInkMixedTotalLabel'), icon: Beaker, ...StatsTheme.blue, description: ts('dcInkMixedTotalDesc') },
+            { key: 'inStock', label: ts('dcInkMixedInStockLabel'), icon: CheckCircle, ...StatsTheme.green, description: ts('dcInkMixedInStockDesc') },
+            { key: 'inUse', label: ts('dcInkMixedInUseLabel'), icon: Clock, ...StatsTheme.orange, description: ts('dcInkMixedInUseDesc') },
+            { key: 'expired', label: ts('dcInkMixedExpiredLabel'), icon: AlertTriangle, ...StatsTheme.red, description: ts('dcInkMixedExpiredDesc') },
           ]}
           stats={[
-            { key: 'total', count: list.length },
-            { key: 'active', count: list.length },
-            { key: 'pending', count: list.length },
-            { key: 'warning', count: list.length },
+            { key: 'total', count: stats.total },
+            { key: 'inStock', count: stats.inStock },
+            { key: 'inUse', count: stats.inUse },
+            { key: 'expired', count: stats.expired },
           ]}
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
