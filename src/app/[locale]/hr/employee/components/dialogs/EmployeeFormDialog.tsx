@@ -300,6 +300,16 @@ export function EmployeeFormDialog({
               </SelectContent>
             </Select>
           </div>
+          {form.status === 3 && (
+            <div className="space-y-2">
+              <Label>{tc('exitDate') || tc('leaveDate')}</Label>
+              <Input
+                type="date"
+                value={form.exit_date || ''}
+                onChange={(e) => setForm({ ...form, exit_date: e.target.value })}
+              />
+            </div>
+          )}
           <div className="space-y-2">
             <Label>
               {tc('age')} <span className="text-gray-400 text-xs">{tc('autoCalculate')}</span>

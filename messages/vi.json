@@ -5630,7 +5630,9 @@
     "printInspectionReportTitle": "Báo cáo kiểm tra chất lượng",
     "materialCodeRequired": "Mã vật liệu là bắt buộc",
     "materialNotFound": "Không tìm thấy mã vật liệu {code}, vui lòng kiểm tra lại",
-    "fieldSep": ":"
+    "fieldSep": ":",
+    "selectEmployee": "Chọn nhân viên",
+    "exitDate": "Ngày nghỉ việc"
   },
   "Nav": {
     "dashboard_center": "Trung tâm Bảng điều khiển",
@@ -6922,7 +6924,6 @@
     "small": "Vật liệu nhỏ",
     "sourceLabelNo": "Số nhãn nguồn",
     "sourceLabelNoCol": "Số nhãn nguồn",
-    "sourceWarehouse": "Kho nguồn",
     "spec": "Quy cách",
     "specN": "Quy cách",
     "status": "Trạng thái",
@@ -6937,7 +6938,6 @@
     "stockAdjustUpdateSuccess": "Cập nhật thành công",
     "supplier": "Nhà cung cấp",
     "surplus": "Thặng dư kiểm kê",
-    "targetWarehouse": "Kho đích",
     "totalCapacity": "Tổng sức chứa",
     "totalItems": "Số mục kiểm kê",
     "totalQty": "Tổng số lượng",
@@ -9340,7 +9340,14 @@
     "effectiveDate": "Ngày hiệu lực",
     "fetchFailed": "Lấy dữ liệu thất bại",
     "inactive": "Nghỉ việc",
-    "type": "Loại"
+    "type": "Loại",
+    "certTypeQualification": "Chứng chỉ hành nghề",
+    "certTypeSystem": "Chứng nhận hệ thống",
+    "skillCategoryDieCutting": "Cắt khuôn",
+    "skillCategoryQuality": "Quản lý chất lượng",
+    "skillCategoryMold": "Khuôn mẫu",
+    "skillCategoryManagement": "Quản lý",
+    "skillCategoryBusiness": "Kinh doanh"
   },
   "System": {
     "title": "Quản lý hệ thống",

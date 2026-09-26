@@ -5630,7 +5630,9 @@
     "printInspectionReportTitle": "品質檢驗報告",
     "materialCodeRequired": "物料編碼為必填項",
     "materialNotFound": "物料編碼 {code} 不存在，請檢查後重試",
-    "fieldSep": "："
+    "fieldSep": "：",
+    "selectEmployee": "選擇員工",
+    "exitDate": "離職日期"
   },
   "Nav": {
     "dashboard_center": "看板中心",
@@ -6922,7 +6924,6 @@
     "small": "小料",
     "sourceLabelNo": "源標籤號",
     "sourceLabelNoCol": "源標籤號",
-    "sourceWarehouse": "源倉庫",
     "spec": "規格",
     "specN": "規格",
     "status": "狀態",
@@ -6937,7 +6938,6 @@
     "stockAdjustUpdateSuccess": "更新成功",
     "supplier": "供應商",
     "surplus": "盤盈",
-    "targetWarehouse": "目標倉庫",
     "totalCapacity": "總容量",
     "totalItems": "盤點項數",
     "totalQty": "總數量",
@@ -9334,7 +9334,14 @@
     "effectiveDate": "生效日期",
     "fetchFailed": "獲取失敗",
     "inactive": "離職",
-    "type": "類型"
+    "type": "類型",
+    "certTypeQualification": "職業資格證",
+    "certTypeSystem": "體系認證",
+    "skillCategoryDieCutting": "模切技術",
+    "skillCategoryQuality": "質量管理",
+    "skillCategoryMold": "模具技術",
+    "skillCategoryManagement": "管理",
+    "skillCategoryBusiness": "業務"
   },
   "System": {
     "title": "系統管理",

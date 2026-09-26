@@ -15,6 +15,7 @@ export interface Employee {
   role_name: string;
   position: string;
   entry_date: string;
+  exit_date?: string;
   birth_date?: string;
   native_place?: string;
   home_address?: string;

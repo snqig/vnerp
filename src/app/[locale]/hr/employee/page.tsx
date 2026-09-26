@@ -172,7 +172,7 @@ export default function EmployeePage() {
 
       const url = debouncedSearch
         ? `/api/organization/employee?keyword=${encodeURIComponent(debouncedSearch)}`
-        : '/api/organization/employee';
+        : '/api/organization/employee?pageSize=1000';
       const response = await authFetch(url);
       const result = await response.json();
       if (result.success) {

@@ -5657,7 +5657,9 @@
     "printInspectionReportTitle": "品质检验报告",
     "materialCodeRequired": "物料编码为必填项",
     "materialNotFound": "物料编码 {code} 不存在，请检查后重试",
-    "fieldSep": "："
+    "fieldSep": "：",
+    "selectEmployee": "选择员工",
+    "exitDate": "离职日期"
   },
   "Nav": {
     "dashboard_center": "看板中心",
@@ -6963,7 +6965,6 @@
     "small": "小料",
     "sourceLabelNo": "源标签号",
     "sourceLabelNoCol": "源标签号",
-    "sourceWarehouse": "源仓库",
     "spec": "规格",
     "specN": "规格",
     "status": "状态",
@@ -6978,7 +6979,6 @@
     "stockAdjustUpdateSuccess": "更新成功",
     "supplier": "供应商",
     "surplus": "盘盈",
-    "targetWarehouse": "目标仓库",
     "totalCapacity": "总容量",
     "totalItems": "盘点项数",
     "totalQty": "总数量",
@@ -9397,7 +9397,14 @@
     "effectiveDate": "生效日期",
     "fetchFailed": "获取失败",
     "inactive": "离职",
-    "type": "类型"
+    "type": "类型",
+    "certTypeQualification": "职业资格证",
+    "certTypeSystem": "体系认证",
+    "skillCategoryDieCutting": "模切技术",
+    "skillCategoryQuality": "质量管理",
+    "skillCategoryMold": "模具技术",
+    "skillCategoryManagement": "管理",
+    "skillCategoryBusiness": "业务"
   },
   "System": {
     "title": "系统管理",
@@ -11468,4 +11475,3 @@
     "saga_compensate": "Saga 补偿"
   }
 }
-

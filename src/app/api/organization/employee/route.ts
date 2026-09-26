@@ -41,6 +41,7 @@ interface Employee {
   remark?: string;
   status?: number;
   photo?: string;
+  exit_date?: string;
   create_time?: string;
   update_time?: string;
 }
@@ -192,8 +193,8 @@ export const POST = withPermission(
       `INSERT INTO sys_employee (
       employee_no, name, gender, age, id_card, phone, email,
       dept_id, dept_name, section, role_id, role_name, position, entry_date,
-      birth_date, native_place, home_address, current_address, birth_month, id_card_expiry, education, remark, status, photo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      birth_date, native_place, home_address, current_address, birth_month, id_card_expiry, education, remark, status, photo, exit_date
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         body.employee_no,
         body.name,
@@ -219,6 +220,7 @@ export const POST = withPermission(
         body.remark ?? null,
         body.status ?? 1,
         body.photo ?? null,
+        body.exit_date ?? null,
       ]
     );
 
@@ -292,7 +294,8 @@ export const PUT = withPermission(
       education = ?,
       remark = ?,
       status = ?,
-      photo = ?
+      photo = ?,
+      exit_date = ?
     WHERE id = ?`,
       [
         body.employee_no,
@@ -319,6 +322,7 @@ export const PUT = withPermission(
         body.remark ?? null,
         body.status,
         body.photo ?? null,
+        body.exit_date ?? null,
         id,
       ]
     );

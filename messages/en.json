@@ -5633,7 +5633,9 @@
     "printInspectionReportTitle": "Quality Inspection Report",
     "materialCodeRequired": "Material code is required",
     "materialNotFound": "Material code {code} not found, please check and retry",
-    "fieldSep": ":"
+    "fieldSep": ":",
+    "selectEmployee": "Select Employee",
+    "exitDate": "Exit Date"
   },
   "Nav": {
     "dashboard_center": "Dashboard Center",
@@ -6415,8 +6417,8 @@
     "transfer": "Transfer",
     "transferQueryDesc": "Warehouse transfer order query",
     "transferList": "Transfer List",
-    "sourceWarehouse": "Source Warehouse",
-    "targetWarehouse": "Target Warehouse",
+    "sourceWarehouse": "Source WH",
+    "targetWarehouse": "Target WH",
     "stockAdjust": "Stock Adjustment",
     "stocktaking": "Stocktaking",
     "inventory": "Inventory",
@@ -6737,8 +6739,6 @@
     "checkDeleteFailed": "Delete failed",
     "transferNo": "Transfer No.",
     "transferType": "Type",
-    "sourceWarehouse": "Source WH",
-    "targetWarehouse": "Target WH",
     "applicant": "Applicant",
     "addTransfer": "New Transfer",
     "noTransferRecords": "No transfer records",
@@ -9476,7 +9476,14 @@
     "effectiveDate": "Effective Date",
     "fetchFailed": "Failed to fetch",
     "inactive": "Inactive",
-    "type": "Type"
+    "type": "Type",
+    "certTypeQualification": "Professional Qualification",
+    "certTypeSystem": "System Certification",
+    "skillCategoryDieCutting": "Die Cutting",
+    "skillCategoryQuality": "Quality Mgmt",
+    "skillCategoryMold": "Mold",
+    "skillCategoryManagement": "Management",
+    "skillCategoryBusiness": "Business"
   },
   "System": {
     "title": "System Management",
