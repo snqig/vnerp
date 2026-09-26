@@ -7,30 +7,30 @@ import { SELECT_STMT } from '@/lib/db/ddl/hr-reports-turnover';
 
 export const GET = withPermission(
   async (_request: NextRequest) => {
-    // 总人数（在职 status=1）；离职人数（exit_date IS NOT NULL）
+    // totalEmployees = 全部未删除员工（含已离职），resignedCount = exit_date 不为空
     const [totals] = await query<DbRow>(
       `SELECT
         COUNT(*) as totalEmployees,
         SUM(CASE WHEN exit_date IS NOT NULL THEN 1 ELSE 0 END) as resignedCount
-      FROM sys_employee WHERE deleted = 0 AND status = 1`
+      FROM sys_employee WHERE deleted = 0`
     );
 
-    // 入职工月趋势（最近12个月）
+    // 入职工月趋势（最近12个月，含已离职员工）
     const monthRows = await query<DbRow>(
       `SELECT
         DATE_FORMAT(entry_date, '%Y-%m') as month,
         COUNT(*) as newHires
       FROM sys_employee
-      WHERE entry_date IS NOT NULL AND deleted = 0 AND status = 1
+      WHERE entry_date IS NOT NULL AND deleted = 0
         AND entry_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
       GROUP BY DATE_FORMAT(entry_date, '%Y-%m')
       ORDER BY month`
     );
 
-    // 按部门统计（在职总数 + 已离职数）
+    // 按部门统计（该部门总人数 + 已离职数）
     const deptRows = await query<DbRow>(SELECT_STMT);
 
-    // 平均司龄（在职员工）
+    // 平均司龄（仅在职员工）
     const [tenure] = await query<DbRow>(
       `SELECT COALESCE((
         SELECT ROUND(AVG(DATEDIFF(CURDATE(), entry_date)))
@@ -38,13 +38,13 @@ export const GET = withPermission(
       ), 0) as avgTenureDays`
     );
 
-    // 离职月趋势（最近12个月，按 exit_date 月份统计）
+    // 离职月趋势（最近12个月，含所有已离职员工）
     const resignMonthRows = await query<DbRow>(
       `SELECT
         DATE_FORMAT(exit_date, '%Y-%m') as month,
         COUNT(*) as resignations
       FROM sys_employee
-      WHERE exit_date IS NOT NULL AND deleted = 0 AND status = 1
+      WHERE exit_date IS NOT NULL AND deleted = 0
         AND exit_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
       GROUP BY DATE_FORMAT(exit_date, '%Y-%m')
       ORDER BY month`
