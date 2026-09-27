@@ -10,85 +10,107 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Plus, Search, Pencil, Trash2, Tag } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
 
+interface PieceRate {
+  id: number;
+  processCode: string;
+  productType: string;
+  unitPrice: number;
+  unit: string;
+  qualityThreshold: number;
+  effectiveDate: string;
+  status: number;
+}
+
 export default function PieceRatePage() {
-  const ts = useTranslations('Common');
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
-  const [rates, setRates] = useState<any[]>([]);
+  const { toast } = useToast();
+  const [rates, setRates] = useState<PieceRate[]>([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');
 
   const fetchRates = async () => {
     setLoading(true);
     try {
-      const res = await authFetch(`/api/hr/piece-rate?keyword=${keyword}`);
+      const res = await authFetch(`/api/hr/piece-rate?keyword=${encodeURIComponent(keyword)}`);
       const json = await res.json();
       if (json.code === 200) setRates(json.data.list || []);
     } catch {
-      toast.error(t('fetchFailed') || ts('k_pyqt59'));
+      toast({ title: tc('error'), description: tc('fetchFailed'), variant: 'destructive' });
     }
     setLoading(false);
   };
 
-  useEffect(() => { fetchRates(); }, []);
+  useEffect(() => {
+    const timer = setTimeout(fetchRates, 300);
+    return () => clearTimeout(timer);
+  }, [keyword]);
 
   return (
-    <MainLayout>
+    <MainLayout title={t('pieceRate')}>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Tag className="h-6 w-6 text-blue-500 dark:text-blue-400" />
-            <h1 className="text-2xl font-bold">{t('pieceRate') || ts('k_1al09iu')}</h1>
+            <Tag className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+            <h1 className="text-2xl font-bold">{t('pieceRate')}</h1>
           </div>
-          <Button><Plus className="h-4 w-4 mr-2" />{tc('add') || ts('k_ebh5gv')}</Button>
+          <Button size="sm">
+            <Plus className="h-3 w-3 mr-1" />{tc('add')}
+          </Button>
         </div>
 
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">
               <Input
-                placeholder={tc('search') || ts('k_1s2zo9c')}
+                placeholder={tc('search')}
                 value={keyword}
-                onChange={e => setKeyword(e.target.value)}
-                className="max-w-sm"
+                onChange={(e) => setKeyword(e.target.value)}
+                className="max-w-sm h-8"
               />
-              <Button variant="outline" onClick={fetchRates}><Search className="h-4 w-4 mr-2" />{tc('search') || ts('k_367f3v')}</Button>
+              <Button variant="outline" size="sm" onClick={fetchRates}>
+                <Search className="h-3 w-3 mr-1" />{tc('search')}
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('processCode') || ts('k_1dy4roy')}</TableHead>
-                  <TableHead>{t('processName') || ts('k_2jnrc0')}</TableHead>
-                  <TableHead>{t('productType') || ts('k_tuwsjn')}</TableHead>
-                  <TableHead>{t('unitPrice') || ts('k_isc1c5')}</TableHead>
-                  <TableHead>{t('effectiveDate') || ts('k_1613r7i')}</TableHead>
-                  <TableHead>{t('status') || ts('k_1ccx4t4')}</TableHead>
-                  <TableHead className="w-24">{tc('actions') || ts('k_501w24')}</TableHead>
+                  <TableHead className="text-xs">{'工序代码'}</TableHead>
+                  <TableHead className="text-xs">{'产品类型'}</TableHead>
+                  <TableHead className="text-xs text-right">{'单价'}</TableHead>
+                  <TableHead className="text-xs">{'单位'}</TableHead>
+                  <TableHead className="text-xs text-right">{'质量标准(%)'}</TableHead>
+                  <TableHead className="text-xs">{'生效日期'}</TableHead>
+                  <TableHead className="text-xs">{'状态'}</TableHead>
+                  <TableHead className="text-xs w-20">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{tc('loading') || ts('k_ldc0z9')}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground text-xs">{tc('loading')}</TableCell></TableRow>
                 ) : rates.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{tc('noData') || ts('k_6tzr61')}</TableCell></TableRow>
-                ) : rates.map(r => (
+                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground text-xs">{tc('noData')}</TableCell></TableRow>
+                ) : rates.map((r) => (
                   <TableRow key={r.id}>
-                    <TableCell className="font-mono">{r.processCode}</TableCell>
-                    <TableCell>{r.processName}</TableCell>
-                    <TableCell>{r.productType || '-'}</TableCell>
-                    <TableCell className="font-mono">{Number(r.unitPrice).toFixed(4)}</TableCell>
-                    <TableCell>{r.effectiveDate}</TableCell>
-                    <TableCell><Badge variant={r.status === 1 ? 'default' : 'secondary'}>{r.status === 1 ? (t('active') || ts('k_5pm2ma')) : (t('inactive') || ts('k_6q9o5l'))}</Badge></TableCell>
+                    <TableCell className="text-xs font-mono">{r.processCode}</TableCell>
+                    <TableCell className="text-xs">{r.productType || '-'}</TableCell>
+                    <TableCell className="text-xs text-right font-mono">¥{Number(r.unitPrice).toFixed(4)}</TableCell>
+                    <TableCell className="text-xs">{r.unit || '件'}</TableCell>
+                    <TableCell className="text-xs text-right">{r.qualityThreshold != null ? r.qualityThreshold.toFixed(2) + '%' : '-'}</TableCell>
+                    <TableCell className="text-xs">{r.effectiveDate || '-'}</TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                      <Badge variant={r.status === 1 ? 'default' : 'secondary'} className="text-xs">{r.status === 1 ? tc('active') : tc('inactive')}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0"><Pencil className="h-3 w-3" /></Button>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-600 dark:text-red-400"><Trash2 className="h-3 w-3" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>

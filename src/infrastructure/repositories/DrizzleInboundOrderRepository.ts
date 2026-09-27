@@ -18,7 +18,7 @@ import { getTranslations } from 'next-intl/server';
  */
 
 import { eq, and, like, or, gte, lte, desc, inArray, count } from 'drizzle-orm';
-import { getDrizzleDb } from '@/lib/db';
+import { getDrizzleDb, execute } from '@/lib/db';
 import { invInboundOrders, invInboundItems } from '@/lib/db/schema';
 import { transaction } from '@/lib/db';
 import {
@@ -401,16 +401,23 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
   async updateInspectionAndFinance(
     id: number,
     inspectionStatus: number,
-    _financePosted: boolean,
-    _conn?: unknown
+    financePosted: boolean,
+    conn?: unknown
   ): Promise<void> {
-    // 使用 Drizzle 更新 qc_status
-    await getDrizzleDb()
-      .update(invInboundOrders)
-      .set({
-        qcStatus: inspectionStatus === 3 ? 'pass' : 'pending',
-        updateTime: new Date(),
-      })
-      .where(eq(invInboundOrders.id, id));
+    // 必须在事务连接(conn)上执行，避免自死锁（见 MysqlInboundOrderRepository 注释）
+    const sql = `UPDATE inv_inbound_order
+        SET inspection_status = ?, finance_posted = ?, qc_status = ?, update_time = NOW()
+      WHERE id = ?`;
+    const params = [
+      inspectionStatus,
+      financePosted ? 1 : 0,
+      inspectionStatus === 3 ? 'pass' : 'pending',
+      id,
+    ];
+    if (conn && typeof (conn as any).execute === 'function') {
+      await (conn as any).execute(sql, params);
+    } else {
+      await execute(sql, params);
+    }
   }
 }

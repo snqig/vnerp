@@ -52,7 +52,7 @@ export default function TurnoverPage() {
     try {
       const res = await authFetch('/api/hr/reports/turnover');
       const json = await res.json();
-      if (json.success) {
+      if (json.code === 200) {
         setData(json.data);
       }
     } catch {

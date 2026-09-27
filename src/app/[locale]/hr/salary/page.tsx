@@ -3,7 +3,7 @@ import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useRef } from 'react';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
@@ -21,6 +21,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -62,10 +63,10 @@ import {
   ArrowUp,
   ArrowDown,
 } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
 // DECIMAL 列经 mysql2 返回字符串，统一归一为数值，避免 `+` 变成字符串拼接
 const toNumber = (v: unknown): number => {
@@ -123,6 +124,7 @@ interface Department {
 }
 
 export default function HRSalaryPage() {
+  const { toast } = useToast();
   // 翻译钩子
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
@@ -274,10 +276,31 @@ export default function HRSalaryPage() {
     }
     return true;
   });
-  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
+  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } = useRowSelection(
     filteredSalaries,
     (r) => String(r.id)
   );
+  const [deleting, setDeleting] = useState(false);
+
+  const handleBatchDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
+    setDeleting(true);
+    let okCount = 0; let failMsg = '';
+    for (const id of ids) {
+      try {
+        const res = await authFetch('/api/hr/salary?id=' + id, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) okCount++; else failMsg = data.message || failMsg;
+      } catch { failMsg = tc('error'); }
+    }
+    setDeleting(false);
+    if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
+    if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
+    clear();
+    await fetchSalaryData();
+  };
 
   const sortedSalaries = (() => {
     if (!sortField) return filteredSalaries;
@@ -324,10 +347,6 @@ export default function HRSalaryPage() {
       setSortDirection('asc');
     }
   };
-
-  const toggleSelectAll = () => toggleAll();;
-
-  const toggleSelect = (id: number) => toggle(String(id));
 
   const SortableHeader = ({
     field,
@@ -408,12 +427,12 @@ export default function HRSalaryPage() {
       if (result.success) {
         await fetchSalaryData();
         setIsEditOpen(false);
-        toast.success(t('salarySaveSuccess'));
+        toast({ title: t('salarySaveSuccess') });
       } else {
-        toast.error(result.message || t('salarySaveFailed'));
+        toast({ title: t('salarySaveFailed'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast.error(t('salarySaveFailed'));
+      toast({ title: t('salarySaveFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -423,7 +442,7 @@ export default function HRSalaryPage() {
   const handleDelete = async (salary: Salary) => {
     if (!confirm(t('confirmDeleteSalary', { name: salary.name }))) return;
     if (!salary.salary_id) {
-      toast.error(tc('failed'));
+      toast({ title: tc('error'), description: tc('failed'), variant: 'destructive' });
       return;
     }
     try {
@@ -433,12 +452,12 @@ export default function HRSalaryPage() {
       const result = await res.json();
       if (result.success) {
         await fetchSalaryData();
-        toast.success(t('salaryDeleteSuccess'));
+        toast({ title: t('salaryDeleteSuccess') });
       } else {
-        toast.error(result.message || t('salarySaveFailed'));
+        toast({ title: t('salarySaveFailed'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast.error(t('salarySaveFailed'));
+      toast({ title: t('salarySaveFailed'), variant: 'destructive' });
     }
   };
 
@@ -647,92 +666,63 @@ export default function HRSalaryPage() {
         {/* 薪资列表 */}
         <Card>
           <CardContent className="p-0">
+            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12 text-center">
-                    <Checkbox
-                      checked={allSelected}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
-                  <SortableHeader field="name">{tc('employeeInfo')}</SortableHeader>
-                  <SortableHeader field="dept_name">{tc('deptPosition')}</SortableHeader>
-                  <SortableHeader field="basic_salary" className="text-right">
+                  <TableHead className="w-10"><input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} /></TableHead>
+                  <TableHead className="w-10 text-center">{tc('serialNo')}</TableHead>
+                  <SortableHeader field="name" className="w-28">{tc('employeeInfo')}</SortableHeader>
+                  <SortableHeader field="dept_name" className="w-28">{tc('deptPosition')}</SortableHeader>
+                  <SortableHeader field="basic_salary" className="text-right w-24">
                     {tc('baseSalary')}
                   </SortableHeader>
-                  <TableHead className="text-right">{tc('allowanceBonus')}</TableHead>
-                  <TableHead className="text-right">{tc('deductionItems')}</TableHead>
-                  <SortableHeader field="actual_salary" className="text-right">
+                  <TableHead className="text-right w-28">{tc('allowanceBonus')}</TableHead>
+                  <TableHead className="text-right w-28">{tc('deductionItems')}</TableHead>
+                  <SortableHeader field="actual_salary" className="text-right w-24">
                     {tc('netSalary')}
                   </SortableHeader>
-                  <TableHead>{tc('status')}</TableHead>
-                  <TableHead>{tc('actions')}</TableHead>
+                  <TableHead className="w-20">{tc('status')}</TableHead>
+                  <TableHead className="w-20">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sortedSalaries.map((salary, index) => (
                   <TableRow key={salary.id}>
-                    <TableCell className="text-center">
-                      <Checkbox
-                        checked={isSelected(String(salary.id))}
-                        onCheckedChange={() => toggleSelect(salary.id)}
-                      />
-                    </TableCell>
-                    <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{salary.name}</span>
-                        <span className="text-xs text-muted-foreground">{salary.employee_no}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {getGenderText(salary.gender)}
-                        </span>
+                      <TableCell><input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(salary.id))} onChange={() => toggle(String(salary.id))} aria-label={tc('selectRow', { id: salary.id })} /></TableCell>
+                    <TableCell className="text-center text-muted-foreground text-xs">{index + 1}</TableCell>
+                    <TableCell className="max-w-28">
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-medium text-xs truncate">{salary.name}</span>
+                        <span className="text-xs text-muted-foreground truncate">{salary.employee_no}</span>
+                        <span className="text-xs text-muted-foreground">{getGenderText(salary.gender)}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span>{salary.dept_name}</span>
-                        <span className="text-xs text-muted-foreground">{salary.position}</span>
+                    <TableCell className="max-w-28">
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs truncate">{salary.dept_name}</span>
+                        <span className="text-xs text-muted-foreground truncate">{salary.position}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right text-xs">
                       ¥{(salary.basic_salary || 0).toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex flex-col text-xs">
-                        <span>
-                          {tc('positionAllowanceShort')}
-                          {(salary.position_allowance || 0).toLocaleString()}
-                        </span>
-                        <span>
-                          {tc('performanceBonusShort')}
-                          {(salary.performance_bonus || 0).toLocaleString()}
-                        </span>
-                        <span>
-                          {tc('overtimePayShort')}
-                          {(salary.overtime_pay || 0).toLocaleString()}
-                        </span>
+                    <TableCell className="text-right text-xs">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="truncate">{tc('positionAllowanceShort')} {(salary.position_allowance || 0).toLocaleString()}</span>
+                        <span className="truncate">{tc('performanceBonusShort')} {(salary.performance_bonus || 0).toLocaleString()}</span>
+                        <span className="truncate">{tc('overtimePayShort')} {(salary.overtime_pay || 0).toLocaleString()}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right text-xs">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="truncate">{tc('socialSecurityShort')} {(salary.social_security || 0).toLocaleString()}</span>
+                        <span className="truncate">{tc('housingFundShort')} {(salary.housing_fund || 0).toLocaleString()}</span>
+                        <span className="truncate">{tc('personalTaxShort')} {(salary.personal_tax || 0).toLocaleString()}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex flex-col text-xs">
-                        <span>
-                          {tc('socialSecurityShort')}
-                          {(salary.social_security || 0).toLocaleString()}
-                        </span>
-                        <span>
-                          {tc('housingFundShort')}
-                          {(salary.housing_fund || 0).toLocaleString()}
-                        </span>
-                        <span>
-                          {tc('personalTaxShort')}
-                          {(salary.personal_tax || 0).toLocaleString()}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span className="font-bold text-lg text-green-600 dark:text-green-400">
+                      <span className="font-bold text-green-600 dark:text-green-400 text-sm">
                         ¥{(salary.actual_salary || 0).toLocaleString()}
                       </span>
                     </TableCell>
@@ -750,19 +740,25 @@ export default function HRSalaryPage() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Button
+                          size="sm"
                           variant="ghost"
-                          size="icon"
+                          className="h-6 text-xs px-2"
                           onClick={() => handleViewDetail(salary)}
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3 w-3" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(salary)}>
-                          <Edit className="h-4 w-4" />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 text-xs px-2"
+                          onClick={() => handleEdit(salary)}
+                        >
+                          <Edit className="h-3 w-3" />
                         </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                              <MoreHorizontal className="h-3 w-3" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">

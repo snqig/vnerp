@@ -33,7 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2, AlertTriangle, Award, CheckCircle, Clock, XCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/lib/date-utils';
 import { useRowSelection } from '@/lib/useRowSelection';
@@ -57,24 +57,24 @@ interface Certificate {
 }
 
 const certTypeMap: Record<string, string> = {
-  operation: 'certTypeOperation',
-  safety: 'certTypeSafety',
-  quality: 'certTypeQuality',
-  skill: 'certTypeSkill',
+  '职业资格证': 'certTypeQualification',
+  '安全证书': 'certTypeSafety',
+  '技能等级证': 'certTypeSkill',
+  '体系认证': 'certTypeSystem',
 };
 
 const certTypeOptions = [
   { value: 'all', label: 'allTypes' },
-  { value: 'operation', label: 'certTypeOperation' },
-  { value: 'safety', label: 'certTypeSafety' },
-  { value: 'quality', label: 'certTypeQuality' },
-  { value: 'skill', label: 'certTypeSkill' },
+  { value: '职业资格证', label: 'certTypeQualification' },
+  { value: '安全证书', label: 'certTypeSafety' },
+  { value: '技能等级证', label: 'certTypeSkill' },
+  { value: '体系认证', label: 'certTypeSystem' },
 ];
 
 const statusOptions = [
   { value: 'all', label: 'allStatus' },
-  { value: 'active', label: 'valid' },
-  { value: 'expired', label: 'expired' },
+  { value: '1', label: 'valid' },
+  { value: '0', label: 'expired' },
 ];
 
 
@@ -89,6 +89,8 @@ const getDaysUntilExpiry = (expiryDate: string) => {
 
 export default function CertificatesPage() {
   const ts = useTranslations('Common');
+  const tc = useTranslations('Common');
+  const { toast } = useToast();
   const [list, setList] = useState<Certificate[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -104,6 +106,7 @@ export default function CertificatesPage() {
   const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
     useRowSelection(list, (r) => String(r.id));
   const [deleting, setDeleting] = useState(false);
+  const [employees, setEmployees] = useState<{id: number; name: string; employee_no: string}[]>([]);
 
   const handleBatchDelete = async () => {
     const ids = Array.from(selected);
@@ -119,14 +122,29 @@ export default function CertificatesPage() {
       } catch { failMsg = tc('error'); }
     }
     setDeleting(false);
-    if (okCount > 0) toast.success(tc('batchDeleteSuccess', { count: okCount }));
-    if (failMsg) toast.error(failMsg);
+    if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
+    if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
     clear();
     fetchData();
   };
 
   const t = useTranslations('Hr');
-  const tc = useTranslations('Common');
+
+  // 加载员工列表
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await authFetch('/api/organization/employee?pageSize=1000');
+        const json = await res.json();
+        if (json.code === 200) {
+          setEmployees(json.data.list || []);
+        }
+      } catch {
+        // 忽略错误
+      }
+    };
+    fetchEmployees();
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -135,17 +153,20 @@ export default function CertificatesPage() {
         pageSize: String(pageSize),
       });
       if (employeeId) params.append('employeeId', employeeId);
-      if (certType) params.append('certType', certType);
-      if (status) params.append('status', status);
+      if (certType && certType !== 'all') params.append('certType', certType);
+      if (status && status !== 'all') params.append('status', status);
 
       const res = await authFetch(`/api/hr/certificates?${params}`);
       const json = await res.json();
       if (json.code === 200) {
         setList(json.data.list || []);
         setTotal(json.data.total || 0);
+      } else {
+        toast({ title: tc('error'), description: json.message || tc('fetchFailed'), variant: 'destructive' });
       }
-    } catch {
-      toast.error(tc('fetchFailed'));
+    } catch (error) {
+      console.error('Fetch error:', error);
+      toast({ title: tc('error'), description: tc('fetchFailed'), variant: 'destructive' });
     }
   };
 
@@ -162,14 +183,14 @@ export default function CertificatesPage() {
       });
       const json = await res.json();
       if (json.code === 200) {
-        toast.success(isEdit ? tc('updateSuccess') : tc('createSuccess'));
+        toast({ title: tc('success'), description: isEdit ? tc('updateSuccess') : tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast.error(json.message || tc('error'));
+        toast({ title: tc('error'), description: json.message || tc('error'), variant: 'destructive' });
       }
     } catch {
-      toast.error(tc('error'));
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -179,13 +200,13 @@ export default function CertificatesPage() {
       const res = await authFetch(`/api/hr/certificates?id=${id}`, { method: 'DELETE' });
       const json = await res.json();
       if (json.code === 200) {
-        toast.success(tc('deleteSuccess'));
+        toast({ title: tc('success'), description: tc('deleteSuccess') });
         fetchData();
       } else {
-        toast.error(json.message || tc('deleteFailed'));
+        toast({ title: tc('error'), description: json.message || tc('deleteFailed'), variant: 'destructive' });
       }
     } catch {
-      toast.error(tc('deleteFailed'));
+      toast({ title: tc('error'), description: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -203,12 +224,22 @@ export default function CertificatesPage() {
           <h1 className="text-2xl font-bold">{t('certificateManage')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
-              <Input
-                placeholder={ts('k_yg2hbv')}
-                value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
-                className="w-28 h-8 text-sm"
-              />
+              <Select
+                value={employeeId || 'all'}
+                onValueChange={(v) => setEmployeeId(v === 'all' ? '' : v)}
+              >
+                <SelectTrigger className="w-40 h-8 text-sm">
+                  <SelectValue placeholder={t('selectEmployee')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{ts('all')}</SelectItem>
+                  {employees.map((emp) => (
+                    <SelectItem key={emp.id} value={String(emp.id)}>
+                      {emp.employee_no} {emp.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Select value={certType} onValueChange={setCertType}>
                 <SelectTrigger className="w-28 h-8 text-sm">
                   <SelectValue placeholder={t('certType')} />
@@ -254,16 +285,16 @@ export default function CertificatesPage() {
         {/* 统计卡片 */}
         <StatsCards
           configs={[
-            { key: 'total', label: t('totalCertificates'), icon: Award, ...StatsTheme.blue },
+            { key: 'total', label: '证书总数', icon: Award, ...StatsTheme.blue },
             { key: 'valid', label: t('valid'), icon: CheckCircle, ...StatsTheme.green },
-            { key: 'expiring', label: t('expiringSoon'), icon: Clock, ...StatsTheme.orange },
-            { key: 'expired', label: t('expired'), icon: XCircle, ...StatsTheme.red }
+            { key: 'expiring', label: '即将到期', icon: Clock, ...StatsTheme.orange },
+            { key: 'expired', label: '已过期', icon: XCircle, ...StatsTheme.red }
           ]}
-          stats={[
-            { key: 'total', count: list.length },
-            { key: 'valid', count: list.length },
-            { key: 'expiring', count: list.length },
-            { key: 'expired', count: list.length }
+          stats={[ 
+            { key: 'total', count: total }, 
+            { key: 'valid', count: list.filter(item => Number(item.status) === 1).length }, 
+            { key: 'expiring', count: list.filter(item => getDaysUntilExpiry(item.expiry_date) <= 30 && getDaysUntilExpiry(item.expiry_date) > 0).length }, 
+            { key: 'expired', count: list.filter(item => Number(item.status) === 0).length } 
           ]}
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
@@ -276,6 +307,7 @@ export default function CertificatesPage() {
                   <TableHead className="w-10">
                     <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
                   </TableHead>
+                  <TableHead className="text-xs">员工姓名</TableHead>
                   <TableHead className="text-xs">{t('certName')}</TableHead>
                   <TableHead className="text-xs">{t('certCode')}</TableHead>
                   <TableHead className="text-xs">{t('certType')}</TableHead>
@@ -307,16 +339,17 @@ export default function CertificatesPage() {
                           aria-label={tc('selectRow', { id: item.id })}
                         />
                       </TableCell>
+                      <TableCell className="text-xs">{item.employee_name || '-'}</TableCell>
                       <TableCell className="text-xs font-medium">{item.cert_name}</TableCell>
                       <TableCell className="text-xs font-mono">{item.cert_code}</TableCell>
                       <TableCell className="text-xs">
-                        {t(certTypeMap[item.cert_type] || item.cert_type)}
+                        {item.cert_type || '-'}
                       </TableCell>
                       <TableCell className="text-xs">{item.issue_authority || '-'}</TableCell>
                       <TableCell className="text-xs">{formatDate(item.issue_date)}</TableCell>
                       <TableCell className="text-xs">{formatDate(item.expiry_date)}</TableCell>
                       <TableCell className="text-xs">
-                        {item.status === 'active' ? (
+                        {Number(item.status) === 1 ? (
                           <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs border-0">{tc('active')}</Badge>
                         ) : (
                           <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs border-0">{tc('expired')}</Badge>
@@ -402,12 +435,22 @@ export default function CertificatesPage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{t('employeeNo')}</Label>
-                <Input
-                  type="number"
-                  value={editItem.employee_id || ''}
-                  onChange={(e) => setEditItem({ ...editItem, employee_id: Number(e.target.value) })}
-                />
+                <Label>{t('employeeName')}</Label>
+                <Select
+                  value={String(editItem.employee_id || '')}
+                  onValueChange={(v) => setEditItem({ ...editItem, employee_id: Number(v) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={tc('select')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employees.map((emp) => (
+                      <SelectItem key={emp.id} value={String(emp.id)}>
+                        {emp.employee_no} {emp.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>{t('certName')}</Label>
@@ -540,7 +583,7 @@ export default function CertificatesPage() {
                   </div>
                   <div>
                     <span className="text-muted-foreground">{tc('status')}：</span>
-                    {detailItem.status === 'active' ? (
+                    {Number(detailItem.status) === 1 ? (
                       <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs border-0">{tc('active')}</Badge>
                     ) : (
                       <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs border-0">{tc('expired')}</Badge>

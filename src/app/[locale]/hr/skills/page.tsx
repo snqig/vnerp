@@ -33,7 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2, Star, CheckCircle2, XCircle, Award } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/lib/date-utils';
 import { useRowSelection } from '@/lib/useRowSelection';
@@ -55,18 +55,27 @@ interface Skill {
 }
 
 const categoryMap: Record<string, string> = {
+  '印刷技术': 'skillCategoryPrinting',
+  '后加工': 'skillCategoryBinding',
+  '模切技术': 'skillCategoryDieCutting',
+  '质量管理': 'skillCategoryQuality',
+  '模具技术': 'skillCategoryMold',
+  management: 'skillCategoryManagement',
   printing: 'skillCategoryPrinting',
-  binding: 'skillCategoryBinding',
-  finishing: 'skillCategoryFinishing',
+  quality: 'skillCategoryQuality',
   maintenance: 'skillCategoryMaintenance',
+  business: 'skillCategoryBusiness',
 };
 
 const categoryOptions = [
   { value: '_all', label: 'all' },
-  { value: 'printing', label: 'skillCategoryPrinting' },
-  { value: 'binding', label: 'skillCategoryBinding' },
-  { value: 'finishing', label: 'skillCategoryFinishing' },
+  { value: '印刷技术', label: 'skillCategoryPrinting' },
+  { value: '后加工', label: 'skillCategoryBinding' },
+  { value: '模切技术', label: 'skillCategoryDieCutting' },
+  { value: '质量管理', label: 'skillCategoryQuality' },
+  { value: '模具技术', label: 'skillCategoryMold' },
   { value: 'maintenance', label: 'skillCategoryMaintenance' },
+  { value: 'business', label: 'skillCategoryBusiness' },
 ];
 
 const levelLabels = ['', 'skillLevel1', 'skillLevel2', 'skillLevel3', 'skillLevel4', 'skillLevel5'];
@@ -100,14 +109,15 @@ export default function SkillsPage() {
       } catch { failMsg = tc('error'); }
     }
     setDeleting(false);
-    if (okCount > 0) toast.success(tc('batchDeleteSuccess', { count: okCount }));
-    if (failMsg) toast.error(failMsg);
+    if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
+    if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
     clear();
     fetchData();
   };
 
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
+  const { toast } = useToast();
 
   const fetchData = async () => {
     try {
@@ -125,7 +135,7 @@ export default function SkillsPage() {
         setTotal(json.data.total || 0);
       }
     } catch {
-      toast.error(tc('fetchFailed'));
+      toast({ title: tc('error'), description: tc('fetchFailed'), variant: 'destructive' });
     }
   };
 
@@ -142,14 +152,14 @@ export default function SkillsPage() {
       });
       const json = await res.json();
       if (json.code === 200) {
-        toast.success(isEdit ? tc('updateSuccess') : tc('createSuccess'));
+        toast({ title: tc('success'), description: isEdit ? tc('updateSuccess') : tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast.error(json.message || tc('error'));
+        toast({ title: tc('error'), description: json.message || tc('error'), variant: 'destructive' });
       }
     } catch {
-      toast.error(tc('error'));
+      toast({ title: tc('error'), description: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -159,13 +169,13 @@ export default function SkillsPage() {
       const res = await authFetch(`/api/hr/skills?id=${id}`, { method: 'DELETE' });
       const json = await res.json();
       if (json.code === 200) {
-        toast.success(tc('deleteSuccess'));
+        toast({ title: tc('success'), description: tc('deleteSuccess') });
         fetchData();
       } else {
-        toast.error(json.message || tc('deleteFailed'));
+        toast({ title: tc('error'), description: json.message || tc('deleteFailed'), variant: 'destructive' });
       }
     } catch {
-      toast.error(tc('deleteFailed'));
+      toast({ title: tc('error'), description: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -230,10 +240,10 @@ export default function SkillsPage() {
         {/* 统计卡片 */}
         <StatsCards
           configs={[
-            { key: 'total', label: t('totalSkills'), icon: Award, ...StatsTheme.blue },
-            { key: 'level1', label: t('level1'), icon: Star, ...StatsTheme.gray },
-            { key: 'level2', label: t('level2'), icon: Star, ...StatsTheme.cyan },
-            { key: 'level3', label: t('level3'), icon: Star, ...StatsTheme.orange }
+            { key: 'total', label: '技能总数', icon: Award, ...StatsTheme.blue },
+            { key: 'level1', label: '初级', icon: Star, ...StatsTheme.gray },
+            { key: 'level2', label: '中级', icon: Star, ...StatsTheme.cyan },
+            { key: 'level3', label: '高级', icon: Star, ...StatsTheme.orange }
           ]}
           stats={[
             { key: 'total', count: list.length },

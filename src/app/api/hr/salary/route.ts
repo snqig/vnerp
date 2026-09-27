@@ -28,6 +28,7 @@ export const GET = withPermission(
       e.employee_no,
       e.name,
       e.gender,
+      e.age,
       e.dept_id,
       e.dept_name,
       e.position,

@@ -49,6 +49,7 @@ export const GET = withPermission(
         employeeName: r.employee_name || '',
         processCode: r.process_code,
         productCode: r.product_code,
+        machineId: r.machine_id || '',
         quantity,
         defectCount: defective,
         passRate,

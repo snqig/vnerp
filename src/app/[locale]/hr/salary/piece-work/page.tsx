@@ -10,10 +10,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Search, Upload, Package, FileText, Calendar, Clock, CheckCircle } from 'lucide-react';
+import { Search, Package } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
-import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
 interface PieceWorkRecord {
   id: number;
@@ -26,19 +25,13 @@ interface PieceWorkRecord {
   passRate: number;
   unitPrice: number;
   amount: number;
+  machineId: string;
 }
 
-const mockRecords: PieceWorkRecord[] = [
-  { id: 1, date: '2024-03-01', employeeName: '张三', processCode: 'P001', productCode: 'PRD-001', quantity: 100, defectCount: 2, passRate: 98, unitPrice: 5, amount: 490 },
-  { id: 2, date: '2024-03-01', employeeName: '李四', processCode: 'P002', productCode: 'PRD-002', quantity: 80, defectCount: 1, passRate: 98.75, unitPrice: 8, amount: 632 },
-  { id: 3, date: '2024-03-02', employeeName: '王五', processCode: 'P001', productCode: 'PRD-001', quantity: 120, defectCount: 3, passRate: 97.5, unitPrice: 5, amount: 585 },
-  { id: 4, date: '2024-03-02', employeeName: '张三', processCode: 'P003', productCode: 'PRD-003', quantity: 50, defectCount: 0, passRate: 100, unitPrice: 15, amount: 750 },
-];
-
 export default function PieceWorkPage() {
-  const ts = useTranslations('Common');
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
+  const { toast } = useToast();
 
   const [records, setRecords] = useState<PieceWorkRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -61,71 +54,53 @@ export default function PieceWorkPage() {
         const list = Array.isArray(json.data) ? json.data : json.data?.list || [];
         setRecords(list);
       } else {
-        setRecords(mockRecords);
+        setRecords([]);
       }
     } catch {
-      setRecords(mockRecords);
+      setRecords([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchRecords(); }, []);
+  useEffect(() => {
+    fetchRecords();
+  }, []);
 
   const totalQuantity = records.reduce((s, r) => s + Number(r.quantity), 0);
   const totalAmount = records.reduce((s, r) => s + Number(r.amount), 0);
 
   return (
-    <MainLayout title={t('pieceWork') || ts('k_8kbc4s')}>
+    <MainLayout title={t('pieceWork')}>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Package className="h-6 w-6 text-blue-500 dark:text-blue-400" />
-            <h1 className="text-2xl font-bold">{t('pieceWork') || ts('k_8kbc4s')}</h1>
+            <Package className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+            <h1 className="text-2xl font-bold">{t('pieceWork')}</h1>
           </div>
-          <Button variant="outline">
-            <Upload className="h-4 w-4 mr-2" />{t('importCsv') || ts('k_1hyar6y')}
-          </Button>
         </div>
 
-        
-        {/* 统计卡片 */}
-        <StatsCards
-          configs={[
-            { key: 'total', label: t('totalRecords'), icon: FileText, ...StatsTheme.blue },
-            { key: 'month', label: t('thisMonth'), icon: Calendar, ...StatsTheme.green },
-            { key: 'pending', label: t('pendingReview'), icon: Clock, ...StatsTheme.orange },
-            { key: 'approved', label: t('reviewed'), icon: CheckCircle, ...StatsTheme.purple },
-          ]}
-          stats={[
-            { key: 'total', count: records.length },
-            { key: 'month', count: records.length },
-            { key: 'pending', count: records.length },
-            { key: 'approved', count: records.length },
-          ]}
-          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
-        />
-<Card>
+        <Card>
           <CardHeader>
             <div className="flex flex-wrap items-end gap-4">
               <div className="space-y-1">
-                <Label className="text-xs">{t('employeeId') || ts('k_yg2hbv')}</Label>
-                <Input className="w-32" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} />
+                <Label className="text-xs">{'员工姓名'}</Label>
+                <Input className="w-32 h-8 text-sm" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">{t('processCode') || ts('k_1dy4roy')}</Label>
-                <Input className="w-32" value={processCode} onChange={(e) => setProcessCode(e.target.value)} />
+                <Label className="text-xs">{'工序代码'}</Label>
+                <Input className="w-32 h-8 text-sm" value={processCode} onChange={(e) => setProcessCode(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">{t('startDate') || ts('k_pwsjm4')}</Label>
-                <Input type="date" className="w-36" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <Label className="text-xs">{t('startDate')}</Label>
+                <Input type="date" className="w-36 h-8 text-sm" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">{t('endDate') || ts('k_jtgmsb')}</Label>
-                <Input type="date" className="w-36" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                <Label className="text-xs">{t('endDate')}</Label>
+                <Input type="date" className="w-36 h-8 text-sm" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
               </div>
-              <Button onClick={fetchRecords}>
-                <Search className="h-4 w-4 mr-2" />{tc('search')}
+              <Button size="sm" onClick={fetchRecords}>
+                <Search className="h-3 w-3 mr-1" />{tc('search')}
               </Button>
             </div>
           </CardHeader>
@@ -136,43 +111,46 @@ export default function PieceWorkPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('date') || ts('k_14s86i5')}</TableHead>
-                  <TableHead>{t('employeeName') || ts('k_bckr52')}</TableHead>
-                  <TableHead>{t('processCode') || ts('k_1dy4roy')}</TableHead>
-                  <TableHead>{t('productCode') || ts('k_kc3quy')}</TableHead>
-                  <TableHead className="text-right">{t('quantity') || ts('k_1i54xuo')}</TableHead>
-                  <TableHead className="text-right">{t('defectCount') || ts('k_1k01jvb')}</TableHead>
-                  <TableHead className="text-right">{t('passRate') || ts('k_8wg6le')}</TableHead>
-                  <TableHead className="text-right">{t('unitPrice') || ts('k_isc1c5')}</TableHead>
-                  <TableHead className="text-right">{t('amount') || ts('k_1jl9r8z')}</TableHead>
+                  <TableHead className="text-xs">{'日期'}</TableHead>
+                  <TableHead className="text-xs">{'员工姓名'}</TableHead>
+                  <TableHead className="text-xs">{'工序代码'}</TableHead>
+                  <TableHead className="text-xs">{'产品编码'}</TableHead>
+                  <TableHead className="text-xs">{'机台号'}</TableHead>
+                  <TableHead className="text-xs text-right">{'数量'}</TableHead>
+                  <TableHead className="text-xs text-right">{'次品数'}</TableHead>
+                  <TableHead className="text-xs text-right">{'合格率'}</TableHead>
+                  <TableHead className="text-xs text-right">{'单价'}</TableHead>
+                  <TableHead className="text-xs text-right">{'金额'}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {records.map((r) => (
                   <TableRow key={r.id}>
-                    <TableCell>{r.date}</TableCell>
-                    <TableCell className="font-medium">{r.employeeName}</TableCell>
-                    <TableCell><Badge variant="outline">{r.processCode}</Badge></TableCell>
-                    <TableCell>{r.productCode}</TableCell>
-                    <TableCell className="text-right">{r.quantity}</TableCell>
-                    <TableCell className="text-right text-red-500 dark:text-red-400">{r.defectCount}</TableCell>
-                    <TableCell className="text-right">{r.passRate}%</TableCell>
-                    <TableCell className="text-right">¥{r.unitPrice}</TableCell>
-                    <TableCell className="text-right font-medium">¥{Number(r.amount).toFixed(2)}</TableCell>
+                    <TableCell className="text-xs">{r.date}</TableCell>
+                    <TableCell className="text-xs font-medium">{r.employeeName}</TableCell>
+                    <TableCell className="text-xs font-mono">{r.processCode}</TableCell>
+                    <TableCell className="text-xs">{r.productCode}</TableCell>
+                    <TableCell className="text-xs">{r.machineId || '-'}</TableCell>
+                    <TableCell className="text-xs text-right">{r.quantity}</TableCell>
+                    <TableCell className="text-xs text-right text-red-500 dark:text-red-400">{r.defectCount}</TableCell>
+                    <TableCell className="text-xs text-right">{r.passRate}%</TableCell>
+                    <TableCell className="text-xs text-right font-mono">¥{Number(r.unitPrice).toFixed(4)}</TableCell>
+                    <TableCell className="text-xs text-right font-medium">¥{Number(r.amount).toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
                 {records.length > 0 && (
                   <TableRow className="bg-muted/50 font-semibold">
-                    <TableCell colSpan={4} className="text-right">{tc('total') || ts('k_3jbcte')}</TableCell>
-                    <TableCell className="text-right">{totalQuantity}</TableCell>
-                    <TableCell colSpan={3}></TableCell>
-                    <TableCell className="text-right">¥{Number(totalAmount).toFixed(2)}</TableCell>
+                    <TableCell colSpan={5} className="text-xs text-right">{tc('total')}</TableCell>
+                    <TableCell className="text-xs text-right">{totalQuantity}</TableCell>
+                    <TableCell className="text-xs"></TableCell>
+                    <TableCell className="text-xs"></TableCell>
+                    <TableCell className="text-xs text-right">¥{totalAmount.toFixed(2)}</TableCell>
                   </TableRow>
                 )}
                 {records.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      {loading ? (tc('loading') || ts('k_ldc0z9')) : (t('noData') || ts('k_6tzr61'))}
+                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground text-xs">
+                      {loading ? tc('loading') : tc('noData')}
                     </TableCell>
                   </TableRow>
                 )}

@@ -120,7 +120,7 @@ export default function CustomersPage() {
   const [followUpStatusFilter, setFollowUpStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const pageSize = 10;
+  const pageSize = 100;
 
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);

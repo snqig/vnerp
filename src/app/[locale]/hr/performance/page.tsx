@@ -193,9 +193,9 @@ export default function PerformancePage() {
         <StatsCards
           configs={[
             { key: 'total', label: t('totalEmployees'), icon: Users, ...StatsTheme.blue },
-            { key: 'excellent', label: t('excellent'), icon: Trophy, ...StatsTheme.green },
-            { key: 'good', label: t('good'), icon: ThumbsUp, ...StatsTheme.cyan },
-            { key: 'average', label: t('average'), icon: Minus, ...StatsTheme.orange },
+            { key: 'excellent', label: '优秀', icon: Trophy, ...StatsTheme.green },
+            { key: 'good', label: '良好', icon: ThumbsUp, ...StatsTheme.cyan },
+            { key: 'average', label: '平均', icon: Minus, ...StatsTheme.orange },
           ]}
           stats={[
             { key: 'total', count: scores.length },
