@@ -58,7 +58,13 @@ export class InboundApplicationService {
     status: string,
     page: number,
     pageSize: number,
-    filters?: { keyword?: string; startDate?: string; endDate?: string; poId?: number }
+    filters?: {
+      keyword?: string;
+      startDate?: string;
+      endDate?: string;
+      poId?: number;
+      orderType?: string;
+    }
   ) {
     return this.orderRepo.findByStatus(status, { page, pageSize }, filters);
   }

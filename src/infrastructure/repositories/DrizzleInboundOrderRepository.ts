@@ -113,7 +113,13 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
   async findByStatus(
     status: string,
     pagination: Pagination,
-    filters?: { keyword?: string; startDate?: string; endDate?: string; poId?: number }
+    filters?: {
+      keyword?: string;
+      startDate?: string;
+      endDate?: string;
+      poId?: number;
+      orderType?: string;
+    }
   ): Promise<PaginatedResult<InboundOrder>> {
     const conditions = [eq(invInboundOrders.deleted, 0)];
 
@@ -127,6 +133,10 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
     if (status) {
       const dbStatus = DOMAIN_TO_DB_STATUS[status] ?? status;
       conditions.push(eq(invInboundOrders.status, dbStatus));
+    }
+
+    if (filters?.orderType) {
+      conditions.push(eq(invInboundOrders.orderType, filters.orderType));
     }
 
     if (filters?.poId) {
