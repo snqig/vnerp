@@ -1,4 +1,23 @@
 {
+  "StandardTable": {
+    "selectAll": "全选（当前页）",
+    "selectRow": "选择第 {id} 行",
+    "paginationSummary": "共 {total} 条，共 {pages} 页",
+    "pageSize": "每页条数",
+    "pageSizeUnit": "条/页",
+    "prevPage": "上一页",
+    "nextPage": "下一页",
+    "pageNumber": "页码",
+    "jump": "跳转",
+    "invalidPage": "请输入 1 ~ {max} 之间的页码",
+    "loading": "加载中…",
+    "empty": "暂无数据",
+    "error": "数据加载失败",
+    "retry": "重试",
+    "sortHint": "点击切换排序（升序 / 降序 / 取消）",
+    "selectedCount": "已选 {count} 条",
+    "expandRow": "展开或收起第 {id} 行明细"
+  },
   "Error": {
     "UNAUTHORIZED": "登录已过期，请重新登录",
     "FORBIDDEN": "您没有权限执行此操作",

@@ -1,4 +1,23 @@
 {
+  "StandardTable": {
+    "selectAll": "Select all (current page)",
+    "selectRow": "Select row {id}",
+    "paginationSummary": "{total} records, {pages} pages",
+    "pageSize": "Rows per page",
+    "pageSizeUnit": "rows",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "pageNumber": "Page",
+    "jump": "Go",
+    "invalidPage": "Enter a page number between 1 and {max}",
+    "loading": "Loading…",
+    "empty": "No data",
+    "error": "Failed to load data",
+    "retry": "Retry",
+    "sortHint": "Click to toggle sorting (asc / desc / none)",
+    "selectedCount": "{count} selected",
+    "expandRow": "Expand or collapse details for row {id}"
+  },
   "Common": {
     "newDeliveryTitle": "New Shipment",
     "newDeliveryDesc": "Fill in shipment information, fields marked * are required",

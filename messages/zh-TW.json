@@ -1,4 +1,23 @@
 {
+  "StandardTable": {
+    "selectAll": "全選（當前頁）",
+    "selectRow": "選擇第 {id} 行",
+    "paginationSummary": "共 {total} 條，共 {pages} 頁",
+    "pageSize": "每頁筆數",
+    "pageSizeUnit": "條/頁",
+    "prevPage": "上一頁",
+    "nextPage": "下一頁",
+    "pageNumber": "頁碼",
+    "jump": "跳轉",
+    "invalidPage": "請輸入 1 ~ {max} 之間的頁碼",
+    "loading": "載入中…",
+    "empty": "暫無資料",
+    "error": "資料載入失敗",
+    "retry": "重試",
+    "sortHint": "點擊切換排序（升序 / 降序 / 取消）",
+    "selectedCount": "已選 {count} 條",
+    "expandRow": "展開或收合第 {id} 行明細"
+  },
   "Common": {
     "newDeliveryTitle": "新增發貨單",
     "newDeliveryDesc": "填寫發貨資訊，帶 * 為必填項",
