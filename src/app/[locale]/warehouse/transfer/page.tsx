@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -41,6 +42,7 @@ export default function TransferPage() {
   const [list, setList] = useState<TransferOrder[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(false);
   const [searchNo, setSearchNo] = useState('');
   const [showDialog, setShowDialog] = useState(false);
@@ -60,7 +62,11 @@ export default function TransferPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: '20', transferNo: searchNo });
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+        transferNo: searchNo,
+      });
       const res = await authFetch('/api/warehouse/transfer?' + params);
       const result = await res.json();
       if (result.success) {
@@ -74,7 +80,85 @@ export default function TransferPage() {
 
   useEffect(() => {
     fetchData();
-  }, [page]);
+  }, [page, pageSize]);
+
+  // /api/warehouse/transfer 未支持 sortField / sortDirection，故不开列排序（需后端补排序参数）
+  const columns: StandardTableColumn<TransferOrder>[] = [
+    {
+      key: 'transfer_no',
+      title: t('transferNo'),
+      width: 120,
+      render: (r) => <span className="font-mono text-xs">{r.transfer_no}</span>,
+    },
+    {
+      key: 'type_name',
+      title: t('transferType'),
+      width: 80,
+      render: (r) => <span className="text-xs">{r.type_name || '-'}</span>,
+    },
+    {
+      key: 'from_warehouse_name',
+      title: t('sourceWarehouse'),
+      render: (r) => <span className="text-xs">{r.from_warehouse_name || '-'}</span>,
+    },
+    {
+      key: 'to_warehouse_name',
+      title: t('targetWarehouse'),
+      render: (r) => <span className="text-xs">{r.to_warehouse_name || '-'}</span>,
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => {
+        const st = STATUS_MAP[r.status] || STATUS_MAP[0];
+        return (
+          <Badge
+            variant={st.variant as 'default' | 'secondary' | 'destructive' | 'outline'}
+            className="text-xs"
+          >
+            {st.label}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: 'operator_name',
+      title: t('applicant'),
+      render: (r) => <span className="text-xs">{r.operator_name || '-'}</span>,
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      align: 'right',
+      render: (r) => (
+        <div className="flex items-center justify-end gap-1">
+          {[0, 1].includes(r.status) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs px-2"
+              onClick={() => handleAction(r.id, 'cancel')}
+            >
+              {tc('cancel')}
+            </Button>
+          )}
+          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openDetail(r)}>
+            <Eye className="h-3 w-3" />
+          </Button>
+          {[0, 4].includes(r.status) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0 text-red-600 dark:text-red-400"
+              onClick={() => handleDelete(r.id)}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   const handleCreate = async () => {
     if (!editItem.from_warehouse_id) {
@@ -206,96 +290,24 @@ export default function TransferPage() {
                 {t('refresh')}
               </Button>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[120px]">{t('transferNo')}</TableHead>
-                  <TableHead className="w-[80px]">{t('transferType')}</TableHead>
-                  <TableHead>{t('sourceWarehouse')}</TableHead>
-                  <TableHead>{t('targetWarehouse')}</TableHead>
-                  <TableHead>{tc('status')}</TableHead>
-                  <TableHead>{t('applicant')}</TableHead>
-                  <TableHead className="text-right">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      {tc('loading')}
-                    </TableCell>
-                  </TableRow>
-                ) : list.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      {t('noTransferRecords')}
-                    </TableCell>
-                  </TableRow>
-                ) : list.map((item) => {
-                  const st = STATUS_MAP[item.status] || STATUS_MAP[0];
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-mono text-xs">{item.transfer_no}</TableCell>
-                      <TableCell className="text-xs">{item.type_name || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.from_warehouse_name || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.to_warehouse_name || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant as any} className="text-xs">
-                          {st.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs">{item.operator_name || '-'}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1">
-                          {[0, 1].includes(item.status) && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 text-xs px-2"
-                              onClick={() => handleAction(item.id, 'cancel')}
-                            >
-                              {tc('cancel')}
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0"
-                            onClick={() => openDetail(item)}
-                          >
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          {[0, 4].includes(item.status) && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 w-7 p-0 text-red-600 dark:text-red-400"
-                              onClick={() => handleDelete(item.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-            <div className="flex items-center justify-between px-4 py-3 border-t">
-              <span className="text-sm text-muted-foreground">{tc('total', { count: total })}</span>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-                  {tc('previousPage')}
-                </Button>
-                <span className="flex items-center px-3 text-sm text-muted-foreground">
-                  {tc('pageOf', { page, pages: Math.ceil(total / 20) || 1 })}
-                </span>
-                <Button size="sm" variant="outline" disabled={page * 20 >= total} onClick={() => setPage((p) => p + 1)}>
-                  {tc('nextPage')}
-                </Button>
-              </div>
-            </div>
+            <StandardTable<TransferOrder>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              loading={loading}
+              onRetry={fetchData}
+              emptyText={t('noTransferRecords')}
+              customStyle={{ containerClassName: 'px-2 pb-2' }}
+            />
           </CardContent>
         </Card>
 

@@ -8,14 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -46,7 +39,6 @@ import {
 } from 'lucide-react';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useToast } from '@/hooks/use-toast';
-import { useRowSelection } from '@/lib/useRowSelection';
 
 interface BatchItem {
   id: number;
@@ -77,10 +69,10 @@ export default function BatchPage() {
   const { toast } = useToast();
 
   const [list, setList] = useState<BatchItem[]>([]);
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } = useRowSelection(list, (item) => String(item.id));
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<any>({});
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(false);
   const [searchBatchNo, setSearchBatchNo] = useState('');
   const [expiryWarningOnly, setExpiryWarningOnly] = useState(false);
@@ -107,7 +99,7 @@ export default function BatchPage() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
       });
       if (searchBatchNo) params.set('batchNo', searchBatchNo);
       if (expiryWarningOnly) params.set('expiryWarning', 'true');
@@ -122,7 +114,7 @@ export default function BatchPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, searchBatchNo, expiryWarningOnly]);
+  }, [page, pageSize, searchBatchNo, expiryWarningOnly]);
 
   useEffect(() => {
     fetchData();
@@ -228,6 +220,126 @@ export default function BatchPage() {
     const status = getExpiryStatus(b.expire_date);
     return status !== null;
   }).length;
+
+  // StandardTable 列定义（服务端分页，接口暂不支持 sortField/sortDirection，故不开启 sortable）
+  const columns: StandardTableColumn<BatchItem>[] = [
+    {
+      key: 'batch_no',
+      title: t('batchNo'),
+      render: (r) => <span className="font-mono text-sm">{r.batch_no}</span>,
+    },
+    {
+      key: 'material_code',
+      title: t('materialCode'),
+      render: (r) => <span className="font-mono text-sm">{r.material_code}</span>,
+    },
+    {
+      key: 'material_name',
+      title: t('materialName'),
+      render: (r) => <span className="text-sm font-medium">{r.material_name}</span>,
+    },
+    {
+      key: 'warehouse_name',
+      title: t('warehouse'),
+      render: (r) => <span className="text-sm">{r.warehouse_name || '-'}</span>,
+    },
+    {
+      key: 'quantity',
+      title: t('quantity'),
+      align: 'right',
+      render: (r) => <span className="text-sm font-mono">{Number(r.quantity).toLocaleString()}</span>,
+    },
+    {
+      key: 'available_qty',
+      title: t('availableQty'),
+      align: 'right',
+      render: (r) => (
+        <span className="text-sm font-mono">{Number(r.available_qty).toLocaleString()}</span>
+      ),
+    },
+    {
+      key: 'unit_price',
+      title: t('costPrice'),
+      align: 'right',
+      render: (r) => <span className="text-sm font-mono">¥{Number(r.unit_price || 0).toFixed(4)}</span>,
+    },
+    {
+      key: 'expire_date',
+      title: t('expiryDate'),
+      render: (r) => {
+        const expiryStatus = getExpiryStatus(r.expire_date);
+        return r.expire_date ? (
+          <div>
+            <div>{r.expire_date}</div>
+            {expiryStatus && (
+              <div className={`text-xs ${expiryStatus.color}`}>{expiryStatus.label}</div>
+            )}
+          </div>
+        ) : (
+          '-'
+        );
+      },
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) =>
+        r.status === 'frozen' ? (
+          <Badge
+            variant="secondary"
+            className="bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300"
+          >
+            <Snowflake className="h-3 w-3 mr-1" />
+            {t('frozen')}
+          </Badge>
+        ) : (
+          <Badge variant="outline">{t('active')}</Badge>
+        ),
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      align: 'right',
+      // 原有操作列：详情 / 冻结 / 解冻，逻辑保持原样
+      render: (r) => (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7"
+            onClick={() => {
+              setDetailData(r);
+              setDetailOpen(true);
+            }}
+          >
+            <Eye className="h-3 w-3 mr-1" />
+            {tc('detail')}
+          </Button>
+          {r.status === 'frozen' ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-green-600 dark:text-green-400"
+              onClick={() => handleFreeze(r.id, 'unfreeze')}
+            >
+              <ThermometerSun className="h-3 w-3 mr-1" />
+              {t('unfreeze')}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-cyan-600 dark:text-cyan-400"
+              onClick={() => handleFreeze(r.id, 'freeze')}
+            >
+              <Snowflake className="h-3 w-3 mr-1" />
+              {t('freeze')}
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <MainLayout>
@@ -338,149 +450,26 @@ export default function BatchPage() {
         {/* 批次列表 */}
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('batchNo')}</TableHead>
-                  <TableHead>{t('materialCode')}</TableHead>
-                  <TableHead>{t('materialName')}</TableHead>
-                  <TableHead>{t('warehouse')}</TableHead>
-                  <TableHead>{t('quantity')}</TableHead>
-                  <TableHead>{t('availableQty')}</TableHead>
-                  <TableHead>{t('costPrice')}</TableHead>
-                  <TableHead>{t('expiryDate')}</TableHead>
-                  <TableHead>{tc('status')}</TableHead>
-                  <TableHead className="text-right">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8">
-                      <RefreshCw className="w-5 h-5 animate-spin mx-auto" />
-                    </TableCell>
-                  </TableRow>
-                ) : list.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
-                      {tc('noData')}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  list.map((item) => {
-                    const expiryStatus = getExpiryStatus(item.expire_date);
-                    return (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-mono text-sm">{item.batch_no}</TableCell>
-                        <TableCell className="font-mono text-sm">{item.material_code}</TableCell>
-                        <TableCell className="text-sm font-medium">{item.material_name}</TableCell>
-                        <TableCell className="text-sm">{item.warehouse_name || '-'}</TableCell>
-                        <TableCell className="text-sm font-mono">
-                          {Number(item.quantity).toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-sm font-mono">
-                          {Number(item.available_qty).toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-sm font-mono">
-                          ¥{Number(item.unit_price || 0).toFixed(4)}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {item.expire_date ? (
-                            <div>
-                              <div>{item.expire_date}</div>
-                              {expiryStatus && (
-                                <div className={`text-xs ${expiryStatus.color}`}>
-                                  {expiryStatus.label}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            '-'
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {item.status === 'frozen' ? (
-                            <Badge
-                              variant="secondary"
-                              className="bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300"
-                            >
-                              <Snowflake className="h-3 w-3 mr-1" />
-                              {t('frozen')}
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline">{t('active')}</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7"
-                              onClick={() => {
-                                setDetailData(item);
-                                setDetailOpen(true);
-                              }}
-                            >
-                              <Eye className="h-3 w-3 mr-1" />
-                              {tc('detail')}
-                            </Button>
-                            {item.status === 'frozen' ? (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-green-600 dark:text-green-400"
-                                onClick={() => handleFreeze(item.id, 'unfreeze')}
-                              >
-                                <ThermometerSun className="h-3 w-3 mr-1" />
-                                {t('unfreeze')}
-                              </Button>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-cyan-600 dark:text-cyan-400"
-                                onClick={() => handleFreeze(item.id, 'freeze')}
-                              >
-                                <Snowflake className="h-3 w-3 mr-1" />
-                                {t('freeze')}
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<BatchItem>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              loading={loading}
+              onRetry={() => fetchData()}
+              emptyText={tc('noData')}
+              customStyle={{ containerClassName: 'px-2 pb-2' }}
+            />
           </CardContent>
         </Card>
-
-        {/* 分页 */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            {tc('total')} {total} {t('batchUnit')}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
       </div>
 
       {/* 批次详情对话框 */}

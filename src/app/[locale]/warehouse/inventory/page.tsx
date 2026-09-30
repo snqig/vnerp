@@ -1,18 +1,14 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+  type SortState,
+} from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -33,13 +29,9 @@ import {
   BoxIcon,
   Layers,
   RefreshCw,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
   Download,
   Snowflake,
 } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
 import { AdvancedSearch, FilterField, ActiveFilter } from '@/components/ui/advanced-search';
 import { BatchToolbar, BatchAction } from '@/components/ui/batch-toolbar';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
@@ -60,8 +52,11 @@ export default function InventoryPage() {
   const [keyword, setKeyword] = useState('');
   const [warehouseId, setWarehouseId] = useState('');
   const [status, setStatus] = useState('all');
-  const [sortField, setSortField] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+  // StandardTable：分页 / 排序 / 勾选
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sort, setSort] = useState<SortState>(null);
+  const [selectedRows, setSelectedRows] = useState<Loose[]>([]);
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
   const { toast } = useToast();
 
@@ -188,40 +183,124 @@ export default function InventoryPage() {
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      if (sortOrder === 'asc') setSortOrder('desc');
-      else if (sortOrder === 'desc') {
-        setSortField(null);
-        setSortOrder(null);
-      }
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  };
-  const getSortIcon = (field: string) => {
-    if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
-    return sortOrder === 'asc' ? (
-      <ArrowUp className="ml-1 h-3 w-3" />
-    ) : (
-      <ArrowDown className="ml-1 h-3 w-3" />
-    );
-  };
   const sortedInventory = useMemo(() => {
-    if (!sortField || !sortOrder) return inventoryItems;
+    if (!sort) return inventoryItems;
+    const dir = sort.direction === 'asc' ? 1 : -1;
     return [...inventoryItems].sort((a, b) => {
-      const aVal = String((a as Record<string, unknown>)[sortField] ?? '').toLowerCase();
-      const bVal = String((b as Record<string, unknown>)[sortField] ?? '').toLowerCase();
-      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+      const aVal = String((a as Record<string, unknown>)[sort.field] ?? '').toLowerCase();
+      const bVal = String((b as Record<string, unknown>)[sort.field] ?? '').toLowerCase();
+      if (aVal < bVal) return -1 * dir;
+      if (aVal > bVal) return 1 * dir;
       return 0;
     });
-  }, [inventoryItems, sortField, sortOrder]);
-  const { selectedCount, isSelected, allSelected, toggle, toggleAll, selected, clear } = useRowSelection(
-    sortedInventory,
-    (r) => String(r.id)
+  }, [inventoryItems, sort]);
+
+  // StandardTable 只渲染当前页数据
+  const paged = useMemo(
+    () => sortedInventory.slice((page - 1) * pageSize, page * pageSize),
+    [sortedInventory, page, pageSize]
   );
+
+  const handleSortChange = (next: SortState) => {
+    setSort(next);
+    setPage(1);
+  };
+
+  const clear = () => setSelectedRows([]);
+
+  const columns: StandardTableColumn<Loose>[] = [
+    {
+      key: 'batch_no',
+      title: t('batchNo'),
+      sortable: true,
+      className: 'font-mono',
+      render: (item) => (
+        <div className="flex items-center gap-2">
+          <Barcode className="h-4 w-4 text-muted-foreground" />
+          {item.batch_no}
+        </div>
+      ),
+    },
+    {
+      key: 'material_code',
+      title: t('materialCode'),
+      sortable: true,
+      className: 'font-mono text-xs',
+      render: (item) => item.material_code || '-',
+    },
+    {
+      key: 'material_name',
+      title: t('material'),
+      sortable: true,
+      className: 'font-medium',
+      render: (item) => item.material_name,
+    },
+    {
+      key: 'material_spec',
+      title: t('specification'),
+      sortable: true,
+      className: 'text-muted-foreground',
+      render: (item) => item.material_spec || '-',
+    },
+    {
+      key: 'warehouse_name',
+      title: t('warehouseName'),
+      sortable: true,
+      render: (item) => <span className="text-sm">{item.warehouse_name || '-'}</span>,
+    },
+    {
+      key: 'quantity',
+      title: t('quantity'),
+      align: 'right',
+      sortable: true,
+      className: 'font-medium',
+      render: (item) => `${parseFloat(item.quantity || 0).toLocaleString()} ${item.unit}`,
+    },
+    {
+      key: 'available_qty',
+      title: t('availableQty'),
+      align: 'right',
+      sortable: true,
+      render: (item) => parseFloat(item.available_qty || 0).toLocaleString(),
+    },
+    {
+      key: 'locked_qty',
+      title: t('lockedQty'),
+      align: 'right',
+      sortable: true,
+      className: 'text-orange-600 dark:text-orange-400',
+      render: (item) => parseFloat(item.locked_qty || 0).toLocaleString(),
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      sortable: true,
+      render: (item) => getStatusBadge(item.status),
+    },
+    {
+      key: 'alertLevel',
+      title: tc('warning'),
+      render: (item) => getAlertBadge(item.alertLevel),
+    },
+    {
+      key: 'expire_date',
+      title: t('expiryDate'),
+      sortable: true,
+      className: 'text-muted-foreground',
+      render: (item) => (item.expire_date ? new Date(item.expire_date).toLocaleDateString() : '-'),
+    },
+    {
+      key: 'actions',
+      title: tc('operation'),
+      align: 'right',
+      render: () => (
+        <Button variant="ghost" size="sm">
+          <Layers className="h-4 w-4 mr-1" />
+          {t('trace')}
+        </Button>
+      ),
+    },
+  ];
 
   useEffect(() => {
     fetchBaseList();
@@ -278,6 +357,8 @@ export default function InventoryPage() {
 
   const fetchInventory = async () => {
     setLoading(true);
+    setPage(1);
+    setSelectedRows([]);
     try {
       const params = new URLSearchParams();
       if (keyword) params.set('keyword', keyword);
@@ -533,167 +614,34 @@ export default function InventoryPage() {
           </CardHeader>
           <CardContent>
             <BatchToolbar
-              selectedIds={[...selected].map(Number)}
+              selectedIds={selectedRows.map((r) => Number(r.id))}
               totalItems={inventoryItems.length}
-              onSelectAll={toggleAll}
+              onSelectAll={() => setSelectedRows([...paged])}
               onClearSelection={clear}
               actions={batchActions}
             />
-            {loading ? (
-              <div className="text-center py-4">{tc('loading')}</div>
-            ) : inventoryItems.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">{t('noInventoryData')}</div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40px]">
-                      <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('batch_no')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('batchNo')}
-                        {getSortIcon('batch_no')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('material_code')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('materialCode')}
-                        {getSortIcon('material_code')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('material_name')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('material')}
-                        {getSortIcon('material_name')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('specification')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('specification')}
-                        {getSortIcon('specification')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('warehouse_name')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('warehouseName')}
-                        {getSortIcon('warehouse_name')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="text-right cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('quantity')}
-                    >
-                      <span className="inline-flex items-center justify-end">
-                        {t('quantity')}
-                        {getSortIcon('quantity')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="text-right cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('available_qty')}
-                    >
-                      <span className="inline-flex items-center justify-end">
-                        {t('availableQty')}
-                        {getSortIcon('available_qty')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="text-right cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('locked_qty')}
-                    >
-                      <span className="inline-flex items-center justify-end">
-                        {t('lockedQty')}
-                        {getSortIcon('locked_qty')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('status')}
-                    >
-                      <span className="inline-flex items-center">
-                        {tc('status')}
-                        {getSortIcon('status')}
-                      </span>
-                    </TableHead>
-                    <TableHead>{tc('warning')}</TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('expiry_date')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('expiryDate')}
-                        {getSortIcon('expiry_date')}
-                      </span>
-                    </TableHead>
-                    <TableHead className="text-right">{tc('operation')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedInventory.map((item: Loose) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="w-[40px]">
-                        <Checkbox
-                          checked={isSelected(String(item.id))}
-                          onCheckedChange={() => toggle(String(item.id))}
-                        />
-                      </TableCell>
-                      <TableCell className="font-mono">
-                        <div className="flex items-center gap-2">
-                          <Barcode className="h-4 w-4 text-muted-foreground" />
-                          {item.batch_no}
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {item.material_code || '-'}
-                      </TableCell>
-                      <TableCell className="font-medium">{item.material_name}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.material_spec || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm">{item.warehouse_name || '-'}</span>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {parseFloat(item.quantity || 0).toLocaleString()} {item.unit}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {parseFloat(item.available_qty || 0).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right text-orange-600 dark:text-orange-400">
-                        {parseFloat(item.locked_qty || 0).toLocaleString()}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(item.status)}</TableCell>
-                      <TableCell>{getAlertBadge(item.alertLevel)}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.expire_date ? new Date(item.expire_date).toLocaleDateString() : '-'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
-                          <Layers className="h-4 w-4 mr-1" />
-                          {t('trace')}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
+            <StandardTable<Loose>
+              columns={columns}
+              dataSource={paged}
+              total={sortedInventory.length}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              sortState={sort}
+              onSortChange={handleSortChange}
+              loading={loading}
+              onRetry={fetchInventory}
+              emptyText={t('noInventoryData')}
+            />
           </CardContent>
         </Card>
       </div>

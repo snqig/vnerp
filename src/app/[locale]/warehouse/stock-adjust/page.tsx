@@ -1,6 +1,4 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -8,14 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -35,7 +25,7 @@ import { Plus, Search, Edit, Trash2, ArrowLeftRight, CheckCircle, Clock, AlertTr
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
-import { Checkbox } from '@/components/ui/checkbox';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
@@ -71,12 +61,10 @@ export default function StockAdjustPage() {
 
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
-  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    list,
-    (r) => String(r.id)
-  );
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [selectedRows, setSelectedRows] = useState<Item[]>([]);
   const [searchNo, setSearchNo] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
@@ -110,7 +98,7 @@ export default function StockAdjustPage() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         adjustNo: searchNo,
       });
       const res = await authFetch('/api/warehouse/stock-adjust?' + params);
@@ -136,7 +124,8 @@ export default function StockAdjustPage() {
   useEffect(() => {
     fetchData();
     fetchStats();
-  }, [page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize]);
 
   const handleSave = async () => {
     try {
@@ -195,6 +184,106 @@ export default function StockAdjustPage() {
     }
   };
 
+  const columns: StandardTableColumn<Item>[] = [
+    {
+      key: 'adjust_no',
+      title: t('adjustNo'),
+      dataIndex: 'adjust_no',
+      width: 140,
+      className: 'text-xs font-mono',
+    },
+    {
+      key: 'warehouse_name',
+      title: tc('warehouse'),
+      width: 140,
+      className: 'text-xs',
+      render: (row) => row.warehouse_name || '-',
+    },
+    {
+      key: 'adjust_date',
+      title: t('adjustDate'),
+      width: 110,
+      className: 'text-xs',
+      render: (row) => row.adjust_date || '-',
+    },
+    {
+      key: 'adjust_type',
+      title: t('adjustType'),
+      width: 100,
+      className: 'text-xs',
+      render: (row) => typeMap[row.adjust_type] || '-',
+    },
+    {
+      key: 'operator_name',
+      title: t('operator'),
+      width: 100,
+      className: 'text-xs',
+      render: (row) => row.operator_name || '-',
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      width: 100,
+      render: (row) => {
+        const st = statusMap[row.status] || statusMap[1];
+        return (
+          <Badge variant={st.variant} className="text-xs">
+            {st.label}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      width: 200,
+      align: 'right',
+      render: (row) => (
+        <div className="flex justify-end gap-1">
+          {row.status === 1 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleStatusChange(row.id, 2, row.status)}
+            >
+              {tc('audit')}
+            </Button>
+          )}
+          {row.status === 2 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleStatusChange(row.id, 3, row.status)}
+            >
+              {t('complete')}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              setEditItem(row);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(row.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
@@ -248,7 +337,7 @@ export default function StockAdjustPage() {
                   formatter: (v) => statusMap[v]?.label || '-',
                 },
               ]}
-              data={selectedCount > 0 ? list.filter((i) => isSelected(String(i.id))) : list}
+              data={selectedRows.length > 0 ? selectedRows : list}
             />
             <Button
               size="sm"
@@ -282,120 +371,26 @@ export default function StockAdjustPage() {
 
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40px]">
-                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                  </TableHead>
-                  <TableHead className="text-xs">{t('adjustNo')}</TableHead>
-                  <TableHead className="text-xs">{tc('warehouse')}</TableHead>
-                  <TableHead className="text-xs">{t('adjustDate')}</TableHead>
-                  <TableHead className="text-xs">{t('adjustType')}</TableHead>
-                  <TableHead className="text-xs">{t('operator')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => {
-                  const st = statusMap[item.status] || statusMap[1];
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={isSelected(String(item.id))}
-                          onCheckedChange={() => toggle(String(item.id))}
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">{item.adjust_no}</TableCell>
-                      <TableCell className="text-xs">{item.warehouse_name || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.adjust_date || '-'}</TableCell>
-                      <TableCell className="text-xs">{typeMap[item.adjust_type] || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.operator_name || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
-                          {st.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {item.status === 1 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 2, item.status)}
-                            >
-                              {tc('audit')}
-                            </Button>
-                          )}
-                          {item.status === 2 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 3, item.status)}
-                            >
-                              {t('complete')}
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => {
-                              setEditItem(item);
-                              setShowDialog(true);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                      {t('noStockAdjustRecords')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<Item>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              rowKey="id"
+              emptyText={t('noStockAdjustRecords')}
+            />
           </CardContent>
         </Card>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{tc('total', { count: total })}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('previousPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>

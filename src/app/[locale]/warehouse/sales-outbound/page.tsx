@@ -7,14 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -34,7 +27,6 @@ import { Plus, Search, Edit, Trash2, Truck, CheckCircle, Clock, AlertTriangle, P
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
 
@@ -71,6 +63,7 @@ export default function SalesOutboundPage() {
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [searchNo, setSearchNo] = useState('');
   const [stats, setStats] = useState({
     pending: 0,
@@ -86,12 +79,11 @@ export default function SalesOutboundPage() {
     { id: number; customer_name: string; customer_code: string }[]
   >([]);
 
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
+  const [selectedRows, setSelectedRows] = useState<Item[]>([]);
   const [deleting, setDeleting] = useState(false);
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => r.id);
     if (ids.length === 0) return;
     if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
     setDeleting(true);
@@ -106,7 +98,7 @@ export default function SalesOutboundPage() {
     setDeleting(false);
     if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
     if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
+    setSelectedRows([]);
     fetchData();
   };
 
@@ -114,7 +106,7 @@ export default function SalesOutboundPage() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         outboundNo: searchNo,
       });
       const res = await authFetch('/api/warehouse/sales-outbound?' + params);
@@ -154,7 +146,7 @@ export default function SalesOutboundPage() {
   useEffect(() => {
     fetchData();
     fetchStats();
-  }, [page]);
+  }, [page, pageSize]);
   useEffect(() => {
     fetchWarehouses();
     fetchCustomers();
@@ -207,6 +199,90 @@ export default function SalesOutboundPage() {
     }
   };
 
+  // /api/warehouse/sales-outbound 未支持 sortField / sortDirection，故不开列排序（需后端补排序参数）
+  const columns: StandardTableColumn<Item>[] = [
+    {
+      key: 'outbound_no',
+      title: ts('k_1bwocym'),
+      render: (r) => <span className="text-xs font-mono">{r.outbound_no}</span>,
+    },
+    {
+      key: 'order_no',
+      title: ts('k_m6144y'),
+      render: (r) => <span className="text-xs">{r.order_no || '-'}</span>,
+    },
+    {
+      key: 'customer_name',
+      title: tc('customer'),
+      render: (r) => <span className="text-xs">{r.customer_name || '-'}</span>,
+    },
+    {
+      key: 'warehouse_name',
+      title: tc('warehouse'),
+      render: (r) => <span className="text-xs">{r.warehouse_name || '-'}</span>,
+    },
+    {
+      key: 'outbound_date',
+      title: ts('k_1au3mgm'),
+      render: (r) => <span className="text-xs">{r.outbound_date || '-'}</span>,
+    },
+    {
+      key: 'delivery_person',
+      title: ts('k_1x8vy1t'),
+      render: (r) => <span className="text-xs">{r.delivery_person || '-'}</span>,
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => {
+        const st = statusMap[r.status] || statusMap[1];
+        return (
+          <Badge variant={st.variant} className="text-xs">
+            {t(st.labelKey)}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      align: 'right',
+      // 原有操作列：确认出库 / 编辑 / 删除，逻辑保持原样
+      render: (r) => (
+        <div className="flex gap-1 justify-end">
+          {r.status === 1 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleStatusChange(r.id, 2)}
+            >
+              {tc('confirmIssue')}</Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              setEditItem(r);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(r.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
@@ -255,109 +331,34 @@ export default function SalesOutboundPage() {
 
         <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                  </TableHead>
-                  <TableHead className="text-xs">{ts('k_1bwocym')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_m6144y')}</TableHead>
-                  <TableHead className="text-xs">{tc('customer')}</TableHead>
-                  <TableHead className="text-xs">{tc('warehouse')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_1au3mgm')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_1x8vy1t')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => {
-                  const st = statusMap[item.status] || statusMap[1];
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(item.id))} onChange={() => toggle(String(item.id))} aria-label={tc('selectRow', { id: item.id })} />
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">{item.outbound_no}</TableCell>
-                      <TableCell className="text-xs">{item.order_no || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.customer_name || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.warehouse_name || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.outbound_date || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.delivery_person || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
-                          {t(st.labelKey)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {item.status === 1 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 2)}
-                            >
-                              {tc('confirmIssue')}</Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => {
-                              setEditItem(item);
-                              setShowDialog(true);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                      {t('noRecords')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <BatchDeleteBar
+              count={selectedRows.length}
+              onClear={() => setSelectedRows([])}
+              onDelete={handleBatchDelete}
+              loading={deleting}
+            />
+            <StandardTable<Item>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              onRetry={fetchData}
+              emptyText={t('noRecords')}
+              customStyle={{ containerClassName: 'px-2 pb-2' }}
+            />
           </CardContent>
         </Card>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{tc('total', { count: total })}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('previousPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>

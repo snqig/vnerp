@@ -1,7 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
@@ -11,13 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+  type SortState,
+} from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -96,6 +93,10 @@ export default function WarehouseSetupPage() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
+  // StandardTable：客户端分页 / 排序
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sort, setSort] = useState<SortState>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(null);
@@ -156,8 +157,9 @@ export default function WarehouseSetupPage() {
     fetchWarehouses();
   }, []);
 
-  // 搜索时重新加载
+  // 搜索时重新加载（回到第 1 页）
   useEffect(() => {
+    setPage(1);
     const timer = setTimeout(() => {
       fetchWarehouses();
     }, 300);
@@ -260,6 +262,120 @@ export default function WarehouseSetupPage() {
       toast.error(t('saveFailed'));
     }
   };
+
+  // 客户端排序（列表一次性拉取，分页在本地切片）
+  const sorted = useMemo(() => {
+    const list = [...warehouses];
+    if (!sort) return list;
+    const dir = sort.direction === 'asc' ? 1 : -1;
+    return list.sort((a, b) => {
+      const av = (a as unknown as Record<string, unknown>)[sort.field];
+      const bv = (b as unknown as Record<string, unknown>)[sort.field];
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+      if (typeof av === 'boolean' && typeof bv === 'boolean') return (Number(av) - Number(bv)) * dir;
+      return String(av ?? '').localeCompare(String(bv ?? '')) * dir;
+    });
+  }, [warehouses, sort]);
+
+  // StandardTable 只渲染当前页数据
+  const paged = useMemo(
+    () => sorted.slice((page - 1) * pageSize, page * pageSize),
+    [sorted, page, pageSize]
+  );
+
+  const handleSortChange = (next: SortState) => {
+    setSort(next);
+    setPage(1);
+  };
+
+  // StandardTable 列定义
+  const columns: StandardTableColumn<Warehouse>[] = [
+    {
+      key: 'code',
+      title: t('code'),
+      sortable: true,
+      render: (r) => <span className="font-medium">{r.code}</span>,
+    },
+    { key: 'name', title: t('name'), sortable: true },
+    {
+      key: 'nature',
+      title: t('nature'),
+      sortable: true,
+      render: (r) => <Badge variant="outline">{getNatureLabel(r.nature)}</Badge>,
+    },
+    {
+      key: 'type',
+      title: t('typeLabel'),
+      sortable: true,
+      render: (r) => <Badge variant="secondary">{getTypeLabel(r.type)}</Badge>,
+    },
+    {
+      key: 'includeInCalculation',
+      title: t('includedInCalc'),
+      sortable: true,
+      render: (r) =>
+        r.includeInCalculation ? (
+          <Badge className="bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20">
+            {ts('k_btshni')}
+          </Badge>
+        ) : (
+          <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">{ts('k_9sspjt')}</Badge>
+        ),
+    },
+    {
+      key: 'capacity',
+      title: t('capacityLabel'),
+      sortable: true,
+      render: (r) => (
+        // 已用容量字段已废弃（无写入方），此列只展示仓库容量
+        <span className="text-sm">
+          {Number(r.capacity) > 0 ? Number(r.capacity).toLocaleString() : '—'}
+        </span>
+      ),
+    },
+    { key: 'manager', title: tc('responsiblePerson'), sortable: true },
+    {
+      key: 'status',
+      title: tc('status'),
+      sortable: true,
+      render: (r) =>
+        r.status === 'active' ? (
+          <Badge className="bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20">
+            {tc('active')}
+          </Badge>
+        ) : (
+          <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">{tc('inactive')}</Badge>
+        ),
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      align: 'right',
+      // 原有操作列：编辑 / 删除，逻辑保持原样
+      render: (r) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleEdit(r)}>
+              <Edit className="h-4 w-4 mr-2" />
+              {ts('k_qreyeg')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleDeleteClick(r)}
+              className="text-red-600 dark:text-red-400"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {ts('k_1t2vi4h')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ];
 
   return (
     <MainLayout title={t('warehouseSetup')}>
@@ -382,96 +498,25 @@ export default function WarehouseSetupPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('code')}</TableHead>
-                  <TableHead>{t('name')}</TableHead>
-                  <TableHead>{t('nature')}</TableHead>
-                  <TableHead>{t('typeLabel')}</TableHead>
-                  <TableHead>{t('includedInCalc')}</TableHead>
-                  <TableHead>{t('capacityLabel')}</TableHead>
-                  <TableHead>{tc('responsiblePerson')}</TableHead>
-                  <TableHead>{tc('status')}</TableHead>
-                  <TableHead className="text-right">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      {tc('loading')}</TableCell>
-                  </TableRow>
-                ) : warehouses.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      {ts('k_s0t1lv')}</TableCell>
-                  </TableRow>
-                ) : (
-                  warehouses.map((warehouse) => (
-                    <TableRow key={warehouse.id}>
-                      <TableCell className="font-medium">{warehouse.code}</TableCell>
-                      <TableCell>{warehouse.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{getNatureLabel(warehouse.nature)}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{getTypeLabel(warehouse.type)}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {warehouse.includeInCalculation ? (
-                          <Badge className="bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20">
-                            {ts('k_btshni')}</Badge>
-                        ) : (
-                          <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">
-                            {ts('k_9sspjt')}</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {/* 已用容量字段已废弃（无写入方），此列只展示仓库容量 */}
-                        <span className="text-sm">
-                          {Number(warehouse.capacity) > 0
-                            ? Number(warehouse.capacity).toLocaleString()
-                            : '—'}
-                        </span>
-                      </TableCell>
-                      <TableCell>{warehouse.manager}</TableCell>
-                      <TableCell>
-                        {warehouse.status === 'active' ? (
-                          <Badge className="bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20">
-                            {tc('active')}
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">
-                            {tc('inactive')}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(warehouse)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              {ts('k_qreyeg')}</DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteClick(warehouse)}
-                              className="text-red-600 dark:text-red-400"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              {ts('k_1t2vi4h')}</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<Warehouse>
+              columns={columns}
+              dataSource={paged}
+              total={warehouses.length}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              sortState={sort}
+              onSortChange={handleSortChange}
+              loading={loading}
+              onRetry={fetchWarehouses}
+              emptyText={ts('k_s0t1lv')}
+            />
           </CardContent>
         </Card>
 

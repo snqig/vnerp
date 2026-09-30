@@ -1,26 +1,19 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-import { logger } from '@/lib/logger';
-
 import { authFetch } from '@/lib/auth-fetch';
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+} from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, RefreshCw, Trash2, Scissors, CheckCircle, Clock, AlertTriangle, PackageOpen, Boxes } from 'lucide-react';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useAuth } from '@/contexts/AuthContext';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 
@@ -72,15 +65,12 @@ export default function CuttingRecordsPage() {
 
   const { user: _user } = useAuth();
   const [records, setRecords] = useState<CuttingRecord[]>([]);
-  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    records,
-    (r) => String(r.id)
-  );
+  const [selectedRows, setSelectedRows] = useState<CuttingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');
   const [sourceLabelNo, setSourceLabelNo] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState({
     pending: 0,
@@ -178,7 +168,7 @@ export default function CuttingRecordsPage() {
     fetchData();
 
     return () => controller.abort();
-  }, [page, keyword, sourceLabelNo]);
+  }, [page, pageSize, keyword, sourceLabelNo]);
 
   const handleSearch = () => {
     setPage(1);
@@ -189,6 +179,58 @@ export default function CuttingRecordsPage() {
     setSourceLabelNo('');
     setPage(1);
   };
+
+  // /api/warehouse/inbound/cutting 未支持 sortField / sortDirection，故不开列排序（需后端补排序参数）
+  const columns: StandardTableColumn<CuttingRecord>[] = [
+    {
+      key: 'recordNo',
+      title: t('recordNoCol'),
+      render: (r) => <span className="font-medium">{r.recordNo}</span>,
+    },
+    { key: 'sourceLabelNo', title: t('sourceLabelNoCol') },
+    {
+      key: 'materialInfo',
+      title: t('materialInfo'),
+      render: (r) => (
+        <div className="space-y-1">
+          <div className="font-medium">{r.materialName}</div>
+          <div className="text-sm text-muted-foreground">{r.materialCode}</div>
+          <div className="text-sm text-muted-foreground">{r.specification}</div>
+        </div>
+      ),
+    },
+    {
+      key: 'originalWidth',
+      title: t('originalWidthMM'),
+      render: (r) => `${r.originalWidth}mm`,
+    },
+    {
+      key: 'cutWidthStr',
+      title: t('cutWidthMM'),
+      render: (r) => `${r.cutWidthStr}mm`,
+    },
+    {
+      key: 'cutTotalWidth',
+      title: t('cutTotalMM'),
+      render: (r) => `${r.cutTotalWidth}mm`,
+    },
+    {
+      key: 'remainWidth',
+      title: t('remainWidthMM'),
+      render: (r) => `${r.remainWidth}mm`,
+    },
+    { key: 'operatorName', title: t('operator') },
+    {
+      key: 'cutTime',
+      title: t('cutTime'),
+      render: (r) => new Date(r.cutTime).toLocaleString(),
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => getStatusBadge(r.status),
+    },
+  ];
 
   return (
     <MainLayout title={t('cuttingRecordManagement')}>
@@ -299,9 +341,7 @@ export default function CuttingRecordsPage() {
                             : String(v),
                     },
                   ]}
-                  data={
-                    selectedCount > 0 ? records.filter((r) => isSelected(String(r.id))) : records
-                  }
+                  data={selectedRows.length > 0 ? selectedRows : records}
                 />
                 <Button variant="outline" onClick={() => setPage((prevPage) => prevPage)}>
                   <RefreshCw className="h-4 w-4 mr-2" />
@@ -311,100 +351,27 @@ export default function CuttingRecordsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40px]">
-                      <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                    </TableHead>
-                    <TableHead>{t('recordNoCol')}</TableHead>
-                    <TableHead>{t('sourceLabelNoCol')}</TableHead>
-                    <TableHead>{t('materialInfo')}</TableHead>
-                    <TableHead>{t('originalWidthMM')}</TableHead>
-                    <TableHead>{t('cutWidthMM')}</TableHead>
-                    <TableHead>{t('cutTotalMM')}</TableHead>
-                    <TableHead>{t('remainWidthMM')}</TableHead>
-                    <TableHead>{t('operator')}</TableHead>
-                    <TableHead>{t('cutTime')}</TableHead>
-                    <TableHead>{tc('status')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={11} className="text-center py-8">
-                        {t('loading')}
-                      </TableCell>
-                    </TableRow>
-                  ) : records.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={11} className="text-center py-8">
-                        {t('noData')}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    records.map((record) => (
-                      <TableRow key={record.id}>
-                        <TableCell>
-                          <Checkbox
-                            checked={isSelected(String(record.id))}
-                            onCheckedChange={() => toggle(String(record.id))}
-                          />
-                        </TableCell>
-                        <TableCell className="font-medium">{record.recordNo}</TableCell>
-                        <TableCell>{record.sourceLabelNo}</TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="font-medium">{record.materialName}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {record.materialCode}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {record.specification}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{record.originalWidth}mm</TableCell>
-                        <TableCell>{record.cutWidthStr}mm</TableCell>
-                        <TableCell>{record.cutTotalWidth}mm</TableCell>
-                        <TableCell>{record.remainWidth}mm</TableCell>
-                        <TableCell>{record.operatorName}</TableCell>
-                        <TableCell>{new Date(record.cutTime).toLocaleString()}</TableCell>
-                        <TableCell>{getStatusBadge(record.status)}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* 分页 */}
-            {total > pageSize && (
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-muted-foreground">
-                  {t('pageOf', { page, pages: Math.ceil(total / pageSize) })}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >
-                    {tc('prevPage')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={page * pageSize >= total}
-                  >
-                    {tc('nextPage')}
-                  </Button>
-                </div>
-              </div>
-            )}
+            <StandardTable<CuttingRecord>
+              columns={columns}
+              dataSource={records}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              loading={loading}
+              onRetry={() => setPage((p) => p)}
+              emptyText={t('noData')}
+              customStyle={{ containerClassName: 'border rounded-lg' }}
+            />
           </CardContent>
         </Card>
       </div>
