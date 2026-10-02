@@ -1,8 +1,7 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useEmployeeOptions, employeeLabel } from '@/hooks/useEmployeeOptions';
 import { MainLayout } from '@/components/layout';
 import QRCode from 'qrcode';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,7 +42,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { StandardTable, StandardTableColumn } from '@/components/common';
 import {
   Search,
   MoreHorizontal,
@@ -241,6 +240,8 @@ export default function QualityProcessPage() {
     remark: '',
     checkedItems: [] as string[],
   });
+  // 检验员下拉：库内在职真实人员（禁手输，回退见表单区）
+  const employeeOptions = useEmployeeOptions();
 
   // 新增状态
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -303,16 +304,8 @@ export default function QualityProcessPage() {
     return true;
   });
 
-  const {
-    sortField,
-    sortDirection,
-    handleSort,
-    sortedData: _sortedProcesses,
-  } = useTableSort(filteredProcesses, 'id');
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    filteredProcesses,
-    (r) => String(r.id)
-  );
+  const sortedProcesses = useMemo(() => filteredProcesses, [filteredProcesses]);
+  const [selectedRows, setSelectedRows] = useState<QualityProcess[]>([]);
 
   // 查看详情
   const handleViewDetail = (process: QualityProcess) => {
@@ -508,8 +501,8 @@ export default function QualityProcessPage() {
                     },
                   ]}
                   data={
-                    selectedCount > 0
-                      ? filteredProcesses.filter((p) => isSelected(String(p.id)))
+                    selectedRows.length > 0
+                      ? filteredProcesses.filter((p) => selectedRows.some((sr) => sr.id === p.id))
                       : filteredProcesses
                   }
                 />
@@ -538,140 +531,133 @@ export default function QualityProcessPage() {
           <TabsContent value={activeTab} className="mt-4">
             <Card>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                      </TableHead>
-                      <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
-                      <SortableTableHeader
-                        field="card_no"
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      >
-                        {t('cardNo')}
-                      </SortableTableHeader>
-                      <SortableTableHeader
-                        field="product_name"
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      >
-                        {t('productInfo')}
-                      </SortableTableHeader>
-                      <TableHead>{tc('customer')}</TableHead>
-                      <TableHead>{t('specificationRequirement')}</TableHead>
-                      <TableHead>{tc('quantity')}</TableHead>
-                      <TableHead>{t('qualityManager')}</TableHead>
-                      <SortableTableHeader
-                        field="status"
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      >
-                        {tc('status')}
-                      </SortableTableHeader>
-                      <TableHead>{tc('actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredProcesses.map((process, index) => (
-                      <TableRow key={process.id}>
-                        <TableCell>
-                          <Checkbox
-                            checked={isSelected(String(process.id))}
-                            onCheckedChange={() => toggle(String(process.id))}
-                          />
-                        </TableCell>
-                        <TableCell className="text-center text-muted-foreground">
-                          {index + 1}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          <div className="flex flex-col">
-                            <span>{process.card_no}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {process.work_order_no}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{process.product_name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {process.material_spec}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {process.print_type}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span>{process.customer_name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {process.customer_code}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col text-sm">
-                            <span>
-                              {t('size')}: {process.finished_size}
-                            </span>
-                            <span>
-                              {t('tolerance')}: {process.tolerance}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {process.plan_qty ? process.plan_qty.toLocaleString() : '-'}
-                        </TableCell>
-                        <TableCell>{process.quality_manager}</TableCell>
-                        <TableCell>{getStatusBadge(process.burdening_status)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleViewDetail(process)}
-                            >
-                              <Eye className="h-4 w-4" />
+                <StandardTable<QualityProcess>
+                  rowSelectable
+                  selectedRows={selectedRows}
+                  onRowSelectedChange={(rows) => setSelectedRows(rows)}
+                  dataSource={sortedProcesses}
+                  columns={[
+                    {
+                      key: 'serialNo',
+                      title: tc('serialNo'),
+                      width: 48,
+                      align: 'center',
+                      render: (_row, index) => (
+                        <span className="text-muted-foreground">{index + 1}</span>
+                      ),
+                    },
+                    {
+                      key: 'card_no',
+                      title: t('cardNo'),
+                      sortable: true,
+                      render: (process) => (
+                        <div className="flex flex-col">
+                          <span className="font-medium">{process.card_no}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {process.work_order_no}
+                          </span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'product_name',
+                      title: t('productInfo'),
+                      sortable: true,
+                      render: (process) => (
+                        <div className="flex flex-col">
+                          <span className="font-medium">{process.product_name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {process.material_spec}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{process.print_type}</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'customer',
+                      title: tc('customer'),
+                      render: (process) => (
+                        <div className="flex flex-col">
+                          <span>{process.customer_name}</span>
+                          <span className="text-xs text-muted-foreground">{process.customer_code}</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'specification',
+                      title: t('specificationRequirement'),
+                      render: (process) => (
+                        <div className="flex flex-col text-sm">
+                          <span>
+                            {t('size')}: {process.finished_size}
+                          </span>
+                          <span>
+                            {t('tolerance')}: {process.tolerance}
+                          </span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'quantity',
+                      title: tc('quantity'),
+                      render: (process) =>
+                        process.plan_qty ? process.plan_qty.toLocaleString() : '-',
+                    },
+                    {
+                      key: 'quality_manager',
+                      title: t('qualityManager'),
+                      render: (process) => process.quality_manager,
+                    },
+                    {
+                      key: 'status',
+                      title: tc('status'),
+                      sortable: true,
+                      render: (process) => getStatusBadge(process.burdening_status),
+                    },
+                    {
+                      key: 'actions',
+                      title: tc('actions'),
+                      render: (process) => (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewDetail(process)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {(process.burdening_status === 1 || process.burdening_status === 2) && (
+                            <Button size="sm" onClick={() => handleStartInspect(process)}>
+                              <ClipboardCheck className="h-4 w-4 mr-1" />
+                              {t('inspect')}
                             </Button>
-                            {(process.burdening_status === 1 || process.burdening_status === 2) && (
-                              <Button size="sm" onClick={() => handleStartInspect(process)}>
-                                <ClipboardCheck className="h-4 w-4 mr-1" />
-                                {t('inspect')}
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
                               </Button>
-                            )}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleViewDetail(process)}>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  {t('viewDetail')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleViewQRCode(process)}>
-                                  <QrCode className="h-4 w-4 mr-2" />
-                                  {t('viewQRCode')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleViewRecords(process)}>
-                                  <FileText className="h-4 w-4 mr-2" />
-                                  {t('inspectionRecords')}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleViewDetail(process)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                {t('viewDetail')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewQRCode(process)}>
+                                <QrCode className="h-4 w-4 mr-2" />
+                                {t('viewQRCode')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewRecords(process)}>
+                                <FileText className="h-4 w-4 mr-2" />
+                                {t('inspectionRecords')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -949,13 +935,33 @@ export default function QualityProcessPage() {
                   {/* 检验员 */}
                   <div className="space-y-3">
                     <Label>{t('inspector')}</Label>
-                    <Input
-                      placeholder={t('enterInspectorName')}
-                      value={inspectForm.inspector}
-                      onChange={(e) =>
-                        setInspectForm({ ...inspectForm, inspector: e.target.value })
-                      }
-                    />
+                    {employeeOptions.length > 0 ? (
+                      <Select
+                        value={inspectForm.inspector}
+                        onValueChange={(value) =>
+                          setInspectForm({ ...inspectForm, inspector: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('enterInspectorName')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {employeeOptions.map((emp) => (
+                            <SelectItem key={emp.employee_no} value={emp.name}>
+                              {employeeLabel(emp)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        placeholder={t('enterInspectorName')}
+                        value={inspectForm.inspector}
+                        onChange={(e) =>
+                          setInspectForm({ ...inspectForm, inspector: e.target.value })
+                        }
+                      />
+                    )}
                   </div>
 
                   {/* 备注 */}

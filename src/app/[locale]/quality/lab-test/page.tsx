@@ -1,21 +1,12 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { useEmployeeOptions, employeeLabel } from '@/hooks/useEmployeeOptions';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -39,9 +30,8 @@ import {
   buildLabTestSchema,
   firstZodMessage,
 } from '@/lib/validators/quality-form';
-import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { StandardTable, StandardTableColumn } from '@/components/common';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
@@ -116,11 +106,11 @@ export default function LabTestPage() {
   });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<LabTestRecord>>({});
-  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'test_no');
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    sortedData,
-    (r) => String(r.id)
-  );
+  // 测试人下拉：库内在职真实人员（禁手输，回退见表单区）
+  const employeeOptions = useEmployeeOptions();
+  const [selectedRows, setSelectedRows] = useState<LabTestRecord[]>([]);
+  const [pageSize] = useState(20);
+  const sortedList = useMemo(() => list, [list]);
 
   const fetchData = async () => {
     try {
@@ -268,147 +258,93 @@ export default function LabTestPage() {
                   { key: 'status', label: tc('status'), width: 12 },
                 ]}
                 data={
-                  selectedCount > 0
-                    ? sortedData.filter((i) => i.id && isSelected(String(i.id)))
-                    : sortedData
+                  selectedRows.length > 0
+                    ? list.filter((i) => selectedRows.some((sr) => sr.id === i.id))
+                    : list
                 }
               />
             </div>
 
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                  </TableHead>
-                  <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
-                  <SortableTableHeader
-                    field="test_no"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('testNo')}
-                  </SortableTableHeader>
-                  <SortableTableHeader
-                    field="product_name"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {tc('productName')}
-                  </SortableTableHeader>
-                  <TableHead>{tc('batchNo')}</TableHead>
-                  <TableHead>{t('testType')}</TableHead>
-                  <TableHead>{t('testItem')}</TableHead>
-                  <TableHead>{t('tester')}</TableHead>
-                  <TableHead>{t('testDate')}</TableHead>
-                  <SortableTableHeader
-                    field="conclusion"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('conclusion')}
-                  </SortableTableHeader>
-                  <SortableTableHeader
-                    field="status"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {tc('status')}
-                  </SortableTableHeader>
-                  <TableHead>{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedData.map((item, index) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={isSelected(String(item.id))}
-                        onCheckedChange={() => toggle(String(item.id))}
-                      />
-                    </TableCell>
-                    <TableCell className="text-center text-muted-foreground">
-                      {(page - 1) * 20 + index + 1}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{item.test_no}</TableCell>
-                    <TableCell>{item.product_name}</TableCell>
-                    <TableCell>{item.batch_no || '-'}</TableCell>
-                    <TableCell>{t(testTypeMap[item.test_type] || item.test_type)}</TableCell>
-                    <TableCell className="max-w-32 truncate">{item.test_items || '-'}</TableCell>
-                    <TableCell>{item.tester || '-'}</TableCell>
-                    <TableCell>{item.test_date?.substring(0, 10) || '-'}</TableCell>
-                    <TableCell>
-                      <Badge variant={conclusionMap[item.conclusion]?.variant || 'outline'}>
-                        {t(conclusionMap[item.conclusion]?.label || 'pendingJudgment')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusMap[item.status]?.variant || 'outline'}>
-                        {t(statusMap[item.status]?.label || tc('unknown'))}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditItem(item);
-                            setShowDialog(true);
-                          }}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            if (item.id) handleDelete(item.id);
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {sortedData.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
-                      {tc('noData')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">
-                {tc('totalRecords', { count: total })}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  {tc('prevPage')}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page * 20 >= total}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {tc('nextPage')}
-                </Button>
-              </div>
-            </div>
+            <StandardTable<LabTestRecord>
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={(rows) => setSelectedRows(rows)}
+              dataSource={sortedList}
+              columns={[
+                {
+                  key: 'serialNo',
+                  title: tc('serialNo'),
+                  width: 60,
+                  align: 'center',
+                  render: (_row, index) => (
+                    <span className="text-muted-foreground">{index + 1}</span>
+                  ),
+                },
+                { key: 'test_no', title: t('testNo') },
+                { key: 'product_name', title: tc('productName') },
+                { key: 'batch_no', title: tc('batchNo'), render: (row) => row.batch_no || '-' },
+                {
+                  key: 'test_type',
+                  title: t('testType'),
+                  render: (row) => t(testTypeMap[row.test_type] || row.test_type),
+                },
+                { key: 'test_items', title: t('testItem'), render: (row) => <span className="max-w-32 truncate block">{row.test_items || '-'}</span> },
+                { key: 'tester', title: t('tester'), render: (row) => row.tester || '-' },
+                { key: 'test_date', title: t('testDate'), render: (row) => row.test_date?.substring(0, 10) || '-' },
+                {
+                  key: 'conclusion',
+                  title: t('conclusion'),
+                  render: (row) => (
+                    <Badge variant={conclusionMap[row.conclusion]?.variant || 'outline'}>
+                      {t(conclusionMap[row.conclusion]?.label || 'pendingJudgment')}
+                    </Badge>
+                  ),
+                },
+                {
+                  key: 'status',
+                  title: tc('status'),
+                  render: (row) => (
+                    <Badge variant={statusMap[row.status]?.variant || 'outline'}>
+                      {t(statusMap[row.status]?.label || tc('unknown'))}
+                    </Badge>
+                  ),
+                },
+                {
+                  key: 'actions',
+                  title: tc('actions'),
+                  width: 80,
+                  render: (row) => (
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditItem(row);
+                          setShowDialog(true);
+                        }}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          if (row.id) handleDelete(row.id);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ),
+                },
+              ]}
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              onPageChange={(p) => setPage(p)}
+              emptyText={tc('noData')}
+            />
           </CardContent>
         </Card>
 
@@ -480,10 +416,28 @@ export default function LabTestPage() {
               </div>
               <div>
                 <Label>{t('tester')}</Label>
-                <Input
-                  value={editItem.tester || ''}
-                  onChange={(e) => setEditItem({ ...editItem, tester: e.target.value })}
-                />
+                {employeeOptions.length > 0 ? (
+                  <Select
+                    value={editItem.tester || ''}
+                    onValueChange={(value) => setEditItem({ ...editItem, tester: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('tester')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {employeeOptions.map((emp) => (
+                        <SelectItem key={emp.employee_no} value={emp.name}>
+                          {employeeLabel(emp)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    value={editItem.tester || ''}
+                    onChange={(e) => setEditItem({ ...editItem, tester: e.target.value })}
+                  />
+                )}
               </div>
               <div>
                 <Label>{t('testDate')}</Label>

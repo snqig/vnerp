@@ -1,18 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+  type SortState,
+} from '@/components/common';
 import { ApiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { MoneyDisplay } from '@/components/ui/money-display';
@@ -49,6 +46,7 @@ export default function AgingReportPage() {
   const [receivableAging, setReceivableAging] = useState<ReceivableAging | null>(null);
   const [payableAging, setPayableAging] = useState<PayableAging | null>(null);
   const [loading, setLoading] = useState(false);
+  const [sort, setSort] = useState<SortState>(null);
 
   const loadAging = async (type: 'receivable' | 'payable') => {
     setLoading(true);
@@ -89,6 +87,35 @@ export default function AgingReportPage() {
 
   const currentAging = activeTab === 'receivable' ? receivableAging : payableAging;
 
+  const reloadAll = () => {
+    loadAging('receivable');
+    loadAging('payable');
+  };
+
+  const columns: StandardTableColumn<AgingBucket>[] = [
+    { key: 'bucket', title: tc('agingBucket'), sortable: true, render: (b) => b.label },
+    {
+      key: 'amount',
+      title: tc('amount'),
+      align: 'right',
+      sortable: true,
+      render: (b) => <MoneyDisplay amount={b.amount} currency="CNY" />,
+    },
+  ];
+
+  // 账龄区间为一次性返回的全量数据，排序在页面本地完成
+  const agingRows = useMemo(() => {
+    const list = currentAging?.buckets ?? [];
+    if (!sort) return list;
+    const dir = sort.direction === 'asc' ? 1 : -1;
+    return [...list].sort((a, b) => {
+      const av = (a as unknown as Record<string, unknown>)[sort.field];
+      const bv = (b as unknown as Record<string, unknown>)[sort.field];
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+      return String(av ?? '').localeCompare(String(bv ?? '')) * dir;
+    });
+  }, [currentAging, sort]);
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -127,31 +154,18 @@ export default function AgingReportPage() {
               <CardTitle>{t('receivable')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{tc('agingBucket')}</TableHead>
-                    <TableHead className="text-right">{tc('amount')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {receivableAging?.buckets.map((b) => (
-                    <TableRow key={b.bucket}>
-                      <TableCell>{b.label}</TableCell>
-                      <TableCell className="text-right">
-                        <MoneyDisplay amount={b.amount} currency="CNY" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {(!receivableAging || receivableAging.buckets.length === 0) && (
-                    <TableRow>
-                      <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
-                        {tc('noData')}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <StandardTable<AgingBucket>
+                columns={columns}
+                dataSource={agingRows}
+                rowKey="bucket"
+                rowSelectable={false}
+                showPagination={false}
+                sortState={sort}
+                onSortChange={setSort}
+                loading={loading}
+                onRetry={reloadAll}
+                emptyText={tc('noData')}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -178,31 +192,18 @@ export default function AgingReportPage() {
               <CardTitle>{t('payable')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{tc('agingBucket')}</TableHead>
-                    <TableHead className="text-right">{tc('amount')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {payableAging?.buckets.map((b) => (
-                    <TableRow key={b.bucket}>
-                      <TableCell>{b.label}</TableCell>
-                      <TableCell className="text-right">
-                        <MoneyDisplay amount={b.amount} currency="CNY" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {(!payableAging || payableAging.buckets.length === 0) && (
-                    <TableRow>
-                      <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
-                        {tc('noData')}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <StandardTable<AgingBucket>
+                columns={columns}
+                dataSource={agingRows}
+                rowKey="bucket"
+                rowSelectable={false}
+                showPagination={false}
+                sortState={sort}
+                onSortChange={setSort}
+                loading={loading}
+                onRetry={reloadAll}
+                emptyText={tc('noData')}
+              />
             </CardContent>
           </Card>
         </TabsContent>

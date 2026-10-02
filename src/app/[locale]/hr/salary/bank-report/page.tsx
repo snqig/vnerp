@@ -5,14 +5,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -79,6 +72,12 @@ export default function BankReportPage() {
 
   const totalAmount = data.reduce((s, item) => s + item.netPay, 0);
 
+  const columns: StandardTableColumn<BankItem>[] = [
+    { key: 'employeeName', title: t('employeeName'), render: (r) => <span className="font-medium">{r.employeeName}</span> },
+    { key: 'bankCardNo', title: t('bankCardNo'), render: (r) => <span className="font-mono">{r.bankCardNo}</span> },
+    { key: 'netPay', title: t('netPay'), align: 'right', render: (r) => <span className="font-medium">¥{r.netPay.toLocaleString()}</span> },
+  ];
+
   const generateBankFile = () => {
     const header = [t('employeeName'), t('bankCardNo'), t('netPay')];
     const rows = data.map((item) => [item.employeeName, item.bankCardNo, item.netPay.toFixed(2)]);
@@ -139,44 +138,22 @@ export default function BankReportPage() {
 
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('employeeName')}</TableHead>
-                  <TableHead>{t('bankCardNo')}</TableHead>
-                  <TableHead className="text-right">{t('netPay')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((item, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell className="font-medium">{item.employeeName}</TableCell>
-                    <TableCell className="font-mono">{item.bankCardNo}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      ¥{item.netPay.toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {data.length > 0 && (
-                  <TableRow className="bg-muted/50 font-bold">
-                    <TableCell colSpan={2} className="text-right">
-                      {tc('total')}
-                    </TableCell>
-                    <TableCell className="text-right text-lg">
-                      ¥{totalAmount.toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                )}
-                {data.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                      {loading ? tc('loading') : t('noData')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<BankItem>
+              columns={columns}
+              dataSource={data}
+              rowKey="employeeName"
+              rowSelectable={false}
+              loading={loading}
+              showPagination={false}
+              emptyText={loading ? tc('loading') : t('noData')}
+            />
           </CardContent>
+          {data.length > 0 && (
+            <div className="flex justify-end gap-6 px-4 py-2 text-sm border-t bg-muted/50 font-bold">
+              <span>{tc('total')}：</span>
+              <span className="text-lg">¥{totalAmount.toLocaleString()}</span>
+            </div>
+          )}
         </Card>
       </div>
     </MainLayout>

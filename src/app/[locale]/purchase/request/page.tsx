@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Plus, MoreHorizontal, Edit, Trash2, FileText, Eye, CheckCircle, XCircle, Printer, ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, ChevronDown, Clock, AlertTriangle, ShoppingCart, DollarSign } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -71,6 +72,7 @@ export default function PurchaseRequestPage() {
   const ts = useTranslations('Purchase');
   const t = useTranslations('Purchase');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
   const { companyName } = useCompanyName();
 
   const statusMap: Record<
@@ -134,7 +136,19 @@ export default function PurchaseRequestPage() {
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
@@ -213,7 +227,9 @@ export default function PurchaseRequestPage() {
       if (result.success) {
         const data = Array.isArray(result.data) ? result.data : result.data?.list || [];
         setRequests(data);
-        setTotal(result.pagination?.total || result.data?.total || data.length);
+        const totalCount = result.pagination?.total || result.data?.total || data.length;
+        setTotal(totalCount);
+        setTotalPages(Math.ceil(totalCount / pageSize));
       } else {
         toast.error(result.message || t('fetchFailed'));
       }
@@ -868,32 +884,31 @@ export default function PurchaseRequestPage() {
           </Table>
 
         {/* 分页 */}
-        {total > pageSize && (
-          <div className="flex justify-between items-center mt-4 text-sm">
-            <div className="text-sm text-muted-foreground">
-              {tc('totalRecords', { count: total })}，
-              {tc('pageInfo', { current: page, total: Math.ceil(total / pageSize) })}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                {tc('prevPage')}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p + 1)}
-                disabled={page >= Math.ceil(total / pageSize)}
-              >
-                {tc('nextPage')}
-              </Button>
+        {total > 0 && (
+          <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+            <span className="text-sm text-muted-foreground">
+              {tStd('paginationSummary', { total, pages: totalPages })}
+            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                  <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                  <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+              <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+              <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+              <div className="flex items-center gap-1">
+                <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+              </div>
             </div>
           </div>
         )}
+        {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
           </CardContent>
         </Card>
       </div>

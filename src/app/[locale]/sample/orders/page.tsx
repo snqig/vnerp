@@ -75,6 +75,7 @@ export default function SampleOrdersPage() {
   // 翻译钩子
   const t = useTranslations('SampleOrders');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -94,6 +95,17 @@ export default function SampleOrdersPage() {
     total: 0,
     totalPages: 0,
   });
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > pagination.totalPages) {
+      setJumpError(tStd('invalidPage', { max: pagination.totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPagination((p) => ({ ...p, page: n }));
+  };
   const [stats, setStats] = useState({
     pending: 0,
     inProgress: 0,
@@ -818,35 +830,31 @@ export default function SampleOrdersPage() {
               </div>
             )}
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
+            {pagination.total > 0 && (
+              <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
                 <span className="text-sm text-muted-foreground">
-                  {t('paginationInfo', {
-                    total: pagination.total,
-                    page: pagination.page,
-                    totalPages: pagination.totalPages,
-                  })}
+                  {tStd('paginationSummary', { total: pagination.total, pages: pagination.totalPages })}
                 </span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={pagination.page === 1}
-                    onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
-                  >
-                    {tc('prevPage')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={pagination.page === pagination.totalPages}
-                    onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
-                  >
-                    {tc('nextPage')}
-                  </Button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={String(pagination.pageSize)} onValueChange={(v) => { setPagination((p) => ({ ...p, pageSize: Number(v), page: 1 })); }}>
+                    <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setPagination((p) => ({ ...p, page: Math.max(1, p.page - 1) }))} disabled={pagination.page <= 1}>{tStd('prevPage')}</Button>
+                  <span className="text-sm">{tStd('pageNumber', { page: pagination.page, pages: pagination.totalPages })}</span>
+                  <Button variant="outline" size="sm" onClick={() => setPagination((p) => ({ ...p, page: Math.min(p.totalPages, p.page + 1) }))} disabled={pagination.page >= pagination.totalPages}>{tStd('nextPage')}</Button>
+                  <div className="flex items-center gap-1">
+                    <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page: pagination.page, pages: pagination.totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                    <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                  </div>
                 </div>
               </div>
             )}
+            {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
           </CardContent>
         </Card>
       </div>

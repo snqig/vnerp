@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { MainLayout } from '@/components/layout/main-layout';
@@ -10,13 +10,10 @@ import { Input } from '@/components/ui/input';
 import { PROCESS_CARD_STATUS_LABEL } from '@/lib/status-labels';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+  type SortState,
+} from '@/components/common';
 import { toast } from 'sonner';
 import {
   Plus,
@@ -73,6 +70,10 @@ export default function ProcessCardPage() {
 
   const [cards, setCards] = useState<SampleCard[]>([]);
   const [loading, setLoading] = useState(false);
+  // StandardTable：分页 / 排序（列表为全量拉取，走客户端分页 + 本地排序）
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sort, setSort] = useState<SortState>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [stats, setStats] = useState({
@@ -175,6 +176,139 @@ export default function ProcessCardPage() {
     }
   };
 
+  const columns: StandardTableColumn<SampleCard>[] = [
+    {
+      key: 'sample_no',
+      title: ts('k_1y8ybpg'),
+      sortable: true,
+      render: (r) => <span className="font-mono">{r.sample_no}</span>,
+    },
+    { key: 'sample_name', title: ts('k_11gs5ia'), sortable: true },
+    {
+      key: 'customer_name',
+      title: ts('k_ush9hy'),
+      sortable: true,
+      render: (r) => r.customer_name || '-',
+    },
+    {
+      key: 'product_name',
+      title: ts('k_aa5e9x'),
+      sortable: true,
+      render: (r) => r.product_name || '-',
+    },
+    { key: 'version_no', title: ts('k_va46gx'), sortable: true },
+    {
+      key: 'substrate_material_name',
+      title: ts('k_1t8ltxj'),
+      sortable: true,
+      render: (r) => r.substrate_material_name || '-',
+    },
+    {
+      key: 'print_color',
+      title: ts('k_4sf5la'),
+      sortable: true,
+      render: (r) => r.print_color || '-',
+    },
+    {
+      key: 'estimated_hour',
+      title: ts('k_q7sxwm'),
+      sortable: true,
+      render: (r) => (r.estimated_hour ? `${r.estimated_hour}h` : '-'),
+    },
+    {
+      key: 'total_cost',
+      title: ts('k_1ugaydy'),
+      sortable: true,
+      render: (r) => `¥${Number(r.total_cost || 0).toFixed(2)}`,
+    },
+    {
+      key: 'status',
+      title: ts('k_1ccx4t4'),
+      sortable: true,
+      render: (r) => (
+        <Badge variant={STATUS_MAP[r.status]?.variant || 'secondary'}>
+          {STATUS_MAP[r.status]?.label || ts('k_1lpnuh4')}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      align: 'right',
+      // 原有操作列：查看 / 编辑 / 提交 / 确认 / 作废 / 删除，逻辑保持原样
+      render: (r) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => router.push(`/dcprint/process-card/${r.id}`)}>
+              <Eye className="h-4 w-4 mr-2" />
+              {ts('k_10fbkvl')}
+            </DropdownMenuItem>
+            {r.status === 1 && (
+              <>
+                <DropdownMenuItem onClick={() => router.push(`/dcprint/process-card/${r.id}/edit`)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  {tc('edit')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleSubmit(r.id)}>
+                  <Send className="h-4 w-4 mr-2" />
+                  {ts('k_ybr38x')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDelete(r.id)}>
+                  <Trash2 className="h-4 w-4 mr-2 text-red-500 dark:text-red-400" />
+                  {tc('delete')}
+                </DropdownMenuItem>
+              </>
+            )}
+            {r.status === 2 && (
+              <>
+                <DropdownMenuItem onClick={() => handleConfirm(r.id)}>
+                  <CheckCircle className="h-4 w-4 mr-2 text-green-500 dark:text-green-400" />
+                  {ts('k_kre8wf')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCancel(r.id)}>
+                  <XCircle className="h-4 w-4 mr-2 text-red-500 dark:text-red-400" />
+                  {ts('k_wph6a4')}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ];
+
+  // 客户端分页：先排序再切片（列表为一次性全量拉取）
+  const sorted = useMemo(() => {
+    if (!sort) return cards;
+    const dir = sort.direction === 'asc' ? 1 : -1;
+    return [...cards].sort((a, b) => {
+      const av = (a as unknown as Record<string, unknown>)[sort.field];
+      const bv = (b as unknown as Record<string, unknown>)[sort.field];
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+      if (typeof av === 'boolean' && typeof bv === 'boolean') return (Number(av) - Number(bv)) * dir;
+      return String(av ?? '').localeCompare(String(bv ?? '')) * dir;
+    });
+  }, [cards, sort]);
+
+  const paged = useMemo(
+    () => sorted.slice((page - 1) * pageSize, page * pageSize),
+    [sorted, page, pageSize]
+  );
+
+  const handleSortChange = (next: SortState) => {
+    setSort(next);
+    setPage(1);
+  };
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchKeyword, filterStatus]);
+
   return (
     <MainLayout title={t('processCardManagement')}>
       <div className="space-y-6">
@@ -248,97 +382,26 @@ export default function ProcessCardPage() {
               </Button>
             </div>
 
-            {loading ? (
-              <div className="text-center py-8 text-muted-foreground">{tc('loading')}</div>
-            ) : cards.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>{tc('noData')}</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{ts('k_1y8ybpg')}</TableHead>
-                    <TableHead>{ts('k_11gs5ia')}</TableHead>
-                    <TableHead>{ts('k_ush9hy')}</TableHead>
-                    <TableHead>{ts('k_aa5e9x')}</TableHead>
-                    <TableHead>{ts('k_va46gx')}</TableHead>
-                    <TableHead>{ts('k_1t8ltxj')}</TableHead>
-                    <TableHead>{ts('k_4sf5la')}</TableHead>
-                    <TableHead>{ts('k_q7sxwm')}</TableHead>
-                    <TableHead>{ts('k_1ugaydy')}</TableHead>
-                    <TableHead>{ts('k_1ccx4t4')}</TableHead>
-                    <TableHead>{tc('actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {cards.map((card) => (
-                    <TableRow key={card.id}>
-                      <TableCell className="font-mono">{card.sample_no}</TableCell>
-                      <TableCell>{card.sample_name}</TableCell>
-                      <TableCell>{card.customer_name || '-'}</TableCell>
-                      <TableCell>{card.product_name || '-'}</TableCell>
-                      <TableCell>{card.version_no}</TableCell>
-                      <TableCell>{card.substrate_material_name || '-'}</TableCell>
-                      <TableCell>{card.print_color || '-'}</TableCell>
-                      <TableCell>{card.estimated_hour ? `${card.estimated_hour}h` : '-'}</TableCell>
-                      <TableCell>¥{Number(card.total_cost || 0).toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Badge variant={STATUS_MAP[card.status]?.variant || 'secondary'}>
-                          {STATUS_MAP[card.status]?.label || ts('k_1lpnuh4')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem
-                              onClick={() => router.push(`/dcprint/process-card/${card.id}`)}
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              {ts('k_10fbkvl')}</DropdownMenuItem>
-                            {card.status === 1 && (
-                              <>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    router.push(`/dcprint/process-card/${card.id}/edit`)
-                                  }
-                                >
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  {tc('edit')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleSubmit(card.id)}>
-                                  <Send className="h-4 w-4 mr-2" />
-                                  {ts('k_ybr38x')}</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDelete(card.id)}>
-                                  <Trash2 className="h-4 w-4 mr-2 text-red-500 dark:text-red-400" />
-                                  {tc('delete')}
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            {card.status === 2 && (
-                              <>
-                                <DropdownMenuItem onClick={() => handleConfirm(card.id)}>
-                                  <CheckCircle className="h-4 w-4 mr-2 text-green-500 dark:text-green-400" />
-                                  {ts('k_kre8wf')}</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleCancel(card.id)}>
-                                  <XCircle className="h-4 w-4 mr-2 text-red-500 dark:text-red-400" />
-                                  {ts('k_wph6a4')}</DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
+            <StandardTable<SampleCard>
+              columns={columns}
+              dataSource={paged}
+              total={sorted.length}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable={false}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              sortState={sort}
+              onSortChange={handleSortChange}
+              loading={loading}
+              onRetry={fetchCards}
+              emptyText={tc('noData')}
+            />
           </CardContent>
         </Card>
       </div>

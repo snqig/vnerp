@@ -4,14 +4,7 @@ import { useState, useEffect } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, UserMinus, CalendarDays, Activity } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -75,6 +68,29 @@ export default function TurnoverPage() {
     );
   }
 
+  const trendColumns: StandardTableColumn<{ month: string; newHires: number; resignations: number; netChange: number }>[] = [
+    { key: 'month', title: t('month') || ts('k_1fsw60u'), render: (r) => <span className="font-medium">{r.month}</span> },
+    { key: 'newHires', title: t('newHires') || ts('k_a0odrq'), align: 'right', render: (r) => <span className="text-green-600 dark:text-green-400">{r.newHires}</span> },
+    { key: 'resignations', title: t('resignations') || ts('k_1v4n1r6'), align: 'right', render: (r) => <span className="text-red-500 dark:text-red-400">{r.resignations}</span> },
+    {
+      key: 'netChange',
+      title: t('netChange') || ts('k_e3fn55'),
+      align: 'right',
+      render: (r) => (
+        <span className={`font-medium ${r.netChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+          {r.netChange >= 0 ? '+' : ''}{r.netChange}
+        </span>
+      ),
+    },
+  ];
+
+  const deptColumns: StandardTableColumn<{ dept_name: string; total: number; resigned: number; rate: number }>[] = [
+    { key: 'dept_name', title: t('departmentName') || tc('department'), render: (r) => <span className="font-medium">{r.dept_name}</span> },
+    { key: 'total', title: t('totalEmployees') || ts('k_k1kv74'), align: 'right', render: (r) => r.total },
+    { key: 'resigned', title: t('resigned') || ts('k_h7ds5u'), align: 'right', render: (r) => r.resigned },
+    { key: 'rate', title: t('turnoverRate') || ts('k_17ttkoh'), align: 'right', render: (r) => `${r.rate}%` },
+  ];
+
   return (
     <MainLayout>
       <div className="container mx-auto py-6 space-y-6">
@@ -127,28 +143,13 @@ export default function TurnoverPage() {
               <CardTitle className="text-lg">{t('monthlyTrend') || ts('k_p3lqro')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('month') || ts('k_1fsw60u')}</TableHead>
-                    <TableHead className="text-right">{t('newHires') || ts('k_a0odrq')}</TableHead>
-                    <TableHead className="text-right">{t('resignations') || ts('k_1v4n1r6')}</TableHead>
-                    <TableHead className="text-right">{t('netChange') || ts('k_e3fn55')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data?.monthlyTrend.map((row, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-medium">{row.month}</TableCell>
-                      <TableCell className="text-right text-green-600 dark:text-green-400">{row.newHires}</TableCell>
-                      <TableCell className="text-right text-red-500 dark:text-red-400">{row.resignations}</TableCell>
-                      <TableCell className={`text-right font-medium ${row.netChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
-                        {row.netChange >= 0 ? '+' : ''}{row.netChange}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <StandardTable
+                columns={trendColumns}
+                dataSource={data?.monthlyTrend || []}
+                rowKey="month"
+                rowSelectable={false}
+                showPagination={false}
+              />
             </CardContent>
           </Card>
 
@@ -157,26 +158,13 @@ export default function TurnoverPage() {
               <CardTitle className="text-lg">{t('departmentTurnoverRate') || ts('k_1xzb8v3')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('departmentName') || tc('department')}</TableHead>
-                    <TableHead className="text-right">{t('totalEmployees') || ts('k_k1kv74')}</TableHead>
-                    <TableHead className="text-right">{t('resigned') || ts('k_h7ds5u')}</TableHead>
-                    <TableHead className="text-right">{t('turnoverRate') || ts('k_17ttkoh')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data?.byDepartment.map((dept, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-medium">{dept.dept_name}</TableCell>
-                      <TableCell className="text-right">{dept.total}</TableCell>
-                      <TableCell className="text-right">{dept.resigned}</TableCell>
-                      <TableCell className="text-right">{dept.rate}%</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <StandardTable
+                columns={deptColumns}
+                dataSource={data?.byDepartment || []}
+                rowKey="dept_name"
+                rowSelectable={false}
+                showPagination={false}
+              />
             </CardContent>
           </Card>
         </div>

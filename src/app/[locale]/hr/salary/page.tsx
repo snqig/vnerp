@@ -1,8 +1,7 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,14 +58,16 @@ import {
   PieChart,
   ChevronLeft,
   ChevronRight,
-  ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  ArrowUpDown,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
+import { useRowSelection } from '@/lib/useRowSelection';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 
 // DECIMAL 列经 mysql2 返回字符串，统一归一为数值，避免 `+` 变成字符串拼接
 const toNumber = (v: unknown): number => {
@@ -128,6 +129,7 @@ export default function HRSalaryPage() {
   // 翻译钩子
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const getGenderText = (gender: number) => {
     return gender === 1 ? tc('maleShort') : gender === 2 ? tc('femaleShort') : tc('unknown');
@@ -155,12 +157,31 @@ export default function HRSalaryPage() {
   const [sortField, setSortField] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const printRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
 
-  const fetchSalaryData = async () => {
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
+
+  const fetchSalaryData = useCallback(async () => {
     try {
       setLoading(true);
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
       const [salaryRes, deptRes] = await Promise.all([
-        authFetch('/api/hr/salary'),
+        authFetch(`/api/hr/salary?${params}`),
         authFetch('/api/organization/department?pageSize=500'),
       ]);
       const salaryData = await salaryRes.json();
@@ -170,6 +191,9 @@ export default function HRSalaryPage() {
         // 统一处理API返回的数据结构
         const rawData = salaryData.data;
         const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
+        const tot = Array.isArray(rawData) ? rawList.length : rawData?.total || 0;
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
         const list = rawList.map((item: Loose) => ({
           id: item.id,
           employee_no: item.employeeNo || item.employee_no,
@@ -225,11 +249,11 @@ export default function HRSalaryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize]);
 
   useEffect(() => {
     fetchSalaryData();
-  }, []);
+  }, [fetchSalaryData]);
 
   // 薪资表单
   const [salaryForm, setSalaryForm] = useState({
@@ -785,6 +809,31 @@ export default function HRSalaryPage() {
                 ))}
               </TableBody>
             </Table>
+            {total > 0 && (
+              <div className="flex items-center justify-between mt-4 flex-wrap gap-2 px-4 pb-4">
+                <span className="text-sm text-muted-foreground">
+                  {tStd('paginationSummary', { total, pages: totalPages })}
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                    <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+                  <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+                  <div className="flex items-center gap-1">
+                    <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                    <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {jumpError && <p className="text-destructive text-sm mt-2 px-4 pb-2">{jumpError}</p>}
           </CardContent>
         </Card>
 

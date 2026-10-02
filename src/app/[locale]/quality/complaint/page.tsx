@@ -1,5 +1,4 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
@@ -8,14 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -40,9 +32,7 @@ import {
   buildComplaintSchema,
   firstZodMessage,
 } from '@/lib/validators/quality-form';
-import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
@@ -126,6 +116,7 @@ export default function Complaint8DPage() {
   const [list, setList] = useState<ComplaintRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [searchCustomer, setSearchCustomer] = useState('');
   const [searchProduct, setSearchProduct] = useState('');
   const [searchStatus, setSearchStatus] = useState('');
@@ -140,17 +131,14 @@ export default function Complaint8DPage() {
   const [show8DDialog, setShow8DDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<ComplaintRecord>>({});
   const [active8DTab, setActive8DTab] = useState('d1');
-  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'complaint_no');
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    sortedData,
-    (r) => String(r.id)
-  );
+  // StandardTable：勾选（服务端分页，排序需后端支持）
+  const [selectedRows, setSelectedRows] = useState<ComplaintRecord[]>([]);
 
   const fetchData = async () => {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         customerName: searchCustomer,
         productName: searchProduct,
         status: searchStatus,
@@ -179,7 +167,7 @@ export default function Complaint8DPage() {
   useEffect(() => {
     fetchData();
     fetchStats();
-  }, [page]);
+  }, [page, pageSize]);
 
   const handleSave = async () => {
     const parsed = buildComplaintSchema(buildQualityFormMessages((k) => tc(k))).safeParse(editItem);
@@ -244,6 +232,102 @@ export default function Complaint8DPage() {
     setActive8DTab('d1');
     setShow8DDialog(true);
   };
+
+  const columns: StandardTableColumn<ComplaintRecord>[] = [
+    {
+      key: 'serialNo',
+      title: tc('serialNo'),
+      align: 'center',
+      width: 48,
+      className: 'text-muted-foreground',
+      render: (_item, index) => (page - 1) * pageSize + index + 1,
+    },
+    {
+      key: 'complaint_no',
+      title: t('complaintNo'),
+      className: 'font-mono text-sm',
+      render: (item) => item.complaint_no,
+    },
+    {
+      key: 'complaint_source',
+      title: tc('source'),
+      render: (item) => t(sourceMap[item.complaint_source] || 'other'),
+    },
+    {
+      key: 'customer_name',
+      title: tc('customerName'),
+      render: (item) => item.customer_name,
+    },
+    {
+      key: 'product_name',
+      title: tc('productName'),
+      render: (item) => item.product_name,
+    },
+    {
+      key: 'complaint_type',
+      title: t('defectType'),
+      render: (item) => t(complaintTypeMap[item.complaint_type] || 'other'),
+    },
+    {
+      key: 'severity',
+      title: t('severity'),
+      render: (item) => (
+        <Badge variant={severityMap[item.severity]?.variant || 'outline'}>
+          {severityMap[item.severity] ? t(severityMap[item.severity].label) : t('unknown')}
+        </Badge>
+      ),
+    },
+    {
+      key: 'defect_qty',
+      title: t('defectQty'),
+      render: (item) => item.defect_qty,
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (item) => (
+        <Badge variant={statusMap[item.status]?.variant || 'outline'}>
+          {t(statusMap[item.status]?.label || 'unknown')}
+        </Badge>
+      ),
+    },
+    {
+      key: 'report_date',
+      title: t('registerDate'),
+      render: (item) => item.report_date?.substring(0, 10) || item.create_time?.substring(0, 10),
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      // 原有操作列：8D 报告 / 编辑 / 删除，逻辑保持原样
+      render: (item) => (
+        <div className="flex gap-1">
+          <Button size="sm" variant="outline" onClick={() => open8DReport(item)}>
+            8D
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setEditItem(item);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              if (item.id) handleDelete(item.id);
+            }}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <MainLayout title={t('complaint8DManagement')}>
@@ -339,155 +423,29 @@ export default function Complaint8DPage() {
                     formatter: (v) => t(statusMap[v]?.label || tc('unknown')),
                   },
                 ]}
-                data={
-                  selectedCount > 0
-                    ? sortedData.filter((i) => i.id && isSelected(String(i.id)))
-                    : sortedData
-                }
+                data={selectedRows.length > 0 ? selectedRows : list}
               />
             </div>
 
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                  </TableHead>
-                  <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
-                  <SortableTableHeader
-                    field="complaint_no"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('complaintNo')}
-                  </SortableTableHeader>
-                  <TableHead>{tc('source')}</TableHead>
-                  <SortableTableHeader
-                    field="customer_name"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {tc('customerName')}
-                  </SortableTableHeader>
-                  <SortableTableHeader
-                    field="product_name"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {tc('productName')}
-                  </SortableTableHeader>
-                  <TableHead>{t('defectType')}</TableHead>
-                  <TableHead>{t('severity')}</TableHead>
-                  <TableHead>{t('defectQty')}</TableHead>
-                  <SortableTableHeader
-                    field="status"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {tc('status')}
-                  </SortableTableHeader>
-                  <TableHead>{t('registerDate')}</TableHead>
-                  <TableHead>{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedData.map((item: ComplaintRecord, index: number) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={isSelected(String(item.id))}
-                        onCheckedChange={() => toggle(String(item.id))}
-                      />
-                    </TableCell>
-                    <TableCell className="text-center text-muted-foreground">
-                      {(page - 1) * 20 + index + 1}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{item.complaint_no}</TableCell>
-                    <TableCell>
-                      {t(sourceMap[item.complaint_source] || 'other')}
-                    </TableCell>
-                    <TableCell>{item.customer_name}</TableCell>
-                    <TableCell>{item.product_name}</TableCell>
-                    <TableCell>{t(complaintTypeMap[item.complaint_type] || 'other')}</TableCell>
-                    <TableCell>
-                      <Badge variant={severityMap[item.severity]?.variant || 'outline'}>
-                        {severityMap[item.severity] ? t(severityMap[item.severity].label) : t('unknown')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{item.defect_qty}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusMap[item.status]?.variant || 'outline'}>
-                        {t(statusMap[item.status]?.label || 'unknown')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {item.report_date?.substring(0, 10) || item.create_time?.substring(0, 10)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="outline" onClick={() => open8DReport(item)}>
-                          8D
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditItem(item);
-                            setShowDialog(true);
-                          }}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            if (item.id) handleDelete(item.id);
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {sortedData.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
-                      {tc('noData')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">
-                {tc('totalRecords', { count: total })}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p: number) => p - 1)}
-                >
-                  {tc('prevPage')}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page * 20 >= total}
-                  onClick={() => setPage((p: number) => p + 1)}
-                >
-                  {tc('nextPage')}
-                </Button>
-              </div>
-            </div>
+            <StandardTable<ComplaintRecord>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              onRetry={fetchData}
+              emptyText={tc('noData')}
+            />
           </CardContent>
         </Card>
 

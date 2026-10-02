@@ -7,14 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -72,6 +65,7 @@ export default function DieManagementPage() {
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [searchCode, setSearchCode] = useState('');
   const [searchName, setSearchName] = useState('');
   const [showDialog, setShowDialog] = useState(false);
@@ -81,7 +75,7 @@ export default function DieManagementPage() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         dieCode: searchCode,
         dieName: searchName,
       });
@@ -98,7 +92,7 @@ export default function DieManagementPage() {
   };
   useEffect(() => {
     fetchData();
-  }, [page]);
+  }, [page, pageSize]);
 
   const handleSave = async () => {
     try {
@@ -133,6 +127,83 @@ export default function DieManagementPage() {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
+
+  // 注：/api/prepress/die 暂不支持 sortField/sortDirection，故先不开启 sortable，
+  // 避免出现点击无反应的排序控件；待后端补齐排序参数后再打开。
+  const columns: StandardTableColumn<Item>[] = [
+    {
+      key: 'die_code',
+      title: ts('k_1kzim0h'),
+      render: (r) => <span className="text-xs font-mono">{r.die_code}</span>,
+    },
+    { key: 'die_name', title: ts('k_1jwfah9'), render: (r) => <span className="text-xs">{r.die_name}</span> },
+    { key: 'die_type', title: tc('type'), render: (r) => <span className="text-xs">{typeMap[r.die_type] || '-'}</span> },
+    { key: 'size_spec', title: ts('k_ym4hcn'), render: (r) => <span className="text-xs">{r.size_spec || '-'}</span> },
+    { key: 'product_name', title: tc('product'), render: (r) => <span className="text-xs">{r.product_name || '-'}</span> },
+    {
+      key: 'max_use_count',
+      title: tc('dcMaxUseCountHead'),
+      render: (r) => <span className="text-xs">{r.max_use_count}</span>,
+    },
+    { key: 'used_count', title: ts('k_y7lj0n'), render: (r) => <span className="text-xs">{r.used_count ?? 0}</span> },
+    {
+      key: 'remaining_count',
+      title: tc('dcRemainingCountHead'),
+      render: (r) => {
+        const warn = r.remaining_count <= r.max_use_count * 0.2;
+        return (
+          <span className="text-xs">
+            {warn ? (
+              <span className="text-red-500 dark:text-red-400 font-bold">{r.remaining_count}</span>
+            ) : (
+              r.remaining_count
+            )}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => {
+        const st = statusMap[r.status] || statusMap[1];
+        return (
+          <Badge variant={st.variant} className="text-xs">
+            {st.label}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      align: 'right',
+      // 原有操作列：编辑 / 删除，逻辑保持原样
+      render: (r) => (
+        <div className="flex gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              setEditItem(r);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(r.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <MainLayout>
@@ -186,101 +257,25 @@ export default function DieManagementPage() {
         </div>
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">{ts('k_1kzim0h')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_1jwfah9')}</TableHead>
-                  <TableHead className="text-xs">{tc('type')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_ym4hcn')}</TableHead>
-                  <TableHead className="text-xs">{tc('product')}</TableHead>
-                  <TableHead className="text-xs">{tc('dcMaxUseCountHead')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_y7lj0n')}</TableHead>
-                  <TableHead className="text-xs">{tc('dcRemainingCountHead')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => {
-                  const st = statusMap[item.status] || statusMap[1];
-                  const warn = item.remaining_count <= item.max_use_count * 0.2;
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell className="text-xs font-mono">{item.die_code}</TableCell>
-                      <TableCell className="text-xs">{item.die_name}</TableCell>
-                      <TableCell className="text-xs">{typeMap[item.die_type] || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.size_spec || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.product_name || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.max_use_count}</TableCell>
-                      <TableCell className="text-xs">{item.used_count ?? 0}</TableCell>
-                      <TableCell className="text-xs">
-                        {warn ? (
-                          <span className="text-red-500 dark:text-red-400 font-bold">{item.remaining_count}</span>
-                        ) : (
-                          item.remaining_count
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
-                          {st.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => {
-                              setEditItem(item);
-                              setShowDialog(true);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center text-gray-400 py-8">
-                      {ts('k_11itye0')}</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<Item>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable={false}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              onRetry={fetchData}
+              emptyText={ts('k_11itye0')}
+            />
           </CardContent>
         </Card>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {ts('k_mtyn6e')}</Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {ts('k_1yw313l')}</Button>
-          </div>
-        </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>

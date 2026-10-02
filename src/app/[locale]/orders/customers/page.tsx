@@ -1,25 +1,9 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -56,8 +40,14 @@ import {
 } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
 import { CustomerStatsCards } from './customer-stats-cards';
-import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 
 // 客户列表项接口（基于 crm_customer 表）
 interface CustomerListItem {
@@ -120,7 +110,7 @@ export default function CustomersPage() {
   const [followUpStatusFilter, setFollowUpStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const pageSize = 100;
+  const [pageSize, setPageSize] = useState(20);
 
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -128,12 +118,13 @@ export default function CustomersPage() {
   const [editForm, setEditForm] = useState<Record<string, string>>({});
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+  const [selectedRows, setSelectedRows] = useState<CustomerListItem[]>([]);
 
   // 从数据库加载客户数据
   useEffect(() => {
     fetchCustomers();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchCustomers 依赖 searchTerm，搜索由下方防抖 effect 单独处理
-  }, [currentPage, statusFilter, customerTypeFilter, followUpStatusFilter]);
+  }, [currentPage, pageSize, statusFilter, customerTypeFilter, followUpStatusFilter]);
 
   // 防抖搜索：搜索词变化时自动触发搜索
   const isInitialRender = useRef(true);
@@ -406,6 +397,16 @@ export default function CustomersPage() {
     );
   };
 
+  const renderSortTitle = (label: React.ReactNode, field: string) => (
+    <span
+      className="inline-flex items-center cursor-pointer select-none hover:text-foreground"
+      onClick={() => handleSort(field)}
+    >
+      {label}
+      {getSortIcon(field)}
+    </span>
+  );
+
   const filteredCustomers = useMemo(() => {
     if (!sortField || !sortOrder) return customers;
     return [...customers].sort((a, b) => {
@@ -418,10 +419,122 @@ export default function CustomersPage() {
       return 0;
     });
   }, [customers, sortField, sortOrder]);
-  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    filteredCustomers,
-    (r) => String(r.id)
-  );
+
+  const columns: StandardTableColumn<CustomerListItem>[] = [
+    {
+      key: 'customerCode',
+      title: renderSortTitle(t('customerCode'), 'customerCode'),
+      sortable: true,
+      render: (c: CustomerListItem) => <span className="font-mono text-sm">{c.customerCode}</span>,
+    },
+    {
+      key: 'customerName',
+      title: renderSortTitle(t('customerName'), 'customerName'),
+      sortable: true,
+      render: (c: CustomerListItem) => (
+        <div className="flex flex-col">
+          <span className="font-medium truncate max-w-[160px]" title={c.customerName}>
+            {c.customerName}
+          </span>
+          {c.shortName && (
+            <span className="text-xs text-muted-foreground">{c.shortName}</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'customerType',
+      title: renderSortTitle(t('type'), 'customerType'),
+      sortable: true,
+      render: (c: CustomerListItem) => getCustomerTypeBadge(c.customerType),
+    },
+    {
+      key: 'contactName',
+      title: renderSortTitle(t('contactPerson'), 'contactName'),
+      sortable: true,
+      render: (c: CustomerListItem) => (
+        <div className="flex items-center gap-1">
+          <User className="h-3 w-3 text-muted-foreground" />
+          <span className="truncate max-w-[100px]" title={c.contactName}>
+            {c.contactName || '-'}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'contactPhone',
+      title: renderSortTitle(t('contactPhone'), 'contactPhone'),
+      sortable: true,
+      render: (c: CustomerListItem) => (
+        <div className="flex items-center gap-1">
+          <Phone className="h-3 w-3 text-muted-foreground" />
+          <span className="text-sm">{c.contactPhone || '-'}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'address',
+      title: renderSortTitle(t('address'), 'address'),
+      sortable: true,
+      render: (c: CustomerListItem) => (
+        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+          <MapPin className="h-3 w-3" />
+          <span
+            className="truncate max-w-[180px]"
+            title={`${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`}
+          >
+            {c.province || ''}
+            {c.city || ''}
+            {c.district || ''}
+            {c.address || '-'}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'followUpStatus',
+      title: renderSortTitle(t('followUpStatus'), 'followUpStatus'),
+      sortable: true,
+      render: (c: CustomerListItem) => getFollowUpStatusBadge(c.followUpStatus),
+    },
+    {
+      key: 'status',
+      title: renderSortTitle(tc('status'), 'status'),
+      sortable: true,
+      render: (c: CustomerListItem) => getStatusBadge(c.status),
+    },
+    {
+      key: 'actions',
+      title: tc('operation'),
+      align: 'right',
+      render: (c: CustomerListItem) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleView(c)}>
+              <Eye className="h-4 w-4 mr-2" />
+              {tc('view')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleEdit(c)}>
+              <Edit className="h-4 w-4 mr-2" />
+              {tc('edit')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleDelete(c)}
+              className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {tc('delete')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ];
 
   return (
     <MainLayout title={t('customerArchive')}>
@@ -525,7 +638,7 @@ export default function CustomersPage() {
                   label: t('address'),
                   width: 30,
                   formatter: (_v, row) =>
-                    `${row.province || ''}${row.city || ''}${row.district || ''}${row.address || ''}`,
+                    `${(row as Loose).province || ''}${(row as Loose).city || ''}${(row as Loose).district || ''}${(row as Loose).address || ''}`,
                 },
                 {
                   key: 'followUpStatus',
@@ -541,230 +654,33 @@ export default function CustomersPage() {
                 },
               ]}
               data={
-                selectedCount > 0
-                  ? filteredCustomers.filter((c) => isSelected(String(c.id)))
+                selectedRows.length > 0
+                  ? filteredCustomers.filter((c) => selectedRows.some((r) => r.id === c.id))
                   : filteredCustomers
               }
             />
           </CardHeader>
           <CardContent>
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="w-[40px]">
-                      <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                    </TableHead>
-                    <TableHead
-                      className="w-[100px] cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('customerCode')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('customerCode')}
-                        {getSortIcon('customerCode')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="w-[180px] cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('customerName')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('customerName')}
-                        {getSortIcon('customerName')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="w-[100px] cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('customerType')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('type')}
-                        {getSortIcon('customerType')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="w-[120px] cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('contactName')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('contactPerson')}
-                        {getSortIcon('contactName')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="w-[130px] cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('contactPhone')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('contactPhone')}
-                        {getSortIcon('contactPhone')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="w-[200px] cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('address')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('address')}
-                        {getSortIcon('address')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="w-[100px] cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('followUpStatus')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('followUpStatus')}
-                        {getSortIcon('followUpStatus')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="w-[70px] cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('status')}
-                    >
-                      <span className="inline-flex items-center">
-                        {tc('status')}
-                        {getSortIcon('status')}
-                      </span>
-                    </TableHead>
-                    <TableHead className="w-[80px] text-center">{tc('operation')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-                          {tc('loading')}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredCustomers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
-                        {tc('noData')}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredCustomers.map((customer) => (
-                      <TableRow key={customer.id} className="group hover:bg-muted/30">
-                        <TableCell>
-                          <Checkbox
-                            checked={isSelected(String(customer.id))}
-                            onCheckedChange={() => toggle(String(customer.id))}
-                          />
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">{customer.customerCode}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span
-                              className="font-medium truncate max-w-[160px]"
-                              title={customer.customerName}
-                            >
-                              {customer.customerName}
-                            </span>
-                            {customer.shortName && (
-                              <span className="text-xs text-muted-foreground">
-                                {customer.shortName}
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>{getCustomerTypeBadge(customer.customerType)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <User className="h-3 w-3 text-muted-foreground" />
-                            <span className="truncate max-w-[100px]" title={customer.contactName}>
-                              {customer.contactName || '-'}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Phone className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{customer.contactPhone || '-'}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <MapPin className="h-3 w-3" />
-                            <span
-                              className="truncate max-w-[180px]"
-                              title={`${customer.province || ''}${customer.city || ''}${customer.district || ''}${customer.address || ''}`}
-                            >
-                              {customer.province || ''}
-                              {customer.city || ''}
-                              {customer.district || ''}
-                              {customer.address || '-'}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getFollowUpStatusBadge(customer.followUpStatus)}</TableCell>
-                        <TableCell>{getStatusBadge(customer.status)}</TableCell>
-                        <TableCell className="text-center">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleView(customer)}>
-                                <Eye className="h-4 w-4 mr-2" />
-                                {tc('view')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleEdit(customer)}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                {tc('edit')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDelete(customer)}
-                                className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                {tc('delete')}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* 分页 */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-muted-foreground">
-                  {t('paginationInfo', {
-                    total: totalCount,
-                    current: currentPage,
-                    pages: totalPages,
-                  })}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    {t('prevPage')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    {t('nextPage')}
-                  </Button>
-                </div>
-              </div>
-            )}
+            <StandardTable<CustomerListItem>
+              columns={columns}
+              dataSource={filteredCustomers}
+              total={totalCount}
+              page={currentPage}
+              pageSize={pageSize}
+              showPagination={totalCount > 0}
+              pageSizeOptions={[20, 50, 100]}
+              onPageChange={(p) => setCurrentPage(p)}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setCurrentPage(1);
+              }}
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              rowKey="id"
+              loading={loading && customers.length === 0}
+              emptyText={customers.length === 0 ? tc('noData') : tc('noData')}
+            />
           </CardContent>
         </Card>
 

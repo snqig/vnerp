@@ -4,7 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { useToast } from '@/hooks/use-toast';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { MainLayout } from '@/components/layout';
@@ -126,6 +126,7 @@ interface AutoScheduleResult {
 export default function ProductionSchedulePage() {
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
   const { toast } = useToast();
   const locale = useLocale();
 
@@ -146,28 +147,28 @@ export default function ProductionSchedulePage() {
   const getStatusBadge = (status: number) => {
     const statusMap: Record<number, { label: string; className: string }> = {
       1: {
-        label: t('statusPending'),
-        className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+        label: '待排程',
+        className: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200',
       },
       2: {
-        label: t('statusScheduled'),
-        className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+        label: '已排程',
+        className: 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200',
       },
       3: {
-        label: t('statusProducing'),
-        className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+        label: '生产中',
+        className: 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-200',
       },
       4: {
-        label: t('statusCompleted'),
-        className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+        label: '已完成',
+        className: 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200',
       },
       5: {
-        label: t('statusCancelled'),
-        className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+        label: '已取消',
+        className: 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200',
       },
     };
     const config = statusMap[status] || {
-      label: tc('unknown'),
+      label: '未知',
       className: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200',
     };
     return <Badge className={config.className}>{config.label}</Badge>;
@@ -242,14 +243,37 @@ export default function ProductionSchedulePage() {
     remark: '',
   });
 
-  const fetchSchedules = async () => {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
+
+  const fetchSchedules = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await authFetch('/api/production/schedule?pageSize=100');
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
+      const res = await authFetch(`/api/production/schedule?${params}`);
       const data = await res.json();
       if (data.success) {
         const list = data.data?.list || [];
+        const tot = data.data?.total || 0;
         setSchedules(list);
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
 
         let conflicts = 0;
         const workshopGroups: Record<string, Schedule[]> = {};
@@ -277,7 +301,7 @@ export default function ProductionSchedulePage() {
         });
 
         setStats({
-          total: list.length,
+          total: tot,
           pending: list.filter((s: Schedule) => s.status === 1).length,
           scheduled: list.filter((s: Schedule) => s.status === 2).length,
           producing: list.filter((s: Schedule) => s.status === 3).length,
@@ -293,7 +317,7 @@ export default function ProductionSchedulePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize]);
 
   const handleBatchDelete = async () => {
     const ids = Array.from(selected);
@@ -351,7 +375,7 @@ export default function ProductionSchedulePage() {
     fetchSchedules();
     fetchCapacityData();
     fetchWorkOrders();
-  }, []);
+  }, [fetchSchedules]);
 
   const filteredSchedules = schedules.filter((schedule) => {
     if (activeTab !== 'all') {
@@ -575,10 +599,10 @@ export default function ProductionSchedulePage() {
           `${t('autoScheduleComplete')} ${t('successCount')}: ${result.data?.summary?.scheduled || 0}, ${t('conflictCount')}: ${result.data?.summary?.with_conflicts || 0}`
         );
       } else {
-        alert(result.message || t('autoScheduleFailed'));
+        alert(result.message || '自动排程失败');
       }
     } catch {
-      alert(t('autoScheduleFailed'));
+      alert('自动排程失败');
     } finally {
       setAutoScheduleLoading(false);
     }
@@ -607,16 +631,16 @@ export default function ProductionSchedulePage() {
       <div className="space-y-6">
         <StatsCards
           configs={[
-            { key: 'total', label: tc('total'), icon: CalendarIcon, ...StatsTheme.blue },
-            { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
-            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
-            { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'total', label: '排程总数', icon: CalendarIcon, ...StatsTheme.blue },
+            { key: 'active', label: '已排程', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'pending', label: '待排程', icon: Clock, ...StatsTheme.orange },
+            { key: 'warning', label: '已延期', icon: AlertTriangle, ...StatsTheme.red },
           ]}
           stats={[
             { key: 'total', count: schedules.length },
-            { key: 'active', count: schedules.length },
-            { key: 'pending', count: schedules.length },
-            { key: 'warning', count: schedules.length },
+            { key: 'active', count: schedules.filter((s) => s.status === 4).length },
+            { key: 'pending', count: schedules.filter((s) => s.status === 1).length },
+            { key: 'warning', count: schedules.filter((s) => s.status === 3).length },
           ]}
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
@@ -678,7 +702,7 @@ export default function ProductionSchedulePage() {
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setIsAutoScheduleOpen(true)}>
                   <Zap className="h-4 w-4 mr-1" />
-                  {t('autoSchedule')}
+                  自动排程
                 </Button>
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                   <DialogTrigger asChild>
@@ -695,55 +719,55 @@ export default function ProductionSchedulePage() {
                     <div className="grid gap-4 py-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>{t('productName')}</Label>
+                          <Label>产品名称</Label>
                           <Input placeholder={t('inputProductName')} />
                         </div>
                         <div className="space-y-2">
-                          <Label>{t('workshopLabel')}</Label>
+                          <Label>车间</Label>
                           <Select>
                             <SelectTrigger>
                               <SelectValue placeholder={t('selectWorkshop')} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="die_cut">{t('workshopDieCut')}</SelectItem>
-                              <SelectItem value="trademark">{t('workshopTrademark')}</SelectItem>
-                              <SelectItem value="printing">{t('workshopPrinting')}</SelectItem>
-                              <SelectItem value="packaging">{t('workshopPackaging')}</SelectItem>
+                              <SelectItem value="die_cut">模切车间</SelectItem>
+                              <SelectItem value="trademark">商标车间</SelectItem>
+                              <SelectItem value="printing">印刷车间</SelectItem>
+                              <SelectItem value="packaging">包装车间</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>{t('plannedQuantity')}</Label>
+                          <Label>计划数量</Label>
                           <Input type="number" placeholder={t('productionQuantity')} />
                         </div>
                         <div className="space-y-2">
-                          <Label>{t('priorityLabel')}</Label>
+                          <Label>优先级</Label>
                           <Select defaultValue="2">
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="1">{t('urgent')}</SelectItem>
-                              <SelectItem value="2">{t('normal')}</SelectItem>
-                              <SelectItem value="3">{t('low')}</SelectItem>
+                              <SelectItem value="1">紧急</SelectItem>
+                              <SelectItem value="2">普通</SelectItem>
+                              <SelectItem value="3">低</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>{t('plannedStart')}</Label>
+                          <Label>计划开始时间</Label>
                           <Input type="datetime-local" />
                         </div>
                         <div className="space-y-2">
-                          <Label>{t('plannedEnd')}</Label>
+                          <Label>计划结束时间</Label>
                           <Input type="datetime-local" />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label>{t('remarkLabel')}</Label>
+                        <Label>备注</Label>
                         <Input placeholder={t('inputRemark')} />
                       </div>
                     </div>
@@ -796,15 +820,15 @@ export default function ProductionSchedulePage() {
                           aria-label={tc('selectAll')}
                         />
                       </TableHead>
-                      <TableHead>{t('scheduleNo')}</TableHead>
-                        <TableHead>{t('orderNo')}</TableHead>
-                        <TableHead>{t('productName')}</TableHead>
-                        <TableHead>{t('workshopLabel')}</TableHead>
-                        <TableHead>{t('plannedQuantity')}</TableHead>
-                        <TableHead>{t('plannedStart')}</TableHead>
-                        <TableHead>{t('priorityLabel')}</TableHead>
-                        <TableHead>{tc('status')}</TableHead>
-                        <TableHead>{tc('actions')}</TableHead>
+                      <TableHead>排程编号</TableHead>
+                        <TableHead>订单编号</TableHead>
+                        <TableHead>产品名称</TableHead>
+                        <TableHead>车间</TableHead>
+                        <TableHead>计划数量</TableHead>
+                        <TableHead>计划开始时间</TableHead>
+                        <TableHead>优先级</TableHead>
+                        <TableHead>状态</TableHead>
+                        <TableHead>操作</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -885,6 +909,31 @@ export default function ProductionSchedulePage() {
                       ))}
                     </TableBody>
                   </Table>
+                  {total > 0 && (
+                    <div className="flex items-center justify-between mt-4 flex-wrap gap-2 px-4 pb-4">
+                      <span className="text-sm text-muted-foreground">
+                        {tStd('paginationSummary', { total, pages: totalPages })}
+                      </span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                          <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                            <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                            <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+                        <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+                        <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+                        <div className="flex items-center gap-1">
+                          <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                          <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {jumpError && <p className="text-destructive text-sm mt-2 px-4 pb-2">{jumpError}</p>}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1140,36 +1189,36 @@ export default function ProductionSchedulePage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-amber-500 dark:text-amber-400" />
-                {t('autoScheduleTitle')}
+                自动排程
               </DialogTitle>
-              <DialogDescription>{t('autoScheduleDesc')}</DialogDescription>
+              <DialogDescription>选择需要排程的工单，系统会自动计算最优排程时间</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
-                  {t('selectedCount', { count: selectedWorkOrders.length })}
+                  已选：{selectedWorkOrders.length} 个工单
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => setSelectedWorkOrders([])}>
-                    {t('clearSelection')}
+                    清空选择
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setSelectedWorkOrders(workOrders.map((wo) => wo.id))}
                   >
-                    {t('selectAll')}
+                    全选
                   </Button>
                 </div>
               </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12">{t('select')}</TableHead>
-                    <TableHead>{t('workOrderNo')}</TableHead>
-                    <TableHead>{t('productName')}</TableHead>
-                    <TableHead>{t('planQty')}</TableHead>
-                    <TableHead>{tc('status')}</TableHead>
+                    <TableHead className="w-12">选择</TableHead>
+                    <TableHead>工单号</TableHead>
+                    <TableHead>产品名称</TableHead>
+                    <TableHead>计划数量</TableHead>
+                    <TableHead>状态</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1206,7 +1255,7 @@ export default function ProductionSchedulePage() {
               </Table>
               {autoScheduleResults.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-sm">{t('scheduleResult')}</h4>
+                  <h4 className="font-semibold text-sm">排程结果</h4>
                   {autoScheduleResults.map((result) => (
                     <Card
                       key={result.work_order_id}
@@ -1218,16 +1267,15 @@ export default function ProductionSchedulePage() {
                         <div className="flex items-center justify-between">
                           <div className="text-sm font-medium">{result.work_order_no}</div>
                           {result.conflicts.length > 0 ? (
-                            <Badge variant="destructive">{t('hasConflict')}</Badge>
+                            <Badge variant="destructive">有冲突</Badge>
                           ) : (
                             <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
-                              {t('statusScheduled')}
+                              已排程
                             </Badge>
                           )}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
-                          {t('startLabel')}: {formatDate(result.overall_start)} ~ {t('endLabel')}:{' '}
-                          {formatDate(result.overall_end)}
+                          开始：{formatDate(result.overall_start)} ~ 结束：{formatDate(result.overall_end)}
                         </div>
                         {result.conflicts.length > 0 && (
                           <div className="text-xs text-red-500 dark:text-red-400 mt-1">
@@ -1242,7 +1290,7 @@ export default function ProductionSchedulePage() {
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsAutoScheduleOpen(false)}>
-                {tc('close')}
+                关闭
               </Button>
               <Button
                 onClick={handleAutoSchedule}
@@ -1253,7 +1301,7 @@ export default function ProductionSchedulePage() {
                 ) : (
                   <Zap className="h-4 w-4 mr-2" />
                 )}
-                {autoScheduleLoading ? t('schedulingInProgress') : t('startAutoSchedule')}
+                {autoScheduleLoading ? '排程中...' : '开始自动排程'}
               </Button>
             </div>
           </DialogContent>
@@ -1345,9 +1393,9 @@ export default function ProductionSchedulePage() {
                         <span>{selectedSchedule.schedule_no}</span>
                         <span className="text-muted-foreground">{t('orderNo')}:</span>
                         <span>{selectedSchedule.order_no || '-'}</span>
-                        <span className="text-muted-foreground">{t('scheduler')}:</span>
+                        <span className="text-muted-foreground">排程员:</span>
                         <span>{selectedSchedule.scheduler || '-'}</span>
-                        <span className="text-muted-foreground">{t('priorityLabel')}:</span>
+                        <span className="text-muted-foreground">优先级:</span>
                         <span>{getPriorityBadge(selectedSchedule.priority)}</span>
                       </div>
                     </div>
@@ -1356,13 +1404,13 @@ export default function ProductionSchedulePage() {
                         {t('productInfo')}
                       </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">{t('productName')}:</span>
+                        <span className="text-muted-foreground">产品名称:</span>
                         <span>{selectedSchedule.product_name}</span>
                         <span className="text-muted-foreground">{t('productCode')}:</span>
                         <span>{selectedSchedule.product_code || '-'}</span>
-                        <span className="text-muted-foreground">{t('workshopLabel')}:</span>
+                        <span className="text-muted-foreground">车间:</span>
                         <span>{getWorkshopBadge(selectedSchedule.workshop)}</span>
-                        <span className="text-muted-foreground">{t('plannedQuantity')}:</span>
+                        <span className="text-muted-foreground">计划数量:</span>
                         <span>{Number(selectedSchedule.planned_qty).toLocaleString(locale)}</span>
                       </div>
                     </div>
@@ -1370,9 +1418,9 @@ export default function ProductionSchedulePage() {
                   <div className="space-y-3">
                     <h4 className="font-semibold text-sm text-muted-foreground">{t('planTime')}</h4>
                     <div className="grid grid-cols-4 gap-2 text-sm">
-                      <span className="text-muted-foreground">{t('plannedStart')}:</span>
+                      <span className="text-muted-foreground">计划开始时间:</span>
                       <span>{formatDate(selectedSchedule.planned_start) || '-'}</span>
-                      <span className="text-muted-foreground">{t('plannedEnd')}:</span>
+                      <span className="text-muted-foreground">计划结束时间:</span>
                       <span>{formatDate(selectedSchedule.planned_end) || '-'}</span>
                       <span className="text-muted-foreground">{t('actualStart')}:</span>
                       <span>{formatDate(selectedSchedule.actual_start) || '-'}</span>
@@ -1383,7 +1431,7 @@ export default function ProductionSchedulePage() {
                   {selectedSchedule.remark && (
                     <div className="space-y-3">
                       <h4 className="font-semibold text-sm text-muted-foreground">
-                        {t('remarkLabel')}
+                        备注
                       </h4>
                       <div className="text-sm p-3 bg-muted rounded">
                         {selectedSchedule.remark}
@@ -1441,20 +1489,20 @@ export default function ProductionSchedulePage() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Edit className="h-5 w-5" />
-                    {t('editSchedule')}: {selectedSchedule.schedule_no}
+                    编辑排程: {selectedSchedule.schedule_no}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{t('productName')}</Label>
+                      <Label>产品名称</Label>
                       <Input
                         value={editForm.product_name}
                         onChange={(e) => setEditForm({ ...editForm, product_name: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('workshopLabel')}</Label>
+                      <Label>车间</Label>
                       <Select
                         value={editForm.workshop}
                         onValueChange={(v) => setEditForm({ ...editForm, workshop: v })}
@@ -1463,17 +1511,17 @@ export default function ProductionSchedulePage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="die_cut">{t('workshopDieCut')}</SelectItem>
-                          <SelectItem value="trademark">{t('workshopTrademark')}</SelectItem>
-                          <SelectItem value="printing">{t('workshopPrinting')}</SelectItem>
-                          <SelectItem value="packaging">{t('workshopPackaging')}</SelectItem>
+                          <SelectItem value="die_cut">模切车间</SelectItem>
+                          <SelectItem value="trademark">商标车间</SelectItem>
+                          <SelectItem value="printing">印刷车间</SelectItem>
+                          <SelectItem value="packaging">包装车间</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{t('plannedQuantity')}</Label>
+                      <Label>计划数量</Label>
                       <Input
                         type="number"
                         value={editForm.planned_qty}
@@ -1483,7 +1531,7 @@ export default function ProductionSchedulePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('priorityLabel')}</Label>
+                      <Label>优先级</Label>
                       <Select
                         value={String(editForm.priority)}
                         onValueChange={(v) => setEditForm({ ...editForm, priority: parseInt(v) })}
@@ -1492,16 +1540,16 @@ export default function ProductionSchedulePage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">{t('urgent')}</SelectItem>
-                          <SelectItem value="2">{t('normal')}</SelectItem>
-                          <SelectItem value="3">{t('low')}</SelectItem>
+                          <SelectItem value="1">紧急</SelectItem>
+                          <SelectItem value="2">普通</SelectItem>
+                          <SelectItem value="3">低</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{t('plannedStart')}</Label>
+                      <Label>计划开始时间</Label>
                       <Input
                         type="datetime-local"
                         value={editForm.planned_start}
@@ -1511,7 +1559,7 @@ export default function ProductionSchedulePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('plannedEnd')}</Label>
+                      <Label>计划结束时间</Label>
                       <Input
                         type="datetime-local"
                         value={editForm.planned_end}
@@ -1520,14 +1568,14 @@ export default function ProductionSchedulePage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>{t('scheduler')}</Label>
+                    <Label>排程员</Label>
                     <Input
                       value={editForm.scheduler}
                       onChange={(e) => setEditForm({ ...editForm, scheduler: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>{t('remarkLabel')}</Label>
+                    <Label>备注</Label>
                     <Input
                       value={editForm.remark}
                       onChange={(e) => setEditForm({ ...editForm, remark: e.target.value })}

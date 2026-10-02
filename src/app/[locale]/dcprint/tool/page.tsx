@@ -125,12 +125,26 @@ const TYPE_MAP = TOOL_TYPE_LABEL;
 export default function ToolManagementPage() {
   const tc = useTranslations('Common');
   const ts = useTranslations('Dcprint');
+  const tStd = useTranslations('StandardTable');
   const { toast } = useToast();
 
   const [tools, setTools] = useState<Tool[]>([]);
-  const [_total, _setTotal] = useState(0);
-  const [page, _setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
   const [_loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
@@ -209,7 +223,9 @@ export default function ToolManagementPage() {
       const data = await res.json();
       if (data.success) {
         setTools(data.data?.list || []);
-        _setTotal(data.data?.total || 0);
+        const tot = data.data?.total || 0;
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
       }
     } finally {
       setLoading(false);
@@ -653,6 +669,31 @@ export default function ToolManagementPage() {
                 )}
               </TableBody>
             </Table>
+            {total > 0 && (
+              <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {tStd('paginationSummary', { total, pages: totalPages })}
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                    <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+                  <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+                  <div className="flex items-center gap-1">
+                    <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                    <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
           </CardContent>
         </Card>
 

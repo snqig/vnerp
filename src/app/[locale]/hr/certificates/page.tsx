@@ -8,14 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -32,11 +25,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Trash2, AlertTriangle, Award, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, AlertTriangle, Award, CheckCircle, Clock, XCircle, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/lib/date-utils';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
@@ -103,13 +95,12 @@ export default function CertificatesPage() {
   const [editItem, setEditItem] = useState<Partial<Certificate>>({});
   const [detailItem, setDetailItem] = useState<Certificate | null>(null);
 
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [employees, setEmployees] = useState<{id: number; name: string; employee_no: string}[]>([]);
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows;
     if (ids.length === 0) return;
     if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
     setDeleting(true);
@@ -124,7 +115,7 @@ export default function CertificatesPage() {
     setDeleting(false);
     if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
     if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
+    setSelectedRows([]);
     fetchData();
   };
 
@@ -217,6 +208,74 @@ export default function CertificatesPage() {
 
   const totalPages = Math.ceil(total / pageSize);
 
+  const columns: StandardTableColumn<Certificate>[] = [
+    { key: 'employee_name', title: '员工姓名', render: (row) => row.employee_name || '-' },
+    { key: 'cert_name', title: t('certName'), render: (row) => <span className="font-medium">{row.cert_name}</span> },
+    { key: 'cert_code', title: t('certCode'), render: (row) => <span className="font-mono">{row.cert_code}</span> },
+    { key: 'cert_type', title: t('certType'), render: (row) => row.cert_type || '-' },
+    { key: 'issue_authority', title: t('issueAuthority'), render: (row) => row.issue_authority || '-' },
+    { key: 'issue_date', title: t('issueDate'), render: (row) => formatDate(row.issue_date) },
+    { key: 'expiry_date', title: t('expiryDate'), render: (row) => formatDate(row.expiry_date) },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (row) =>
+        Number(row.status) === 1 ? (
+          <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs border-0">{tc('active')}</Badge>
+        ) : (
+          <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs border-0">{tc('expired')}</Badge>
+        ),
+    },
+    {
+      key: 'remind_days',
+      title: t('remindDays'),
+      render: (row) => {
+        const daysLeft = getDaysUntilExpiry(row.expiry_date);
+        const isExpiring = daysLeft <= 30 && daysLeft > 0;
+        return isExpiring ? (
+          <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs border-0 whitespace-nowrap">
+            <AlertTriangle className="h-3 w-3 mr-1" />
+            {daysLeft}
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        );
+      },
+    },
+    {
+      key: 'actions',
+      title: tc('operation'),
+      align: 'right',
+      width: 100,
+      render: (row) => (
+        <div className="flex gap-1 justify-end">
+          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleRowClick(row)}>
+            <Eye className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              setEditItem(row);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(row.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <MainLayout title={t('certificateManage')}>
       <div className="p-6 space-y-6">
@@ -300,133 +359,23 @@ export default function CertificatesPage() {
         />
 <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                  </TableHead>
-                  <TableHead className="text-xs">员工姓名</TableHead>
-                  <TableHead className="text-xs">{t('certName')}</TableHead>
-                  <TableHead className="text-xs">{t('certCode')}</TableHead>
-                  <TableHead className="text-xs">{t('certType')}</TableHead>
-                  <TableHead className="text-xs">{t('issueAuthority')}</TableHead>
-                  <TableHead className="text-xs">{t('issueDate')}</TableHead>
-                  <TableHead className="text-xs">{t('expiryDate')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{t('remindDays')}</TableHead>
-                  <TableHead className="text-xs w-20">{tc('operation')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => {
-                  const daysLeft = getDaysUntilExpiry(item.expiry_date);
-                  const isExpiring = daysLeft <= 30 && daysLeft > 0;
-                  return (
-                    <TableRow
-                      key={item.id}
-                      className="cursor-pointer"
-                      onClick={() => handleRowClick(item)}
-                    >
-                      <TableCell>
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer accent-blue-600"
-                          checked={isSelected(String(item.id))}
-                          onChange={() => toggle(String(item.id))}
-                          onClick={(e) => e.stopPropagation()}
-                          aria-label={tc('selectRow', { id: item.id })}
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs">{item.employee_name || '-'}</TableCell>
-                      <TableCell className="text-xs font-medium">{item.cert_name}</TableCell>
-                      <TableCell className="text-xs font-mono">{item.cert_code}</TableCell>
-                      <TableCell className="text-xs">
-                        {item.cert_type || '-'}
-                      </TableCell>
-                      <TableCell className="text-xs">{item.issue_authority || '-'}</TableCell>
-                      <TableCell className="text-xs">{formatDate(item.issue_date)}</TableCell>
-                      <TableCell className="text-xs">{formatDate(item.expiry_date)}</TableCell>
-                      <TableCell className="text-xs">
-                        {Number(item.status) === 1 ? (
-                          <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs border-0">{tc('active')}</Badge>
-                        ) : (
-                          <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs border-0">{tc('expired')}</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {isExpiring ? (
-                          <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs border-0 whitespace-nowrap">
-                            <AlertTriangle className="h-3 w-3 mr-1" />
-                            {daysLeft}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => {
-                              setEditItem(item);
-                              setShowDialog(true);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
-                      {tc('noData')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} loading={deleting} />
+            <StandardTable<Certificate>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              showPagination={totalPages > 1}
+              onPageChange={setPage}
+              rowSelectable
+              selectedRows={list.filter((r) => selectedRows.includes(r.id))}
+              onRowSelectedChange={(rows) => setSelectedRows(rows.map((r) => r.id))}
+              rowKey="id"
+              emptyText={tc('noData')}
+            />
           </CardContent>
         </Card>
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{t('totalRecords', { count: total })}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}
-            </Button>
-            <span className="flex items-center text-sm text-muted-foreground px-2">
-              {page} / {totalPages || 1}
-            </span>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>

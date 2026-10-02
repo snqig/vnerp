@@ -1,7 +1,6 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -9,14 +8,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -29,6 +20,7 @@ import { Plus, Search, Edit, Trash2, CheckCircle, Clock, AlertTriangle, Calendar
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
+import { StandardTable, StandardTableColumn, SortState } from '@/components/common';
 
 interface Item {
   id: number;
@@ -60,6 +52,7 @@ export default function EquipmentScrapPage() {
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [searchNo, setSearchNo] = useState('');
   const [stats, setStats] = useState({
     pending: 0,
@@ -70,20 +63,27 @@ export default function EquipmentScrapPage() {
   });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
-
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
+  const [sort, setSort] = useState<SortState>(null);
+  const [selectedRows, setSelectedRows] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: '20', scrapNo: searchNo });
+      setLoading(true);
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), scrapNo: searchNo });
+      if (sort) {
+        params.set('sortField', sort.field);
+        params.set('sortDirection', sort.direction);
+      }
       const res = await authFetch('/api/equipment/scrap?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch {}
+    } catch {} finally {
+      setLoading(false);
+    }
   };
   const fetchStats = async () => {
     try {
@@ -100,7 +100,12 @@ export default function EquipmentScrapPage() {
   useEffect(() => {
     fetchData();
     fetchStats();
-  }, [page]);
+  }, [page, pageSize, searchNo, sort]);
+
+  const handleSortChange = (next: SortState) => {
+    setSort(next);
+    setPage(1);
+  };
 
   const handleSave = async () => {
     try {
@@ -156,7 +161,7 @@ export default function EquipmentScrapPage() {
   };
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => r.id);
     if (ids.length === 0) return;
     if (!confirm(tc('confirmBatchDelete', { count: ids.length }))) return;
     let okCount = 0;
@@ -174,9 +179,107 @@ export default function EquipmentScrapPage() {
     if (okCount > 0)
       toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
     if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
+    setSelectedRows([]);
     fetchData();
   };
+
+  const columns: StandardTableColumn<Item>[] = [
+    {
+      key: 'scrap_no',
+      title: ts('k_1ggqij1'),
+      render: (r) => <span className="text-xs font-mono">{r.scrap_no}</span>,
+    },
+    {
+      key: 'equipment_code',
+      title: ts('k_17s4qyf'),
+      render: (r) => <span className="text-xs">{r.equipment_code || '-'}</span>,
+    },
+    {
+      key: 'equipment_name',
+      title: ts('k_eb1q6f'),
+      render: (r) => <span className="text-xs">{r.equipment_name || '-'}</span>,
+    },
+    {
+      key: 'scrap_date',
+      title: ts('k_1oc5iv9'),
+      render: (r) => <span className="text-xs">{r.scrap_date || '-'}</span>,
+    },
+    {
+      key: 'scrap_reason',
+      title: ts('k_1h3xyle'),
+      render: (r) => <span className="text-xs max-w-28 truncate">{r.scrap_reason || '-'}</span>,
+    },
+    {
+      key: 'original_value',
+      title: ts('k_12o2s46'),
+      render: (r) => <span className="text-xs">¥{Number(r.original_value || 0).toFixed(2)}</span>,
+    },
+    {
+      key: 'net_value',
+      title: ts('k_2dlv89'),
+      render: (r) => <span className="text-xs">¥{Number(r.net_value || 0).toFixed(2)}</span>,
+    },
+    {
+      key: 'approval_person',
+      title: tc('approver'),
+      render: (r) => <span className="text-xs">{r.approval_person || '-'}</span>,
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => {
+        const st = statusMap[r.status] || statusMap[1];
+        return <Badge variant={st.variant} className="text-xs">{st.label}</Badge>;
+      },
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      render: (r) => (
+        <div className="flex gap-1">
+          {r.status === 1 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleStatusChange(r.id, 2)}
+            >
+              {ts('k_1fb3cb3')}
+            </Button>
+          )}
+          {r.status === 2 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleStatusChange(r.id, 3)}
+            >
+              {ts('k_1hma1hv')}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              setEditItem(r);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(r.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <MainLayout>
@@ -203,9 +306,11 @@ export default function EquipmentScrapPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              {tc('scrapTitle')}</Button>
+              {tc('scrapTitle')}
+            </Button>
           </div>
-        </div>        <StatsCards
+        </div>
+        <StatsCards
           configs={[
             { key: 'pending', label: '待审批', icon: Clock, ...StatsTheme.orange },
             { key: 'approved', label: '已审批', icon: CheckCircle, ...StatsTheme.blue },
@@ -223,141 +328,29 @@ export default function EquipmentScrapPage() {
           cols={{ mobile: 2, tablet: 3, desktop: 5 }}
         />
 
-
         <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input
-                      ref={selectAllRef}
-                      type="checkbox"
-                      className="h-4 w-4 cursor-pointer accent-blue-600"
-                      checked={allSelected}
-                      onChange={toggleAll}
-                      aria-label={tc('selectAll')}
-                    />
-                  </TableHead>
-                  <TableHead className="text-xs">{ts('k_1ggqij1')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_17s4qyf')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_eb1q6f')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_1oc5iv9')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_1h3xyle')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_12o2s46')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_2dlv89')}</TableHead>
-                  <TableHead className="text-xs">{tc('approver')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => {
-                  const st = statusMap[item.status] || statusMap[1];
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer accent-blue-600"
-                          checked={isSelected(String(item.id))}
-                          onChange={() => toggle(String(item.id))}
-                          aria-label={tc('selectRow', { id: item.id })}
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">{item.scrap_no}</TableCell>
-                      <TableCell className="text-xs">{item.equipment_code || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.equipment_name || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.scrap_date || '-'}</TableCell>
-                      <TableCell className="text-xs max-w-28 truncate">
-                        {item.scrap_reason || '-'}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        ¥{Number(item.original_value || 0).toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        ¥{Number(item.net_value || 0).toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-xs">{item.approval_person || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
-                          {st.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {item.status === 1 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 2)}
-                            >
-                              {ts('k_1fb3cb3')}</Button>
-                          )}
-                          {item.status === 2 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 3)}
-                            >
-                              {ts('k_1hma1hv')}</Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => {
-                              setEditItem(item);
-                              setShowDialog(true);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center text-gray-400 py-8">
-                      {tc('noRecords')}</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} />
+            <StandardTable<Item>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable={true}
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              sortState={sort}
+              onSortChange={handleSortChange}
+              onPageChange={(p) => setPage(p)}
+              onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+              loading={loading}
+              emptyText={tc('noRecords')}
+            />
           </CardContent>
         </Card>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}</Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}</Button>
-          </div>
-        </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
@@ -421,7 +414,8 @@ export default function EquipmentScrapPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                {tc('cancel')}</Button>
+                {tc('cancel')}
+              </Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>

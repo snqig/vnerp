@@ -1,6 +1,4 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
@@ -19,28 +17,23 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Star, AlertTriangle, Loader2, RefreshCw, Printer, ArrowUpDown, ArrowUp, ArrowDown, Building2, CheckCircle, Clock } from 'lucide-react';
+import { Plus, Edit, Trash2, Star, AlertTriangle, Loader2, RefreshCw, Printer, Building2, CheckCircle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { useDebounce } from '@/hooks/use-debounce';
 import { SearchInput } from '@/components/ui/search-input';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { CurrencySelect } from '@/components/ui/currency-select';
+import {
+  StandardTable,
+  type StandardTableColumn,
+} from '@/components/common';
 
 interface Supplier {
   id: number;
@@ -116,12 +109,10 @@ export default function SuppliersPage() {
   const { companyName } = useCompanyName();
   const { toast } = useToast();
   const [list, setList] = useState<Supplier[]>([]);
-  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    list,
-    (r) => String(r.id)
-  );
+  const [selectedRows, setSelectedRows] = useState<Supplier[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
   const debouncedKeyword = useDebounce(keyword, 300);
@@ -152,39 +143,7 @@ export default function SuppliersPage() {
     }
     return e;
   };
-  const [sortField, setSortField] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
-
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      if (sortOrder === 'asc') setSortOrder('desc');
-      else if (sortOrder === 'desc') {
-        setSortField(null);
-        setSortOrder(null);
-      }
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  };
-  const getSortIcon = (field: string) => {
-    if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
-    return sortOrder === 'asc' ? (
-      <ArrowUp className="ml-1 h-3 w-3" />
-    ) : (
-      <ArrowDown className="ml-1 h-3 w-3" />
-    );
-  };
-  const sortedList = useMemo(() => {
-    if (!sortField || !sortOrder) return list;
-    return [...list].sort((a, b) => {
-      const aVal = String((a as Loose)[sortField] ?? '').toLowerCase();
-      const bVal = String((b as Loose)[sortField] ?? '').toLowerCase();
-      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [list, sortField, sortOrder]);
+  const sortedList = useMemo(() => list, [list]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -304,13 +263,22 @@ export default function SuppliersPage() {
     }
   };
 
-  const toggleSelect = (id: number) => toggle(String(id));
+  const toggleSelect = (id: number) => {
+    const item = list.find((s) => s.id === id);
+    if (!item) return;
+    setSelectedRows((prev) =>
+      prev.some((s) => s.id === id) ? prev.filter((s) => s.id !== id) : [...prev, item]
+    );
+  };
 
-  const toggleSelectAll = () => toggleAll();;
+  const toggleSelectAll = () => {
+    setSelectedRows((prev) =>
+      prev.length === sortedList.length ? [] : sortedList
+    );
+  };
 
   const handlePrint = () => {
-    const recordsToPrint =
-      selectedCount > 0 ? list.filter((s) => isSelected(String(s.id))) : list;
+    const recordsToPrint = selectedRows.length > 0 ? selectedRows : list;
     if (recordsToPrint.length === 0) {
       toast({ title: tc('noDataToPrint'), variant: 'destructive' });
       return;
@@ -375,6 +343,24 @@ export default function SuppliersPage() {
     printWindow.document.write(html);
     printWindow.document.close();
   };
+
+  const columns: StandardTableColumn<Supplier>[] = [
+    { key: 'supplier_code', title: t('supplierCode'), render: (s: Supplier) => <span className="font-mono">{s.supplier_code}</span> },
+    { key: 'supplier_name', title: t('supplierName'), render: (s: Supplier) => (<div><div className="font-medium">{s.supplier_name}</div>{s.short_name && <div className="text-sm text-muted-foreground">{s.short_name}</div>}</div>) },
+    { key: 'supplier_type', title: tc('type'), render: (s: Supplier) => supplierTypeLabels[s.supplier_type] || '-' },
+    { key: 'credit_level', title: tc('grade'), render: (s: Supplier) => {
+        const grade = creditLevelMap[s.credit_level] || creditLevelMap.B;
+        return <Badge className={grade.cls}><Star className="h-3 w-3 mr-1" />{s.credit_level} - {creditLevelLabels[s.credit_level] || '-'}</Badge>;
+      }},
+    { key: 'status', title: tc('status'), render: (s: Supplier) => {
+        const status = statusMap[s.status] || statusMap[1];
+        return <Badge className={status.cls}>{s.status === 2 && <AlertTriangle className="h-3 w-3 mr-1" />}{status.label}</Badge>;
+      }},
+    { key: 'contact_name', title: tc('contact'), render: (s: Supplier) => s.contact_name || '-' },
+    { key: 'contact_phone', title: tc('phone'), render: (s: Supplier) => s.contact_phone || '-' },
+    { key: 'default_currency', title: tc('supplierDefaultCurrency'), render: (s: Supplier) => s.default_currency || 'CNY' },
+    { key: 'actions', title: tc('actions'), align: 'right', render: (s: Supplier) => (<div className="flex justify-end gap-1"><Button variant="ghost" size="icon" onClick={() => handleOpenEdit(s)}><Edit className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => handleDelete(s.id)}><Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" /></Button></div>) },
+  ];
 
   const stats = {
     S: list.filter((s) => s.credit_level === 'S').length,
@@ -476,8 +462,8 @@ export default function SuppliersPage() {
                     { key: 'address', label: tc('address'), width: 30 },
                   ]}
                   data={
-                    selectedCount > 0
-                      ? list.filter((s) => isSelected(String(s.id)))
+                    selectedRows.length > 0
+                      ? list.filter((s) => selectedRows.some((sr) => sr.id === s.id))
                       : sortedList
                   }
                 />
@@ -491,180 +477,25 @@ export default function SuppliersPage() {
             <CardTitle>{t('supplierManagement')}</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                <span className="ml-2 text-gray-400">{tc('loading')}</span>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <Checkbox
-                        checked={allSelected}
-                        onCheckedChange={toggleSelectAll}
-                      />
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('supplier_code')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('supplierCode')}
-                        {getSortIcon('supplier_code')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('supplier_name')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('supplierName')}
-                        {getSortIcon('supplier_name')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('supplier_type')}
-                    >
-                      <span className="inline-flex items-center">
-                        {tc('type')}
-                        {getSortIcon('supplier_type')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('credit_level')}
-                    >
-                      <span className="inline-flex items-center">
-                        {tc('grade')}
-                        {getSortIcon('credit_level')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('status')}
-                    >
-                      <span className="inline-flex items-center">
-                        {tc('status')}
-                        {getSortIcon('status')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('contact_name')}
-                    >
-                      <span className="inline-flex items-center">
-                        {tc('contact')}
-                        {getSortIcon('contact_name')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted"
-                      onClick={() => handleSort('contact_phone')}
-                    >
-                      <span className="inline-flex items-center">
-                        {tc('phone')}
-                        {getSortIcon('contact_phone')}
-                      </span>
-                    </TableHead>
-                    <TableHead>{tc('supplierDefaultCurrency')}</TableHead>
-                    <TableHead className="text-right">{tc('actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {list.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                        {tc('noData')}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    sortedList.map((item) => {
-                      const grade = creditLevelMap[item.credit_level] || creditLevelMap.B;
-                      const status = statusMap[item.status] || statusMap[1];
-                      return (
-                        <TableRow key={item.id}>
-                          <TableCell>
-                            <Checkbox
-                              checked={isSelected(String(item.id))}
-                              onCheckedChange={() => toggleSelect(item.id)}
-                            />
-                          </TableCell>
-                          <TableCell className="font-mono">{item.supplier_code}</TableCell>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{item.supplier_name}</div>
-                              {item.short_name && (
-                                <div className="text-sm text-muted-foreground">
-                                  {item.short_name}
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{supplierTypeLabels[item.supplier_type] || '-'}</TableCell>
-                          <TableCell>
-                            <Badge className={grade.cls}>
-                              <Star className="h-3 w-3 mr-1" />
-                              {item.credit_level} - {creditLevelLabels[item.credit_level] || '-'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={status.cls}>
-                              {item.status === 2 && <AlertTriangle className="h-3 w-3 mr-1" />}
-                              {status.label}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{item.contact_name || '-'}</TableCell>
-                          <TableCell>{item.contact_phone || '-'}</TableCell>
-                          <TableCell>{item.default_currency || 'CNY'}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleOpenEdit(item)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(item.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            )}
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-gray-500">{tc('totalRecords', { count: total })}</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  {tc('prevPage')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page * 20 >= total}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {tc('nextPage')}
-                </Button>
-              </div>
-            </div>
+            <StandardTable<Supplier>
+              columns={columns}
+              dataSource={sortedList}
+              total={total}
+              page={page}
+              pageSize={20}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              loading={loading && list.length === 0}
+              emptyText={tc('noData')}
+            />
           </CardContent>
         </Card>
 

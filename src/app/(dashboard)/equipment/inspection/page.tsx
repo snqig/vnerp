@@ -1,7 +1,6 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -9,14 +8,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +26,7 @@ import {
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 
 interface InspectionRecord {
   id: number;
@@ -85,6 +77,7 @@ export default function EquipmentInspectionPage() {
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<{ totalRecords: number; todayCount: number; abnormalCount: number; pendingCount: number }>({ totalRecords: 0, todayCount: 0, abnormalCount: 0, pendingCount: 0 });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [filterEquipmentId, setFilterEquipmentId] = useState('');
   const [filterType, setFilterType] = useState('');
   const [filterResult, setFilterResult] = useState('');
@@ -93,15 +86,13 @@ export default function EquipmentInspectionPage() {
   const [editItem, setEditItem] = useState<Partial<InspectionRecord>>({});
   const [saving, setSaving] = useState(false);
   const [equipmentOptions, setEquipmentOptions] = useState<Array<{ id: number; equipment_code: string; equipment_name: string }>>([]);
-
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
+  const [selectedRows, setSelectedRows] = useState<InspectionRecord[]>([]);
 
   const fetchData = async () => {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         equipment_id: filterEquipmentId,
         inspection_type: filterType,
         result: filterResult,
@@ -135,7 +126,8 @@ export default function EquipmentInspectionPage() {
 
   useEffect(() => {
     fetchData();
-  }, [page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize]);
 
   useEffect(() => {
     fetchEquipmentOptions();
@@ -181,7 +173,7 @@ export default function EquipmentInspectionPage() {
   };
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => r.id);
     if (ids.length === 0) return;
     if (!confirm(tc('confirmBatchDelete', { count: ids.length }))) return;
     let okCount = 0;
@@ -199,7 +191,7 @@ export default function EquipmentInspectionPage() {
     if (okCount > 0)
       toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
     if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
+    setSelectedRows([]);
     fetchData();
   };
 
@@ -217,6 +209,91 @@ export default function EquipmentInspectionPage() {
     setEditItem(item);
     setShowDialog(true);
   };
+
+  const columns: StandardTableColumn<InspectionRecord>[] = [
+    {
+      key: 'inspectionNo',
+      title: tc('inspectionNo'),
+      dataIndex: 'inspection_no',
+      className: 'font-mono',
+      width: 130,
+    },
+    {
+      key: 'equipment',
+      title: tc('equipment'),
+      width: 180,
+      render: (row) => (row.equipment_code ? `${row.equipment_code} - ${row.equipment_name}` : '-'),
+    },
+    {
+      key: 'inspectionType',
+      title: tc('inspectionType'),
+      width: 90,
+      render: (row) => inspectionTypeMap[row.inspection_type || 1] || '-',
+    },
+    {
+      key: 'inspectionDate',
+      title: tc('inspectionDate'),
+      dataIndex: 'inspection_date',
+      width: 110,
+    },
+    {
+      key: 'inspector',
+      title: tc('inspector'),
+      dataIndex: 'inspector_name',
+      width: 100,
+    },
+    {
+      key: 'result',
+      title: tc('result'),
+      width: 80,
+      render: (row) => {
+        const rt = resultMap[row.result || 1] || resultMap[1];
+        return <Badge variant={rt.variant} className="text-xs">{rt.label}</Badge>;
+      },
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      width: 90,
+      render: (row) => {
+        const st = statusMap[row.status] || statusMap[1];
+        return <Badge variant={st.variant} className="text-xs">{st.label}</Badge>;
+      },
+    },
+    {
+      key: 'abnormalDesc',
+      title: tc('abnormalDesc'),
+      dataIndex: 'abnormal_desc',
+      width: 160,
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      width: 140,
+      align: 'right',
+      render: (row) => (
+        <div className="flex justify-end gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 text-xs px-2"
+            onClick={() => openEdit(row)}
+          >
+            <Edit className="h-3 w-3 mr-1" />
+            {tc('edit')}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(row.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <MainLayout>
@@ -321,122 +398,29 @@ export default function EquipmentInspectionPage() {
 
         <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input
-                      ref={selectAllRef}
-                      type="checkbox"
-                      className="h-4 w-4 cursor-pointer accent-blue-600"
-                      checked={allSelected}
-                      onChange={toggleAll}
-                      aria-label={tc('selectAll')}
-                    />
-                  </TableHead>
-                  <TableHead className="text-xs">{tc('inspectionNo')}</TableHead>
-                  <TableHead className="text-xs">{tc('equipment')}</TableHead>
-                  <TableHead className="text-xs">{tc('inspectionType')}</TableHead>
-                  <TableHead className="text-xs">{tc('inspectionDate')}</TableHead>
-                  <TableHead className="text-xs">{tc('inspector')}</TableHead>
-                  <TableHead className="text-xs">{tc('result')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('abnormalDesc')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => {
-                  const rt = resultMap[item.result || 1] || resultMap[1];
-                  const st = statusMap[item.status] || statusMap[1];
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer accent-blue-600"
-                          checked={isSelected(String(item.id))}
-                          onChange={() => toggle(String(item.id))}
-                          aria-label={tc('selectRow', { id: item.id })}
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">{item.inspection_no}</TableCell>
-                      <TableCell className="text-xs">
-                        {item.equipment_code ? `${item.equipment_code} - ${item.equipment_name}` : '-'}
-                      </TableCell>
-                      <TableCell className="text-xs">{inspectionTypeMap[item.inspection_type || 1] || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.inspection_date || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.inspector_name || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={rt.variant} className="text-xs">
-                          {rt.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
-                          {st.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs max-w-32 truncate">{item.abnormal_desc || '-'}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 text-xs px-2"
-                            onClick={() => openEdit(item)}
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            {tc('edit')}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                      {tc('noRecords')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            {selectedRows.length > 0 && (
+              <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} />
+            )}
+            <StandardTable<InspectionRecord>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              rowSelectable={true}
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              rowKey="id"
+              emptyText={tc('noRecords')}
+            />
           </CardContent>
         </Card>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            {tc('totalRecord')}{total}{tc('records')}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>

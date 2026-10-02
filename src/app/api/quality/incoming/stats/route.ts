@@ -15,6 +15,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       dateFilter = ' AND DATE(create_time) BETWEEN ? AND ?';
       params.push(startDate, endDate);
     }
+    // 入库单侧的日期过滤（待检验按入库单创建时间口径）
+    let inboundDateFilter = '';
+    const inboundParams: any[] = [];
+    if (startDate && endDate) {
+      inboundDateFilter = ' AND DATE(create_time) BETWEEN ? AND ?';
+      inboundParams.push(startDate, endDate);
+    }
 
     // pass / fail 按 inspection_result 统计
     const [passedResult] = await query(
@@ -25,9 +32,15 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       `SELECT COUNT(*) as count FROM qc_incoming_inspection WHERE deleted = 0 AND inspection_result = 'fail'${dateFilter}`,
       params
     );
-    const [pendingResult] = await query(
-      `SELECT COUNT(*) as count FROM qc_incoming_inspection WHERE deleted = 0 AND inspection_result IS NULL${dateFilter}`,
+    // 检验中：检验单已创建但结果未出（pending 或 NULL；normalizeInspectionResult 保证新单写 pending）
+    const [inspectingResult] = await query(
+      `SELECT COUNT(*) as count FROM qc_incoming_inspection WHERE deleted = 0 AND (inspection_result = 'pending' OR inspection_result IS NULL)${dateFilter}`,
       params
+    );
+    // 待检验：入库单已审核进入待检状态（inspection_status=3）尚未挂检验单出结果
+    const [pendingResult] = await query(
+      `SELECT COUNT(*) as count FROM inv_inbound_order WHERE deleted = 0 AND inspection_status = 3${inboundDateFilter}`,
+      inboundParams
     );
     const [monthlyResult] = await query(
       `SELECT COUNT(*) as count FROM qc_incoming_inspection
@@ -38,7 +51,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       success: true,
       data: {
         pending: pendingResult?.count || 0,
-        inspecting: 0,
+        inspecting: inspectingResult?.count || 0,
         passed: passedResult?.count || 0,
         failed: failedResult?.count || 0,
         monthlyCount: monthlyResult?.count || 0,

@@ -1,20 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { formatDate } from '@/lib/date-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+} from '@/components/common';
 import { ApiClient } from '@/lib/api-client';
-import { formatDate, formatAmount } from '@/lib/utils';
 import { toast } from 'sonner';
 import { MoneyDisplay } from '@/components/ui/money-display';
 import { RefreshCw, FileText, AlertTriangle, Clock, Wallet, CheckCircle } from 'lucide-react';
@@ -49,8 +45,7 @@ export default function ReceivablesPage() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-
-  const pageSize = 20;
+  const [pageSize, setPageSize] = useState(20);
 
   const loadReceivables = async () => {
     setLoading(true);
@@ -69,7 +64,74 @@ export default function ReceivablesPage() {
 
   useEffect(() => {
     loadReceivables();
-  }, [page]);
+  }, [page, pageSize]);
+
+  const columns: StandardTableColumn<Receivable>[] = [
+    {
+      key: 'customer_name',
+      title: tc('customerName'),
+      render: (r) => <span className="font-medium">{r.customer_name}</span>,
+    },
+    {
+      key: 'receivable_no',
+      title: t('receivableNo'),
+      render: (r) => <span className="font-mono text-sm">{r.receivable_no}</span>,
+    },
+    {
+      key: 'source_no',
+      title: tc('sourceNo'),
+      render: (r) =>
+        r.source_no ? (
+          <span className="flex items-center gap-1">
+            <FileText className="w-3 h-3 text-muted-foreground shrink-0" />
+            {r.source_no}
+          </span>
+        ) : (
+          '-'
+        ),
+    },
+    {
+      key: 'amount',
+      title: t('receivableAmount'),
+      align: 'right',
+      render: (r) => <MoneyDisplay amount={r.amount} currency={r.currency || 'CNY'} />,
+    },
+    {
+      key: 'received_amount',
+      title: t('receivedAmount'),
+      align: 'right',
+      render: (r) => <MoneyDisplay amount={r.received_amount} currency={r.currency || 'CNY'} />,
+    },
+    {
+      key: 'balance',
+      title: tc('balance'),
+      align: 'right',
+      render: (r) => (
+        <span className={r.balance > 0 ? 'text-orange-600 dark:text-orange-400 font-medium' : ''}>
+          <MoneyDisplay amount={r.balance} currency={r.currency || 'CNY'} />
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => (
+        <Badge variant={STATUS_BADGE[r.status]?.variant || 'default'}>
+          {STATUS_BADGE[r.status]?.label || tc('unknown')}
+        </Badge>
+      ),
+    },
+    {
+      key: 'due_date',
+      title: tc('dueDate'),
+      render: (r) => formatDate(r.due_date),
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      render: () => <span className="text-sm text-muted-foreground">{tc('noActions')}</span>,
+    },
+  ];
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -107,86 +169,26 @@ export default function ReceivablesPage() {
           <CardTitle>{t('receivableListTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{tc('customerName')}</TableHead>
-                <TableHead>{t('receivableNo')}</TableHead>
-                <TableHead>{tc('sourceNo')}</TableHead>
-                <TableHead className="text-right">{t('receivableAmount')}</TableHead>
-                <TableHead className="text-right">{t('receivedAmount')}</TableHead>
-                <TableHead className="text-right">{tc('balance')}</TableHead>
-                <TableHead>{tc('status')}</TableHead>
-                <TableHead>{tc('dueDate')}</TableHead>
-                <TableHead>{tc('actions')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {receivables.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell className="font-medium">{r.customer_name}</TableCell>
-                  <TableCell className="font-mono text-sm">{r.receivable_no}</TableCell>
-                  <TableCell>
-                    {r.source_no ? (
-                      <span className="flex items-center gap-1">
-                        <FileText className="w-3 h-3 text-muted-foreground shrink-0" />
-                        {r.source_no}
-                      </span>
-                    ) : '-'}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <MoneyDisplay amount={r.amount} currency={r.currency || 'CNY'} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <MoneyDisplay amount={r.received_amount} currency={r.currency || 'CNY'} />
-                  </TableCell>
-                  <TableCell className={`text-right ${r.balance > 0 ? 'text-orange-600 dark:text-orange-400 font-medium' : ''}`}>
-                    <MoneyDisplay amount={r.balance} currency={r.currency || 'CNY'} />
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={STATUS_BADGE[r.status]?.variant || 'default'}>
-                      {STATUS_BADGE[r.status]?.label || tc('unknown')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{formatDate(r.due_date)}</TableCell>
-                  <TableCell>
-                    <span className="text-sm text-muted-foreground">{tc('noActions')}</span>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {receivables.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                    {tc('noData')}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <StandardTable<Receivable>
+            columns={columns}
+            dataSource={receivables}
+            total={total}
+            page={page}
+            pageSize={pageSize}
+            pageSizeOptions={[20, 25, 30]}
+            rowKey="id"
+            rowSelectable={false}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
+            loading={loading}
+            onRetry={loadReceivables}
+            emptyText={tc('noData')}
+          />
         </CardContent>
       </Card>
-
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>{tc('totalRecords', { count: total })}</span>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            {tc('previousPage')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page * pageSize >= total}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            {tc('nextPage')}
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }

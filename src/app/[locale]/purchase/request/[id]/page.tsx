@@ -2,20 +2,17 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+  type SortState,
+} from '@/components/common';
 import { ArrowLeft, Edit, Printer, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -104,6 +101,10 @@ export default function PurchaseRequestDetailPage() {
 
   const [request, setRequest] = useState<PurchaseRequest | null>(null);
   const [loading, setLoading] = useState(true);
+  // StandardTable：分页 / 排序（明细为一次性全量返回，走客户端分页 + 本地排序）
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sort, setSort] = useState<SortState>(null);
 
   useEffect(() => {
     if (id) {
@@ -142,6 +143,75 @@ export default function PurchaseRequestDetailPage() {
       style: 'currency',
       currency: currency || 'CNY',
     }).format(amount);
+  };
+
+  const items = request?.items ?? [];
+
+  const columns: StandardTableColumn<RequestItem>[] = [
+    { key: 'line_no', title: ts('k_11vy4t0'), sortable: true },
+    {
+      key: 'material_code',
+      title: tc('materialCode'),
+      sortable: true,
+      render: (r) => r.material_code || '-',
+    },
+    {
+      key: 'material_name',
+      title: tc('materialName'),
+      sortable: true,
+      render: (r) => <span className="font-medium">{r.material_name}</span>,
+    },
+    {
+      key: 'material_spec',
+      title: ts('k_17faar3'),
+      sortable: true,
+      render: (r) => r.material_spec || '-',
+    },
+    { key: 'material_unit', title: tc('unit'), sortable: true, render: (r) => r.material_unit || '-' },
+    { key: 'quantity', title: tc('quantity'), align: 'right', sortable: true },
+    {
+      key: 'price',
+      title: ts('k_isc1c5'),
+      align: 'right',
+      sortable: true,
+      render: (r) => Number(r.price || 0).toFixed(4),
+    },
+    {
+      key: 'amount',
+      title: tc('amount'),
+      align: 'right',
+      sortable: true,
+      render: (r) => (
+        <span className="font-medium">
+          {formatAmount(Number(r.amount || 0), request?.currency || 'CNY')}
+        </span>
+      ),
+    },
+    { key: 'remark', title: tc('remark'), sortable: true, render: (r) => r.remark || '-' },
+  ];
+
+  // 客户端分页：先排序再切片
+  const sorted = useMemo(() => {
+    const source = request?.items ?? [];
+    if (!sort) return source;
+    const dir = sort.direction === 'asc' ? 1 : -1;
+    return [...source].sort((a, b) => {
+      const av = (a as unknown as Record<string, unknown>)[sort.field];
+      const bv = (b as unknown as Record<string, unknown>)[sort.field];
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+      if (typeof av === 'boolean' && typeof bv === 'boolean') return (Number(av) - Number(bv)) * dir;
+      return String(av ?? '').localeCompare(String(bv ?? '')) * dir;
+    });
+  }, [request, sort]);
+
+  const paged = useMemo(
+    () => sorted.slice((page - 1) * pageSize, page * pageSize),
+    [sorted, page, pageSize]
+  );
+
+  const handleSortChange = (next: SortState) => {
+    setSort(next);
+    setPage(1);
   };
 
   if (loading) {
@@ -271,40 +341,25 @@ export default function PurchaseRequestDetailPage() {
             <CardTitle>{ts('k_1fk0uv7')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{ts('k_11vy4t0')}</TableHead>
-                  <TableHead>{tc('materialCode')}</TableHead>
-                  <TableHead>{tc('materialName')}</TableHead>
-                  <TableHead>{ts('k_17faar3')}</TableHead>
-                  <TableHead>{tc('unit')}</TableHead>
-                  <TableHead className="text-right">{tc('quantity')}</TableHead>
-                  <TableHead className="text-right">{ts('k_isc1c5')}</TableHead>
-                  <TableHead className="text-right">{tc('amount')}</TableHead>
-                  <TableHead>{tc('remark')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {request.items?.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>{item.line_no}</TableCell>
-                    <TableCell>{item.material_code || '-'}</TableCell>
-                    <TableCell className="font-medium">{item.material_name}</TableCell>
-                    <TableCell>{item.material_spec || '-'}</TableCell>
-                    <TableCell>{item.material_unit || '-'}</TableCell>
-                    <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right">
-                      {Number(item.price || 0).toFixed(4)}
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatAmount(Number(item.amount || 0), request.currency)}
-                    </TableCell>
-                    <TableCell>{item.remark || '-'}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <StandardTable<RequestItem>
+              columns={columns}
+              dataSource={paged}
+              total={sorted.length}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable={false}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              sortState={sort}
+              onSortChange={handleSortChange}
+              onRetry={fetchRequest}
+              emptyText={tc('noData')}
+            />
 
             {/* 合计 */}
             <div className="flex justify-end mt-4 pt-4 border-t">

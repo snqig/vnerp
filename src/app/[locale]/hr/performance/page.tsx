@@ -5,21 +5,13 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Save, TrendingUp, Users, Trophy, ThumbsUp, Minus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 
 interface ScoreRow {
   /** hr_performance.id，员工尚未打分时为 null */
@@ -144,19 +136,18 @@ export default function PerformancePage() {
     (r) => !search || r.employeeName?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(filtered, (r) => String(r.employeeId));
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [deleting, setDeleting] = useState(false);
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows;
     if (ids.length === 0) return;
     if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
     setDeleting(true);
     let okCount = 0;
     let failMsg = '';
     for (const employeeId of ids) {
-      const row = scores.find((r) => String(r.employeeId) === employeeId);
+      const row = scores.find((r) => r.employeeId === employeeId);
       if (!row?.perfId) continue; // 尚未打分，无记录可删
       try {
         const res = await authFetch(`/api/hr/performance?id=${row.perfId}`, { method: 'DELETE' });
@@ -170,9 +161,67 @@ export default function PerformancePage() {
     setDeleting(false);
     if (okCount > 0) toast.success(tc('batchDeleteSuccess', { count: okCount }));
     if (failMsg) toast.error(failMsg);
-    clear();
+    setSelectedRows([]);
     fetchScores();
   };
+
+  // 无服务端分页：整页展示，隐藏分页栏
+  const page = 1;
+  const pageSize = Math.max(filtered.length, 1);
+  const total = filtered.length;
+  const totalPages = Math.ceil(total / pageSize);
+
+  const scoreFields = ['outputRate', 'qualityRate', 'equipmentRate', 'siteManagement'] as const;
+
+  const columns: StandardTableColumn<ScoreRow>[] = [
+    {
+      key: 'employeeName',
+      title: t('employeeName') || ts('k_10ld5dp'),
+      render: (r) => (
+        <div>
+          <span className="font-medium">{r.employeeName}</span>
+          <span className="text-xs text-muted-foreground ml-2">{r.employeeNo}</span>
+        </div>
+      ),
+    },
+    ...scoreFields.map((field) => ({
+      key: field,
+      title:
+        field === 'outputRate'
+          ? t('outputRate40') || ts('k_sc91k0')
+          : field === 'qualityRate'
+            ? t('qualityRate30') || ts('k_yspo8i')
+            : field === 'equipmentRate'
+              ? t('equipmentRate15') || ts('k_jacx39')
+              : t('siteManagement15') || ts('k_3f0n70'),
+      align: 'right' as const,
+      render: (r: ScoreRow) => (
+        <Input
+          type="number"
+          step="0.01"
+          min="0"
+          max="100"
+          className="w-24 text-right h-8 inline-block"
+          value={r[field]}
+          onChange={(e) => updateScore(r.employeeId, field, parseFloat(e.target.value) || 0)}
+        />
+      ),
+    })),
+    {
+      key: 'totalScore',
+      title: (
+        <span className="text-blue-600 dark:text-blue-400 font-bold">
+          {t('totalScore') || ts('k_x4ssb8')}
+        </span>
+      ),
+      align: 'right',
+      render: (r) => (
+        <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+          {r.totalScore.toFixed(2)}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <MainLayout title={t('performance') || ts('k_1g8d66q')}>
@@ -220,82 +269,21 @@ export default function PerformancePage() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                  </TableHead>
-                  <TableHead>{t('employeeName') || ts('k_10ld5dp')}</TableHead>
-                  <TableHead className="text-right">
-                    {t('outputRate40') || ts('k_sc91k0')}
-                  </TableHead>
-                  <TableHead className="text-right">
-                    {t('qualityRate30') || ts('k_yspo8i')}
-                  </TableHead>
-                  <TableHead className="text-right">
-                    {t('equipmentRate15') || ts('k_jacx39')}
-                  </TableHead>
-                  <TableHead className="text-right">
-                    {t('siteManagement15') || ts('k_3f0n70')}
-                  </TableHead>
-                  <TableHead className="text-right text-blue-600 dark:text-blue-400 font-bold">
-                    {t('totalScore') || ts('k_x4ssb8')}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((r) => (
-                  <TableRow key={r.employeeId}>
-                    <TableCell>
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 cursor-pointer accent-blue-600"
-                        checked={isSelected(String(r.employeeId))}
-                        onChange={() => toggle(String(r.employeeId))}
-                        aria-label={t('performance') || ts('k_1g8d66q')}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <span className="font-medium">{r.employeeName}</span>
-                        <span className="text-xs text-muted-foreground ml-2">{r.employeeNo}</span>
-                      </div>
-                    </TableCell>
-                    {(
-                      ['outputRate', 'qualityRate', 'equipmentRate', 'siteManagement'] as const
-                    ).map((field) => (
-                      <TableCell key={field} className="text-right">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="100"
-                          className="w-24 text-right h-8 inline-block"
-                          value={r[field]}
-                          onChange={(e) =>
-                            updateScore(r.employeeId, field, parseFloat(e.target.value) || 0)
-                          }
-                        />
-                      </TableCell>
-                    ))}
-                    <TableCell className="text-right">
-                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                        {r.totalScore.toFixed(2)}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filtered.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      {t('noData') || ts('k_6tzr61')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} loading={deleting} />
+            <StandardTable<ScoreRow>
+              columns={columns}
+              dataSource={filtered}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              showPagination={totalPages > 1}
+              onPageChange={() => {}}
+              rowSelectable
+              selectedRows={filtered.filter((r) => selectedRows.includes(r.employeeId))}
+              onRowSelectedChange={(rows) => setSelectedRows(rows.map((r) => r.employeeId))}
+              rowKey="employeeId"
+              emptyText={t('noData') || ts('k_6tzr61')}
+            />
           </CardContent>
         </Card>
       </div>

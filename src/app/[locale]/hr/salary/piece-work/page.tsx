@@ -4,9 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -70,6 +68,19 @@ export default function PieceWorkPage() {
   const totalQuantity = records.reduce((s, r) => s + Number(r.quantity), 0);
   const totalAmount = records.reduce((s, r) => s + Number(r.amount), 0);
 
+  const columns: StandardTableColumn<PieceWorkRecord>[] = [
+    { key: 'date', title: '日期', render: (r) => r.date },
+    { key: 'employeeName', title: '员工姓名', render: (r) => <span className="font-medium">{r.employeeName}</span> },
+    { key: 'processCode', title: '工序代码', render: (r) => <span className="font-mono">{r.processCode}</span> },
+    { key: 'productCode', title: '产品编码', render: (r) => r.productCode },
+    { key: 'machineId', title: '机台号', render: (r) => r.machineId || '-' },
+    { key: 'quantity', title: '数量', align: 'right', render: (r) => r.quantity },
+    { key: 'defectCount', title: '次品数', align: 'right', render: (r) => <span className="text-red-500 dark:text-red-400">{r.defectCount}</span> },
+    { key: 'passRate', title: '合格率', align: 'right', render: (r) => `${r.passRate}%` },
+    { key: 'unitPrice', title: '单价', align: 'right', render: (r) => <span className="font-mono">¥{Number(r.unitPrice).toFixed(4)}</span> },
+    { key: 'amount', title: '金额', align: 'right', render: (r) => <span className="font-medium">¥{Number(r.amount).toFixed(2)}</span> },
+  ];
+
   return (
     <MainLayout title={t('pieceWork')}>
       <div className="container mx-auto py-6 space-y-6">
@@ -108,55 +119,23 @@ export default function PieceWorkPage() {
 
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">{'日期'}</TableHead>
-                  <TableHead className="text-xs">{'员工姓名'}</TableHead>
-                  <TableHead className="text-xs">{'工序代码'}</TableHead>
-                  <TableHead className="text-xs">{'产品编码'}</TableHead>
-                  <TableHead className="text-xs">{'机台号'}</TableHead>
-                  <TableHead className="text-xs text-right">{'数量'}</TableHead>
-                  <TableHead className="text-xs text-right">{'次品数'}</TableHead>
-                  <TableHead className="text-xs text-right">{'合格率'}</TableHead>
-                  <TableHead className="text-xs text-right">{'单价'}</TableHead>
-                  <TableHead className="text-xs text-right">{'金额'}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {records.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="text-xs">{r.date}</TableCell>
-                    <TableCell className="text-xs font-medium">{r.employeeName}</TableCell>
-                    <TableCell className="text-xs font-mono">{r.processCode}</TableCell>
-                    <TableCell className="text-xs">{r.productCode}</TableCell>
-                    <TableCell className="text-xs">{r.machineId || '-'}</TableCell>
-                    <TableCell className="text-xs text-right">{r.quantity}</TableCell>
-                    <TableCell className="text-xs text-right text-red-500 dark:text-red-400">{r.defectCount}</TableCell>
-                    <TableCell className="text-xs text-right">{r.passRate}%</TableCell>
-                    <TableCell className="text-xs text-right font-mono">¥{Number(r.unitPrice).toFixed(4)}</TableCell>
-                    <TableCell className="text-xs text-right font-medium">¥{Number(r.amount).toFixed(2)}</TableCell>
-                  </TableRow>
-                ))}
-                {records.length > 0 && (
-                  <TableRow className="bg-muted/50 font-semibold">
-                    <TableCell colSpan={5} className="text-xs text-right">{tc('total')}</TableCell>
-                    <TableCell className="text-xs text-right">{totalQuantity}</TableCell>
-                    <TableCell className="text-xs"></TableCell>
-                    <TableCell className="text-xs"></TableCell>
-                    <TableCell className="text-xs text-right">¥{totalAmount.toFixed(2)}</TableCell>
-                  </TableRow>
-                )}
-                {records.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground text-xs">
-                      {loading ? tc('loading') : tc('noData')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<PieceWorkRecord>
+              columns={columns}
+              dataSource={records}
+              rowKey="id"
+              rowSelectable={false}
+              loading={loading}
+              showPagination={false}
+              emptyText={tc('noData')}
+            />
           </CardContent>
+          {records.length > 0 && (
+            <div className="flex justify-end gap-6 px-4 py-2 text-xs border-t bg-muted/50 font-semibold">
+              <span>{tc('total')}：</span>
+              <span>{totalQuantity}</span>
+              <span>¥{totalAmount.toFixed(2)}</span>
+            </div>
+          )}
         </Card>
       </div>
     </MainLayout>

@@ -1,19 +1,16 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+  type SortState,
+} from '@/components/common';
 import {
   Select,
   SelectContent,
@@ -27,7 +24,6 @@ import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { authFetch } from '@/lib/auth-fetch';
 import { formatDate } from '@/lib/date-utils';
 import { useToast } from '@/hooks/use-toast';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
 interface CostItem {
@@ -59,6 +55,10 @@ export default function CostPage() {
   const [list, setList] = useState<CostItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sort, setSort] = useState<SortState>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [keyword, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [summary, setSummary] = useState({
@@ -70,12 +70,12 @@ export default function CostPage() {
   });
 
   const { toast } = useToast();
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
+  const [selectedRows, setSelectedRows] = useState<CostItem[]>([]);
+  const clear = () => setSelectedRows([]);
   const [deleting, setDeleting] = useState(false);
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => String(r.id));
     if (ids.length === 0) return;
     if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
     setDeleting(true);
@@ -97,20 +97,30 @@ export default function CostPage() {
 
   const fetchData = useCallback(async () => {
     try {
+      setLoading(true);
+      setError(null);
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         keyword,
         cost_type: typeFilter,
       });
+      if (sort) {
+        params.set('sortField', sort.field);
+        params.set('sortDirection', sort.direction);
+      }
       const res = await authFetch('/api/finance/cost?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data?.list || []);
         setTotal(result.data?.total || 0);
       }
-    } catch {}
-  }, [page, keyword, typeFilter]);
+    } catch {
+      setError(tc('error'));
+    } finally {
+      setLoading(false);
+    }
+  }, [page, pageSize, keyword, typeFilter, sort, tc]);
 
   const fetchSummary = useCallback(async () => {
     try {
@@ -129,6 +139,54 @@ export default function CostPage() {
 
   // fin_cost_record.amount 以「元」存储（如 1250.00 = ¥1250.00），直接格式化即可，无需 /100。
   const formatAmount = (amount: number) => Number(amount || 0).toFixed(2);
+
+  const handleSortChange = (next: SortState) => {
+    setSort(next);
+    setPage(1);
+  };
+
+  const columns: StandardTableColumn<CostItem>[] = [
+    {
+      key: 'cost_no',
+      title: t('costNo'),
+      sortable: true,
+      render: (r) => <span className="font-mono text-sm">{r.cost_no}</span>,
+    },
+    {
+      key: 'cost_type',
+      title: t('costType'),
+      sortable: true,
+      render: (r) => (
+        <Badge variant="outline">{t(costTypeMap[r.cost_type]) || r.cost_type}</Badge>
+      ),
+    },
+    {
+      key: 'order_no',
+      title: t('sourceNo'),
+      sortable: true,
+      render: (r) => <span className="font-mono text-sm">{r.order_no}</span>,
+    },
+    { key: 'department', title: tc('department'), sortable: true },
+    {
+      key: 'amount',
+      title: tc('amount'),
+      align: 'right',
+      sortable: true,
+      render: (r) => `¥${formatAmount(r.amount)}`,
+    },
+    {
+      key: 'cost_date',
+      title: tc('date'),
+      sortable: true,
+      render: (r) => formatDate(r.cost_date),
+    },
+    {
+      key: 'description',
+      title: t('description'),
+      sortable: true,
+      render: (r) => <span className="max-w-xs truncate block">{r.description}</span>,
+    },
+  ];
 
   return (
     <MainLayout>
@@ -188,75 +246,33 @@ export default function CostPage() {
 
         <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                  </TableHead>
-                  <TableHead>{t('costNo')}</TableHead>
-                  <TableHead>{t('costType')}</TableHead>
-                  <TableHead>{t('sourceNo')}</TableHead>
-                  <TableHead>{tc('department')}</TableHead>
-                  <TableHead className="text-right">{tc('amount')}</TableHead>
-                  <TableHead>{tc('date')}</TableHead>
-                  <TableHead>{t('description')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      {t('noData')}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  list.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell>
-                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(c.id))} onChange={() => toggle(String(c.id))} aria-label={tc('selectRow', { id: c.id })} />
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">{c.cost_no}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {t(costTypeMap[c.cost_type]) || c.cost_type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">{c.order_no}</TableCell>
-                      <TableCell>{c.department}</TableCell>
-                      <TableCell className="text-right">¥{formatAmount(c.amount)}</TableCell>
-                      <TableCell>{formatDate(c.cost_date)}</TableCell>
-                      <TableCell className="max-w-xs truncate">{c.description}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <BatchDeleteBar count={selectedRows.length} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
+            <StandardTable<CostItem>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              sortState={sort}
+              onSortChange={handleSortChange}
+              loading={loading}
+              error={error}
+              onRetry={fetchData}
+              emptyText={t('noData')}
+              customStyle={{ containerClassName: 'px-2 pb-2' }}
+            />
           </CardContent>
         </Card>
-
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{tc('totalRecords', { count: total })}</span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {t('previousPage')}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {t('nextPage')}
-            </Button>
-          </div>
-        </div>
       </div>
     </MainLayout>
   );

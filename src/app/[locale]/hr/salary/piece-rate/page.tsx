@@ -6,9 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import { Plus, Search, Pencil, Trash2, Tag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { authFetch } from '@/lib/auth-fetch';
@@ -50,6 +48,43 @@ export default function PieceRatePage() {
     return () => clearTimeout(timer);
   }, [keyword]);
 
+  const columns: StandardTableColumn<PieceRate>[] = [
+    { key: 'processCode', title: '工序代码', render: (r) => <span className="font-mono">{r.processCode}</span> },
+    { key: 'productType', title: '产品类型', render: (r) => r.productType || '-' },
+    { key: 'unitPrice', title: '单价', align: 'right', render: (r) => <span className="font-mono">¥{Number(r.unitPrice).toFixed(4)}</span> },
+    { key: 'unit', title: '单位', render: (r) => r.unit || '件' },
+    {
+      key: 'qualityThreshold',
+      title: '质量标准(%)',
+      align: 'right',
+      render: (r) => (r.qualityThreshold != null ? r.qualityThreshold.toFixed(2) + '%' : '-'),
+    },
+    { key: 'effectiveDate', title: '生效日期', render: (r) => r.effectiveDate || '-' },
+    {
+      key: 'status',
+      title: '状态',
+      render: (r) => (
+        <Badge variant={r.status === 1 ? 'default' : 'secondary'} className="text-xs">
+          {r.status === 1 ? tc('active') : tc('inactive')}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      render: () => (
+        <div className="flex gap-1">
+          <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+            <Pencil className="h-3 w-3" />
+          </Button>
+          <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-600 dark:text-red-400">
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <MainLayout title={t('pieceRate')}>
       <div className="container mx-auto py-6 space-y-6">
@@ -78,45 +113,15 @@ export default function PieceRatePage() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">{'工序代码'}</TableHead>
-                  <TableHead className="text-xs">{'产品类型'}</TableHead>
-                  <TableHead className="text-xs text-right">{'单价'}</TableHead>
-                  <TableHead className="text-xs">{'单位'}</TableHead>
-                  <TableHead className="text-xs text-right">{'质量标准(%)'}</TableHead>
-                  <TableHead className="text-xs">{'生效日期'}</TableHead>
-                  <TableHead className="text-xs">{'状态'}</TableHead>
-                  <TableHead className="text-xs w-20">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground text-xs">{tc('loading')}</TableCell></TableRow>
-                ) : rates.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground text-xs">{tc('noData')}</TableCell></TableRow>
-                ) : rates.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="text-xs font-mono">{r.processCode}</TableCell>
-                    <TableCell className="text-xs">{r.productType || '-'}</TableCell>
-                    <TableCell className="text-xs text-right font-mono">¥{Number(r.unitPrice).toFixed(4)}</TableCell>
-                    <TableCell className="text-xs">{r.unit || '件'}</TableCell>
-                    <TableCell className="text-xs text-right">{r.qualityThreshold != null ? r.qualityThreshold.toFixed(2) + '%' : '-'}</TableCell>
-                    <TableCell className="text-xs">{r.effectiveDate || '-'}</TableCell>
-                    <TableCell>
-                      <Badge variant={r.status === 1 ? 'default' : 'secondary'} className="text-xs">{r.status === 1 ? tc('active') : tc('inactive')}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0"><Pencil className="h-3 w-3" /></Button>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-600 dark:text-red-400"><Trash2 className="h-3 w-3" /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <StandardTable<PieceRate>
+              columns={columns}
+              dataSource={rates}
+              rowKey="id"
+              rowSelectable={false}
+              loading={loading}
+              showPagination={false}
+              emptyText={tc('noData')}
+            />
           </CardContent>
         </Card>
       </div>

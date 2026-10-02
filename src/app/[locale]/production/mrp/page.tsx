@@ -5,14 +5,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
+import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -180,6 +174,8 @@ export default function MRPPage() {
   const [materials, setMaterials] = useState<Material[]>([]);
 
   const [selectedWorkOrderIds, setSelectedWorkOrderIds] = useState<number[]>([]);
+  const [selectedReqRows, setSelectedReqRows] = useState<NetRequirement[]>([]);
+  const [selectedOrderRows, setSelectedOrderRows] = useState<PlannedOrder[]>([]);
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>('');
   const [autoGeneratePR, setAutoGeneratePR] = useState(false);
   const [mrpLoading, setMrpLoading] = useState(false);
@@ -305,11 +301,120 @@ export default function MRPPage() {
     }
   };
 
+  const handleBatchDeleteReq = async () => {
+    if (selectedReqRows.length === 0) return;
+    try {
+      await authFetch('/api/production/mrp/batch-delete-reqs', {
+        method: 'POST',
+        body: JSON.stringify({ materialIds: selectedReqRows.map((r) => r.material_id) }),
+      });
+      setSelectedReqRows([]);
+    } catch {}
+  };
+
+  const handleBatchDeleteOrders = async () => {
+    if (selectedOrderRows.length === 0) return;
+    try {
+      await authFetch('/api/production/mrp/batch-delete-orders', {
+        method: 'POST',
+        body: JSON.stringify({ materialIds: selectedOrderRows.map((r) => r.material_id) }),
+      });
+      setSelectedOrderRows([]);
+    } catch {}
+  };
+
   const toggleWorkOrder = (id: number) => {
     setSelectedWorkOrderIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
+
+  const netReqColumns: StandardTableColumn<NetRequirement>[] = [
+    { key: 'material_code', title: t('materialCode'), align: 'left' },
+    { key: 'material_name', title: t('materialName') },
+    { key: 'gross_requirement', title: t('grossRequirement'), align: 'right', render: (row) => row.gross_requirement.toLocaleString(locale) },
+    { key: 'on_hand_qty', title: t('onHand'), align: 'right', render: (row) => row.on_hand_qty.toLocaleString(locale) },
+    { key: 'allocated_qty', title: t('allocated'), align: 'right', render: (row) => row.allocated_qty.toLocaleString(locale) },
+    { key: 'in_transit_qty', title: t('inTransit'), align: 'right', render: (row) => row.in_transit_qty.toLocaleString(locale) },
+    { key: 'safety_stock', title: t('safetyStock'), align: 'right', render: (row) => row.safety_stock.toLocaleString(locale) },
+    { key: 'net_requirement', title: t('netRequirement'), align: 'right', render: (row) => row.net_requirement > 0 ? row.net_requirement.toLocaleString(locale) : '-' },
+    { key: 'lead_time_days', title: t('leadTimeDays'), align: 'right', dataIndex: 'lead_time_days' },
+    { key: 'suggested_order_date', title: t('suggestedOrderDate'), dataIndex: 'suggested_order_date' },
+    {
+      key: 'shortage_warning',
+      title: t('shortageWarning'),
+      render: (row) =>
+        row.shortage_warning ? (
+          <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+            <AlertTriangle className="h-3 w-3 mr-1" />
+            {t('shortage')}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+            {t('sufficient')}
+          </Badge>
+        ),
+    },
+  ];
+
+  const plannedOrderColumns: StandardTableColumn<PlannedOrder>[] = [
+    { key: 'material_code', title: t('materialCode'), align: 'left' },
+    { key: 'material_name', title: t('materialName') },
+    { key: 'quantity', title: tc('quantity'), align: 'right', render: (row) => row.quantity.toLocaleString(locale) },
+    { key: 'required_date', title: t('requiredDate'), dataIndex: 'required_date' },
+    { key: 'order_date', title: t('orderDate'), dataIndex: 'order_date' },
+    {
+      key: 'priority',
+      title: t('priorityLabel'),
+      render: (row) => (
+        <Badge className={priorityConfig[row.priority]?.className}>
+          {priorityConfig[row.priority]?.label || row.priority}
+        </Badge>
+      ),
+    },
+  ];
+
+  const bomNodeColumns: StandardTableColumn<BOMNode & { indent: number }>[] = [
+    {
+      key: 'level',
+      title: t('level'),
+      width: 64,
+      render: (row) => (
+        <div className="flex items-center gap-1" style={{ paddingLeft: `${row.indent * 20}px` }}>
+          {row.level > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />}
+          <span className="text-xs text-muted-foreground">L{row.level}</span>
+        </div>
+      ),
+    },
+    { key: 'material_code', title: t('materialCode'), render: (row) => <span className="font-mono text-sm">{row.material_code}</span> },
+    { key: 'material_name', title: t('materialName'), render: (row) => <span className={row.is_leaf ? '' : 'font-medium'}>{row.material_name}</span> },
+    { key: 'quantity', title: tc('quantity'), align: 'right', render: (row) => row.quantity.toLocaleString(locale) },
+    { key: 'unit', title: t('unit'), dataIndex: 'unit' },
+    { key: 'scrap_rate', title: t('scrapRate'), align: 'right', render: (row) => row.scrap_rate > 0 ? `${(row.scrap_rate * 100).toFixed(1)}%` : '-' },
+    { key: 'lead_time_days', title: t('leadTimeDays'), align: 'right', dataIndex: 'lead_time_days' },
+    {
+      key: 'type',
+      title: t('type'),
+      render: (row) =>
+        row.level === 0 ? (
+          <Badge variant="outline">{t('finishedProduct')}</Badge>
+        ) : row.is_leaf ? (
+          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">{t('rawMaterial')}</Badge>
+        ) : (
+          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">{t('semiFinished')}</Badge>
+        ),
+    },
+  ];
+
+  const timeBucketColumns: StandardTableColumn<TimeBucket>[] = [
+    { key: 'date', title: t('date'), dataIndex: 'date', headerClassName: 'font-medium' },
+    { key: 'gross_requirement', title: t('grossRequirement'), align: 'right', render: (row) => row.gross_requirement.toLocaleString(locale) },
+    { key: 'scheduled_receipt', title: t('scheduledReceipt'), align: 'right', render: (row) => row.scheduled_receipt.toLocaleString(locale) },
+    { key: 'on_hand', title: t('onHand'), align: 'right', render: (row) => row.on_hand.toLocaleString(locale) },
+    { key: 'net_requirement', title: t('netRequirement'), align: 'right', render: (row) => row.net_requirement > 0 ? row.net_requirement.toLocaleString(locale) : '-' },
+    { key: 'planned_order_release', title: t('plannedOrderRelease'), align: 'right', render: (row) => row.planned_order_release > 0 ? row.planned_order_release.toLocaleString(locale) : '-' },
+    { key: 'planned_order_receipt', title: t('plannedOrderReceipt'), align: 'right', render: (row) => row.planned_order_receipt > 0 ? row.planned_order_receipt.toLocaleString(locale) : '-' },
+  ];
 
   return (
     <MainLayout title={t('mrpTitle')}>
@@ -524,57 +629,57 @@ export default function MRPPage() {
                       </CardHeader>
                       <CardContent className="p-0">
                         <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>{t('materialCode')}</TableHead>
-                                <TableHead>{t('materialName')}</TableHead>
-                                <TableHead className="text-right">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="text-left py-2 px-3">{t('materialCode')}</th>
+                                <th className="text-left py-2 px-3">{t('materialName')}</th>
+                                <th className="text-right py-2 px-3">
                                   {t('grossRequirement')}
-                                </TableHead>
-                                <TableHead className="text-right">{t('onHand')}</TableHead>
-                                <TableHead className="text-right">{t('allocated')}</TableHead>
-                                <TableHead className="text-right">{t('inTransit')}</TableHead>
-                                <TableHead className="text-right">{t('safetyStock')}</TableHead>
-                                <TableHead className="text-right">{t('netRequirement')}</TableHead>
-                                <TableHead className="text-right">{t('leadTimeDays')}</TableHead>
-                                <TableHead>{t('suggestedOrderDate')}</TableHead>
-                                <TableHead>{t('shortageWarning')}</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                                </th>
+                                <th className="text-right py-2 px-3">{t('onHand')}</th>
+                                <th className="text-right py-2 px-3">{t('allocated')}</th>
+                                <th className="text-right py-2 px-3">{t('inTransit')}</th>
+                                <th className="text-right py-2 px-3">{t('safetyStock')}</th>
+                                <th className="text-right py-2 px-3">{t('netRequirement')}</th>
+                                <th className="text-right py-2 px-3">{t('leadTimeDays')}</th>
+                                <th className="text-left py-2 px-3">{t('suggestedOrderDate')}</th>
+                                <th className="text-left py-2 px-3">{t('shortageWarning')}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
                               {mrpResult.net_requirements.map((req, idx) => (
-                                <TableRow
+                                <tr
                                   key={idx}
                                   className={
                                     req.shortage_warning ? 'bg-red-50 dark:bg-red-950/20' : ''
                                   }
                                 >
-                                  <TableCell className="font-medium">{req.material_code}</TableCell>
-                                  <TableCell>{req.material_name}</TableCell>
-                                  <TableCell className="text-right">
+                                  <td className="py-2 px-3 font-medium">{req.material_code}</td>
+                                  <td className="py-2 px-3">{req.material_name}</td>
+                                  <td className="py-2 px-3 text-right">
                                     {req.gross_requirement.toLocaleString(locale)}
-                                  </TableCell>
-                                  <TableCell className="text-right">
+                                  </td>
+                                  <td className="py-2 px-3 text-right">
                                     {req.on_hand_qty.toLocaleString(locale)}
-                                  </TableCell>
-                                  <TableCell className="text-right">
+                                  </td>
+                                  <td className="py-2 px-3 text-right">
                                     {req.allocated_qty.toLocaleString(locale)}
-                                  </TableCell>
-                                  <TableCell className="text-right">
+                                  </td>
+                                  <td className="py-2 px-3 text-right">
                                     {req.in_transit_qty.toLocaleString(locale)}
-                                  </TableCell>
-                                  <TableCell className="text-right">
+                                  </td>
+                                  <td className="py-2 px-3 text-right">
                                     {req.safety_stock.toLocaleString(locale)}
-                                  </TableCell>
-                                  <TableCell className="text-right font-semibold">
+                                  </td>
+                                  <td className="py-2 px-3 text-right font-semibold">
                                     {req.net_requirement > 0
                                       ? req.net_requirement.toLocaleString(locale)
                                       : '-'}
-                                  </TableCell>
-                                  <TableCell className="text-right">{req.lead_time_days}</TableCell>
-                                  <TableCell>{req.suggested_order_date}</TableCell>
-                                  <TableCell>
+                                  </td>
+                                  <td className="py-2 px-3 text-right">{req.lead_time_days}</td>
+                                  <td className="py-2 px-3">{req.suggested_order_date}</td>
+                                  <td className="py-2 px-3">
                                     {req.shortage_warning ? (
                                       <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
                                         <AlertTriangle className="h-3 w-3 mr-1" />
@@ -588,21 +693,21 @@ export default function MRPPage() {
                                         {t('sufficient')}
                                       </Badge>
                                     )}
-                                  </TableCell>
-                                </TableRow>
+                                  </td>
+                                </tr>
                               ))}
                               {mrpResult.net_requirements.length === 0 && (
-                                <TableRow>
-                                  <TableCell
+                                <tr>
+                                  <td
                                     colSpan={11}
                                     className="text-center text-muted-foreground py-8"
                                   >
                                     {t('noNetRequirementData')}
-                                  </TableCell>
-                                </TableRow>
+                                  </td>
+                                </tr>
                               )}
-                            </TableBody>
-                          </Table>
+                            </tbody>
+                          </table>
                         </div>
                       </CardContent>
                     </Card>
@@ -614,48 +719,48 @@ export default function MRPPage() {
                       </CardHeader>
                       <CardContent className="p-0">
                         <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>{t('materialCode')}</TableHead>
-                                <TableHead>{t('materialName')}</TableHead>
-                                <TableHead className="text-right">{tc('quantity')}</TableHead>
-                                <TableHead>{t('requiredDate')}</TableHead>
-                                <TableHead>{t('orderDate')}</TableHead>
-                                <TableHead>{t('priorityLabel')}</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="text-left py-2 px-3">{t('materialCode')}</th>
+                                <th className="text-left py-2 px-3">{t('materialName')}</th>
+                                <th className="text-right py-2 px-3">{tc('quantity')}</th>
+                                <th className="text-left py-2 px-3">{t('requiredDate')}</th>
+                                <th className="text-left py-2 px-3">{t('orderDate')}</th>
+                                <th className="text-left py-2 px-3">{t('priorityLabel')}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
                               {mrpResult.planned_orders.map((order, idx) => (
-                                <TableRow key={idx}>
-                                  <TableCell className="font-medium">
+                                <tr key={idx}>
+                                  <td className="py-2 px-3 font-medium">
                                     {order.material_code}
-                                  </TableCell>
-                                  <TableCell>{order.material_name}</TableCell>
-                                  <TableCell className="text-right">
+                                  </td>
+                                  <td className="py-2 px-3">{order.material_name}</td>
+                                  <td className="py-2 px-3 text-right">
                                     {order.quantity.toLocaleString(locale)}
-                                  </TableCell>
-                                  <TableCell>{order.required_date}</TableCell>
-                                  <TableCell>{order.order_date}</TableCell>
-                                  <TableCell>
+                                  </td>
+                                  <td className="py-2 px-3">{order.required_date}</td>
+                                  <td className="py-2 px-3">{order.order_date}</td>
+                                  <td className="py-2 px-3">
                                     <Badge className={priorityConfig[order.priority]?.className}>
                                       {priorityConfig[order.priority]?.label || order.priority}
                                     </Badge>
-                                  </TableCell>
-                                </TableRow>
+                                  </td>
+                                </tr>
                               ))}
                               {mrpResult.planned_orders.length === 0 && (
-                                <TableRow>
-                                  <TableCell
+                                <tr>
+                                  <td
                                     colSpan={6}
                                     className="text-center text-muted-foreground py-8"
                                   >
                                     {t('noPlannedOrders')}
-                                  </TableCell>
-                                </TableRow>
+                                  </td>
+                                </tr>
                               )}
-                            </TableBody>
-                          </Table>
+                            </tbody>
+                          </table>
                         </div>
                       </CardContent>
                     </Card>
@@ -735,22 +840,22 @@ export default function MRPPage() {
                       </CardHeader>
                       <CardContent className="p-0">
                         <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead className="w-16">{t('level')}</TableHead>
-                                <TableHead>{t('materialCode')}</TableHead>
-                                <TableHead>{t('materialName')}</TableHead>
-                                <TableHead className="text-right">{tc('quantity')}</TableHead>
-                                <TableHead>{t('unit')}</TableHead>
-                                <TableHead className="text-right">{t('scrapRate')}</TableHead>
-                                <TableHead className="text-right">{t('leadTimeDays')}</TableHead>
-                                <TableHead>{t('type')}</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="text-left py-2 px-3 w-16">{t('level')}</th>
+                                <th className="text-left py-2 px-3">{t('materialCode')}</th>
+                                <th className="text-left py-2 px-3">{t('materialName')}</th>
+                                <th className="text-right py-2 px-3">{tc('quantity')}</th>
+                                <th className="text-left py-2 px-3">{t('unit')}</th>
+                                <th className="text-right py-2 px-3">{t('scrapRate')}</th>
+                                <th className="text-right py-2 px-3">{t('leadTimeDays')}</th>
+                                <th className="text-left py-2 px-3">{t('type')}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
                               {flattenBOMTree(bomTree).map((node, idx) => (
-                                <TableRow
+                                <tr
                                   key={`${node.path}-${idx}`}
                                   className={
                                     node.level === 0
@@ -760,7 +865,7 @@ export default function MRPPage() {
                                         : 'bg-blue-50/50 dark:bg-blue-950/20'
                                   }
                                 >
-                                  <TableCell>
+                                  <td className="py-2 px-3">
                                     <div
                                       className="flex items-center gap-1"
                                       style={{ paddingLeft: `${node.indent * 20}px` }}
@@ -772,26 +877,26 @@ export default function MRPPage() {
                                         L{node.level}
                                       </span>
                                     </div>
-                                  </TableCell>
-                                  <TableCell className="font-mono text-sm">
+                                  </td>
+                                  <td className="py-2 px-3 font-mono text-sm">
                                     {node.material_code}
-                                  </TableCell>
-                                  <TableCell className={node.is_leaf ? '' : 'font-medium'}>
+                                  </td>
+                                  <td className={`py-2 px-3 ${node.is_leaf ? '' : 'font-medium'}`}>
                                     {node.material_name}
-                                  </TableCell>
-                                  <TableCell className="text-right">
+                                  </td>
+                                  <td className="py-2 px-3 text-right">
                                     {node.quantity.toLocaleString(locale)}
-                                  </TableCell>
-                                  <TableCell>{node.unit}</TableCell>
-                                  <TableCell className="text-right">
+                                  </td>
+                                  <td className="py-2 px-3">{node.unit}</td>
+                                  <td className="py-2 px-3 text-right">
                                     {node.scrap_rate > 0
                                       ? `${(node.scrap_rate * 100).toFixed(1)}%`
                                       : '-'}
-                                  </TableCell>
-                                  <TableCell className="text-right">
+                                  </td>
+                                  <td className="py-2 px-3 text-right">
                                     {node.lead_time_days}
-                                  </TableCell>
-                                  <TableCell>
+                                  </td>
+                                  <td className="py-2 px-3">
                                     {node.level === 0 ? (
                                       <Badge variant="outline">{t('finishedProduct')}</Badge>
                                     ) : node.is_leaf ? (
@@ -803,11 +908,11 @@ export default function MRPPage() {
                                         {t('semiFinished')}
                                       </Badge>
                                     )}
-                                  </TableCell>
-                                </TableRow>
+                                  </td>
+                                </tr>
                               ))}
-                            </TableBody>
-                          </Table>
+                            </tbody>
+                          </table>
                         </div>
                       </CardContent>
                     </Card>
@@ -985,63 +1090,63 @@ export default function MRPPage() {
                       </CardHeader>
                       <CardContent className="p-0">
                         <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>{t('date')}</TableHead>
-                                <TableHead className="text-right">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="text-left py-2 px-3">{t('date')}</th>
+                                <th className="text-right py-2 px-3">
                                   {t('grossRequirement')}
-                                </TableHead>
-                                <TableHead className="text-right">
+                                </th>
+                                <th className="text-right py-2 px-3">
                                   {t('scheduledReceipt')}
-                                </TableHead>
-                                <TableHead className="text-right">{t('onHand')}</TableHead>
-                                <TableHead className="text-right">{t('netRequirement')}</TableHead>
-                                <TableHead className="text-right">
+                                </th>
+                                <th className="text-right py-2 px-3">{t('onHand')}</th>
+                                <th className="text-right py-2 px-3">{t('netRequirement')}</th>
+                                <th className="text-right py-2 px-3">
                                   {t('plannedOrderRelease')}
-                                </TableHead>
-                                <TableHead className="text-right">
+                                </th>
+                                <th className="text-right py-2 px-3">
                                   {t('plannedOrderReceipt')}
-                                </TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
                               {timeBuckets.map((bucket, idx) => (
-                                <TableRow
+                                <tr
                                   key={idx}
                                   className={
                                     bucket.net_requirement > 0 ? 'bg-red-50 dark:bg-red-950/20' : ''
                                   }
                                 >
-                                  <TableCell className="font-medium">{bucket.date}</TableCell>
-                                  <TableCell className="text-right">
+                                  <td className="py-2 px-3 font-medium">{bucket.date}</td>
+                                  <td className="py-2 px-3 text-right">
                                     {bucket.gross_requirement.toLocaleString(locale)}
-                                  </TableCell>
-                                  <TableCell className="text-right">
+                                  </td>
+                                  <td className="py-2 px-3 text-right">
                                     {bucket.scheduled_receipt.toLocaleString(locale)}
-                                  </TableCell>
-                                  <TableCell className="text-right">
+                                  </td>
+                                  <td className="py-2 px-3 text-right">
                                     {bucket.on_hand.toLocaleString(locale)}
-                                  </TableCell>
-                                  <TableCell className="text-right font-semibold">
+                                  </td>
+                                  <td className="py-2 px-3 text-right font-semibold">
                                     {bucket.net_requirement > 0
                                       ? bucket.net_requirement.toLocaleString(locale)
                                       : '-'}
-                                  </TableCell>
-                                  <TableCell className="text-right">
+                                  </td>
+                                  <td className="py-2 px-3 text-right">
                                     {bucket.planned_order_release > 0
                                       ? bucket.planned_order_release.toLocaleString(locale)
                                       : '-'}
-                                  </TableCell>
-                                  <TableCell className="text-right">
+                                  </td>
+                                  <td className="py-2 px-3 text-right">
                                     {bucket.planned_order_receipt > 0
                                       ? bucket.planned_order_receipt.toLocaleString(locale)
                                       : '-'}
-                                  </TableCell>
-                                </TableRow>
+                                  </td>
+                                </tr>
                               ))}
-                            </TableBody>
-                          </Table>
+                            </tbody>
+                          </table>
                         </div>
                       </CardContent>
                     </Card>

@@ -1,7 +1,6 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { useRouter } from '@/i18n/navigation';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
@@ -11,14 +10,8 @@ import { formatDate } from '@/lib/date-utils';
 import { normalizeWorkOrderStatus } from '@/lib/constants';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable } from '@/components/common';
+import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import {
   Dialog,
   DialogContent,
@@ -46,7 +39,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, MoreHorizontal, Eye, Play, Factory, CheckCircle, Clock, Package, TrendingUp, Filter, Printer, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown, ClipboardList, AlertTriangle } from 'lucide-react';
+import { Plus, MoreHorizontal, Eye, Play, Factory, CheckCircle, Clock, Package, TrendingUp, Filter, Printer, Trash2, Pencil, ClipboardList, AlertTriangle } from 'lucide-react';
 
 interface WorkOrderItem {
   id: number;
@@ -183,39 +176,7 @@ export default function WorkOrderPage() {
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortField, setSortField] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
-
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      if (sortOrder === 'asc') setSortOrder('desc');
-      else if (sortOrder === 'desc') {
-        setSortField(null);
-        setSortOrder(null);
-      }
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  };
-  const getSortIcon = (field: string) => {
-    if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
-    return sortOrder === 'asc' ? (
-      <ArrowUp className="ml-1 h-3 w-3" />
-    ) : (
-      <ArrowDown className="ml-1 h-3 w-3" />
-    );
-  };
-  const sortedWorkOrders = useMemo(() => {
-    if (!sortField || !sortOrder) return workOrders;
-    return [...workOrders].sort((a, b) => {
-      const aVal = String((a as Record<string, unknown>)[sortField] ?? '').toLowerCase();
-      const bVal = String((b as Record<string, unknown>)[sortField] ?? '').toLowerCase();
-      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [workOrders, sortField, sortOrder]);
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
   // 已存在未取消工单的销售订单号集合（用于创建工单时过滤下拉，避免选到不可再建工单的订单）
   const ordersWithActiveWo = useMemo(
@@ -224,26 +185,15 @@ export default function WorkOrderPage() {
   );
   const [bomList, setBomList] = useState<BOMItem[]>([]);
 
-  const {
-    selected,
-    selectedCount,
-    isSelected,
-    allSelected,
-    toggle,
-    toggleAll,
-    clear,
-    selectAllRef,
-  } = useRowSelection(sortedWorkOrders, (o) => o.work_order_no);
-
   const handleBatchDelete = async () => {
-    const nos = [...selected];
-    if (nos.length === 0) return;
-    if (!confirm(t('confirmBatchDelete', { count: nos.length }))) return;
+    if (selectedRows.length === 0) return;
+    const selectedOrders = workOrders.filter((wo) => selectedRows.includes(wo.id));
+    if (!confirm(t('confirmBatchDelete', { count: selectedOrders.length }))) return;
     let okCount = 0;
     let failMsg = '';
-    for (const no of nos) {
+    for (const wo of selectedOrders) {
       try {
-        const res = await authFetch(`/api/workorders?work_order_no=${no}`, { method: 'DELETE' });
+        const res = await authFetch(`/api/workorders?work_order_no=${wo.work_order_no}`, { method: 'DELETE' });
         const data = await res.json();
         if (data.success) okCount++;
         else failMsg = data.message || failMsg;
@@ -257,7 +207,7 @@ export default function WorkOrderPage() {
     if (failMsg) {
       toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
     }
-    clear();
+    setSelectedRows([]);
     fetchWorkOrders();
   };
 
@@ -569,16 +519,16 @@ export default function WorkOrderPage() {
       <div className="space-y-6">
         <StatsCards
           configs={[
-            { key: 'total', label: tc('total'), icon: ClipboardList, ...StatsTheme.blue },
-            { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
-            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
-            { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'total', label: '工单总数', icon: ClipboardList, ...StatsTheme.blue },
+            { key: 'active', label: '已完成', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'pending', label: '待开工', icon: Clock, ...StatsTheme.orange },
+            { key: 'warning', label: '已延期', icon: AlertTriangle, ...StatsTheme.red },
           ]}
           stats={[
             { key: 'total', count: workOrders.length },
-            { key: 'active', count: workOrders.length },
-            { key: 'pending', count: workOrders.length },
-            { key: 'warning', count: workOrders.length },
+            { key: 'active', count: workOrders.filter((o) => o.status === 'completed').length },
+            { key: 'pending', count: workOrders.filter((o) => o.status === 'pending').length },
+            { key: 'warning', count: workOrders.filter((o) => o.status === 'overdue').length },
           ]}
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
@@ -631,224 +581,158 @@ export default function WorkOrderPage() {
           <TabsContent value={activeTab} className="mt-4">
             <Card>
               <CardContent className="p-0">
-                {selectedCount > 0 && (
-                  <div className="flex items-center justify-between gap-2 border-b bg-muted/40 px-4 py-2 text-sm">
-                    <span className="font-medium">
-                      {t('selectedCount', { count: selectedCount })}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" onClick={clear}>
-                        {tc('clear')}
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={handleBatchDelete}>
-                        {t('batchDelete')}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                {loading ? (
-                  <div className="flex items-center justify-center py-12 text-muted-foreground">
-                    {tc('loading')}
-                  </div>
-                ) : workOrders.length === 0 ? (
-                  <div className="flex items-center justify-center py-12 text-muted-foreground">
-                    {t('noWorkOrderData')}
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-10">
-                          <input
-                            ref={selectAllRef}
-                            type="checkbox"
-                            className="h-4 w-4 cursor-pointer accent-blue-600"
-                            checked={allSelected}
-                            onChange={toggleAll}
-                            aria-label={t('select')}
-                          />
-                        </TableHead>
-                        <TableHead
-                          className="cursor-pointer select-none hover:bg-muted"
-                          onClick={() => handleSort('work_order_no')}
-                        >
-                          <span className="inline-flex items-center">
-                            {t('workOrderNo')}
-                            {getSortIcon('work_order_no')}
-                          </span>
-                        </TableHead>
-                        <TableHead
-                          className="cursor-pointer select-none hover:bg-muted"
-                          onClick={() => handleSort('product_name')}
-                        >
-                          <span className="inline-flex items-center">
-                            {t('productInfo')}
-                            {getSortIcon('product_name')}
-                          </span>
-                        </TableHead>
-                        <TableHead
-                          className="cursor-pointer select-none hover:bg-muted"
-                          onClick={() => handleSort('customer_name')}
-                        >
-                          <span className="inline-flex items-center">
-                            {t('customer')}
-                            {getSortIcon('customer_name')}
-                          </span>
-                        </TableHead>
-                        <TableHead
-                          className="cursor-pointer select-none hover:bg-muted"
-                          onClick={() => handleSort('quantity')}
-                        >
-                          <span className="inline-flex items-center">
-                            {t('quantity')}
-                            {getSortIcon('quantity')}
-                          </span>
-                        </TableHead>
-                        <TableHead
-                          className="cursor-pointer select-none hover:bg-muted"
-                          onClick={() => handleSort('status')}
-                        >
-                          <span className="inline-flex items-center">
-                            {t('status.label')}
-                            {getSortIcon('status')}
-                          </span>
-                        </TableHead>
-                        <TableHead
-                          className="cursor-pointer select-none hover:bg-muted"
-                          onClick={() => handleSort('priority')}
-                        >
-                          <span className="inline-flex items-center">
-                            {t('priority.label')}
-                            {getSortIcon('priority')}
-                          </span>
-                        </TableHead>
-                        <TableHead
-                          className="cursor-pointer select-none hover:bg-muted"
-                          onClick={() => handleSort('planned_start_date')}
-                        >
-                          <span className="inline-flex items-center">
-                            {t('plannedDate')}
-                            {getSortIcon('planned_start_date')}
-                          </span>
-                        </TableHead>
-                        <TableHead>{t('operation')}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortedWorkOrders.map((order) => (
-                        <TableRow key={order.id}>
-                          <TableCell>
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 cursor-pointer accent-blue-600"
-                              checked={isSelected(order.work_order_no)}
-                              onChange={() => toggle(order.work_order_no)}
-                              aria-label={t('select')}
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            <div className="flex flex-col">
-                              <span>{order.work_order_no}</span>
-                              {order.order_no && (
-                                <span className="text-xs text-muted-foreground">
-                                  {t('related')}: {order.order_no}
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{order.product_name || '-'}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span>{order.customer_name || '-'}</span>
-                          </TableCell>
-                          <TableCell>
-                            <span>
-                              {parseFloat(String(order.quantity)).toLocaleString(locale)}{' '}
-                              {order.unit}
-                            </span>
-                          </TableCell>
-                          <TableCell>{getStatusBadge(order.status)}</TableCell>
-                          <TableCell>{getPriorityBadge(order.priority)}</TableCell>
-                          <TableCell>
-                            <div className="flex flex-col text-xs">
-                              <span>{formatDate(order.plan_start_date) || '-'}</span>
-                              <span className="text-muted-foreground">{t('to')}</span>
-                              <span>{formatDate(order.plan_end_date) || '-'}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleViewDetail(order)}
-                              >
-                                <Eye className="h-4 w-4" />
+                <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} />
+                <StandardTable<WorkOrder>
+                  rowSelectable={true}
+                  selectedRows={workOrders.filter((wo) => selectedRows.includes(wo.id))}
+                  onRowSelectedChange={(selectedWorkOrders) => {
+                    setSelectedRows(selectedWorkOrders.map((wo) => wo.id));
+                  }}
+                  dataSource={workOrders}
+                  rowKey={(row) => String(row.id)}
+                  columns={[
+                    { key: 'select', title: '', width: 10, align: 'center' },
+                    {
+                      key: 'work_order_no',
+                      title: t('workOrderNo'),
+                      width: 150,
+                      sortable: true,
+                    },
+                    {
+                      key: 'product_name',
+                      title: t('productInfo'),
+                      width: 150,
+                      sortable: true,
+                      render: (row: WorkOrder) => (
+                        <div className="flex flex-col">
+                          <span className="font-medium">{row.product_name || '-'}</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'customer_name',
+                      title: t('customer'),
+                      width: 120,
+                      sortable: true,
+                      render: (row: WorkOrder) => <span>{row.customer_name || '-'}</span>,
+                    },
+                    {
+                      key: 'quantity',
+                      title: t('quantity'),
+                      width: 80,
+                      align: 'right',
+                      sortable: true,
+                      render: (row: WorkOrder) => (
+                        <span>
+                          {parseFloat(String(row.quantity)).toLocaleString(locale)}{' '}
+                          {row.unit}
+                        </span>
+                      ),
+                    },
+                    {
+                      key: 'status',
+                      title: t('status.label'),
+                      width: 80,
+                      sortable: true,
+                      render: (row: WorkOrder) => getStatusBadge(row.status),
+                    },
+                    {
+                      key: 'priority',
+                      title: t('priority.label'),
+                      width: 80,
+                      sortable: true,
+                      render: (row: WorkOrder) => getPriorityBadge(row.priority),
+                    },
+                    {
+                      key: 'plan_start_date',
+                      title: t('plannedDate'),
+                      width: 150,
+                      sortable: true,
+                      render: (row: WorkOrder) => (
+                        <div className="flex flex-col text-xs">
+                          <span>{formatDate(row.plan_start_date) || '-'}</span>
+                          <span className="text-muted-foreground">{t('to')}</span>
+                          <span>{formatDate(row.plan_end_date) || '-'}</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'actions',
+                      title: tc('actions'),
+                      width: 80,
+                      align: 'right',
+                      render: (row: WorkOrder) => (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewDetail(row)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
                               </Button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleViewDetail(order)}>
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    {t('viewDetail')}
-                                  </DropdownMenuItem>
-                                  {order.status !== 'completed' && order.status !== 'cancelled' && (
-                                    <DropdownMenuItem onClick={() => handleOpenEdit(order)}>
-                                      <Pencil className="h-4 w-4 mr-2" />
-                                      {t('editWorkOrder')}
-                                    </DropdownMenuItem>
-                                  )}
-                                  {order.status === 'pending' && (
-                                    <DropdownMenuItem
-                                      onClick={() => handleStatusChange(order, 'confirmed')}
-                                    >
-                                      <CheckCircle className="h-4 w-4 mr-2" />
-                                      {t('confirmWorkOrder')}
-                                    </DropdownMenuItem>
-                                  )}
-                                  {order.status === 'confirmed' && (
-                                    <DropdownMenuItem
-                                      onClick={() => handleStatusChange(order, 'producing')}
-                                    >
-                                      <Play className="h-4 w-4 mr-2" />
-                                      {t('startProduction')}
-                                    </DropdownMenuItem>
-                                  )}
-                                  {order.status === 'producing' && (
-                                    <DropdownMenuItem
-                                      onClick={() => handleStatusChange(order, 'completed')}
-                                    >
-                                      <CheckCircle className="h-4 w-4 mr-2" />
-                                      {t('completeWorkOrder')}
-                                    </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuItem onClick={() => handlePrintWorkOrder(order)}>
-                                    <Printer className="h-4 w-4 mr-2" />
-                                    {t('printWorkOrder')}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-red-600 dark:text-red-400"
-                                    onClick={() => handleDelete(order)}
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    {tc('delete')}
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleViewDetail(row)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                {t('viewDetail')}
+                              </DropdownMenuItem>
+                              {row.status !== 'completed' && row.status !== 'cancelled' && (
+                                <DropdownMenuItem onClick={() => handleOpenEdit(row)}>
+                                  <Pencil className="h-4 w-4 mr-2" />
+                                  {t('editWorkOrder')}
+                                </DropdownMenuItem>
+                              )}
+                              {row.status === 'pending' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusChange(row, 'confirmed')}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  {t('confirmWorkOrder')}
+                                </DropdownMenuItem>
+                              )}
+                              {row.status === 'confirmed' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusChange(row, 'producing')}
+                                >
+                                  <Play className="h-4 w-4 mr-2" />
+                                  {t('startProduction')}
+                                </DropdownMenuItem>
+                              )}
+                              {row.status === 'producing' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusChange(row, 'completed')}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  {t('completeWorkOrder')}
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => handlePrintWorkOrder(row)}>
+                                <Printer className="h-4 w-4 mr-2" />
+                                {t('printWorkOrder')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-red-600 dark:text-red-400"
+                                onClick={() => handleDelete(row)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                {tc('delete')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      ),
+                    },
+                  ]}
+                  total={workOrders.length}
+                  page={1}
+                  pageSize={20}
+                  showPagination={false}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -1009,34 +893,34 @@ export default function WorkOrderPage() {
                       <h4 className="font-semibold text-sm text-muted-foreground">
                         {t('workOrderMaterials')}
                       </h4>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>{t('lineNo')}</TableHead>
-                            <TableHead>{t('materialCode')}</TableHead>
-                            <TableHead>{t('materialName')}</TableHead>
-                            <TableHead>{t('quantity')}</TableHead>
-                            <TableHead>{t('unit')}</TableHead>
-                            <TableHead>{t('status.label')}</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
+                      <table className="w-full text-sm border-collapse">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-1 px-2">{t('lineNo')}</th>
+                            <th className="text-left py-1 px-2">{t('materialCode')}</th>
+                            <th className="text-left py-1 px-2">{t('materialName')}</th>
+                            <th className="text-right py-1 px-2">{t('quantity')}</th>
+                            <th className="text-left py-1 px-2">{t('unit')}</th>
+                            <th className="text-left py-1 px-2">{t('status.label')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
                           {selectedOrder.items.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell>{item.line_no}</TableCell>
-                              <TableCell>{item.material_code || item.material_id || '-'}</TableCell>
-                              <TableCell>{item.material_name || '-'}</TableCell>
-                              <TableCell>
+                            <tr key={item.id} className="border-b last:border-0">
+                              <td className="py-1 px-2">{item.line_no}</td>
+                              <td className="py-1 px-2">{item.material_code || item.material_id || '-'}</td>
+                              <td className="py-1 px-2">{item.material_name || '-'}</td>
+                              <td className="py-1 px-2 text-right">
                                 {parseFloat(String(item.quantity)).toLocaleString(locale)}
-                              </TableCell>
-                              <TableCell>{item.unit || '-'}</TableCell>
-                              <TableCell>
+                              </td>
+                              <td className="py-1 px-2">{item.unit || '-'}</td>
+                              <td className="py-1 px-2">
                                 {item.status ? getStatusBadge(item.status) : '-'}
-                              </TableCell>
-                            </TableRow>
+                              </td>
+                            </tr>
                           ))}
-                        </TableBody>
-                      </Table>
+                        </tbody>
+                      </table>
                     </div>
                   )}
 

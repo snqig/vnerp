@@ -32,6 +32,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Plus,
   Search,
   Beaker,
@@ -82,12 +89,29 @@ export default function InkFormulaPage() {
   const ts = useTranslations('Dcprint');
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
   const router = useRouter();
   const { addToast: toast } = useToastContext();
 
   const [colors, setColors] = useState<InkColor[]>([]);
   const [selectedColor, setSelectedColor] = useState<InkColor | null>(null);
   const [versions, setVersions] = useState<FormulaVersion[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isColorDialogOpen, setIsColorDialogOpen] = useState(false);
@@ -103,19 +127,22 @@ export default function InkFormulaPage() {
   const fetchColors = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: '1', pageSize: '100' });
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
       if (searchKeyword) params.append('keyword', searchKeyword);
       const res = await authFetch(`/api/dcprint/formula/color?${params}`);
       const data = await res.json();
       if (data.success) {
         setColors(data.data?.list || data.data || []);
+        const tot = data.data?.total || 0;
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
       }
     } catch {
       toast({ title: ts('k_v9pftt'), description: ts('k_1igc1i7'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [searchKeyword]);
+  }, [searchKeyword, page, pageSize]);
 
   const fetchVersions = useCallback(async (colorId: number) => {
     try {
@@ -334,6 +361,31 @@ export default function InkFormulaPage() {
                 </TableBody>
               </Table>
             )}
+            {total > 0 && (
+              <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {tStd('paginationSummary', { total, pages: totalPages })}
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                    <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+                  <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+                  <div className="flex items-center gap-1">
+                    <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                    <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
           </CardContent>
         </Card>
 

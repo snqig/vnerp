@@ -1,20 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { formatDate } from '@/lib/date-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+} from '@/components/common';
 import { ApiClient } from '@/lib/api-client';
-import { formatDate, formatAmount } from '@/lib/utils';
 import { toast } from 'sonner';
 import { MoneyDisplay } from '@/components/ui/money-display';
 import { RefreshCw, CheckCircle, TrendingDown, Calculator, DollarSign } from 'lucide-react';
@@ -47,8 +43,7 @@ export default function PaymentsPage() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-
-  const pageSize = 20;
+  const [pageSize, setPageSize] = useState(20);
 
   const loadPayments = async () => {
     setLoading(true);
@@ -67,10 +62,57 @@ export default function PaymentsPage() {
 
   useEffect(() => {
     loadPayments();
-  }, [page]);
+  }, [page, pageSize]);
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const columns: StandardTableColumn<Payment>[] = [
+    {
+      key: 'payment_no',
+      title: tc('paymentNo'),
+      render: (p) => <span className="font-mono text-sm">{p.payment_no}</span>,
+    },
+    {
+      key: 'supplier_name',
+      title: tc('supplier'),
+      render: (p) => <span className="font-medium">{p.supplier_name}</span>,
+    },
+    {
+      key: 'amount',
+      title: tc('amount'),
+      align: 'right',
+      render: (p) => (
+        <span className="text-red-600 dark:text-red-400 font-medium">
+          <MoneyDisplay amount={p.amount} currency={p.currency || 'CNY'} />
+        </span>
+      ),
+    },
+    {
+      key: 'payment_method',
+      title: tc('paymentMethod'),
+      render: (p) => (
+        <Badge variant={METHOD_BADGE[p.payment_method]?.variant || 'outline'}>
+          {METHOD_BADGE[p.payment_method]?.label || p.payment_method || '-'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'payable_no',
+      title: tc('payableNoLabel'),
+      render: (p) => <span className="font-mono text-sm">{p.payable_no || '-'}</span>,
+    },
+    {
+      key: 'payment_date',
+      title: tc('paymentDate'),
+      render: (p) => formatDate(p.payment_date),
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      render: () => <span className="text-sm text-muted-foreground">{tc('noActions')}</span>,
+    },
+  ];
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -103,71 +145,26 @@ export default function PaymentsPage() {
           <CardTitle>{tc('paymentRecords')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{tc('paymentNo')}</TableHead>
-                <TableHead>{tc('supplier')}</TableHead>
-                <TableHead className="text-right">{tc('amount')}</TableHead>
-                <TableHead>{tc('paymentMethod')}</TableHead>
-                <TableHead>{tc('payableNoLabel')}</TableHead>
-                <TableHead>{tc('paymentDate')}</TableHead>
-                <TableHead>{tc('actions')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {payments.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-mono text-sm">{p.payment_no}</TableCell>
-                  <TableCell className="font-medium">{p.supplier_name}</TableCell>
-                  <TableCell className="text-right text-red-600 dark:text-red-400 font-medium">
-                    <MoneyDisplay amount={p.amount} currency={p.currency || 'CNY'} />
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={METHOD_BADGE[p.payment_method]?.variant || 'outline'}>
-                      {METHOD_BADGE[p.payment_method]?.label || p.payment_method || '-'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">{p.payable_no || '-'}</TableCell>
-                  <TableCell>{formatDate(p.payment_date)}</TableCell>
-                  <TableCell>
-                    <span className="text-sm text-muted-foreground">{tc('noActions')}</span>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {payments.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    {tc('noData')}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <StandardTable<Payment>
+            columns={columns}
+            dataSource={payments}
+            total={total}
+            page={page}
+            pageSize={pageSize}
+            pageSizeOptions={[20, 25, 30]}
+            rowKey="id"
+            rowSelectable={false}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
+            loading={loading}
+            onRetry={loadPayments}
+            emptyText={tc('noData')}
+          />
         </CardContent>
       </Card>
-
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>{tc('totalRecords', { count: total })}</span>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            {tc('previousPage')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page * pageSize >= total}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            {tc('nextPage')}
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }

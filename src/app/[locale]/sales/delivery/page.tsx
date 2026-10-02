@@ -125,6 +125,7 @@ export default function DeliveryPage() {
   // 翻译钩子
   const t = useTranslations('Sales');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const STATUS_MAP: Record<number, { label: string; color: string }> = {
     1: {
@@ -191,6 +192,22 @@ export default function DeliveryPage() {
   >([]);
   const [materials, setMaterials] = useState<Loose[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  const doJump = () => {
+    const n = parseInt(jumpValue, 10);
+    if (!Number.isFinite(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setPage(n);
+    setJumpValue('');
+    setJumpError(null);
+  };
 
   const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
     useRowSelection(list, (r) => String(r.id));
@@ -228,11 +245,15 @@ export default function DeliveryPage() {
       if (keyword) params.append('keyword', keyword);
       if (statusFilter !== 'all') params.append('status', statusFilter);
       if (typeFilter !== 'all') params.append('type', typeFilter);
+      params.append('page', String(page));
+      params.append('pageSize', String(pageSize));
       const res = await authFetch(`/api/sales/delivery?${params.toString()}`);
       const result = await res.json();
       if (result.success) {
+        const tot = result.data?.total || 0;
         setList(result.data?.list || []);
-        setTotal(result.data?.total || 0);
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
         logger.info({ module: 'Sales', action: 'fetchDelivery' }, tc('k_17atxqv'), {
           count: (result.data?.list || []).length,
         });
@@ -245,7 +266,7 @@ export default function DeliveryPage() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, statusFilter, typeFilter, t, tc]);
+  }, [keyword, statusFilter, typeFilter, page, pageSize, t, tc]);
 
   const fetchCustomers = useCallback(async () => {
     logger.info({ module: 'Sales', action: 'fetchCustomers' }, tc('k_3ao17l'));
@@ -605,6 +626,81 @@ export default function DeliveryPage() {
                 </TableBody>
               </Table>
               </>
+            )}
+            {total > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-3">
+                  <span>
+                    {tStd('paginationSummary', { total, pages: totalPages })}
+                  </span>
+                  <Select
+                    value={String(pageSize)}
+                    onValueChange={(v) => {
+                      setPageSize(Number(v));
+                      setPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-[110px]" aria-label={tStd('pageSize')}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[20, 50, 100].map((opt) => (
+                        <SelectItem key={opt} value={String(opt)}>
+                          {opt} {tStd('pageSizeUnit')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    {tStd('prevPage')}
+                  </Button>
+                  <span className="px-1 tabular-nums">
+                    {page} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    {tStd('nextPage')}
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={jumpValue}
+                      onChange={(e) => {
+                        setJumpValue(e.target.value);
+                        if (jumpError) setJumpError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') doJump();
+                      }}
+                      className="h-8 w-16"
+                      placeholder={tStd('pageNumber')}
+                      aria-label={tStd('pageNumber')}
+                      inputMode="numeric"
+                    />
+                    <Button variant="outline" size="sm" onClick={doJump}>
+                      {tStd('jump')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {jumpError && (
+              <p className="px-1 pb-2 text-xs text-destructive" role="alert">
+                {jumpError}
+              </p>
             )}
           </CardContent>
         </Card>

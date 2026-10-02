@@ -68,6 +68,7 @@ export default function InkManagementPage() {
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const typeMap: Record<number, string> = {
     1: t('waterInk'),
@@ -102,6 +103,19 @@ export default function InkManagementPage() {
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
   const [searchCode, setSearchCode] = useState('');
   const [searchName, setSearchName] = useState('');
   const [searchType, setSearchType] = useState('');
@@ -122,7 +136,7 @@ export default function InkManagementPage() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         inkCode: searchCode,
         inkName: searchName,
       });
@@ -133,12 +147,13 @@ export default function InkManagementPage() {
       if (result.success) {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
+        setTotalPages(Math.ceil((result.data.total || 0) / pageSize));
       }
     } catch (error) {
       console.error('Failed to fetch ink list:', error);
       setList([]);
     }
-  }, [page, searchCode, searchName, searchType, searchStatus]);
+  }, [page, pageSize, searchCode, searchName, searchType, searchStatus]);
 
   const fetchStats = async () => {
     try {
@@ -526,27 +541,31 @@ export default function InkManagementPage() {
               </TableBody>
             </Table>
 
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-gray-500">{tc('total', { count: total })}</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  {tc('prevPage')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page * 20 >= total}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {tc('nextPage')}
-                </Button>
+            {total > 0 && (
+              <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {tStd('paginationSummary', { total, pages: totalPages })}
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                    <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+                  <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+                  <div className="flex items-center gap-1">
+                    <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                    <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+            {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
           </CardContent>
         </Card>
 

@@ -5,20 +5,12 @@ import { MainLayout } from '@/components/layout';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { authFetch } from '@/lib/auth-fetch';
-import { useRowSelection } from '@/lib/useRowSelection';
+import { formatDate } from '@/lib/date-utils';
 import { Search, Plus, Calendar, CheckCircle2, AlertCircle, RefreshCw, RotateCcw, Edit, Trash2, BarChart2, BarChart3, ClipboardList, ClipboardCheck, CheckCircle, Clock, AlertTriangle, Loader, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -41,9 +33,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { StandardTable, StandardTableColumn } from '@/components/common';
 import { toast } from 'sonner';
 import {
   buildQualityFormMessages,
@@ -149,6 +140,29 @@ export default function IncomingInspectionPage() {
     failed: 0,
     monthlyCount: 0,
   });
+  // 检验员下拉数据源：sys_employee 在职人员（检验员必须是库内真实人员，禁手输）
+  const [employeeOptions, setEmployeeOptions] = useState<
+    Array<{ employee_no: string; name: string; dept_name?: string; position?: string }>
+  >([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await authFetch('/api/hr/employees?status=1&page=1&pageSize=200');
+        const result = await res.json();
+        if (!cancelled && result.success) {
+          const list = Array.isArray(result.data) ? result.data : result.data?.list || [];
+          setEmployeeOptions(list);
+        }
+      } catch {
+        // 拉取失败时保留空列表，表单回退手输入框
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // 从 API 获取来料检验数据
   const fetchInspections = useCallback(async () => {
@@ -187,6 +201,8 @@ export default function IncomingInspectionPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentInspection, setCurrentInspection] = useState<Loose>(null);
+  const [selectedRows, setSelectedRows] = useState<Loose[]>([]);
+  const [pageSize] = useState(20);
   const [formData, setFormData] = useState<{
     inspectionDate: string;
     supplierName: string;
@@ -236,10 +252,7 @@ export default function IncomingInspectionPage() {
     });
   }, [incomingInspections, searchQuery, statusFilter]);
 
-  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(
-    filteredInspections,
-    'id'
-  );
+  const sortedList = useMemo(() => filteredInspections, [filteredInspections]);
 
   const handleRefresh = useCallback(async () => {
     await fetchInspections();
@@ -249,7 +262,7 @@ export default function IncomingInspectionPage() {
   const handleReset = useCallback(() => {
     setSearchQuery('');
     setStatusFilter('all');
-    clearSelection();
+    setSelectedRows([]);
     toast.success(tc('filterReset'));
   }, []);
 
@@ -392,16 +405,6 @@ export default function IncomingInspectionPage() {
     }
   };
 
-  const {
-    selected,
-    isSelected,
-    allSelected,
-    toggle,
-    toggleAll,
-    clear: clearSelection,
-    selectAllRef,
-  } = useRowSelection(sortedData, (i) => String(i.id));
-
   const totalInspectionsToday = incomingInspections.filter(
     (i) => i.date === new Date().toISOString().slice(0, 10)
   ).length;
@@ -411,19 +414,6 @@ export default function IncomingInspectionPage() {
     incomingInspections.length > 0
       ? Math.round((totalPassInspections / incomingInspections.length) * 100)
       : 0;
-
-  const _exportColumns = [
-    { key: 'id', header: t('inspectionNo') },
-    { key: 'date', header: tc('date') },
-    { key: 'supplier', header: tc('supplier') },
-    { key: 'materialName', header: tc('materialName') },
-    { key: 'specification', header: tc('specification') },
-    { key: 'batchNo', header: tc('batchNo') },
-    { key: 'quantity', header: tc('quantity') },
-    { key: 'inspectionType', header: t('inspectionType') },
-    { key: 'result', header: t('inspectionResult') },
-    { key: 'inspector', header: t('inspector') },
-  ];
 
   const renderFormItems = () => (
     <div className="space-y-4">
@@ -539,11 +529,30 @@ export default function IncomingInspectionPage() {
         </div>
         <div className="space-y-2">
           <Label>{t('inspector')} *</Label>
-          <Input
-            value={formData.inspectorName}
-            onChange={(e) => setFormData({ ...formData, inspectorName: e.target.value })}
-            placeholder={t('enterInspectorName')}
-          />
+          {employeeOptions.length > 0 ? (
+            <Select
+              value={formData.inspectorName}
+              onValueChange={(value) => setFormData({ ...formData, inspectorName: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={tc('select')} />
+              </SelectTrigger>
+              <SelectContent>
+                {employeeOptions.map((emp) => (
+                  <SelectItem key={emp.employee_no} value={emp.name}>
+                    {emp.name}
+                    {emp.dept_name ? `（${emp.dept_name}${emp.position ? '·' + emp.position : ''}）` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              value={formData.inspectorName}
+              onChange={(e) => setFormData({ ...formData, inspectorName: e.target.value })}
+              placeholder={t('enterInspectorName')}
+            />
+          )}
         </div>
         <div className="space-y-2">
           <Label>{tc('remark')}</Label>
@@ -699,7 +708,11 @@ export default function IncomingInspectionPage() {
                 },
                 { key: 'inspector', label: t('inspector'), width: 10 },
               ]}
-              data={selected.size > 0 ? sortedData.filter((i) => selected.has(String(i.id))) : sortedData}
+              data={
+                selectedRows.length > 0
+                  ? incomingInspections.filter((i) => selectedRows.some((sr) => sr.id === i.id))
+                  : incomingInspections
+              }
             />
           </div>
         </div>
@@ -726,134 +739,83 @@ export default function IncomingInspectionPage() {
           <CardHeader className="flex flex-row items-center justify-between border-b">
             <CardTitle>{t('incomingInspectionRecord')}</CardTitle>
             <span className="text-sm text-muted-foreground">
-              {tc('totalRecords', { count: sortedData.length })}
+              {tc('totalRecords', { count: sortedList.length })}
             </span>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <input
-                      ref={selectAllRef}
-                      type="checkbox"
-                      className="h-4 w-4 cursor-pointer accent-blue-600"
-                      checked={allSelected}
-                      onChange={toggleAll}
-                      aria-label={tc('selectAll')}
-                    />
-                  </TableHead>
-                  <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
-                  <SortableTableHeader
-                    field="id"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('inspectionNo')}
-                  </SortableTableHeader>
-                  <SortableTableHeader
-                    field="date"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {tc('date')}
-                  </SortableTableHeader>
-                  <SortableTableHeader
-                    field="supplier"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {tc('supplier')}
-                  </SortableTableHeader>
-                  <SortableTableHeader
-                    field="materialName"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {tc('materialName')}
-                  </SortableTableHeader>
-                  <TableHead>{tc('specification')}</TableHead>
-                  <TableHead>{tc('batchNo')}</TableHead>
-                  <TableHead>{tc('quantity')}</TableHead>
-                  <TableHead>{t('inspectionType')}</TableHead>
-                  <SortableTableHeader
-                    field="result"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {tc('status')}
-                  </SortableTableHeader>
-                  <TableHead>{t('inspector')}</TableHead>
-                  <TableHead className="text-right">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedData.map((inspection, index) => (
-                  <TableRow key={inspection.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={isSelected(String(inspection.id))}
-                        onCheckedChange={() => toggle(String(inspection.id))}
-                      />
-                    </TableCell>
-                    <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
-                    <TableCell className="font-medium">{inspection.id}</TableCell>
-                    <TableCell>{inspection.date}</TableCell>
-                    <TableCell>{inspection.supplier}</TableCell>
-                    <TableCell>{inspection.materialName}</TableCell>
-                    <TableCell>{inspection.specification}</TableCell>
-                    <TableCell>{inspection.batchNo}</TableCell>
-                    <TableCell>
-                      {inspection.quantity} {inspection.unit}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {inspectionTypeOptions.find((o) => o.value === inspection.inspectionTypeRaw)
-                          ?.label || inspection.inspectionTypeRaw}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusConfig[inspection.result]?.variant || 'outline'}>
-                        {statusConfig[inspection.result]?.label || inspection.result}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{inspection.inspector}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(inspection)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            {tc('edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDelete(inspection)}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            {tc('delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {sortedData.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
-                      <ClipboardList className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      {t('noIncomingInspectionRecords')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<Loose>
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={(rows) => setSelectedRows(rows)}
+              dataSource={sortedList}
+              columns={[
+                {
+                  key: 'serialNo',
+                  title: tc('serialNo'),
+                  width: 60,
+                  align: 'center',
+                  render: (_row, index) => <span className="text-muted-foreground">{index + 1}</span>,
+                },
+                { key: 'id', title: t('inspectionNo') },
+                {
+                  key: 'date',
+                  title: tc('date'),
+                  // DATE 列经 API 序列化为 UTC ISO 串，按本地日历日格式化（勿裸显/勿 toISOString）
+                  render: (row) => formatDate(row.date),
+                },
+                { key: 'supplier', title: tc('supplier') },
+                { key: 'materialName', title: tc('materialName') },
+                { key: 'specification', title: tc('specification') },
+                { key: 'batchNo', title: tc('batchNo') },
+                { key: 'quantity', title: tc('quantity'), render: (row) => `${row.quantity} ${row.unit}` },
+                {
+                  key: 'inspectionType',
+                  title: t('inspectionType'),
+                  render: (row) => (
+                    <Badge variant="outline">
+                      {inspectionTypeOptions.find((o) => o.value === row.inspectionTypeRaw)?.label || row.inspectionTypeRaw}
+                    </Badge>
+                  ),
+                },
+                {
+                  key: 'result',
+                  title: tc('status'),
+                  render: (row) => (
+                    <Badge variant={statusConfig[row.result]?.variant || 'outline'}>
+                      {statusConfig[row.result]?.label || row.result}
+                    </Badge>
+                  ),
+                },
+                { key: 'inspector', title: t('inspector') },
+                {
+                  key: 'actions',
+                  title: tc('actions'),
+                  width: 80,
+                  align: 'right',
+                  render: (row) => (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(row)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          {tc('edit')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDelete(row)}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          {tc('delete')}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ),
+                },
+              ]}
+              emptyText={t('noIncomingInspectionRecords')}
+            />
           </CardContent>
         </Card>
 

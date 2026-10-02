@@ -4,12 +4,26 @@ import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
+// StandardTable 表头排序：白名单字段，避免 SQL 注入
+const SORTABLE_FIELDS = [
+  'cost_no',
+  'cost_type',
+  'order_no',
+  'department',
+  'amount',
+  'cost_date',
+  'description',
+  'id',
+] as const;
+
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
   const keyword = searchParams.get('keyword') || '';
   const costType = searchParams.get('cost_type') || '';
+  const sortField = searchParams.get('sortField') || '';
+  const sortDirection = searchParams.get('sortDirection') === 'asc' ? 'ASC' : 'DESC';
 
   let where = 'WHERE deleted = 0';
   const params: SqlValue[] = [];
@@ -27,8 +41,12 @@ export const GET = withPermission(async (request: NextRequest) => {
   const totalRows = await query(`SELECT COUNT(*) as total FROM fin_cost_record ${where}`, params);
   const total = totalRows[0]?.total || 0;
 
+  const orderBy = (SORTABLE_FIELDS as readonly string[]).includes(sortField)
+    ? `ORDER BY ${sortField} ${sortDirection}, id DESC`
+    : 'ORDER BY cost_date DESC, id DESC';
+
   const rows = await query(
-    `SELECT * FROM fin_cost_record ${where} ORDER BY cost_date DESC, id DESC LIMIT ? OFFSET ?`,
+    `SELECT * FROM fin_cost_record ${where} ${orderBy} LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
 

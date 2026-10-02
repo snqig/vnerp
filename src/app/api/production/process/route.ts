@@ -33,8 +33,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       pc.create_user_name,
       pc.create_time,
       pc.update_time,
-      sc.customer_name,
-      sc.customer_code,
+      w.customer_name,
+      '' as customer_code,
       sc.process_flow1,
       sc.process_flow2,
       sc.print_type,
@@ -42,7 +42,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       sc.film_code,
       sc.mold_code
     FROM prd_process_card pc
-    LEFT JOIN prd_standard_card sc ON pc.product_code = sc.card_no
+    LEFT JOIN prod_work_order w ON pc.work_order_id = w.id
+    LEFT JOIN prd_standard_card sc ON pc.product_name = sc.product_name
     WHERE pc.deleted = 0 AND pc.burdening_status >= 1
   `;
 
