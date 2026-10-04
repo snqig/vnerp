@@ -5715,6 +5715,7 @@
     "warehouse_cutting": "Quản lý Cắt",
     "warehouse_transfer": "Điều chuyển kho",
     "warehouse_stocktaking": "Kiểm kê kho",
+    "pad_scan": "Trạm quét Pad",
     "warehouse_stock_adjust": "Điều chỉnh kho",
     "warehouse_production_inbound": "Nhập kho SX",
     "warehouse_sales_outbound": "Xuất kho Bán hàng",

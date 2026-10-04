@@ -5718,6 +5718,7 @@
     "warehouse_cutting": "Cutting Management",
     "warehouse_transfer": "Stock Transfer",
     "warehouse_stocktaking": "Stocktaking",
+    "pad_scan": "Pad Scan Station",
     "warehouse_stock_adjust": "Stock Adjustment",
     "warehouse_production_inbound": "Production Inbound",
     "warehouse_sales_outbound": "Sales Outbound",

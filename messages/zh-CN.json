@@ -5742,6 +5742,7 @@
     "warehouse_cutting": "分切管理",
     "warehouse_transfer": "库存调拨",
     "warehouse_stocktaking": "库存盘点",
+    "pad_scan": "Pad 扫码工作站",
     "warehouse_stock_adjust": "库存调整",
     "warehouse_production_inbound": "生产入库",
     "warehouse_sales_outbound": "销售出库",

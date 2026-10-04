@@ -5715,6 +5715,7 @@
     "warehouse_cutting": "分切管理",
     "warehouse_transfer": "庫存調撥",
     "warehouse_stocktaking": "庫存盤點",
+    "pad_scan": "Pad 掃碼工作站",
     "warehouse_stock_adjust": "庫存調整",
     "warehouse_production_inbound": "生產入庫",
     "warehouse_sales_outbound": "銷售出庫",
