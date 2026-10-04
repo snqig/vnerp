@@ -22,6 +22,7 @@ import {
   CircleDot,
   ClipboardList,
   CheckCircle2,
+  Truck,
 } from 'lucide-react';
 
 type TraceTimelineItem = {
@@ -38,7 +39,24 @@ type TraceData = {
   timeline: TraceTimelineItem[];
 };
 
-type Mode = 'trace' | 'stocktake';
+type Mode = 'trace' | 'stocktake' | 'outbound';
+
+type OutboundItem = {
+  id: number;
+  materialName?: string;
+  batchNo?: string;
+  qty?: number;
+  unit?: string;
+  specification?: string;
+};
+
+type OutboundOrder = {
+  id: number;
+  orderNo: string;
+  status?: string | number;
+  warehouseName?: string;
+  items: OutboundItem[];
+};
 
 export default function PadScanPage() {
   const t = useTranslations('PadScan');
@@ -62,17 +80,20 @@ export default function PadScanPage() {
       </header>
 
       {/* 模式切换：触屏大按钮 */}
-      <div className="grid grid-cols-2 gap-2 px-4 pt-3">
+      <div className="grid grid-cols-3 gap-2 px-4 pt-3">
         <ModeButton active={mode === 'trace'} onClick={() => setMode('trace')} icon={<CircleDot className="h-4 w-4" />}>
           {useTranslations('QRCode')('trace')}
         </ModeButton>
         <ModeButton active={mode === 'stocktake'} onClick={() => setMode('stocktake')} icon={<ClipboardList className="h-4 w-4" />}>
           {t('modeStocktake')}
         </ModeButton>
+        <ModeButton active={mode === 'outbound'} onClick={() => setMode('outbound')} icon={<Truck className="h-4 w-4" />}>
+          {t('modeOutbound')}
+        </ModeButton>
       </div>
 
       <main className="flex-1 grid gap-4 p-4 lg:grid-cols-2">
-        {mode === 'trace' ? <TraceMode /> : <StocktakeMode />}
+        {mode === 'trace' ? <TraceMode /> : mode === 'stocktake' ? <StocktakeMode /> : <OutboundMode />}
       </main>
     </div>
   );
@@ -560,6 +581,238 @@ function StocktakeMode() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+      </section>
+    </>
+  );
+}
+
+/* ============================ 出库拣货 / outbound-pick ============================ */
+
+function OutboundMode() {
+  const t = useTranslations('PadScan');
+  const tc = useTranslations('Common');
+
+  const [orderNo, setOrderNo] = useState('');
+  const [order, setOrder] = useState<OutboundOrder | null>(null);
+  const [picked, setPicked] = useState<Set<number>>(new Set());
+  const [scanned, setScanned] = useState<TraceData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [result, setResult] = useState<Record<string, any> | null>(null);
+
+  const loadOrder = useCallback(async () => {
+    const no = orderNo.trim();
+    setError(null);
+    setOrder(null);
+    setPicked(new Set());
+    setScanned(null);
+    setResult(null);
+    if (!no) {
+      setError(t('enterOrderNo'));
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await authFetch(
+        '/api/warehouse/outbound?keyword=' + encodeURIComponent(no) + '&page=1&pageSize=20'
+      );
+      const j = await res.json();
+      const list: OutboundOrder[] = j?.data?.list || j?.data?.records || j?.data?.items || [];
+      const found = list.find((o) => o.orderNo === no) || list[0];
+      if (!found) {
+        setError(t('orderNotFound'));
+        return;
+      }
+      setOrder(found);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [orderNo, t]);
+
+  // 扫码拣货：解析双轨 → 按 batchNo（回退 materialName）匹配未拣明细 → 标记已拣
+  const handleScan = useCallback(
+    async (code: string) => {
+      setError(null);
+      setScanned(null);
+      if (!order) return;
+      try {
+        const res = await authFetch('/api/qrcode/unified-trace?content=' + encodeURIComponent(code));
+        const j = await res.json();
+        const data: TraceData | null = j?.success && j.data ? j.data : null;
+        setScanned(data);
+        if (!data) return;
+        const scanBatch = data.qr?.batch_no || data.label?.batch_no || '';
+        const scanMat = data.qr?.material_name || data.label?.material_name || '';
+        const items = order.items || [];
+        let idx = -1;
+        if (scanBatch) idx = items.findIndex((it, i) => !picked.has(i) && it.batchNo === scanBatch);
+        if (idx < 0 && scanMat) idx = items.findIndex((it, i) => !picked.has(i) && it.materialName === scanMat);
+        if (idx >= 0) {
+          setPicked((prev) => new Set(prev).add(idx));
+        } else {
+          const inOrder = scanBatch
+            ? items.some((it) => it.batchNo === scanBatch)
+            : items.some((it) => it.materialName === scanMat);
+          setError(inOrder ? t('alreadyPicked') : t('notInOrder'));
+        }
+      } catch {
+        // 溯源失败不阻塞拣货
+      }
+    },
+    [order, picked, t]
+  );
+
+  const confirmOutbound = useCallback(async () => {
+    if (!order) {
+      setError(t('noOrder'));
+      return;
+    }
+    setConfirming(true);
+    setError(null);
+    try {
+      const res = await authFetch('/api/warehouse/outbound/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: order.id }),
+      });
+      const j = await res.json();
+      if (j.success) {
+        setResult(j.data);
+      } else {
+        setError(j.message || t('confirmFailed'));
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setConfirming(false);
+    }
+  }, [order, t]);
+
+  const total = order?.items?.length ?? 0;
+  const done = picked.size;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  return (
+    <>
+      <section className="flex flex-col">
+        <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+          <Truck className="h-4 w-4" />
+          {t('outboundOrder')}
+        </div>
+        <div className="flex gap-2">
+          <Input
+            placeholder={t('enterOrderNo')}
+            value={orderNo}
+            onChange={(e) => setOrderNo(e.target.value)}
+            className="font-mono"
+          />
+          <Button onClick={loadOrder} disabled={!orderNo.trim() || loading}>
+            {t('loadOutbound')}
+          </Button>
+        </div>
+        {order && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            {order.orderNo} · {order.warehouseName || '-'}
+          </p>
+        )}
+        <div className="mt-3">
+          <QRCodeScanner
+            scanMode="outbound"
+            autoFocus={order != null}
+            onScan={handleScan}
+            placeholder={t('pickToStart')}
+            className="flex-1"
+            disabled={order == null}
+            offlineSupport
+          />
+        </div>
+        {scanned && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            {scanned.qr?.material_name || scanned.label?.material_name || scanned.qr?.qr_code || ''}
+          </p>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        {error && (
+          <Card>
+            <CardContent className="p-4 text-center text-destructive">{error}</CardContent>
+          </Card>
+        )}
+
+        {!order && !error && (
+          <Card className="flex-1">
+            <CardContent className="flex h-full min-h-[160px] items-center justify-center p-8 text-center text-muted-foreground">
+              {t('enterOrderNo')}
+            </CardContent>
+          </Card>
+        )}
+
+        {order && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center justify-between text-base">
+                <span className="flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  {t('pickList')}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {t('pickProgress', { done, total })}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+              </div>
+              <ul className="space-y-1">
+                {(order.items || []).map((it, i) => (
+                  <li
+                    key={it.id ?? i}
+                    className={`flex items-center justify-between gap-2 rounded px-2 py-1 text-sm ${
+                      picked.has(i) ? 'bg-green-500/10' : 'bg-muted/50'
+                    }`}
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      {picked.has(i) ? (
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <span className="h-4 w-4 shrink-0 rounded-full border" />
+                      )}
+                      <span className="truncate">{it.materialName || '-'}</span>
+                    </span>
+                    <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                      {it.batchNo || '-'} × {it.qty ?? '-'}{it.unit || ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <Button
+                onClick={confirmOutbound}
+                disabled={confirming}
+                className="w-full gap-1"
+              >
+                {confirming ? <Clock className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                {t('confirmOutbound')}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {result && (
+          <Card>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex items-center gap-2 font-medium text-green-700 dark:text-green-400">
+                <CheckCircle2 className="h-4 w-4" />
+                {t('outboundDone')}
+              </div>
+              <Field label={t('deductBatches')} value={String(result.totalDeductedBatches ?? '-')} />
             </CardContent>
           </Card>
         )}

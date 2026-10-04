@@ -9811,7 +9811,21 @@
     "scanToStart": "Quét mã QR vật tư để bắt đầu kiểm",
     "stocktakeSaved": "Đã lưu kiểm kê",
     "offlineQueued": "Đã lưu ngoại tuyến, sẽ đồng bộ khi có mạng",
-    "pendingSync": "Chờ đồng bộ ({count})"
+    "pendingSync": "Chờ đồng bộ ({count})",
+    "modeOutbound": "Xuất kho",
+    "outboundOrder": "Đơn xuất kho",
+    "enterOrderNo": "Nhập số đơn xuất kho",
+    "loadOutbound": "Tải",
+    "orderNotFound": "Không tìm thấy đơn xuất kho",
+    "pickList": "Danh sách lấy hàng",
+    "pickProgress": "Đã lấy {done}/{total}",
+    "notInOrder": "Vật tư không thuộc đơn này",
+    "alreadyPicked": "Đã lấy rồi",
+    "confirmOutbound": "Xác nhận xuất kho",
+    "confirmFailed": "Xác nhận thất bại",
+    "outboundDone": "Xuất kho thành công",
+    "deductBatches": "Số lô đã trừ",
+    "pickToStart": "Quét QR vật tư để bắt đầu lấy hàng"
   },
   "DieTemplate": {
     "add": "Thêm",

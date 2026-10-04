@@ -9805,7 +9805,21 @@
     "scanToStart": "掃描物料二維碼開始盤點",
     "stocktakeSaved": "盤點記錄已保存",
     "offlineQueued": "離線已暫存，連網後自動同步",
-    "pendingSync": "待同步 {count}"
+    "pendingSync": "待同步 {count}",
+    "modeOutbound": "出庫",
+    "outboundOrder": "出庫單",
+    "enterOrderNo": "請輸入出庫單號",
+    "loadOutbound": "載入",
+    "orderNotFound": "未找到出庫單",
+    "pickList": "揀貨清單",
+    "pickProgress": "已揀 {done}/{total}",
+    "notInOrder": "該物料不在本單",
+    "alreadyPicked": "該物料已揀過",
+    "confirmOutbound": "確認出庫",
+    "confirmFailed": "確認出庫失敗",
+    "outboundDone": "出庫成功",
+    "deductBatches": "扣減批次",
+    "pickToStart": "掃描物料二維碼開始揀貨"
   },
   "DieTemplate": {
     "add": "新增",

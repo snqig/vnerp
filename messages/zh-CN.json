@@ -9868,7 +9868,21 @@
     "scanToStart": "扫描物料二维码开始盘点",
     "stocktakeSaved": "盘点记录已保存",
     "offlineQueued": "离线已暂存，联网后自动同步",
-    "pendingSync": "待同步 {count}"
+    "pendingSync": "待同步 {count}",
+    "modeOutbound": "出库",
+    "outboundOrder": "出库单",
+    "enterOrderNo": "请输入出库单号",
+    "loadOutbound": "载入",
+    "orderNotFound": "未找到出库单",
+    "pickList": "拣货清单",
+    "pickProgress": "已拣 {done}/{total}",
+    "notInOrder": "该物料不在本单",
+    "alreadyPicked": "该物料已拣过",
+    "confirmOutbound": "确认出库",
+    "confirmFailed": "确认出库失败",
+    "outboundDone": "出库成功",
+    "deductBatches": "扣减批次",
+    "pickToStart": "扫描物料二维码开始拣货"
   },
   "DieTemplate": {
     "add": "新增",

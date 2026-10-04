@@ -9842,7 +9842,21 @@
     "scanToStart": "Scan a material QR to start counting",
     "stocktakeSaved": "Count recorded",
     "offlineQueued": "Saved offline, will sync when back online",
-    "pendingSync": "Pending sync ({count})"
+    "pendingSync": "Pending sync ({count})",
+    "modeOutbound": "Outbound",
+    "outboundOrder": "Outbound Order",
+    "enterOrderNo": "Enter outbound order no.",
+    "loadOutbound": "Load",
+    "orderNotFound": "Outbound order not found",
+    "pickList": "Pick List",
+    "pickProgress": "Picked {done}/{total}",
+    "notInOrder": "Item not in this order",
+    "alreadyPicked": "Already picked",
+    "confirmOutbound": "Confirm Outbound",
+    "confirmFailed": "Confirm failed",
+    "outboundDone": "Outbound done",
+    "deductBatches": "Deducted batches",
+    "pickToStart": "Scan material QR to start picking"
   },
   "DieTemplate": {
     "add": "Add",
