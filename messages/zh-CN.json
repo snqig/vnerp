@@ -9865,7 +9865,9 @@
     "scannedMaterial": "已扫物料",
     "noOrder": "请先载入盘点单",
     "scanToStart": "扫描物料二维码开始盘点",
-    "stocktakeSaved": "盘点记录已保存"
+    "stocktakeSaved": "盘点记录已保存",
+    "offlineQueued": "离线已暂存，联网后自动同步",
+    "pendingSync": "待同步 {count}"
   },
   "DieTemplate": {
     "add": "新增",

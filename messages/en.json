@@ -9839,7 +9839,9 @@
     "scannedMaterial": "Scanned Material",
     "noOrder": "Load a stocktake order first",
     "scanToStart": "Scan a material QR to start counting",
-    "stocktakeSaved": "Count recorded"
+    "stocktakeSaved": "Count recorded",
+    "offlineQueued": "Saved offline, will sync when back online",
+    "pendingSync": "Pending sync ({count})"
   },
   "DieTemplate": {
     "add": "Add",

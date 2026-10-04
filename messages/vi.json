@@ -9808,7 +9808,9 @@
     "scannedMaterial": "Vật tư đã quét",
     "noOrder": "Vui lòng tải phiếu kiểm kê trước",
     "scanToStart": "Quét mã QR vật tư để bắt đầu kiểm",
-    "stocktakeSaved": "Đã lưu kiểm kê"
+    "stocktakeSaved": "Đã lưu kiểm kê",
+    "offlineQueued": "Đã lưu ngoại tuyến, sẽ đồng bộ khi có mạng",
+    "pendingSync": "Chờ đồng bộ ({count})"
   },
   "DieTemplate": {
     "add": "Thêm",

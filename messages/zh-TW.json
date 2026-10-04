@@ -9802,7 +9802,9 @@
     "scannedMaterial": "已掃物料",
     "noOrder": "請先載入盤點單",
     "scanToStart": "掃描物料二維碼開始盤點",
-    "stocktakeSaved": "盤點記錄已保存"
+    "stocktakeSaved": "盤點記錄已保存",
+    "offlineQueued": "離線已暫存，連網後自動同步",
+    "pendingSync": "待同步 {count}"
   },
   "DieTemplate": {
     "add": "新增",

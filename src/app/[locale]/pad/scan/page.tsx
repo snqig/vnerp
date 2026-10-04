@@ -170,7 +170,7 @@ function TraceMode() {
           <CircleDot className="h-4 w-4" />
           {t('scanHint')}
         </div>
-        <QRCodeScanner scanMode="query" autoFocus onScan={handleScan} placeholder={t('scanHint')} className="flex-1" />
+        <QRCodeScanner scanMode="query" autoFocus onScan={handleScan} placeholder={t('scanHint')} className="flex-1" offlineSupport />
       </section>
 
       <section className="flex flex-col">
@@ -475,6 +475,7 @@ function StocktakeMode() {
             placeholder={t('scanToStart')}
             className="flex-1"
             disabled={activeOrder == null}
+            offlineSupport
           />
         </div>
       </section>
