@@ -9825,7 +9825,21 @@
     "labelNo": "Label No.",
     "remainingWidth": "Remaining Width",
     "trackLabel": "Print Label Track",
-    "trackQr": "Generic QR Track"
+    "trackQr": "Generic QR Track",
+    "modeStocktake": "Stocktake",
+    "stocktakeOrder": "Stocktake Order",
+    "enterOrderId": "Enter stocktake order ID",
+    "loadOrder": "Load",
+    "orderLoaded": "Loaded stocktake order #{id}",
+    "actualQty": "Actual Qty",
+    "bookQty": "Book Qty",
+    "diff": "Variance",
+    "progress": "Progress",
+    "confirmStocktake": "Confirm Count",
+    "scannedMaterial": "Scanned Material",
+    "noOrder": "Load a stocktake order first",
+    "scanToStart": "Scan a material QR to start counting",
+    "stocktakeSaved": "Count recorded"
   },
   "DieTemplate": {
     "add": "Add",

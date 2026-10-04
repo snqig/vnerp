@@ -9788,7 +9788,21 @@
     "labelNo": "標籤號",
     "remainingWidth": "剩餘寬幅",
     "trackLabel": "印廠標籤軌",
-    "trackQr": "通用二維碼軌"
+    "trackQr": "通用二維碼軌",
+    "modeStocktake": "盤點",
+    "stocktakeOrder": "盤點單號",
+    "enterOrderId": "請輸入盤點單 ID",
+    "loadOrder": "載入",
+    "orderLoaded": "已載入盤點單 #{id}",
+    "actualQty": "實盤數量",
+    "bookQty": "帳面數量",
+    "diff": "差異",
+    "progress": "進度",
+    "confirmStocktake": "確認盤點",
+    "scannedMaterial": "已掃物料",
+    "noOrder": "請先載入盤點單",
+    "scanToStart": "掃描物料二維碼開始盤點",
+    "stocktakeSaved": "盤點記錄已保存"
   },
   "DieTemplate": {
     "add": "新增",

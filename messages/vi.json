@@ -9794,7 +9794,21 @@
     "labelNo": "Mã nhãn",
     "remainingWidth": "Bề rộng còn lại",
     "trackLabel": "Luồng nhãn in",
-    "trackQr": "Luồng mã QR chung"
+    "trackQr": "Luồng mã QR chung",
+    "modeStocktake": "Kiểm kê",
+    "stocktakeOrder": "Phiếu kiểm kê",
+    "enterOrderId": "Nhập ID phiếu kiểm kê",
+    "loadOrder": "Tải",
+    "orderLoaded": "Đã tải phiếu kiểm kê #{id}",
+    "actualQty": "SL thực tế",
+    "bookQty": "SL sổ sách",
+    "diff": "Chênh lệch",
+    "progress": "Tiến độ",
+    "confirmStocktake": "Xác nhận kiểm",
+    "scannedMaterial": "Vật tư đã quét",
+    "noOrder": "Vui lòng tải phiếu kiểm kê trước",
+    "scanToStart": "Quét mã QR vật tư để bắt đầu kiểm",
+    "stocktakeSaved": "Đã lưu kiểm kê"
   },
   "DieTemplate": {
     "add": "Thêm",

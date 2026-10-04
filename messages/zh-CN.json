@@ -9851,7 +9851,21 @@
     "labelNo": "标签号",
     "remainingWidth": "剩余宽幅",
     "trackLabel": "印厂标签轨",
-    "trackQr": "通用二维码轨"
+    "trackQr": "通用二维码轨",
+    "modeStocktake": "盘点",
+    "stocktakeOrder": "盘点单号",
+    "enterOrderId": "请输入盘点单 ID",
+    "loadOrder": "载入",
+    "orderLoaded": "已载入盘点单 #{id}",
+    "actualQty": "实盘数量",
+    "bookQty": "账面数量",
+    "diff": "差异",
+    "progress": "进度",
+    "confirmStocktake": "确认盘点",
+    "scannedMaterial": "已扫物料",
+    "noOrder": "请先载入盘点单",
+    "scanToStart": "扫描物料二维码开始盘点",
+    "stocktakeSaved": "盘点记录已保存"
   },
   "DieTemplate": {
     "add": "新增",
