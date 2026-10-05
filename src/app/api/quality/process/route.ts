@@ -158,6 +158,19 @@ export const POST = withPermission(
       return errorResponse(ts('invalidInspectResult', { value: inspectResult }), 400);
     }
 
+    // 关联完整性：cardId 必须真实存在，且 cardNo 必须与该卡实际卡号一致（防跨系统关联断裂）
+    const cardRows = await query<{ id: number; card_no: string }>(
+      'SELECT id, card_no FROM prd_process_card WHERE id = ? AND deleted = 0',
+      [cardId]
+    );
+    const card = cardRows[0];
+    if (!card) {
+      return errorResponse(ts('k_1emlkd9'), 404);
+    }
+    if (card.card_no !== cardNo) {
+      return errorResponse(ts('cardNoMismatch'), 400);
+    }
+
     // 状态机验证
     const currentStatus = await getCurrentInspectStatus(cardNo);
     const targetStatus = inspectResult as InspectStatus;
