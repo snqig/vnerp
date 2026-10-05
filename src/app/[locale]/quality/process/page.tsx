@@ -44,13 +44,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { StandardTable, StandardTableColumn } from '@/components/common';
 import { getQualityStatusBadge, getQualityStatusLabel } from '@/lib/quality-status';
+import { QualityInspectDialog } from '@/components/quality/QualityInspectDialog';
 import {
   Search,
   MoreHorizontal,
   Eye,
   CheckCircle,
-  XCircle,
-  AlertTriangle,
   ClipboardCheck,
   TrendingUp,
   Calendar,
@@ -59,9 +58,6 @@ import {
   QrCode,
   Clock,
   Shield,
-  Award,
-  RefreshCw,
-  Trash2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
@@ -328,16 +324,6 @@ export default function QualityProcessPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // 切换检验项目
-  const toggleInspectItem = (itemId: string) => {
-    setInspectForm((prev) => ({
-      ...prev,
-      checkedItems: prev.checkedItems.includes(itemId)
-        ? prev.checkedItems.filter((id) => id !== itemId)
-        : [...prev.checkedItems, itemId],
-    }));
   };
 
   // 查看二维码
@@ -753,226 +739,33 @@ export default function QualityProcessPage() {
           </DialogContent>
         </Dialog>
 
-        {/* 检验对话框 */}
-        <Dialog open={isInspectOpen} onOpenChange={setIsInspectOpen}>
-          <DialogContent className="max-w-2xl" resizable>
-            {selectedProcess && (
-              <>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Award className="h-5 w-5" />
-                    {t('processInspection')}: {selectedProcess.card_no}
-                  </DialogTitle>
-                  <DialogDescription>{t('recordInspectionResult')}</DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-6 py-4">
-                  {/* 流程卡信息 */}
-                  <div className="bg-muted rounded-lg p-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">{tc('product')}:</span>
-                        <span className="ml-2 font-medium">{selectedProcess.product_name}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">{tc('customer')}:</span>
-                        <span className="ml-2">{selectedProcess.customer_name}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">{tc('specification')}:</span>
-                        <span className="ml-2">
-                          {selectedProcess.finished_size} ({selectedProcess.tolerance})
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">{t('planQty')}:</span>
-                        <span className="ml-2">
-                          {(selectedProcess.plan_qty ?? 0).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 检验项目 */}
-                  <div className="space-y-3">
-                    <Label>{t('inspectionItems')}</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {inspectItems.map((item) => (
-                        <div key={item.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={item.id}
-                            checked={inspectForm.checkedItems.includes(item.id)}
-                            onCheckedChange={() => toggleInspectItem(item.id)}
-                          />
-                          <label
-                            htmlFor={item.id}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            {item.name}
-                            {item.required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 检验结果 */}
-                  <div className="space-y-3">
-                    <Label>{t('inspectionResult')}</Label>
-                    <Select
-                      value={inspectForm.result}
-                      onValueChange={(value) => setInspectForm({ ...inspectForm, result: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('selectInspectionResult')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pass">
-                          <div className="flex items-center">
-                            <CheckCircle className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
-                            {tc('qualified')}
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="fail">
-                          <div className="flex items-center">
-                            <XCircle className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />
-                            {tc('unqualified')}
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="concession">
-                          <div className="flex items-center">
-                            <AlertTriangle className="h-4 w-4 mr-2 text-orange-600 dark:text-orange-400" />
-                            {t('concessionAccept')}
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="rework">
-                          <div className="flex items-center">
-                            <RefreshCw className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-400" />
-                            {t('rework')}
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="scrap">
-                          <div className="flex items-center">
-                            <Trash2 className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />
-                            {t('scrap')}
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* 数量 */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <Label>{t('qualifiedQty')}</Label>
-                      <Input
-                        type="number"
-                        value={inspectForm.qualifiedQty}
-                        onChange={(e) =>
-                          setInspectForm({
-                            ...inspectForm,
-                            qualifiedQty: parseInt(e.target.value) || 0,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <Label>{t('defectQty')}</Label>
-                      <Input
-                        type="number"
-                        value={inspectForm.defectQty}
-                        onChange={(e) =>
-                          setInspectForm({
-                            ...inspectForm,
-                            defectQty: parseInt(e.target.value) || 0,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  {/* 不良类型 */}
-                  {inspectForm.defectQty > 0 && (
-                    <div className="space-y-3">
-                      <Label>{t('defectType')}</Label>
-                      <Select
-                        value={inspectForm.defectType}
-                        onValueChange={(value) =>
-                          setInspectForm({ ...inspectForm, defectType: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('selectDefectType')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="size">{t('sizeDefect')}</SelectItem>
-                          <SelectItem value="color">{t('colorDefect')}</SelectItem>
-                          <SelectItem value="adhesion">{t('adhesionDefect')}</SelectItem>
-                          <SelectItem value="appearance">{t('appearanceDefect')}</SelectItem>
-                          <SelectItem value="printing">{t('printingDefect')}</SelectItem>
-                          <SelectItem value="other">{tc('other')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {/* 检验员 */}
-                  <div className="space-y-3">
-                    <Label>{t('inspector')}</Label>
-                    {employeeOptions.length > 0 ? (
-                      <Select
-                        value={inspectForm.inspector}
-                        onValueChange={(value) =>
-                          setInspectForm({ ...inspectForm, inspector: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('enterInspectorName')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {employeeOptions.map((emp) => (
-                            <SelectItem key={emp.employee_no} value={emp.name}>
-                              {employeeLabel(emp)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Input
-                        placeholder={t('enterInspectorName')}
-                        value={inspectForm.inspector}
-                        onChange={(e) =>
-                          setInspectForm({ ...inspectForm, inspector: e.target.value })
-                        }
-                      />
-                    )}
-                  </div>
-
-                  {/* 备注 */}
-                  <div className="space-y-3">
-                    <Label>{tc('remark')}</Label>
-                    <Textarea
-                      placeholder={t('enterInspectionRemark')}
-                      value={inspectForm.remark}
-                      onChange={(e) => setInspectForm({ ...inspectForm, remark: e.target.value })}
-                      rows={3}
-                    />
-                  </div>
-
-                  {/* 操作按钮 */}
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsInspectOpen(false)}>
-                      {tc('cancel')}
-                    </Button>
-                    <Button onClick={handleSubmitInspect} disabled={loading}>
-                      {loading ? tc('submitting') : t('submitInspection')}
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
+        {/* 检验对话框（共用组件） */}
+        <QualityInspectDialog
+          open={isInspectOpen}
+          onOpenChange={setIsInspectOpen}
+          type="process"
+          title={`${t('processInspection')}: ${selectedProcess?.card_no}`}
+          description={t('recordInspectionResult')}
+          card={selectedProcess}
+          items={inspectItems}
+          form={inspectForm}
+          onChange={(patch) => setInspectForm((prev) => ({ ...prev, ...patch }))}
+          defectFieldName="defectType"
+          defectOptions={[
+            { value: 'size', label: t('sizeDefect') },
+            { value: 'color', label: t('colorDefect') },
+            { value: 'adhesion', label: t('adhesionDefect') },
+            { value: 'appearance', label: t('appearanceDefect') },
+            { value: 'printing', label: t('printingDefect') },
+            { value: 'other', label: tc('other') },
+          ]}
+          employeeOptions={employeeOptions}
+          employeeLabel={employeeLabel}
+          onSubmit={handleSubmitInspect}
+          loading={loading}
+          t={t}
+          tc={tc}
+        />
 
         {/* 检验报告对话框 */}
         <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
