@@ -1,8 +1,7 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useEmployeeOptions, employeeLabel } from '@/hooks/useEmployeeOptions';
 import { MainLayout } from '@/components/layout';
 import QRCode from 'qrcode';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,7 +41,8 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { StandardTable, StandardTableColumn } from '@/components/common';
+import { getQualityStatusBadge, getQualityStatusLabel } from '@/lib/quality-status';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import {
   Search,
@@ -62,6 +62,8 @@ import {
   Award,
   Percent,
   Download,
+  RefreshCw,
+  Trash2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
@@ -117,31 +119,8 @@ export default function QualityFinalPage() {
   const finalInspectItems = getFinalInspectItems(t);
 
   // 获取状态标签
-  const getStatusBadge = (status: number) => {
-    const statusMap: Record<number, { label: string; className: string }> = {
-      0: {
-        label: t('pendingProduction'),
-        className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-      },
-      1: {
-        label: t('scheduled'),
-        className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-      },
-      2: {
-        label: t('pendingFinalInspection'),
-        className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-      },
-      3: {
-        label: t('finalInspectionCompleted'),
-        className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-      },
-    };
-    const config = statusMap[status] || {
-      label: tc('unknown'),
-      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-    };
-    return <Badge className={config.className}>{config.label}</Badge>;
-  };
+  const getStatusBadge = (status: number) =>
+    getQualityStatusBadge(status, 'final', t, tc);
 
   const [stats, setStats] = useState({
     pending: 0,
@@ -241,6 +220,8 @@ export default function QualityFinalPage() {
     remark: '',
     checkedItems: [] as string[],
   });
+  // 终检员下拉：库内在职真实人员（禁手输，回退见表单区）
+  const employeeOptions = useEmployeeOptions();
 
   // 筛选终检
   const filteredFinals = finals.filter((final) => {
@@ -263,16 +244,8 @@ export default function QualityFinalPage() {
     return true;
   });
 
-  const {
-    sortField,
-    sortDirection,
-    handleSort,
-    sortedData: _sortedFinalInspects,
-  } = useTableSort(filteredFinals, 'id');
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    filteredFinals,
-    (r) => String(r.id)
-  );
+  const sortedFinals = useMemo(() => filteredFinals, [filteredFinals]);
+  const [selectedRows, setSelectedRows] = useState<FinalInspect[]>([]);
 
   // 查看详情
   const handleViewDetail = (final: FinalInspect) => {
@@ -447,20 +420,12 @@ export default function QualityFinalPage() {
                       key: 'burdening_status',
                       label: tc('status'),
                       width: 12,
-                      formatter: (v) => {
-                        const m: Record<number, string> = {
-                          0: t('pendingProduction'),
-                          1: t('scheduled'),
-                          2: t('pendingFinalInspection'),
-                          3: t('finalInspectionCompleted'),
-                        };
-                        return m[v] || tc('unknown');
-                      },
+                      formatter: (v) => getQualityStatusLabel(Number(v), 'final', t, tc),
                     },
                   ]}
                   data={
-                    selectedCount > 0
-                      ? filteredFinals.filter((f) => isSelected(String(f.id)))
+                    selectedRows.length > 0
+                      ? filteredFinals.filter((f) => selectedRows.some((sr) => sr.id === f.id))
                       : filteredFinals
                   }
                 />
@@ -486,146 +451,142 @@ export default function QualityFinalPage() {
           <TabsContent value={activeTab} className="mt-4">
             <Card>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                      </TableHead>
-                      <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
-                      <SortableTableHeader
-                        field="card_no"
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      >
-                        {t('cardNo')}
-                      </SortableTableHeader>
-                      <SortableTableHeader
-                        field="product_name"
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      >
-                        {t('productInfo')}
-                      </SortableTableHeader>
-                      <TableHead>{tc('customer')}</TableHead>
-                      <TableHead>{t('specificationRequirement')}</TableHead>
-                      <TableHead>{tc('quantity')}</TableHead>
-                      <TableHead>{t('packagingMethod')}</TableHead>
-                      <SortableTableHeader
-                        field="status"
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      >
-                        {tc('status')}
-                      </SortableTableHeader>
-                      <TableHead>{tc('actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredFinals.map((final: FinalInspect, index: number) => (
-                      <TableRow key={final.id}>
-                        <TableCell>
-                          <Checkbox
-                            checked={isSelected(String(final.id))}
-                            onCheckedChange={() => toggle(String(final.id))}
-                          />
-                        </TableCell>
-                        <TableCell className="text-center text-muted-foreground">
-                          {index + 1}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          <div className="flex flex-col">
-                            <span>{final.card_no}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {final.work_order_no}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{final.product_name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {final.material_spec}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {final.print_type}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span>{final.customer_name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {final.customer_code}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col text-sm">
-                            <span>
-                              {t('size')}: {final.finished_size}
-                            </span>
-                            <span>
-                              {t('tolerance')}: {final.tolerance}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{(final.plan_qty ?? 0).toLocaleString()}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-col text-sm">
-                            <span>{final.packing_type}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {final.slice_per_box}
-                              {t('slicePerBox')}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(final.burdening_status)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleViewDetail(final)}
-                            >
-                              <Eye className="h-4 w-4" />
+                <StandardTable<FinalInspect>
+                  rowSelectable
+                  selectedRows={selectedRows}
+                  onRowSelectedChange={(rows) => setSelectedRows(rows)}
+                  dataSource={sortedFinals}
+                  columns={[
+                    {
+                      key: 'serialNo',
+                      title: tc('serialNo'),
+                      width: 48,
+                      align: 'center',
+                      render: (_row, index) => (
+                        <span className="text-muted-foreground">{index + 1}</span>
+                      ),
+                    },
+                    {
+                      key: 'card_no',
+                      title: t('cardNo'),
+                      sortable: true,
+                      render: (final) => (
+                        <div className="flex flex-col">
+                          <span className="font-medium">{final.card_no}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {final.work_order_no}
+                          </span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'product_name',
+                      title: t('productInfo'),
+                      sortable: true,
+                      render: (final) => (
+                        <div className="flex flex-col">
+                          <span className="font-medium">{final.product_name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {final.material_spec}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{final.print_type}</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'customer',
+                      title: tc('customer'),
+                      render: (final) => (
+                        <div className="flex flex-col">
+                          <span>{final.customer_name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {final.customer_code}
+                          </span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'specification',
+                      title: t('specificationRequirement'),
+                      render: (final) => (
+                        <div className="flex flex-col text-sm">
+                          <span>
+                            {t('size')}: {final.finished_size}
+                          </span>
+                          <span>
+                            {t('tolerance')}: {final.tolerance}
+                          </span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'quantity',
+                      title: tc('quantity'),
+                      render: (final) => (final.plan_qty ?? 0).toLocaleString(),
+                    },
+                    {
+                      key: 'packaging',
+                      title: t('packagingMethod'),
+                      render: (final) => (
+                        <div className="flex flex-col text-sm">
+                          <span>{final.packing_type}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {final.slice_per_box}
+                            {t('slicePerBox')}
+                          </span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'status',
+                      title: tc('status'),
+                      sortable: true,
+                      render: (final) => getStatusBadge(final.burdening_status),
+                    },
+                    {
+                      key: 'actions',
+                      title: tc('actions'),
+                      render: (final) => (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewDetail(final)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {final.burdening_status === 2 && (
+                            <Button size="sm" onClick={() => handleStartFinal(final)}>
+                              <ClipboardCheck className="h-4 w-4 mr-1" />
+                              {t('finalInspect')}
                             </Button>
-                            {final.burdening_status === 2 && (
-                              <Button size="sm" onClick={() => handleStartFinal(final)}>
-                                <ClipboardCheck className="h-4 w-4 mr-1" />
-                                {t('finalInspect')}
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
                               </Button>
-                            )}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleViewDetail(final)}>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  {t('viewDetail')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleViewQRCode(final)}>
-                                  <QrCode className="h-4 w-4 mr-2" />
-                                  {t('viewQRCode')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleViewDetail(final)}>
-                                  <FileText className="h-4 w-4 mr-2" />
-                                  {t('finalInspectionRecords')}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleViewDetail(final)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                {t('viewDetail')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewQRCode(final)}>
+                                <QrCode className="h-4 w-4 mr-2" />
+                                {t('viewQRCode')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewDetail(final)}>
+                                <FileText className="h-4 w-4 mr-2" />
+                                {t('finalInspectionRecords')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -846,6 +807,18 @@ export default function QualityFinalPage() {
                             {t('concessionAccept')}
                           </div>
                         </SelectItem>
+                        <SelectItem value="rework">
+                          <div className="flex items-center">
+                            <RefreshCw className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-400" />
+                            {t('rework')}
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="scrap">
+                          <div className="flex items-center">
+                            <Trash2 className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />
+                            {t('scrap')}
+                          </div>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -912,11 +885,31 @@ export default function QualityFinalPage() {
 
                   <div className="space-y-3">
                     <Label>{t('finalInspector')}</Label>
-                    <Input
-                      placeholder={t('enterFinalInspectorName')}
-                      value={finalForm.inspector}
-                      onChange={(e) => setFinalForm({ ...finalForm, inspector: e.target.value })}
-                    />
+                    {employeeOptions.length > 0 ? (
+                      <Select
+                        value={finalForm.inspector}
+                        onValueChange={(value) =>
+                          setFinalForm({ ...finalForm, inspector: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('enterFinalInspectorName')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {employeeOptions.map((emp) => (
+                            <SelectItem key={emp.employee_no} value={emp.name}>
+                              {employeeLabel(emp)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        placeholder={t('enterFinalInspectorName')}
+                        value={finalForm.inspector}
+                        onChange={(e) => setFinalForm({ ...finalForm, inspector: e.target.value })}
+                      />
+                    )}
                   </div>
 
                   <div className="space-y-3">
