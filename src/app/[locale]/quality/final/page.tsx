@@ -45,6 +45,7 @@ import { StandardTable, StandardTableColumn } from '@/components/common';
 import { getQualityStatusBadge, getQualityStatusLabel } from '@/lib/quality-status';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { QualityInspectDialog } from '@/components/quality/QualityInspectDialog';
+import { QualityBatchBar } from '@/components/quality/QualityBatchBar';
 import {
   Search,
   MoreHorizontal,
@@ -511,6 +512,11 @@ export default function QualityFinalPage() {
                       render: (final) => (final.plan_qty ?? 0).toLocaleString(),
                     },
                     {
+                      key: 'quality_manager',
+                      title: t('qualityManager'),
+                      render: (final) => final.quality_manager,
+                    },
+                    {
                       key: 'packaging',
                       title: t('packagingMethod'),
                       render: (final) => (
@@ -577,6 +583,18 @@ export default function QualityFinalPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* 批量操作底栏(统一) */}
+        <QualityBatchBar<FinalInspect>
+          selectedRows={selectedRows}
+          allRows={sortedFinals}
+          onSelectedRowsChange={setSelectedRows}
+          labels={{
+            selectedCount: tc('selectedItems', { count: selectedRows.length }),
+            clearSelection: tc('clearSelection'),
+            batchPrint: t('batchPrint'),
+          }}
+        />
 
         {/* 详情对话框 */}
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>

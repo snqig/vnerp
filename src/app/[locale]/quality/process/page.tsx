@@ -45,6 +45,7 @@ import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { StandardTable, StandardTableColumn } from '@/components/common';
 import { getQualityStatusBadge, getQualityStatusLabel } from '@/lib/quality-status';
 import { QualityInspectDialog } from '@/components/quality/QualityInspectDialog';
+import { QualityBatchBar } from '@/components/quality/QualityBatchBar';
 import {
   Search,
   MoreHorizontal,
@@ -53,6 +54,7 @@ import {
   ClipboardCheck,
   TrendingUp,
   Calendar,
+  Percent,
   FileText,
   Printer,
   QrCode,
@@ -96,6 +98,8 @@ interface QualityStats {
   passed: number;
   today: number;
   week: number;
+  /** 异常率(%):burdening_status 为 5(不合格)/6(返工) 的比例 */
+  anomalyRate: number;
 }
 
 // 检验记录接口
@@ -139,6 +143,7 @@ export default function QualityProcessPage() {
     passed: 0,
     today: 0,
     week: 0,
+    anomalyRate: 0,
   });
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isInspectOpen, setIsInspectOpen] = useState(false);
@@ -182,12 +187,16 @@ export default function QualityProcessPage() {
           quality_manager: item.qualityManager || item.quality_manager,
         }));
         setProcesses(list);
+        const anomalyCount = list.filter(
+          (p: QualityProcess) => p.burdening_status === 5 || p.burdening_status === 6,
+        ).length;
         setStats({
           pending: list.filter((p: QualityProcess) => p.burdening_status === 1).length,
           inspecting: list.filter((p: QualityProcess) => p.burdening_status === 2).length,
           passed: list.filter((p: QualityProcess) => p.burdening_status === 3).length,
           today: list.length,
           week: list.length,
+          anomalyRate: list.length > 0 ? Math.round((anomalyCount / list.length) * 100) : 0,
         });
         logger.info({ module: 'Quality', action: 'fetchProcesses' }, ts('k_s0muv8'), {
           count: list.length,
@@ -407,6 +416,7 @@ export default function QualityProcessPage() {
             { key: 'passed', label: t('inspected'), icon: CheckCircle, ...StatsTheme.green },
             { key: 'today', label: t('todayInspection'), icon: Calendar, ...StatsTheme.purple },
             { key: 'week', label: t('weekInspection'), icon: TrendingUp, ...StatsTheme.cyan },
+            { key: 'anomalyRate', label: t('anomalyRate'), icon: Percent, ...StatsTheme.red },
           ]}
           stats={[
             { key: 'pending', count: stats.pending },
@@ -414,8 +424,9 @@ export default function QualityProcessPage() {
             { key: 'passed', count: stats.passed },
             { key: 'today', count: stats.today },
             { key: 'week', count: stats.week },
+            { key: 'anomalyRate', count: stats.anomalyRate, suffix: '%' },
           ]}
-          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          cols={{ mobile: 2, tablet: 3, desktop: 6 }}
         />
 
 
@@ -617,9 +628,21 @@ export default function QualityProcessPage() {
                   ]}
                 />
               </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          {/* 批量操作底栏(统一) */}
+          <QualityBatchBar<QualityProcess>
+            selectedRows={selectedRows}
+            allRows={sortedProcesses}
+            onSelectedRowsChange={setSelectedRows}
+            labels={{
+              selectedCount: tc('selectedItems', { count: selectedRows.length }),
+              clearSelection: tc('clearSelection'),
+              batchPrint: t('batchPrint'),
+            }}
+          />
 
         {/* 详情对话框 */}
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
@@ -817,6 +840,12 @@ export default function QualityProcessPage() {
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.week}</div>
                     <div className="text-sm text-muted-foreground">{t('weekInspection')}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.anomalyRate}%</div>
+                    <div className="text-sm text-muted-foreground">{t('anomalyRate')}</div>
                   </CardContent>
                 </Card>
               </div>
