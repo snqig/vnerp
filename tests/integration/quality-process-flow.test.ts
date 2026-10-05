@@ -15,7 +15,7 @@
  *  A. process POST 不校验 cardId 是否真实存在 → 缺失流程卡时静默成功并写入孤儿 qc_inspection。
  *  B. process POST 不校验 cardNo 与 cardId 实际卡号一致 → 跨系统点线回流断裂（qc_inspection.source_no
  *     与 prd_process_card.card_no 对不上，GET 按 cardId 关联时查不到）。
- *  C. scrap 结果不更新流程卡状态（已知缺口，标注待裁定，不作为硬失败断言）。
+ *  C. scrap 按方案 A 并入 fail 语义：POST/PUT 均将 scrap 更新为 burdening_status = 5（与 RESULT_TO_CODE.scrap=2 保持一致）。
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -232,10 +232,10 @@ describe('过程检验 IPQC 链路', () => {
       expect(state.processCardUpdates.some((u) => u.sql.includes('burdening_status = 6'))).toBe(true);
     });
 
-    it('scrap → 写入 qc_inspection 但流程卡状态不更新（已知缺口，标注待裁定）', async () => {
+    it('scrap → 写入 qc_inspection，流程卡 burdening_status = 5（与 fail 语义保持一致）', async () => {
       await POST(req('POST', baseBody({ inspectResult: 'scrap' })));
       expect(state.qcInsertParams![5]).toBe(2); // inspection_result=2
-      expect(state.processCardUpdates).toHaveLength(0); // 当前无 burdening_status 分支
+      expect(state.processCardUpdates.some((u) => u.sql.includes('burdening_status = 5'))).toBe(true);
     });
   });
 
@@ -260,6 +260,19 @@ describe('过程检验 IPQC 链路', () => {
       expect(state.qcUpdateParams).not.toBeNull();
       expect(state.qcUpdateParams![0]).toBe(2); // inspection_result
       expect(state.processCardUpdates.some((u) => u.sql.includes('burdening_status = 5'))).toBe(true);
+    });
+
+    it('scrap → 联动流程卡 burdening_status = 5（按 source_no）', async () => {
+      const res = await PUT(
+        req('PUT', { id: 1, inspectResult: 'scrap', qualifiedQty: 5, defectQty: 5, inspector: 'X' })
+      );
+      expect(res.status).toBe(200);
+      expect(state.qcUpdateParams![0]).toBe(2); // inspection_result
+      expect(
+        state.processCardUpdates.some(
+          (u) => u.sql.includes('burdening_status = 5') && u.sql.includes('WHERE card_no = ?')
+        )
+      ).toBe(true);
     });
   });
 

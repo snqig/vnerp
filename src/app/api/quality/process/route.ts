@@ -224,7 +224,8 @@ export const POST = withPermission(
         `UPDATE prd_process_card SET burdening_status = burdening_status + 1, update_time = NOW() WHERE id = ?`,
         [cardId]
       );
-    } else if (inspectResult === 'fail') {
+    } else if (inspectResult === 'fail' || inspectResult === 'scrap') {
+      // scrap 与 fail 在 RESULT_TO_CODE 中同为 inspection_result=2，流程卡侧保持同一语义
       await query(
         `UPDATE prd_process_card SET burdening_status = 5, update_time = NOW() WHERE id = ?`,
         [cardId]
@@ -318,7 +319,8 @@ export const PUT = withPermission(
         `UPDATE prd_process_card SET burdening_status = burdening_status + 1, update_time = NOW() WHERE card_no = ?`,
         [currentRecord.source_no]
       );
-    } else if (inspectResult === 'fail') {
+    } else if (inspectResult === 'fail' || inspectResult === 'scrap') {
+      // scrap 与 fail 在 RESULT_TO_CODE 中同为 inspection_result=2，流程卡侧保持同一语义
       await query(
         `UPDATE prd_process_card SET burdening_status = 5, update_time = NOW() WHERE card_no = ?`,
         [currentRecord.source_no]
