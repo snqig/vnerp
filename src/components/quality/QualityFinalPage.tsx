@@ -107,7 +107,7 @@ const getFinalInspectItems = (t: (key: string) => string) => [
   { id: 'label', name: t('labelCheck'), required: true },
 ];
 
-export function QualityFinalPage() {
+export function QualityFinalPage({ embedded = false }: { embedded?: boolean }) {
   const ts = useTranslations('Quality');
   // 翻译钩子
   const t = useTranslations('Quality');
@@ -345,9 +345,8 @@ export function QualityFinalPage() {
     }
   };
 
-  return (
-    <MainLayout title={t('finalInspection')}>
-      <div className="space-y-6">
+  const content = (
+    <div className="space-y-6">
                 {/* 统计卡片 */}
         <StatsCards
           configs={[
@@ -944,6 +943,11 @@ export function QualityFinalPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </MainLayout>
   );
+
+  // embedded=true：宿主页面（quality/center）已提供布局层，直接输出内容，
+  // 避免嵌出第二套 Sidebar/Header（MainLayout 是 h-screen overflow-hidden 的完整壳）。
+  if (embedded) return content;
+
+  return <MainLayout title={t('finalInspection')}>{content}</MainLayout>;
 }

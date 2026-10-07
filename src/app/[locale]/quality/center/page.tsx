@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MainLayout } from '@/components/layout';
 import { QualityProcessPage } from '@/components/quality/QualityProcessPage';
 import { QualityFinalPage } from '@/components/quality/QualityFinalPage';
 
@@ -35,28 +36,34 @@ export default function QualityCenterPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => setActiveTab(v as CenterTab)}
-        className="space-y-6"
-      >
-        <TabsList>
-          <TabsTrigger value="process">
-            {t('processInspection')}
-          </TabsTrigger>
-          <TabsTrigger value="final">
-            {t('finalInspection')}
-          </TabsTrigger>
-        </TabsList>
+    // 布局层由本页提供：两个子页面原本是独立路由，各自套 MainLayout；
+    // 合并成tab 后必须由宿主统一提供，否则每个 tab 都会再套一层
+    // Sidebar+Header（MainLayout 是 h-screen overflow-hidden 的完整壳），
+    // 表现为两个侧边栏堆叠、勾选状态视觉上「合并选中」。
+    <MainLayout title={t('qualityInspectionCenter')}>
+      <div className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as CenterTab)}
+          className="space-y-6"
+        >
+          <TabsList>
+            <TabsTrigger value="process">
+              {t('processInspection')}
+            </TabsTrigger>
+            <TabsTrigger value="final">
+              {t('finalInspection')}
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="process" className="space-y-6">
-          <QualityProcessPage />
-        </TabsContent>
-        <TabsContent value="final" className="space-y-6">
-          <QualityFinalPage />
-        </TabsContent>
-      </Tabs>
-    </div>
+          <TabsContent value="process" className="space-y-6">
+            <QualityProcessPage embedded />
+          </TabsContent>
+          <TabsContent value="final" className="space-y-6">
+            <QualityFinalPage embedded />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </MainLayout>
   );
 }
