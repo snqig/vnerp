@@ -759,6 +759,7 @@ export function QualityIncomingPage({ embedded = false }: { embedded?: boolean }
               }
             />
             </div>
+            </div>
           </CardContent>
         </Card>
 
