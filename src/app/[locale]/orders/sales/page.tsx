@@ -2,7 +2,6 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useRouter } from '@/i18n/navigation';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { useTranslations } from 'next-intl';
 import {
   SALES_ORDER_STATUS_CODES,
@@ -35,7 +34,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { SearchInput } from '@/components/ui/search-input';
 import {
   Select,
@@ -58,14 +56,7 @@ import {
   ArrowUp,
   ArrowDown,
   Printer,
-  ChevronDown,
-  ChevronRight,
-  ShoppingCart,
   CheckCircle,
-  ClipboardList,
-  CheckCheck,
-  Truck,
-  CircleCheckBig,
   XCircle,
 } from 'lucide-react';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -73,6 +64,7 @@ import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import { SalesStatsCards } from './sales-stats-cards';
 
 type SortField =
@@ -279,25 +271,7 @@ export default function SalesOrdersPage() {
     return filtered;
   }, [orders, sortField, sortOrder]);
 
-  const {
-    selected,
-    selectedCount,
-    isSelected,
-    allSelected,
-    toggle,
-    toggleAll,
-    selectAllRef,
-  } = useRowSelection(filteredOrders, (o) => String(o.id));
-
-  const toggleRowExpand = (orderId: number) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(orderId)) {
-      newExpanded.delete(orderId);
-    } else {
-      newExpanded.add(orderId);
-    }
-    setExpandedRows(newExpanded);
-  };
+  const [selectedRows, setSelectedRows] = useState<Order[]>([]);
 
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
@@ -364,13 +338,11 @@ export default function SalesOrdersPage() {
   };
 
   const handleBatchConfirm = async () => {
-    if (!selected.size) {
+    if (!selectedRows.length) {
       toast.warning(t('selectOrderFirst'));
       return;
     }
-    const pendingOrders = filteredOrders.filter(
-      (o) => selected.has(String(o.id)) && o.status === 1
-    );
+    const pendingOrders = selectedRows.filter((o) => o.status === 1);
     if (pendingOrders.length === 0) {
       toast.warning(t('noPendingOrder'));
       return;
@@ -399,14 +371,14 @@ export default function SalesOrdersPage() {
   };
 
   const handleBatchDelete = async () => {
-    if (!selected.size) return;
-    if (!confirm(t('confirmDeleteSelected', { count: selected.size }))) return;
+    if (!selectedRows.length) return;
+    if (!confirm(t('confirmDeleteSelected', { count: selectedRows.length }))) return;
 
     try {
       setLoading(true);
       let successCount = 0;
-      for (const orderId of selected) {
-        const res = await authFetch(`/api/orders?id=${orderId}`, { method: 'DELETE' });
+      for (const order of selectedRows) {
+        const res = await authFetch(`/api/orders?id=${order.id}`, { method: 'DELETE' });
         const data = await res.json();
         if (data.success) successCount++;
       }
@@ -466,10 +438,7 @@ export default function SalesOrdersPage() {
   };
 
   const _handleExport = (format: string) => {
-    const dataToExport =
-      selected.size > 0
-        ? filteredOrders.filter((o) => selected.has(String(o.id)))
-        : filteredOrders;
+    const dataToExport = selectedRows.length > 0 ? selectedRows : filteredOrders;
 
     if (dataToExport.length === 0) {
       toast.warning(t('noExportData'));
@@ -606,10 +575,7 @@ export default function SalesOrdersPage() {
   };
 
   const handlePrintList = () => {
-    const dataToPrint =
-      selected.size > 0
-        ? filteredOrders.filter((o) => selected.has(String(o.id)))
-        : filteredOrders;
+    const dataToPrint = selectedRows.length > 0 ? selectedRows : filteredOrders;
 
     if (dataToPrint.length === 0) {
       toast.warning(t('noPrintData'));
@@ -667,6 +633,133 @@ export default function SalesOrdersPage() {
     toast.success(t('printSuccess', { count: dataToPrint.length }));
   };
 
+  // 可排序表头：沿用原有三态排序（升序→降序→取消），行为与旧表格一致
+  const renderSortTitle = (label: React.ReactNode, field: SortField, alignEnd = false) => (
+    <span
+      className={`inline-flex items-center cursor-pointer select-none hover:text-foreground ${alignEnd ? 'justify-end' : ''}`}
+      role="button"
+      tabIndex={0}
+      aria-sort={getAriaSort(field)}
+      onClick={() => handleSort(field)}
+      onKeyDown={(e) => handleSortKeyDown(e, field)}
+    >
+      {label}
+      {getSortIcon(field)}
+    </span>
+  );
+
+  const columns: StandardTableColumn<Order>[] = [
+    {
+      key: 'order_no',
+      title: renderSortTitle(t('orderNo'), 'order_no'),
+      render: (order) => <span className="font-mono">{order.order_no}</span>,
+    },
+    {
+      key: 'customer_name',
+      title: renderSortTitle(t('customer'), 'customer_name'),
+      render: (order) => order.customer_name || '-',
+    },
+    {
+      key: 'order_date',
+      title: renderSortTitle(t('orderDate'), 'order_date'),
+      render: (order) => formatDate(order.order_date),
+    },
+    {
+      key: 'delivery_date',
+      title: renderSortTitle(t('deliveryDate'), 'delivery_date'),
+      render: (order) => formatDate(order.delivery_date),
+    },
+    {
+      key: 'total_amount',
+      title: renderSortTitle(t('amount'), 'total_amount', true),
+      align: 'right',
+      className: 'font-medium',
+      render: (order) => (
+        <MoneyDisplay
+          amount={order.total_amount || 0}
+          currency={order.currency || 'CNY'}
+          baseAmount={order.base_total_amount}
+          baseCurrency={order.base_currency}
+        />
+      ),
+    },
+    {
+      key: 'currency',
+      title: tc('currency'),
+      align: 'right',
+      render: (order) => order.currency || <span className="text-muted-foreground">-</span>,
+    },
+    {
+      key: 'base_amount',
+      title: t('baseAmount'),
+      align: 'right',
+      render: (order) =>
+        order.base_total_amount != null ? (
+          <MoneyDisplay
+            amount={order.base_total_amount}
+            currency={order.base_currency || 'CNY'}
+          />
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        ),
+    },
+    {
+      key: 'status',
+      title: renderSortTitle(tc('status'), 'status'),
+      render: (order) => getStatusBadge(order.status, t),
+    },
+    {
+      key: 'actions',
+      title: tc('operation'),
+      align: 'right',
+      render: (order) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleViewOrder(order)}>
+              <Eye className="h-4 w-4 mr-2" />
+              {t('viewDetail')}
+            </DropdownMenuItem>
+            {order.status === 1 && (
+              <DropdownMenuItem onClick={() => handleConfirmOrder(order.id)}>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {t('confirmOrder')}
+              </DropdownMenuItem>
+            )}
+            {order.status === 1 || order.status === 2 ? (
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={() => handleCancelOrder(order.id)}
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                {t('cancelOrder')}
+              </DropdownMenuItem>
+            ) : null}
+            <DropdownMenuItem onClick={() => handleEditOrder(order)}>
+              <Edit className="h-4 w-4 mr-2" />
+              {tc('edit')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleGenerateWorkOrder(order)}>
+              <FileText className="h-4 w-4 mr-2" />
+              {t('generateWorkOrder')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={() => handleDeleteOrder(order.id)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {tc('delete')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ];
+
   return (
     <MainLayout title={t('salesOrderTitle')}>
       <div className="space-y-6">
@@ -710,26 +803,22 @@ export default function SalesOrdersPage() {
                 </Button>
               </div>
               <div className="flex gap-2">
-                {selectedCount > 0 && (
+                {selectedRows.length > 0 && (
                   <Button variant="default" onClick={handleBatchConfirm}>
                     <CheckCircle className="h-4 w-4 mr-2" />
                     {tc('confirm')}(
-                    {
-                      filteredOrders.filter((o) => selected.has(String(o.id)) && o.status === 1)
-                        .length
-                    }
-                    )
+                    {selectedRows.filter((o) => o.status === 1).length})
                   </Button>
                 )}
                 <Button variant="outline" onClick={handlePrintList}>
                   <Printer className="h-4 w-4 mr-2" />
                   {tc('print')}
-                  {selectedCount > 0 ? `(${selectedCount})` : ''}
+                  {selectedRows.length > 0 ? `(${selectedRows.length})` : ''}
                 </Button>
-                {selectedCount > 0 && (
+                {selectedRows.length > 0 && (
                   <Button variant="destructive" onClick={handleBatchDelete}>
                     <Trash2 className="h-4 w-4 mr-2" />
-                    {tc('delete')}({selectedCount})
+                    {tc('delete')}({selectedRows.length})
                   </Button>
                 )}
                 <GlobalExportToolbar
@@ -776,11 +865,7 @@ export default function SalesOrdersPage() {
                         .join('; ') || '-'),
                     },
                   ]}
-                  data={
-                    selected.size > 0
-                      ? filteredOrders.filter((o) => selected.has(String(o.id)))
-                      : filteredOrders
-                  }
+                  data={selectedRows.length > 0 ? selectedRows : filteredOrders}
                 />
                 <Button onClick={() => router.push('/orders/sales/new')}>
                   <Plus className="h-4 w-4 mr-2" />
@@ -800,209 +885,27 @@ export default function SalesOrdersPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {loading && orders.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">{t('loading')}</div>
-            ) : filteredOrders.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <ShoppingCart className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>{orders.length === 0 ? t('noOrderData') : t('noMatchingOrder')}</p>
-              </div>
-            ) : (
-              <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <input
-                        ref={selectAllRef}
-                        type="checkbox"
-                        className="h-4 w-4 cursor-pointer accent-blue-600"
-                        checked={allSelected}
-                        onChange={toggleAll}
-                        aria-label={tc('selectAll')}
-                      />
-                    </TableHead>
-                    <TableHead className="w-10"></TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted/50"
-                      tabIndex={0}
-                      aria-sort={getAriaSort('order_no')}
-                      onClick={() => handleSort('order_no')}
-                      onKeyDown={(e) => handleSortKeyDown(e, 'order_no')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('orderNo')}
-                        {getSortIcon('order_no')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted/50"
-                      tabIndex={0}
-                      aria-sort={getAriaSort('customer_name')}
-                      onClick={() => handleSort('customer_name')}
-                      onKeyDown={(e) => handleSortKeyDown(e, 'customer_name')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('customer')}
-                        {getSortIcon('customer_name')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted/50"
-                      tabIndex={0}
-                      aria-sort={getAriaSort('order_date')}
-                      onClick={() => handleSort('order_date')}
-                      onKeyDown={(e) => handleSortKeyDown(e, 'order_date')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('orderDate')}
-                        {getSortIcon('order_date')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted/50"
-                      tabIndex={0}
-                      aria-sort={getAriaSort('delivery_date')}
-                      onClick={() => handleSort('delivery_date')}
-                      onKeyDown={(e) => handleSortKeyDown(e, 'delivery_date')}
-                    >
-                      <span className="inline-flex items-center">
-                        {t('deliveryDate')}
-                        {getSortIcon('delivery_date')}
-                      </span>
-                    </TableHead>
-                    <TableHead
-                      className="text-right cursor-pointer select-none hover:bg-muted/50"
-                      tabIndex={0}
-                      aria-sort={getAriaSort('total_amount')}
-                      onClick={() => handleSort('total_amount')}
-                      onKeyDown={(e) => handleSortKeyDown(e, 'total_amount')}
-                    >
-                      <span className="inline-flex items-center justify-end">
-                        {t('amount')}
-                        {getSortIcon('total_amount')}
-                      </span>
-                    </TableHead>
-                    <TableHead className="text-right">{tc('currency')}</TableHead>
-                    <TableHead className="text-right">{t('baseAmount')}</TableHead>
-                    <TableHead
-                      className="cursor-pointer select-none hover:bg-muted/50"
-                      tabIndex={0}
-                      aria-sort={getAriaSort('status')}
-                      onClick={() => handleSort('status')}
-                      onKeyDown={(e) => handleSortKeyDown(e, 'status')}
-                    >
-                      <span className="inline-flex items-center">
-                        {tc('status')}
-                        {getSortIcon('status')}
-                      </span>
-                    </TableHead>
-                    <TableHead className="text-right">{tc('operation')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredOrders.map((order) => {
-                    const isExpanded = expandedRows.has(order.id);
-                    const lines = order.items || [];
-                    return (
-                      <React.Fragment key={order.id}>
-                        <TableRow className="hover:bg-muted/50">
-                          <TableCell>
-                            <Checkbox
-                              checked={isSelected(String(order.id))}
-                              onCheckedChange={() => toggle(String(order.id))}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() => toggleRowExpand(order.id)}
-                            >
-                              {isExpanded ? (
-                                <ChevronDown className="h-4 w-4" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </TableCell>
-                          <TableCell className="font-mono">{order.order_no}</TableCell>
-                          <TableCell>{order.customer_name || '-'}</TableCell>
-                          <TableCell>{formatDate(order.order_date)}</TableCell>
-                          <TableCell>{formatDate(order.delivery_date)}</TableCell>
-                          <TableCell className="text-right font-medium">
-                            <MoneyDisplay
-                              amount={order.total_amount || 0}
-                              currency={order.currency || 'CNY'}
-                              baseAmount={order.base_total_amount}
-                              baseCurrency={order.base_currency}
-                            />
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {order.currency || <span className="text-muted-foreground">-</span>}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {order.base_total_amount != null ? (
-                              <MoneyDisplay
-                                amount={order.base_total_amount}
-                                currency={order.base_currency || 'CNY'}
-                              />
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(order.status, t)}</TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleViewOrder(order)}>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  {t('viewDetail')}
-                                </DropdownMenuItem>
-                                {order.status === 1 && (
-                                  <DropdownMenuItem onClick={() => handleConfirmOrder(order.id)}>
-                                    <CheckCircle className="h-4 w-4 mr-2" />
-                                    {t('confirmOrder')}
-                                  </DropdownMenuItem>
-                                )}
-                                {order.status === 1 || order.status === 2 ? (
-                                  <DropdownMenuItem
-                                    className="text-destructive"
-                                    onClick={() => handleCancelOrder(order.id)}
-                                  >
-                                    <XCircle className="h-4 w-4 mr-2" />
-                                    {t('cancelOrder')}
-                                  </DropdownMenuItem>
-                                ) : null}
-                                <DropdownMenuItem onClick={() => handleEditOrder(order)}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  {tc('edit')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleGenerateWorkOrder(order)}>
-                                  <FileText className="h-4 w-4 mr-2" />
-                                  {t('generateWorkOrder')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-destructive"
-                                  onClick={() => handleDeleteOrder(order.id)}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  {tc('delete')}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                        {isExpanded && (
-                          <TableRow key={`${order.id}-detail`}>
-                            <TableCell colSpan={11} className="p-0">
-                              <div className="bg-slate-50 dark:bg-gray-800 border-t">
+            <StandardTable<Order>
+              columns={columns}
+              dataSource={filteredOrders}
+              total={totalRecords}
+              page={page}
+              pageSize={pageSize}
+              showPagination={totalRecords > pageSize}
+              onPageChange={setPage}
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              rowKey="id"
+              loading={loading && orders.length === 0}
+              emptyText={orders.length === 0 ? t('noOrderData') : t('noMatchingOrder')}
+              expandable
+              expandedRowKeys={Array.from(expandedRows).map(String)}
+              onExpandedRowChange={(keys) => setExpandedRows(new Set(keys.map(Number)))}
+              expandedRowRender={(order) => {
+                const lines = order.items || [];
+                return (
+                  <div className="bg-slate-50 dark:bg-gray-800 border-t">
                                 <Table>
                                   <TableHeader>
                                     <TableRow className="bg-slate-100/50 hover:bg-slate-100/50 dark:bg-gray-700/30 dark:hover:bg-gray-700/50">
@@ -1075,44 +978,9 @@ export default function SalesOrdersPage() {
                                   </TableBody>
                                 </Table>
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              {totalRecords > pageSize && (
-                <div className="flex items-center justify-between mt-4">
-                  <span className="text-sm text-muted-foreground">
-                    {t('orderCount')}: {totalRecords}
-                  </span>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page <= 1}
-                      onClick={() => setPage((p) => p - 1)}
-                    >
-                      {tc('prevPage')}
-                    </Button>
-                    <span className="flex items-center px-3 text-sm text-muted-foreground">
-                      {tc('pageOf', { page, pages: Math.ceil(totalRecords / pageSize) })}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page * pageSize >= totalRecords}
-                      onClick={() => setPage((p) => p + 1)}
-                    >
-                      {tc('nextPage')}
-                    </Button>
-                  </div>
-                </div>
-              )}
-              </>
-            )}
+                );
+              }}
+            />
           </CardContent>
         </Card>
 

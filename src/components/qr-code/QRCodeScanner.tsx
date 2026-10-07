@@ -14,9 +14,13 @@ import {
   AlertCircle,
   History,
   Loader2,
+  CloudOff,
+  RefreshCw,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLocale } from 'next-intl';
+import { Badge } from '@/components/ui/badge';
+import { useOfflineScanSync } from '@/hooks/use-network-status';
 
 type ScanMode = 'inbound' | 'outbound' | 'feed' | 'query' | 'verify';
 
@@ -38,6 +42,8 @@ interface QRCodeScannerProps {
   inputOnly?: boolean;
   disabled?: boolean;
   className?: string;
+  /** 离线优先：断网时扫码暂存 IndexedDB，联网自动补传（默认关闭，避免影响既有调用方） */
+  offlineSupport?: boolean;
 }
 
 export function QRCodeScanner({
@@ -51,12 +57,35 @@ export function QRCodeScanner({
   inputOnly = false,
   disabled = false,
   className = '',
+  offlineSupport = false,
 }: QRCodeScannerProps) {
   const tc = useTranslations('Common');
   const ts = useTranslations('Common');
+  const tp = useTranslations('PadScan');
   const resolvedPlaceholder = placeholder ?? ts('k_1v6ose0');
   const { toast } = useToast();
   const locale = useLocale();
+
+  // 离线优先：接入孤儿化的 offline-scan-queue + useOfflineScanSync。
+  // 断网时 processScan 直接落 IndexedDB；联网后 syncPending 通过 onScan 重放，使扫码结果在恢复网络后自动补齐。
+  const onScanRef = useRef(onScan);
+  onScanRef.current = onScan;
+  const { isOnline, syncing, pendingCount, syncPending, refreshCount } = useOfflineScanSync(
+    useCallback(
+      async (items: Array<{ qrCode: string; scanType: string; payload: Record<string, unknown> }>) => {
+        for (const item of items) {
+          await onScanRef.current(item.qrCode);
+        }
+      },
+      []
+    )
+  );
+
+  useEffect(() => {
+    if (isOnline) {
+      void syncPending();
+    }
+  }, [isOnline, syncPending]);
   const [mode, setMode] = useState<'manual' | 'camera'>('manual');
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -109,7 +138,38 @@ export function QRCodeScanner({
         }
       }
 
-      // 执行扫描回调
+      // 离线优先：断网时直接暂存本地队列，联网后自动补传
+      if (offlineSupport && !isOnline) {
+        try {
+          const { enqueueScan } = await import('@/lib/offline-scan-queue');
+          await enqueueScan({
+            qrCode: trimmedCode,
+            scanType: scanMode,
+            payload: { scanMode },
+            maxAttempts: 3,
+          });
+          void refreshCount();
+          setLastResult({ success: true, message: tp('offlineQueued') });
+          setHistory((prev) => [
+            {
+              qrCode: trimmedCode,
+              time: new Date().toISOString(),
+              success: true,
+              message: tp('offlineQueued'),
+            },
+            ...prev.slice(0, 19),
+          ]);
+          toast({ title: tp('offlineQueued') });
+          setInputValue('');
+          setIsProcessing(false);
+          return;
+        } catch (e) {
+          console.error('[QRCodeScanner] 离线暂存失败', e);
+          // 暂存失败则继续走在线逻辑，交由下方错误处理
+        }
+      }
+
+      // 在线：执行扫描回调
       await onScan(trimmedCode);
 
       setLastResult({ success: true });
@@ -226,6 +286,16 @@ export function QRCodeScanner({
           <CardTitle className="text-base flex items-center gap-2">
             <ScanLine className="h-5 w-5" />
             {getModeLabel()}
+            {offlineSupport && pendingCount > 0 && (
+              <Badge variant="secondary" className="ml-1 gap-1 text-xs">
+                {syncing ? (
+                  <RefreshCw className="h-3 w-3 animate-spin" />
+                ) : (
+                  <CloudOff className="h-3 w-3" />
+                )}
+                {syncing ? ts('syncing') : tp('pendingSync', { count: pendingCount })}
+              </Badge>
+            )}
           </CardTitle>
           {!inputOnly && showCamera && (
             <div className="flex gap-1">

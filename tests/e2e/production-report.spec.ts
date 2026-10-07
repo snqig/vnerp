@@ -11,7 +11,7 @@
  *   - 通过 page UI 验证前端渲染正确性
  */
 
-import { test, expect, type APIResponse } from '@playwright/test';
+import { test, expect, type APIResponse, type Page } from '@playwright/test';
 import { login } from '../utils/api-auth';
 
 async function parseJson(resp: APIResponse): Promise<Loose> {
@@ -189,6 +189,7 @@ test.describe('生产报工列表 E2E 测试', () => {
     // 创建一条新记录
     const newReport = await createTestReport(page);
     test.skip(!newReport, '无法创建测试报工记录（无可用工单），跳过删除测试');
+    if (!newReport) return;
 
     // 等待记录写入数据库
     await page.waitForTimeout(1000);

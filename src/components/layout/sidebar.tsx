@@ -243,7 +243,9 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   const { toast } = useToast();
 
   // 获取菜单的翻译名称
-  const getMenuName = (menu: MenuItem): string => {
+  const getMenuName = (menu: MenuItem | undefined): string => {
+    // 防御：调用方可能传入 undefined（如 activeParentCode 未匹配到任何菜单）
+    if (!menu) return '';
     // 尝试使用菜单 code 作为翻译键
     if (menu.code) {
       try {
@@ -482,10 +484,11 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   }, [pathname, orderedMenus, navigationMode, isActive]);
 
   // 获取混合模式下当前激活的子菜单
-  const mixedSubMenus =
+  const activeParentMenu =
     navigationMode === 'mixed' && activeParentCode
-      ? orderedMenus.find((m) => m.code === activeParentCode)?.children || []
-      : [];
+      ? orderedMenus.find((m) => m.code === activeParentCode)
+      : undefined;
+  const mixedSubMenus = activeParentMenu?.children || [];
 
   // 渲染子菜单（非拖拽）
   const renderMenuItem = (menu: MenuItem, level: number = 0): React.ReactNode => {
@@ -605,7 +608,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
           <div className="h-full flex flex-col">
             <div className="h-16 flex items-center px-4 border-b border-border">
               <span className="font-semibold text-sm text-foreground">
-                {getMenuName(orderedMenus.find((m) => m.code === activeParentCode)!) || ts('k_1a6znp0')}
+                {activeParentMenu ? getMenuName(activeParentMenu) : ts('k_1a6znp0')}
               </span>
             </div>
             <ScrollArea className="flex-1">

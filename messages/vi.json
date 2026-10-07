@@ -5731,9 +5731,7 @@
     "outsource_receive": "Nhận hàng gia công",
     "outsource_settlement": "Thanh toán gia công",
     "quality": "Phòng Chất lượng",
-    "quality_incoming": "Kiểm tra đầu vào",
-    "quality_process": "Kiểm tra quy trình",
-    "quality_final": "Kiểm tra thành phẩm",
+    "quality_process": "Trung tâm kiểm tra chất lượng",
     "quality_trace": "Truy vết chất lượng",
     "quality_unqualified": "Xử lý không đạt",
     "quality_sgs": "Quản lý chứng chỉ SGS",
@@ -7756,6 +7754,7 @@
     "purchaseOrder": "Đơn mua hàng",
     "purchaseRequest": "Yêu cầu mua hàng",
     "supplierManagement": "Quản lý nhà cung cấp",
+    "totalSuppliers": "Tổng số nhà cung cấp",
     "newPurchaseOrder": "Tạo đơn mua mới",
     "editPurchaseOrder": "Sửa đơn mua",
     "createPurchaseOrder": "Tạo đơn mua hàng",
@@ -8158,6 +8157,7 @@
     "totalPayable": "Tổng phải trả"
   },
   "Quality": {
+    "k_center_title": "Trung tâm kiểm tra chất lượng",
     "k_link_color_std": "Liên kết mẫu màu ký mẫu",
     "k_link_none": "Không liên kết",
     "k_base_ref": "Chuẩn ký mẫu",
@@ -8616,7 +8616,10 @@
     "testing": "Đang kiểm tra",
     "k_1upxefi": "Bản ghi truy xuất",
     "unknown": "Không rõ",
-    "otherSource": "Khác"
+    "otherSource": "Khác",
+    "unqualifiedInspection": "Không đạt",
+    "monthlyInspectionCount": "Số lần kiểm tra tháng này",
+    "qualifiedRate": "Tỷ lệ đạt"
   },
   "Equipment": {
     "title": "Quản lý thiết bị",
@@ -11247,6 +11250,7 @@
     "inkColorList": "Danh sách màu mực",
     "inkFormulaManagement": "Quản lý công thức mực",
     "inkManagement": "Quản lý mực",
+    "inkManagementDesc": "Quản lý hồ sơ mực, tồn kho và cảnh báo tồn kho an toàn",
     "inkName": "Tên mực",
     "isCut": "Đã cắt",
     "isUsed": "Đã sử dụng",

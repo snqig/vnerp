@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 ;
 import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
+import { generateDocumentNo } from '@/lib/document-numbering';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { logger, generateTraceId } from '@/lib/logger';
@@ -24,18 +25,10 @@ const WORK_ORDER_STATUS = {
 
 const SAMPLE_ORDER_TYPE = 1;
 
+// 复用集中式 generateDocumentNo('work_order')：命名锁串行化 + 含软删行取最大流水，
+// 杜绝并发重复与已删号复用（uk_work_order_no 唯一约束治理）。前缀/表与 work_order 一致。
 async function generateWorkOrderNo(conn: DbConnection): Promise<string> {
-  const today = new Date();
-  const y = today.getFullYear();
-  const m = String(today.getMonth() + 1).padStart(2, '0');
-  const d = String(today.getDate()).padStart(2, '0');
-  const prefix = `WO${y}${m}${d}`;
-  const [rows] = await conn.query(
-    'SELECT COUNT(*) AS cnt FROM prod_work_order WHERE work_order_no LIKE ?',
-    [`${prefix}%`]
-  );
-  const nextSeq = Number((rows as DbRow[])[0]?.cnt ?? 0) + 1;
-  return `${prefix}${String(nextSeq).padStart(4, '0')}`;
+  return generateDocumentNo('work_order', conn);
 }
 
 export const POST = withPermission(

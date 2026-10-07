@@ -126,10 +126,10 @@ export const POST = withPermission(
       [cardId]
     );
     const card = cardRows[0];
-    if (
-      card &&
-      Number(qualifiedQty) + Number(defectQty) > Number(card.plan_qty || 0)
-    ) {
+    if (!card) {
+      return errorResponse(ts('k_1emlkd9'), 404);
+    }
+    if (Number(qualifiedQty) + Number(defectQty) > Number(card.plan_qty || 0)) {
       return errorResponse(buildQualityFormMessages((k) => ts(k)).qtySumExceedsPlan, 400, 400);
     }
 
@@ -216,6 +216,9 @@ export const PUT = withPermission(
       [id]
     );
     const rec = recRows[0];
+    if (!rec) {
+      return errorResponse(ts('k_1emlkd9'), 404);
+    }
     if (rec && rec.card_id) {
       if (finalResult === 'pass' || finalResult === 'concession') {
         await query(

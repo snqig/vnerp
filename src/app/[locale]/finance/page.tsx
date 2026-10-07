@@ -125,6 +125,7 @@ export default function FinancePage() {
   // 翻译钩子
   const tc = useTranslations('Common');
   const t = useTranslations('Finance');
+  const tStd = useTranslations('StandardTable');
   const locale = useLocale();
 
   const [activeTab, setActiveTab] = useState('receivable');
@@ -135,6 +136,31 @@ export default function FinancePage() {
   const [_loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
+
+  const handleTabChange = (v: string) => {
+    setActiveTab(v);
+    setPage(1);
+    setTotal(0);
+    setTotalPages(0);
+    setJumpValue('');
+    setJumpError(null);
+  };
 
   const [receivableDialogOpen, setReceivableDialogOpen] = useState(false);
   const [payableDialogOpen, setPayableDialogOpen] = useState(false);
@@ -187,18 +213,22 @@ export default function FinancePage() {
       const params = new URLSearchParams();
       if (keyword) params.set('keyword', keyword);
       if (statusFilter !== 'all') params.set('status', statusFilter);
-      params.set('pageSize', '50');
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
       const res = await authFetch(`/api/finance/receivables?${params}`);
       const data = await res.json();
       if (data.success) {
         setReceivables(data.data?.list || []);
+        const tot = data.data?.total || 0;
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
       }
     } catch (_e) {
       toast.error(tc('fetchReceivableListFailed'));
     } finally {
       setLoading(false);
     }
-  }, [keyword, statusFilter, tc]);
+  }, [keyword, statusFilter, page, pageSize, tc]);
 
   const fetchPayables = useCallback(async () => {
     setLoading(true);
@@ -206,18 +236,22 @@ export default function FinancePage() {
       const params = new URLSearchParams();
       if (keyword) params.set('keyword', keyword);
       if (statusFilter !== 'all') params.set('status', statusFilter);
-      params.set('pageSize', '50');
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
       const res = await authFetch(`/api/finance/payable?${params}`);
       const data = await res.json();
       if (data.success) {
         setPayables(data.data?.list || []);
+        const tot = data.data?.total || 0;
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
       }
     } catch (_e) {
       toast.error(tc('fetchPayableListFailed'));
     } finally {
       setLoading(false);
     }
-  }, [keyword, statusFilter, tc]);
+  }, [keyword, statusFilter, page, pageSize, tc]);
 
   // 经营看板汇总：KPI 卡片依赖 /api/finance/stats 返回的 receivable/payable 汇总
   // （应收/应付列表接口本身不返回 summary，原先读不存在的 data.data.summary 导致卡片恒为 ¥0.00）
@@ -249,32 +283,44 @@ export default function FinancePage() {
   const fetchReceipts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await authFetch('/api/finance/receipt?pageSize=50');
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
+      const res = await authFetch(`/api/finance/receipt?${params}`);
       const data = await res.json();
       if (data.success) {
         setReceipts(data.data?.list || []);
+        const tot = data.data?.total || 0;
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
       }
     } catch (_e) {
       toast.error(tc('fetchReceiptListFailed'));
     } finally {
       setLoading(false);
     }
-  }, [tc]);
+  }, [page, pageSize, tc]);
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await authFetch('/api/finance/payment?pageSize=50');
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
+      const res = await authFetch(`/api/finance/payment?${params}`);
       const data = await res.json();
       if (data.success) {
         setPayments(data.data?.list || []);
+        const tot = data.data?.total || 0;
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
       }
     } catch (_e) {
       toast.error(tc('fetchPaymentListFailed'));
     } finally {
       setLoading(false);
     }
-  }, [tc]);
+  }, [page, pageSize, tc]);
 
   const fetchCustomers = async () => {
     try {
@@ -502,6 +548,37 @@ export default function FinancePage() {
       : num.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
+  // 四个 Tab 共用标准分页栏（状态随 Tab 切换重置）
+  const paginationBar = (
+    <>
+      {total > 0 && (
+        <div className="flex items-center justify-between mt-4 flex-wrap gap-2 px-4 pb-4">
+          <span className="text-sm text-muted-foreground">
+            {tStd('paginationSummary', { total, pages: totalPages })}
+          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+              <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+            <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+            <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+            <div className="flex items-center gap-1">
+              <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+              <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {jumpError && <p className="text-destructive text-sm mt-2 px-4 pb-2">{jumpError}</p>}
+    </>
+  );
+
   return (
     <MainLayout title={t('title')}>
       <div className="space-y-6">
@@ -568,7 +645,7 @@ export default function FinancePage() {
           </Card>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <div className="flex items-center justify-between">
             <TabsList>
               <TabsTrigger value="receivable">{tc('tabReceivable')}</TabsTrigger>
@@ -725,6 +802,7 @@ export default function FinancePage() {
                     )}
                   </TableBody>
                 </Table>
+                {paginationBar}
               </CardContent>
             </Card>
           </TabsContent>
@@ -797,6 +875,7 @@ export default function FinancePage() {
                     )}
                   </TableBody>
                 </Table>
+                {paginationBar}
               </CardContent>
             </Card>
           </TabsContent>
@@ -840,6 +919,7 @@ export default function FinancePage() {
                     )}
                   </TableBody>
                 </Table>
+                {paginationBar}
               </CardContent>
             </Card>
           </TabsContent>
@@ -880,6 +960,7 @@ export default function FinancePage() {
                     )}
                   </TableBody>
                 </Table>
+                {paginationBar}
               </CardContent>
             </Card>
           </TabsContent>

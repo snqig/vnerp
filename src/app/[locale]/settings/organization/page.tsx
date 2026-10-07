@@ -112,6 +112,7 @@ export default function OrganizationPage() {
   const ts = useTranslations('Common');
   // 翻译钩子
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const [activeTab, setActiveTab] = useState('company');
 
@@ -135,6 +136,23 @@ export default function OrganizationPage() {
   const [roleForm, setRoleForm] = useState<Partial<Role>>({});
   const [roleEditing, setRoleEditing] = useState(false);
   const [codeError, setCodeError] = useState('');
+
+  // 角色列表分页状态（企业信息为单条、部门为树形全量，均不分页）
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
 
   // 生成唯一角色编码
   const generateRoleCode = () => {
@@ -386,7 +404,7 @@ export default function OrganizationPage() {
   const fetchRoles = useCallback(async () => {
     setRoleLoading(true);
     try {
-      const response = await authFetch('/api/organization/role');
+      const response = await authFetch(`/api/organization/role?page=${page}&pageSize=${pageSize}`);
       if (!response.ok) {
         loadMockRoles();
         return;
@@ -405,6 +423,9 @@ export default function OrganizationPage() {
           return;
         }
         setRoles(roleList);
+        const totalCount = roleData?.total || roleList.length;
+        setTotal(totalCount);
+        setTotalPages(Math.ceil(totalCount / pageSize));
       } else {
         loadMockRoles();
       }
@@ -414,7 +435,7 @@ export default function OrganizationPage() {
       setRoleLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- loadMockRoles 是模拟数据兜底函数，仅使用 setState 稳定引用，定义在函数体之后
-  }, []);
+  }, [page, pageSize]);
 
   // 模拟角色数据
   const loadMockRoles = () => {
@@ -988,6 +1009,31 @@ export default function OrganizationPage() {
                     </TableBody>
                   </Table>
                 )}
+                {total > 0 && (
+                  <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {tStd('paginationSummary', { total, pages: totalPages })}
+                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                        <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                          <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                          <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+                      <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+                      <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+                      <div className="flex items-center gap-1">
+                        <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                        <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
               </CardContent>
             </Card>
           </TabsContent>

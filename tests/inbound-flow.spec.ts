@@ -51,8 +51,18 @@ test.describe('入库管理端到端流程', () => {
     const materialName = `E2E物料_${Date.now()}`;
     const batchNo = `E2EBATCH_${Date.now()}`;
 
-    // 打开新增对话框（工具栏第一个“新增/Add”按钮）
+    // 打开新增对话框：
+    // InboundToolbar 的「Add」按钮是 DropdownMenuTrigger，点击后弹出含 2 个 menuitem 的下拉菜单，
+    // 必须再点「purchaseInbound」（采购入库）menuitem 才会真正打开 AddDialog。
+    // 原写法 `getByRole('button', { name: /add/i }).first()` 只打开下拉，并未触发 dialog。
     await page.getByRole('button', { name: /add/i }).first().click();
+    // 下拉项文案因翻译键缺失（messages/*.json 未定义 purchaseInbound）会渲染为字面 key，
+    // 用 menuitem role + 关键词匹配兼容中英文两种环境。
+    await page
+      .getByRole('menuitem')
+      .filter({ hasText: /purchaseInbound|Procurement Inbound|采购入库/i })
+      .first()
+      .click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible({ timeout: 10000 });
 
@@ -91,7 +101,13 @@ test.describe('入库管理端到端流程', () => {
   });
 
   test('E2E-IN-006b: 新增对话框内采购订单搜索框可见且可输入', async ({ page }) => {
+    // 同 E2E-IN-002：Add 按钮是 DropdownMenuTrigger，需再点 purchaseInbound 触发 dialog。
     await page.getByRole('button', { name: /add/i }).first().click();
+    await page
+      .getByRole('menuitem')
+      .filter({ hasText: /purchaseInbound|Procurement Inbound|采购入库/i })
+      .first()
+      .click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible({ timeout: 10000 });
 

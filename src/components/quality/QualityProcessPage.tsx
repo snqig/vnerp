@@ -158,7 +158,21 @@ export function QualityProcessPage({ embedded = false }: { embedded?: boolean })
       setLoading(true);
 
       const res = await authFetch('/api/quality/process');
+      if (!res.ok) {
+        // 非 2xx 时把响应体前 200 字节一并带进错误信息：
+        // 认证失败返回 JSON、被重定向到登录页返回 HTML，两者在调用方都只是
+        // 「fetch 失败」，不取响应体就永远分不清，只能靠猜。
+        const bodySnippet = await res.text().catch(() => '');
+        throw new Error(
+          `HTTP ${res.status} ${res.statusText} | content-type=${res.headers.get('content-type')} | body=${bodySnippet.slice(0, 200)}`,
+        );
+      }
       const data = await res.json();
+      if (!data.success) {
+        // HTTP 200 但业务失败：数据停在旧状态且控制台一片安静，
+        // 必须显式记录 message，否则和「加载成功但确实没数据」无法区分。
+        throw new Error(`业务失败: code=${data.code} message=${data.message}`);
+      }
       if (data.success) {
         const rawData = data.data;
         const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
@@ -190,10 +204,15 @@ export function QualityProcessPage({ embedded = false }: { embedded?: boolean })
         const anomalyCount = list.filter(
           (p: QualityProcess) => p.burdening_status === 5 || p.burdening_status === 6,
         ).length;
+        // 过程检验三态（互斥，覆盖 burdening_status IN (1,2,5,6)）：
+        //   pending   = 1（已配料待过程检）
+        //   inspecting= 5|6（不合格/返工，处理中）
+        //   passed    = 2（过程检通过，进入终检前）
+        // 原 passed 误取 status===3（终检完成），但 process 列表已排除 status 3，导致该 tab 恒空。
         setStats({
           pending: list.filter((p: QualityProcess) => p.burdening_status === 1).length,
-          inspecting: list.filter((p: QualityProcess) => p.burdening_status === 2).length,
-          passed: list.filter((p: QualityProcess) => p.burdening_status === 3).length,
+          inspecting: anomalyCount,
+          passed: list.filter((p: QualityProcess) => p.burdening_status === 2).length,
           today: list.length,
           week: list.length,
           anomalyRate: list.length > 0 ? Math.round((anomalyCount / list.length) * 100) : 0,
@@ -203,9 +222,12 @@ export function QualityProcessPage({ embedded = false }: { embedded?: boolean })
         });
       }
     } catch (error) {
-      logger.error({ module: 'Quality', action: 'fetchProcesses' }, ts('k_xsfonz'), {
-        error: (error as Error).message,
-      });
+      const errMsg = error instanceof Error ? error.message : String(error);
+      logger.error(
+        { module: 'Quality', action: 'fetchProcesses' },
+        ts('k_xsfonz'),
+        { error: errMsg, stack: (error as Error).stack },
+      );
     } finally {
       setLoading(false);
     }
@@ -270,12 +292,17 @@ export function QualityProcessPage({ embedded = false }: { embedded?: boolean })
   // 筛选流程
   const filteredProcesses = processes.filter((process) => {
     if (activeTab !== 'all') {
-      const statusMap: Record<string, number> = {
+      const statusMap: Record<string, number | number[]> = {
         pending: 1,
-        inspecting: 2,
-        passed: 3,
+        inspecting: [5, 6],
+        passed: 2,
       };
-      if (process.burdening_status !== statusMap[activeTab]) return false;
+      const target = statusMap[activeTab];
+      if (Array.isArray(target)) {
+        if (!target.includes(process.burdening_status)) return false;
+      } else {
+        if (process.burdening_status !== target) return false;
+      }
     }
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -313,7 +340,8 @@ export function QualityProcessPage({ embedded = false }: { embedded?: boolean })
     setIsInspectOpen(true);
   };
 
-  // 提交检验
+  // 提交检验（当前为模拟逻辑：未调用真实 POST /api/quality/process，待后续接入）
+  // 过程检通过后 burdening_status 应 +1（1→2），原硬编码 3（终检完成）与后端语义冲突。
   const handleSubmitInspect = async () => {
     if (!selectedProcess) return;
     setLoading(true);
@@ -323,7 +351,11 @@ export function QualityProcessPage({ embedded = false }: { embedded?: boolean })
 
       // 更新本地数据
       setProcesses(
-        processes.map((p) => (p.id === selectedProcess.id ? { ...p, burdening_status: 3 } : p))
+        processes.map((p) =>
+          p.id === selectedProcess.id
+            ? { ...p, burdening_status: selectedProcess.burdening_status + 1 }
+            : p
+        )
       );
 
       setIsInspectOpen(false);

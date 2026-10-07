@@ -98,7 +98,7 @@ export default function EditPurchaseOrderPage() {
   if (error || !initial) {
     return (
       <MainLayout title={t('editPurchaseOrder')}>
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="py-16 text-center space-y-4">
             <p className="text-sm text-red-600 dark:text-red-400">
               {error || t('fetchFailed')}

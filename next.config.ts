@@ -74,6 +74,18 @@ const nextConfig: NextConfig = {
     ];
 
     return [
+      // 旧质量检验路由（/quality/process、/quality/final）的跳转响应禁止缓存：
+      // 307 仍会被浏览器缓存，若缓存了旧规则（:locale 误匹配 api 导致 /api/quality/process
+      // 被跳到 /api/quality/center），即使服务端修复后浏览器仍直跳不存在的 API 拿到 HTML，
+      // 前端 res.json() 抛 "Unexpected token '<'"。加 no-store 根治重定向缓存。
+      {
+        source: '/:locale(zh-CN|zh-TW|en|vi)/quality/(process|final)',
+        headers: [{ key: 'Cache-Control', value: 'no-store' }],
+      },
+      {
+        source: '/quality/(process|final)',
+        headers: [{ key: 'Cache-Control', value: 'no-store' }],
+      },
       {
         source: '/api/:path*',
         headers: [
@@ -139,6 +151,20 @@ const nextConfig: NextConfig = {
       {
         source: '/quality/final',
         destination: '/quality/center?tab=final',
+        permanent: false,
+      },
+      // 来料检验同样并入 center（第三个 tab）。
+      // 与 process/final 一样必须同时声明「带 locale」和「不带 locale」两套 source：
+      // next-intl 对裸路径的 locale 补全发生在 redirect 阶段之后，
+      // 只写 /:locale/... 时裸路径 /quality/incoming 匹配不到任何规则 → 直接 404。
+      {
+        source: `/:locale(${LOCALE})/quality/incoming`,
+        destination: '/:locale/quality/center?tab=incoming',
+        permanent: false,
+      },
+      {
+        source: '/quality/incoming',
+        destination: '/quality/center?tab=incoming',
         permanent: false,
       },
     ];

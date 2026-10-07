@@ -4,6 +4,7 @@ import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { MaterialReturnApprovedEvent } from '@/domain/production/events/PickOrderEvents';
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { expireDateFragment } from '@/lib/batch-expiry';
 import { InventoryCostService } from '@/application/services/InventoryCostService';
 import { appendInventoryTransaction, recomputeInventorySummary } from '@/lib/inventory-ledger';
 
@@ -70,10 +71,13 @@ export class MaterialReturnInventoryHandler implements EventHandler<MaterialRetu
               [item.quantity, item.quantity, batchRow[0].id]
             );
           } else {
-            // 批次不存在则新建，用 originalInboundDate 回填入库日期
+            // 批次不存在则新建，用 originalInboundDate 回填入库日期；
+            // 修正原 `item.originalInboundDate || 'CURDATE()'` 字符串字面量 bug（会落脏值而非当天日期）
+            const today = new Date().toISOString().slice(0, 10);
+            const inboundDate = item.originalInboundDate || today;
             await conn.execute(
-              `INSERT INTO inv_inventory_batch (batch_no, material_id, material_name, warehouse_id, available_qty, quantity, unit_price, inbound_date, status, create_time)
-               VALUES (?, ?, ?, ?, ?, ?, 0, ?, 1, NOW())`,
+              `INSERT INTO inv_inventory_batch (batch_no, material_id, material_name, warehouse_id, available_qty, quantity, unit_price, inbound_date, produce_date, expire_date, status, create_time)
+               VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ${expireDateFragment()}, 1, NOW())`,
               [
                 item.batchNo,
                 item.materialId,
@@ -81,7 +85,10 @@ export class MaterialReturnInventoryHandler implements EventHandler<MaterialRetu
                 warehouseId,
                 item.quantity,
                 item.quantity,
-                item.originalInboundDate || 'CURDATE()',
+                inboundDate,
+                inboundDate,
+                inboundDate,
+                item.materialId,
               ]
             );
           }

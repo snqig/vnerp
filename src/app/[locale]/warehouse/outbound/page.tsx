@@ -1,6 +1,4 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -21,7 +19,6 @@ import {
   TrendingDown,
   Boxes,
   AlertCircle,
-  List,
   Layers,
   Edit,
   Trash2,
@@ -34,6 +31,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -456,7 +454,7 @@ export default function OutboundManagementPage() {
     setSearchQuery('');
     setStatusFilter('all');
     setDateRange('all');
-    clear();
+    setSelectedRows([]);
     toast.success(t('filterReset'));
   }, [t]);
 
@@ -474,10 +472,7 @@ export default function OutboundManagementPage() {
       return matchesSearch && matchesStatus;
     });
   }, [outboundRecords, searchQuery, statusFilter]);
-  const { selectedCount, isSelected, allSelected, toggle, toggleAll, clear } = useRowSelection(
-    filteredRecords,
-    (r) => String(r.id)
-  );
+  const [selectedRows, setSelectedRows] = useState<OutboundRecord[]>([]);
 
   // 新增出库单
   // 输入物料编码 + 选择仓库后，自动查询该物料在当前仓库的可用库存
@@ -910,9 +905,7 @@ export default function OutboundManagementPage() {
   // 列印：新窗口渲染 A4 报表并唤起浏览器打印（选中行优先，未选则列印当前筛选结果）
   const handlePrint = () => {
     const dataToPrint =
-      selectedCount > 0
-        ? filteredRecords.filter((r) => isSelected(String(r.id)))
-        : filteredRecords;
+      selectedRows.length > 0 ? selectedRows : filteredRecords;
 
     if (dataToPrint.length === 0) {
       toast.error(tc('noDataToPrint'));
@@ -981,18 +974,127 @@ export default function OutboundManagementPage() {
     toast.success(tc('printingRecords', { count: dataToPrint.length }));
   };
 
-  // 选择记录
-  const toggleSelectRecord = (recordId: string) => toggle(String(recordId));
-
-  // 全选
-  const toggleSelectAll = () => toggleAll();;
-
   // 计算统计数据
   const totalOutboundToday = outboundRecords
     .filter((r) => r.date === new Date().toISOString().slice(0, 10))
     .reduce((sum, r) => sum + (Number(r.quantity) || 0), 0);
 
   const totalOutboundMonth = outboundRecords.reduce((sum, r) => sum + (Number(r.quantity) || 0), 0);
+
+  const columns: StandardTableColumn<OutboundRecord>[] = [
+    {
+      key: 'outboundNo',
+      title: t('outboundNo'),
+      dataIndex: 'id',
+      width: 130,
+      className: 'font-medium',
+    },
+    { key: 'date', title: tc('date'), dataIndex: 'date', width: 110 },
+    { key: 'materialName', title: tc('materialName'), dataIndex: 'materialName', width: 160 },
+    { key: 'spec', title: tc('specification'), dataIndex: 'spec', width: 120 },
+    { key: 'quantity', title: tc('quantity'), dataIndex: 'quantity', width: 90, align: 'right' },
+    { key: 'unit', title: tc('unit'), dataIndex: 'unit', width: 70 },
+    {
+      key: 'amount',
+      title: tc('amount'),
+      width: 130,
+      align: 'right',
+      render: (row) =>
+        row.total_amount != null ? (
+          <MoneyDisplay
+            amount={row.total_amount}
+            currency={row.currency || 'CNY'}
+            baseAmount={row.base_total_amount}
+            baseCurrency={row.base_currency}
+          />
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        ),
+    },
+    {
+      key: 'currency',
+      title: tc('currency'),
+      width: 80,
+      render: (row) => row.currency || <span className="text-muted-foreground">-</span>,
+    },
+    { key: 'warehouse', title: tc('warehouse'), dataIndex: 'warehouse', width: 120 },
+    {
+      key: 'batchNo',
+      title: tc('batchNo'),
+      width: 130,
+      className: 'font-mono text-xs',
+      render: (row) => row.batchNo || row.batch_no || '-',
+    },
+    {
+      key: 'type',
+      title: tc('type'),
+      width: 110,
+      render: (row) => (
+        <Badge
+          variant="outline"
+          className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800"
+        >
+          {row.type}
+        </Badge>
+      ),
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      width: 120,
+      render: (row) => {
+        const StatusIcon = statusConfig[row.status]?.icon || FileText;
+        return (
+          <div className="flex items-center gap-1">
+            <StatusIcon className="w-4 h-4" />
+            <span>{tc(statusConfig[row.status]?.labelKey || 'unknown') || row.status}</span>
+          </div>
+        );
+      },
+    },
+    { key: 'operator', title: t('operator'), dataIndex: 'operator', width: 100 },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      width: 90,
+      align: 'right',
+      render: (row) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleEdit(row)}>
+              <Edit className="mr-2 h-4 w-4" />
+              {tc('edit')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleDelete(row)}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              {tc('delete')}
+            </DropdownMenuItem>
+            {row.auditStatus !== 'approved' && (
+              <DropdownMenuItem onClick={() => handleAudit(row, 'approve')}>
+                <Check className="mr-2 h-4 w-4" />
+                {t('audit')}
+              </DropdownMenuItem>
+            )}
+            {row.auditStatus === 'approved' && (
+              <DropdownMenuItem onClick={() => handleAudit(row, 'reject')}>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                {t('unaudit')}
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => handleFifoPreview(row)}>
+              <Layers className="mr-2 h-4 w-4" />
+              {t('fifoAllocation')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ];
 
   return (
     <MainLayout>
@@ -1103,9 +1205,9 @@ export default function OutboundManagementPage() {
             </Select>
           </div>
 
-          {selectedCount > 0 && (
+          {selectedRows.length > 0 && (
             <Badge variant="secondary" className="ml-auto">
-              {t('selectedRecordsCount', { count: selectedCount })}
+              {t('selectedRecordsCount', { count: selectedRows.length })}
             </Badge>
           )}
         </motion.div>
@@ -1146,135 +1248,16 @@ export default function OutboundManagementPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <Checkbox
-                          checked={allSelected}
-                          onCheckedChange={toggleSelectAll}
-                        />
-                      </TableHead>
-                      <TableHead>{t('outboundNo')}</TableHead>
-                      <TableHead>{tc('date')}</TableHead>
-                      <TableHead>{tc('materialName')}</TableHead>
-                      <TableHead>{tc('specification')}</TableHead>
-                      <TableHead>{tc('quantity')}</TableHead>
-                      <TableHead>{tc('unit')}</TableHead>
-                      <TableHead>{tc('amount')}</TableHead>
-                      <TableHead>{tc('currency')}</TableHead>
-                      <TableHead>{tc('warehouse')}</TableHead>
-                      <TableHead>{tc('batchNo')}</TableHead>
-                      <TableHead>{tc('type')}</TableHead>
-                      <TableHead>{tc('status')}</TableHead>
-                      <TableHead>{t('operator')}</TableHead>
-                      <TableHead className="text-right">{tc('actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredRecords.map((record) => {
-                      const StatusIcon = statusConfig[record.status]?.icon || FileText;
-                      return (
-                        <TableRow key={record.id} className="hover:bg-muted/50">
-                          <TableCell>
-                            <Checkbox
-                              checked={isSelected(String(record.id))}
-                              onCheckedChange={() => toggleSelectRecord(record.id)}
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium">{record.id}</TableCell>
-                          <TableCell>{record.date}</TableCell>
-                          <TableCell>{record.materialName}</TableCell>
-                          <TableCell>{record.spec}</TableCell>
-                          <TableCell>{record.quantity}</TableCell>
-                          <TableCell>{record.unit}</TableCell>
-                          <TableCell>
-                            {record.total_amount != null ? (
-                              <MoneyDisplay
-                                amount={record.total_amount}
-                                currency={record.currency || 'CNY'}
-                                baseAmount={record.base_total_amount}
-                                baseCurrency={record.base_currency}
-                              />
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {record.currency || <span className="text-muted-foreground">-</span>}
-                          </TableCell>
-                          <TableCell>{record.warehouse}</TableCell>
-                          <TableCell className="font-mono text-xs">
-                            {record.batchNo || record.batch_no || '-'}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800"
-                            >
-                              {record.type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <StatusIcon className="w-4 h-4" />
-                              <span>
-                                {tc(statusConfig[record.status]?.labelKey || 'unknown') ||
-                                  record.status}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{record.operator}</TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEdit(record)}>
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  {tc('edit')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDelete(record)}>
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  {tc('delete')}
-                                </DropdownMenuItem>
-                                {record.auditStatus !== 'approved' && (
-                                  <DropdownMenuItem onClick={() => handleAudit(record, 'approve')}>
-                                    <Check className="mr-2 h-4 w-4" />
-                                    {t('audit')}
-                                  </DropdownMenuItem>
-                                )}
-                                {record.auditStatus === 'approved' && (
-                                  <DropdownMenuItem onClick={() => handleAudit(record, 'reject')}>
-                                    <RotateCcw className="mr-2 h-4 w-4" />
-                                    {t('unaudit')}
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem onClick={() => handleFifoPreview(record)}>
-                                  <Layers className="mr-2 h-4 w-4" />
-                                  {t('fifoAllocation')}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-              {filteredRecords.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-muted">
-                    <List className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">{t('noOutboundRecords')}</p>
-                </div>
-              )}
+              <StandardTable<OutboundRecord>
+                columns={columns}
+                dataSource={filteredRecords}
+                rowSelectable
+                selectedRows={selectedRows}
+                onRowSelectedChange={setSelectedRows}
+                rowKey="id"
+                showPagination={false}
+                emptyText={t('noOutboundRecords')}
+              />
             </CardContent>
           </Card>
         </motion.div>

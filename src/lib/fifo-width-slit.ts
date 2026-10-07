@@ -314,8 +314,8 @@ export async function executeWidthSlitDeduction(
           batch_no, material_id, material_code, material_name,
           warehouse_id, quantity, available_qty, locked_qty, unit, unit_price,
           width, length, area, batch_type, parent_batch_id,
-          inbound_date, produce_date, status, create_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, 1, ?, CURDATE(), CURDATE(), 1, ?)`,
+          inbound_date, produce_date, status, split_flag, create_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, 1, ?, CURDATE(), CURDATE(), 1, 1, ?)`,
         [
           childBatchNo,
           a.material_id,
@@ -337,6 +337,11 @@ export async function executeWidthSlitDeduction(
 
       // 母卷按面积当量扣减
       await deductBatch(conn, a.batch_id, a.version, a.parent_roll_equiv);
+      // 母卷已被横切 → 标记余料（split_flag=2），使 FIFO「余料优先」真正生效
+      await conn.execute(
+        `UPDATE inv_inventory_batch SET split_flag = 2, update_time = NOW() WHERE id = ? AND available_qty > 0`,
+        [a.batch_id]
+      );
       // 子批立即出库（被本次出库单消耗）
       await deductBatch(conn, childId, 1, a.allocate_qty);
 

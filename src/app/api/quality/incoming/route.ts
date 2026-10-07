@@ -353,35 +353,32 @@ export const POST = withPermission(
         [qtySplit.qualified_qty, qtySplit.unqualified_qty, inspectionId]
       );
 
+      // 库存联动与检验单【同事务】：批次放行/冻结 + 入库单 inspection_status 与本检验单同生共死。
+      // 任一联动 UPDATE 抛错即整体回滚，杜绝「检验单已 pass 但批次未放行/未冻结、inspection_id 未落库」。
+      // 注意：inspection_status 只能写 1（合格）/2（不合格），严禁写 3——3 是入库单 approve()
+      // 的专属语义（approve() 通过时自置 3 + finance_posted），质检写 3 会僭越审核语义。
+      if (inspectionResult === 'pass') {
+        await connection.execute(
+          `UPDATE inv_inventory_batch SET alert_level = 'normal', status = 1, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
+          [inspectionId, batchNo]
+        );
+        await connection.execute(
+          `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no COLLATE utf8mb4_0900_ai_ci SET o.inspection_status = 1, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
+          [inspectionId, batchNo]
+        );
+      } else if (inspectionResult === 'fail') {
+        await connection.execute(
+          `UPDATE inv_inventory_batch SET alert_level = 'frozen', status = 0, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
+          [inspectionId, batchNo]
+        );
+        await connection.execute(
+          `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no COLLATE utf8mb4_0900_ai_ci SET o.inspection_status = 2, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
+          [inspectionId, batchNo]
+        );
+      }
+
       return { id: inspectionId, inspectionNo, inspectionResult };
     });
-
-    if (result.inspectionResult === 'pass') {
-      await transaction(async (conn) => {
-        await conn.execute(
-          `UPDATE inv_inventory_batch SET alert_level = 'normal', status = 1, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
-          [result.id, batchNo]
-        );
-        // 注意：inspection_status 只能写 1（已检验/合格），严禁写 3——3 是入库单 approve()
-        // 的专属语义（InboundOrder.ts：approve() 通过时自置 3 + finance_posted），质检写 3 会
-        // 僭越审核语义、让入库单绕过审核就显示「已通过」。
-        await conn.execute(
-          `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no COLLATE utf8mb4_0900_ai_ci SET o.inspection_status = 1, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
-          [result.id, batchNo]
-        );
-      }).catch(() => {});
-    } else if (result.inspectionResult === 'fail') {
-      await transaction(async (conn) => {
-        await conn.execute(
-          `UPDATE inv_inventory_batch SET alert_level = 'frozen', status = 0, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
-          [result.id, batchNo]
-        );
-        await conn.execute(
-          `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no COLLATE utf8mb4_0900_ai_ci SET o.inspection_status = 2, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
-          [result.id, batchNo]
-        );
-      }).catch(() => {});
-    }
 
     return successResponse(result, ts('k_e70dsk'));
   },
@@ -466,7 +463,7 @@ export const PUT = withPermission(
           `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no COLLATE utf8mb4_0900_ai_ci SET o.inspection_status = 1, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
           [id, updateData.batchNo]
         );
-      }).catch(() => {});
+      });
     } else if (updateData.inspectionResult === 'fail') {
       await transaction(async (conn) => {
         await conn.execute(
@@ -477,7 +474,7 @@ export const PUT = withPermission(
           `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no COLLATE utf8mb4_0900_ai_ci SET o.inspection_status = 2, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
           [id, updateData.batchNo]
         );
-      }).catch(() => {});
+      });
     }
 
     // 更新检验单明细

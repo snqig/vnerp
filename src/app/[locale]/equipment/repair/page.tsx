@@ -1,7 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useRowSelection } from '@/lib/useRowSelection';
+import { toDateInput } from '@/lib/date-utils';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -9,14 +9,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
+import { StandardTable, StandardTableColumn, SortState } from '@/components/common';
 
 interface Item {
   id: number;
@@ -74,6 +67,7 @@ export default function EquipmentRepairPage() {
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [searchNo, setSearchNo] = useState('');
   const [stats, setStats] = useState({
     pending: 0,
@@ -84,24 +78,31 @@ export default function EquipmentRepairPage() {
   });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
-
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
+  const [sort, setSort] = useState<SortState>(null);
+  const [selectedRows, setSelectedRows] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         repairNo: searchNo,
       });
+      if (sort) {
+        params.set('sortField', sort.field);
+        params.set('sortDirection', sort.direction);
+      }
       const res = await authFetch('/api/equipment/repair?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch {}
+    } catch {} finally {
+      setLoading(false);
+    }
   };
   const fetchStats = async () => {
     try {
@@ -118,7 +119,12 @@ export default function EquipmentRepairPage() {
   useEffect(() => {
     fetchData();
     fetchStats();
-  }, [page]);
+  }, [page, pageSize, searchNo, sort]);
+
+  const handleSortChange = (next: SortState) => {
+    setSort(next);
+    setPage(1);
+  };
 
   const handleSave = async () => {
     // P1-1 前端守卫：与后端同口径（设备身份/故障日期/故障描述/维修人必填）
@@ -194,7 +200,7 @@ export default function EquipmentRepairPage() {
   };
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => r.id);
     if (ids.length === 0) return;
     if (!confirm(tc('confirmBatchDelete', { count: ids.length }))) return;
     let okCount = 0;
@@ -212,9 +218,102 @@ export default function EquipmentRepairPage() {
     if (okCount > 0)
       toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
     if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
+    setSelectedRows([]);
     fetchData();
   };
+
+  const columns: StandardTableColumn<Item>[] = [
+    {
+      key: 'repair_no',
+      title: ts('k_1j82wwz'),
+      render: (r) => <span className="text-xs font-mono">{r.repair_no}</span>,
+    },
+    {
+      key: 'equipment_code',
+      title: ts('k_17s4qyf'),
+      render: (r) => <span className="text-xs">{r.equipment_code || '-'}</span>,
+    },
+    {
+      key: 'equipment_name',
+      title: ts('k_eb1q6f'),
+      render: (r) => <span className="text-xs">{r.equipment_name || '-'}</span>,
+    },
+    {
+      key: 'fault_date',
+      title: ts('k_3s4z78'),
+      render: (r) => <span className="text-xs">{r.fault_date || '-'}</span>,
+    },
+    {
+      key: 'fault_desc',
+      title: ts('k_784d9f'),
+      render: (r) => <span className="text-xs max-w-32 truncate">{r.fault_desc || '-'}</span>,
+    },
+    {
+      key: 'repair_type',
+      title: ts('k_1migccd'),
+      render: (r) => <span className="text-xs">{typeMap[r.repair_type] || '-'}</span>,
+    },
+    {
+      key: 'repair_person',
+      title: ts('k_gquu0n'),
+      render: (r) => <span className="text-xs">{r.repair_person || '-'}</span>,
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => {
+        const st = statusMap[r.status] || statusMap[1];
+        return <Badge variant={st.variant} className="text-xs">{st.label}</Badge>;
+      },
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      render: (r) => (
+        <div className="flex gap-1">
+          {r.status === 1 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleStatusChange(r.id, 2)}
+            >
+              {ts('k_r6qw02')}
+            </Button>
+          )}
+          {r.status === 2 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleStatusChange(r.id, 3)}
+            >
+              {ts('k_8cfjmp')}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              setEditItem(r);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(r.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <MainLayout>
@@ -241,9 +340,11 @@ export default function EquipmentRepairPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              {ts('k_1f62jlo')}</Button>
+              {ts('k_1f62jlo')}
+            </Button>
           </div>
-        </div>        <StatsCards
+        </div>
+        <StatsCards
           configs={[
             { key: 'pending', label: '待维修', icon: Clock, ...StatsTheme.orange },
             { key: 'repairing', label: '维修中', icon: Wrench, ...StatsTheme.blue },
@@ -261,135 +362,29 @@ export default function EquipmentRepairPage() {
           cols={{ mobile: 2, tablet: 3, desktop: 5 }}
         />
 
-
         <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input
-                      ref={selectAllRef}
-                      type="checkbox"
-                      className="h-4 w-4 cursor-pointer accent-blue-600"
-                      checked={allSelected}
-                      onChange={toggleAll}
-                      aria-label={tc('selectAll')}
-                    />
-                  </TableHead>
-                  <TableHead className="text-xs">{ts('k_1j82wwz')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_17s4qyf')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_eb1q6f')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_3s4z78')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_784d9f')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_1migccd')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_gquu0n')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => {
-                  const st = statusMap[item.status] || statusMap[1];
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer accent-blue-600"
-                          checked={isSelected(String(item.id))}
-                          onChange={() => toggle(String(item.id))}
-                          aria-label={tc('selectRow', { id: item.id })}
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">{item.repair_no}</TableCell>
-                      <TableCell className="text-xs">{item.equipment_code || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.equipment_name || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.fault_date || '-'}</TableCell>
-                      <TableCell className="text-xs max-w-32 truncate">
-                        {item.fault_desc || '-'}
-                      </TableCell>
-                      <TableCell className="text-xs">{typeMap[item.repair_type] || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.repair_person || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
-                          {st.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {item.status === 1 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 2)}
-                            >
-                              {ts('k_r6qw02')}</Button>
-                          )}
-                          {item.status === 2 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 3)}
-                            >
-                              {ts('k_8cfjmp')}</Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => {
-                              setEditItem(item);
-                              setShowDialog(true);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                      {tc('noRecords')}</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} />
+            <StandardTable<Item>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable={true}
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              sortState={sort}
+              onSortChange={handleSortChange}
+              onPageChange={(p) => setPage(p)}
+              onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+              loading={loading}
+              emptyText={tc('noRecords')}
+            />
           </CardContent>
         </Card>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}</Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}</Button>
-          </div>
-        </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
@@ -414,7 +409,7 @@ export default function EquipmentRepairPage() {
                 <Label>{ts('k_3s4z78')}</Label>
                 <Input
                   type="date"
-                  value={editItem.fault_date || ''}
+                  value={toDateInput(editItem.fault_date)}
                   onChange={(e) => setEditItem({ ...editItem, fault_date: e.target.value })}
                 />
               </div>
@@ -451,7 +446,8 @@ export default function EquipmentRepairPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                {tc('cancel')}</Button>
+                {tc('cancel')}
+              </Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>

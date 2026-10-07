@@ -14,7 +14,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
       `SELECT COUNT(*) as count FROM prd_process_card WHERE deleted = 0 AND burdening_status = 2`
     );
 
-    // 终检中数量
+    // 终检中数量（终检无独立「检验中」状态：2=待终检 → 3=终检完成）
     const [inspectingResult] = await query(
       `SELECT COUNT(*) as count FROM prd_process_card WHERE deleted = 0 AND burdening_status = 2`
     );

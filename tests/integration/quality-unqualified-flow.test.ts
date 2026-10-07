@@ -220,9 +220,13 @@ describe('不合格品处理链路', () => {
 
       expect(res.status).toBe(200);
       expect(json.data.id).toBe(300);
-      // 不合格单号 UQ-YYYYMMDD-xxxx（仓储生成），处理单号 UNQ-YYYY-MMDD-001
+      // 不合格单号 UQ-YYYYMMDD-xxxx（仓储生成），处理单号 UNQ-YYYY-MMDD-xxx
+      // 单号按当天日期生成（见 MysqlUnqualifiedRepository.generateHandleNo），故动态取 today。
+      const today = new Date();
+      const mmdd = `${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+      const handleNoPrefix = `UNQ-${today.getFullYear()}-${mmdd}-`;
       expect(json.data.unqualified_no).toMatch(/^UQ-\d{8}-\d{4}$/);
-      expect(json.data.handle_no).toBe(`UNQ-2026-0926-001`);
+      expect(json.data.handle_no).toBe(`${handleNoPrefix}001`);
 
       // handle_status = 1 (pending)，且未指定处理方式时 handle_type 为 NULL
       expect(state.insertParams[11]).toBeNull(); // handle_type
@@ -232,12 +236,17 @@ describe('不合格品处理链路', () => {
       expect(state.insertParams[7]).toBe('PET薄膜'); // material_name
     });
 
-    it('处理单号按天递增：已有 UNQ-2026-0926-007 时取 008', async () => {
-      state.maxHandleNo = 'UNQ-2026-0926-007';
+    it('处理单号按天递增：已有当日最大号时取 下一号', async () => {
+      // 单号按当天日期生成（见 MysqlUnqualifiedRepository.generateHandleNo），
+      // 故同日序号前缀随 today 变化，硬编码日期段会让测试每天必挂。
+      const today = new Date();
+      const mmdd = `${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+      const handleNoPrefix = `UNQ-${today.getFullYear()}-${mmdd}-`;
+      state.maxHandleNo = `${handleNoPrefix}007`;
       const res = await POST(req('POST', createBody()));
       const json = await res.json();
 
-      expect(json.data.handle_no).toBe('UNQ-2026-0926-008');
+      expect(json.data.handle_no).toBe(`${handleNoPrefix}008`);
     });
 
     it('创建事件必须进入 outbox（否则下游订阅者永远收不到）', async () => {

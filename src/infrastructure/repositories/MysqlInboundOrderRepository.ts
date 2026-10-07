@@ -148,7 +148,13 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
   async findByStatus(
     status: string,
     pagination: Pagination,
-    filters?: { keyword?: string; startDate?: string; endDate?: string; poId?: number }
+    filters?: {
+      keyword?: string;
+      startDate?: string;
+      endDate?: string;
+      poId?: number;
+      orderType?: string;
+    }
   ): Promise<PaginatedResult<InboundOrder>> {
     let sql = `SELECT o.id, o.order_no, o.inbound_date, o.supplier_name, o.supplier_id,
                o.po_id, o.po_no, o.warehouse_id, o.warehouse_name, o.order_type, o.total_quantity,
@@ -171,6 +177,12 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
       sql += ` AND o.status = ?`;
       countSql += ` AND o.status = ?`;
       params.push(dbStatus);
+    }
+
+    if (filters?.orderType) {
+      sql += ` AND o.order_type = ?`;
+      countSql += ` AND o.order_type = ?`;
+      params.push(filters.orderType);
     }
 
     if (filters?.poId) {

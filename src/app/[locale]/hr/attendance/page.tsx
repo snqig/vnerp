@@ -1,7 +1,6 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Calendar,
@@ -19,26 +18,16 @@ import {
   RotateCcw,
   Edit,
   Trash2,
+  UserPlus,
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
-  XCircle,
-  UserCircle,
-  UserPlus,
 } from 'lucide-react';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -62,10 +51,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
 import { formatDate } from '@/lib/date-utils';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
+import { SortState } from '@/components/common/standard-table';
+
+type Loose = Record<string, unknown>;
 
 // 部门下拉不再内联硬编码。原清单（管理部/业务部/生产部/打样中心/采购部/品质部/
 // 模切/商标/其他/采购）是部门结构的第二份副本，与库中真实部门早已不一致。
@@ -159,6 +151,55 @@ export default function AttendancePage() {
     },
   };
 
+  const columns: StandardTableColumn<AttendanceRecord>[] = [
+    { key: 'date', title: tc('date'), sortable: true },
+    { key: 'employeeId', title: tc('employeeNo'), sortable: true },
+    { key: 'employeeName', title: tc('name'), sortable: true },
+    { key: 'department', title: tc('department'), sortable: true },
+    { key: 'checkIn', title: tc('checkIn'), sortable: true },
+    { key: 'checkOut', title: tc('checkOut'), sortable: true },
+    { key: 'workingHours', title: tc('workingHours'), sortable: true },
+    { key: 'overtimeHours', title: tc('overtimeHours'), sortable: true },
+    {
+      key: 'status',
+      title: tc('status'),
+      sortable: true,
+      render: (record) => {
+        const StatusIcon = statusConfig[record.status]?.icon || Clock;
+        return (
+          <div className="flex items-center justify-center gap-1">
+            <StatusIcon className="w-4 h-4" />
+            <span>{statusConfig[record.status]?.label || record.status}</span>
+          </div>
+        );
+      },
+    },
+    { key: 'remark', title: tc('remark') },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      render: (record) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleEdit(record)}>
+              <Edit className="mr-2 h-4 w-4" />
+              {tc('edit')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleDelete(record)}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              {tc('delete')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ];
+
   const { companyName } = useCompanyName();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -167,6 +208,7 @@ export default function AttendancePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [sortField, setSortField] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
 
@@ -234,7 +276,7 @@ export default function AttendancePage() {
         const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
         setAttendanceRecords(
           rawList.map((r: Loose, idx: number) => {
-            let dateStr = r.attendanceDate || r.attendance_date || r.date || '';
+            let dateStr = String(r.attendanceDate || r.attendance_date || r.date || '');
             if (dateStr && dateStr.includes('T')) {
               dateStr = formatDate(dateStr);
             }
@@ -251,8 +293,8 @@ export default function AttendancePage() {
                 r.workingHours ||
                 r.working_hours ||
                 calculateWorkingHours(
-                  r.checkInTime || r.check_in_time || r.check_in,
-                  r.checkOutTime || r.check_out_time || r.check_out
+                  String(r.checkInTime || r.check_in_time || r.check_in),
+                  String(r.checkOutTime || r.check_out_time || r.check_out)
                 ),
               overtimeHours: r.overtimeHours || r.overtime_hours || 0,
               remark: r.remark || '',
@@ -278,38 +320,11 @@ export default function AttendancePage() {
     setStatusFilter('all');
     setDepartmentFilter('all');
     setDateRange('all');
-    clear();
+    setSelectedRows([]);
+    setSortField('');
+    setSortDirection('asc');
     toast.success(t('resetSuccess'));
   }, [t]);
-
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  const SortableHeader = ({ field, children }: { field: string; children: React.ReactNode }) => (
-    <TableHead
-      className="cursor-pointer select-none border border-border bg-muted text-center whitespace-nowrap hover:bg-muted/80 transition-colors"
-      onClick={() => handleSort(field)}
-    >
-      <div className="flex items-center justify-center gap-1">
-        {children}
-        {sortField === field ? (
-          sortDirection === 'asc' ? (
-            <ArrowUp className="w-3 h-3" />
-          ) : (
-            <ArrowDown className="w-3 h-3" />
-          )
-        ) : (
-          <ArrowUpDown className="w-3 h-3 opacity-30" />
-        )}
-      </div>
-    </TableHead>
-  );
 
   // 筛选考勤记录
   const filteredRecords = useMemo(() => {
@@ -330,7 +345,7 @@ export default function AttendancePage() {
 
     if (sortField) {
       records = [...records].sort((a, b) => {
-        let aVal: Loose, bVal: Loose;
+        let aVal: string | number | undefined, bVal: string | number | undefined;
         switch (sortField) {
           case 'date':
             aVal = a.date;
@@ -412,15 +427,15 @@ export default function AttendancePage() {
   };
 
   // 编辑考勤记录
-  const handleEdit = (record: Loose) => {
+  const handleEdit = (record: AttendanceRecord) => {
     setCurrentRecord(record);
     setFormData({
       attendanceDate: record.date,
       employeeId: record.employeeId,
       employeeName: record.employeeName,
       departmentName: record.department,
-      checkInTime: record.checkIn,
-      checkOutTime: record.checkOut,
+      checkInTime: record.checkIn || '',
+      checkOutTime: record.checkOut || '',
       status: record.status,
       workingHours: record.workingHours?.toString() || '',
       overtimeHours: record.overtimeHours?.toString() || '',
@@ -494,7 +509,7 @@ export default function AttendancePage() {
   };
 
   // 删除考勤记录
-  const handleDelete = (record: Loose) => {
+  const handleDelete = (record: AttendanceRecord) => {
     setCurrentRecord(record);
     setIsDeleteDialogOpen(true);
   };
@@ -517,16 +532,12 @@ export default function AttendancePage() {
   };
 
   // 打印
-  const { selectedCount, isSelected, allSelected, toggle, toggleAll, clear } = useRowSelection(
-    filteredRecords,
-    (r) => String(r.id)
-  );
   const handlePrint = () => {
-    if (selectedCount === 0) {
+    if (selectedRows.length === 0) {
       toast.error(t('selectToPrint'));
       return;
     }
-    const recordsToPrint = filteredRecords.filter((r) => isSelected(String(r.id)));
+    const recordsToPrint = filteredRecords.filter((r) => selectedRows.includes(r.id));
     const statusLabels: Record<string, string> = {
       normal: tc('normal'),
       late: t('late'),
@@ -581,12 +592,6 @@ export default function AttendancePage() {
     printWindow.document.close();
     toast.success(t('printingRecords', { count: recordsToPrint.length }));
   };
-
-  // 选择记录
-  const toggleSelectRecord = (recordId: number) => toggle(String(recordId));
-
-  // 全选
-  const toggleSelectAll = () => toggleAll();;
 
   // 计算统计数据
   const totalRecords = attendanceRecords.length;
@@ -694,9 +699,9 @@ export default function AttendancePage() {
             </Select>
           </div>
 
-          {selectedCount > 0 && (
+          {selectedRows.length > 0 && (
             <Badge variant="secondary" className="ml-auto">
-              {t('selectedRecords', { count: selectedCount })}
+              {t('selectedRecords', { count: selectedRows.length })}
             </Badge>
           )}
         </div>
@@ -773,92 +778,16 @@ export default function AttendancePage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-center w-12">
-                      <Checkbox
-                        checked={allSelected}
-                        onCheckedChange={toggleSelectAll}
-                      />
-                    </TableHead>
-                    <SortableHeader field="date">{tc('date')}</SortableHeader>
-                    <SortableHeader field="employeeId">{tc('employeeNo')}</SortableHeader>
-                    <SortableHeader field="employeeName">{tc('name')}</SortableHeader>
-                    <SortableHeader field="department">{tc('department')}</SortableHeader>
-                    <SortableHeader field="checkIn">{tc('checkIn')}</SortableHeader>
-                    <SortableHeader field="checkOut">{tc('checkOut')}</SortableHeader>
-                    <SortableHeader field="workingHours">{tc('workingHours')}</SortableHeader>
-                    <SortableHeader field="overtimeHours">{tc('overtimeHours')}</SortableHeader>
-                    <SortableHeader field="status">{tc('status')}</SortableHeader>
-                    <TableHead className="text-center">{tc('remark')}</TableHead>
-                    <TableHead className="text-center">{tc('actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRecords.map((record) => {
-                    const StatusIcon = statusConfig[record.status]?.icon || Clock;
-                    return (
-                      <TableRow key={record.id} className="hover:bg-accent/50 even:bg-muted/30">
-                        <TableCell className="text-center">
-                          <Checkbox
-                            checked={isSelected(String(record.id))}
-                            onCheckedChange={() => toggleSelectRecord(record.id)}
-                          />
-                        </TableCell>
-                        <TableCell className="text-center">{record.date}</TableCell>
-                        <TableCell className="text-center font-mono">{record.employeeId}</TableCell>
-                        <TableCell className="text-center">{record.employeeName}</TableCell>
-                        <TableCell className="text-center">{record.department}</TableCell>
-                        <TableCell className="text-center">{record.checkIn || '-'}</TableCell>
-                        <TableCell className="text-center">{record.checkOut || '-'}</TableCell>
-                        <TableCell className="text-center">
-                          {record.workingHours} {tc('hours')}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {record.overtimeHours} {tc('hours')}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <StatusIcon className="w-4 h-4" />
-                            <span>{statusConfig[record.status]?.label || record.status}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">{record.remark || '-'}</TableCell>
-                        <TableCell className="text-center">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEdit(record)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                {tc('edit')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDelete(record)}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                {tc('delete')}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-            {filteredRecords.length === 0 && (
-              <div className="text-center py-12">
-                <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                  <Calendar className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <p className="text-muted-foreground">{t('noAttendanceRecords')}</p>
-              </div>
-            )}
+            <StandardTable<AttendanceRecord>
+              rowSelectable
+              selectedRows={filteredRecords.filter((r) => selectedRows.includes(r.id))}
+              onRowSelectedChange={(rows) => setSelectedRows(rows.map((r) => r.id))}
+              rowKey="id"
+              dataSource={filteredRecords}
+              columns={columns}
+              total={filteredRecords.length}
+              showPagination
+            />
           </CardContent>
         </Card>
       </div>
@@ -877,7 +806,7 @@ export default function AttendancePage() {
                 <Input
                   id="attendanceDate"
                   type="date"
-                  value={formData.attendanceDate}
+                  value={toDateInput(formData.attendanceDate)}
                   onChange={(e) => setFormData({ ...formData, attendanceDate: e.target.value })}
                 />
               </div>
@@ -1013,7 +942,7 @@ export default function AttendancePage() {
                 <Input
                   id="attendanceDate"
                   type="date"
-                  value={formData.attendanceDate}
+                  value={toDateInput(formData.attendanceDate)}
                   onChange={(e) => setFormData({ ...formData, attendanceDate: e.target.value })}
                 />
               </div>

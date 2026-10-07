@@ -1,6 +1,4 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
@@ -10,15 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -70,6 +60,8 @@ export default function ProductLabelPage() {
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [selectedRows, setSelectedRows] = useState<Item[]>([]);
   const [searchNo, setSearchNo] = useState('');
   const [searchMaterial, setSearchMaterial] = useState('');
   const [searchStatus, setSearchStatus] = useState('');
@@ -91,7 +83,7 @@ export default function ProductLabelPage() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         labelNo: searchNo,
         materialName: searchMaterial,
         status: searchStatus,
@@ -103,7 +95,7 @@ export default function ProductLabelPage() {
         setTotal(result.data.total || 0);
       }
     } catch {}
-  }, [page, searchNo, searchMaterial, searchStatus]);
+  }, [page, pageSize, searchNo, searchMaterial, searchStatus]);
 
   const fetchStats = async () => {
     try {
@@ -122,14 +114,7 @@ export default function ProductLabelPage() {
     fetchStats();
   }, [fetchData]);
 
-  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    list,
-    (r) => String(r.id)
-  );
-
-  const toggleSelect = (id: number) => toggle(String(id));
-
-  const toggleSelectAll = () => toggleAll();
+  const selectedCount = selectedRows.length;
 
   const handleSave = async () => {
     try {
@@ -182,7 +167,7 @@ export default function ProductLabelPage() {
   };
 
   const handleBatchPrint = async () => {
-    const items = list.filter((i) => isSelected(String(i.id)));
+    const items = selectedRows;
     if (items.length === 0) {
       toast({ title: t('selectLabelFirst'), variant: 'destructive' });
       return;
@@ -256,6 +241,116 @@ export default function ProductLabelPage() {
     };
     return labels[status] || tc('unknown');
   };
+
+  const labelStatusLabels: Record<number, string> = {
+    1: t('labelPendingPrint'),
+    2: t('labelPrinted'),
+    3: t('labelLabeled'),
+  };
+
+  // StandardTable 列定义（服务端分页，接口暂不支持 sortField/sortDirection，故不开启 sortable）
+  const columns: StandardTableColumn<Item>[] = [
+    {
+      key: 'label_no',
+      title: t('labelNo'),
+      render: (r) => <span className="text-xs font-mono">{r.label_no}</span>,
+    },
+    {
+      key: 'work_order_no',
+      title: t('workOrderNo'),
+      render: (r) => <span className="text-xs">{r.work_order_no || '-'}</span>,
+    },
+    {
+      key: 'material_code',
+      title: t('materialCode'),
+      render: (r) => <span className="text-xs">{r.material_code || '-'}</span>,
+    },
+    {
+      key: 'material_name',
+      title: t('materialName'),
+      render: (r) => <span className="text-xs">{r.material_name || '-'}</span>,
+    },
+    {
+      key: 'quantity',
+      title: tc('quantity'),
+      render: (r) => (
+        <span className="text-xs">
+          {r.quantity}
+          {r.unit}
+        </span>
+      ),
+    },
+    {
+      key: 'batch_no',
+      title: t('batchNo'),
+      render: (r) => <span className="text-xs">{r.batch_no || '-'}</span>,
+    },
+    {
+      key: 'qc_result',
+      title: t('qcResult'),
+      render: (r) => <span className="text-xs">{r.qc_result || '-'}</span>,
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => {
+        const st = LABEL_STATUS_CONFIG[r.status] || LABEL_STATUS_CONFIG[1];
+        return (
+          <Badge variant={st.variant} className="text-xs">
+            {labelStatusLabels[r.status] || tc('unknown')}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      // 原有操作列：打印 / 已贴标 / 编辑 / 删除，逻辑保持原样
+      render: (r) => (
+        <div className="flex gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 text-xs px-2"
+            onClick={() => handleSinglePrint(r)}
+            title={t('printLabel')}
+          >
+            <Printer className="h-3 w-3" />
+          </Button>
+          {r.status === 2 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleStatusChange(r.id, 3)}
+            >
+              {t('labelLabeled')}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              setEditItem(r);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(r.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
@@ -322,7 +417,7 @@ export default function ProductLabelPage() {
                   formatter: (v) => getExportLabel(v),
                 },
               ]}
-              data={selectedCount > 0 ? list.filter((i) => isSelected(String(i.id))) : list}
+              data={selectedCount > 0 ? selectedRows : list}
             />
             <Button
               size="sm"
@@ -366,141 +461,32 @@ export default function ProductLabelPage() {
 
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <Checkbox
-                      checked={allSelected}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead className="text-xs">{t('labelNo')}</TableHead>
-                  <TableHead className="text-xs">{t('workOrderNo')}</TableHead>
-                  <TableHead className="text-xs">{t('materialCode')}</TableHead>
-                  <TableHead className="text-xs">{t('materialName')}</TableHead>
-                  <TableHead className="text-xs">{tc('quantity')}</TableHead>
-                  <TableHead className="text-xs">{t('batchNo')}</TableHead>
-                  <TableHead className="text-xs">{t('qcResult')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => {
-                  const st = LABEL_STATUS_CONFIG[item.status] || LABEL_STATUS_CONFIG[1];
-                  const labelStatusLabels: Record<number, string> = {
-                    1: t('labelPendingPrint'),
-                    2: t('labelPrinted'),
-                    3: t('labelLabeled'),
-                  };
-                  return (
-                    <TableRow
-                      key={item.id}
-                      className={isSelected(String(item.id)) ? 'bg-blue-500/10' : ''}
-                    >
-                      <TableCell>
-                        <Checkbox
-                          checked={isSelected(String(item.id))}
-                          onCheckedChange={() => toggleSelect(item.id)}
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">{item.label_no}</TableCell>
-                      <TableCell className="text-xs">{item.work_order_no || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.material_code || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.material_name || '-'}</TableCell>
-                      <TableCell className="text-xs">
-                        {item.quantity}
-                        {item.unit}
-                      </TableCell>
-                      <TableCell className="text-xs">{item.batch_no || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.qc_result || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
-                          {labelStatusLabels[item.status] || tc('unknown')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 text-xs px-2"
-                            onClick={() => handleSinglePrint(item)}
-                            title={t('printLabel')}
-                          >
-                            <Printer className="h-3 w-3" />
-                          </Button>
-                          {item.status === 2 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 3)}
-                            >
-                              {t('labelLabeled')}
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => {
-                              setEditItem(item);
-                              setShowDialog(true);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center text-gray-400 py-8">
-                      {tc('noData')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<Item>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              onRetry={() => fetchData()}
+              emptyText={tc('noData')}
+              customStyle={{
+                containerClassName: 'px-2 pb-2',
+                rowClassName: (row) =>
+                  selectedRows.some((s) => s.id === (row as Item).id) ? 'bg-blue-500/10' : '',
+              }}
+            />
           </CardContent>
         </Card>
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            {tc('total', { count: total })}{' '}
-            {selectedCount > 0 && t('selectedCount', { count: selectedCount })}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>

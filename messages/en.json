@@ -5734,9 +5734,7 @@
     "outsource_receive": "Outsourcing Receipt",
     "outsource_settlement": "Outsourcing Settlement",
     "quality": "Quality Dept",
-    "quality_incoming": "Incoming Inspection",
-    "quality_process": "Process Inspection",
-    "quality_final": "Final Inspection",
+    "quality_process": "Quality Inspection Center",
     "quality_trace": "Quality Traceability",
     "quality_unqualified": "Non-conforming Handling",
     "quality_sgs": "SGS Certification",
@@ -7875,6 +7873,7 @@
     "purchaseOrder": "Purchase Order",
     "purchaseRequest": "Purchase Request",
     "supplierManagement": "Supplier Management",
+    "totalSuppliers": "Total Suppliers",
     "newPurchaseOrder": "New Purchase Order",
     "editPurchaseOrder": "Edit Purchase Order",
     "createPurchaseOrder": "Create Purchase Order",
@@ -8293,6 +8292,7 @@
     "total": "Total"
   },
   "Quality": {
+    "k_center_title": "Quality Inspection Center",
     "k_link_color_std": "Link Sign-off Color Sample",
     "k_link_none": "Not linked",
     "k_base_ref": "Sign-off Reference",
@@ -8751,7 +8751,10 @@
     "testing": "Testing",
     "k_1upxefi": "追溯记录",
     "unknown": "Unknown",
-    "otherSource": "Other"
+    "otherSource": "Other",
+    "unqualifiedInspection": "Rejected",
+    "monthlyInspectionCount": "Inspections This Month",
+    "qualifiedRate": "Qualified Rate"
   },
   "Equipment": {
     "title": "Equipment Management",
@@ -11277,6 +11280,7 @@
     "inkColorList": "Ink Color List",
     "inkFormulaManagement": "Ink Formula Management",
     "inkManagement": "Ink Management",
+    "inkManagementDesc": "Manage ink master data, stock levels and safety-stock alerts",
     "inkName": "Ink Name",
     "isCut": "Slitted",
     "isUsed": "Used",

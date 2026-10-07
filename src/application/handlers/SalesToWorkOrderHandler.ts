@@ -2,6 +2,7 @@ import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { SalesOrderApprovedEvent } from '@/domain/sales/events/SalesOrderEvents';
 import { WorkOrderCreatedEvent } from '@/domain/production/events/WorkOrderEvents';
 import { query, transaction } from '@/lib/db';
+import { generateDocumentNo } from '@/lib/document-numbering';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { secureLog } from '@/lib/logger';
 import { WorkOrderPriority, WorkOrderStatus } from '@/lib/constants';
@@ -91,7 +92,6 @@ export class SalesToWorkOrderHandler implements EventHandler<SalesOrderApprovedE
   }): Promise<WorkOrderCreationResult | null> {
     const { orderId, orderNo, materialId, materialName, requiredQty } = params;
 
-    const workOrderNo = this.generateWorkOrderNo();
     const today = new Date().toISOString().slice(0, 10);
     const endDate = this.calculateEndDate(requiredQty);
 
@@ -135,7 +135,11 @@ export class SalesToWorkOrderHandler implements EventHandler<SalesOrderApprovedE
       ? await this.getMaterialRequirements(productId, requiredQty)
       : [];
 
+    let workOrderNo = '';
     const workOrderId = await transaction(async (conn) => {
+      // 工单号走集中式 generateDocumentNo（命名锁串行化 + 含软删行取最大流水），
+      // 杜绝并发重复与已删号复用（uk_work_order_no 唯一约束治理）。
+      workOrderNo = await generateDocumentNo('work_order', conn);
       // ⚠️ 原先此处写 `status = 1` / `priority = 2`（数字码写入 varchar 列）：
       //    - status 被 MySQL 强制转成字符串 '1'，成为 prod_work_order.status 的越界值
       //      （已由 20260923_converge_work_order_status_domain.sql 归一为 'pending'）；
@@ -192,12 +196,6 @@ export class SalesToWorkOrderHandler implements EventHandler<SalesOrderApprovedE
       plannedQty: requiredQty,
       materialCount: materialRequirements.length,
     };
-  }
-
-  private generateWorkOrderNo(): string {
-    const date = new Date();
-    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-    return `WO${dateStr}${String(date.getTime()).slice(-6)}`;
   }
 
   private async getMaterialRequirements(

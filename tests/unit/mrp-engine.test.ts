@@ -1,6 +1,12 @@
 /**
  * MRP 引擎核心算法单元测试
  * 覆盖 explodeBOM、calculateNetRequirements、runFullMRP 的核心逻辑
+ *
+ * 2026-09-30 更新：mrp-engine 已重构（BOM 改走 mdm_product→prd_bom.product_id→prd_bom_detail→inv_material），
+ * 测试 mock 同步对齐新 SQL 形状：
+ *   - 根节点信息优先查 mdm_product（product_code/product_name AS material_code/material_name），缺失回落 inv_material；
+ *   - prd_bom 按 product_id 查（含 status=1, deleted=0），不再 SELECT material_id/is_default；
+ *   - prd_bom_detail 通过 LEFT JOIN inv_material 一次取齐 material_code/material_name。
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -33,34 +39,70 @@ function createMockConn(queryMocks: Array<{ match: RegExp; result: any[] }>) {
   return conn;
 }
 
+// 通用：mdm_product 根节点查询
+const mdmProductMatch = /SELECT product_code AS material_code, product_name AS material_name, unit\s+FROM mdm_product WHERE id = \? AND deleted = 0/;
+// 通用：inv_material 根节点回落查询
+const invMaterialRootMatch = /SELECT material_code, material_name, unit FROM inv_material WHERE id = \? AND deleted = 0/;
+// 通用：prd_bom 头查询（按 product_id，无 material_id / is_default 列）
+const prdBomMatch = /SELECT b\.id, b\.product_id, b\.version, b\.status\s+FROM prd_bom b\s+WHERE b\.product_id = \? AND b\.status = 1 AND b\.deleted = 0/;
+// 通用：prd_bom_detail + JOIN inv_material
+const prdBomDetailMatch = /SELECT bd\.id, bd\.bom_id, bd\.material_id, bd\.quantity, bd\.unit, bd\.loss_rate,\s+m\.material_code, m\.material_name\s+FROM prd_bom_detail bd\s+LEFT JOIN inv_material m ON m\.id = bd\.material_id\s+WHERE bd\.bom_id = \?/;
+// 通用：inv_material 提前行检查（仅 SELECT id，不含其他列）
+const invMaterialExistsMatch = /SELECT id FROM inv_material WHERE id = \? AND deleted = 0/;
+// 通用：子物料代码名称查询（prd_bom_detail 已 LEFT JOIN，这里仅做 fallback）
+const invMaterialInfoMatch = /SELECT id, material_code, material_name.*FROM inv_material WHERE id = \?/;
+// 通用：calculateNetRequirements 工单查询
+const workOrderCalcMatch = /SELECT wo\.id, wo\.work_order_no, wo\.planned_qty AS plan_qty, wo\.plan_start_date,\s+wo\.product_id\s+FROM prod_work_order wo/;
+// 通用：runFullMRP 工单查询（无 work_order_no，含 plan_start_date）
+const workOrderRunFullMatch = /SELECT wo\.id, wo\.planned_qty AS plan_qty, wo\.plan_start_date, wo\.product_id\s+FROM prod_work_order wo/;
+// 通用：库存查询（含 WHERE 条件，用 (?=FROM) 前瞻匹配即可）
+const inventoryMatch = /SELECT COALESCE\(SUM\(available_qty\), 0\) as total_available\s+FROM inv_inventory(?=\s+WHERE|$)/;
+// 通用：安全库存 + 物料信息（material_purchase / safety_stock 词）
+const materialSafetyMatch = /safety_stock/;
+// 通用：在途
+const inTransitMatch = /in_transit/;
+// 通用：采购价格
+const purchasePriceMatch = /SELECT purchase_price FROM inv_material WHERE id = \? AND deleted = 0/;
+
 describe('MRP 引擎 - explodeBOM', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
   it('应该正确展开单层BOM为树形结构', async () => {
-    vi.mock('@/lib/calc-param-service', () => ({
+    vi.doMock('@/lib/calc-param-service', () => ({
       CalcParamService: {
         getInt: vi.fn().mockResolvedValue(7),
       },
     }));
+    vi.doMock('@/lib/logger', () => ({
+      logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
+    }));
+    vi.doMock('@/lib/constants', () => ({
+      WORK_ORDER_STATUSES_OPEN: ['pending', 'confirmed', 'producing'],
+    }));
+    const { explodeBOM } = await import('@/lib/mrp-engine');
 
     const conn = {
       async query(sql: string, params?: any[]): Promise<any[]> {
         const s = sql.replace(/\s+/g, ' ').trim();
-        // 产品信息查询 (含 deleted = 0)
-        if (/SELECT id, material_code, material_name, unit FROM inv_material WHERE id = \? AND deleted = 0/.test(s)) {
-          return [{ id: 1, material_code: 'PROD-001', material_name: '产品A', unit: '件' }];
+        // 产品域根节点
+        if (mdmProductMatch.test(s)) {
+          return [{ material_code: 'PROD-001', material_name: '产品A', unit: '件' }];
         }
-        // 提前行检查 (SELECT id FROM inv_material WHERE id = ? AND deleted = 0)
-        if (/SELECT id FROM inv_material WHERE id = \? AND deleted = 0/.test(s)) {
+        // 提前期行检查
+        if (invMaterialExistsMatch.test(s)) {
           return [{ id: params?.[0] }];
         }
         // BOM — 仅产品ID=1有BOM
-        if (/SELECT id, material_id, version, status, is_default FROM prd_bom/.test(s)) {
+        if (prdBomMatch.test(s)) {
           if (params?.[0] === 1) {
-            return [{ id: 100, material_id: 1, version: '1.0', status: 1, is_default: 1 }];
+            return [{ id: 100, product_id: 1, version: '1.0', status: 1 }];
           }
           return [];
         }
-        // BOM 明细 (含 JOIN inv_material)
-        if (/SELECT bd\.id, bd\.bom_id, bd\.material_id, bd\.quantity.*FROM prd_bom_detail bd/.test(s)) {
+        // BOM 明细 + JOIN inv_material
+        if (prdBomDetailMatch.test(s)) {
           if (params?.[0] === 100) {
             return [
               { id: 201, bom_id: 100, material_id: 101, quantity: 2, unit: 'kg', loss_rate: 5, material_code: 'MAT-001', material_name: '材料1' },
@@ -69,12 +111,11 @@ describe('MRP 引擎 - explodeBOM', () => {
           }
           return [];
         }
-        // 子物料信息查询 (SELECT id, material_code, material_name FROM inv_material WHERE id = ?)
-        if (/SELECT id, material_code, material_name FROM inv_material WHERE id = \?/.test(s)) {
-          const id = params?.[0];
-          if (id === 101) return [{ id: 101, material_code: 'MAT-001', material_name: '材料1' }];
-          if (id === 102) return [{ id: 102, material_code: 'MAT-002', material_name: '材料2' }];
-          return [{ id, material_code: '', material_name: '' }];
+        // inv_material 代码名称 fallback
+        if (invMaterialInfoMatch.test(s)) {
+          if (params?.[0] === 101) return [{ id: 101, material_code: 'MAT-001', material_name: '材料1' }];
+          if (params?.[0] === 102) return [{ id: 102, material_code: 'MAT-002', material_name: '材料2' }];
+          return [];
         }
         return [];
       },
@@ -85,6 +126,7 @@ describe('MRP 引擎 - explodeBOM', () => {
 
     expect(tree.material_id).toBe(1);
     expect(tree.material_code).toBe('PROD-001');
+    expect(tree.material_name).toBe('产品A');
     expect(tree.quantity).toBe(10);
     expect(tree.is_leaf).toBe(false);
     expect(tree.children).toHaveLength(2);
@@ -104,25 +146,37 @@ describe('MRP 引擎 - explodeBOM', () => {
   });
 
   it('无BOM的产品应标记为叶子节点', async () => {
-    vi.mock('@/lib/calc-param-service', () => ({
+    vi.doMock('@/lib/calc-param-service', () => ({
       CalcParamService: {
         getInt: vi.fn().mockResolvedValue(7),
       },
     }));
+    vi.doMock('@/lib/logger', () => ({
+      logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
+    }));
+    vi.doMock('@/lib/constants', () => ({
+      WORK_ORDER_STATUSES_OPEN: ['pending', 'confirmed', 'producing'],
+    }));
+    const { explodeBOM } = await import('@/lib/mrp-engine');
 
     const conn = createMockConn([
       {
-        match: /SELECT id, material_code, material_name, unit FROM inv_material WHERE id = \? AND deleted = 0/,
+        // mdm_product 未命中（产品域无此 ID），回落 inv_material
+        match: mdmProductMatch,
+        result: [],
+      },
+      {
+        match: invMaterialRootMatch,
         result: [
-          { id: 999, material_code: 'RAW-001', material_name: '原材料', unit: 'kg' },
+          { material_code: 'RAW-001', material_name: '原材料', unit: 'kg' },
         ],
       },
       {
-        match: /SELECT id FROM inv_material WHERE id = \? AND deleted = 0/,
+        match: invMaterialExistsMatch,
         result: [{ id: 999 }],
       },
       {
-        match: /SELECT id, material_id, version, status, is_default FROM prd_bom/,
+        match: prdBomMatch,
         result: [],
       },
     ]);
@@ -130,47 +184,51 @@ describe('MRP 引擎 - explodeBOM', () => {
     const tree = await explodeBOM(conn, 999, 5);
 
     expect(tree.material_id).toBe(999);
+    expect(tree.material_code).toBe('RAW-001');
     expect(tree.is_leaf).toBe(true);
     expect(tree.children).toHaveLength(0);
   });
 
   it('应该处理多层BOM展开（半成品）', async () => {
-    vi.mock('@/lib/calc-param-service', () => ({
+    vi.doMock('@/lib/calc-param-service', () => ({
       CalcParamService: {
         getInt: vi.fn().mockResolvedValue(7),
       },
     }));
+    vi.doMock('@/lib/logger', () => ({
+      logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
+    }));
+    vi.doMock('@/lib/constants', () => ({
+      WORK_ORDER_STATUSES_OPEN: ['pending', 'confirmed', 'producing'],
+    }));
+    const { explodeBOM } = await import('@/lib/mrp-engine');
 
     const conn = {
       async query(sql: string, params?: any[]): Promise<any[]> {
         const s = sql.replace(/\s+/g, ' ').trim();
-        // 产品信息查询 (含 deleted = 0)
-        if (/SELECT id, material_code, material_name, unit FROM inv_material WHERE id = \? AND deleted = 0/.test(s)) {
+        // 产品域根节点
+        if (mdmProductMatch.test(s)) {
           const id = params?.[0];
-          if (id === 1) {
-            return [{ id: 1, material_code: 'PROD-001', material_name: '产品A', unit: '件' }];
-          }
-          if (id === 101) {
-            return [{ id: 101, material_code: 'SEMI-001', material_name: '半成品1', unit: '件' }];
-          }
-          return [{ id, material_code: `MAT-${id}`, material_name: `物料${id}`, unit: 'kg' }];
+          if (id === 1) return [{ material_code: 'PROD-001', material_name: '产品A', unit: '件' }];
+          if (id === 101) return [{ material_code: 'SEMI-001', material_name: '半成品1', unit: '件' }];
+          return [];
         }
-        // 提前行检查
-        if (/SELECT id FROM inv_material WHERE id = \? AND deleted = 0/.test(s)) {
+        // 提前期行检查
+        if (invMaterialExistsMatch.test(s)) {
           return [{ id: params?.[0] }];
         }
-        // BOM 查询
-        if (/SELECT id, material_id, version, status, is_default FROM prd_bom/.test(s)) {
+        // BOM 查询（按 product_id）
+        if (prdBomMatch.test(s)) {
           if (params?.[0] === 1) {
-            return [{ id: 100, material_id: 1, version: '1.0', status: 1, is_default: 1 }];
+            return [{ id: 100, product_id: 1, version: '1.0', status: 1 }];
           }
           if (params?.[0] === 101) {
-            return [{ id: 200, material_id: 101, version: '1.0', status: 1, is_default: 1 }];
+            return [{ id: 200, product_id: 101, version: '1.0', status: 1 }];
           }
           return [];
         }
-        // BOM 明细查询 (含 JOIN inv_material)
-        if (/SELECT bd\.id, bd\.bom_id, bd\.material_id, bd\.quantity.*FROM prd_bom_detail bd/.test(s)) {
+        // BOM 明细 + JOIN inv_material
+        if (prdBomDetailMatch.test(s)) {
           const bomId = params?.[0];
           if (bomId === 100) {
             return [{
@@ -185,13 +243,6 @@ describe('MRP 引擎 - explodeBOM', () => {
             }];
           }
           return [];
-        }
-        // 子物料信息查询
-        if (/SELECT id, material_code, material_name FROM inv_material WHERE id = \?/.test(s)) {
-          const id = params?.[0];
-          if (id === 101) return [{ id: 101, material_code: 'SEMI-001', material_name: '半成品1' }];
-          if (id === 201) return [{ id: 201, material_code: 'RAW-001', material_name: '原材料1' }];
-          return [{ id, material_code: `MAT-${id}`, material_name: `物料${id}` }];
         }
         return [];
       },
@@ -217,54 +268,73 @@ describe('MRP 引擎 - explodeBOM', () => {
 });
 
 describe('MRP 引擎 - calculateNetRequirements', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
   it('空工单列表应返回空数组', async () => {
-    vi.mock('@/lib/calc-param-service', () => ({
+    vi.doMock('@/lib/calc-param-service', () => ({
       CalcParamService: {
         getInt: vi.fn().mockResolvedValue(7),
       },
     }));
+    vi.doMock('@/lib/logger', () => ({
+      logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
+    }));
+    vi.doMock('@/lib/constants', () => ({
+      WORK_ORDER_STATUSES_OPEN: ['pending', 'confirmed', 'producing'],
+    }));
+    const { calculateNetRequirements } = await import('@/lib/mrp-engine');
+
     const conn = createMockConn([]);
     const result = await calculateNetRequirements(conn, [], 1);
     expect(result).toEqual([]);
   });
 
   it('应该正确计算净需求（考虑库存和在途）', async () => {
-    vi.mock('@/lib/calc-param-service', () => ({
+    vi.doMock('@/lib/calc-param-service', () => ({
       CalcParamService: {
         getInt: vi.fn().mockResolvedValue(7),
       },
     }));
+    vi.doMock('@/lib/logger', () => ({
+      logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
+    }));
+    vi.doMock('@/lib/constants', () => ({
+      WORK_ORDER_STATUSES_OPEN: ['pending', 'confirmed', 'producing'],
+    }));
+    const { calculateNetRequirements } = await import('@/lib/mrp-engine');
 
     const conn = {
       async query(sql: string, params?: any[]): Promise<any[]> {
         const s = sql.replace(/\s+/g, ' ').trim();
-        // 工单查询
-        if (/SELECT wo\.id, wo\.work_order_no, wo\.plan_qty, wo\.plan_start_date, wo\.material_id.*FROM prd_work_order/.test(s)) {
+        // 工单查询（calculateNetRequirements 取 product_id）
+        if (workOrderCalcMatch.test(s)) {
           return [{
             id: 1,
             work_order_no: 'WO001',
             plan_qty: 10,
             plan_start_date: '2026-07-10',
-            material_id: 1,
+            product_id: 1,
           }];
         }
-        // 产品信息 (含 deleted = 0)
-        if (/SELECT id, material_code, material_name, unit FROM inv_material WHERE id = \? AND deleted = 0/.test(s)) {
-          return [{ id: 1, material_code: 'PROD-001', material_name: '产品A', unit: '件' }];
+        // 产品域根节点
+        if (mdmProductMatch.test(s)) {
+          return [{ material_code: 'PROD-001', material_name: '产品A', unit: '件' }];
         }
-        // 提前行检查
-        if (/SELECT id FROM inv_material WHERE id = \? AND deleted = 0/.test(s)) {
+        // 提前期行检查
+        if (invMaterialExistsMatch.test(s)) {
           return [{ id: params?.[0] }];
         }
-        // BOM — 仅产品ID=1有BOM，原材料无BOM
-        if (/SELECT id, material_id, version, status, is_default FROM prd_bom/.test(s)) {
+        // BOM（按 product_id=1）
+        if (prdBomMatch.test(s)) {
           if (params?.[0] === 1) {
-            return [{ id: 100, material_id: 1, version: '1.0', status: 1, is_default: 1 }];
+            return [{ id: 100, product_id: 1, version: '1.0', status: 1 }];
           }
           return [];
         }
-        // BOM 明细 (含 JOIN inv_material)
-        if (/SELECT bd\.id, bd\.bom_id, bd\.material_id, bd\.quantity.*FROM prd_bom_detail bd/.test(s)) {
+        // BOM 明细 + JOIN inv_material
+        if (prdBomDetailMatch.test(s)) {
           if (params?.[0] === 100) {
             return [{
               id: 201, bom_id: 100, material_id: 101, quantity: 2, unit: 'kg', loss_rate: 0,
@@ -273,22 +343,25 @@ describe('MRP 引擎 - calculateNetRequirements', () => {
           }
           return [];
         }
-        // 子物料信息查询
-        if (/SELECT id, material_code, material_name FROM inv_material WHERE id = \?/.test(s)) {
-          const id = params?.[0];
-          if (id === 101) return [{ id: 101, material_code: 'MAT-001', material_name: '材料1' }];
-          return [{ id, material_code: '', material_name: '' }];
+        // inv_material 代码名称 fallback（explodeBOM 内部调用 + calculateNetRequirements 物料主数据）
+        if (invMaterialInfoMatch.test(s)) {
+          if (params?.[0] === 101) return [{ id: 101, material_code: 'MAT-001', material_name: '材料1', unit: 'kg', safety_stock: 0, purchase_price: 0 }];
+          return [];
         }
         // 库存查询
-        if (/SELECT COALESCE\(SUM\(available_qty\)/.test(s)) {
+        if (inventoryMatch.test(s)) {
           return [{ total_available: 10 }];
         }
-        // 安全库存查询
-        if (/safety_stock/.test(s) && !/po_item/.test(s) && !/in_transit/.test(s)) {
+        // 安全库存 + 物料主数据
+        if (materialSafetyMatch.test(s) && !inTransitMatch.test(s)) {
           return [{ id: 101, material_code: 'MAT-001', material_name: '材料1', unit: 'kg', safety_stock: 0, purchase_price: 0, lead_time_days: 7 }];
         }
+        // 分配查询（必须先于 in_transit 检查，因为 SQL 含 mii.issued_qty）
+        if (/mii\.issued_qty.*total_allocated/i.test(s)) {
+          return [{ total_allocated: 0 }];
+        }
         // 在途查询
-        if (/in_transit/.test(s) || /po_item/.test(s)) {
+        if (inTransitMatch.test(s)) {
           return [{ total_in_transit: 0 }];
         }
         return [];
@@ -312,12 +385,24 @@ describe('MRP 引擎 - calculateNetRequirements', () => {
 });
 
 describe('MRP 引擎 - runFullMRP', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
   it('空工单列表应返回空结果', async () => {
-    vi.mock('@/lib/calc-param-service', () => ({
+    vi.doMock('@/lib/calc-param-service', () => ({
       CalcParamService: {
         getInt: vi.fn().mockResolvedValue(7),
       },
     }));
+    vi.doMock('@/lib/logger', () => ({
+      logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
+    }));
+    vi.doMock('@/lib/constants', () => ({
+      WORK_ORDER_STATUSES_OPEN: ['pending', 'confirmed', 'producing'],
+    }));
+    const { runFullMRP } = await import('@/lib/mrp-engine');
+
     const conn = createMockConn([]);
     const result = await runFullMRP(conn, [], 1, null, 'system', false);
 
@@ -328,50 +413,58 @@ describe('MRP 引擎 - runFullMRP', () => {
   });
 
   it('应该执行完整MRP流程（不自动生成请购单）', async () => {
-    vi.mock('@/lib/calc-param-service', () => ({
+    vi.doMock('@/lib/calc-param-service', () => ({
       CalcParamService: {
         getInt: vi.fn().mockResolvedValue(7),
       },
     }));
+    vi.doMock('@/lib/logger', () => ({
+      logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
+    }));
+    vi.doMock('@/lib/constants', () => ({
+      WORK_ORDER_STATUSES_OPEN: ['pending', 'confirmed', 'producing'],
+    }));
+    const { runFullMRP } = await import('@/lib/mrp-engine');
 
     const conn = {
       async query(sql: string, params?: any[]): Promise<any[]> {
         const s = sql.replace(/\s+/g, ' ').trim();
         // calculateNetRequirements 的工单查询
-        if (/SELECT wo\.id, wo\.work_order_no, wo\.plan_qty, wo\.plan_start_date, wo\.material_id.*FROM prd_work_order/.test(s)) {
+        if (workOrderCalcMatch.test(s)) {
           return [{
             id: 1,
             work_order_no: 'WO001',
             plan_qty: 10,
             plan_start_date: '2026-07-10',
-            material_id: 1,
+            product_id: 1,
           }];
         }
-        // runFullMRP 的工单查询（无 work_order_no）
-        if (/SELECT wo\.id, wo\.plan_qty, wo\.material_id.*FROM prd_work_order/.test(s)) {
+        // runFullMRP 的工单查询（含 plan_start_date，取 product_id）
+        if (workOrderRunFullMatch.test(s)) {
           return [{
             id: 1,
             plan_qty: 10,
-            material_id: 1,
+            plan_start_date: '2026-07-10',
+            product_id: 1,
           }];
         }
-        // 产品信息 (含 deleted = 0)
-        if (/SELECT id, material_code, material_name, unit FROM inv_material WHERE id = \? AND deleted = 0/.test(s)) {
-          return [{ id: 1, material_code: 'PROD-001', material_name: '产品A', unit: '件' }];
+        // 产品域根节点
+        if (mdmProductMatch.test(s)) {
+          return [{ material_code: 'PROD-001', material_name: '产品A', unit: '件' }];
         }
-        // 提前行检查
-        if (/SELECT id FROM inv_material WHERE id = \? AND deleted = 0/.test(s)) {
+        // 提前期行检查
+        if (invMaterialExistsMatch.test(s)) {
           return [{ id: params?.[0] }];
         }
         // BOM
-        if (/SELECT id, material_id, version, status, is_default FROM prd_bom/.test(s)) {
+        if (prdBomMatch.test(s)) {
           if (params?.[0] === 1) {
-            return [{ id: 100, material_id: 1, version: '1.0', status: 1, is_default: 1 }];
+            return [{ id: 100, product_id: 1, version: '1.0', status: 1 }];
           }
           return [];
         }
-        // BOM 明细 (含 JOIN inv_material)
-        if (/SELECT bd\.id, bd\.bom_id, bd\.material_id, bd\.quantity.*FROM prd_bom_detail bd/.test(s)) {
+        // BOM 明细 + JOIN inv_material
+        if (prdBomDetailMatch.test(s)) {
           if (params?.[0] === 100) {
             return [{
               id: 201, bom_id: 100, material_id: 101, quantity: 2, unit: 'kg', loss_rate: 0,
@@ -380,26 +473,24 @@ describe('MRP 引擎 - runFullMRP', () => {
           }
           return [];
         }
-        // 子物料信息查询
-        if (/SELECT id, material_code, material_name FROM inv_material WHERE id = \?/.test(s)) {
-          const id = params?.[0];
-          if (id === 101) return [{ id: 101, material_code: 'MAT-001', material_name: '材料1' }];
-          return [{ id, material_code: '', material_name: '' }];
-        }
         // 库存查询
-        if (/SELECT COALESCE\(SUM\(available_qty\)/.test(s)) {
+        if (inventoryMatch.test(s)) {
           return [{ total_available: 5 }];
         }
-        // 安全库存
-        if (/safety_stock/.test(s) && !/po_item/.test(s) && !/in_transit/.test(s)) {
+        // 安全库存 + 物料主数据
+        if (materialSafetyMatch.test(s) && !inTransitMatch.test(s)) {
           return [{ id: 101, material_code: 'MAT-001', material_name: '材料1', unit: 'kg', safety_stock: 0, purchase_price: 10, lead_time_days: 7 }];
         }
-        // 采购价格
-        if (/SELECT purchase_price FROM inv_material/.test(s)) {
+        // 采购价格（runFullMRP summary 计算用）
+        if (purchasePriceMatch.test(s)) {
           return [{ purchase_price: 10 }];
         }
-        // 在途
-        if (/in_transit/.test(s) || /po_item/.test(s)) {
+        // 分配查询（必须先于 in_transit 检查，因为 SQL 含 mii.issued_qty）
+        if (/mii\.issued_qty.*total_allocated/i.test(s)) {
+          return [{ total_allocated: 0 }];
+        }
+        // 在途查询
+        if (inTransitMatch.test(s)) {
           return [{ total_in_transit: 0 }];
         }
         return [];

@@ -1,0 +1,12 @@
+{
+  "total_issues": 0,
+  "severity_summary": {
+    "critical": 0,
+    "warning": 0,
+    "info": 0
+  },
+  "module_summary": {},
+  "audit_time": "2026-10-02T11:40:15.177Z",
+  "db_connection": "127.0.0.1:3306/vnerpdacahng",
+  "issues": []
+}

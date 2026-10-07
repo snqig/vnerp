@@ -177,12 +177,13 @@ export function QualityFinalPage({ embedded = false }: { embedded?: boolean }) {
           slice_per_bundle: item.slicePerBundle || item.slice_per_bundle,
         }));
         setFinals(list);
-        const pendingCount = list.filter((f: FinalInspect) => f.burdening_status === 1).length;
-        const inspectingCount = list.filter((f: FinalInspect) => f.burdening_status === 2).length;
+        // 终检阶段语义：2=待终检(pending)，3=终检完成(passed)。
+        // 原 pending 误统计 status===1，但 final 列表 burdening_status>=2 不含 1，导致 pending 恒为 0。
+        const pendingCount = list.filter((f: FinalInspect) => f.burdening_status === 2).length;
         const passedCount = list.filter((f: FinalInspect) => f.burdening_status === 3).length;
         setStats({
           pending: pendingCount,
-          inspecting: inspectingCount,
+          inspecting: 0,
           passed: passedCount,
           today: list.length,
           week: list.length,
