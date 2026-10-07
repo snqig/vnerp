@@ -102,8 +102,9 @@ const nextConfig: NextConfig = {
     ];
   },
   async redirects() {
-    // 质量检验中心：旧路由 /quality/process、/quality/final 307 重定向到 /quality/center
-    // 便于书签与外部引用不中断，同时引导用户到统一的中心页。
+    // 质量检验中心：旧路由 /quality/process、/quality/final 307 重定向到 /quality/center。
+    // 合并路由后两页共用一个 center 页的内tab，必须按来源带上 ?tab=，
+    // 否则点侧边栏「成品终检」会落到默认的「过程检验」tab。
     //
     // 必须同时声明「带 locale」和「不带 locale」两套 source：next-intl 中间件对裸路径的
     // locale 补全发生在 redirect 阶段之后，只写 /:locale/... 时裸路径 /quality/process
@@ -116,22 +117,22 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/:locale/quality/process',
-        destination: '/:locale/quality/center',
+        destination: '/:locale/quality/center?tab=process',
         permanent: false,
       },
       {
         source: '/:locale/quality/final',
-        destination: '/:locale/quality/center',
+        destination: '/:locale/quality/center?tab=final',
         permanent: false,
       },
       {
         source: '/quality/process',
-        destination: '/quality/center',
+        destination: '/quality/center?tab=process',
         permanent: false,
       },
       {
         source: '/quality/final',
-        destination: '/quality/center',
+        destination: '/quality/center?tab=final',
         permanent: false,
       },
     ];
