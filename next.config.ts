@@ -102,18 +102,37 @@ const nextConfig: NextConfig = {
     ];
   },
   async redirects() {
-    // 质量检验中心：旧路由 /quality/process、/quality/final 301 重定向到 /quality/center
+    // 质量检验中心：旧路由 /quality/process、/quality/final 307 重定向到 /quality/center
     // 便于书签与外部引用不中断，同时引导用户到统一的中心页。
+    //
+    // 必须同时声明「带 locale」和「不带 locale」两套 source：next-intl 中间件对裸路径的
+    // locale 补全发生在 redirect 阶段之后，只写 /:locale/... 时裸路径 /quality/process
+    // 匹配不到任何规则 → 直接 404。
+    // destination 一律写不带 locale 的 /quality/center，交由中间件按浏览器语言补前缀，
+    // 避免硬编码语种导致跳转后语言被强制改成 zh-CN。
+    //
+    // permanent 用 false（307）而非 true（308）：308 会被浏览器永久缓存，
+    // 日后若再次调整重定向目标，用户本机将无法刷新到新规则。
     return [
       {
         source: '/:locale/quality/process',
         destination: '/:locale/quality/center',
-        permanent: true,
+        permanent: false,
       },
       {
         source: '/:locale/quality/final',
         destination: '/:locale/quality/center',
-        permanent: true,
+        permanent: false,
+      },
+      {
+        source: '/quality/process',
+        destination: '/quality/center',
+        permanent: false,
+      },
+      {
+        source: '/quality/final',
+        destination: '/quality/center',
+        permanent: false,
       },
     ];
   },
