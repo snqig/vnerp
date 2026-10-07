@@ -1,8 +1,7 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useEmployeeOptions, employeeLabel } from '@/hooks/useEmployeeOptions';
 import { MainLayout } from '@/components/layout';
 import QRCode from 'qrcode';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,15 +41,16 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { StandardTable, StandardTableColumn } from '@/components/common';
+import { getQualityStatusBadge, getQualityStatusLabel } from '@/lib/quality-status';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
+import { QualityInspectDialog } from '@/components/quality/QualityInspectDialog';
+import { QualityBatchBar } from '@/components/quality/QualityBatchBar';
 import {
   Search,
   MoreHorizontal,
   Eye,
   CheckCircle,
-  XCircle,
-  AlertTriangle,
   ClipboardCheck,
   TrendingUp,
   Calendar,
@@ -59,7 +59,6 @@ import {
   QrCode,
   Clock,
   Shield,
-  Award,
   Percent,
   Download,
 } from 'lucide-react';
@@ -108,7 +107,7 @@ const getFinalInspectItems = (t: (key: string) => string) => [
   { id: 'label', name: t('labelCheck'), required: true },
 ];
 
-export default function QualityFinalPage() {
+export function QualityFinalPage() {
   const ts = useTranslations('Quality');
   // 翻译钩子
   const t = useTranslations('Quality');
@@ -117,31 +116,8 @@ export default function QualityFinalPage() {
   const finalInspectItems = getFinalInspectItems(t);
 
   // 获取状态标签
-  const getStatusBadge = (status: number) => {
-    const statusMap: Record<number, { label: string; className: string }> = {
-      0: {
-        label: t('pendingProduction'),
-        className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-      },
-      1: {
-        label: t('scheduled'),
-        className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-      },
-      2: {
-        label: t('pendingFinalInspection'),
-        className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-      },
-      3: {
-        label: t('finalInspectionCompleted'),
-        className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-      },
-    };
-    const config = statusMap[status] || {
-      label: tc('unknown'),
-      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-    };
-    return <Badge className={config.className}>{config.label}</Badge>;
-  };
+  const getStatusBadge = (status: number) =>
+    getQualityStatusBadge(status, 'final', t, tc);
 
   const [stats, setStats] = useState({
     pending: 0,
@@ -241,6 +217,8 @@ export default function QualityFinalPage() {
     remark: '',
     checkedItems: [] as string[],
   });
+  // 终检员下拉：库内在职真实人员（禁手输，回退见表单区）
+  const employeeOptions = useEmployeeOptions();
 
   // 筛选终检
   const filteredFinals = finals.filter((final) => {
@@ -263,16 +241,8 @@ export default function QualityFinalPage() {
     return true;
   });
 
-  const {
-    sortField,
-    sortDirection,
-    handleSort,
-    sortedData: _sortedFinalInspects,
-  } = useTableSort(filteredFinals, 'id');
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    filteredFinals,
-    (r) => String(r.id)
-  );
+  const sortedFinals = useMemo(() => filteredFinals, [filteredFinals]);
+  const [selectedRows, setSelectedRows] = useState<FinalInspect[]>([]);
 
   // 查看详情
   const handleViewDetail = (final: FinalInspect) => {
@@ -316,16 +286,6 @@ export default function QualityFinalPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // 切换检验项目
-  const toggleInspectItem = (itemId: string) => {
-    setFinalForm((prev) => ({
-      ...prev,
-      checkedItems: prev.checkedItems.includes(itemId)
-        ? prev.checkedItems.filter((id) => id !== itemId)
-        : [...prev.checkedItems, itemId],
-    }));
   };
 
   // 查看二维码
@@ -447,20 +407,12 @@ export default function QualityFinalPage() {
                       key: 'burdening_status',
                       label: tc('status'),
                       width: 12,
-                      formatter: (v) => {
-                        const m: Record<number, string> = {
-                          0: t('pendingProduction'),
-                          1: t('scheduled'),
-                          2: t('pendingFinalInspection'),
-                          3: t('finalInspectionCompleted'),
-                        };
-                        return m[v] || tc('unknown');
-                      },
+                      formatter: (v) => getQualityStatusLabel(Number(v), 'final', t, tc),
                     },
                   ]}
                   data={
-                    selectedCount > 0
-                      ? filteredFinals.filter((f) => isSelected(String(f.id)))
+                    selectedRows.length > 0
+                      ? filteredFinals.filter((f) => selectedRows.some((sr) => sr.id === f.id))
                       : filteredFinals
                   }
                 />
@@ -486,150 +438,163 @@ export default function QualityFinalPage() {
           <TabsContent value={activeTab} className="mt-4">
             <Card>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                      </TableHead>
-                      <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
-                      <SortableTableHeader
-                        field="card_no"
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      >
-                        {t('cardNo')}
-                      </SortableTableHeader>
-                      <SortableTableHeader
-                        field="product_name"
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      >
-                        {t('productInfo')}
-                      </SortableTableHeader>
-                      <TableHead>{tc('customer')}</TableHead>
-                      <TableHead>{t('specificationRequirement')}</TableHead>
-                      <TableHead>{tc('quantity')}</TableHead>
-                      <TableHead>{t('packagingMethod')}</TableHead>
-                      <SortableTableHeader
-                        field="status"
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      >
-                        {tc('status')}
-                      </SortableTableHeader>
-                      <TableHead>{tc('actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredFinals.map((final: FinalInspect, index: number) => (
-                      <TableRow key={final.id}>
-                        <TableCell>
-                          <Checkbox
-                            checked={isSelected(String(final.id))}
-                            onCheckedChange={() => toggle(String(final.id))}
-                          />
-                        </TableCell>
-                        <TableCell className="text-center text-muted-foreground">
-                          {index + 1}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          <div className="flex flex-col">
-                            <span>{final.card_no}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {final.work_order_no}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{final.product_name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {final.material_spec}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {final.print_type}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span>{final.customer_name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {final.customer_code}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col text-sm">
-                            <span>
-                              {t('size')}: {final.finished_size}
-                            </span>
-                            <span>
-                              {t('tolerance')}: {final.tolerance}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{(final.plan_qty ?? 0).toLocaleString()}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-col text-sm">
-                            <span>{final.packing_type}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {final.slice_per_box}
-                              {t('slicePerBox')}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(final.burdening_status)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleViewDetail(final)}
-                            >
-                              <Eye className="h-4 w-4" />
+                <StandardTable<FinalInspect>
+                  rowSelectable
+                  selectedRows={selectedRows}
+                  onRowSelectedChange={(rows) => setSelectedRows(rows)}
+                  dataSource={sortedFinals}
+                  columns={[
+                    {
+                      key: 'serialNo',
+                      title: tc('serialNo'),
+                      width: 48,
+                      align: 'center',
+                      render: (_row, index) => (
+                        <span className="text-muted-foreground">{index + 1}</span>
+                      ),
+                    },
+                    {
+                      key: 'card_no',
+                      title: t('cardNo'),
+                      sortable: true,
+                      render: (final) => (
+                        <div className="flex flex-col">
+                          <span className="font-medium">{final.card_no}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {final.work_order_no}
+                          </span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'product_name',
+                      title: t('productInfo'),
+                      sortable: true,
+                      render: (final) => (
+                        <div className="flex flex-col">
+                          <span className="font-medium">{final.product_name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {final.material_spec}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{final.print_type}</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'customer',
+                      title: tc('customer'),
+                      render: (final) => (
+                        <div className="flex flex-col">
+                          <span>{final.customer_name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {final.customer_code}
+                          </span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'specification',
+                      title: t('specificationRequirement'),
+                      render: (final) => (
+                        <div className="flex flex-col text-sm">
+                          <span>
+                            {t('size')}: {final.finished_size}
+                          </span>
+                          <span>
+                            {t('tolerance')}: {final.tolerance}
+                          </span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'quantity',
+                      title: tc('quantity'),
+                      render: (final) => (final.plan_qty ?? 0).toLocaleString(),
+                    },
+                    {
+                      key: 'quality_manager',
+                      title: t('qualityManager'),
+                      render: (final) => final.quality_manager,
+                    },
+                    {
+                      key: 'packaging',
+                      title: t('packagingMethod'),
+                      render: (final) => (
+                        <div className="flex flex-col text-sm">
+                          <span>{final.packing_type}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {final.slice_per_box}
+                            {t('slicePerBox')}
+                          </span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'status',
+                      title: tc('status'),
+                      sortable: true,
+                      render: (final) => getStatusBadge(final.burdening_status),
+                    },
+                    {
+                      key: 'actions',
+                      title: tc('actions'),
+                      render: (final) => (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewDetail(final)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {final.burdening_status === 2 && (
+                            <Button size="sm" onClick={() => handleStartFinal(final)}>
+                              <ClipboardCheck className="h-4 w-4 mr-1" />
+                              {t('finalInspect')}
                             </Button>
-                            {final.burdening_status === 2 && (
-                              <Button size="sm" onClick={() => handleStartFinal(final)}>
-                                <ClipboardCheck className="h-4 w-4 mr-1" />
-                                {t('finalInspect')}
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
                               </Button>
-                            )}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleViewDetail(final)}>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  {t('viewDetail')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleViewQRCode(final)}>
-                                  <QrCode className="h-4 w-4 mr-2" />
-                                  {t('viewQRCode')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleViewDetail(final)}>
-                                  <FileText className="h-4 w-4 mr-2" />
-                                  {t('finalInspectionRecords')}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleViewDetail(final)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                {t('viewDetail')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewQRCode(final)}>
+                                <QrCode className="h-4 w-4 mr-2" />
+                                {t('viewQRCode')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewDetail(final)}>
+                                <FileText className="h-4 w-4 mr-2" />
+                                {t('finalInspectionRecords')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* 批量操作底栏(统一) */}
+        <QualityBatchBar<FinalInspect>
+          selectedRows={selectedRows}
+          allRows={sortedFinals}
+          onSelectedRowsChange={setSelectedRows}
+          labels={{
+            selectedCount: tc('selectedItems', { count: selectedRows.length }),
+            clearSelection: tc('clearSelection'),
+            batchPrint: t('batchPrint'),
+          }}
+        />
 
         {/* 详情对话框 */}
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
@@ -756,192 +721,45 @@ export default function QualityFinalPage() {
           </DialogContent>
         </Dialog>
 
-        {/* 终检对话框 */}
-        <Dialog open={isFinalOpen} onOpenChange={setIsFinalOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" resizable>
-            {selectedFinal && (
-              <>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Award className="h-5 w-5" />
-                    {t('finalInspection')}: {selectedFinal.card_no}
-                  </DialogTitle>
-                  <DialogDescription>{t('recordFinalInspectionResult')}</DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-6 py-4">
-                  <div className="bg-muted rounded-lg p-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">{tc('product')}:</span>
-                        <span className="ml-2 font-medium">{selectedFinal.product_name}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">{tc('customer')}:</span>
-                        <span className="ml-2">{selectedFinal.customer_name}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">{tc('specification')}:</span>
-                        <span className="ml-2">
-                          {selectedFinal.finished_size} ({selectedFinal.tolerance})
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">{t('planQty')}:</span>
-                        <span className="ml-2">
-                          {(selectedFinal.plan_qty ?? 0).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label>
-                      {t('finalInspectionItems')} <span className="text-red-500 dark:text-red-400">*</span>
-                    </Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {finalInspectItems.map((item) => (
-                        <div key={item.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={item.id}
-                            checked={finalForm.checkedItems.includes(item.id)}
-                            onCheckedChange={() => toggleInspectItem(item.id)}
-                          />
-                          <label
-                            htmlFor={item.id}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            {item.name}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label>{t('finalInspectionResult')}</Label>
-                    <Select
-                      value={finalForm.result}
-                      onValueChange={(value) => setFinalForm({ ...finalForm, result: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('selectFinalInspectionResult')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pass">
-                          <div className="flex items-center">
-                            <CheckCircle className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
-                            {t('qualifiedInbound')}
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="fail">
-                          <div className="flex items-center">
-                            <XCircle className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />
-                            {t('unqualifiedRework')}
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="concession">
-                          <div className="flex items-center">
-                            <AlertTriangle className="h-4 w-4 mr-2 text-orange-600 dark:text-orange-400" />
-                            {t('concessionAccept')}
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <Label>{t('qualifiedQty')}</Label>
-                      <Input
-                        type="number"
-                        value={finalForm.qualifiedQty}
-                        onChange={(e) =>
-                          setFinalForm({
-                            ...finalForm,
-                            qualifiedQty: parseInt(e.target.value) || 0,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <Label>{t('defectQty')}</Label>
-                      <Input
-                        type="number"
-                        value={finalForm.defectQty}
-                        onChange={(e) =>
-                          setFinalForm({ ...finalForm, defectQty: parseInt(e.target.value) || 0 })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  {finalForm.defectQty > 0 && (
-                    <div className="space-y-3">
-                      <Label>{t('defectReason')}</Label>
-                      <Select
-                        value={finalForm.defectReason}
-                        onValueChange={(value) =>
-                          setFinalForm({ ...finalForm, defectReason: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('selectDefectReason')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="size">{t('sizeDefect')}</SelectItem>
-                          <SelectItem value="color">{t('colorDefect')}</SelectItem>
-                          <SelectItem value="appearance">{t('appearanceDefect')}</SelectItem>
-                          <SelectItem value="printing">{t('printingDefect')}</SelectItem>
-                          <SelectItem value="packaging">{t('packagingDefect')}</SelectItem>
-                          <SelectItem value="quantity">{t('quantityMismatch')}</SelectItem>
-                          <SelectItem value="other">{tc('other')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  <div className="space-y-3">
-                    <Label>{t('packagingMethodConfirm')}</Label>
-                    <Input
-                      value={finalForm.packMethod}
-                      onChange={(e) => setFinalForm({ ...finalForm, packMethod: e.target.value })}
-                      placeholder={t('confirmPackagingMethod')}
-                    />
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label>{t('finalInspector')}</Label>
-                    <Input
-                      placeholder={t('enterFinalInspectorName')}
-                      value={finalForm.inspector}
-                      onChange={(e) => setFinalForm({ ...finalForm, inspector: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label>{tc('remark')}</Label>
-                    <Textarea
-                      placeholder={t('enterFinalInspectionRemark')}
-                      value={finalForm.remark}
-                      onChange={(e) => setFinalForm({ ...finalForm, remark: e.target.value })}
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsFinalOpen(false)}>
-                      {tc('cancel')}
-                    </Button>
-                    <Button onClick={handleSubmitFinal} disabled={loading}>
-                      {loading ? tc('submitting') : t('submitFinalInspection')}
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
+        {/* 终检对话框（共用组件） */}
+        <QualityInspectDialog
+          open={isFinalOpen}
+          onOpenChange={setIsFinalOpen}
+          type="final"
+          title={`${t('finalInspection')}: ${selectedFinal?.card_no}`}
+          description={t('recordFinalInspectionResult')}
+          card={selectedFinal}
+          items={finalInspectItems}
+          itemsRequired
+          form={finalForm}
+          onChange={(patch) => setFinalForm((prev) => ({ ...prev, ...patch }))}
+          defectFieldName="defectReason"
+          defectOptions={[
+            { value: 'size', label: t('sizeDefect') },
+            { value: 'color', label: t('colorDefect') },
+            { value: 'appearance', label: t('appearanceDefect') },
+            { value: 'printing', label: t('printingDefect') },
+            { value: 'packaging', label: t('packagingDefect') },
+            { value: 'quantity', label: t('quantityMismatch') },
+            { value: 'other', label: tc('other') },
+          ]}
+          employeeOptions={employeeOptions}
+          employeeLabel={employeeLabel}
+          extraFields={
+            <div className="space-y-3">
+              <Label>{t('packagingMethodConfirm')}</Label>
+              <Input
+                value={finalForm.packMethod}
+                onChange={(e) => setFinalForm({ ...finalForm, packMethod: e.target.value })}
+                placeholder={t('confirmPackagingMethod')}
+              />
+            </div>
+          }
+          onSubmit={handleSubmitFinal}
+          loading={loading}
+          t={t}
+          tc={tc}
+        />
 
         {/* 报告对话框 */}
         <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>

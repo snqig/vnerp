@@ -101,6 +101,22 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    // 质量检验中心：旧路由 /quality/process、/quality/final 301 重定向到 /quality/center
+    // 便于书签与外部引用不中断，同时引导用户到统一的中心页。
+    return [
+      {
+        source: '/:locale/quality/process',
+        destination: '/:locale/quality/center',
+        permanent: true,
+      },
+      {
+        source: '/:locale/quality/final',
+        destination: '/:locale/quality/center',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);
