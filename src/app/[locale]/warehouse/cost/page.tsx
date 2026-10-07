@@ -4,6 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -217,22 +218,20 @@ export default function CostPage() {
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
 
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Calculator className="w-6 h-6" />
-              {ts('k_13bdco3')}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {ts('k_1gbfxkf')}</p>
-          </div>
-          <Button size="sm" variant="outline" onClick={fetchData}>
-            <RefreshCw className="h-3 w-3 mr-1" />
-            {ts('k_12qo56a')}</Button>
-        </div>
+        <PageHeroHeader
+          icon={Calculator}
+          title={ts('k_13bdco3')}
+          description={ts('k_1gbfxkf')}
+          action={
+            <Button size="sm" variant="outline" onClick={fetchData}>
+              <RefreshCw className="h-3 w-3 mr-1" />
+              {ts('k_12qo56a')}</Button>
+          }
+        />
 
         {/* 汇总卡片 */}
         <div className="grid grid-cols-3 gap-4">
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -249,7 +248,7 @@ export default function CostPage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -260,7 +259,7 @@ export default function CostPage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
                 <Calculator className="w-5 h-5 text-orange-600 dark:text-orange-400" />
@@ -273,7 +272,7 @@ export default function CostPage() {
           </Card>
         </div>
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
             <StandardTable<CostItem>
               columns={columns}

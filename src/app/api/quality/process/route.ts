@@ -115,11 +115,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       sc.tolerance,
       sc.quality_manager as quality_manager
     FROM prd_process_card pc
-    LEFT JOIN prd_standard_card sc ON CAST(pc.product_code AS UNSIGNED) = sc.id
-    WHERE pc.deleted = 0 AND pc.burdening_status >= 1
+    LEFT JOIN prd_standard_card sc
+      ON pc.product_code IS NOT NULL AND pc.product_code != ''
+      AND CAST(pc.product_code AS UNSIGNED) = sc.id
+    WHERE pc.deleted = 0 AND pc.burdening_status IN (1, 2, 5, 6)
   `;
 
-  let countSql = `SELECT COUNT(*) as total FROM prd_process_card pc WHERE pc.deleted = 0 AND pc.burdening_status >= 1`;
+  let countSql = `SELECT COUNT(*) as total FROM prd_process_card pc WHERE pc.deleted = 0 AND pc.burdening_status IN (1, 2, 5, 6)`;
   const params: SqlValue[] = [];
 
   if (status) {
@@ -156,6 +158,19 @@ export const POST = withPermission(
     const validResults = ['pass', 'fail', 'concession', 'rework', 'scrap'];
     if (!validResults.includes(inspectResult)) {
       return errorResponse(ts('invalidInspectResult', { value: inspectResult }), 400);
+    }
+
+    // 关联完整性：cardId 必须真实存在，且 cardNo 必须与该卡实际卡号一致（防跨系统关联断裂）
+    const cardRows = await query<{ id: number; card_no: string }>(
+      'SELECT id, card_no FROM prd_process_card WHERE id = ? AND deleted = 0',
+      [cardId]
+    );
+    const card = cardRows[0];
+    if (!card) {
+      return errorResponse(ts('k_1emlkd9'), 404);
+    }
+    if (card.card_no !== cardNo) {
+      return errorResponse(ts('cardNoMismatch'), 400);
     }
 
     // 状态机验证
@@ -211,7 +226,8 @@ export const POST = withPermission(
         `UPDATE prd_process_card SET burdening_status = burdening_status + 1, update_time = NOW() WHERE id = ?`,
         [cardId]
       );
-    } else if (inspectResult === 'fail') {
+    } else if (inspectResult === 'fail' || inspectResult === 'scrap') {
+      // scrap 与 fail 在 RESULT_TO_CODE 中同为 inspection_result=2，流程卡侧保持同一语义
       await query(
         `UPDATE prd_process_card SET burdening_status = 5, update_time = NOW() WHERE id = ?`,
         [cardId]
@@ -305,7 +321,8 @@ export const PUT = withPermission(
         `UPDATE prd_process_card SET burdening_status = burdening_status + 1, update_time = NOW() WHERE card_no = ?`,
         [currentRecord.source_no]
       );
-    } else if (inspectResult === 'fail') {
+    } else if (inspectResult === 'fail' || inspectResult === 'scrap') {
+      // scrap 与 fail 在 RESULT_TO_CODE 中同为 inspection_result=2，流程卡侧保持同一语义
       await query(
         `UPDATE prd_process_card SET burdening_status = 5, update_time = NOW() WHERE card_no = ?`,
         [currentRecord.source_no]

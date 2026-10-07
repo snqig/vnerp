@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateTimeLocal } from '@/lib/date-utils';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { EQUIPMENT_PLAN_STATUS_LABEL } from '@/lib/status-labels';
 import { useEffect, useState, useCallback } from 'react';
@@ -684,7 +685,13 @@ export default function EquipmentMaintenancePage() {
                                   variant="ghost"
                                   className="h-7 w-7 p-0"
                                   onClick={() => {
-                                    setForm(r);
+                                    // start_time/end_time 为 DATETIME 列，UTC ISO 串直塞
+                                    // datetime-local 会回显空白/偏移 8h，统一转本地钟面
+                                    setForm({
+                                      ...r,
+                                      start_time: toDateTimeLocal(r.start_time),
+                                      end_time: toDateTimeLocal(r.end_time),
+                                    });
                                     setDialogType('record');
                                     setDialogOpen(true);
                                   }}

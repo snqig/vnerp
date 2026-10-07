@@ -1,8 +1,11 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -286,31 +289,22 @@ export default function SalesOutboundPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{ts('k_270k8')}</h1>
-          <div className="flex gap-2">
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder={tc('searchOrderNo')}
-                value={searchNo}
-                onChange={(e) => setSearchNo(e.target.value)}
-                className="w-36 h-8 text-sm"
-              />
-              <Button size="sm" variant="outline" onClick={fetchData}>
-                <Search className="h-3 w-3" />
-              </Button>
-            </div>
+        <PageHeroHeader
+          icon={Truck}
+          title={ts('k_270k8')}
+          action={
             <Button
               size="sm"
               onClick={() => {
                 setEditItem({});
                 setShowDialog(true);
               }}
+              className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
             >
               <Plus className="h-3 w-3 mr-1" />
               {ts('k_1r8y9zs')}</Button>
-          </div>
-        </div>        <StatsCards
+          }
+        />        <StatsCards
           configs={[
             { key: 'pending', label: '待出库', icon: Clock, ...StatsTheme.orange },
             { key: 'partial', label: '部分出库', icon: PackageOpen, ...StatsTheme.yellow },
@@ -329,7 +323,21 @@ export default function SalesOutboundPage() {
         />
 
 
-        <Card>
+        <ListToolbar>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder={tc('searchOrderNo')}
+              value={searchNo}
+              onChange={(e) => setSearchNo(e.target.value)}
+              className="w-36 h-8 text-sm"
+            />
+            <Button size="sm" variant="outline" onClick={fetchData}>
+              <Search className="h-3 w-3" />
+            </Button>
+          </div>
+        </ListToolbar>
+
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
             <BatchDeleteBar
               count={selectedRows.length}
@@ -384,7 +392,7 @@ export default function SalesOutboundPage() {
                 <Label>{ts('k_1au3mgm')}</Label>
                 <Input
                   type="date"
-                  value={editItem.outbound_date || ''}
+                  value={toDateInput(editItem.outbound_date)}
                   onChange={(e) => setEditItem({ ...editItem, outbound_date: e.target.value })}
                 />
               </div>

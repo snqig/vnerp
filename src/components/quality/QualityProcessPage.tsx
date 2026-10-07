@@ -43,22 +43,23 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import { StandardTable, StandardTableColumn } from '@/components/common';
+import { getQualityStatusBadge, getQualityStatusLabel } from '@/lib/quality-status';
+import { QualityInspectDialog } from '@/components/quality/QualityInspectDialog';
+import { QualityBatchBar } from '@/components/quality/QualityBatchBar';
 import {
   Search,
   MoreHorizontal,
   Eye,
   CheckCircle,
-  XCircle,
-  AlertTriangle,
   ClipboardCheck,
   TrendingUp,
   Calendar,
+  Percent,
   FileText,
   Printer,
   QrCode,
   Clock,
   Shield,
-  Award,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
@@ -97,6 +98,8 @@ interface QualityStats {
   passed: number;
   today: number;
   week: number;
+  /** 异常率(%):burdening_status 为 5(不合格)/6(返工) 的比例 */
+  anomalyRate: number;
 }
 
 // 检验记录接口
@@ -121,7 +124,7 @@ const getInspectItems = (t: (key: string) => string) => [
 ];
 
 
-export default function QualityProcessPage() {
+export function QualityProcessPage({ embedded = false }: { embedded?: boolean }) {
   const ts = useTranslations('Quality');
   // 翻译钩子
   const t = useTranslations('Quality');
@@ -130,31 +133,8 @@ export default function QualityProcessPage() {
   const inspectItems = getInspectItems(t);
 
   // 获取状态标签
-  const getStatusBadge = (status: number) => {
-    const statusMap: Record<number, { label: string; className: string }> = {
-      0: {
-        label: t('pendingProduction'),
-        className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-      },
-      1: {
-        label: t('pendingInspection'),
-        className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-      },
-      2: {
-        label: t('inspecting'),
-        className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-      },
-      3: {
-        label: t('inspected'),
-        className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-      },
-    };
-    const config = statusMap[status] || {
-      label: tc('unknown'),
-      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-    };
-    return <Badge className={config.className}>{config.label}</Badge>;
-  };
+  const getStatusBadge = (status: number) =>
+    getQualityStatusBadge(status, 'process', t, tc);
 
   const [processes, setProcesses] = useState<QualityProcess[]>([]);
   const [stats, setStats] = useState<QualityStats>({
@@ -163,6 +143,7 @@ export default function QualityProcessPage() {
     passed: 0,
     today: 0,
     week: 0,
+    anomalyRate: 0,
   });
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isInspectOpen, setIsInspectOpen] = useState(false);
@@ -177,7 +158,21 @@ export default function QualityProcessPage() {
       setLoading(true);
 
       const res = await authFetch('/api/quality/process');
+      if (!res.ok) {
+        // 非 2xx 时把响应体前 200 字节一并带进错误信息：
+        // 认证失败返回 JSON、被重定向到登录页返回 HTML，两者在调用方都只是
+        // 「fetch 失败」，不取响应体就永远分不清，只能靠猜。
+        const bodySnippet = await res.text().catch(() => '');
+        throw new Error(
+          `HTTP ${res.status} ${res.statusText} | content-type=${res.headers.get('content-type')} | body=${bodySnippet.slice(0, 200)}`,
+        );
+      }
       const data = await res.json();
+      if (!data.success) {
+        // HTTP 200 但业务失败：数据停在旧状态且控制台一片安静，
+        // 必须显式记录 message，否则和「加载成功但确实没数据」无法区分。
+        throw new Error(`业务失败: code=${data.code} message=${data.message}`);
+      }
       if (data.success) {
         const rawData = data.data;
         const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
@@ -206,21 +201,33 @@ export default function QualityProcessPage() {
           quality_manager: item.qualityManager || item.quality_manager,
         }));
         setProcesses(list);
+        const anomalyCount = list.filter(
+          (p: QualityProcess) => p.burdening_status === 5 || p.burdening_status === 6,
+        ).length;
+        // 过程检验三态（互斥，覆盖 burdening_status IN (1,2,5,6)）：
+        //   pending   = 1（已配料待过程检）
+        //   inspecting= 5|6（不合格/返工，处理中）
+        //   passed    = 2（过程检通过，进入终检前）
+        // 原 passed 误取 status===3（终检完成），但 process 列表已排除 status 3，导致该 tab 恒空。
         setStats({
           pending: list.filter((p: QualityProcess) => p.burdening_status === 1).length,
-          inspecting: list.filter((p: QualityProcess) => p.burdening_status === 2).length,
-          passed: list.filter((p: QualityProcess) => p.burdening_status === 3).length,
+          inspecting: anomalyCount,
+          passed: list.filter((p: QualityProcess) => p.burdening_status === 2).length,
           today: list.length,
           week: list.length,
+          anomalyRate: list.length > 0 ? Math.round((anomalyCount / list.length) * 100) : 0,
         });
         logger.info({ module: 'Quality', action: 'fetchProcesses' }, ts('k_s0muv8'), {
           count: list.length,
         });
       }
     } catch (error) {
-      logger.error({ module: 'Quality', action: 'fetchProcesses' }, ts('k_xsfonz'), {
-        error: (error as Error).message,
-      });
+      const errMsg = error instanceof Error ? error.message : String(error);
+      logger.error(
+        { module: 'Quality', action: 'fetchProcesses' },
+        ts('k_xsfonz'),
+        { error: errMsg, stack: (error as Error).stack },
+      );
     } finally {
       setLoading(false);
     }
@@ -285,12 +292,17 @@ export default function QualityProcessPage() {
   // 筛选流程
   const filteredProcesses = processes.filter((process) => {
     if (activeTab !== 'all') {
-      const statusMap: Record<string, number> = {
+      const statusMap: Record<string, number | number[]> = {
         pending: 1,
-        inspecting: 2,
-        passed: 3,
+        inspecting: [5, 6],
+        passed: 2,
       };
-      if (process.burdening_status !== statusMap[activeTab]) return false;
+      const target = statusMap[activeTab];
+      if (Array.isArray(target)) {
+        if (!target.includes(process.burdening_status)) return false;
+      } else {
+        if (process.burdening_status !== target) return false;
+      }
     }
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -328,7 +340,8 @@ export default function QualityProcessPage() {
     setIsInspectOpen(true);
   };
 
-  // 提交检验
+  // 提交检验（当前为模拟逻辑：未调用真实 POST /api/quality/process，待后续接入）
+  // 过程检通过后 burdening_status 应 +1（1→2），原硬编码 3（终检完成）与后端语义冲突。
   const handleSubmitInspect = async () => {
     if (!selectedProcess) return;
     setLoading(true);
@@ -338,7 +351,11 @@ export default function QualityProcessPage() {
 
       // 更新本地数据
       setProcesses(
-        processes.map((p) => (p.id === selectedProcess.id ? { ...p, burdening_status: 3 } : p))
+        processes.map((p) =>
+          p.id === selectedProcess.id
+            ? { ...p, burdening_status: selectedProcess.burdening_status + 1 }
+            : p
+        )
       );
 
       setIsInspectOpen(false);
@@ -348,16 +365,6 @@ export default function QualityProcessPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // 切换检验项目
-  const toggleInspectItem = (itemId: string) => {
-    setInspectForm((prev) => ({
-      ...prev,
-      checkedItems: prev.checkedItems.includes(itemId)
-        ? prev.checkedItems.filter((id) => id !== itemId)
-        : [...prev.checkedItems, itemId],
-    }));
   };
 
   // 查看二维码
@@ -430,9 +437,8 @@ export default function QualityProcessPage() {
     }
   };
 
-  return (
-    <MainLayout title={t('processInspection')}>
-      <div className="space-y-6">
+  const content = (
+    <div className="space-y-6">
         {/* 统计卡片 */}
         <StatsCards
           configs={[
@@ -441,6 +447,7 @@ export default function QualityProcessPage() {
             { key: 'passed', label: t('inspected'), icon: CheckCircle, ...StatsTheme.green },
             { key: 'today', label: t('todayInspection'), icon: Calendar, ...StatsTheme.purple },
             { key: 'week', label: t('weekInspection'), icon: TrendingUp, ...StatsTheme.cyan },
+            { key: 'anomalyRate', label: t('anomalyRate'), icon: Percent, ...StatsTheme.red },
           ]}
           stats={[
             { key: 'pending', count: stats.pending },
@@ -448,8 +455,9 @@ export default function QualityProcessPage() {
             { key: 'passed', count: stats.passed },
             { key: 'today', count: stats.today },
             { key: 'week', count: stats.week },
+            { key: 'anomalyRate', count: stats.anomalyRate, suffix: '%' },
           ]}
-          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
+          cols={{ mobile: 2, tablet: 3, desktop: 6 }}
         />
 
 
@@ -489,15 +497,7 @@ export default function QualityProcessPage() {
                       key: 'burdening_status',
                       label: tc('status'),
                       width: 12,
-                      formatter: (v) => {
-                        const m: Record<number, string> = {
-                          0: t('pendingProduction'),
-                          1: t('pendingInspection'),
-                          2: t('inspecting'),
-                          3: t('inspected'),
-                        };
-                        return m[v] || tc('unknown');
-                      },
+                      formatter: (v) => getQualityStatusLabel(Number(v), 'process', t, tc),
                     },
                   ]}
                   data={
@@ -659,9 +659,21 @@ export default function QualityProcessPage() {
                   ]}
                 />
               </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          {/* 批量操作底栏(统一) */}
+          <QualityBatchBar<QualityProcess>
+            selectedRows={selectedRows}
+            allRows={sortedProcesses}
+            onSelectedRowsChange={setSelectedRows}
+            labels={{
+              selectedCount: tc('selectedItems', { count: selectedRows.length }),
+              clearSelection: tc('clearSelection'),
+              batchPrint: t('batchPrint'),
+            }}
+          />
 
         {/* 详情对话框 */}
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
@@ -781,214 +793,33 @@ export default function QualityProcessPage() {
           </DialogContent>
         </Dialog>
 
-        {/* 检验对话框 */}
-        <Dialog open={isInspectOpen} onOpenChange={setIsInspectOpen}>
-          <DialogContent className="max-w-2xl" resizable>
-            {selectedProcess && (
-              <>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Award className="h-5 w-5" />
-                    {t('processInspection')}: {selectedProcess.card_no}
-                  </DialogTitle>
-                  <DialogDescription>{t('recordInspectionResult')}</DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-6 py-4">
-                  {/* 流程卡信息 */}
-                  <div className="bg-muted rounded-lg p-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">{tc('product')}:</span>
-                        <span className="ml-2 font-medium">{selectedProcess.product_name}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">{tc('customer')}:</span>
-                        <span className="ml-2">{selectedProcess.customer_name}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">{tc('specification')}:</span>
-                        <span className="ml-2">
-                          {selectedProcess.finished_size} ({selectedProcess.tolerance})
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">{t('planQty')}:</span>
-                        <span className="ml-2">
-                          {(selectedProcess.plan_qty ?? 0).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 检验项目 */}
-                  <div className="space-y-3">
-                    <Label>{t('inspectionItems')}</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {inspectItems.map((item) => (
-                        <div key={item.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={item.id}
-                            checked={inspectForm.checkedItems.includes(item.id)}
-                            onCheckedChange={() => toggleInspectItem(item.id)}
-                          />
-                          <label
-                            htmlFor={item.id}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            {item.name}
-                            {item.required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 检验结果 */}
-                  <div className="space-y-3">
-                    <Label>{t('inspectionResult')}</Label>
-                    <Select
-                      value={inspectForm.result}
-                      onValueChange={(value) => setInspectForm({ ...inspectForm, result: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('selectInspectionResult')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pass">
-                          <div className="flex items-center">
-                            <CheckCircle className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
-                            {tc('qualified')}
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="fail">
-                          <div className="flex items-center">
-                            <XCircle className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />
-                            {tc('unqualified')}
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="concession">
-                          <div className="flex items-center">
-                            <AlertTriangle className="h-4 w-4 mr-2 text-orange-600 dark:text-orange-400" />
-                            {t('concessionAccept')}
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* 数量 */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <Label>{t('qualifiedQty')}</Label>
-                      <Input
-                        type="number"
-                        value={inspectForm.qualifiedQty}
-                        onChange={(e) =>
-                          setInspectForm({
-                            ...inspectForm,
-                            qualifiedQty: parseInt(e.target.value) || 0,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <Label>{t('defectQty')}</Label>
-                      <Input
-                        type="number"
-                        value={inspectForm.defectQty}
-                        onChange={(e) =>
-                          setInspectForm({
-                            ...inspectForm,
-                            defectQty: parseInt(e.target.value) || 0,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  {/* 不良类型 */}
-                  {inspectForm.defectQty > 0 && (
-                    <div className="space-y-3">
-                      <Label>{t('defectType')}</Label>
-                      <Select
-                        value={inspectForm.defectType}
-                        onValueChange={(value) =>
-                          setInspectForm({ ...inspectForm, defectType: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('selectDefectType')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="size">{t('sizeDefect')}</SelectItem>
-                          <SelectItem value="color">{t('colorDefect')}</SelectItem>
-                          <SelectItem value="adhesion">{t('adhesionDefect')}</SelectItem>
-                          <SelectItem value="appearance">{t('appearanceDefect')}</SelectItem>
-                          <SelectItem value="printing">{t('printingDefect')}</SelectItem>
-                          <SelectItem value="other">{tc('other')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {/* 检验员 */}
-                  <div className="space-y-3">
-                    <Label>{t('inspector')}</Label>
-                    {employeeOptions.length > 0 ? (
-                      <Select
-                        value={inspectForm.inspector}
-                        onValueChange={(value) =>
-                          setInspectForm({ ...inspectForm, inspector: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('enterInspectorName')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {employeeOptions.map((emp) => (
-                            <SelectItem key={emp.employee_no} value={emp.name}>
-                              {employeeLabel(emp)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Input
-                        placeholder={t('enterInspectorName')}
-                        value={inspectForm.inspector}
-                        onChange={(e) =>
-                          setInspectForm({ ...inspectForm, inspector: e.target.value })
-                        }
-                      />
-                    )}
-                  </div>
-
-                  {/* 备注 */}
-                  <div className="space-y-3">
-                    <Label>{tc('remark')}</Label>
-                    <Textarea
-                      placeholder={t('enterInspectionRemark')}
-                      value={inspectForm.remark}
-                      onChange={(e) => setInspectForm({ ...inspectForm, remark: e.target.value })}
-                      rows={3}
-                    />
-                  </div>
-
-                  {/* 操作按钮 */}
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsInspectOpen(false)}>
-                      {tc('cancel')}
-                    </Button>
-                    <Button onClick={handleSubmitInspect} disabled={loading}>
-                      {loading ? tc('submitting') : t('submitInspection')}
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
+        {/* 检验对话框（共用组件） */}
+        <QualityInspectDialog
+          open={isInspectOpen}
+          onOpenChange={setIsInspectOpen}
+          type="process"
+          title={`${t('processInspection')}: ${selectedProcess?.card_no}`}
+          description={t('recordInspectionResult')}
+          card={selectedProcess}
+          items={inspectItems}
+          form={inspectForm}
+          onChange={(patch) => setInspectForm((prev) => ({ ...prev, ...patch }))}
+          defectFieldName="defectType"
+          defectOptions={[
+            { value: 'size', label: t('sizeDefect') },
+            { value: 'color', label: t('colorDefect') },
+            { value: 'adhesion', label: t('adhesionDefect') },
+            { value: 'appearance', label: t('appearanceDefect') },
+            { value: 'printing', label: t('printingDefect') },
+            { value: 'other', label: tc('other') },
+          ]}
+          employeeOptions={employeeOptions}
+          employeeLabel={employeeLabel}
+          onSubmit={handleSubmitInspect}
+          loading={loading}
+          t={t}
+          tc={tc}
+        />
 
         {/* 检验报告对话框 */}
         <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
@@ -1040,6 +871,12 @@ export default function QualityProcessPage() {
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.week}</div>
                     <div className="text-sm text-muted-foreground">{t('weekInspection')}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.anomalyRate}%</div>
+                    <div className="text-sm text-muted-foreground">{t('anomalyRate')}</div>
                   </CardContent>
                 </Card>
               </div>
@@ -1270,6 +1107,11 @@ export default function QualityProcessPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </MainLayout>
   );
+
+  // embedded=true：宿主页面（quality/center）已提供布局层，直接输出内容，
+  // 避免嵌出第二套 Sidebar/Header（MainLayout 是 h-screen overflow-hidden 的完整壳）。
+  if (embedded) return content;
+
+  return <MainLayout title={t('processInspection')}>{content}</MainLayout>;
 }

@@ -1,8 +1,11 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateTimeLocal } from '@/lib/date-utils';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -202,51 +205,55 @@ export default function InkUsagePage() {
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
 
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{tc('dcInkUsageTitle')}</h1>
-          <div className="flex gap-2">
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder={tc('dcPlateIdLabel')}
-                value={plateId}
-                onChange={(e) => setPlateId(e.target.value)}
-                className="w-24 h-8 text-sm"
-              />
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3 text-gray-400" />
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-28 h-8 text-sm"
-                />
-              </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3 text-gray-400" />
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-28 h-8 text-sm"
-                />
-              </div>
-              <Button size="sm" variant="outline" onClick={fetchData}>
-                <Search className="h-3 w-3" />
-              </Button>
-            </div>
+        <PageHeroHeader
+          icon={Droplets}
+          title={tc('dcInkUsageTitle')}
+          action={
             <Button
               size="sm"
+              className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
               onClick={() => {
                 setEditItem({});
                 setShowDialog(true);
               }}
             >
-              <Plus className="h-3 w-3 mr-1" />
-              {ts('k_15ybbto')}</Button>
-          </div>
-        </div>
+              <Plus className="h-4 w-4 mr-1" />
+              {ts('k_15ybbto')}
+            </Button>
+          }
+        />
 
-        <Card>
+        <ListToolbar>
+          <Input
+            placeholder={tc('dcPlateIdLabel')}
+            value={plateId}
+            onChange={(e) => setPlateId(e.target.value)}
+            className="w-24 h-8 text-sm"
+          />
+          <div className="flex items-center gap-1">
+            <Calendar className="h-3 w-3 text-gray-400" />
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-28 h-8 text-sm"
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <Calendar className="h-3 w-3 text-gray-400" />
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-28 h-8 text-sm"
+            />
+          </div>
+          <Button size="sm" variant="outline" onClick={fetchData}>
+            <Search className="h-3 w-3" />
+          </Button>
+        </ListToolbar>
+
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
             <StandardTable<InkUsage>
               columns={columns}
@@ -333,7 +340,7 @@ export default function InkUsagePage() {
                 <Label>{ts('k_1qsekja')}</Label>
                 <Input
                   type="datetime-local"
-                  value={editItem.usage_date?.slice(0, 16) || ''}
+                  value={toDateTimeLocal(editItem.usage_date)}
                   onChange={(e) => setEditItem({ ...editItem, usage_date: e.target.value })}
                 />
               </div>

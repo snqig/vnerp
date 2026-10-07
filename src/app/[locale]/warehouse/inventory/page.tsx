@@ -528,7 +528,7 @@ export default function InventoryPage() {
           </Card>
         )}
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardHeader>
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
               <div>

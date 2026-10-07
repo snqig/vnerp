@@ -2,7 +2,7 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
-import { MainLayout } from '@/components/layout';
+import { MainLayout, PageHeroHeader } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -235,6 +235,12 @@ export default function CuttingRecordsPage() {
   return (
     <MainLayout title={t('cuttingRecordManagement')}>
       <div className="space-y-6">
+        <PageHeroHeader
+          icon={Scissors}
+          title={t('cuttingRecordManagement')}
+          description={t('cuttingRecordQueryDesc')}
+        />
+
         <StatsCards
           configs={[
             { key: 'pending', label: '待入库', icon: Clock, ...StatsTheme.orange },
@@ -254,7 +260,7 @@ export default function CuttingRecordsPage() {
           showTrend={false}
         />
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Scissors className="h-5 w-5" />
@@ -300,7 +306,7 @@ export default function CuttingRecordsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>

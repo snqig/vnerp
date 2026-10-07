@@ -515,6 +515,130 @@ describe('SampleProcessCardService.generateQuote', () => {
 });
 
 // ============================================================
+// 5.5 convertQuoteToOrder — 报价单转销售订单（打通 quote → sal_order 断头路）
+// ============================================================
+
+function makeQuoteRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 300,
+    quote_no: 'QT2026071500001',
+    status: 1,
+    quantity: 100,
+    quoted_price: 8000,
+    customer_id: 100,
+    customer_name: '测试客户',
+    product_name: '测试产品',
+    currency: 'CNY',
+    sample_card_id: 5,
+    sales_order_id: null,
+    sales_order_no: null,
+    ...overrides,
+  };
+}
+
+describe('SampleProcessCardService.convertQuoteToOrder', () => {
+  let service: SampleProcessCardService;
+
+  beforeEach(() => {
+    service = new SampleProcessCardService();
+  });
+
+  it('正常转换：金额取 quoted_price，detail 单价 = quoted_price/quantity，回写报价状态', async () => {
+    // query #1: 报价单；#2: 工艺卡承印材料；#3: SO 序号
+    mocks.query
+      .mockResolvedValueOnce([makeQuoteRow()])
+      .mockResolvedValueOnce([{ substrate_material_id: 10 }])
+      .mockResolvedValueOnce([{ cnt: 0 }]);
+
+    mocks.mockConn.execute
+      .mockResolvedValueOnce(mockExecReturn({ insertId: 999 })) // INSERT sal_order
+      .mockResolvedValueOnce(mockExecReturn()) // INSERT sal_order_detail
+      .mockResolvedValueOnce(mockExecReturn()); // UPDATE sal_quote
+
+    const result = await service.convertQuoteToOrder(300, 7);
+
+    expect(result).toEqual({ salesOrderId: 999, orderNo: expect.stringMatching(/^SO\d{8}0001$/), quotedPrice: 8000 });
+
+    // 3 次 execute：sal_order + detail + 回写报价
+    expect(mocks.mockConn.execute).toHaveBeenCalledTimes(3);
+
+    const orderParams = mocks.mockConn.execute.mock.calls[0][1] as unknown[];
+    expect(orderParams[0]).toMatch(/^SO\d{8}0001$/); // order_no
+    expect(orderParams[2]).toBe(100); // customer_id
+    expect(orderParams[3]).toBe(8000); // total_amount = quoted_price
+
+    const detailParams = mocks.mockConn.execute.mock.calls[1][1] as unknown[];
+    expect(detailParams[0]).toBe(999); // order_id
+    expect(detailParams[1]).toBe(10); // material_id = 工艺卡承印材料
+    expect(detailInsertQuantity(detailParams)).toBe(100);
+    expect(detailParams[4]).toBe(80); // unit_price = 8000/100
+    expect(detailParams[5]).toBe(8000); // total_amount = quoted_price
+
+    // 回写报价：status=3（SQL 字面量）+ sales_order_id + sales_order_no
+    const [updateSql, updateParams] = mocks.mockConn.execute.mock.calls[2];
+    expect(String(updateSql)).toContain('UPDATE sal_quote');
+    expect(String(updateSql)).toContain('status = 3');
+    expect(String(updateSql)).toContain('sales_order_id');
+    expect(updateParams).toContain(999); // sales_order_id
+    expect(updateParams).toContain(300); // WHERE id = quoteId
+  });
+
+  it('幂等：报价已接受且已有销售订单时直接返回，不重复建单', async () => {
+    mocks.query.mockResolvedValueOnce([
+      makeQuoteRow({ status: 3, sales_order_id: 555, sales_order_no: 'SO2026071400009' }),
+    ]);
+
+    const result = await service.convertQuoteToOrder(300, 7);
+
+    expect(result).toEqual({ salesOrderId: 555, orderNo: 'SO2026071400009', quotedPrice: 8000 });
+    expect(mocks.transaction).not.toHaveBeenCalled();
+    expect(mocks.mockConn.execute).not.toHaveBeenCalled();
+  });
+
+  it('报价已作废(status=5)时抛错', async () => {
+    mocks.query.mockResolvedValueOnce([makeQuoteRow({ status: 5 })]);
+
+    await expect(service.convertQuoteToOrder(300, 7)).rejects.toThrow('不可转销售订单');
+    expect(mocks.transaction).not.toHaveBeenCalled();
+  });
+
+  it('报价金额为 0 时抛错', async () => {
+    mocks.query.mockResolvedValueOnce([makeQuoteRow({ quoted_price: 0 })]);
+
+    await expect(service.convertQuoteToOrder(300, 7)).rejects.toThrow('报价金额无效');
+    expect(mocks.transaction).not.toHaveBeenCalled();
+  });
+
+  it('报价单不存在时抛错', async () => {
+    mocks.query.mockResolvedValueOnce([]);
+
+    await expect(service.convertQuoteToOrder(999, 7)).rejects.toThrow('报价单不存在');
+  });
+
+  it('无 sample_card_id 时不查工艺卡，material_id=0', async () => {
+    mocks.query
+      .mockResolvedValueOnce([makeQuoteRow({ sample_card_id: null })])
+      .mockResolvedValueOnce([{ cnt: 3 }]);
+
+    mocks.mockConn.execute
+      .mockResolvedValueOnce(mockExecReturn({ insertId: 1000 }))
+      .mockResolvedValueOnce(mockExecReturn())
+      .mockResolvedValueOnce(mockExecReturn());
+
+    await service.convertQuoteToOrder(300, 7);
+
+    expect(mocks.query).toHaveBeenCalledTimes(2); // 无物料查询
+    const detailParams = mocks.mockConn.execute.mock.calls[1][1] as unknown[];
+    expect(detailParams[1]).toBe(0); // material_id = 0
+  });
+});
+
+/** detail INSERT 参数里 quantity 位于 index 3 */
+function detailInsertQuantity(params: unknown[]): number {
+  return params[3] as number;
+}
+
+// ============================================================
 // 6. convertToFormalWorkOrder — 转正式生产工单（已确认 → BOM/工艺）
 // ============================================================
 describe('SampleProcessCardService.convertToFormalWorkOrder', () => {

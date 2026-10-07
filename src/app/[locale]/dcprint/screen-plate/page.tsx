@@ -3,6 +3,8 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +34,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, Edit, Trash2, History, Activity } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, History, Activity, Layers } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 
@@ -251,46 +253,50 @@ export default function ScreenPlatePage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{ts('k_19k7iab')}</h1>
-          <div className="flex gap-2">
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder={tc('code')}
-                value={searchCode}
-                onChange={(e) => setSearchCode(e.target.value)}
-                className="w-28 h-8 text-sm"
-              />
-              <Select value={searchStatus} onValueChange={setSearchStatus}>
-                <SelectTrigger className="w-24 h-8 text-sm">
-                  <SelectValue placeholder={tc('status')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">{tc('all')}</SelectItem>
-                  {Object.entries(statusMap).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>
-                      {v.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button size="sm" variant="outline" onClick={fetchData}>
-                <Search className="h-3 w-3" />
-              </Button>
-            </div>
+        <PageHeroHeader
+          icon={Layers}
+          title={ts('k_19k7iab')}
+          action={
             <Button
               size="sm"
+              className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
               onClick={() => {
                 setEditItem({});
                 setShowDialog(true);
               }}
             >
-              <Plus className="h-3 w-3 mr-1" />
-              {ts('k_10st6hm')}</Button>
-          </div>
-        </div>
+              <Plus className="h-4 w-4 mr-1" />
+              {ts('k_10st6hm')}
+            </Button>
+          }
+        />
 
-        <Card>
+        <ListToolbar>
+          <Input
+            placeholder={tc('code')}
+            value={searchCode}
+            onChange={(e) => setSearchCode(e.target.value)}
+            className="w-28 h-8 text-sm"
+          />
+          <Select value={searchStatus} onValueChange={setSearchStatus}>
+            <SelectTrigger className="w-24 h-8 text-sm">
+              <SelectValue placeholder={tc('status')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">{tc('all')}</SelectItem>
+              {Object.entries(statusMap).map(([k, v]) => (
+                <SelectItem key={k} value={k}>
+                  {v.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button size="sm" variant="outline" onClick={fetchData}>
+            <Search className="h-3 w-3" />
+          </Button>
+        </ListToolbar>
+
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
             <Table>
               <TableHeader>

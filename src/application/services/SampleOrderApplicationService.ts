@@ -275,10 +275,29 @@ export class SampleOrderApplicationService {
     }
     logger.info(ctx, 'Material id resolved', { materialNo: order.materialNo, materialId });
 
-    // 4. Compute amounts (from sample fee / quotation)
+    // 4. Compute amounts — 优先取工艺卡报价单金额，无有效报价时回退打样费
     const quantity = order.quantity || 1;
-    const unitPrice = order.sampleFee || 0;
-    const totalAmount = unitPrice;
+    let unitPrice = order.sampleFee || 0;
+    let totalAmount = unitPrice;
+    if (order.processCardId) {
+      const quoteRows = await query<{ quoted_price: number | string; quantity: number | string }>(
+        `SELECT q.quoted_price, q.quantity
+           FROM dcprint_sample_process_card c
+           INNER JOIN sal_quote q ON q.id = c.quote_id
+          WHERE c.id = ? AND c.deleted = 0 AND q.deleted = 0 AND q.status NOT IN (4, 5)
+          LIMIT 1`,
+        [order.processCardId]
+      );
+      const quoteRow = quoteRows[0];
+      const quotedPrice = Number(quoteRow?.quoted_price ?? 0);
+      if (quoteRow && quotedPrice > 0) {
+        const quoteQtyNum = Number(quoteRow.quantity);
+        const quoteQty = quoteQtyNum > 0 ? quoteQtyNum : quantity;
+        unitPrice = Math.round((quotedPrice / quoteQty) * 10000) / 10000;
+        totalAmount = Math.round(unitPrice * quantity * 10000) / 10000;
+        logger.info(ctx, 'Amount source: quotation', { quotedPrice, quoteQty, unitPrice, totalAmount });
+      }
+    }
 
     // 5. Insert sal_order + sal_order_detail in one transaction (atomic)
     //    Retry on unique constraint conflict (ER_DUP_ENTRY): increment sequence by 1 each retry.

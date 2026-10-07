@@ -4,6 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -360,28 +361,30 @@ export default function BatchPage() {
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
 
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Layers className="w-6 h-6" />
-              {t('batchManagement')}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">{t('batchManagementDesc')}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={fetchData}>
-              <RefreshCw className="h-3 w-3 mr-1" />
-              {tc('refresh')}
-            </Button>
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              + {tc('create')}
-            </Button>
-          </div>
-        </div>
+        <PageHeroHeader
+          icon={Layers}
+          title={t('batchManagement')}
+          description={t('batchManagementDesc')}
+          action={
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={fetchData}>
+                <RefreshCw className="h-3 w-3 mr-1" />
+                {tc('refresh')}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setCreateOpen(true)}
+                className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
+              >
+                + {tc('create')}
+              </Button>
+            </div>
+          }
+        />
 
         {/* 汇总卡片 */}
         <div className="grid grid-cols-3 gap-4">
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
                 <Layers className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -392,7 +395,7 @@ export default function BatchPage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
                 <Snowflake className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
@@ -405,7 +408,7 @@ export default function BatchPage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
@@ -419,7 +422,7 @@ export default function BatchPage() {
         </div>
 
         {/* 搜索栏 */}
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="pt-4">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 flex-1">
@@ -448,7 +451,7 @@ export default function BatchPage() {
         </Card>
 
         {/* 批次列表 */}
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
             <StandardTable<BatchItem>
               columns={columns}

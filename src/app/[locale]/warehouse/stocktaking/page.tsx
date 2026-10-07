@@ -3,7 +3,7 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { STOCKTAKING_TYPE_LABEL, SPLIT_FLAG_LABEL } from '@/lib/status-labels';
 import { useEffect, useState } from 'react';
-import { MainLayout } from '@/components/layout';
+import { MainLayout, PageHeroHeader, ListToolbar } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -496,20 +496,28 @@ export default function StocktakingPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t('stocktaking')}</h1>
-          <div className="flex gap-2">
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder={tc('searchOrderNo')}
-                value={searchNo}
-                onChange={(e) => setSearchNo(e.target.value)}
-                className="w-36 h-8 text-sm"
-              />
-              <Button size="sm" variant="outline" onClick={fetchData}>
-                <Search className="h-3 w-3" />
-              </Button>
-            </div>
+        <PageHeroHeader
+          icon={ClipboardCheck}
+          title={t('stocktaking')}
+          action={
+            <Button size="sm" onClick={() => { setEditItem({}); setShowDialog(true); }}>
+              <Plus className="h-3 w-3 mr-1" />
+              {t('addStocktaking')}
+            </Button>
+          }
+        />
+        <ListToolbar>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder={tc('searchOrderNo')}
+              value={searchNo}
+              onChange={(e) => setSearchNo(e.target.value)}
+              className="w-36 h-8 text-sm"
+            />
+            <Button size="sm" variant="outline" onClick={fetchData}>
+              <Search className="h-3 w-3" />
+            </Button>
+          </div>
             <GlobalExportToolbar
               filename={ts('k_1uyxdj1')}
               title={ts('k_zfkd36')}
@@ -544,8 +552,7 @@ export default function StocktakingPage() {
               <Plus className="h-3 w-3 mr-1" />
               {t('addStocktaking')}
             </Button>
-          </div>
-        </div>        <StatsCards
+        </ListToolbar>        <StatsCards
           configs={[
             { key: 'pending', label: '待盘点', icon: Clock, ...StatsTheme.orange },
             { key: 'counting', label: '盘点中', icon: ClipboardCheck, ...StatsTheme.blue },
@@ -565,7 +572,7 @@ export default function StocktakingPage() {
 
 
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
             <StandardTable<InventoryCheck>
               columns={columns}

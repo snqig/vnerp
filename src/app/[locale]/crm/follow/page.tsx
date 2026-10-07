@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -455,7 +456,7 @@ export default function CustomerFollowPage() {
                   <Label>{t('nextFollowDate')}</Label>
                   <Input
                     type="date"
-                    value={form.next_follow_date || ''}
+                    value={toDateInput(form.next_follow_date)}
                     onChange={(e) => setForm({ ...form, next_follow_date: e.target.value })}
                   />
                 </div>

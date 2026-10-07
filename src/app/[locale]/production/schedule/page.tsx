@@ -8,7 +8,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { MainLayout } from '@/components/layout';
-import { formatDate } from '@/lib/date-utils';
+import { formatDate, toDateTimeLocal } from '@/lib/date-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -529,8 +529,8 @@ export default function ProductionSchedulePage() {
       product_name: schedule.product_name,
       workshop: schedule.workshop,
       planned_qty: schedule.planned_qty,
-      planned_start: schedule.planned_start || '',
-      planned_end: schedule.planned_end || '',
+      planned_start: toDateTimeLocal(schedule.planned_start),
+      planned_end: toDateTimeLocal(schedule.planned_end),
       priority: schedule.priority,
       scheduler: schedule.scheduler || '',
       remark: schedule.remark || '',

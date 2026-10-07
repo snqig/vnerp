@@ -365,7 +365,7 @@ export default function PurchaseReturnPage() {
           </div>
         </div>
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
             <StandardTable<ReturnOrder>
               columns={columns}

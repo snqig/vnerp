@@ -50,6 +50,8 @@ export const GET = withPermission(async (request: NextRequest) => {
     [...params, pageSize, (page - 1) * pageSize]
   );
 
+  // 汇总口径必须与列表一致：复用同一 where + params，
+  // 否则按关键词/类型筛选列表后，顶部卡片仍显示全量金额。
   const costSummary = await query(`
     SELECT
       COALESCE(SUM(CASE WHEN cost_type = 'material' THEN amount ELSE 0 END), 0) as material,
@@ -57,8 +59,8 @@ export const GET = withPermission(async (request: NextRequest) => {
       COALESCE(SUM(CASE WHEN cost_type = 'overhead' THEN amount ELSE 0 END), 0) as overhead,
       COALESCE(SUM(CASE WHEN cost_type = 'outsource' THEN amount ELSE 0 END), 0) as outsource,
       COALESCE(SUM(amount), 0) as total
-    FROM fin_cost_record WHERE deleted = 0
-  `);
+    FROM fin_cost_record ${where}
+  `, params);
 
   return successResponse({
     list: rows,

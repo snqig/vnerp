@@ -1,10 +1,13 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateTimeLocal, nowDateTimeLocal } from '@/lib/date-utils';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -287,38 +290,42 @@ export default function InkMixedPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{tc('dcInkMixedTitle')}</h1>
-          <div className="flex gap-2">
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder={tc('searchOrderNo')}
-                value={searchNo}
-                onChange={(e) => setSearchNo(e.target.value)}
-                className="w-36 h-8 text-sm"
-              />
-              <Input
-                placeholder={ts('k_138bir9')}
-                value={searchColor}
-                onChange={(e) => setSearchColor(e.target.value)}
-                className="w-36 h-8 text-sm"
-              />
-              <Button size="sm" variant="outline" onClick={fetchData}>
-                <Search className="h-3 w-3" />
-              </Button>
-            </div>
+        <PageHeroHeader
+          icon={Beaker}
+          title={tc('dcInkMixedTitle')}
+          action={
             <Button
               size="sm"
+              className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
               onClick={() => {
-                setEditItem({ mix_time: new Date().toISOString().slice(0, 16), unit: 'kg' });
+                setEditItem({ mix_time: nowDateTimeLocal(), unit: 'kg' });
                 fetchDialogOptions();
                 setShowDialog(true);
               }}
             >
-              <Plus className="h-3 w-3 mr-1" />
-              {ts('k_5sawab')}</Button>
-          </div>
-        </div>
+              <Plus className="h-4 w-4 mr-1" />
+              {ts('k_5sawab')}
+            </Button>
+          }
+        />
+
+        <ListToolbar>
+          <Input
+            placeholder={tc('searchOrderNo')}
+            value={searchNo}
+            onChange={(e) => setSearchNo(e.target.value)}
+            className="w-36 h-8 text-sm"
+          />
+          <Input
+            placeholder={ts('k_138bir9')}
+            value={searchColor}
+            onChange={(e) => setSearchColor(e.target.value)}
+            className="w-36 h-8 text-sm"
+          />
+          <Button size="sm" variant="outline" onClick={fetchData}>
+            <Search className="h-3 w-3" />
+          </Button>
+        </ListToolbar>
 
         <StatsCards
           clickable
@@ -339,7 +346,7 @@ export default function InkMixedPage() {
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
             <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
             <Table>
@@ -581,7 +588,7 @@ export default function InkMixedPage() {
                 <Label>{ts('k_5ctrcy')}</Label>
                 <Input
                   type="datetime-local"
-                  value={editItem.mix_time || ''}
+                  value={toDateTimeLocal(editItem.mix_time)}
                   onChange={(e) => setEditItem({ ...editItem, mix_time: e.target.value })}
                 />
               </div>
@@ -622,7 +629,7 @@ export default function InkMixedPage() {
                 <Label>{ts('k_1oc35yx')}</Label>
                 <Input
                   type="datetime-local"
-                  value={editItem.expire_time || ''}
+                  value={toDateTimeLocal(editItem.expire_time)}
                   onChange={(e) => setEditItem({ ...editItem, expire_time: e.target.value })}
                 />
               </div>

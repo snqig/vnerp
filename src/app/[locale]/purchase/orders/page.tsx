@@ -661,7 +661,7 @@ export default function PurchaseOrdersPage() {
         />
 
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex flex-1 gap-4 items-center w-full md:w-auto">
@@ -773,7 +773,7 @@ export default function PurchaseOrdersPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardHeader>
             <CardTitle>{t('purchaseOrders')}</CardTitle>
             <CardDescription>

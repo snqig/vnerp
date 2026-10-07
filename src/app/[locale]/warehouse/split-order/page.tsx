@@ -3,6 +3,8 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -379,21 +381,25 @@ export default function SplitOrderPage() {
 
   return (
     <MainLayout>
-      <Card>
+      <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
         <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold">{ts('k_1xvd5o6')}</h1>
-            <Button
-              onClick={() => {
-                resetForm();
-                setShowCreate(true);
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {ts('k_8r4lf')}</Button>
-          </div>
+          <PageHeroHeader
+            icon={Scissors}
+            title={ts('k_1xvd5o6')}
+            action={
+              <Button
+                onClick={() => {
+                  resetForm();
+                  setShowCreate(true);
+                }}
+                className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {ts('k_8r4lf')}</Button>
+            }
+          />
 
-          <div className="flex gap-2 mb-4">
+          <ListToolbar>
             <Input
               placeholder={ts('k_15x9dnn')}
               value={searchNo}
@@ -414,7 +420,7 @@ export default function SplitOrderPage() {
             <Button variant="outline" onClick={() => fetchData()}>
               <Search className="h-4 w-4" />
             </Button>
-          </div>
+          </ListToolbar>
 
           <StandardTable<SplitOrder>
             columns={columns}

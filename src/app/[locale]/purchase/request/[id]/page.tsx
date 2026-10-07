@@ -399,7 +399,7 @@ export default function PurchaseRequestDetailPage() {
 
         {/* 备注 */}
         {request.remark && (
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardHeader>
               <CardTitle>{tc('remark')}</CardTitle>
             </CardHeader>

@@ -27,6 +27,7 @@ import {
   XCircle,
   Send,
   AlertTriangle,
+  ShoppingCart,
 } from 'lucide-react';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import {
@@ -49,6 +50,7 @@ interface SampleCard {
   print_color: string;
   total_cost: number;
   estimated_hour: number;
+  quote_id: number | null;
   create_time: string;
 }
 
@@ -176,6 +178,38 @@ export default function ProcessCardPage() {
     }
   };
 
+  // 已确认工艺卡 → 生成报价单（POST /api/dcprint/sample-card/[id]/generate-quote）
+  const handleGenerateQuote = async (id: number) => {
+    try {
+      const res = await authFetch(`/api/dcprint/sample-card/${id}/generate-quote`, { method: 'POST' });
+      const data = (await res.json()) as { success: boolean; message?: string };
+      if (data.success) {
+        toast.success(data.message || ts('k_hn069'));
+        fetchCards();
+      } else {
+        toast.error(data.message || ts('k_ydow7a'));
+      }
+    } catch {
+      toast.error(ts('k_ydow7a'));
+    }
+  };
+
+  // 报价单 → 销售订单（POST /api/quotes/[id]/convert，后端幂等：重复点击返回既有订单）
+  const handleConvertToOrder = async (quoteId: number) => {
+    try {
+      const res = await authFetch(`/api/quotes/${quoteId}/convert`, { method: 'POST' });
+      const data = (await res.json()) as { success: boolean; message?: string };
+      if (data.success) {
+        toast.success(data.message || ts('k_9vwt5c'));
+        fetchCards();
+      } else {
+        toast.error(data.message || ts('k_ydow7a'));
+      }
+    } catch {
+      toast.error(ts('k_ydow7a'));
+    }
+  };
+
   const columns: StandardTableColumn<SampleCard>[] = [
     {
       key: 'sample_no',
@@ -275,6 +309,18 @@ export default function ProcessCardPage() {
                   {ts('k_wph6a4')}
                 </DropdownMenuItem>
               </>
+            )}
+            {r.status === 3 && !r.quote_id && (
+              <DropdownMenuItem onClick={() => handleGenerateQuote(r.id)}>
+                <FileText className="h-4 w-4 mr-2" />
+                {ts('k_8fdq2m')}
+              </DropdownMenuItem>
+            )}
+            {r.status === 3 && r.quote_id && (
+              <DropdownMenuItem onClick={() => handleConvertToOrder(r.quote_id!)}>
+                <ShoppingCart className="h-4 w-4 mr-2 text-green-500 dark:text-green-400" />
+                {ts('k_9vwt5c')}
+              </DropdownMenuItem>
             )}
           </DropdownMenuContent>
         </DropdownMenu>

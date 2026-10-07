@@ -1,10 +1,13 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { nowDateTimeLocal } from '@/lib/date-utils';
 import { INK_TYPE_LABEL, INK_STATUS_LABEL } from '@/lib/status-labels';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -131,7 +134,7 @@ export default function InkOpeningPage() {
     material_name: '',
     batch_no: '',
     ink_type: 'solvent',
-    open_time: new Date().toISOString().slice(0, 16),
+    open_time: nowDateTimeLocal(),
     expire_hours: 48,
     remaining_qty: '',
     unit: 'kg',
@@ -220,7 +223,7 @@ export default function InkOpeningPage() {
           material_name: '',
           batch_no: '',
           ink_type: 'solvent',
-          open_time: new Date().toISOString().slice(0, 16),
+          open_time: nowDateTimeLocal(),
           expire_hours: 48,
           remaining_qty: '',
           unit: 'kg',
@@ -329,55 +332,59 @@ export default function InkOpeningPage() {
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>{ts('k_dajxpn')}</CardTitle>
-                <CardDescription>{tc('dcOpeningRecordDesc')}</CardDescription>
-              </div>
-              <div className="flex gap-2">
-                <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder={ts('k_1xilek5')}
-                    className="pl-10"
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && fetchRecords()}
-                  />
-                </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-28">
-                    <SelectValue placeholder={tc('status')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{ts('k_igzce8')}</SelectItem>
-                    <SelectItem value="1">{ts('k_kr2h4d')}</SelectItem>
-                    <SelectItem value="2">{ts('k_1g217or')}</SelectItem>
-                    <SelectItem value="3">{ts('k_oy744d')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={inkTypeFilter} onValueChange={setInkTypeFilter}>
-                  <SelectTrigger className="w-28">
-                    <SelectValue placeholder={ts('k_10yyuf6')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{ts('k_zao217')}</SelectItem>
-                    <SelectItem value="solvent">{ts('k_u0oodq')}</SelectItem>
-                    <SelectItem value="uv">{ts('k_1lwyoyj')}</SelectItem>
-                    <SelectItem value="water">{ts('k_krqaz0')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" onClick={fetchRecords}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {ts('k_12qo56a')}</Button>
-                <Button onClick={() => setDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {ts('k_zh5my3')}</Button>
-              </div>
-            </div>
-          </CardHeader>
+        <PageHeroHeader
+          icon={Droplet}
+          title={ts('k_dajxpn')}
+          description={tc('dcOpeningRecordDesc')}
+          action={
+            <Button
+              onClick={() => setDialogOpen(true)}
+              className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {ts('k_zh5my3')}</Button>
+          }
+        />
+
+        <ListToolbar>
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={ts('k_1xilek5')}
+              className="pl-10"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && fetchRecords()}
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder={tc('status')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{ts('k_igzce8')}</SelectItem>
+              <SelectItem value="1">{ts('k_kr2h4d')}</SelectItem>
+              <SelectItem value="2">{ts('k_1g217or')}</SelectItem>
+              <SelectItem value="3">{ts('k_oy744d')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={inkTypeFilter} onValueChange={setInkTypeFilter}>
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder={ts('k_10yyuf6')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{ts('k_zao217')}</SelectItem>
+              <SelectItem value="solvent">{ts('k_u0oodq')}</SelectItem>
+              <SelectItem value="uv">{ts('k_1lwyoyj')}</SelectItem>
+              <SelectItem value="water">{ts('k_krqaz0')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" onClick={fetchRecords}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {ts('k_12qo56a')}</Button>
+        </ListToolbar>
+
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent>
             <Table>
               <TableHeader>

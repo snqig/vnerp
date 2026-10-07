@@ -131,7 +131,7 @@ export default function PieceWorkPage() {
           </CardContent>
           {records.length > 0 && (
             <div className="flex justify-end gap-6 px-4 py-2 text-xs border-t bg-muted/50 font-semibold">
-              <span>{tc('total')}：</span>
+              <span>{t('total')}：</span>
               <span>{totalQuantity}</span>
               <span>¥{totalAmount.toFixed(2)}</span>
             </div>

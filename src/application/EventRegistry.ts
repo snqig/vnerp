@@ -33,6 +33,7 @@ import { FinishOrderInventoryHandler } from '@/application/handlers/FinishOrderI
 import { ProductionFinanceHandler } from '@/application/handlers/ProductionFinanceHandler';
 import { SampleOrderInventoryHandler } from '@/application/handlers/SampleOrderInventoryHandler';
 import { SampleOrderConversionHandler } from '@/application/handlers/SampleOrderConversionHandler';
+import { SampleFeeDeductionHandler } from '@/application/handlers/SampleFeeDeductionHandler';
 import { ToolUsageSyncHandler } from '@/application/handlers/ToolUsageSyncHandler';
 import { ToolCostHandler } from '@/application/handlers/ToolCostHandler';
 import { MaterialReturnInventoryHandler } from '@/application/handlers/MaterialReturnInventoryHandler';
@@ -323,6 +324,10 @@ export class EventRegistry {
     eventBus.subscribe(
       'SampleOrderConverted',
       new IdempotentHandler(new SampleOrderConversionHandler())
+    );
+    eventBus.subscribe(
+      'SampleOrderConverted',
+      new IdempotentHandler(new SampleFeeDeductionHandler())
     );
     eventBus.subscribe('SampleOrderConverted', new AuditLogHandler());
     eventBus.subscribe('SampleOrderSubmitted', new AuditLogHandler());

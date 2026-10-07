@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useEffect, useState } from 'react';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
@@ -482,7 +483,7 @@ export default function ProductLifecyclePage() {
                 <Label>{t('effectiveDate')}</Label>
                 <Input
                   type="date"
-                  value={form.effective_date || ''}
+                  value={toDateInput(form.effective_date)}
                   onChange={(e) => setForm({ ...form, effective_date: e.target.value })}
                 />
               </div>

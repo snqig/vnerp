@@ -559,7 +559,7 @@ export default function PurchaseRequestPage() {
 
 
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-4">
         {/* 搜索栏 */}
         <div className="flex flex-wrap gap-3 mb-4">

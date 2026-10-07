@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -536,7 +537,7 @@ export default function CustomerAnalysisPage() {
                   <Label>{t('periodStart')}</Label>
                   <Input
                     type="date"
-                    value={form.period_start || ''}
+                    value={toDateInput(form.period_start)}
                     onChange={(e) => setForm({ ...form, period_start: e.target.value })}
                   />
                 </div>
@@ -544,7 +545,7 @@ export default function CustomerAnalysisPage() {
                   <Label>{t('periodEnd')}</Label>
                   <Input
                     type="date"
-                    value={form.period_end || ''}
+                    value={toDateInput(form.period_end)}
                     onChange={(e) => setForm({ ...form, period_end: e.target.value })}
                   />
                 </div>

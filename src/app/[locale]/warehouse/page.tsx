@@ -26,7 +26,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Search, RefreshCw, Package, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
+import { Search, RefreshCw, Package, ArrowDownToLine, ArrowUpFromLine, Warehouse } from 'lucide-react';
+import { PageHeroHeader } from '@/components/layout';
 import { useTranslations } from 'next-intl';
 
 interface BatchInventory {
@@ -297,9 +298,8 @@ export default function WarehousePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
-        <div className="flex gap-2">
+      <PageHeroHeader icon={Warehouse} title={t('title')} />
+      <div className="flex gap-2">
           <Dialog open={inboundOpen} onOpenChange={setInboundOpen}>
             <DialogTrigger asChild>
               <Button className="bg-green-600 hover:bg-green-700">
@@ -586,9 +586,8 @@ export default function WarehousePage() {
             {t('refresh')}
           </Button>
         </div>
-      </div>
 
-      <Card>
+      <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="w-5 h-5" />

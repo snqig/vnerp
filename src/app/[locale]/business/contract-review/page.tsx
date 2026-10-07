@@ -2,6 +2,7 @@
 import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -618,7 +619,7 @@ export default function ContractReviewPage() {
                 <Label>{ts('k_pn7pxo')}</Label>
                 <Input
                   type="date"
-                  value={editItem.delivery_date || ''}
+                  value={toDateInput(editItem.delivery_date)}
                   onChange={(e) => setEditItem({ ...editItem, delivery_date: e.target.value })}
                 />
               </div>

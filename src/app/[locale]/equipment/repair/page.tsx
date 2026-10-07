@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -408,7 +409,7 @@ export default function EquipmentRepairPage() {
                 <Label>{ts('k_3s4z78')}</Label>
                 <Input
                   type="date"
-                  value={editItem.fault_date || ''}
+                  value={toDateInput(editItem.fault_date)}
                   onChange={(e) => setEditItem({ ...editItem, fault_date: e.target.value })}
                 />
               </div>

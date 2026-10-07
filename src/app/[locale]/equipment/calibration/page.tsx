@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -399,7 +400,7 @@ export default function EquipmentCalibrationPage() {
                 <Label>{ts('k_14yjphf')}</Label>
                 <Input
                   type="date"
-                  value={editItem.calibration_date || ''}
+                  value={toDateInput(editItem.calibration_date)}
                   onChange={(e) => setEditItem({ ...editItem, calibration_date: e.target.value })}
                 />
               </div>
@@ -407,7 +408,7 @@ export default function EquipmentCalibrationPage() {
                 <Label>{tc('nextCalibrationDate')}</Label>
                 <Input
                   type="date"
-                  value={editItem.next_calibration_date || ''}
+                  value={toDateInput(editItem.next_calibration_date)}
                   onChange={(e) =>
                     setEditItem({ ...editItem, next_calibration_date: e.target.value })
                   }

@@ -1,5 +1,6 @@
 'use client';
 import { authFetch } from '@/lib/auth-fetch';
+import { extractSignColorLink } from '@/lib/color-diff';
 import { useEffect, useState, useMemo } from 'react';
 import { useEmployeeOptions, employeeLabel } from '@/hooks/useEmployeeOptions';
 import { MainLayout } from '@/components/layout';
@@ -54,6 +55,22 @@ interface LabTestRecord {
   status: number;
   remark: string;
   create_time: string;
+  // 签样色样基准联动（色差测试，编辑态 Lab 为字符串输入）
+  color_standard_id?: string | number | null;
+  measured_lab?: { l: string; a: string; b: string };
+}
+
+// 色样档案选项（GET /api/sample/color-standards）
+interface ColorStandardOption {
+  id: number;
+  color_no: string;
+  color_name: string;
+  sample_order_no: string | null;
+  l_value: string;
+  a_value: string;
+  b_value: string;
+  de_threshold: string;
+  measure_device: string | null;
 }
 
 const testTypeMap: Record<string, string> = {
@@ -93,6 +110,10 @@ export default function LabTestPage() {
 
   const { toast } = useToast();
   const [list, setList] = useState<LabTestRecord[]>([]);
+  // 签样色样档案选项（色差测试关联基准用）
+  const [colorStandards, setColorStandards] = useState<ColorStandardOption[]>([]);
+  // 编辑回显时置顶的关联色样（可能不在 colorStandards 列表内）
+  const [pinnedColorStd, setPinnedColorStd] = useState<ColorStandardOption | null>(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchProduct, setSearchProduct] = useState('');
@@ -146,18 +167,43 @@ export default function LabTestPage() {
     fetchStats();
   }, [page]);
 
+  // 打开弹窗时拉取色样档案选项（签样标准闭环：色差测试关联基准）
+  useEffect(() => {
+    if (!showDialog) return;
+    authFetch('/api/sample/color-standards?limit=100')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setColorStandards(data.data?.list || []);
+      })
+      .catch(() => {});
+  }, [showDialog]);
+
   const handleSave = async () => {
     const parsed = buildLabTestSchema(buildQualityFormMessages((k) => tc(k))).safeParse(editItem);
     if (!parsed.success) {
       toast({ title: firstZodMessage(parsed.error), variant: 'destructive' });
       return;
     }
+    // 组装签样色样联动字段：未关联传 null（后端清除旧联动）；关联且实测 Lab 齐全才带 measured_lab（服务端算 ΔE）
+    const payload: Record<string, unknown> = { ...parsed.data };
+    const ml = editItem.measured_lab;
+    if (editItem.color_standard_id) {
+      payload.color_standard_id = Number(editItem.color_standard_id);
+      if (ml && ml.l !== '' && ml.a !== '' && ml.b !== '') {
+        payload.measured_lab = { l: Number(ml.l), a: Number(ml.a), b: Number(ml.b) };
+      } else {
+        delete payload.measured_lab;
+      }
+    } else {
+      payload.color_standard_id = null;
+      delete payload.measured_lab;
+    }
     try {
       const method = editItem.id ? 'PUT' : 'POST';
       const res = await authFetch('/api/quality/lab-test', {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify(payload),
       });
       const result = await res.json();
       if (result.success) {
@@ -240,6 +286,7 @@ export default function LabTestPage() {
               <Button
                 onClick={() => {
                   setEditItem({ test_type: 'physical', conclusion: 'pending' });
+                  setPinnedColorStd(null);
                   setShowDialog(true);
                 }}
               >
@@ -320,7 +367,48 @@ export default function LabTestPage() {
                         size="sm"
                         variant="ghost"
                         onClick={() => {
-                          setEditItem(row);
+                          // 签样色样联动回显：从 detail_data JSON 提取关联色样与实测 Lab
+                          const link = extractSignColorLink(row.detail_data);
+                          setEditItem({
+                            ...row,
+                            color_standard_id: link.color_standard_id ?? undefined,
+                            measured_lab: link.measured_lab,
+                          });
+                          // 关联色样可能不在色样列表（limit=100）内，置顶合成选项防裸 ID 显示
+                          if (link.color_standard_id) {
+                            const cs = (() => {
+                              try {
+                                return (
+                                  JSON.parse(row.detail_data) as {
+                                    color_standard?: {
+                                      color_standard_id?: number;
+                                      color_no?: string;
+                                      color_name?: string;
+                                      base_lab?: { l?: number; a?: number; b?: number };
+                                      de_threshold?: number;
+                                    };
+                                  }
+                                ).color_standard;
+                              } catch {
+                                return undefined;
+                              }
+                            })();
+                            if (cs) {
+                              setPinnedColorStd({
+                                id: cs.color_standard_id ?? 0,
+                                color_no: cs.color_no || '',
+                                color_name: cs.color_name || '',
+                                sample_order_no: null,
+                                l_value: String(cs.base_lab?.l ?? ''),
+                                a_value: String(cs.base_lab?.a ?? ''),
+                                b_value: String(cs.base_lab?.b ?? ''),
+                                de_threshold: String(cs.de_threshold ?? ''),
+                                measure_device: null,
+                              });
+                            }
+                          } else {
+                            setPinnedColorStd(null);
+                          }
                           setShowDialog(true);
                         }}
                       >
@@ -481,6 +569,112 @@ export default function LabTestPage() {
                   onChange={(e) => setEditItem({ ...editItem, detail_data: e.target.value })}
                 />
               </div>
+              {(editItem.test_type === 'color' || editItem.test_type === 'color_diff') && (
+                <div className="col-span-2 border rounded-md p-3 space-y-3">
+                  <div>
+                    <Label>{t('k_link_color_std')}</Label>
+                    <Select
+                      value={
+                        editItem.color_standard_id ? String(editItem.color_standard_id) : 'none'
+                      }
+                      onValueChange={(v) =>
+                        setEditItem({
+                          ...editItem,
+                          color_standard_id: v === 'none' ? undefined : v,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('k_link_color_std')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t('k_link_none')}</SelectItem>
+                        {(pinnedColorStd &&
+                        !colorStandards.some((c) => c.id === pinnedColorStd.id)
+                          ? [pinnedColorStd, ...colorStandards]
+                          : colorStandards
+                        ).map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {c.color_no} · {c.color_name}（{c.sample_order_no || '-'}）
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {(() => {
+                      const merged =
+                        pinnedColorStd && !colorStandards.some((c) => c.id === pinnedColorStd.id)
+                          ? [pinnedColorStd, ...colorStandards]
+                          : colorStandards;
+                      const std = merged.find(
+                        (c) => String(c.id) === String(editItem.color_standard_id)
+                      );
+                      if (!std) return null;
+                      return (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t('k_base_ref')}：L*={Number(std.l_value)} / a*={Number(std.a_value)} /{' '}
+                          b*={Number(std.b_value)}，ΔE≤{Number(std.de_threshold)}
+                        </p>
+                      );
+                    })()}
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <Label>{t('k_measured_lab_l')}</Label>
+                      <Input
+                        type="number"
+                        step="0.0001"
+                        value={editItem.measured_lab?.l ?? ''}
+                        onChange={(e) =>
+                          setEditItem({
+                            ...editItem,
+                            measured_lab: {
+                              l: e.target.value,
+                              a: editItem.measured_lab?.a ?? '',
+                              b: editItem.measured_lab?.b ?? '',
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>{t('k_measured_lab_a')}</Label>
+                      <Input
+                        type="number"
+                        step="0.0001"
+                        value={editItem.measured_lab?.a ?? ''}
+                        onChange={(e) =>
+                          setEditItem({
+                            ...editItem,
+                            measured_lab: {
+                              l: editItem.measured_lab?.l ?? '',
+                              a: e.target.value,
+                              b: editItem.measured_lab?.b ?? '',
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>{t('k_measured_lab_b')}</Label>
+                      <Input
+                        type="number"
+                        step="0.0001"
+                        value={editItem.measured_lab?.b ?? ''}
+                        onChange={(e) =>
+                          setEditItem({
+                            ...editItem,
+                            measured_lab: {
+                              l: editItem.measured_lab?.l ?? '',
+                              a: editItem.measured_lab?.a ?? '',
+                              b: e.target.value,
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="col-span-2">
                 <Label>{tc('remark')}</Label>
                 <Textarea

@@ -327,7 +327,7 @@ export default function PurchaseOrderDetailPage() {
         </div>
 
         {/* 订单基本信息 */}
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
@@ -401,7 +401,7 @@ export default function PurchaseOrderDetailPage() {
 
           {/* 订单明细 */}
           <TabsContent value="lines">
-            <Card>
+            <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
               <CardContent className="p-4">
                 <Table>
                   <TableHeader>
@@ -467,7 +467,7 @@ export default function PurchaseOrderDetailPage() {
 
           {/* 入库记录 */}
           <TabsContent value="inbound">
-            <Card>
+            <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
               <CardHeader>
                 <CardTitle className="text-base">
                   {tc('inboundRecord')}
@@ -527,7 +527,7 @@ export default function PurchaseOrderDetailPage() {
 
           {/* 退货记录 */}
           <TabsContent value="return">
-            <Card>
+            <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
               <CardHeader>
                 <CardTitle className="text-base">
                   {tc('returnRecord')}
@@ -587,7 +587,7 @@ export default function PurchaseOrderDetailPage() {
 
           {/* 应付记录 */}
           <TabsContent value="payable">
-            <Card>
+            <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
               <CardHeader>
                 <CardTitle className="text-base">
                   {tc('payableRecord')}

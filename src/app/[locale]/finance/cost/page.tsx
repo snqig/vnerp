@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, RefreshCw, DollarSign, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { Search, RefreshCw, DollarSign, Package, Hammer, Factory, Truck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { authFetch } from '@/lib/auth-fetch';
@@ -124,13 +124,17 @@ export default function CostPage() {
 
   const fetchSummary = useCallback(async () => {
     try {
-      const res = await authFetch('/api/finance/cost');
+      // 汇总口径与列表一致：带当前筛选条件，卡片随筛选联动
+      const params = new URLSearchParams();
+      if (keyword) params.set('keyword', keyword);
+      if (typeFilter) params.set('cost_type', typeFilter);
+      const res = await authFetch('/api/finance/cost?' + params.toString());
       const result = await res.json();
       if (result.success && result.data) {
-        setSummary(result.data.cost_summary || summary);
+        setSummary(result.data.cost_summary || { material: 0, labor: 0, overhead: 0, outsource: 0, total: 0 });
       }
     } catch {}
-  }, []);
+  }, [keyword, typeFilter]);
 
   useEffect(() => {
     fetchData();
@@ -156,9 +160,12 @@ export default function CostPage() {
       key: 'cost_type',
       title: t('costType'),
       sortable: true,
-      render: (r) => (
-        <Badge variant="outline">{t(costTypeMap[r.cost_type]) || r.cost_type}</Badge>
-      ),
+      render: (r) => {
+        // 未知/空类型直接显示原值；注意 t() 缺 key 时返回的是 key 路径（truthy），
+        // 不能写 `t(k) || 原值`——那样兜底永远不生效。
+        const typeKey = costTypeMap[r.cost_type];
+        return <Badge variant="outline">{typeKey ? t(typeKey) : (r.cost_type || '-')}</Badge>;
+      },
     },
     {
       key: 'order_no',
@@ -219,6 +226,7 @@ export default function CostPage() {
                 <SelectItem value="labor">{t('laborCost')}</SelectItem>
                 <SelectItem value="overhead">{t('overheadCost')}</SelectItem>
                 <SelectItem value="outsource">{t('outsourceCost')}</SelectItem>
+                <SelectItem value="other">{t('otherCost')}</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" onClick={fetchData}>
@@ -230,18 +238,21 @@ export default function CostPage() {
 
         <StatsCards
           configs={[
-            { key: 'total', label: tc('total'), icon: DollarSign, ...StatsTheme.blue },
-            { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
-            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
-            { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'total', label: t('totalCost'), icon: DollarSign, ...StatsTheme.blue },
+            { key: 'material', label: t('materialCost'), icon: Package, ...StatsTheme.green },
+            { key: 'labor', label: t('laborCost'), icon: Hammer, ...StatsTheme.orange },
+            { key: 'overhead', label: t('overheadCost'), icon: Factory, ...StatsTheme.purple },
+            { key: 'outsource', label: t('outsourceCost'), icon: Truck, ...StatsTheme.cyan },
           ]}
           stats={[
-            { key: 'total', count: list.length },
-            { key: 'active', count: list.length },
-            { key: 'pending', count: list.length },
-            { key: 'warning', count: list.length },
+            { key: 'total', count: Number(summary.total) || 0 },
+            { key: 'material', count: Number(summary.material) || 0 },
+            { key: 'labor', count: Number(summary.labor) || 0 },
+            { key: 'overhead', count: Number(summary.overhead) || 0 },
+            { key: 'outsource', count: Number(summary.outsource) || 0 },
           ]}
-          cols={{ mobile: 2, tablet: 2, desktop: 4 }}
+          countFormatter={(c) => `¥${Number(c || 0).toFixed(2)}`}
+          cols={{ mobile: 2, tablet: 3, desktop: 5 }}
         />
 
         <Card>

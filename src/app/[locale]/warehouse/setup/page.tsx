@@ -2,7 +2,7 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useMemo } from 'react';
-import { MainLayout } from '@/components/layout';
+import { MainLayout, PageHeroHeader } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
@@ -380,20 +380,17 @@ export default function WarehouseSetupPage() {
   return (
     <MainLayout title={t('warehouseSetup')}>
       <div className="space-y-6">
-        {/* 页面标题 */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Warehouse className="h-6 w-6 text-primary" />
-              {t('warehouseSetup')}
-            </h1>
-            <p className="text-muted-foreground mt-1">{t('warehouseSetupDesc')}</p>
-          </div>
-          <Button onClick={handleAdd} className="btn-dashboard-primary">
-            <Plus className="h-4 w-4 mr-2" />
-            {t('addWarehouse')}
-          </Button>
-        </div>
+        <PageHeroHeader
+          icon={Warehouse}
+          title={t('warehouseSetup')}
+          description={t('warehouseSetupDesc')}
+          action={
+            <Button onClick={handleAdd} className="btn-dashboard-primary">
+              <Plus className="h-4 w-4 mr-2" />
+              {t('addWarehouse')}
+            </Button>
+          }
+        />
 
         {/* 统计卡片 */}
         <StatsCards

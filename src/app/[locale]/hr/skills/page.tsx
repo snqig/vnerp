@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -413,7 +414,7 @@ export default function SkillsPage() {
                 <Label>{t('assessDate')}</Label>
                 <Input
                   type="date"
-                  value={editItem.assess_date || ''}
+                  value={toDateInput(editItem.assess_date)}
                   onChange={(e) => setEditItem({ ...editItem, assess_date: e.target.value })}
                 />
               </div>
@@ -421,7 +422,7 @@ export default function SkillsPage() {
                 <Label>{t('nextAssessDate')}</Label>
                 <Input
                   type="date"
-                  value={editItem.next_assess_date || ''}
+                  value={toDateInput(editItem.next_assess_date)}
                   onChange={(e) => setEditItem({ ...editItem, next_assess_date: e.target.value })}
                 />
               </div>

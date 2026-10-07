@@ -3,7 +3,7 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { MainLayout } from '@/components/layout';
+import { MainLayout, PageHeroHeader } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { StandardTable, type StandardTableColumn } from '@/components/common';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, RefreshCw, Search, Eye, Trash2 } from 'lucide-react';
+import { Plus, RefreshCw, Search, Eye, Trash2, ArrowLeftRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
 import { UserSelect } from '@/components/ui/user-select';
@@ -242,8 +242,19 @@ export default function TransferPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
+        <PageHeroHeader
+          icon={ArrowLeftRight}
+          title={t('transfer')}
+          action={
+            <Button onClick={() => { setEditItem({ type: 2 }); setShowDialog(true); }}>
+              <Plus className="h-4 w-4 mr-1" />
+              {t('addTransfer')}
+            </Button>
+          }
+        />
+
         {/* 搜索区域 */}
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="pt-4">
             <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 min-w-[200px]">
@@ -268,17 +279,13 @@ export default function TransferPage() {
                   <Search className="h-4 w-4 mr-1" />
                   {t('query')}
                 </Button>
-                <Button onClick={() => { setEditItem({ type: 2 }); setShowDialog(true); }}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  {t('addTransfer')}
-                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* 列表区域 */}
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
             <div className="px-4 py-3 border-b flex items-center justify-between">
               <div>

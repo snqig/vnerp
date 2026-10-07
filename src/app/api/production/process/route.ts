@@ -35,15 +35,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       pc.update_time,
       w.customer_name,
       '' as customer_code,
-      sc.process_flow1,
-      sc.process_flow2,
-      sc.print_type,
-      sc.film_manufacturer,
-      sc.film_code,
-      sc.mold_code
+      (SELECT MIN(process_flow1) FROM prd_standard_card WHERE product_name = pc.product_name AND deleted = 0) AS process_flow1,
+      (SELECT MIN(process_flow2) FROM prd_standard_card WHERE product_name = pc.product_name AND deleted = 0) AS process_flow2,
+      (SELECT MIN(print_type) FROM prd_standard_card WHERE product_name = pc.product_name AND deleted = 0) AS print_type,
+      (SELECT MIN(film_manufacturer) FROM prd_standard_card WHERE product_name = pc.product_name AND deleted = 0) AS film_manufacturer,
+      (SELECT MIN(film_code) FROM prd_standard_card WHERE product_name = pc.product_name AND deleted = 0) AS film_code,
+      (SELECT MIN(mold_code) FROM prd_standard_card WHERE product_name = pc.product_name AND deleted = 0) AS mold_code
     FROM prd_process_card pc
     LEFT JOIN prod_work_order w ON pc.work_order_id = w.id
-    LEFT JOIN prd_standard_card sc ON pc.product_name = sc.product_name
     WHERE pc.deleted = 0 AND pc.burdening_status >= 1
   `;
 

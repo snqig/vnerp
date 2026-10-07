@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { MainLayout } from '@/components/layout/main-layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
 import { useToastContext } from '@/components/ui/toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -253,43 +255,46 @@ export default function InkFormulaPage() {
   return (
     <MainLayout title={t('inkFormulaManagement')}>
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Beaker className="h-5 w-5" />
-              {t('inkColorList')}
-            </CardTitle>
-          </CardHeader>
+        <PageHeroHeader
+          icon={Beaker}
+          title={t('inkColorList')}
+          action={
+            <Button
+              onClick={() => {
+                setEditingColor(null);
+                setColorForm({
+                  color_code: '',
+                  color_name: '',
+                  color_series: '',
+                  base_ink_type: '',
+                  pantone_code: '',
+                });
+                setIsColorDialogOpen(true);
+              }}
+              className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {tc('add')}{ts('k_14gayme')}</Button>
+          }
+        />
+
+        <ListToolbar className="gap-4">
+          <div className="flex-1 max-w-sm">
+            <Input
+              placeholder={tc('search')}
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && fetchColors()}
+            />
+          </div>
+          <Button onClick={() => fetchColors()} variant="outline">
+            <Search className="h-4 w-4 mr-2" />
+            {tc('search')}
+          </Button>
+        </ListToolbar>
+
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex-1 max-w-sm">
-                <Input
-                  placeholder={tc('search')}
-                  value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && fetchColors()}
-                />
-              </div>
-              <Button onClick={() => fetchColors()} variant="outline">
-                <Search className="h-4 w-4 mr-2" />
-                {tc('search')}
-              </Button>
-              <Button
-                onClick={() => {
-                  setEditingColor(null);
-                  setColorForm({
-                    color_code: '',
-                    color_name: '',
-                    color_series: '',
-                    base_ink_type: '',
-                    pantone_code: '',
-                  });
-                  setIsColorDialogOpen(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {tc('add')}{ts('k_14gayme')}</Button>
-            </div>
 
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">{tc('loading')}</div>
@@ -390,7 +395,7 @@ export default function InkFormulaPage() {
         </Card>
 
         {selectedColor && (
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>{selectedColor.color_name} {ts('k_1t2aw12')}</span>

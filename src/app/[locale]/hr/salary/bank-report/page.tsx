@@ -150,7 +150,7 @@ export default function BankReportPage() {
           </CardContent>
           {data.length > 0 && (
             <div className="flex justify-end gap-6 px-4 py-2 text-sm border-t bg-muted/50 font-bold">
-              <span>{tc('total')}：</span>
+              <span>{t('total')}：</span>
               <span className="text-lg">¥{totalAmount.toLocaleString()}</span>
             </div>
           )}

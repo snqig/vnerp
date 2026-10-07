@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { nowDateTimeLocal } from '@/lib/date-utils';
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
@@ -318,7 +319,7 @@ export default function ProductionReportPage() {
         equipment_id: equipmentList.find((e) => e.equipment_code === scannedCodes.equipment)?.id,
         work_order_id: wo?.id,
         work_order_no: code,
-        start_time: new Date().toISOString().slice(0, 16),
+        start_time: nowDateTimeLocal(),
       });
     }
   };
@@ -342,7 +343,7 @@ export default function ProductionReportPage() {
   const handleFinishWork = () => {
     setForm((prev: Loose) => ({
       ...prev,
-      end_time: new Date().toISOString().slice(0, 16),
+      end_time: nowDateTimeLocal(),
     }));
     setDialogOpen(true);
     setIsWorking(false);
@@ -541,7 +542,7 @@ export default function ProductionReportPage() {
               />
               <Button
                 onClick={() => {
-                  setForm({ ...form, start_time: new Date().toISOString().slice(0, 16) });
+                  setForm({ ...form, start_time: nowDateTimeLocal() });
                   setDialogOpen(true);
                 }}
               >

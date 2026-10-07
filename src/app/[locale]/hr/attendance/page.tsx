@@ -1,5 +1,6 @@
 'use client';
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Calendar,
@@ -805,7 +806,7 @@ export default function AttendancePage() {
                 <Input
                   id="attendanceDate"
                   type="date"
-                  value={formData.attendanceDate}
+                  value={toDateInput(formData.attendanceDate)}
                   onChange={(e) => setFormData({ ...formData, attendanceDate: e.target.value })}
                 />
               </div>
@@ -941,7 +942,7 @@ export default function AttendancePage() {
                 <Input
                   id="attendanceDate"
                   type="date"
-                  value={formData.attendanceDate}
+                  value={toDateInput(formData.attendanceDate)}
                   onChange={(e) => setFormData({ ...formData, attendanceDate: e.target.value })}
                 />
               </div>

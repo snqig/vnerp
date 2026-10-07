@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -375,7 +376,7 @@ export default function EquipmentScrapPage() {
                 <Label>{ts('k_1oc5iv9')}</Label>
                 <Input
                   type="date"
-                  value={editItem.scrap_date || ''}
+                  value={toDateInput(editItem.scrap_date)}
                   onChange={(e) => setEditItem({ ...editItem, scrap_date: e.target.value })}
                 />
               </div>

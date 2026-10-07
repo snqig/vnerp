@@ -3,6 +3,8 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Badge } from '@/components/ui/badge';
@@ -315,7 +317,7 @@ export default function MaterialLabelsPage() {
         />
 
         {/* 搜索栏 */}
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <QrCode className="h-5 w-5" />
@@ -379,33 +381,33 @@ export default function MaterialLabelsPage() {
         </Card>
 
         {/* 标签列表 */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>{t('labelList')}</CardTitle>
-                <CardDescription>{tc('totalRecords', { count: total })}</CardDescription>
-              </div>
-              <div className="flex gap-2">
-                {selectedPrintLabels.length > 0 && (
-                  <LabelPrintTrigger labels={selectedPrintLabels}>
-                    <Button>
-                      <Printer className="h-4 w-4 mr-2" />
-                      {t('printSelected')} ({selectedPrintLabels.length})
-                    </Button>
-                  </LabelPrintTrigger>
-                )}
-                <Button variant="outline" onClick={() => setShowPrinterSettings(true)}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  {t('printerSettings')}
-                </Button>
-                <Button variant="outline" onClick={() => setPage((prevPage) => prevPage)}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {tc('refresh')}
-                </Button>
-              </div>
+        <PageHeroHeader
+          icon={QrCode}
+          title={t('labelList')}
+          description={tc('totalRecords', { count: total })}
+          action={
+            <div className="flex flex-wrap gap-2">
+              {selectedPrintLabels.length > 0 && (
+                <LabelPrintTrigger labels={selectedPrintLabels}>
+                  <Button>
+                    <Printer className="h-4 w-4 mr-2" />
+                    {t('printSelected')} ({selectedPrintLabels.length})
+                  </Button>
+                </LabelPrintTrigger>
+              )}
+              <Button variant="outline" onClick={() => setShowPrinterSettings(true)}>
+                <Settings className="h-4 w-4 mr-2" />
+                {t('printerSettings')}
+              </Button>
+              <Button variant="outline" onClick={() => setPage((prevPage) => prevPage)}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                {tc('refresh')}
+              </Button>
             </div>
-          </CardHeader>
+          }
+        />
+
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent>
             <div className="border rounded-lg">
               <Table>

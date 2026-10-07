@@ -47,6 +47,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
        WHERE deleted = 0 AND YEAR(create_time) = YEAR(CURDATE()) AND MONTH(create_time) = MONTH(CURDATE())`
     );
 
+    // 合格率：已出结果的检验单中合格占比（口径与过程检验的异常率互为补数，
+    // 分母排除 pending/NULL 的在检单，否则待检一多合格率会被稀释得没有意义）
+    const passed = Number(passedResult?.count || 0);
+    const failed = Number(failedResult?.count || 0);
+    const qualifiedRate = passed + failed > 0 ? Math.round((passed / (passed + failed)) * 100) : 0;
+
     return NextResponse.json({
       success: true,
       data: {
@@ -55,6 +61,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         passed: passedResult?.count || 0,
         failed: failedResult?.count || 0,
         monthlyCount: monthlyResult?.count || 0,
+        qualifiedRate,
       },
     });
   } catch (error) {

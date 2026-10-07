@@ -332,7 +332,7 @@ export default function SuppliersPage() {
       </style></head>
       <body>
         <h1>${t('supplierManagement')}</h1>
-        <div class="info">${tc('printTime')}：${new Date().toLocaleString()} | ${tc('total')} ${recordsToPrint.length} ${tc('records')}</div>
+        <div class="info">${tc('printTime')}：${new Date().toLocaleString()} | ${tc('total', { count: recordsToPrint.length })}</div>
         <table>
           <thead><tr><th>${tc('code')}</th><th>${tc('name')}</th><th>${tc('type')}</th><th>${tc('grade')}</th><th>${tc('status')}</th><th>${tc('contact')}</th><th>${tc('phone')}</th></tr></thead>
           <tbody>${rows}</tbody>
@@ -375,7 +375,7 @@ export default function SuppliersPage() {
       <div className="space-y-6">
         <StatsCards
           configs={[
-            { key: 'total', label: tc('total'), icon: Building2, ...StatsTheme.blue },
+            { key: 'total', label: t('totalSuppliers'), icon: Building2, ...StatsTheme.blue },
             { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
             { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
             { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
@@ -389,7 +389,7 @@ export default function SuppliersPage() {
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex flex-1 gap-4 items-center w-full md:w-auto">
@@ -472,7 +472,7 @@ export default function SuppliersPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardHeader>
             <CardTitle>{t('supplierManagement')}</CardTitle>
           </CardHeader>

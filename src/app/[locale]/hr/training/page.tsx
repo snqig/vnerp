@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -340,7 +341,7 @@ export default function TrainingPage() {
                 <Label>{tc('trainingDate')}</Label>
                 <Input
                   type="date"
-                  value={editItem.training_date || ''}
+                  value={toDateInput(editItem.training_date)}
                   onChange={(e) => setEditItem({ ...editItem, training_date: e.target.value })}
                 />
               </div>

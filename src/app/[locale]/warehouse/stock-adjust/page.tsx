@@ -1,7 +1,10 @@
 'use client';
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -287,9 +290,11 @@ export default function StockAdjustPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t('stockAdjustTitle')}</h1>
-          <div className="flex gap-2">
+        <PageHeroHeader
+          icon={ArrowLeftRight}
+          title={t('stockAdjustTitle')}
+          action={
+            <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
                 placeholder={tc('searchOrderNo')}
@@ -349,8 +354,9 @@ export default function StockAdjustPage() {
               <Plus className="h-3 w-3 mr-1" />
               {t('addAdjust')}
             </Button>
-          </div>
-        </div>        <StatsCards
+            </div>
+          }
+        />        <StatsCards
           configs={[
             { key: 'pending', label: '待审批', icon: Clock, ...StatsTheme.orange },
             { key: 'approved', label: '已审批', icon: CheckCircle, ...StatsTheme.blue },
@@ -369,7 +375,7 @@ export default function StockAdjustPage() {
         />
 
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
             <StandardTable<Item>
               columns={columns}
@@ -414,7 +420,7 @@ export default function StockAdjustPage() {
                 <Label>{t('adjustDateLabel')}</Label>
                 <Input
                   type="date"
-                  value={editItem.adjust_date || ''}
+                  value={toDateInput(editItem.adjust_date)}
                   onChange={(e) => setEditItem({ ...editItem, adjust_date: e.target.value })}
                 />
               </div>
