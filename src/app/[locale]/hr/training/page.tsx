@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,14 +10,7 @@ import { GraduationCap, CheckCircle, Clock, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -36,7 +30,6 @@ import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/lib/date-utils';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
 interface Item {
@@ -81,12 +74,12 @@ export default function TrainingPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
 
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
+  const [pageSize] = useState(20);
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [deleting, setDeleting] = useState(false);
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows;
     if (ids.length === 0) return;
     if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
     setDeleting(true);
@@ -101,7 +94,7 @@ export default function TrainingPage() {
     setDeleting(false);
     if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
     if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
+    setSelectedRows([]);
     fetchData();
   };
 
@@ -109,7 +102,7 @@ export default function TrainingPage() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         trainingName: searchName,
       });
       const res = await authFetch('/api/hr/training?' + params);
@@ -172,6 +165,59 @@ export default function TrainingPage() {
     }
   };
 
+  const totalPages = Math.ceil(total / pageSize);
+
+  const columns: StandardTableColumn<Item>[] = [
+    {
+      key: 'serialNo',
+      title: tc('serialNo'),
+      align: 'center',
+      width: 60,
+      render: (_row, index) => (page - 1) * pageSize + index + 1,
+    },
+    { key: 'training_no', title: tc('trainingNo'), render: (row) => <span className="font-mono">{row.training_no}</span> },
+    { key: 'training_name', title: tc('trainingName'), render: (row) => row.training_name },
+    { key: 'training_type', title: tc('trainingType'), render: (row) => t(typeMap[row.training_type] || 'unknown') },
+    { key: 'training_date', title: tc('trainingDate'), render: (row) => formatDate(row.training_date) },
+    { key: 'training_hours', title: tc('hours'), render: (row) => `${row.training_hours || '-'}h` },
+    { key: 'trainer', title: tc('trainer'), render: (row) => row.trainer || '-' },
+    { key: 'training_place', title: tc('location'), render: (row) => row.training_place || '-' },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (row) => {
+        const st = statusMap[row.status] || statusMap[1];
+        return <Badge variant={st.variant} className="text-xs">{t(st.label)}</Badge>;
+      },
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      align: 'right',
+      width: 160,
+      render: (row) => (
+        <div className="flex gap-1 justify-end">
+          {row.status === 1 && (
+            <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={() => handleStatusChange(row.id, 2)}>
+              {tc('start')}
+            </Button>
+          )}
+          {row.status === 2 && (
+            <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={() => handleStatusChange(row.id, 3)}>
+              {tc('complete')}
+            </Button>
+          )}
+          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setEditItem(row); setShowDialog(true); }}>
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-600 dark:text-red-400" onClick={() => handleDelete(row.id)}>
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <MainLayout title={t('trainingManagement')}>
       <div className="p-6 space-y-6">
@@ -220,105 +266,21 @@ export default function TrainingPage() {
         />
         <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                  </TableHead>
-                  <TableHead className="text-xs w-12 text-center">{tc('serialNo')}</TableHead>
-                  <TableHead className="text-xs">{tc('trainingNo')}</TableHead>
-                  <TableHead className="text-xs">{tc('trainingName')}</TableHead>
-                  <TableHead className="text-xs">{tc('trainingType')}</TableHead>
-                  <TableHead className="text-xs">{tc('trainingDate')}</TableHead>
-                  <TableHead className="text-xs">{tc('hours')}</TableHead>
-                  <TableHead className="text-xs">{tc('trainer')}</TableHead>
-                  <TableHead className="text-xs">{tc('location')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item, index) => {
-                  const st = statusMap[item.status] || statusMap[1];
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(item.id))} onChange={() => toggle(String(item.id))} aria-label={tc('selectRow', { id: item.id })} />
-                      </TableCell>
-                      <TableCell className="text-xs text-center text-muted-foreground">
-                        {(page - 1) * 20 + index + 1}
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">{item.training_no}</TableCell>
-                      <TableCell className="text-xs">{item.training_name}</TableCell>
-                      <TableCell className="text-xs">
-                        {t(typeMap[item.training_type] || 'unknown')}
-                      </TableCell>
-                      <TableCell className="text-xs">{formatDate(item.training_date)}</TableCell>
-                      <TableCell className="text-xs">{item.training_hours || '-'}h</TableCell>
-                      <TableCell className="text-xs">{item.trainer || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.training_place || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
-                          {t(st.label)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {item.status === 1 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 2)}
-                            >
-                              {tc('start')}
-                            </Button>
-                          )}
-                          {item.status === 2 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 3)}
-                            >
-                              {tc('complete')}
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => {
-                              setEditItem(item);
-                              setShowDialog(true);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
-                      {tc('noRecords')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} loading={deleting} />
+            <StandardTable<Item>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              showPagination={totalPages > 1}
+              onPageChange={setPage}
+              rowSelectable
+              selectedRows={list.filter((r) => selectedRows.includes(r.id))}
+              onRowSelectedChange={(rows) => setSelectedRows(rows.map((r) => r.id))}
+              rowKey="id"
+              emptyText={tc('noData')}
+            />
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
@@ -379,7 +341,7 @@ export default function TrainingPage() {
                 <Label>{tc('trainingDate')}</Label>
                 <Input
                   type="date"
-                  value={editItem.training_date || ''}
+                  value={toDateInput(editItem.training_date)}
                   onChange={(e) => setEditItem({ ...editItem, training_date: e.target.value })}
                 />
               </div>

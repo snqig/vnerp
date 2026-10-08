@@ -12,6 +12,7 @@ import {
   appendInventoryLog,
   recomputeInventorySummary,
 } from '@/lib/inventory-ledger';
+import { expireDateFragmentFromToday } from '@/lib/batch-expiry';
 
 export const POST = withPermission(
   async (request: NextRequest, userInfo, { params }: { params: Promise<{ id: string }> }) => {
@@ -102,8 +103,8 @@ export const POST = withPermission(
           await conn.execute(
             `INSERT INTO inv_inventory_batch
               (batch_no, material_id, material_name, warehouse_id, warehouse_name,
-               quantity, available_qty, locked_qty, unit, unit_price, inbound_date, status, version, create_time, update_time, deleted)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, CURDATE(), 1, 1, NOW(), NOW(), 0)`,
+               quantity, available_qty, locked_qty, unit, unit_price, inbound_date, produce_date, expire_date, status, version, create_time, update_time, deleted)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, CURDATE(), CURDATE(), ${expireDateFragmentFromToday()}, 1, 1, NOW(), NOW(), 0)`,
             [
               batchNo,
               materialId,
@@ -114,6 +115,7 @@ export const POST = withPermission(
               quantity,
               unit,
               unitPrice,
+              materialId,
             ]
           );
         }

@@ -1,7 +1,6 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -9,14 +8,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +26,7 @@ import {
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 
 interface SpareIssue {
   id: number;
@@ -68,6 +60,7 @@ export default function EquipmentSpareIssuePage() {
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<{ totalIssues: number; pendingCount: number; todayCount: number }>({ totalIssues: 0, pendingCount: 0, todayCount: 0 });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [filterEquipmentId, setFilterEquipmentId] = useState('');
   const [filterPartId, setFilterPartId] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -76,15 +69,13 @@ export default function EquipmentSpareIssuePage() {
   const [saving, setSaving] = useState(false);
   const [partOptions, setPartOptions] = useState<Array<{ id: number; part_code: string; part_name: string; stock_quantity: number }>>([]);
   const [equipmentOptions, setEquipmentOptions] = useState<Array<{ id: number; equipment_code: string; equipment_name: string }>>([]);
-
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
+  const [selectedRows, setSelectedRows] = useState<SpareIssue[]>([]);
 
   const fetchData = async () => {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         equipment_id: filterEquipmentId,
         part_id: filterPartId,
         status: filterStatus,
@@ -134,7 +125,8 @@ export default function EquipmentSpareIssuePage() {
 
   useEffect(() => {
     fetchData();
-  }, [page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize]);
 
   useEffect(() => {
     fetchPartOptions();
@@ -180,7 +172,7 @@ export default function EquipmentSpareIssuePage() {
   };
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => r.id);
     if (ids.length === 0) return;
     if (!confirm(tc('confirmBatchDelete', { count: ids.length }))) return;
     let okCount = 0;
@@ -198,7 +190,7 @@ export default function EquipmentSpareIssuePage() {
     if (okCount > 0)
       toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
     if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
+    setSelectedRows([]);
     fetchData();
   };
 
@@ -217,7 +209,88 @@ export default function EquipmentSpareIssuePage() {
     setShowDialog(true);
   };
 
-  const selectedPart = partOptions.find((p) => p.id === editItem.part_id);
+  const columns: StandardTableColumn<SpareIssue>[] = [
+    {
+      key: 'issue_no',
+      title: tc('issueNo'),
+      dataIndex: 'issue_no',
+      className: 'font-mono',
+      width: 130,
+    },
+    {
+      key: 'sparePart',
+      title: tc('sparePart'),
+      width: 180,
+      render: (row) => (row.part_code ? `${row.part_code} - ${row.part_name}` : '-'),
+    },
+    {
+      key: 'equipment',
+      title: tc('equipment'),
+      width: 180,
+      render: (row) => (row.equipment_code ? `${row.equipment_code} - ${row.equipment_name}` : '-'),
+    },
+    {
+      key: 'quantity',
+      title: tc('quantity'),
+      dataIndex: 'quantity',
+      width: 80,
+      align: 'right',
+    },
+    {
+      key: 'issue_date',
+      title: tc('issueDate'),
+      dataIndex: 'issue_date',
+      width: 110,
+    },
+    {
+      key: 'applicant_name',
+      title: tc('requester'),
+      dataIndex: 'applicant_name',
+      width: 100,
+    },
+    {
+      key: 'reason',
+      title: tc('purpose'),
+      dataIndex: 'reason',
+      width: 160,
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      width: 90,
+      render: (row) => {
+        const st = statusMap[row.status] || statusMap[1];
+        return <Badge variant={st.variant} className="text-xs">{st.label}</Badge>;
+      },
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      width: 140,
+      align: 'right',
+      render: (row) => (
+        <div className="flex justify-end gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 text-xs px-2"
+            onClick={() => openEdit(row)}
+          >
+            <Edit className="h-3 w-3 mr-1" />
+            {tc('edit')}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(row.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <MainLayout>
@@ -305,119 +378,29 @@ export default function EquipmentSpareIssuePage() {
 
         <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input
-                      ref={selectAllRef}
-                      type="checkbox"
-                      className="h-4 w-4 cursor-pointer accent-blue-600"
-                      checked={allSelected}
-                      onChange={toggleAll}
-                      aria-label={tc('selectAll')}
-                    />
-                  </TableHead>
-                  <TableHead className="text-xs">{tc('issueNo')}</TableHead>
-                  <TableHead className="text-xs">{tc('sparePart')}</TableHead>
-                  <TableHead className="text-xs">{tc('equipment')}</TableHead>
-                  <TableHead className="text-xs">{tc('quantity')}</TableHead>
-                  <TableHead className="text-xs">{tc('issueDate')}</TableHead>
-                  <TableHead className="text-xs">{tc('requester')}</TableHead>
-                  <TableHead className="text-xs">{tc('purpose')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => {
-                  const st = statusMap[item.status] || statusMap[1];
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer accent-blue-600"
-                          checked={isSelected(String(item.id))}
-                          onChange={() => toggle(String(item.id))}
-                          aria-label={tc('selectRow', { id: item.id })}
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">{item.issue_no}</TableCell>
-                      <TableCell className="text-xs">
-                        {item.part_code ? `${item.part_code} - ${item.part_name}` : '-'}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {item.equipment_code ? `${item.equipment_code} - ${item.equipment_name}` : '-'}
-                      </TableCell>
-                      <TableCell className="text-xs">{item.quantity}</TableCell>
-                      <TableCell className="text-xs">{item.issue_date || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.applicant_name || '-'}</TableCell>
-                      <TableCell className="text-xs max-w-32 truncate">{item.reason || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
-                          {st.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 text-xs px-2"
-                            onClick={() => openEdit(item)}
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            {tc('edit')}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center text-gray-400 py-8">
-                      {tc('noRecords')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            {selectedRows.length > 0 && (
+              <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} />
+            )}
+            <StandardTable<SpareIssue>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              rowSelectable={true}
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              rowKey="id"
+              emptyText={tc('noRecords')}
+            />
           </CardContent>
         </Card>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            {tc('totalRecord')}{total}{tc('records')}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>

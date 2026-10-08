@@ -1082,8 +1082,11 @@ export async function runFullMRP(
   }
 
   const placeholders = workOrderIds.map(() => '?').join(',');
-  const workOrders: Loose = await cq(conn, 
-    `SELECT wo.id, wo.planned_qty AS plan_qty, wo.legacy_material_id AS material_id
+  // 与 calculateNetRequirements:599 对齐：BOM 的键是「产品」（prd_bom.product_id -> mdm_product），
+  // 故取 wo.product_id。原写法 `wo.legacy_material_id AS material_id` 把物料当产品用（域混淆），
+  // explodeBOM 拿物料域 ID 去查产品域 BOM，恒查不到 → bom_tree 始终为空。
+  const workOrders: Loose = await cq(conn,
+    `SELECT wo.id, wo.planned_qty AS plan_qty, wo.plan_start_date, wo.product_id
      FROM prod_work_order wo
      WHERE wo.id IN (${placeholders})`,
     workOrderIds
@@ -1104,8 +1107,9 @@ export async function runFullMRP(
   };
 
   for (const wo of workOrders) {
-    if (!wo.material_id) continue;
-    const bomTree = await explodeBOM(conn, wo.material_id, Number(wo.plan_qty || 0));
+    // 工单未记录产品（product_id = 0）时无法定位 BOM，与 calculateNetRequirements:628 一致显式跳过。
+    if (!wo.product_id) continue;
+    const bomTree = await explodeBOM(conn, Number(wo.product_id), Number(wo.plan_qty || 0));
     if (combinedBomTree.children) {
       combinedBomTree.children.push(bomTree);
     }

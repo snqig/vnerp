@@ -71,6 +71,27 @@ export const logger = pino({
           target: 'pino-pretty',
           options: { colorize: true, translateTime: 'SYS:standard', ignore: 'pid,hostname' },
         },
+  // pino 的 log(level, obj, msg) 只认前两个参数：调用点普遍写成
+  // logger.error(ctx, message, details) —— 第三个 details 参数会被静默丢弃，
+  // 结果就是控制台只剩「{} 「获取品质过程检验数据失败」 {}」，
+  // error message / stack 全看不到，等于把排障线索自己销毁了。
+  // 这里用 logMethod hook 把第三个及之后的参数合并进 extra 字段。
+  hooks: {
+    logMethod(args, method) {
+      // args = [obj, msg?, ...rest]
+      if (args.length <= 2) {
+        return method.apply(this, args as unknown as Parameters<typeof method>);
+      }
+      const [obj, msg, ...rest] = args;
+      const extras = rest.filter((a) => a !== undefined && a !== null);
+      const merged =
+        extras.length === 0
+          ? (obj as Record<string, unknown>)
+          : { ...(obj as Record<string, unknown>), extra: extras.length === 1 ? extras[0] : extras };
+      const next = msg === undefined ? [merged] : [merged, msg];
+      return method.apply(this, next as unknown as Parameters<typeof method>);
+    },
+  },
 }) as unknown as AppLogger;
 
 export function secureLog(level: string, message: string, data?: Record<string, unknown>) {

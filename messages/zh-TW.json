@@ -5731,9 +5731,7 @@
     "outsource_receive": "委外收貨",
     "outsource_settlement": "委外結算",
     "quality": "品質部",
-    "quality_incoming": "來料檢驗",
-    "quality_process": "過程檢驗",
-    "quality_final": "成品檢驗",
+    "quality_process": "品質檢驗中心",
     "quality_trace": "品質追溯",
     "quality_unqualified": "不合格品處理",
     "quality_sgs": "SGS認證管理",
@@ -7750,6 +7748,7 @@
     "purchaseOrder": "採購訂單",
     "purchaseRequest": "採購申請",
     "supplierManagement": "供應商管理",
+    "totalSuppliers": "供應商總數",
     "newPurchaseOrder": "新建採購單",
     "editPurchaseOrder": "編輯採購單",
     "createPurchaseOrder": "創建採購訂單",
@@ -8152,6 +8151,7 @@
     "totalPayable": "应付总额"
   },
   "Quality": {
+    "k_center_title": "質量檢驗中心",
     "k_link_color_std": "關聯簽樣色樣",
     "k_link_none": "不關聯",
     "k_base_ref": "簽樣基準",
@@ -8358,6 +8358,7 @@
     "printReport": "列印報告",
     "printingQuality": "印刷品質",
     "problemDesc": "問題描述",
+    "qualityInspectionCenter": "品質檢驗中心",
     "processInspection": "過程檢驗",
     "processInspectionReport": "過程檢驗報告",
     "productInfo": "產品資訊",
@@ -8609,7 +8610,10 @@
     "testing": "檢測中",
     "k_1upxefi": "追溯记录",
     "unknown": "未知",
-    "otherSource": "其他"
+    "otherSource": "其他",
+    "unqualifiedInspection": "未通過",
+    "monthlyInspectionCount": "本月檢驗次數",
+    "qualifiedRate": "合格率"
   },
   "Equipment": {
     "title": "設備管理",
@@ -11240,6 +11244,7 @@
     "inkColorList": "油墨顏色列表",
     "inkFormulaManagement": "油墨配方管理",
     "inkManagement": "油墨管理",
+    "inkManagementDesc": "維護油墨基礎檔案、庫存數量與安全庫存預警",
     "inkName": "油墨名稱",
     "isCut": "已分切",
     "isUsed": "已使用",

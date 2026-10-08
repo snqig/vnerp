@@ -3,10 +3,13 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Table,
   TableBody,
@@ -87,6 +90,7 @@ export default function SplitOrderPage() {
   const [list, setList] = useState<SplitOrder[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [searchNo, setSearchNo] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -108,7 +112,7 @@ export default function SplitOrderPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: '20' });
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
       if (searchNo) params.set('keyword', searchNo);
       if (statusFilter) params.set('status', statusFilter);
       const res = await authFetch('/api/warehouse/split-order?' + params);
@@ -118,7 +122,7 @@ export default function SplitOrderPage() {
         setTotal(result.data.total || 0);
       }
     } catch {}
-  }, [page, searchNo, statusFilter]);
+  }, [page, pageSize, searchNo, statusFilter]);
 
   useEffect(() => {
     fetchData();
@@ -289,23 +293,113 @@ export default function SplitOrderPage() {
     setDetails([{ pieces: 1, qtyPerPiece: 0, totalQty: 0, width: 0, isWaste: false }]);
   };
 
+  // StandardTable 列定义（服务端分页，接口暂不支持 sortField/sortDirection，故不开启 sortable）
+  const columns: StandardTableColumn<SplitOrder>[] = [
+    {
+      key: 'split_no',
+      title: ts('k_1epfrdq'),
+      render: (r) => <span className="font-mono">{r.split_no}</span>,
+    },
+    { key: 'split_date', title: ts('k_1qbyx86') },
+    { key: 'parent_batch_id', title: ts('k_cqonvx') },
+    { key: 'material_name', title: tc('materialName') },
+    { key: 'out_qty', title: ts('k_1f04p8j') },
+    { key: 'total_waste', title: ts('k_1b2ia9n') },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => {
+        const cfg = STATUS_MAP[r.status] || { label: ts('k_1lpnuh4'), variant: 'outline' };
+        return (
+          <Badge variant={cfg.variant as 'default' | 'secondary' | 'destructive' | 'outline'}>
+            {cfg.label}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: 'operator_name',
+      title: ts('k_15sp2wy'),
+      render: (r) => r.operator_name || '-',
+    },
+    {
+      key: 'actions',
+      title: tc('operation'),
+      // 原有操作列：查看详情 / 审核 / 作废，逻辑保持原样
+      render: (r) => (
+        <div className="flex gap-1">
+          <Button size="sm" variant="ghost" onClick={() => viewDetail(r)}>
+            <Eye className="h-4 w-4" />
+          </Button>
+          {r.status === 0 && (
+            <>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-green-600 dark:text-green-400"
+                onClick={() => handleAudit(r.id)}
+              >
+                <CheckCircle className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-red-600 dark:text-red-400"
+                onClick={() => handleVoid(r.id)}
+              >
+                <XCircle className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  // 分切单明细（只读展示，不分页）
+  const detailColumns: StandardTableColumn<Loose>[] = [
+    {
+      key: 'child_batch_no',
+      title: ts('k_1mrrasq'),
+      render: (r) => <span className="font-mono">{r.child_batch_no || '-'}</span>,
+    },
+    { key: 'pieces', title: ts('k_1o2ukqw') },
+    { key: 'qty_per_piece', title: ts('k_sximke'), dataIndex: 'qty_per_piece' },
+    { key: 'total_qty', title: ts('k_2tzyir'), dataIndex: 'total_qty' },
+    { key: 'width', title: ts('k_1kv361j') },
+    {
+      key: 'allocated_cost',
+      title: ts('k_tkmy39'),
+      render: (r) => r.allocated_cost || '-',
+    },
+    {
+      key: 'is_waste',
+      title: ts('k_anh4cj'),
+      render: (r) => (r.is_waste ? ts('k_1b2ia9n') : ts('k_156cbqh')),
+    },
+  ];
+
   return (
     <MainLayout>
-      <Card>
+      <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
         <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold">{ts('k_1xvd5o6')}</h1>
-            <Button
-              onClick={() => {
-                resetForm();
-                setShowCreate(true);
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {ts('k_8r4lf')}</Button>
-          </div>
+          <PageHeroHeader
+            icon={Scissors}
+            title={ts('k_1xvd5o6')}
+            action={
+              <Button
+                onClick={() => {
+                  resetForm();
+                  setShowCreate(true);
+                }}
+                className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {ts('k_8r4lf')}</Button>
+            }
+          />
 
-          <div className="flex gap-2 mb-4">
+          <ListToolbar>
             <Input
               placeholder={ts('k_15x9dnn')}
               value={searchNo}
@@ -326,99 +420,24 @@ export default function SplitOrderPage() {
             <Button variant="outline" onClick={() => fetchData()}>
               <Search className="h-4 w-4" />
             </Button>
-          </div>
+          </ListToolbar>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{ts('k_1epfrdq')}</TableHead>
-                <TableHead>{ts('k_1qbyx86')}</TableHead>
-                <TableHead>{ts('k_cqonvx')}</TableHead>
-                <TableHead>{tc('materialName')}</TableHead>
-                <TableHead>{ts('k_1f04p8j')}</TableHead>
-                <TableHead>{ts('k_1b2ia9n')}</TableHead>
-                <TableHead>{tc('status')}</TableHead>
-                <TableHead>{ts('k_15sp2wy')}</TableHead>
-                <TableHead>{tc('operation')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {list.map((item) => {
-                const cfg = STATUS_MAP[item.status] || { label: ts('k_1lpnuh4'), variant: 'outline' };
-                return (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-mono">{item.split_no}</TableCell>
-                    <TableCell>{item.split_date}</TableCell>
-                    <TableCell>{item.parent_batch_id}</TableCell>
-                    <TableCell>{item.material_name}</TableCell>
-                    <TableCell>{item.out_qty}</TableCell>
-                    <TableCell>{item.total_waste}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={cfg.variant as 'default' | 'secondary' | 'destructive' | 'outline'}
-                      >
-                        {cfg.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{item.operator_name || '-'}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => viewDetail(item)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {item.status === 0 && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-green-600 dark:text-green-400"
-                              onClick={() => handleAudit(item.id)}
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-red-600 dark:text-red-400"
-                              onClick={() => handleVoid(item.id)}
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {list.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground">
-                    {ts('k_6tzr61')}</TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-
-          <div className="flex items-center justify-between mt-4">
-            <span className="text-sm text-muted-foreground">{ts('k_1vsm2qk')}{total} {ts('k_1rfm5gs')}</span>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage(page - 1)}
-              >
-                {tc('prevPage')}</Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page * 20 >= total}
-                onClick={() => setPage(page + 1)}
-              >
-                {tc('nextPage')}</Button>
-            </div>
-          </div>
+          <StandardTable<SplitOrder>
+            columns={columns}
+            dataSource={list}
+            total={total}
+            page={page}
+            pageSize={pageSize}
+            pageSizeOptions={[20, 25, 30]}
+            rowKey="id"
+            onPageChange={setPage}
+            onPageSizeChange={(s) => {
+              setPageSize(s);
+              setPage(1);
+            }}
+            onRetry={() => fetchData()}
+            emptyText={ts('k_6tzr61')}
+          />
         </CardContent>
       </Card>
 
@@ -564,32 +583,14 @@ export default function SplitOrderPage() {
               {currentOrder?.total_waste}
             </div>
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{ts('k_1mrrasq')}</TableHead>
-                <TableHead>{ts('k_1o2ukqw')}</TableHead>
-                <TableHead>{ts('k_sximke')}</TableHead>
-                <TableHead>{ts('k_2tzyir')}</TableHead>
-                <TableHead>{ts('k_1kv361j')}</TableHead>
-                <TableHead>{ts('k_tkmy39')}</TableHead>
-                <TableHead>{ts('k_anh4cj')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {detailList.map((d, i) => (
-                <TableRow key={i}>
-                  <TableCell className="font-mono">{(d as Loose).child_batch_no || '-'}</TableCell>
-                  <TableCell>{d.pieces}</TableCell>
-                  <TableCell>{(d as Loose).qty_per_piece}</TableCell>
-                  <TableCell>{(d as Loose).total_qty}</TableCell>
-                  <TableCell>{d.width}</TableCell>
-                  <TableCell>{(d as Loose).allocated_cost || '-'}</TableCell>
-                  <TableCell>{(d as Loose).is_waste ? ts('k_1b2ia9n') : ts('k_156cbqh')}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <StandardTable<Loose>
+            columns={detailColumns}
+            dataSource={detailList}
+            total={detailList.length}
+            rowKey={(_r, i) => String(i)}
+            showPagination={false}
+            emptyText={ts('k_6tzr61')}
+          />
         </DialogContent>
       </Dialog>
     </MainLayout>

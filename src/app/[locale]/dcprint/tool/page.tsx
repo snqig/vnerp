@@ -2,9 +2,12 @@
 import { useTranslations } from 'next-intl';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { TOOL_TYPE_LABEL, TOOL_STATUS_LABEL } from '@/lib/status-labels';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -125,12 +128,26 @@ const TYPE_MAP = TOOL_TYPE_LABEL;
 export default function ToolManagementPage() {
   const tc = useTranslations('Common');
   const ts = useTranslations('Dcprint');
+  const tStd = useTranslations('StandardTable');
   const { toast } = useToast();
 
   const [tools, setTools] = useState<Tool[]>([]);
-  const [_total, _setTotal] = useState(0);
-  const [page, _setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
   const [_loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
@@ -209,7 +226,9 @@ export default function ToolManagementPage() {
       const data = await res.json();
       if (data.success) {
         setTools(data.data?.list || []);
-        _setTotal(data.data?.total || 0);
+        const tot = data.data?.total || 0;
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
       }
     } finally {
       setLoading(false);
@@ -454,12 +473,19 @@ export default function ToolManagementPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{tc('dcDieMgmtTitle')}</h1>
-          <Button onClick={openCreate}>
-            <Plus className="mr-2 h-4 w-4" />
-            {ts('k_l7139x')}</Button>
-        </div>
+        <PageHeroHeader
+          icon={Wrench}
+          title={tc('dcDieMgmtTitle')}
+          action={
+            <Button
+              onClick={openCreate}
+              className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {ts('k_l7139x')}
+            </Button>
+          }
+        />
 
         {/* Dashboard */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
@@ -502,7 +528,7 @@ export default function ToolManagementPage() {
         </div>
 
         {/* Filter */}
-        <div className="flex gap-4 items-center">
+        <ListToolbar className="gap-4">
           <Tabs value={filterType} onValueChange={setFilterType}>
             <TabsList>
               <TabsTrigger value="">{ts('k_q6w6ul')}</TabsTrigger>
@@ -533,10 +559,10 @@ export default function ToolManagementPage() {
           <Button variant="outline" onClick={fetchTools}>
             <Search className="h-4 w-4" />
           </Button>
-        </div>
+        </ListToolbar>
 
         {/* Table */}
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
@@ -653,6 +679,31 @@ export default function ToolManagementPage() {
                 )}
               </TableBody>
             </Table>
+            {total > 0 && (
+              <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {tStd('paginationSummary', { total, pages: totalPages })}
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                    <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+                  <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+                  <div className="flex items-center gap-1">
+                    <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                    <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
           </CardContent>
         </Card>
 
@@ -745,7 +796,7 @@ export default function ToolManagementPage() {
                 <Label>{ts('k_1o091e7')}</Label>
                 <Input
                   type="date"
-                  value={formData.manufacture_date}
+                  value={toDateInput(formData.manufacture_date)}
                   onChange={(e) => setFormData({ ...formData, manufacture_date: e.target.value })}
                 />
               </div>

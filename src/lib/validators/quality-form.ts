@@ -180,6 +180,15 @@ export function buildLabTestSchema(m: QualityFormMessages) {
     detail_data: z.string().optional(),
     conclusion: z.string().optional(),
     remark: z.string().optional(),
+    // 签样色样基准联动（色差测试）：关联 sal_sample_color_standard，服务端算 ΔE
+    color_standard_id: z.union([z.coerce.number(), z.null()]).optional(),
+    measured_lab: z
+      .object({
+        l: z.coerce.number(),
+        a: z.coerce.number(),
+        b: z.coerce.number(),
+      })
+      .optional(),
   });
 }
 

@@ -107,7 +107,7 @@ const getFinalInspectItems = (t: (key: string) => string) => [
   { id: 'label', name: t('labelCheck'), required: true },
 ];
 
-export function QualityFinalPage() {
+export function QualityFinalPage({ embedded = false }: { embedded?: boolean }) {
   const ts = useTranslations('Quality');
   // 翻译钩子
   const t = useTranslations('Quality');
@@ -177,12 +177,13 @@ export function QualityFinalPage() {
           slice_per_bundle: item.slicePerBundle || item.slice_per_bundle,
         }));
         setFinals(list);
-        const pendingCount = list.filter((f: FinalInspect) => f.burdening_status === 1).length;
-        const inspectingCount = list.filter((f: FinalInspect) => f.burdening_status === 2).length;
+        // 终检阶段语义：2=待终检(pending)，3=终检完成(passed)。
+        // 原 pending 误统计 status===1，但 final 列表 burdening_status>=2 不含 1，导致 pending 恒为 0。
+        const pendingCount = list.filter((f: FinalInspect) => f.burdening_status === 2).length;
         const passedCount = list.filter((f: FinalInspect) => f.burdening_status === 3).length;
         setStats({
           pending: pendingCount,
-          inspecting: inspectingCount,
+          inspecting: 0,
           passed: passedCount,
           today: list.length,
           week: list.length,
@@ -345,9 +346,8 @@ export function QualityFinalPage() {
     }
   };
 
-  return (
-    <MainLayout title={t('finalInspection')}>
-      <div className="space-y-6">
+  const content = (
+    <div className="space-y-6">
                 {/* 统计卡片 */}
         <StatsCards
           configs={[
@@ -944,6 +944,11 @@ export function QualityFinalPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </MainLayout>
   );
+
+  // embedded=true：宿主页面（quality/center）已提供布局层，直接输出内容，
+  // 避免嵌出第二套 Sidebar/Header（MainLayout 是 h-screen overflow-hidden 的完整壳）。
+  if (embedded) return content;
+
+  return <MainLayout title={t('finalInspection')}>{content}</MainLayout>;
 }

@@ -3,6 +3,8 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Badge } from '@/components/ui/badge';
@@ -71,6 +73,7 @@ export default function MaterialLabelsPage() {
   const ts = useTranslations('Dcprint');
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
   const { user } = useAuth();
 
   // 是否徽章
@@ -119,8 +122,20 @@ export default function MaterialLabelsPage() {
   const [isMainMaterial, setIsMainMaterial] = useState('all');
   const [isCut, setIsCut] = useState('all');
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -166,6 +181,7 @@ export default function MaterialLabelsPage() {
         if (result.success) {
           setLabels(result.data?.list || []);
           setTotal(result.data?.pagination?.total || 0);
+          setTotalPages(Math.ceil((result.data?.pagination?.total || 0) / pageSize));
           logger.info({ module: 'Dcprint', action: 'fetchLabels' }, ts('k_1bz6yje'), {
             count: (result.data?.list || []).length,
           });
@@ -197,7 +213,7 @@ export default function MaterialLabelsPage() {
     fetchStats();
 
     return () => controller.abort();
-  }, [page, isMainMaterial, isCut, keyword]);
+  }, [page, pageSize, isMainMaterial, isCut, keyword]);
 
   const handleSearch = () => {
     setPage(1);
@@ -301,7 +317,7 @@ export default function MaterialLabelsPage() {
         />
 
         {/* 搜索栏 */}
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <QrCode className="h-5 w-5" />
@@ -365,33 +381,33 @@ export default function MaterialLabelsPage() {
         </Card>
 
         {/* 标签列表 */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>{t('labelList')}</CardTitle>
-                <CardDescription>{tc('totalRecords', { count: total })}</CardDescription>
-              </div>
-              <div className="flex gap-2">
-                {selectedPrintLabels.length > 0 && (
-                  <LabelPrintTrigger labels={selectedPrintLabels}>
-                    <Button>
-                      <Printer className="h-4 w-4 mr-2" />
-                      {t('printSelected')} ({selectedPrintLabels.length})
-                    </Button>
-                  </LabelPrintTrigger>
-                )}
-                <Button variant="outline" onClick={() => setShowPrinterSettings(true)}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  {t('printerSettings')}
-                </Button>
-                <Button variant="outline" onClick={() => setPage((prevPage) => prevPage)}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {tc('refresh')}
-                </Button>
-              </div>
+        <PageHeroHeader
+          icon={QrCode}
+          title={t('labelList')}
+          description={tc('totalRecords', { count: total })}
+          action={
+            <div className="flex flex-wrap gap-2">
+              {selectedPrintLabels.length > 0 && (
+                <LabelPrintTrigger labels={selectedPrintLabels}>
+                  <Button>
+                    <Printer className="h-4 w-4 mr-2" />
+                    {t('printSelected')} ({selectedPrintLabels.length})
+                  </Button>
+                </LabelPrintTrigger>
+              )}
+              <Button variant="outline" onClick={() => setShowPrinterSettings(true)}>
+                <Settings className="h-4 w-4 mr-2" />
+                {t('printerSettings')}
+              </Button>
+              <Button variant="outline" onClick={() => setPage((prevPage) => prevPage)}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                {tc('refresh')}
+              </Button>
             </div>
-          </CardHeader>
+          }
+        />
+
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent>
             <div className="border rounded-lg">
               <Table>
@@ -529,31 +545,31 @@ export default function MaterialLabelsPage() {
             </div>
 
             {/* 分页 */}
-            {total > pageSize && (
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-muted-foreground">
-                  {t('pageInfo', { page, total: Math.ceil(total / pageSize) })}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >
-                    {tc('prevPage')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={page * pageSize >= total}
-                  >
-                    {tc('nextPage')}
-                  </Button>
+            {total > 0 && (
+              <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {tStd('paginationSummary', { total, pages: totalPages })}
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                    <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+                  <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+                  <div className="flex items-center gap-1">
+                    <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                    <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                  </div>
                 </div>
               </div>
             )}
+            {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
           </CardContent>
         </Card>
       </div>

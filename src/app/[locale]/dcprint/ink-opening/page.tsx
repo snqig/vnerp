@@ -1,10 +1,13 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { nowDateTimeLocal } from '@/lib/date-utils';
 import { INK_TYPE_LABEL, INK_STATUS_LABEL } from '@/lib/status-labels';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -87,9 +90,26 @@ export default function InkOpeningPage() {
   const ts = useTranslations('Dcprint');
   // 翻译钩子
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const { toast } = useToast();
   const [records, setRecords] = useState<InkOpeningRecord[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
   const [overdueList, setOverdueList] = useState<InkOpeningRecord[]>([]);
   const [_loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
@@ -114,7 +134,7 @@ export default function InkOpeningPage() {
     material_name: '',
     batch_no: '',
     ink_type: 'solvent',
-    open_time: new Date().toISOString().slice(0, 16),
+    open_time: nowDateTimeLocal(),
     expire_hours: 48,
     remaining_qty: '',
     unit: 'kg',
@@ -132,11 +152,15 @@ export default function InkOpeningPage() {
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (inkTypeFilter !== 'all') params.set('ink_type', inkTypeFilter);
       if (isOverdueFilter) params.set('is_overdue', '1');
-      params.set('pageSize', '50');
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
       const res = await authFetch(`/api/dcprint/ink-opening?${params}`);
       const data = await res.json();
       if (data.success) {
         setRecords(data.data?.list || []);
+        const tot = data.data?.total || 0;
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
         if (data.data?.summary) setSummary(data.data.summary);
         if (data.data?.overdue_list) setOverdueList(data.data.overdue_list);
       }
@@ -145,7 +169,7 @@ export default function InkOpeningPage() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, statusFilter, inkTypeFilter, isOverdueFilter]);
+  }, [keyword, statusFilter, inkTypeFilter, isOverdueFilter, page, pageSize]);
 
   const fetchMaterials = async () => {
     try {
@@ -199,7 +223,7 @@ export default function InkOpeningPage() {
           material_name: '',
           batch_no: '',
           ink_type: 'solvent',
-          open_time: new Date().toISOString().slice(0, 16),
+          open_time: nowDateTimeLocal(),
           expire_hours: 48,
           remaining_qty: '',
           unit: 'kg',
@@ -308,55 +332,59 @@ export default function InkOpeningPage() {
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>{ts('k_dajxpn')}</CardTitle>
-                <CardDescription>{tc('dcOpeningRecordDesc')}</CardDescription>
-              </div>
-              <div className="flex gap-2">
-                <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder={ts('k_1xilek5')}
-                    className="pl-10"
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && fetchRecords()}
-                  />
-                </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-28">
-                    <SelectValue placeholder={tc('status')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{ts('k_igzce8')}</SelectItem>
-                    <SelectItem value="1">{ts('k_kr2h4d')}</SelectItem>
-                    <SelectItem value="2">{ts('k_1g217or')}</SelectItem>
-                    <SelectItem value="3">{ts('k_oy744d')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={inkTypeFilter} onValueChange={setInkTypeFilter}>
-                  <SelectTrigger className="w-28">
-                    <SelectValue placeholder={ts('k_10yyuf6')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{ts('k_zao217')}</SelectItem>
-                    <SelectItem value="solvent">{ts('k_u0oodq')}</SelectItem>
-                    <SelectItem value="uv">{ts('k_1lwyoyj')}</SelectItem>
-                    <SelectItem value="water">{ts('k_krqaz0')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" onClick={fetchRecords}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {ts('k_12qo56a')}</Button>
-                <Button onClick={() => setDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {ts('k_zh5my3')}</Button>
-              </div>
-            </div>
-          </CardHeader>
+        <PageHeroHeader
+          icon={Droplet}
+          title={ts('k_dajxpn')}
+          description={tc('dcOpeningRecordDesc')}
+          action={
+            <Button
+              onClick={() => setDialogOpen(true)}
+              className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {ts('k_zh5my3')}</Button>
+          }
+        />
+
+        <ListToolbar>
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={ts('k_1xilek5')}
+              className="pl-10"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && fetchRecords()}
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder={tc('status')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{ts('k_igzce8')}</SelectItem>
+              <SelectItem value="1">{ts('k_kr2h4d')}</SelectItem>
+              <SelectItem value="2">{ts('k_1g217or')}</SelectItem>
+              <SelectItem value="3">{ts('k_oy744d')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={inkTypeFilter} onValueChange={setInkTypeFilter}>
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder={ts('k_10yyuf6')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{ts('k_zao217')}</SelectItem>
+              <SelectItem value="solvent">{ts('k_u0oodq')}</SelectItem>
+              <SelectItem value="uv">{ts('k_1lwyoyj')}</SelectItem>
+              <SelectItem value="water">{ts('k_krqaz0')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" onClick={fetchRecords}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {ts('k_12qo56a')}</Button>
+        </ListToolbar>
+
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent>
             <Table>
               <TableHeader>
@@ -476,6 +504,31 @@ export default function InkOpeningPage() {
                 )}
               </TableBody>
             </Table>
+            {total > 0 && (
+              <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {tStd('paginationSummary', { total, pages: totalPages })}
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                    <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+                  <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+                  <div className="flex items-center gap-1">
+                    <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                    <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
           </CardContent>
         </Card>
 

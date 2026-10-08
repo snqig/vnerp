@@ -23,14 +23,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +34,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToastContext } from '@/components/ui/toast';
 import { MainLayout } from '@/components/layout/main-layout';
 import { useTranslations } from 'next-intl';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
@@ -62,6 +54,19 @@ interface BOMItem {
   remark: string;
   create_time: string;
   update_time: string;
+}
+
+interface BomLine {
+  id: number;
+  line_no: number;
+  material_code: string;
+  material_name: string;
+  material_spec: string;
+  consumption_qty: number;
+  unit: string;
+  loss_rate: number;
+  actual_qty: number;
+  total_cost: number;
 }
 
 const statusMap: Record<number, { labelKey: string; color: string }> = {
@@ -95,7 +100,8 @@ export default function BOMPage() {
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
   const [stats, setStats] = useState({
     total: 0,
     approved: 0,
@@ -106,8 +112,8 @@ export default function BOMPage() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [bomDetail, setBomDetail] = useState<Loose>(null);
 
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(bomList, (r) => String(r.id));
+  const [selectedRows, setSelectedRows] = useState<BOMItem[]>([]);
+  const clear = () => setSelectedRows([]);
   const [deleting, setDeleting] = useState(false);
 
   const fetchBOMList = async (overridePage?: number) => {
@@ -116,7 +122,7 @@ export default function BOMPage() {
       const pageToUse = overridePage ?? currentPage;
       const params = new URLSearchParams({
         page: pageToUse.toString(),
-        pageSize: '20',
+        pageSize: String(pageSize),
       });
       if (searchKeyword) params.append('keyword', searchKeyword);
 
@@ -126,8 +132,7 @@ export default function BOMPage() {
       if (data.success) {
         const bomList = Array.isArray(data.data) ? data.data : data.data?.list || [];
         setBomList(bomList);
-        const total = data.data?.total || 0;
-        setTotalPages(Math.ceil(total / 20) || 1);
+        setTotal(data.data?.total || 0);
       } else {
         toast({
           title: tc('error'),
@@ -242,7 +247,7 @@ export default function BOMPage() {
   };
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => r.id);
     if (ids.length === 0) return;
     if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
     setDeleting(true);
@@ -276,7 +281,160 @@ export default function BOMPage() {
   useEffect(() => {
     fetchBOMList();
     fetchStats();
-  }, [currentPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize]);
+
+  const columns: StandardTableColumn<BOMItem>[] = [
+    {
+      key: 'bom_no',
+      title: t('bomNo'),
+      render: (r) => <span className="font-medium">{r.bom_no}</span>,
+    },
+    {
+      key: 'product_name',
+      title: t('productInfo'),
+      render: (r) => (
+        <div>
+          <div className="font-medium">{r.product_name}</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">{r.product_code}</div>
+          {r.product_spec && (
+            <div className="text-xs text-gray-400 dark:text-gray-500">{r.product_spec}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'version',
+      title: t('version'),
+      render: (r) => (
+        <div className="flex items-center gap-2">
+          <span>{r.version}</span>
+          {r.is_default === 1 && (
+            <Badge variant="default" className="text-xs">
+              {t('default')}
+            </Badge>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => (
+        <Badge className={statusMap[r.status]?.color || 'bg-gray-100 dark:bg-gray-700'}>
+          {getStatusLabel(r.status, t, tc)}
+        </Badge>
+      ),
+    },
+    {
+      key: 'total_material_count',
+      title: t('materialCount'),
+      render: (r) => (
+        <>
+          {r.total_material_count} {t('itemsUnit')}
+        </>
+      ),
+    },
+    {
+      key: 'total_cost',
+      title: t('totalCost'),
+      render: (r) => `¥${Number(r.total_cost || 0).toFixed(4)}`,
+    },
+    {
+      key: 'create_time',
+      title: tc('createTime'),
+      render: (r) => new Date(r.create_time).toLocaleDateString(),
+    },
+    {
+      key: 'actions',
+      title: tc('operation'),
+      align: 'right',
+      // 原有操作列：查看 / 审核 / 发布 / 停用 / 编辑 / 删除，逻辑保持原样
+      render: (r) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => fetchBOMDetail(r.id)}>
+              <Eye className="w-4 h-4 mr-2" />
+              {t('viewDetail')}
+            </DropdownMenuItem>
+            {r.status === 10 && (
+              <DropdownMenuItem onClick={() => handleStatusChange(r.id, 'audit')}>
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {t('audit')}
+              </DropdownMenuItem>
+            )}
+            {r.status === 20 && (
+              <DropdownMenuItem onClick={() => handleStatusChange(r.id, 'publish')}>
+                <FileText className="w-4 h-4 mr-2" />
+                {t('publish')}
+              </DropdownMenuItem>
+            )}
+            {r.status === 30 && (
+              <DropdownMenuItem onClick={() => handleStatusChange(r.id, 'disable')}>
+                <XCircle className="w-4 h-4 mr-2" />
+                {t('disable')}
+              </DropdownMenuItem>
+            )}
+            {r.status < 30 && (
+              <DropdownMenuItem onClick={() => router.push(`/orders/bom/edit/${r.id}`)}>
+                <Edit className="w-4 h-4 mr-2" />
+                {tc('edit')}
+              </DropdownMenuItem>
+            )}
+            {r.status < 30 && (
+              <DropdownMenuItem
+                onClick={() => handleDelete(r.id)}
+                className="text-red-600 dark:text-red-400"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                {tc('delete')}
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ];
+
+  const detailColumns: StandardTableColumn<BomLine>[] = [
+    { key: 'line_no', title: t('lineNo') },
+    { key: 'material_code', title: t('materialCode') },
+    { key: 'material_name', title: t('materialName') },
+    {
+      key: 'material_spec',
+      title: t('spec'),
+      render: (r) => <span className="text-sm text-gray-500 dark:text-gray-400">{r.material_spec}</span>,
+    },
+    {
+      key: 'consumption_qty',
+      title: t('consumption'),
+      render: (r) => (
+        <>
+          {r.consumption_qty} {r.unit}
+        </>
+      ),
+    },
+    {
+      key: 'loss_rate',
+      title: t('lossRate'),
+      render: (r) => `${r.loss_rate}%`,
+    },
+    {
+      key: 'actual_qty',
+      title: t('actualUsage'),
+      render: (r) => parseFloat(String(r.actual_qty || 0)).toFixed(4),
+    },
+    {
+      key: 'total_cost',
+      title: t('cost'),
+      render: (r) => `¥${parseFloat(String(r.total_cost || 0)).toFixed(4)}`,
+    },
+  ];
 
   return (
     <MainLayout title={t('bomManagement')}>
@@ -334,159 +492,29 @@ export default function BOMPage() {
         </div>
 
         <div className="rounded-lg border shadow-sm bg-card">
-          <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10">
-                  <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                </TableHead>
-                <TableHead>{t('bomNo')}</TableHead>
-                <TableHead>{t('productInfo')}</TableHead>
-                <TableHead>{t('version')}</TableHead>
-                <TableHead>{tc('status')}</TableHead>
-                <TableHead>{t('materialCount')}</TableHead>
-                <TableHead>{t('totalCost')}</TableHead>
-                <TableHead>{tc('createTime')}</TableHead>
-                <TableHead className="text-right">{tc('operation')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
-                    {tc('loading')}
-                  </TableCell>
-                </TableRow>
-              ) : bomList.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={8}
-                    className="text-center py-8 text-gray-500 dark:text-gray-400"
-                  >
-                    {t('noBomData')}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                bomList.map((bom) => (
-                  <TableRow key={bom.id}>
-                    <TableCell>
-                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(bom.id))} onChange={() => toggle(String(bom.id))} aria-label={tc('selectRow', { id: bom.id })} />
-                    </TableCell>
-                    <TableCell className="font-medium">{bom.bom_no}</TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{bom.product_name}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {bom.product_code}
-                        </div>
-                        {bom.product_spec && (
-                          <div className="text-xs text-gray-400 dark:text-gray-500">
-                            {bom.product_spec}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span>{bom.version}</span>
-                        {bom.is_default === 1 && (
-                          <Badge variant="default" className="text-xs">
-                            {t('default')}
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={statusMap[bom.status]?.color || 'bg-gray-100 dark:bg-gray-700'}
-                      >
-                        {getStatusLabel(bom.status, t, tc)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {bom.total_material_count} {t('itemsUnit')}
-                    </TableCell>
-                    <TableCell>¥{Number(bom.total_cost || 0).toFixed(4)}</TableCell>
-                    <TableCell>{new Date(bom.create_time).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => fetchBOMDetail(bom.id)}>
-                            <Eye className="w-4 h-4 mr-2" />
-                            {t('viewDetail')}
-                          </DropdownMenuItem>
-                          {bom.status === 10 && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(bom.id, 'audit')}>
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                              {t('audit')}
-                            </DropdownMenuItem>
-                          )}
-                          {bom.status === 20 && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(bom.id, 'publish')}>
-                              <FileText className="w-4 h-4 mr-2" />
-                              {t('publish')}
-                            </DropdownMenuItem>
-                          )}
-                          {bom.status === 30 && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(bom.id, 'disable')}>
-                              <XCircle className="w-4 h-4 mr-2" />
-                              {t('disable')}
-                            </DropdownMenuItem>
-                          )}
-                          {bom.status < 30 && (
-                            <DropdownMenuItem
-                              onClick={() => router.push(`/orders/bom/edit/${bom.id}`)}
-                            >
-                              <Edit className="w-4 h-4 mr-2" />
-                              {tc('edit')}
-                            </DropdownMenuItem>
-                          )}
-                          {bom.status < 30 && (
-                            <DropdownMenuItem
-                              onClick={() => handleDelete(bom.id)}
-                              className="text-red-600 dark:text-red-400"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              {tc('delete')}
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <BatchDeleteBar count={selectedRows.length} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
+          <StandardTable<BOMItem>
+            columns={columns}
+            dataSource={bomList}
+            total={total}
+            page={currentPage}
+            pageSize={pageSize}
+            pageSizeOptions={[20, 25, 30]}
+            rowKey="id"
+            rowSelectable
+            selectedRows={selectedRows}
+            onRowSelectedChange={setSelectedRows}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(s) => {
+              setPageSize(s);
+              setCurrentPage(1);
+            }}
+            loading={loading}
+            onRetry={() => fetchBOMList()}
+            emptyText={t('noBomData')}
+            customStyle={{ containerClassName: 'px-2 pb-2' }}
+          />
         </div>
-
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              {tc('prevPage')}
-            </Button>
-            <span className="flex items-center px-4">
-              {currentPage} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        )}
 
         <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
           <DialogContent className="max-w-6xl w-[90vw] max-h-[90vh] overflow-y-auto" resizable>
@@ -543,42 +571,14 @@ export default function BOMPage() {
                     <Package className="w-5 h-5" />
                     {t('bomDetailInfo', { count: bomDetail.lines?.length || 0 })}
                   </h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t('lineNo')}</TableHead>
-                        <TableHead>{t('materialCode')}</TableHead>
-                        <TableHead>{t('materialName')}</TableHead>
-                        <TableHead>{t('spec')}</TableHead>
-                        <TableHead>{t('consumption')}</TableHead>
-                        <TableHead>{t('lossRate')}</TableHead>
-                        <TableHead>{t('actualUsage')}</TableHead>
-                        <TableHead>{t('cost')}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {bomDetail.lines?.map((line: Loose) => (
-                        <TableRow key={line.id}>
-                          <TableCell>{line.line_no}</TableCell>
-                          <TableCell>{line.material_code}</TableCell>
-                          <TableCell>{line.material_name}</TableCell>
-                          <TableCell className="text-sm text-gray-500 dark:text-gray-400">
-                            {line.material_spec}
-                          </TableCell>
-                          <TableCell>
-                            {line.consumption_qty} {line.unit}
-                          </TableCell>
-                          <TableCell>{line.loss_rate}%</TableCell>
-                          <TableCell>
-                            {parseFloat(String(line.actual_qty || 0)).toFixed(4)}
-                          </TableCell>
-                          <TableCell>
-                            ¥{parseFloat(String(line.total_cost || 0)).toFixed(4)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <StandardTable<BomLine>
+                    columns={detailColumns}
+                    dataSource={(bomDetail.lines ?? []) as BomLine[]}
+                    total={bomDetail.lines?.length || 0}
+                    rowKey="id"
+                    showPagination={false}
+                    emptyText={tc('noData')}
+                  />
                 </div>
               </div>
             )}

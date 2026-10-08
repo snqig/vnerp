@@ -25,10 +25,11 @@ export const GET = withPermission(
     const list = rows.map((r) => ({
       id: r.id,
       processCode: r.process_code,
-      // hr_piece_rate 无独立工序名称列，暂以工序编号填充工序名称
       processName: r.process_code,
       productType: r.product_type,
       unitPrice: r.unit_price,
+      unit: r.unit,
+      qualityThreshold: r.quality_threshold,
       effectiveDate: r.effective_date,
       status: r.status,
     }));

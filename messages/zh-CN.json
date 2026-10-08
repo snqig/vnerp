@@ -5760,9 +5760,7 @@
     "outsource_receive": "委外收货",
     "outsource_settlement": "委外结算",
     "quality": "品质部",
-    "quality_incoming": "来料检验",
-    "quality_process": "过程检验",
-    "quality_final": "成品检验",
+    "quality_process": "质量检验中心",
     "quality_trace": "品质追溯",
     "quality_unqualified": "不合格品处理",
     "quality_sgs": "SGS认证管理",
@@ -7796,6 +7794,7 @@
     "purchaseOrder": "采购订单",
     "purchaseRequest": "采购申请",
     "supplierManagement": "供应商管理",
+    "totalSuppliers": "供应商总数",
     "newPurchaseOrder": "新建采购单",
     "editPurchaseOrder": "编辑采购单",
     "createPurchaseOrder": "创建采购订单",
@@ -8214,6 +8213,7 @@
     "total": "总计"
   },
   "Quality": {
+    "k_center_title": "质量检验中心",
     "k_link_color_std": "关联签样色样",
     "k_link_none": "不关联",
     "k_base_ref": "签样基准",
@@ -8420,6 +8420,7 @@
     "printReport": "列印报告",
     "printingQuality": "印刷品质",
     "problemDesc": "问题描述",
+    "qualityInspectionCenter": "质量检验中心",
     "processInspection": "过程检验",
     "processInspectionReport": "过程检验报告",
     "productInfo": "产品资讯",
@@ -8671,7 +8672,10 @@
     "testing": "检测中",
     "k_1upxefi": "追溯记录",
     "unknown": "未知",
-    "otherSource": "其他"
+    "otherSource": "其他",
+    "unqualifiedInspection": "未通过",
+    "monthlyInspectionCount": "本月检验次数",
+    "qualifiedRate": "合格率"
   },
   "Equipment": {
     "title": "设备管理",
@@ -11302,6 +11306,7 @@
     "inkColorList": "油墨颜色列表",
     "inkFormulaManagement": "油墨配方管理",
     "inkManagement": "油墨管理",
+    "inkManagementDesc": "维护油墨基础档案、库存数量与安全库存预警",
     "inkName": "油墨名称",
     "isCut": "已分切",
     "isUsed": "已使用",

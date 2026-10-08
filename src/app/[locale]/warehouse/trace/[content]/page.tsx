@@ -76,7 +76,7 @@ export default function TraceContentPage() {
           )}
         </div>
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent id="trace-timeline-content" className="pt-6">
             {loading ? (
               <div className="py-8 text-center text-muted-foreground">{t('scan.loading')}</div>

@@ -104,7 +104,10 @@ export async function proxy(request: NextRequest) {
   }
 
   // API 路由：access_token 存在性检查 + CSRF 校验 + 放行（不做 i18n 处理）
-  if (pathname.startsWith('/api/')) {
+  // 注意：pathname 可能带 locale 前缀（如 /zh-CN/api/quality/process），必须先 stripLocale
+  // 再判断，否则会漏进下面的页面鉴权分支，被 next-intl 当成「默认 locale 不该带前缀」重定向掉（307）。
+  const { locale, cleanPath } = stripLocale(pathname);
+  if (pathname.startsWith('/api/') || cleanPath.startsWith('/api/')) {
     // 跳过公开 API（登录/注册/登出/刷新/健康检查等）
     // logout 和 refresh 必须放行：登出时 token 可能已过期，refresh 本身就是为了获取新 token
     const isPublicApi = [
@@ -120,7 +123,7 @@ export async function proxy(request: NextRequest) {
       // 品牌信息（公司名 / LOGO）供**登录页**使用，而登录页必然是未登录状态，
       // 因此该接口不能要求 token —— 只返回展示型字段，详见路由内注释。
       '/api/public/',
-    ].some((p) => pathname.startsWith(p));
+    ].some((p) => cleanPath.startsWith(p));
 
     if (!isPublicApi) {
       // 非公开 API 需携带 access_token cookie 或 Authorization header（兼容 localStorage 与 cookie 两种认证模式）。
@@ -167,7 +170,6 @@ export async function proxy(request: NextRequest) {
   // 黑名单 / 用户级撤销（改密 / 锁号）由 API 层 withAuth 负责，这里只做粗粒度放行。
   const accessToken = request.cookies.get('access_token')?.value;
   const tokenValid = accessToken ? await verifyJwtSignature(accessToken) : false;
-  const { locale, cleanPath } = stripLocale(pathname);
 
   // 受保护路由：无有效 token → 重定向到 /login（保留 locale 前缀）
   // 根路径 '/' 也受保护（渲染 dashboard）

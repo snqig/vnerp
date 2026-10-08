@@ -61,6 +61,18 @@ const dbConfig = {
   // 全仓已核查：无任何代码依赖「DECIMAL 是字符串」这一假设。
   // 注：仅影响读取侧（DECIMAL），不影响写入、也不改变 BIGINT 的字符串语义。
   decimalNumbers: true,
+  // ── DATE 列读取类型 ──
+  //
+  // 默认 mysql2 把 DATE 列读成 JS Date 对象（本地时区零点），经 API JSON 序列化
+  // 变成 UTC ISO 串（东八区钟面偏移 -8h），前端 <input type="date"> 只接受
+  // YYYY-MM-DD → 编辑弹窗日期回显全线空白（已用 toDateInput 逐页打补丁，11 页 14 处）。
+  // 开启后 DATE 列直接返回 'YYYY-MM-DD' 字符串：date input 原生可显示，
+  // 前端 new Date('YYYY-MM-DD') 与原有 ISO 串解析落在同一日历日，展示行为不变。
+  // 仅指定 ['DATE']：DATETIME/TIMESTAMP 仍返回 Date 对象 → ISO 串，create_time 等
+  // 时间戳展示零变化，规避 'YYYY-MM-DD HH:mm:ss' 空格分隔串的 Safari 解析风险。
+  // 全仓已核查：无读取侧代码对 DATE 列值调用 Date 方法（SGSCertificate.validUntil
+  // 的 fromPersistence 无调用点）。
+  dateStrings: ['DATE' as const],
   waitForConnections: true,
   connectionLimit: 20,
   maxIdle: 10,

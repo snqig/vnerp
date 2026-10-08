@@ -1,21 +1,13 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState } from 'react';
+import { extractSignColorLink } from '@/lib/color-diff';
+import { useEffect, useState, useMemo } from 'react';
+import { useEmployeeOptions, employeeLabel } from '@/hooks/useEmployeeOptions';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -39,9 +31,8 @@ import {
   buildLabTestSchema,
   firstZodMessage,
 } from '@/lib/validators/quality-form';
-import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { StandardTable, StandardTableColumn } from '@/components/common';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
@@ -64,6 +55,22 @@ interface LabTestRecord {
   status: number;
   remark: string;
   create_time: string;
+  // 签样色样基准联动（色差测试，编辑态 Lab 为字符串输入）
+  color_standard_id?: string | number | null;
+  measured_lab?: { l: string; a: string; b: string };
+}
+
+// 色样档案选项（GET /api/sample/color-standards）
+interface ColorStandardOption {
+  id: number;
+  color_no: string;
+  color_name: string;
+  sample_order_no: string | null;
+  l_value: string;
+  a_value: string;
+  b_value: string;
+  de_threshold: string;
+  measure_device: string | null;
 }
 
 const testTypeMap: Record<string, string> = {
@@ -103,6 +110,10 @@ export default function LabTestPage() {
 
   const { toast } = useToast();
   const [list, setList] = useState<LabTestRecord[]>([]);
+  // 签样色样档案选项（色差测试关联基准用）
+  const [colorStandards, setColorStandards] = useState<ColorStandardOption[]>([]);
+  // 编辑回显时置顶的关联色样（可能不在 colorStandards 列表内）
+  const [pinnedColorStd, setPinnedColorStd] = useState<ColorStandardOption | null>(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchProduct, setSearchProduct] = useState('');
@@ -116,11 +127,11 @@ export default function LabTestPage() {
   });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<LabTestRecord>>({});
-  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'test_no');
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    sortedData,
-    (r) => String(r.id)
-  );
+  // 测试人下拉：库内在职真实人员（禁手输，回退见表单区）
+  const employeeOptions = useEmployeeOptions();
+  const [selectedRows, setSelectedRows] = useState<LabTestRecord[]>([]);
+  const [pageSize] = useState(20);
+  const sortedList = useMemo(() => list, [list]);
 
   const fetchData = async () => {
     try {
@@ -156,18 +167,43 @@ export default function LabTestPage() {
     fetchStats();
   }, [page]);
 
+  // 打开弹窗时拉取色样档案选项（签样标准闭环：色差测试关联基准）
+  useEffect(() => {
+    if (!showDialog) return;
+    authFetch('/api/sample/color-standards?limit=100')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setColorStandards(data.data?.list || []);
+      })
+      .catch(() => {});
+  }, [showDialog]);
+
   const handleSave = async () => {
     const parsed = buildLabTestSchema(buildQualityFormMessages((k) => tc(k))).safeParse(editItem);
     if (!parsed.success) {
       toast({ title: firstZodMessage(parsed.error), variant: 'destructive' });
       return;
     }
+    // 组装签样色样联动字段：未关联传 null（后端清除旧联动）；关联且实测 Lab 齐全才带 measured_lab（服务端算 ΔE）
+    const payload: Record<string, unknown> = { ...parsed.data };
+    const ml = editItem.measured_lab;
+    if (editItem.color_standard_id) {
+      payload.color_standard_id = Number(editItem.color_standard_id);
+      if (ml && ml.l !== '' && ml.a !== '' && ml.b !== '') {
+        payload.measured_lab = { l: Number(ml.l), a: Number(ml.a), b: Number(ml.b) };
+      } else {
+        delete payload.measured_lab;
+      }
+    } else {
+      payload.color_standard_id = null;
+      delete payload.measured_lab;
+    }
     try {
       const method = editItem.id ? 'PUT' : 'POST';
       const res = await authFetch('/api/quality/lab-test', {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify(payload),
       });
       const result = await res.json();
       if (result.success) {
@@ -250,6 +286,7 @@ export default function LabTestPage() {
               <Button
                 onClick={() => {
                   setEditItem({ test_type: 'physical', conclusion: 'pending' });
+                  setPinnedColorStd(null);
                   setShowDialog(true);
                 }}
               >
@@ -268,147 +305,134 @@ export default function LabTestPage() {
                   { key: 'status', label: tc('status'), width: 12 },
                 ]}
                 data={
-                  selectedCount > 0
-                    ? sortedData.filter((i) => i.id && isSelected(String(i.id)))
-                    : sortedData
+                  selectedRows.length > 0
+                    ? list.filter((i) => selectedRows.some((sr) => sr.id === i.id))
+                    : list
                 }
               />
             </div>
 
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                  </TableHead>
-                  <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
-                  <SortableTableHeader
-                    field="test_no"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('testNo')}
-                  </SortableTableHeader>
-                  <SortableTableHeader
-                    field="product_name"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {tc('productName')}
-                  </SortableTableHeader>
-                  <TableHead>{tc('batchNo')}</TableHead>
-                  <TableHead>{t('testType')}</TableHead>
-                  <TableHead>{t('testItem')}</TableHead>
-                  <TableHead>{t('tester')}</TableHead>
-                  <TableHead>{t('testDate')}</TableHead>
-                  <SortableTableHeader
-                    field="conclusion"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('conclusion')}
-                  </SortableTableHeader>
-                  <SortableTableHeader
-                    field="status"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {tc('status')}
-                  </SortableTableHeader>
-                  <TableHead>{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedData.map((item, index) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={isSelected(String(item.id))}
-                        onCheckedChange={() => toggle(String(item.id))}
-                      />
-                    </TableCell>
-                    <TableCell className="text-center text-muted-foreground">
-                      {(page - 1) * 20 + index + 1}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{item.test_no}</TableCell>
-                    <TableCell>{item.product_name}</TableCell>
-                    <TableCell>{item.batch_no || '-'}</TableCell>
-                    <TableCell>{t(testTypeMap[item.test_type] || item.test_type)}</TableCell>
-                    <TableCell className="max-w-32 truncate">{item.test_items || '-'}</TableCell>
-                    <TableCell>{item.tester || '-'}</TableCell>
-                    <TableCell>{item.test_date?.substring(0, 10) || '-'}</TableCell>
-                    <TableCell>
-                      <Badge variant={conclusionMap[item.conclusion]?.variant || 'outline'}>
-                        {t(conclusionMap[item.conclusion]?.label || 'pendingJudgment')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusMap[item.status]?.variant || 'outline'}>
-                        {t(statusMap[item.status]?.label || tc('unknown'))}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditItem(item);
-                            setShowDialog(true);
-                          }}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            if (item.id) handleDelete(item.id);
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {sortedData.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
-                      {tc('noData')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">
-                {tc('totalRecords', { count: total })}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  {tc('prevPage')}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page * 20 >= total}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {tc('nextPage')}
-                </Button>
-              </div>
-            </div>
+            <StandardTable<LabTestRecord>
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={(rows) => setSelectedRows(rows)}
+              dataSource={sortedList}
+              columns={[
+                {
+                  key: 'serialNo',
+                  title: tc('serialNo'),
+                  width: 60,
+                  align: 'center',
+                  render: (_row, index) => (
+                    <span className="text-muted-foreground">{index + 1}</span>
+                  ),
+                },
+                { key: 'test_no', title: t('testNo') },
+                { key: 'product_name', title: tc('productName') },
+                { key: 'batch_no', title: tc('batchNo'), render: (row) => row.batch_no || '-' },
+                {
+                  key: 'test_type',
+                  title: t('testType'),
+                  render: (row) => t(testTypeMap[row.test_type] || row.test_type),
+                },
+                { key: 'test_items', title: t('testItem'), render: (row) => <span className="max-w-32 truncate block">{row.test_items || '-'}</span> },
+                { key: 'tester', title: t('tester'), render: (row) => row.tester || '-' },
+                { key: 'test_date', title: t('testDate'), render: (row) => row.test_date?.substring(0, 10) || '-' },
+                {
+                  key: 'conclusion',
+                  title: t('conclusion'),
+                  render: (row) => (
+                    <Badge variant={conclusionMap[row.conclusion]?.variant || 'outline'}>
+                      {t(conclusionMap[row.conclusion]?.label || 'pendingJudgment')}
+                    </Badge>
+                  ),
+                },
+                {
+                  key: 'status',
+                  title: tc('status'),
+                  render: (row) => (
+                    <Badge variant={statusMap[row.status]?.variant || 'outline'}>
+                      {t(statusMap[row.status]?.label || tc('unknown'))}
+                    </Badge>
+                  ),
+                },
+                {
+                  key: 'actions',
+                  title: tc('actions'),
+                  width: 80,
+                  render: (row) => (
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          // 签样色样联动回显：从 detail_data JSON 提取关联色样与实测 Lab
+                          const link = extractSignColorLink(row.detail_data);
+                          setEditItem({
+                            ...row,
+                            color_standard_id: link.color_standard_id ?? undefined,
+                            measured_lab: link.measured_lab,
+                          });
+                          // 关联色样可能不在色样列表（limit=100）内，置顶合成选项防裸 ID 显示
+                          if (link.color_standard_id) {
+                            const cs = (() => {
+                              try {
+                                return (
+                                  JSON.parse(row.detail_data) as {
+                                    color_standard?: {
+                                      color_standard_id?: number;
+                                      color_no?: string;
+                                      color_name?: string;
+                                      base_lab?: { l?: number; a?: number; b?: number };
+                                      de_threshold?: number;
+                                    };
+                                  }
+                                ).color_standard;
+                              } catch {
+                                return undefined;
+                              }
+                            })();
+                            if (cs) {
+                              setPinnedColorStd({
+                                id: cs.color_standard_id ?? 0,
+                                color_no: cs.color_no || '',
+                                color_name: cs.color_name || '',
+                                sample_order_no: null,
+                                l_value: String(cs.base_lab?.l ?? ''),
+                                a_value: String(cs.base_lab?.a ?? ''),
+                                b_value: String(cs.base_lab?.b ?? ''),
+                                de_threshold: String(cs.de_threshold ?? ''),
+                                measure_device: null,
+                              });
+                            }
+                          } else {
+                            setPinnedColorStd(null);
+                          }
+                          setShowDialog(true);
+                        }}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          if (row.id) handleDelete(row.id);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ),
+                },
+              ]}
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              onPageChange={(p) => setPage(p)}
+              emptyText={tc('noData')}
+            />
           </CardContent>
         </Card>
 
@@ -480,10 +504,28 @@ export default function LabTestPage() {
               </div>
               <div>
                 <Label>{t('tester')}</Label>
-                <Input
-                  value={editItem.tester || ''}
-                  onChange={(e) => setEditItem({ ...editItem, tester: e.target.value })}
-                />
+                {employeeOptions.length > 0 ? (
+                  <Select
+                    value={editItem.tester || ''}
+                    onValueChange={(value) => setEditItem({ ...editItem, tester: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('tester')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {employeeOptions.map((emp) => (
+                        <SelectItem key={emp.employee_no} value={emp.name}>
+                          {employeeLabel(emp)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    value={editItem.tester || ''}
+                    onChange={(e) => setEditItem({ ...editItem, tester: e.target.value })}
+                  />
+                )}
               </div>
               <div>
                 <Label>{t('testDate')}</Label>
@@ -527,6 +569,112 @@ export default function LabTestPage() {
                   onChange={(e) => setEditItem({ ...editItem, detail_data: e.target.value })}
                 />
               </div>
+              {(editItem.test_type === 'color' || editItem.test_type === 'color_diff') && (
+                <div className="col-span-2 border rounded-md p-3 space-y-3">
+                  <div>
+                    <Label>{t('k_link_color_std')}</Label>
+                    <Select
+                      value={
+                        editItem.color_standard_id ? String(editItem.color_standard_id) : 'none'
+                      }
+                      onValueChange={(v) =>
+                        setEditItem({
+                          ...editItem,
+                          color_standard_id: v === 'none' ? undefined : v,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('k_link_color_std')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t('k_link_none')}</SelectItem>
+                        {(pinnedColorStd &&
+                        !colorStandards.some((c) => c.id === pinnedColorStd.id)
+                          ? [pinnedColorStd, ...colorStandards]
+                          : colorStandards
+                        ).map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {c.color_no} · {c.color_name}（{c.sample_order_no || '-'}）
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {(() => {
+                      const merged =
+                        pinnedColorStd && !colorStandards.some((c) => c.id === pinnedColorStd.id)
+                          ? [pinnedColorStd, ...colorStandards]
+                          : colorStandards;
+                      const std = merged.find(
+                        (c) => String(c.id) === String(editItem.color_standard_id)
+                      );
+                      if (!std) return null;
+                      return (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t('k_base_ref')}：L*={Number(std.l_value)} / a*={Number(std.a_value)} /{' '}
+                          b*={Number(std.b_value)}，ΔE≤{Number(std.de_threshold)}
+                        </p>
+                      );
+                    })()}
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <Label>{t('k_measured_lab_l')}</Label>
+                      <Input
+                        type="number"
+                        step="0.0001"
+                        value={editItem.measured_lab?.l ?? ''}
+                        onChange={(e) =>
+                          setEditItem({
+                            ...editItem,
+                            measured_lab: {
+                              l: e.target.value,
+                              a: editItem.measured_lab?.a ?? '',
+                              b: editItem.measured_lab?.b ?? '',
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>{t('k_measured_lab_a')}</Label>
+                      <Input
+                        type="number"
+                        step="0.0001"
+                        value={editItem.measured_lab?.a ?? ''}
+                        onChange={(e) =>
+                          setEditItem({
+                            ...editItem,
+                            measured_lab: {
+                              l: editItem.measured_lab?.l ?? '',
+                              a: e.target.value,
+                              b: editItem.measured_lab?.b ?? '',
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>{t('k_measured_lab_b')}</Label>
+                      <Input
+                        type="number"
+                        step="0.0001"
+                        value={editItem.measured_lab?.b ?? ''}
+                        onChange={(e) =>
+                          setEditItem({
+                            ...editItem,
+                            measured_lab: {
+                              l: editItem.measured_lab?.l ?? '',
+                              a: editItem.measured_lab?.a ?? '',
+                              b: e.target.value,
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="col-span-2">
                 <Label>{tc('remark')}</Label>
                 <Textarea

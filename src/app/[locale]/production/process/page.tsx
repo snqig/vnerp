@@ -1,22 +1,18 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+  type SortState,
+} from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -107,9 +103,11 @@ export default function ProductionProcessPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
   const [processRemark, setProcessRemark] = useState('');
-
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(processes, (process) => String(process.id));
+  // StandardTable：分页 / 排序 / 勾选
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sort, setSort] = useState<SortState>(null);
+  const [selectedRows, setSelectedRows] = useState<ProcessCard[]>([]);
 
   const fetchProcesses = useCallback(async () => {
     try {
@@ -150,7 +148,7 @@ export default function ProductionProcessPage() {
   }, [activeTab, searchQuery, toast]);
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => r.id);
     if (ids.length === 0) return;
     if (!confirm(tc('confirmBatchDelete', { count: ids.length }))) return;
     let okCount = 0;
@@ -195,6 +193,158 @@ export default function ProductionProcessPage() {
     if (process.burdening_status === 3) return 100;
     return 0;
   };
+
+  // 筛选条件变化时回到第 1 页并清空勾选
+  useEffect(() => {
+    setPage(1);
+    setSelectedRows([]);
+  }, [activeTab, searchQuery]);
+
+  const sorted = useMemo(() => {
+    if (!sort) return processes;
+    const dir = sort.direction === 'asc' ? 1 : -1;
+    return [...processes].sort((a, b) => {
+      const av = (a as unknown as Record<string, unknown>)[sort.field];
+      const bv = (b as unknown as Record<string, unknown>)[sort.field];
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+      return String(av ?? '').localeCompare(String(bv ?? '')) * dir;
+    });
+  }, [processes, sort]);
+
+  // StandardTable 只渲染当前页数据
+  const paged = useMemo(
+    () => sorted.slice((page - 1) * pageSize, page * pageSize),
+    [sorted, page, pageSize]
+  );
+
+  const handleSortChange = (next: SortState) => {
+    setSort(next);
+    setPage(1);
+  };
+
+  const clear = () => setSelectedRows([]);
+
+  const columns: StandardTableColumn<ProcessCard>[] = [
+    {
+      key: 'card_no',
+      title: t('processCardNo'),
+      sortable: true,
+      className: 'font-medium',
+      render: (process) => (
+        <div className="flex flex-col">
+          <span>{process.card_no}</span>
+          <span className="text-xs text-muted-foreground">{process.work_order_no}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'product_name',
+      title: t('productInfo'),
+      sortable: true,
+      render: (process) => (
+        <div className="flex flex-col">
+          <span className="font-medium">{process.product_name}</span>
+          <span className="text-xs text-muted-foreground">{process.material_spec}</span>
+          {process.print_type && (
+            <span className="text-xs text-muted-foreground">{process.print_type}</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'customer_name',
+      title: t('customer'),
+      sortable: true,
+      render: (process) => (
+        <div className="flex flex-col">
+          <span>{process.customer_name || '-'}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'plan_qty',
+      title: tc('quantity'),
+      sortable: true,
+      render: (process) => parseFloat(String(process.plan_qty)).toLocaleString(locale),
+    },
+    {
+      key: 'process_flow1',
+      title: t('processFlow'),
+      sortable: true,
+      render: (process) => (
+        <div className="flex flex-col gap-1">
+          <div className="text-xs">{process.process_flow1 || '-'}</div>
+          {process.process_flow2 && (
+            <div className="text-xs text-muted-foreground">{process.process_flow2}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'progress',
+      title: t('progress'),
+      render: (process) => (
+        <div className="w-full max-w-[120px]">
+          <Progress value={getProgressPercent(process)} className="h-2" />
+          <span className="text-xs text-muted-foreground">{getProgressPercent(process)}%</span>
+        </div>
+      ),
+    },
+    {
+      key: 'burdening_status',
+      title: tc('status'),
+      sortable: true,
+      render: (process) => getStatusBadge(process.burdening_status),
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      render: (process) => (
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={() => handleViewDetail(process)}>
+            <Eye className="h-4 w-4" />
+          </Button>
+          {process.burdening_status === 1 && (
+            <Button size="sm" onClick={() => handleStartProcess(process)}>
+              <Play className="h-4 w-4 mr-1" />
+              {t('startWork')}
+            </Button>
+          )}
+          {process.burdening_status === 2 && (
+            <Button size="sm" variant="outline" onClick={() => handleStartProcess(process)}>
+              <Clock className="h-4 w-4 mr-1" />
+              {t('reportWork')}
+            </Button>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleViewDetail(process)}>
+                <Eye className="h-4 w-4 mr-2" />
+                {tc('detail')}
+              </DropdownMenuItem>
+              {process.burdening_status === 2 && (
+                <DropdownMenuItem onClick={() => handleStatusUpdate(process, 3)}>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  {t('completeProduction')}
+                </DropdownMenuItem>
+              )}
+              {process.burdening_status === 3 && (
+                <DropdownMenuItem onClick={() => handleStatusUpdate(process, 2)}>
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  {t('redoProduction')}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ),
+    },
+  ];
 
   const handleViewDetail = (process: ProcessCard) => {
     setSelectedProcess(process);
@@ -259,16 +409,16 @@ export default function ProductionProcessPage() {
       <div className="space-y-6">
         <StatsCards
           configs={[
-            { key: 'total', label: tc('total'), icon: GitBranch, ...StatsTheme.blue },
-            { key: 'active', label: tc('active'), icon: CheckCircle, ...StatsTheme.green },
-            { key: 'pending', label: tc('pending'), icon: Clock, ...StatsTheme.orange },
-            { key: 'warning', label: tc('warning'), icon: AlertTriangle, ...StatsTheme.red },
+            { key: 'total', label: '流程卡总数', icon: GitBranch, ...StatsTheme.blue },
+            { key: 'active', label: '已启用', icon: CheckCircle, ...StatsTheme.green },
+            { key: 'pending', label: '待启用', icon: Clock, ...StatsTheme.orange },
+            { key: 'warning', label: '异常', icon: AlertTriangle, ...StatsTheme.red },
           ]}
           stats={[
             { key: 'total', count: processes.length },
-            { key: 'active', count: processes.length },
-            { key: 'pending', count: processes.length },
-            { key: 'warning', count: processes.length },
+            { key: 'active', count: processes.filter((p) => p.burdening_status === 2).length },
+            { key: 'pending', count: processes.filter((p) => p.burdening_status === 1).length },
+            { key: 'warning', count: processes.filter((p) => p.lock_status === 1).length },
           ]}
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
@@ -313,162 +463,30 @@ export default function ProductionProcessPage() {
           <TabsContent value={activeTab} className="mt-4">
             <Card>
               <CardContent className="p-0">
-                {loading ? (
-                  <div className="flex items-center justify-center py-12 text-muted-foreground">
-                    {tc('loading')}
-                  </div>
-                ) : processes.length === 0 ? (
-                  <div className="flex items-center justify-center py-12 text-muted-foreground">
-                    {t('noProcessData')}
-                  </div>
-                ) : (
-                  <>
-                  <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-10">
-                          <input
-                            ref={selectAllRef}
-                            type="checkbox"
-                            className="h-4 w-4 cursor-pointer accent-blue-600"
-                            checked={allSelected}
-                            onChange={toggleAll}
-                            aria-label={tc('selectAll')}
-                          />
-                        </TableHead>
-                        <TableHead>{t('processCardNo')}</TableHead>
-                        <TableHead>{t('productInfo')}</TableHead>
-                        <TableHead>{t('customer')}</TableHead>
-                        <TableHead>{tc('quantity')}</TableHead>
-                        <TableHead>{t('processFlow')}</TableHead>
-                        <TableHead>{t('progress')}</TableHead>
-                        <TableHead>{tc('status')}</TableHead>
-                        <TableHead>{tc('actions')}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {processes.map((process) => (
-                        <TableRow key={process.id}>
-                          <TableCell>
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 cursor-pointer accent-blue-600"
-                              checked={isSelected(String(process.id))}
-                              onChange={() => toggle(String(process.id))}
-                              aria-label={tc('selectRow', { id: process.id })}
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            <div className="flex flex-col">
-                              <span>{process.card_no}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {process.work_order_no}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{process.product_name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {process.material_spec}
-                              </span>
-                              {process.print_type && (
-                                <span className="text-xs text-muted-foreground">
-                                  {process.print_type}
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span>{process.customer_name || '-'}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {parseFloat(String(process.plan_qty)).toLocaleString(locale)}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col gap-1">
-                              <div className="text-xs">{process.process_flow1 || '-'}</div>
-                              {process.process_flow2 && (
-                                <div className="text-xs text-muted-foreground">
-                                  {process.process_flow2}
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="w-full max-w-[120px]">
-                              <Progress value={getProgressPercent(process)} className="h-2" />
-                              <span className="text-xs text-muted-foreground">
-                                {getProgressPercent(process)}%
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{getStatusBadge(process.burdening_status)}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleViewDetail(process)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              {process.burdening_status === 1 && (
-                                <Button size="sm" onClick={() => handleStartProcess(process)}>
-                                  <Play className="h-4 w-4 mr-1" />
-                                  {t('startWork')}
-                                </Button>
-                              )}
-                              {process.burdening_status === 2 && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleStartProcess(process)}
-                                >
-                                  <Clock className="h-4 w-4 mr-1" />
-                                  {t('reportWork')}
-                                </Button>
-                              )}
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleViewDetail(process)}>
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    {tc('detail')}
-                                  </DropdownMenuItem>
-                                  {process.burdening_status === 2 && (
-                                    <DropdownMenuItem
-                                      onClick={() => handleStatusUpdate(process, 3)}
-                                    >
-                                      <CheckCircle className="h-4 w-4 mr-2" />
-                                      {t('completeProduction')}
-                                    </DropdownMenuItem>
-                                  )}
-                                  {process.burdening_status === 3 && (
-                                    <DropdownMenuItem
-                                      onClick={() => handleStatusUpdate(process, 2)}
-                                    >
-                                      <RotateCcw className="h-4 w-4 mr-2" />
-                                      {t('redoProduction')}
-                                    </DropdownMenuItem>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  </>
-                )}
+                <BatchDeleteBar count={selectedRows.length} onClear={clear} onDelete={handleBatchDelete} />
+                <StandardTable<ProcessCard>
+                  columns={columns}
+                  dataSource={paged}
+                  total={sorted.length}
+                  page={page}
+                  pageSize={pageSize}
+                  pageSizeOptions={[20, 25, 30]}
+                  rowKey="id"
+                  rowSelectable
+                  selectedRows={selectedRows}
+                  onRowSelectedChange={setSelectedRows}
+                  onPageChange={setPage}
+                  onPageSizeChange={(s) => {
+                    setPageSize(s);
+                    setPage(1);
+                  }}
+                  sortState={sort}
+                  onSortChange={handleSortChange}
+                  loading={loading}
+                  onRetry={fetchProcesses}
+                  emptyText={t('noProcessData')}
+                  customStyle={{ containerClassName: 'px-2 pb-2' }}
+                />
               </CardContent>
             </Card>
           </TabsContent>

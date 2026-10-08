@@ -3,6 +3,7 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useRef } from 'react';
 import { useCompanyName } from '@/hooks/useCompanyName';
+import { useDashboardScale } from '@/hooks/useDashboardScale';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -89,14 +90,37 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const { companyName } = useCompanyName();
   const dashboardRef = useRef<HTMLDivElement>(null);
+  const dashScale = useDashboardScale();
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = async () => {
+    const el = dashboardRef.current;
+    if (!el) return;
+
     if (!document.fullscreenElement) {
-      dashboardRef.current?.requestFullscreen();
+      // 强制设置背景，绕过 CSS 加载/优先级问题
+      const isDark = document.documentElement.classList.contains('dark');
+      el.style.background = isDark
+        ? 'linear-gradient(135deg, #091637 0%, #010205 100%)'
+        : 'linear-gradient(135deg, #FDFBF6 0%, #F1E7D6 100%)';
+      // 容器带 zoom：CSS 长度先按缩放前的布局值算，再乘 dashScale 渲染。
+      // 故全屏铺满要除以 dashScale，否则 2560 屏（scale≈1.33）会溢出到 ~3400px。
+      el.style.width = `calc(100vw / ${dashScale})`;
+      el.style.height = `calc(100vh / ${dashScale})`;
+      el.style.minHeight = `calc(100vh / ${dashScale})`;
+      el.style.padding = '1.5rem';
+      el.style.overflowY = 'auto';
+      await el.requestFullscreen();
       setIsFullscreen(true);
     } else {
       document.exitFullscreen();
+      // 退出后清理 inline style
+      el.style.background = '';
+      el.style.width = '';
+      el.style.height = '';
+      el.style.minHeight = '';
+      el.style.padding = '';
+      el.style.overflowY = '';
       setIsFullscreen(false);
     }
   };
@@ -156,7 +180,11 @@ export default function DashboardPage() {
 
   return (
     <MainLayout title={t('title')}>
-      <div ref={dashboardRef} className="space-y-6">
+      <div
+        ref={dashboardRef}
+        className="dash-zoom space-y-6 dashboard-gradient min-h-full"
+        style={{ zoom: dashScale }}
+      >
         <div
           className="dashboard-gradient relative rounded-xl overflow-hidden px-4 pt-6 pb-4"
         >

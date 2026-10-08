@@ -1,21 +1,11 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -39,9 +29,8 @@ import {
   buildSupplierAuditSchema,
   firstZodMessage,
 } from '@/lib/validators/quality-form';
-import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { StandardTable, StandardTableColumn } from '@/components/common';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
@@ -114,11 +103,9 @@ export default function SupplierAuditPage() {
   });
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<SupplierAuditRecord>>({});
-  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'audit_no');
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    sortedData,
-    (r) => String(r.id)
-  );
+  const [selectedRows, setSelectedRows] = useState<SupplierAuditRecord[]>([]);
+  const [pageSize] = useState(20);
+  const sortedList = useMemo(() => list, [list]);
 
   const fetchData = async () => {
     try {
@@ -286,143 +273,118 @@ export default function SupplierAuditPage() {
                   { key: 'audit_result', label: tc('result'), width: 12 },
                 ]}
                 data={
-                  selectedCount > 0
-                    ? sortedData.filter((i) => i.id && isSelected(String(i.id)))
-                    : sortedData
+                  selectedRows.length > 0
+                    ? list.filter((i) => selectedRows.some((sr) => sr.id === i.id))
+                    : list
                 }
               />
             </div>
 
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                  </TableHead>
-                  <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
-                  <SortableTableHeader
-                    field="audit_no"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('auditNo')}
-                  </SortableTableHeader>
-                  <SortableTableHeader
-                    field="supplier_name"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {tc('supplierName')}
-                  </SortableTableHeader>
-                  <TableHead>{t('auditType')}</TableHead>
-                  <TableHead>{t('auditDate')}</TableHead>
-                  <TableHead>{t('qualitySystem')}</TableHead>
-                  <TableHead>{t('delivery')}</TableHead>
-                  <TableHead>{t('price')}</TableHead>
-                  <TableHead>{t('service')}</TableHead>
-                  <TableHead>{t('totalScore')}</TableHead>
-                  <TableHead>{tc('result')}</TableHead>
-                  <TableHead>{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedData.map((item, index) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={isSelected(String(item.id))}
-                        onCheckedChange={() => toggle(String(item.id))}
-                      />
-                    </TableCell>
-                    <TableCell className="text-center text-muted-foreground">
-                      {(page - 1) * 20 + index + 1}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{item.audit_no}</TableCell>
-                    <TableCell>{item.supplier_name}</TableCell>
-                    <TableCell>{t(auditTypeMap[item.audit_type] || item.audit_type)}</TableCell>
-                    <TableCell>{item.audit_date?.substring(0, 10) || '-'}</TableCell>
-                    <TableCell>{getScoreBadge(item.quality_system_score)}</TableCell>
-                    <TableCell>{getScoreBadge(item.delivery_score)}</TableCell>
-                    <TableCell>{getScoreBadge(item.price_score)}</TableCell>
-                    <TableCell>{getScoreBadge(item.service_score)}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          item.total_score >= 240
-                            ? 'default'
-                            : item.total_score >= 180
-                              ? 'secondary'
-                              : 'destructive'
-                        }
+            <StandardTable<SupplierAuditRecord>
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={(rows) => setSelectedRows(rows)}
+              dataSource={sortedList}
+              columns={[
+                {
+                  key: 'serialNo',
+                  title: tc('serialNo'),
+                  width: 60,
+                  align: 'center',
+                  render: (_row, index) => (
+                    <span className="text-muted-foreground">{index + 1}</span>
+                  ),
+                },
+                { key: 'audit_no', title: t('auditNo') },
+                { key: 'supplier_name', title: tc('supplierName') },
+                {
+                  key: 'audit_type',
+                  title: t('auditType'),
+                  render: (row) => t(auditTypeMap[row.audit_type] || row.audit_type),
+                },
+                { key: 'audit_date', title: t('auditDate'), render: (row) => row.audit_date?.substring(0, 10) || '-' },
+                {
+                  key: 'quality_system_score',
+                  title: t('qualitySystem'),
+                  render: (row) => getScoreBadge(row.quality_system_score),
+                },
+                {
+                  key: 'delivery_score',
+                  title: t('delivery'),
+                  render: (row) => getScoreBadge(row.delivery_score),
+                },
+                {
+                  key: 'price_score',
+                  title: t('price'),
+                  render: (row) => getScoreBadge(row.price_score),
+                },
+                {
+                  key: 'service_score',
+                  title: t('service'),
+                  render: (row) => getScoreBadge(row.service_score),
+                },
+                {
+                  key: 'total_score',
+                  title: t('totalScore'),
+                  render: (row) => (
+                    <Badge
+                      variant={
+                        row.total_score >= 240
+                          ? 'default'
+                          : row.total_score >= 180
+                            ? 'secondary'
+                            : 'destructive'
+                      }
+                    >
+                      {row.total_score}
+                    </Badge>
+                  ),
+                },
+                {
+                  key: 'audit_result',
+                  title: tc('result'),
+                  render: (row) => (
+                    <Badge variant={auditResultMap[row.audit_result]?.variant || 'outline'}>
+                      {t(auditResultMap[row.audit_result]?.label || 'pendingJudgment')}
+                    </Badge>
+                  ),
+                },
+                {
+                  key: 'actions',
+                  title: tc('actions'),
+                  width: 80,
+                  render: (row) => (
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditItem({ ...row, auditor: (row.auditor ?? row.auditor_name ?? '') as string });
+                          setShowDialog(true);
+                        }}
                       >
-                        {item.total_score}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={auditResultMap[item.audit_result]?.variant || 'outline'}>
-                        {t(auditResultMap[item.audit_result]?.label || 'pendingJudgment')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditItem({ ...item, auditor: (item.auditor ?? item.auditor_name ?? '') as string });
-                            setShowDialog(true);
-                          }}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            if (item.id) handleDelete(item.id);
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {sortedData.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
-                      {tc('noData')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">
-                {tc('totalRecords', { count: total })}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  {tc('prevPage')}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page * 20 >= total}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {tc('nextPage')}
-                </Button>
-              </div>
-            </div>
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          if (row.id) handleDelete(row.id);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ),
+                },
+              ]}
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              onPageChange={(p) => setPage(p)}
+              emptyText={tc('noData')}
+            />
           </CardContent>
         </Card>
 

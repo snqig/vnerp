@@ -68,6 +68,7 @@ export default function InkManagementPage() {
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const typeMap: Record<number, string> = {
     1: t('waterInk'),
@@ -102,6 +103,19 @@ export default function InkManagementPage() {
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
   const [searchCode, setSearchCode] = useState('');
   const [searchName, setSearchName] = useState('');
   const [searchType, setSearchType] = useState('');
@@ -122,7 +136,7 @@ export default function InkManagementPage() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         inkCode: searchCode,
         inkName: searchName,
       });
@@ -133,12 +147,13 @@ export default function InkManagementPage() {
       if (result.success) {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
+        setTotalPages(Math.ceil((result.data.total || 0) / pageSize));
       }
     } catch (error) {
       console.error('Failed to fetch ink list:', error);
       setList([]);
     }
-  }, [page, searchCode, searchName, searchType, searchStatus]);
+  }, [page, pageSize, searchCode, searchName, searchType, searchStatus]);
 
   const fetchStats = async () => {
     try {
@@ -283,25 +298,38 @@ export default function InkManagementPage() {
           showTrend={false}
         />
 
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t('inkManagement')}</h1>
-          <div className="flex gap-2">
+        <div className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 via-cyan-50 to-indigo-50 p-6 shadow-sm dark:border-slate-800 dark:from-sky-950/40 dark:via-slate-900/40 dark:to-indigo-950/40">
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-lg shadow-sky-500/30">
+                <Droplet className="h-7 w-7" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+                  {t('inkManagement')}
+                </h1>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {t('inkManagementDesc')}
+                </p>
+              </div>
+            </div>
             <Button
               size="sm"
+              className="shrink-0 bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
               onClick={() => {
                 setEditItem({});
                 setShowDialog(true);
               }}
             >
-              <Plus className="h-3 w-3 mr-1" />
+              <Plus className="h-4 w-4 mr-1" />
               {t('addInk')}
             </Button>
           </div>
         </div>
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-4">
-            <div className="flex flex-wrap items-center gap-2 mb-4">
+            <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-900/40">
               <Input
                 placeholder={t('inkCode')}
                 value={searchCode}
@@ -389,7 +417,7 @@ export default function InkManagementPage() {
             </div>
 
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-slate-50/80 dark:bg-slate-900/60">
                 <TableRow>
                   <TableHead className="w-[40px]">
                     <Checkbox
@@ -462,8 +490,18 @@ export default function InkManagementPage() {
               <TableBody>
                 {sortedList.map((item, index) => {
                   const st = statusMap[item.status] ?? statusMap[1];
+                  const ratio =
+                    item.safety_stock > 0
+                      ? item.stock_qty / item.safety_stock
+                      : item.stock_qty > 0
+                        ? 1
+                        : 0;
+                  const isLow = item.stock_qty < item.safety_stock;
+                  const stockBar =
+                    ratio >= 1 ? 'bg-emerald-500' : ratio >= 0.5 ? 'bg-amber-500' : 'bg-rose-500';
+                  const swatch = item.color_code || '#e2e8f0';
                   return (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40">
                       <TableCell>
                         <Checkbox
                           checked={isSelected(String(item.id))}
@@ -473,20 +511,48 @@ export default function InkManagementPage() {
                       <TableCell className="text-xs text-muted-foreground">{index + 1}</TableCell>
                       <TableCell className="text-xs font-mono">{item.ink_code}</TableCell>
                       <TableCell className="text-xs">{item.ink_name}</TableCell>
-                      <TableCell className="text-xs">{typeMap[item.ink_type] || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.color_name || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.color_code || '-'}</TableCell>
+                      <TableCell className="text-xs">
+                        <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                          {typeMap[item.ink_type] || '-'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="h-4 w-4 shrink-0 rounded-md border border-black/10 shadow-sm"
+                            style={{ backgroundColor: swatch }}
+                          />
+                          <span className="truncate">{item.color_name || '-'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="h-4 w-4 shrink-0 rounded-md border border-black/10 shadow-sm"
+                            style={{ backgroundColor: swatch }}
+                          />
+                          <span className="font-mono">{item.color_code || '-'}</span>
+                        </div>
+                      </TableCell>
                       <TableCell className="text-xs">{item.brand || '-'}</TableCell>
                       <TableCell className="text-xs">{item.unit}</TableCell>
                       <TableCell className="text-xs">
-                        {item.stock_qty ?? 0}
-                        {item.stock_qty < item.safety_stock && (
-                          <span className="text-red-500 dark:text-red-400 ml-1">⚠</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="w-12 font-semibold tabular-nums text-slate-700 dark:text-slate-200">
+                            {item.stock_qty ?? 0}
+                          </span>
+                          <div className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700 sm:block">
+                            <div
+                              className={`h-full rounded-full ${stockBar}`}
+                              style={{ width: `${Math.min(100, ratio * 100)}%` }}
+                            />
+                          </div>
+                          {isLow && <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />}
+                        </div>
                       </TableCell>
                       <TableCell className="text-xs">{item.safety_stock}</TableCell>
                       <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
+                        <Badge variant={st.variant} className="rounded-full px-2.5 text-xs">
                           {st.label}
                         </Badge>
                       </TableCell>
@@ -518,65 +584,85 @@ export default function InkManagementPage() {
                 })}
                 {sortedList.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={13} className="text-center text-gray-400 py-8">
-                      {tc('noRecords')}
+                    <TableCell colSpan={13} className="py-12">
+                      <div className="flex flex-col items-center justify-center gap-2 text-slate-400">
+                        <Droplet className="h-8 w-8 opacity-40" />
+                        <span className="text-sm">{tc('noRecords')}</span>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
 
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-gray-500">{tc('total', { count: total })}</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  {tc('prevPage')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page * 20 >= total}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {tc('nextPage')}
-                </Button>
+            {total > 0 && (
+              <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {tStd('paginationSummary', { total, pages: totalPages })}
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                    <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+                  <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+                  <div className="flex items-center gap-1">
+                    <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                    <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+            {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
           </CardContent>
         </Card>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.id ? t('editInk') : t('addInk')}</DialogTitle>
+              <DialogTitle className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-sm">
+                  <Droplet className="h-4 w-4" />
+                </span>
+                {editItem.id ? t('editInk') : t('addInk')}
+              </DialogTitle>
             </DialogHeader>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>{t('inkCode')}</Label>
+            <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                  {t('inkCode')}
+                  {!editItem.id && <span className="ml-0.5 text-red-500">*</span>}
+                </Label>
                 <Input
+                  className="h-9 rounded-lg font-mono"
                   value={editItem.ink_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, ink_code: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>{t('inkName')}</Label>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                  {t('inkName')}
+                  {!editItem.id && <span className="ml-0.5 text-red-500">*</span>}
+                </Label>
                 <Input
+                  className="h-9 rounded-lg"
                   value={editItem.ink_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, ink_name: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>{tc('type')}</Label>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-600 dark:text-slate-300">{tc('type')}</Label>
                 <Select
                   value={String(editItem.ink_type || 4)}
                   onValueChange={(v) => setEditItem({ ...editItem, ink_type: Number(v) })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -588,45 +674,57 @@ export default function InkManagementPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>{t('colorName')}</Label>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-600 dark:text-slate-300">{t('colorName')}</Label>
                 <Input
+                  className="h-9 rounded-lg"
                   value={editItem.color_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, color_name: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>{t('colorCode')}</Label>
-                <Input
-                  value={editItem.color_code || ''}
-                  onChange={(e) => setEditItem({ ...editItem, color_code: e.target.value })}
-                />
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-600 dark:text-slate-300">{t('colorCode')}</Label>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-9 w-9 shrink-0 rounded-lg border border-black/10 shadow-inner"
+                    style={{ backgroundColor: editItem.color_code || '#e2e8f0' }}
+                  />
+                  <Input
+                    className="h-9 flex-1 rounded-lg font-mono"
+                    value={editItem.color_code || ''}
+                    onChange={(e) => setEditItem({ ...editItem, color_code: e.target.value })}
+                  />
+                </div>
               </div>
-              <div>
-                <Label>{tc('brand')}</Label>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-600 dark:text-slate-300">{tc('brand')}</Label>
                 <Input
+                  className="h-9 rounded-lg"
                   value={editItem.brand || ''}
                   onChange={(e) => setEditItem({ ...editItem, brand: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>{tc('specification')}</Label>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-600 dark:text-slate-300">{tc('specification')}</Label>
                 <Input
+                  className="h-9 rounded-lg"
                   value={editItem.specification ?? ''}
                   onChange={(e) => setEditItem({ ...editItem, specification: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>{tc('unit')}</Label>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-600 dark:text-slate-300">{tc('unit')}</Label>
                 <Input
+                  className="h-9 rounded-lg"
                   value={editItem.unit || 'kg'}
                   onChange={(e) => setEditItem({ ...editItem, unit: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>{t('safetyStock')}</Label>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-600 dark:text-slate-300">{t('safetyStock')}</Label>
                 <Input
                   type="number"
+                  className="h-9 rounded-lg tabular-nums"
                   value={editItem.safety_stock ?? ''}
                   onChange={(e) =>
                     setEditItem({ ...editItem, safety_stock: Number(e.target.value) })
@@ -634,11 +732,16 @@ export default function InkManagementPage() {
                 />
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="border-t border-slate-100 pt-4 dark:border-slate-800">
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc('save')}</Button>
+              <Button
+                onClick={handleSave}
+                className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
+              >
+                {tc('save')}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

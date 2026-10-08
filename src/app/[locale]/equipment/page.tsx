@@ -3,6 +3,7 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { EQUIPMENT_TYPE_LABEL, EQUIPMENT_STATUS_LABEL } from '@/lib/status-labels';
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -189,11 +190,14 @@ export default function EquipmentPage() {
 
         {maintenanceReminders > 0 && (
           <div className="flex justify-end">
-            <a href="/equipment/maintenance" className="inline-flex items-center gap-1">
+            <Link
+              href="/equipment/maintenance"
+              className="inline-flex items-center gap-1"
+            >
               <Badge variant="destructive" className="cursor-pointer hover:bg-destructive/90">
                 {ts('k_maintenanceReminders')} {maintenanceReminders}
               </Badge>
-            </a>
+            </Link>
           </div>
         )}
 

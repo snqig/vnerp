@@ -67,7 +67,7 @@ test.describe('仪表盘模块测试', () => {
     await page.goto('/dashboard');
     await page.waitForTimeout(2000);
 
-    await expect(page.locator('h2').filter({ hasText: '仪表盘' }).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.tech-title-wrapper').first()).toBeVisible({ timeout: 10000 });
   });
 
   /**

@@ -1,13 +1,15 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+  type SortState,
+} from '@/components/common';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
@@ -22,7 +24,6 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Clock, Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
 interface Shift {
@@ -58,11 +59,16 @@ export default function ShiftsPage() {
   const tc = useTranslations('Common');
 
   const [shifts, setShifts] = useState<Shift[]>([]);
-  const [_loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Shift>>(defaultForm);
   const [search, setSearch] = useState('');
+  // StandardTable：分页 / 排序 / 勾选
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sort, setSort] = useState<SortState>(null);
+  const [selectedRows, setSelectedRows] = useState<Shift[]>([]);
 
   const fetchShifts = async () => {
     setLoading(true);
@@ -81,6 +87,72 @@ export default function ShiftsPage() {
   };
 
   useEffect(() => { fetchShifts(); }, []);
+
+  // 搜索条件变化时回到第 1 页并清空勾选
+  useEffect(() => {
+    setPage(1);
+    setSelectedRows([]);
+  }, [search]);
+
+  const columns: StandardTableColumn<Shift>[] = [
+    {
+      key: 'shiftName',
+      title: t('shiftName') || ts('k_cc9p5i'),
+      sortable: true,
+      render: (r) => <span className="font-medium">{r.shiftName}</span>,
+    },
+    { key: 'startTime', title: t('startTime') || ts('k_j6x7pa'), sortable: true },
+    { key: 'endTime', title: t('endTime') || ts('k_9uebcl'), sortable: true },
+    {
+      key: 'allowOvertime',
+      title: t('allowOvertime') || ts('k_1udmajf'),
+      render: (r) => <Switch checked={r.allowOvertime} disabled />,
+    },
+    {
+      key: 'overtimeRate',
+      title: t('overtimeRate') || ts('k_1fqrsmq'),
+      sortable: true,
+      render: (r) => `${r.overtimeRate}x`,
+    },
+    {
+      key: 'nightAllowance',
+      title: t('nightAllowance') || ts('k_gw3gw3'),
+      sortable: true,
+      render: (r) => `¥${r.nightAllowance}`,
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      sortable: true,
+      render: (r) => (
+        <Badge
+          className={
+            r.status === 1
+              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
+          }
+        >
+          {r.status === 1 ? tc('active') || ts('k_5pm2ma') : tc('inactive') || ts('k_6q9o5l')}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      align: 'right',
+      // 原有操作列：编辑 / 删除，逻辑保持原样
+      render: (r) => (
+        <>
+          <Button variant="ghost" size="icon" onClick={() => openEdit(r)}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => handleDelete(r)}>
+            <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
+          </Button>
+        </>
+      ),
+    },
+  ];
 
   const handleSave = async () => {
     if (!form.shiftName) {
@@ -132,16 +204,37 @@ export default function ShiftsPage() {
     setDialogOpen(true);
   };
 
-  const filtered = shifts.filter((s) =>
-    !search || s.shiftName.toLowerCase().includes(search.toLowerCase())
+  const filtered = useMemo(() => {
+    const list = shifts.filter((s) =>
+      !search || s.shiftName.toLowerCase().includes(search.toLowerCase())
+    );
+    if (!sort) return list;
+    const dir = sort.direction === 'asc' ? 1 : -1;
+    return [...list].sort((a, b) => {
+      const av = (a as unknown as Record<string, unknown>)[sort.field];
+      const bv = (b as unknown as Record<string, unknown>)[sort.field];
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+      if (typeof av === 'boolean' && typeof bv === 'boolean') return (Number(av) - Number(bv)) * dir;
+      return String(av ?? '').localeCompare(String(bv ?? '')) * dir;
+    });
+  }, [shifts, search, sort]);
+
+  // StandardTable 只渲染当前页数据
+  const paged = useMemo(
+    () => filtered.slice((page - 1) * pageSize, page * pageSize),
+    [filtered, page, pageSize]
   );
 
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(filtered, (r) => String(r.id));
+  const handleSortChange = (next: SortState) => {
+    setSort(next);
+    setPage(1);
+  };
+
+  const clear = () => setSelectedRows([]);
   const [deleting, setDeleting] = useState(false);
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => r.id);
     if (ids.length === 0) return;
     if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
     setDeleting(true);
@@ -187,61 +280,30 @@ export default function ShiftsPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                  </TableHead>
-                  <TableHead>{t('shiftName') || ts('k_cc9p5i')}</TableHead>
-                  <TableHead>{t('startTime') || ts('k_j6x7pa')}</TableHead>
-                  <TableHead>{t('endTime') || ts('k_9uebcl')}</TableHead>
-                  <TableHead>{t('allowOvertime') || ts('k_1udmajf')}</TableHead>
-                  <TableHead>{t('overtimeRate') || ts('k_1fqrsmq')}</TableHead>
-                  <TableHead>{t('nightAllowance') || ts('k_gw3gw3')}</TableHead>
-                  <TableHead>{tc('status')}</TableHead>
-                  <TableHead className="text-right">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((shift) => (
-                  <TableRow key={shift.id}>
-                    <TableCell>
-                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(shift.id))} onChange={() => toggle(String(shift.id))} aria-label={tc('selectRow', { id: shift.id })} />
-                    </TableCell>
-                    <TableCell className="font-medium">{shift.shiftName}</TableCell>
-                    <TableCell>{shift.startTime}</TableCell>
-                    <TableCell>{shift.endTime}</TableCell>
-                    <TableCell>
-                      <Switch checked={shift.allowOvertime} disabled />
-                    </TableCell>
-                    <TableCell>{shift.overtimeRate}x</TableCell>
-                    <TableCell>¥{shift.nightAllowance}</TableCell>
-                    <TableCell>
-                      <Badge className={shift.status === 1 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}>
-                        {shift.status === 1 ? (tc('active') || ts('k_5pm2ma')) : (tc('inactive') || ts('k_6q9o5l'))}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(shift)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(shift)}>
-                        <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filtered.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      {t('noData') || ts('k_6tzr61')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <BatchDeleteBar count={selectedRows.length} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
+            <StandardTable<Shift>
+              columns={columns}
+              dataSource={paged}
+              total={filtered.length}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              sortState={sort}
+              onSortChange={handleSortChange}
+              loading={loading}
+              onRetry={fetchShifts}
+              emptyText={t('noData') || ts('k_6tzr61')}
+              customStyle={{ containerClassName: 'px-2 pb-2' }}
+            />
           </CardContent>
         </Card>
 

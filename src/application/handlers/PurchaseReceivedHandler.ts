@@ -3,6 +3,7 @@ import { PurchaseOrderReceivedEvent } from '@/domain/purchase/events/PurchaseOrd
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import { INSERT_INTO_INV_INVENTORY } from '@/lib/db/ddl/application-handlers-PurchaseReceivedHandler';
+import { expireDateFragmentFromToday } from '@/lib/batch-expiry';
 
 export class PurchaseReceivedHandler implements EventHandler<PurchaseOrderReceivedEvent> {
   async handle(event: PurchaseOrderReceivedEvent): Promise<void> {
@@ -30,8 +31,8 @@ export class PurchaseReceivedHandler implements EventHandler<PurchaseOrderReceiv
           );
         } else {
           await conn.execute(
-            `INSERT INTO inv_inventory_batch (batch_no, material_id, material_name, warehouse_id, available_qty, quantity, unit_price, inbound_date, status, create_time)
-             VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE(), 1, NOW())`,
+            `INSERT INTO inv_inventory_batch (batch_no, material_id, material_name, warehouse_id, available_qty, quantity, unit_price, inbound_date, produce_date, expire_date, status, create_time)
+             VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE(), CURDATE(), ${expireDateFragmentFromToday()}, 1, NOW())`,
             [
               item.batchNo,
               item.materialId,
@@ -40,6 +41,7 @@ export class PurchaseReceivedHandler implements EventHandler<PurchaseOrderReceiv
               item.quantity,
               item.quantity,
               item.unitPrice,
+              item.materialId,
             ]
           );
         }

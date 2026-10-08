@@ -1,11 +1,25 @@
-import { getTranslations } from 'next-intl/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
+import { SampleOrderStatus } from '@/domain/sample/value-objects/SampleOrderStatus';
 
-// 获取打样订单统计信息
+/**
+ * 打样订单统计卡片逻辑
+ *
+ * DB `sal_sample_order` 字段说明：
+ *   status: VARCHAR(20) — 订单生命周期状态
+ *     draft / pending / in_progress / completed / confirmed / converted / cancelled
+ *   delivery_status: VARCHAR(20) — 交付状态
+ *     pending / delivered / signed
+ *
+ * 前端 StatsCards 卡片语义对齐：
+ *   pending       → 状态 = pending（待确认/待打样）
+ *   producing     → 状态 = in_progress（生产中/打样中）
+ *   shipping      → 交付状态 = pending 且 订单已完成（待发货）
+ *   completed     → 状态 IN (completed, confirmed, converted)（已完成/已确认/已转大货）
+ *   monthlyCount  → 本月创建的打样订单总数
+ */
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
-  const ts = await getTranslations('Sample');
   try {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
@@ -19,44 +33,45 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params.push(startDate, endDate);
     }
 
-    // 待确认
-    const [pendingResult] = await query(
-      `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND status = 1${dateFilter}`,
-      params
-    );
+    const PENDING = `status = ?${dateFilter}`;
+    const PRODUCING = `status = ?${dateFilter}`;
+    const SHIPPING = `delivery_status = ? AND status IN ('completed','confirmed')${dateFilter}`;
+    const COMPLETED = `status IN ('completed','confirmed','converted')${dateFilter}`;
 
-    // 生产中
-    const [producingResult] = await query(
-      `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND status = 2${dateFilter}`,
-      params
-    );
-
-    // 待发货
-    const [shippingResult] = await query(
-      `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND status = 3${dateFilter}`,
-      params
-    );
-
-    // 已完成
-    const [completedResult] = await query(
-      `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND status = 4${dateFilter}`,
-      params
-    );
-
-    // 本月打样订单数
-    const [monthlyResult] = await query(
-      `SELECT COUNT(*) as count FROM sal_sample_order 
-       WHERE deleted = 0 AND YEAR(create_time) = YEAR(CURDATE()) AND MONTH(create_time) = MONTH(CURDATE())`
-    );
+    const [[pendingResult], [producingResult], [shippingResult], [completedResult], [monthlyResult]] =
+      await Promise.all([
+        query(
+          `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND ${PENDING}`,
+          [...params.map(() => SampleOrderStatus.PENDING)]
+        ),
+        query(
+          `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND ${PRODUCING}`,
+          [...params.map(() => SampleOrderStatus.IN_PROGRESS)]
+        ),
+        query(
+          `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND ${SHIPPING}`,
+          [SampleOrderStatus.PENDING, ...params]
+        ),
+        query(
+          `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND ${COMPLETED}`,
+          params
+        ),
+        query(`
+          SELECT COUNT(*) as count FROM sal_sample_order
+          WHERE deleted = 0
+            AND YEAR(create_time) = YEAR(CURDATE())
+            AND MONTH(create_time) = MONTH(CURDATE())
+        `),
+      ]);
 
     return NextResponse.json({
       success: true,
       data: {
-        pending: pendingResult?.count || 0,
-        producing: producingResult?.count || 0,
-        shipping: shippingResult?.count || 0,
-        completed: completedResult?.count || 0,
-        monthlyCount: monthlyResult?.count || 0,
+        pending: (pendingResult as any)?.count || 0,
+        producing: (producingResult as any)?.count || 0,
+        shipping: (shippingResult as any)?.count || 0,
+        completed: (completedResult as any)?.count || 0,
+        monthlyCount: (monthlyResult as any)?.count || 0,
       },
     });
   } catch (error) {

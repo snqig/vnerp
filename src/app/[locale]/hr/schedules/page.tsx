@@ -6,9 +6,6 @@ import { toast } from 'sonner';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table';
-import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -18,10 +15,10 @@ import { Badge } from '@/components/ui/badge';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import { Calendar, Plus, Search, ChevronLeft, ChevronRight, CheckCircle, Clock, AlertTriangle, CalendarDays, CalendarRange } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
 interface Schedule {
@@ -52,6 +49,24 @@ export default function SchedulesPage() {
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
 
+  const columns: StandardTableColumn<Schedule>[] = [
+    { key: 'employeeName', title: '', render: (record) => <span className="font-medium">{record.employeeName}</span> },
+    { key: 'shiftName', title: '', render: (record) => <span>{record.shiftName}</span> },
+    { key: 'startDate', title: '', render: (record) => <span>{record.startDate}</span> },
+    { key: 'endDate', title: '', render: (record) => <span>{record.endDate}</span> },
+    {
+      key: 'status',
+      title: '',
+      render: (record) => (
+        <Badge className={
+          record.status === 'active' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
+        }>
+          {record.status === 'active' ? tc('active') : tc('inactive')}
+        </Badge>
+      ),
+    },
+  ];
+
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [_employees, _setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
@@ -71,6 +86,9 @@ export default function SchedulesPage() {
     startDate: '',
     endDate: '',
   });
+
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchSchedules = async () => {
     setLoading(true);
@@ -102,8 +120,8 @@ export default function SchedulesPage() {
     }
   };
 
-  useEffect(() => { 
-    fetchSchedules(); 
+  useEffect(() => {
+    fetchSchedules();
     fetchStats();
   }, []);
 
@@ -140,12 +158,8 @@ export default function SchedulesPage() {
     !search || s.employeeName?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(filtered, (r) => String(r.id));
-  const [deleting, setDeleting] = useState(false);
-
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows;
     if (ids.length === 0) return;
     if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
     setDeleting(true);
@@ -160,7 +174,7 @@ export default function SchedulesPage() {
     setDeleting(false);
     if (okCount > 0) toast.success(tc('batchDeleteSuccess', { count: okCount }));
     if (failMsg) toast.error(failMsg);
-    clear();
+    setSelectedRows([]);
     fetchSchedules();
   };
 
@@ -221,52 +235,20 @@ export default function SchedulesPage() {
                   />
                 </div>
               </div>
-              <Badge variant="secondary">{t('totalCount')} {filtered.length} {t('records')}</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                  </TableHead>
-                  <TableHead>{t('employeeName')}</TableHead>
-                  <TableHead>{t('shiftName')}</TableHead>
-                  <TableHead>{t('startDate')}</TableHead>
-                  <TableHead>{t('endDate')}</TableHead>
-                  <TableHead>{tc('status')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((s) => (
-                  <TableRow key={s.id}>
-                    <TableCell>
-                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(s.id))} onChange={() => toggle(String(s.id))} aria-label={tc('selectRow', { id: s.id })} />
-                    </TableCell>
-                    <TableCell className="font-medium">{s.employeeName}</TableCell>
-                    <TableCell>{s.shiftName}</TableCell>
-                    <TableCell>{s.startDate}</TableCell>
-                    <TableCell>{s.endDate}</TableCell>
-                    <TableCell>
-                      <Badge className={
-                        s.status === 'active' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
-                      }>
-                        {s.status === 'active' ? tc('active') : tc('inactive')}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filtered.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      {loading ? tc('loading') : t('noData')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} loading={deleting} />
+            <StandardTable<Schedule>
+              rowSelectable
+              selectedRows={filtered.filter((r) => selectedRows.includes(r.id))}
+              onRowSelectedChange={(rows) => setSelectedRows(rows.map((r) => r.id))}
+              rowKey="id"
+              dataSource={filtered}
+              columns={columns}
+              total={filtered.length}
+              showPagination
+            />
           </CardContent>
         </Card>
 

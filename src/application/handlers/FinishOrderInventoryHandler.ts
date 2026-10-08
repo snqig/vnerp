@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 
 import { transaction } from '@/lib/db';
+import { expireDateFragmentFromToday } from '@/lib/batch-expiry';
 import { secureLog } from '@/lib/logger';
 import { recomputeInventorySummary } from '@/lib/inventory-ledger';
 import type { DomainEvent } from '@/domain/shared/DomainTypes';
@@ -88,9 +89,9 @@ export class FinishOrderInventoryHandler {
       } else {
         await conn.execute(
           `INSERT INTO inv_inventory_batch
-           (batch_no, material_id, material_code, material_name, warehouse_id, quantity, available_qty, inbound_date, status, create_time)
-           VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE(), 1, NOW())`,
-          [batchNo, productId, productCode, productName, warehouseId, qualifiedQty, qualifiedQty]
+           (batch_no, material_id, material_code, material_name, warehouse_id, quantity, available_qty, inbound_date, produce_date, expire_date, status, create_time)
+           VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE(), CURDATE(), ${expireDateFragmentFromToday()}, 1, NOW())`,
+          [batchNo, productId, productCode, productName, warehouseId, qualifiedQty, qualifiedQty, productId]
         );
       }
 

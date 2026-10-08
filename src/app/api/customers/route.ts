@@ -1,7 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-
-;
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { execute, queryOne, transaction, queryPaginated, SqlValue } from '@/lib/db';
 import {
   successResponse,

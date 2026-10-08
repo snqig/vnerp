@@ -339,8 +339,8 @@ export const PATCH = withPermission(
               batch_no, material_id, material_code, material_name,
               warehouse_id, quantity, available_qty, locked_qty,
               unit, unit_price, width, length, area, batch_type, parent_batch_id,
-              inbound_date, produce_date, status, create_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, 1, ?, CURDATE(), CURDATE(), 1, ?)`,
+              inbound_date, produce_date, status, split_flag, create_by
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, 1, ?, CURDATE(), CURDATE(), 1, 1, ?)`,
             [
               childBatchNo,
               order.material_id,
@@ -446,6 +446,12 @@ export const PATCH = withPermission(
         if ((motherUpd?.affectedRows ?? 0) === 0) {
           throw new Error(ts('k_1gjteir'));
         }
+
+        // 母料已被分切 → 标记余料（split_flag=2），使 FIFO「余料优先」真正生效
+        await conn.execute(
+          `UPDATE inv_inventory_batch SET split_flag = 2, update_time = NOW() WHERE id = ? AND available_qty > 0`,
+          [parentBatchId]
+        );
 
         // 财务级库存流水（母料 'out' 出库，含良品与损耗），与母料扣减同事务。
         await appendInventoryTransaction(conn, {

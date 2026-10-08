@@ -2,6 +2,7 @@
 import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -79,6 +80,7 @@ export default function ContractReviewPage() {
   const ts = useTranslations('Business');
   const t = useTranslations('Business');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const sampleStatusMap: Record<
     string,
@@ -120,6 +122,21 @@ export default function ContractReviewPage() {
   );
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  const doJump = () => {
+    const n = parseInt(jumpValue, 10);
+    if (!Number.isFinite(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setPage(n);
+    setJumpValue('');
+    setJumpError(null);
+  };
   const [searchCustomer, setSearchCustomer] = useState('');
   const [searchProduct, setSearchProduct] = useState('');
   const [searchStatus, setSearchStatus] = useState('');
@@ -142,7 +159,7 @@ export default function ContractReviewPage() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         customerName: searchCustomer,
         productName: searchProduct,
         status: searchStatus,
@@ -150,11 +167,13 @@ export default function ContractReviewPage() {
       const res = await authFetch('/api/business/contract-review?' + params);
       const result = await res.json();
       if (result.success) {
+        const tot = result.data.total || 0;
         setList(result.data.list || []);
-        setTotal(result.data.total || 0);
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
       }
     } catch {}
-  }, [page, searchCustomer, searchProduct, searchStatus]);
+  }, [page, pageSize, searchCustomer, searchProduct, searchStatus]);
 
   const fetchStats = async () => {
     try {
@@ -467,27 +486,82 @@ export default function ContractReviewPage() {
               </TableBody>
             </Table>
 
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">
-                {ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}{selectedCount > 0 && `，已选 ${selectedCount} 条`}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  {tc('prevPage')}</Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page * 20 >= total}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {tc('nextPage')}</Button>
+            {total > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-3">
+                  <span>
+                    {tStd('paginationSummary', { total, pages: totalPages })}
+                  </span>
+                  {selectedCount > 0 && <span>，已选 {selectedCount} 条</span>}
+                  <Select
+                    value={String(pageSize)}
+                    onValueChange={(v) => {
+                      setPageSize(Number(v));
+                      setPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-[110px]" aria-label={tStd('pageSize')}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[20, 50, 100].map((opt) => (
+                        <SelectItem key={opt} value={String(opt)}>
+                          {opt} {tStd('pageSizeUnit')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    {tStd('prevPage')}
+                  </Button>
+                  <span className="px-1 tabular-nums">
+                    {page} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    {tStd('nextPage')}
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={jumpValue}
+                      onChange={(e) => {
+                        setJumpValue(e.target.value);
+                        if (jumpError) setJumpError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') doJump();
+                      }}
+                      className="h-8 w-16"
+                      placeholder={tStd('pageNumber')}
+                      aria-label={tStd('pageNumber')}
+                      inputMode="numeric"
+                    />
+                    <Button variant="outline" size="sm" onClick={doJump}>
+                      {tStd('jump')}
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+
+            {jumpError && (
+              <p className="px-1 pb-2 text-xs text-destructive" role="alert">
+                {jumpError}
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -545,7 +619,7 @@ export default function ContractReviewPage() {
                 <Label>{ts('k_pn7pxo')}</Label>
                 <Input
                   type="date"
-                  value={editItem.delivery_date || ''}
+                  value={toDateInput(editItem.delivery_date)}
                   onChange={(e) => setEditItem({ ...editItem, delivery_date: e.target.value })}
                 />
               </div>

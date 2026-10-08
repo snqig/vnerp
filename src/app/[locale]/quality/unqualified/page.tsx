@@ -1,8 +1,5 @@
 'use client';
 
-import { useRowSelection } from '@/lib/useRowSelection';
-
-
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -10,14 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -33,11 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Search, Trash2, XCircle, CheckCircle, Clock, AlertTriangle, Wrench, Archive } from 'lucide-react';
+import { Plus, Search, Trash2, XCircle, CheckCircle, Clock, Wrench, Archive } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -129,6 +117,7 @@ export default function UnqualifiedPage() {
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [searchNo, setSearchNo] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [actionMode, setActionMode] = useState<ActionMode>('create');
@@ -205,23 +194,17 @@ export default function UnqualifiedPage() {
   useEffect(() => {
     authFetch('/api/organization/department?pageSize=500').then(r => r.json()).then(res => {
       const list = res.data?.list || res.list || [];
-      setDepartments(list.map((d: any) => d.dept_name).filter(Boolean));
+      setDepartments([...new Set(list.map((d: any): string => d.dept_name).filter(Boolean))] as string[]);
     }).catch(() => {});
     authFetch('/api/organization/employee?pageSize=500').then(r => r.json()).then(res => {
       const list = res.data?.list || res.list || [];
-      setPersons(list.filter((u: any) => u.status === 1).map((u: any) => u.real_name || u.username).filter(Boolean));
+      // sys_employee 人名字段是 name（real_name/username 不存在，曾致人员下拉恒空）
+      setPersons([...new Set(list.filter((u: any) => u.status === 1).map((u: any): string => u.name).filter(Boolean))] as string[]);
     }).catch(() => {});
   }, []);
 
-  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'handle_no');
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-
-    sortedData,
-
-    (r) => String(r.id)
-
-  );
-
+  // StandardTable：勾选（服务端分页，排序需后端支持）
+  const [selectedRows, setSelectedRows] = useState<Item[]>([]);
 
   // start/complete 表单状态
   const [startForm, setStartForm] = useState({
@@ -239,7 +222,7 @@ export default function UnqualifiedPage() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         handleNo: searchNo,
       });
       const res = await authFetch('/api/quality/unqualified?' + params);
@@ -265,7 +248,7 @@ export default function UnqualifiedPage() {
   useEffect(() => {
     fetchData();
     fetchStats();
-  }, [page]);
+  }, [page, pageSize]);
 
   const openCreateDialog = () => {
     setActionMode('create');
@@ -405,7 +388,114 @@ export default function UnqualifiedPage() {
     }
   };
 
-  const displayList = sortedData;
+  const columns: StandardTableColumn<Item>[] = [
+    {
+      key: 'serialNo',
+      title: tc('serialNo'),
+      align: 'center',
+      width: 48,
+      className: 'text-xs text-muted-foreground',
+      render: (_item, index) => (page - 1) * pageSize + index + 1,
+    },
+    {
+      key: 'handle_no',
+      title: t('handleNo'),
+      className: 'text-xs font-mono',
+      render: (item) => item.handle_no || '-',
+    },
+    {
+      key: 'material_code',
+      title: tc('materialCode'),
+      className: 'text-xs',
+      render: (item) => item.material_code || '-',
+    },
+    {
+      key: 'material_name',
+      title: tc('materialName'),
+      className: 'text-xs',
+      render: (item) => item.material_name || '-',
+    },
+    {
+      key: 'quantity',
+      title: t('unqualifiedQty'),
+      className: 'text-xs',
+      render: (item) => item.quantity,
+    },
+    {
+      key: 'handle_type',
+      title: t('handlingMethod'),
+      className: 'text-xs',
+      render: (item) => (item.handle_type ? t(typeMap[item.handle_type] || '-') : '-'),
+    },
+    {
+      key: 'responsible_dept',
+      title: t('responsibleDept'),
+      className: 'text-xs',
+      render: (item) => item.responsible_dept || '-',
+    },
+    {
+      key: 'responsible_person',
+      title: t('responsiblePerson'),
+      className: 'text-xs',
+      render: (item) => item.responsible_person || '-',
+    },
+    {
+      key: 'handle_status',
+      title: tc('status'),
+      render: (item) => {
+        const st = statusMap[item.handle_status] || statusMap[1];
+        return (
+          <Badge variant={st.variant} className="text-xs">
+            {t(st.label)}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      // 原有操作列：开始处理 / 完成 / 删除，逻辑保持原样
+      render: (item) => {
+        const canStart = item.handle_status === 1;
+        const canComplete = item.handle_status === 2;
+        const canDelete = item.handle_status === 1;
+        return (
+          <div className="flex gap-1">
+            {canStart && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 text-xs px-2"
+                onClick={() => openStartDialog(item)}
+              >
+                {t('startHandle')}
+              </Button>
+            )}
+            {canComplete && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 text-xs px-2"
+                onClick={() => openCompleteDialog(item)}
+              >
+                {tc('complete')}
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+                onClick={() => handleDelete(item.id)}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
     <MainLayout title={t('unqualifiedProductHandling')}>
@@ -462,11 +552,7 @@ export default function UnqualifiedPage() {
                   formatter: (v) => t(statusMap[v]?.label || '-'),
                 },
               ]}
-              data={
-                selectedCount > 0
-                  ? displayList.filter((i) => isSelected(String(i.id)))
-                  : displayList
-              }
+              data={selectedRows.length > 0 ? selectedRows : list}
             />
           </div>
         </div>        <StatsCards
@@ -490,150 +576,28 @@ export default function UnqualifiedPage() {
 
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                  </TableHead>
-                  <TableHead className="text-xs w-12 text-center">{tc('serialNo')}</TableHead>
-                  <SortableTableHeader
-                    field="handle_no"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    <span className="text-xs">{t('handleNo')}</span>
-                  </SortableTableHeader>
-                  <TableHead className="text-xs">{tc('materialCode')}</TableHead>
-                  <SortableTableHeader
-                    field="material_name"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    <span className="text-xs">{tc('materialName')}</span>
-                  </SortableTableHeader>
-                  <TableHead className="text-xs">{t('unqualifiedQty')}</TableHead>
-                  <TableHead className="text-xs">{t('handlingMethod')}</TableHead>
-                  <TableHead className="text-xs">{t('responsibleDept')}</TableHead>
-                  <TableHead className="text-xs">{t('responsiblePerson')}</TableHead>
-                  <SortableTableHeader
-                    field="handle_status"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    <span className="text-xs">{tc('status')}</span>
-                  </SortableTableHeader>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {displayList.map((item, index) => {
-                  const st = statusMap[item.handle_status] || statusMap[1];
-                  const canStart = item.handle_status === 1;
-                  const canComplete = item.handle_status === 2;
-                  const canDelete = item.handle_status === 1;
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <Checkbox
-
-                          checked={isSelected(String(item.id))}
-
-                          onCheckedChange={() => toggle(String(item.id))}
-
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs text-center text-muted-foreground">
-                        {(page - 1) * 20 + index + 1}
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">{item.handle_no || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.material_code || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.material_name || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.quantity}</TableCell>
-                      <TableCell className="text-xs">
-                        {item.handle_type ? t(typeMap[item.handle_type] || '-') : '-'}
-                      </TableCell>
-                      <TableCell className="text-xs">{item.responsible_dept || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.responsible_person || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
-                          {t(st.label)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {canStart && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => openStartDialog(item)}
-                            >
-                              {t('startHandle')}
-                            </Button>
-                          )}
-                          {canComplete && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => openCompleteDialog(item)}
-                            >
-                              {tc('complete')}
-                            </Button>
-                          )}
-                          {canDelete && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                              onClick={() => handleDelete(item.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {displayList.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
-                      {tc('noRecords')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<Item>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              onRetry={fetchData}
+              emptyText={tc('noRecords')}
+              customStyle={{ containerClassName: 'px-2 pb-2' }}
+            />
           </CardContent>
         </Card>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            {tc('totalRecords', { count: total })}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>

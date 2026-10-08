@@ -7,6 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -54,6 +61,7 @@ export default function EmployeePage() {
   // 翻译钩子
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const { companyName } = useCompanyName();
   const { hasPermission: _hasPermission } = usePermission();
@@ -82,6 +90,24 @@ export default function EmployeePage() {
     avgAge: 0,
     education: {} as Record<string, number>,
   });
+
+  // 服务端分页状态
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
 
   // 排序状态
   const [sortConfig, setSortConfig] = useState<{
@@ -170,13 +196,17 @@ export default function EmployeePage() {
     try {
       let employeeList: Employee[];
 
-      const url = debouncedSearch
-        ? `/api/organization/employee?keyword=${encodeURIComponent(debouncedSearch)}`
-        : '/api/organization/employee?pageSize=1000';
-      const response = await authFetch(url);
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.set('keyword', debouncedSearch);
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
+      const response = await authFetch(`/api/organization/employee?${params}`);
       const result = await response.json();
       if (result.success) {
         employeeList = Array.isArray(result.data) ? result.data : result.data?.list || [];
+        const tot = Array.isArray(result.data) ? employeeList.length : result.data?.total || 0;
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
       } else {
         throw new Error('API returned unsuccessful');
       }
@@ -194,7 +224,7 @@ export default function EmployeePage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, calculateStats, t, ts]);
+  }, [debouncedSearch, page, pageSize, calculateStats, t, ts]);
 
   // 获取部门列表
   const fetchDepartments = useCallback(async () => {
@@ -1540,6 +1570,31 @@ export default function EmployeePage() {
                     ))}
                   </TableBody>
                 </Table>
+                {total > 0 && (
+                  <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {tStd('paginationSummary', { total, pages: totalPages })}
+                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                        <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                          <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                          <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+                      <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+                      <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+                      <div className="flex items-center gap-1">
+                        <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                        <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
               </>
             )}
           </CardContent>
