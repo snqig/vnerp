@@ -4,6 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
 import { useCompanyName } from '@/hooks/useCompanyName';
+import { useDashboardScale } from '@/hooks/useDashboardScale';
 import GlassKnob from '@/components/GlassKnob';
 import GlassGauge from '@/components/GlassGauge';
 import {
@@ -266,6 +267,7 @@ export default function QualityDashboard() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
+  const dashScale = useDashboardScale();
   const [passRateHistory, setPassRateHistory] = useState<number[]>([92, 94, 91, 95, 93, 96]);
   const [defectRateHistory, setDefectRateHistory] = useState<number[]>([8, 6, 9, 5, 7, 4]);
 
@@ -304,12 +306,31 @@ export default function QualityDashboard() {
     };
   }, []);
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = async () => {
+    const el = dashboardRef.current;
+    if (!el) return;
     if (!document.fullscreenElement) {
-      dashboardRef.current?.requestFullscreen();
+      const isDark = document.documentElement.classList.contains('dark');
+      el.style.background = isDark
+        ? 'linear-gradient(135deg, #091637 0%, #010205 100%)'
+        : 'linear-gradient(135deg, #FDFBF6 0%, #F1E7D6 100%)';
+      // 容器带 zoom：CSS 长度先按缩放前的布局值算，再乘 dashScale 渲染。
+      // 故全屏铺满要除以 dashScale，否则 2560 屏（scale≈1.33）会溢出到 ~3400px。
+      el.style.width = `calc(100vw / ${dashScale})`;
+      el.style.height = `calc(100vh / ${dashScale})`;
+      el.style.minHeight = `calc(100vh / ${dashScale})`;
+      el.style.padding = '1.5rem';
+      el.style.overflowY = 'auto';
+      await el.requestFullscreen();
       setIsFullscreen(true);
     } else {
       document.exitFullscreen();
+      el.style.background = '';
+      el.style.width = '';
+      el.style.height = '';
+      el.style.minHeight = '';
+      el.style.padding = '';
+      el.style.overflowY = '';
       setIsFullscreen(false);
     }
   };
@@ -338,7 +359,8 @@ export default function QualityDashboard() {
     <MainLayout>
       <div
         ref={dashboardRef}
-        className="dash-scope dark:bg-[linear-gradient(135deg,#091637_0%,#010205_100%)] min-h-screen text-slate-900 dark:text-gray-200 dark:text-white p-4 relative overflow-hidden"
+        style={{ zoom: dashScale }}
+        className="dash-zoom dash-scope glass-scope dashboard-gradient min-h-full text-slate-900 dark:text-gray-200 dark:text-white p-4 relative overflow-hidden"
       >
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 left-0 w-96 h-96 bg-[#A0522D]/5 rounded-full blur-3xl animate-blob dark:bg-cyan-500/5" />
