@@ -2,7 +2,7 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { EQUIPMENT_TYPE_LABEL, EQUIPMENT_STATUS_LABEL } from '@/lib/status-labels';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback , useRef} from 'react';
 import Link from 'next/link';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -83,13 +83,15 @@ export default function EquipmentPage() {
   const [typeStats, setTypeStats] = useState<Loose[]>([]);
   const [maintenanceReminders, setMaintenanceReminders] = useState(0);
 
-  const fetchData = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (keyword) params.append('keyword', keyword);
       if (typeFilter !== 'all') params.append('equipment_type', typeFilter);
-      const res = await authFetch(`/api/equipment?${params.toString()}`);
+      const res = await authFetch(`/api/equipment?${params.toString()}`, { signal: controllerRef.current?.signal });
       const result = await res.json();
       if (result.success) {
         setList(result.data?.list || []);
@@ -103,7 +105,10 @@ export default function EquipmentPage() {
   }, [keyword, typeFilter]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchData();
+    return () => controllerRef.current?.abort();
   }, [fetchData]);
 
   useEffect(() => {

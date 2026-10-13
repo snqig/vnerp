@@ -1,7 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback , useRef} from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -133,7 +133,9 @@ export default function QRCodePage() {
   const [traceData, setTraceData] = useState<Loose>(null);
   const [traceInput, setTraceInput] = useState('');
 
-  const fetchData = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchData = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         page: String(page),
@@ -141,7 +143,7 @@ export default function QRCodePage() {
         keyword,
         qr_type: typeFilter,
       });
-      const res = await authFetch('/api/qrcode?' + params);
+      const res = await authFetch('/api/qrcode?' + params, { signal: controllerRef.current?.signal });
       const result = await res.json();
       if (result.success || result.code === 200) {
         let rawList: Loose[] = [];
@@ -172,7 +174,10 @@ export default function QRCodePage() {
   }, [page, pageSize, keyword, typeFilter]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchData();
+    return () => controllerRef.current?.abort();
   }, [fetchData]);
 
   const handleGenerate = async () => {

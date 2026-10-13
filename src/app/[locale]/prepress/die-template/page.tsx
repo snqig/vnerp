@@ -2,7 +2,7 @@
 import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback , useRef} from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -182,7 +182,9 @@ export default function DieTemplatePage() {
     remark: '',
   });
 
-  const fetchList = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchList = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -192,7 +194,7 @@ export default function DieTemplatePage() {
       if (dieStatusFilter !== 'all') params.set('die_status', dieStatusFilter);
       params.set('page', String(page));
       params.set('pageSize', String(pageSize));
-      const res = await authFetch(`/api/prepress/die-template?${params}`);
+      const res = await authFetch(`/api/prepress/die-template?${params}`, { signal: controllerRef.current?.signal });
       const data = await res.json();
       if (data.success) {
         setList(data.data?.list || []);
@@ -234,7 +236,10 @@ export default function DieTemplatePage() {
   }, [toast]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchList();
+    return () => controllerRef.current?.abort();
   }, [fetchList]);
 
   useEffect(() => {

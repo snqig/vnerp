@@ -1,7 +1,7 @@
 'use client';
 import { useTranslations } from 'next-intl';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback , useRef} from 'react';
 import { useRouter } from 'next/navigation';
 import { authFetch } from '@/lib/auth-fetch';
 import { MainLayout } from '@/components/layout';
@@ -73,7 +73,9 @@ export default function SampleTemplateListPage() {
   const [formData, setFormData] = useState<TemplateFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
 
-  const fetchList = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchList = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -82,7 +84,7 @@ export default function SampleTemplateListPage() {
         keyword,
         category,
       });
-      const res = await authFetch(`/api/dcprint/sample-card/template?${params}`);
+      const res = await authFetch(`/api/dcprint/sample-card/template?${params}`, { signal: controllerRef.current?.signal });
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -96,7 +98,10 @@ export default function SampleTemplateListPage() {
   }, [page, keyword, category]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchList();
+    return () => controllerRef.current?.abort();
   }, [fetchList]);
 
   const handleOpenCreate = () => {

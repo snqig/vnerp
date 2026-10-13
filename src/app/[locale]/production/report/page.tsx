@@ -2,7 +2,7 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { nowDateTimeLocal } from '@/lib/date-utils';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect , useRef} from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import type { ExportColumn } from '@/lib/global-export-service';
@@ -170,12 +170,14 @@ export default function ProductionReportPage() {
   const [isWorking, setIsWorking] = useState(false);
   const [workStartTime, setWorkStartTime] = useState<Date | null>(null);
 
-  const fetchData = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(page), pageSize: '20' });
       if (keyword) params.append('keyword', keyword);
-      const res = await authFetch('/api/production/work-report?' + params);
+      const res = await authFetch('/api/production/work-report?' + params, { signal: controllerRef.current?.signal });
       const result = await res.json();
       if (result.success) {
         setList(result.data?.list || []);
@@ -237,7 +239,10 @@ export default function ProductionReportPage() {
   }, []);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchData();
+    return () => controllerRef.current?.abort();
   }, [fetchData]);
   useEffect(() => {
     fetchWorkOrders();

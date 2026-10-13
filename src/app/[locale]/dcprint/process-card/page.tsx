@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo , useRef} from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { MainLayout } from '@/components/layout/main-layout';
@@ -86,13 +86,15 @@ export default function ProcessCardPage() {
     cancelled: 0,
   });
 
-  const fetchCards = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchCards = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: '1', pageSize: '100' });
       if (searchKeyword) params.append('keyword', searchKeyword);
       if (filterStatus !== 'all') params.append('status', filterStatus);
-      const res = await authFetch(`/api/dcprint/sample-card?${params}`);
+      const res = await authFetch(`/api/dcprint/sample-card?${params}`, { signal: controllerRef.current?.signal });
       const data = await res.json();
       if (data.success) {
         const list = data.data?.list || data.data || [];
@@ -113,7 +115,10 @@ export default function ProcessCardPage() {
   }, [searchKeyword, filterStatus]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchCards();
+    return () => controllerRef.current?.abort();
   }, [fetchCards]);
 
   const handleSubmit = async (id: number) => {

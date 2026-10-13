@@ -1,7 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback , useRef} from 'react';
 import { MainLayout } from '@/components/layout';
 import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
 import { ListToolbar } from '@/components/layout/ListToolbar';
@@ -110,12 +110,14 @@ export default function SplitOrderPage() {
     { pieces: 1, qtyPerPiece: 0, totalQty: 0, width: 0, isWaste: false },
   ]);
 
-  const fetchData = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchData = useCallback(async () => {
     try {
       const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
       if (searchNo) params.set('keyword', searchNo);
       if (statusFilter) params.set('status', statusFilter);
-      const res = await authFetch('/api/warehouse/split-order?' + params);
+      const res = await authFetch('/api/warehouse/split-order?' + params, { signal: controllerRef.current?.signal });
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -125,7 +127,10 @@ export default function SplitOrderPage() {
   }, [page, pageSize, searchNo, statusFilter]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchData();
+    return () => controllerRef.current?.abort();
   }, [fetchData]);
 
   const searchParentBatch = async () => {

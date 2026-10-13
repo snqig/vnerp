@@ -1,7 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback , useRef} from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -128,7 +128,9 @@ export default function PurchaseReturnPage() {
   // 采购订单列表（用于选择）
   const [purchaseOrders, setPurchaseOrders] = useState<Loose[]>([]);
 
-  const fetchList = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchList = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -137,7 +139,7 @@ export default function PurchaseReturnPage() {
         keyword,
         status: statusFilter,
       });
-      const res = await authFetch('/api/purchase/return?' + params);
+      const res = await authFetch('/api/purchase/return?' + params, { signal: controllerRef.current?.signal });
       const result = await res.json();
       if (result.success) {
         setList(result.data?.list || result.data || []);
@@ -160,7 +162,10 @@ export default function PurchaseReturnPage() {
   };
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchList();
+    return () => controllerRef.current?.abort();
   }, [fetchList]);
 
   const handleSelectOrder = (orderId: string) => {

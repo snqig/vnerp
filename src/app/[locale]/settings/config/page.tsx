@@ -1,7 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback , useRef} from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -563,7 +563,9 @@ export default function ConfigPage() {
   const [loading, setLoading] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchData = useCallback(async () => {
     setLoading(true);
     setInitError(null);
     try {
@@ -572,7 +574,7 @@ export default function ConfigPage() {
         pageSize: String(pageSize),
         configName: searchName,
       });
-      const res = await authFetch('/api/system/config?' + params);
+      const res = await authFetch('/api/system/config?' + params, { signal: controllerRef.current?.signal });
       if (!res.ok) {
         const errBody = await res.json().catch(() => null);
         setInitError(errBody?.message || `请求失败 (${res.status})`);
@@ -595,7 +597,10 @@ export default function ConfigPage() {
   }, [page, pageSize, searchName]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchData();
+    return () => controllerRef.current?.abort();
   }, [fetchData]);
 
   const handleSave = async () => {

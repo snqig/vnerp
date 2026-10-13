@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Truck, Receipt, FileText, Package } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback , useRef} from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import { logger } from '@/lib/logger';
 
@@ -180,13 +180,13 @@ export default function SalesOrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [tabLoading, setTabLoading] = useState<string | null>(null);
 
-  const fetchOrder = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchOrder = useCallback(async () => {
     if (!orderId) return;
     setLoading(true);
     try {
-      const response = await authFetch(
-        `/api/orders/sales?keyword=${encodeURIComponent(String(orderId))}`
-      );
+      const response = await authFetch(`/api/orders/sales?keyword=${encodeURIComponent(String(orderId))}`, { signal: controllerRef.current?.signal });
       const result = await fetchJson(response);
       if (result.success) {
         const list = Array.isArray(result.data?.list) ? result.data.list : [];
@@ -275,7 +275,10 @@ export default function SalesOrderDetailPage() {
   }, [order?.order_no, ts]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchOrder();
+    return () => controllerRef.current?.abort();
   }, [fetchOrder]);
 
   const handleTabChange = (value: string) => {

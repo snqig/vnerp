@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback , useRef} from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -73,7 +73,9 @@ export default function CostDetailPage() {
     total: 0,
   });
 
-  const fetchData = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchData = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         page: String(page),
@@ -82,7 +84,7 @@ export default function CostDetailPage() {
         workOrderNo,
       });
       if (costType) params.set('cost_type', costType);
-      const res = await authFetch('/api/finance/costs?' + params);
+      const res = await authFetch('/api/finance/costs?' + params, { signal: controllerRef.current?.signal });
       const result = await res.json();
       if (result.success) {
         setList(result.data?.list || []);
@@ -96,7 +98,10 @@ export default function CostDetailPage() {
   }, [page, pageSize, keyword, costType, workOrderNo]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchData();
+    return () => controllerRef.current?.abort();
   }, [fetchData]);
 
   const formatAmount = (amount: number) => Number(amount || 0).toFixed(2);

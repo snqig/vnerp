@@ -2,7 +2,7 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo , useRef} from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { MainLayout } from '@/components/layout';
@@ -109,7 +109,9 @@ export default function ProductionProcessPage() {
   const [sort, setSort] = useState<SortState>(null);
   const [selectedRows, setSelectedRows] = useState<ProcessCard[]>([]);
 
-  const fetchProcesses = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchProcesses = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -123,7 +125,7 @@ export default function ProductionProcessPage() {
       }
       if (searchQuery) params.append('cardNo', searchQuery);
 
-      const res = await authFetch(`/api/production/process?${params}`);
+      const res = await authFetch(`/api/production/process?${params}`, { signal: controllerRef.current?.signal });
       const data = await res.json();
 
       if (data.success) {
@@ -171,7 +173,10 @@ export default function ProductionProcessPage() {
   };
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchProcesses();
+    return () => controllerRef.current?.abort();
   }, [fetchProcesses]);
 
   const stats = {

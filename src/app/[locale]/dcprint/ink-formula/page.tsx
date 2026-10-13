@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback , useRef} from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { MainLayout } from '@/components/layout/main-layout';
@@ -126,12 +126,14 @@ export default function InkFormulaPage() {
     pantone_code: '',
   });
 
-  const fetchColors = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchColors = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
       if (searchKeyword) params.append('keyword', searchKeyword);
-      const res = await authFetch(`/api/dcprint/formula/color?${params}`);
+      const res = await authFetch(`/api/dcprint/formula/color?${params}`, { signal: controllerRef.current?.signal });
       const data = await res.json();
       if (data.success) {
         setColors(data.data?.list || data.data || []);
@@ -159,7 +161,10 @@ export default function InkFormulaPage() {
   }, []);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchColors();
+    return () => controllerRef.current?.abort();
   }, [fetchColors]);
   useEffect(() => {
     if (selectedColor) fetchVersions(selectedColor.id);

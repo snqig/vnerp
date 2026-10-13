@@ -1,7 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback , useRef} from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
@@ -76,13 +76,15 @@ export default function SampleProgressPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [keyword, setKeyword] = useState('');
 
-  const fetchData = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.append('status', statusFilter);
       if (keyword) params.append('keyword', keyword);
-      const res = await authFetch(`/api/sample/progress?${params}`);
+      const res = await authFetch(`/api/sample/progress?${params}`, { signal: controllerRef.current?.signal });
       const result = await res.json();
       if (result.success) {
         setList(result.data?.list || []);
@@ -96,7 +98,10 @@ export default function SampleProgressPage() {
   }, [statusFilter, keyword, ts, toast]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchData();
+    return () => controllerRef.current?.abort();
   }, [fetchData]);
 
   const getStageStatus = (stage: number) => {

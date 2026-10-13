@@ -58,7 +58,7 @@ import {
   PlusCircle,
   Layers,
 } from 'lucide-react';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo , useRef} from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -272,9 +272,11 @@ export default function ProductsPage() {
     }
   }, [pagination.page, pagination.pageSize, searchKeyword, selectedCategory]);
 
-  const fetchCategories = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchCategories = useCallback(async () => {
     try {
-      const response = await authFetch('/api/products/categories');
+      const response = await authFetch('/api/products/categories', { signal: controllerRef.current?.signal });
       const result = await response.json();
       if (result.success || result.code === 200) {
         const payload = result.data;
@@ -306,7 +308,10 @@ export default function ProductsPage() {
   }, [fetchProducts]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchCategories();
+    return () => controllerRef.current?.abort();
   }, [fetchCategories]);
 
   useEffect(() => {

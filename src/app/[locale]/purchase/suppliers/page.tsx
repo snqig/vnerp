@@ -2,7 +2,7 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo , useRef} from 'react';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -145,7 +145,9 @@ export default function SuppliersPage() {
   };
   const sortedList = useMemo(() => list, [list]);
 
-  const fetchData = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       {
@@ -156,7 +158,7 @@ export default function SuppliersPage() {
         });
         if (gradeFilter !== 'all') params.set('keyword', debouncedKeyword);
         if (statusFilter !== 'all') params.set('status', statusFilter);
-        const res = await authFetch(`/api/purchase/suppliers?${params}`);
+        const res = await authFetch(`/api/purchase/suppliers?${params}`, { signal: controllerRef.current?.signal });
         const result = await res.json();
         if (result.success) {
           let data = Array.isArray(result.data) ? result.data : result.data?.list || [];
@@ -177,7 +179,10 @@ export default function SuppliersPage() {
   }, [page, debouncedKeyword, gradeFilter, statusFilter]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchData();
+    return () => controllerRef.current?.abort();
   }, [fetchData]);
 
   const handleOpenAdd = () => {

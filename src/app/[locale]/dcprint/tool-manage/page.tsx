@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback , useRef} from 'react';
 import { TOOL_TYPE_LABEL, TOOL_STATUS_LABEL } from '@/lib/status-labels';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout/main-layout';
@@ -126,14 +126,16 @@ export default function ToolManagePage() {
     tension_value: 0,
   });
 
-  const fetchTools = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchTools = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
       if (searchKeyword) params.append('keyword', searchKeyword);
       if (filterType !== 'all') params.append('toolType', filterType);
       if (filterStatus !== 'all') params.append('status', filterStatus);
-      const res = await authFetch(`/api/dcprint/tool?${params}`);
+      const res = await authFetch(`/api/dcprint/tool?${params}`, { signal: controllerRef.current?.signal });
       const data = await res.json();
       if (data.success) {
         setTools(data.data?.list || data.data || []);
@@ -149,7 +151,10 @@ export default function ToolManagePage() {
   }, [searchKeyword, filterType, filterStatus, page, pageSize]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchTools();
+    return () => controllerRef.current?.abort();
   }, [fetchTools]);
 
   const handleSave = async () => {

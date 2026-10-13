@@ -1,7 +1,7 @@
 'use client';
 import { authFetch } from '@/lib/auth-fetch';
 import { toDateInput } from '@/lib/date-utils';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback , useRef} from 'react';
 import {
   Calendar,
   Clock,
@@ -215,9 +215,11 @@ export default function AttendancePage() {
   // 部门主数据（唯一真相源：/api/organization/department）
   const [liveDepartments, setLiveDepartments] = useState<{ id: number; dept_name: string }[]>([]);
 
-  const fetchDepartments = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchDepartments = useCallback(async () => {
     try {
-      const res = await authFetch('/api/organization/department?pageSize=500');
+      const res = await authFetch('/api/organization/department?pageSize=500', { signal: controllerRef.current?.signal });
       const data = await res.json();
       if (data.success || data.code === 200) {
         const raw = data.data;
@@ -232,7 +234,10 @@ export default function AttendancePage() {
   }, []);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchDepartments();
+    return () => controllerRef.current?.abort();
   }, [fetchDepartments]);
 
   // 选项 = 主数据部门 ∪ 已加载考勤记录里的部门名（保住历史值的过滤入口）

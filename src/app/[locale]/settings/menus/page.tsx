@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback , useRef} from 'react';
 import { MainLayout } from '@/components/layout';
 import { useTranslations } from 'next-intl';
 import { Card, CardContent } from '@/components/ui/card';
@@ -74,10 +74,12 @@ export default function MenusPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const fetchData = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await authFetch('/api/organization/menu');
+      const res = await authFetch('/api/organization/menu', { signal: controllerRef.current?.signal });
       const result = await res.json();
       if (result.success && result.data) {
         const menuData = Array.isArray(result.data) ? result.data : result.data?.list || [];
@@ -95,7 +97,10 @@ export default function MenusPage() {
   }, [toast]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchData();
+    return () => controllerRef.current?.abort();
   }, [fetchData]);
 
   const toggleExpand = (id: number) => {

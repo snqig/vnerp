@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback , useRef} from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
@@ -95,7 +95,9 @@ export default function BatchPage() {
   });
   const [materials, setMaterials] = useState<Loose[]>([]);
 
-  const fetchData = useCallback(async () => {
+    const controllerRef = useRef<AbortController | null>(null);
+
+const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -105,7 +107,7 @@ export default function BatchPage() {
       if (searchBatchNo) params.set('batchNo', searchBatchNo);
       if (expiryWarningOnly) params.set('expiryWarning', 'true');
 
-      const res = await authFetch(`/api/warehouse/batch?${params}`);
+      const res = await authFetch(`/api/warehouse/batch?${params}`, { signal: controllerRef.current?.signal });
       const result = await res.json();
       if (result.success) {
         setList(result.data?.list || []);
@@ -118,7 +120,10 @@ export default function BatchPage() {
   }, [page, pageSize, searchBatchNo, expiryWarningOnly]);
 
   useEffect(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = new AbortController();
     fetchData();
+    return () => controllerRef.current?.abort();
   }, [fetchData]);
 
   useEffect(() => {
