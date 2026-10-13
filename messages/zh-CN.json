@@ -5682,7 +5682,58 @@
     "materialNotFound": "物料编码 {code} 不存在，请检查后重试",
     "fieldSep": "：",
     "selectEmployee": "选择员工",
-    "exitDate": "离职日期"
+    "exitDate": "离职日期",
+    "abnormal": "异常",
+    "abnormalDesc": "异常描述",
+    "beltTension": "皮带张力",
+    "calibrationDue": "检定到期",
+    "dcExpiryPreview": "油墨过期预览",
+    "dcInkMixedAddDesc": "添加油墨混合描述",
+    "dcInkMixedColorPreview": "油墨配色预览",
+    "dcInkMixedSectionColor": "配色",
+    "dcInkMixedSectionQty": "数量",
+    "dcSectionMaterial": "材料",
+    "dcSectionOther": "其他",
+    "dcSectionParams": "参数",
+    "dcSectionQty": "数量",
+    "docName": "文档名称",
+    "docNo": "文档编号",
+    "docType": "文档类型",
+    "fileName": "文件名",
+    "handlingAdvice": "处理建议",
+    "idleCount": "闲置数量",
+    "k_": "...",
+    "k_1b6876z": "操作失败",
+    "noiseLevel": "噪音水平",
+    "oilLevel": "油位",
+    "pendingConfirm": "待确认",
+    "pressure": "压力",
+    "purpose": "用途",
+    "sparePart": "备件",
+    "supportFileType": "支持的文件类型",
+    "temperature": "温度",
+    "totalDies": "刀模总数",
+    "totalProcessCards": "工艺卡总数",
+    "totalVehicles": "车辆总数",
+    "vibration": "振动",
+    "activeRates": "活跃率",
+    "currencyCount": "币种数量",
+    "defectiveCount": "不良品数量",
+    "expiringRates": "临期率",
+    "leaveDate": "离厂日期",
+    "monthlyDue": "本月到期",
+    "overdue": "逾期",
+    "pendingCalc": "待计算",
+    "pendingUpdate": "待更新",
+    "refundAmount": "退款金额",
+    "totalReturns": "退货总量",
+    "unpaidAmount": "未付金额",
+    "expandCollapse": "展开/收起",
+    "openMenu": "打开菜单",
+    "skipToContent": "跳过到内容",
+    "switchLanguage": "切换语言",
+    "zoomIn": "放大",
+    "unknownPlaceholder": "..."
   },
   "Nav": {
     "dashboard_center": "看板中心",
@@ -5801,7 +5852,8 @@
     "settings_config": "系统配置",
     "settings_notice": "通知公告",
     "settings_login_log": "登录日志",
-    "settings_oper_log": "操作日志"
+    "settings_oper_log": "操作日志",
+    "home": "首页"
   },
   "Auth": {
     "login": "登录",
@@ -6112,7 +6164,9 @@
     "k_a9seax": "应付总额",
     "k_to20vy": "月度收入",
     "k_1vpljkq": "月度支出",
-    "k_j9p97w": "净利润"
+    "k_j9p97w": "净利润",
+    "oeeLabel": "OEE",
+    "utilizationGauge": "设备利用率"
   },
   "Orders": {
     "title": "订单管理",
@@ -7312,7 +7366,10 @@
     "k_qreyeg": "编辑",
     "k_xc5h04": "详情",
     "queryFailed": "查询失败",
-    "unitBucket": "桶"
+    "unitBucket": "桶",
+    "purchaseInbound": "采购入库",
+    "purchaseInboundDesc": "从采购订单创建入库单",
+    "mixedMaterialAddDesc": "添加混合材料记录"
   },
   "Production": {
     "title": "生产管理",
@@ -7519,11 +7576,11 @@
     "printLabelCount": "列印标签({count})",
     "printType": "印刷类型",
     "priority": {
+      "urgent": "紧急",
       "high": "高",
-      "label": "优先级",
-      "low": "低",
       "normal": "普通",
-      "urgent": "紧急"
+      "low": "低",
+      "label": "优先级"
     },
     "priorityLabel": "优先级",
     "priorityRange": "优先级 (1-10)",
@@ -7651,12 +7708,12 @@
     "startTime": "开始时间",
     "startWork": "开始作业",
     "status": {
-      "completed": "已完成",
-      "confirmed": "已确认",
       "pending": "待处理",
+      "confirmed": "已确认",
+      "producing": "生产中",
+      "completed": "已完成",
       "cancelled": "已取消",
-      "label": "状态",
-      "producing": "生产中"
+      "label": "状态"
     },
     "statusCancelled": "已取消",
     "statusCompleted": "已完成",
@@ -7755,23 +7812,49 @@
     "startLabel": "开始",
     "endLabel": "结束",
     "planTime": "计划时间",
-    "status.pending": "待处理",
-    "status.confirmed": "已确认",
-    "status.producing": "生产中",
-    "status.completed": "已完成",
-    "status.cancelled": "已取消",
-    "status.label": "状态",
-    "priority.urgent": "紧急",
-    "priority.high": "高",
-    "priority.normal": "普通",
-    "priority.low": "低",
-    "priority.label": "优先级",
-    "units.sheet": "张",
     "error": "操作失败",
     "success": "操作成功",
     "statusUpdated": "状态已更新为：{status}",
     "currentStatus": "目前状态",
-    "createTime": "创建时间"
+    "createTime": "创建时间",
+    "woSectionBasic": "工单基本信息",
+    "woSectionPlan": "工单计划信息",
+    "woPlanDuration": "计划工时",
+    "woDayUnit": "天",
+    "woSectionProduction": "生产信息",
+    "woSectionRemark": "备注",
+    "woNoReadonlyHint": "工单编号不可编辑",
+    "woSectionCustomerPriority": "客户优先级",
+    "prSectionOverview": "工序总览",
+    "prStepProgress": "工序进度",
+    "prSectionBasic": "基础信息",
+    "prSectionResource": "资源信息",
+    "prSectionOutput": "产出信息",
+    "prCompleteRate": "完成率",
+    "prYieldRate": "良品率",
+    "prSectionHours": "工时统计",
+    "prSectionScanProgress": "扫描进度",
+    "prSectionScanInput": "扫码输入",
+    "totalWorkOrders": "工单总数",
+    "scProductNameRequired": "请选择产品",
+    "scSectionTarget": "目标数量",
+    "scSectionQtyPriority": "数量/优先级",
+    "scSectionTiming": "时间安排",
+    "scSectionRemark": "备注",
+    "scSectionWorkOrders": "工单列表",
+    "scSectionCapacity": "产能",
+    "scDetailDesc": "明细说明",
+    "scEditScheduleDesc": "编辑排程说明",
+    "scDurationLabel": "工期",
+    "scDurationValue": "预计 {days} 天",
+    "scDurationInvalid": "工期无效",
+    "scSectionPeople": "人员配置",
+    "totalLabels": "标签总数",
+    "printedLabels": "已打印",
+    "pendingLabels": "待打印",
+    "monthlyPrintedLabels": "本月打印数",
+    "involvedProducts": "涉及产品数"
+  
   },
   "Purchase": {
     "title": "采购管理",
@@ -8210,7 +8293,8 @@
     "manufacturing": "制造费用",
     "outsource": "外协",
     "month": "月份",
-    "total": "总计"
+    "total": "总计",
+    "monthlyBreakdown": "月度分解"
   },
   "Quality": {
     "k_center_title": "质量检验中心",
@@ -8833,7 +8917,16 @@
     "fromStatus": "变更前",
     "toStatus": "变更后",
     "operator": "操作人",
-    "changeTime": "时间"
+    "changeTime": "时间",
+    "k_16d942o": "选择图片",
+    "k_add_inspection": "添加检验项",
+    "k_add_spare_issue": "添加领用记录",
+    "k_add_spare_part": "添加备件",
+    "k_maintenanceReminders": "保养提醒",
+    "k_spare_issue_management": "备件领用管理",
+    "k_status_active": "启用",
+    "k_status_inactive": "停用",
+    "k_upload_document": "上传文档"
   },
   "Outsource": {
     "title": "委外管理",
@@ -9607,7 +9700,24 @@
     "version": "版本",
     "versionNumber": "版本号",
     "viewPdf": "查看PDF",
-    "workshop": "车间"
+    "workshop": "车间",
+    "sectionBasicInfo": "基本信息",
+    "sectionSupplement": "补充信息",
+    "sectionTransferParams": "转段参数",
+    "sopSectionBasic": "基础信息",
+    "sopSectionContent": "SOP内容",
+    "statConverting": "转段中",
+    "statEffective": "已生效",
+    "statMonthlyCount": "本月新增",
+    "statMonthlyNew": "本月新建",
+    "statPending": "待处理",
+    "statPendingEffective": "待生效",
+    "statSuccessRate": "成功率",
+    "statWithVersion": "有版本",
+    "sectionEcoBasic": "生态基本信息",
+    "sectionEcoDetail": "生态明细",
+    "sectionLifecycleBasic": "生命周期基本信息",
+    "sectionLifecycleDetail": "生命周期明细"
   },
   "Delivery": {
     "title": "配送管理",
@@ -10472,7 +10582,8 @@
     "k_l8mszz": "如：标签 / 软包装 / 纸盒",
     "k_14yx0jz": "标签（逗号分隔）",
     "k_m3l3y7": "如：哑银纸,卷装,四色",
-    "k_ssp8k7": "模板说明..."
+    "k_ssp8k7": "模板说明...",
+    "k_zl7i8a": "模板选择"
   },
   "SampleManagement": {
     "title": "打样管理",
@@ -10596,7 +10707,18 @@
     "k_vvzvw8": "检样",
     "k_xrdj7e": "冲压",
     "k_z5lkkb": "基本信息",
-    "k_zzipuh": "电子档"
+    "k_zzipuh": "电子档",
+    "statusInProgress": "进行中",
+    "statConfirming": "待确认",
+    "basicInfo": "基本信息",
+    "statMonthlyCount": "本月打样数",
+    "statusDraft": "草稿",
+    "statusPending": "待打样",
+    "statusCompleted": "已完成",
+    "statusConfirmed": "已确认",
+    "statusConverted": "已转大货",
+    "statusCancelled": "已作废"
+  
   },
   "SampleOrders": {
     "k_signrec_title": "签样登记",
@@ -10671,7 +10793,13 @@
     "dateInfo": "日期资讯",
     "orderDate": "订单日期",
     "deliveryDate": "交付日期",
-    "specification": "规格型号"
+    "specification": "规格型号",
+    "statProducing": "生产中",
+    "statShipping": "发货中",
+    "statCompleted": "已完成",
+    "statMonthlyOrders": "本月订单",
+    "statPending": "待确认"
+  
   },
   "Reports": {
     "title": "报表中心",
@@ -10906,7 +11034,11 @@
       "export_pdf": "导出 PDF 报告",
       "export_success": "PDF 导出成功",
       "loading": "加载追溯数据...",
-      "back_to_query": "返回查询"
+      "back_to_query": "返回查询",
+      "totalRecords": "总记录数",
+      "materialTypes": "物料类型",
+      "warehouseCount": "仓库数量",
+      "timeSpan": "时间范围"
     },
     "timeline": {
       "title": "追溯时间线",
@@ -11381,7 +11513,11 @@
     "scanQueryFailed": "扫码查询失败",
     "workOrderNo": "工单号",
     "pageInfo": "第 {page} / {total} 页",
-    "scanBatching": "扫描批次"
+    "scanBatching": "扫描批次",
+    "k_anomalyCount": "异常次数",
+    "k_monthUsage": "本月使用",
+    "k_totalUsage": "总使用量",
+    "k_yoyChange": "同比变化"
   },
   "permModule": {
     "dashboard": "仪表盘",
@@ -11581,5 +11717,24 @@
     "saga_view": "查看 Saga",
     "saga_retry": "Saga 重试",
     "saga_compensate": "Saga 补偿"
+  },
+  "Sample": {
+    "k_fetchFailed": "获取数据失败",
+    "k_sampleProgress": "样品进度",
+    "k_inProgress": "进行中",
+    "k_dueToday": "今日到期",
+    "k_dueThisWeek": "本周到期",
+    "k_atRisk": "有风险",
+    "k_sampleList": "样品列表",
+    "k_sampleProgressDesc": "样品进度管理，跟踪样品制作状态",
+    "k_searchPlaceholder": "搜索样品编号...",
+    "k_statusFilter": "状态筛选",
+    "k_noData": "暂无数据",
+    "k_sampleNo": "样品编号",
+    "k_productName": "产品名称",
+    "k_progress": "进度",
+    "k_responsiblePerson": "负责人",
+    "k_requireDate": "要求日期",
+    "k_viewDetail": "查看详情"
   }
 }

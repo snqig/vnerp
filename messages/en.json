@@ -5658,7 +5658,75 @@
     "materialNotFound": "Material code {code} not found, please check and retry",
     "fieldSep": ":",
     "selectEmployee": "Select Employee",
-    "exitDate": "Exit Date"
+    "exitDate": "Exit Date",
+    "abnormal": "Abnormal",
+    "abnormalDesc": "Abnormal Description",
+    "beltTension": "Belt Tension",
+    "calibrationDue": "Calibration Due",
+    "dcExpiryPreview": "Ink Expiry Preview",
+    "dcInkMixedAddDesc": "Add Ink Mix Description",
+    "dcInkMixedColorPreview": "Ink Color Preview",
+    "dcInkMixedSectionColor": "Color",
+    "dcInkMixedSectionQty": "Quantity",
+    "dcSectionMaterial": "Material",
+    "dcSectionOther": "Other",
+    "dcSectionParams": "Parameters",
+    "dcSectionQty": "Quantity",
+    "docName": "Document Name",
+    "docNo": "Document No",
+    "docType": "Document Type",
+    "fileName": "File Name",
+    "handlingAdvice": "Handling Advice",
+    "idleCount": "Idle Count",
+    "k_": "...",
+    "k_1b6876z": "Operation Failed",
+    "noiseLevel": "Noise Level",
+    "oilLevel": "Oil Level",
+    "pendingConfirm": "Pending Confirmation",
+    "pressure": "Pressure",
+    "purpose": "Purpose",
+    "sparePart": "Spare Part",
+    "supportFileType": "Supported File Types",
+    "temperature": "Temperature",
+    "totalDies": "Total Dies",
+    "totalProcessCards": "Total Process Cards",
+    "totalVehicles": "Total Vehicles",
+    "vibration": "Vibration",
+    "activeRates": "Active Rate",
+    "currencyCount": "Currency Count",
+    "defectiveCount": "Defective Count",
+    "expiringRates": "Expiring Rate",
+    "leaveDate": "Leave Date",
+    "monthlyDue": "Monthly Due",
+    "overdue": "Overdue",
+    "pendingCalc": "Pending Calculation",
+    "pendingUpdate": "Pending Update",
+    "refundAmount": "Refund Amount",
+    "totalReturns": "Total Returns",
+    "unpaidAmount": "Unpaid Amount",
+    "expandCollapse": "Expand/Collapse",
+    "openMenu": "Open Menu",
+    "skipToContent": "Skip to Content",
+    "switchLanguage": "Switch Language",
+    "zoomIn": "Zoom In",
+    "unknownPlaceholder": "...",
+    "inStockCost": "Stock Cost",
+    "inTransitCost": "In Transit Cost",
+    "shippedCost": "Shipped Cost",
+    "totalBatches": "Total Batches",
+    "expiringSoon": "Expiring Soon",
+    "availableBatches": "Available Batches",
+    "inTransitCost": "In Transit Cost",
+    "shippedCost": "Shipped Cost",
+    "totalBatches": "Total Batches",
+    "expiringSoon": "Expiring Soon",
+    "availableBatches": "Available Batches",
+    "inTransitCost": "In Transit Cost",
+    "shippedCost": "Shipped Cost",
+    "totalBatches": "Total Batches",
+    "expiringSoon": "Expiring Soon",
+    "availableBatches": "Available Batches"
+  
   },
   "Nav": {
     "dashboard_center": "Dashboard Center",
@@ -5775,7 +5843,15 @@
     "settings_config": "System Config",
     "settings_notice": "Notifications",
     "settings_login_log": "Login Logs",
-    "settings_oper_log": "Operation Logs"
+    "settings_oper_log": "Operation Logs",
+    "home": "Home",
+    "warehouse_batch": "Batch Inventory",
+    "warehouse_cost": "Inventory Cost",
+    "warehouse_batch": "Batch Inventory",
+    "warehouse_cost": "Inventory Cost",
+    "warehouse_batch": "Batch Inventory",
+    "warehouse_cost": "Inventory Cost"
+  
   },
   "Auth": {
     "login": "Login",
@@ -6086,7 +6162,9 @@
     "k_a9seax": "Total Payable",
     "k_to20vy": "Monthly Revenue",
     "k_1vpljkq": "Monthly Expense",
-    "k_j9p97w": "Net Profit"
+    "k_j9p97w": "Net Profit",
+    "oeeLabel": "OEE",
+    "utilizationGauge": "Equipment Utilization"
   },
   "Orders": {
     "title": "Order Management",
@@ -7286,7 +7364,10 @@
     "k_qreyeg": "编辑",
     "k_xc5h04": "详情",
     "queryFailed": "Query Failed",
-    "unitBucket": "Bucket"
+    "unitBucket": "Bucket",
+    "purchaseInbound": "Purchase Inbound",
+    "purchaseInboundDesc": "Create inbound from purchase order",
+    "mixedMaterialAddDesc": "Add mixed material record"
   },
   "Production": {
     "title": "Production Management",
@@ -7667,19 +7748,19 @@
     "totalOrders": "Total Orders",
     "totalPlanQty": "Total Plan Quantity",
     "priority": {
+      "urgent": "Urgent",
       "high": "High",
-      "label": "Priority",
-      "low": "Low",
       "normal": "Normal",
-      "urgent": "Urgent"
+      "low": "Low",
+      "label": "Priority"
     },
     "status": {
-      "completed": "Completed",
-      "confirmed": "Confirmed",
       "pending": "Pending",
+      "confirmed": "Confirmed",
+      "producing": "Producing",
+      "completed": "Completed",
       "cancelled": "Cancelled",
-      "label": "Status",
-      "producing": "Producing"
+      "label": "Status"
     },
     "units": {
       "sheet": "Sheet"
@@ -7729,23 +7810,49 @@
     "startLabel": "Start",
     "endLabel": "End",
     "planTime": "Plan time",
-    "status.pending": "Pending",
-    "status.confirmed": "Confirmed",
-    "status.producing": "Producing",
-    "status.completed": "Completed",
-    "status.cancelled": "Cancelled",
-    "status.label": "Status",
-    "priority.urgent": "Urgent",
-    "priority.high": "High",
-    "priority.normal": "Normal",
-    "priority.low": "Low",
-    "priority.label": "Priority",
-    "units.sheet": "Sheet",
     "error": "Operation Failed",
     "success": "Operation Successful",
     "statusUpdated": "Status updated to: {status}",
     "currentStatus": "Current Status",
-    "createTime": "Created At"
+    "createTime": "Created At",
+    "woSectionBasic": "Basic Info",
+    "woSectionPlan": "Plan Info",
+    "woPlanDuration": "Planned Duration",
+    "woDayUnit": "day(s)",
+    "woSectionProduction": "Production",
+    "woSectionRemark": "Remark",
+    "woNoReadonlyHint": "Work order number cannot be edited",
+    "woSectionCustomerPriority": "Customer Priority",
+    "prSectionOverview": "Process Overview",
+    "prStepProgress": "Step Progress",
+    "prSectionBasic": "Basic Info",
+    "prSectionResource": "Resource Info",
+    "prSectionOutput": "Output Info",
+    "prCompleteRate": "Completion Rate",
+    "prYieldRate": "Yield Rate",
+    "prSectionHours": "Hours Statistics",
+    "prSectionScanProgress": "Scan Progress",
+    "prSectionScanInput": "Scan Input",
+    "totalWorkOrders": "Total Work Orders",
+    "scProductNameRequired": "Please select product",
+    "scSectionTarget": "Target Qty",
+    "scSectionQtyPriority": "Qty/Priority",
+    "scSectionTiming": "Timing",
+    "scSectionRemark": "Remark",
+    "scSectionWorkOrders": "Work Orders",
+    "scSectionCapacity": "Capacity",
+    "scDetailDesc": "Detail Description",
+    "scEditScheduleDesc": "Edit Schedule Description",
+    "scDurationLabel": "Duration",
+    "scDurationValue": "Est. {days} days",
+    "scDurationInvalid": "Invalid duration",
+    "scSectionPeople": "Staffing",
+    "totalLabels": "Total Labels",
+    "printedLabels": "Printed",
+    "pendingLabels": "Pending",
+    "monthlyPrintedLabels": "Monthly Printed",
+    "involvedProducts": "Products Involved"
+  
   },
   "QRCode": {
     "generateQRCode": "Generate QR Code",
@@ -8289,7 +8396,8 @@
     "manufacturing": "Manufacturing",
     "outsource": "Outsource",
     "month": "Month",
-    "total": "Total"
+    "total": "Total",
+    "monthlyBreakdown": "Monthly Breakdown"
   },
   "Quality": {
     "k_center_title": "Quality Inspection Center",
@@ -8912,7 +9020,16 @@
     "fromStatus": "From",
     "toStatus": "To",
     "operator": "Operator",
-    "changeTime": "Time"
+    "changeTime": "Time",
+    "k_16d942o": "Select Image",
+    "k_add_inspection": "Add Inspection Item",
+    "k_add_spare_issue": "Add Issue Record",
+    "k_add_spare_part": "Add Spare Part",
+    "k_maintenanceReminders": "Maintenance Reminders",
+    "k_spare_issue_management": "Spare Issue Management",
+    "k_status_active": "Active",
+    "k_status_inactive": "Inactive",
+    "k_upload_document": "Upload Document"
   },
   "Outsource": {
     "title": "Outsource Management",
@@ -9686,7 +9803,24 @@
     "changeRevision": "Revision",
     "changeUpgrade": "Upgrade",
     "changeDowngrade": "Downgrade",
-    "sopType": "SOP Type"
+    "sopType": "SOP Type",
+    "sectionBasicInfo": "Basic Information",
+    "sectionSupplement": "Supplement",
+    "sectionTransferParams": "Transfer Parameters",
+    "sopSectionBasic": "Basic Info",
+    "sopSectionContent": "SOP Content",
+    "statConverting": "Converting",
+    "statEffective": "Effective",
+    "statMonthlyCount": "Monthly New",
+    "statMonthlyNew": "New This Month",
+    "statPending": "Pending",
+    "statPendingEffective": "Pending Effective",
+    "statSuccessRate": "Success Rate",
+    "statWithVersion": "With Version",
+    "sectionEcoBasic": "Eco Basic Info",
+    "sectionEcoDetail": "Eco Details",
+    "sectionLifecycleBasic": "Lifecycle Basic Info",
+    "sectionLifecycleDetail": "Lifecycle Details"
   },
   "Delivery": {
     "title": "Delivery Management",
@@ -10446,7 +10580,8 @@
     "k_l8mszz": "如：标签 / 软包装 / 纸盒",
     "k_14yx0jz": "标签（逗号分隔）",
     "k_m3l3y7": "如：哑银纸,卷装,四色",
-    "k_ssp8k7": "模板说明..."
+    "k_ssp8k7": "模板说明...",
+    "k_zl7i8a": "Template Selection"
   },
   "SampleManagement": {
     "title": "Sample Management",
@@ -10570,7 +10705,18 @@
     "k_vvzvw8": "检样",
     "k_xrdj7e": "冲压",
     "k_z5lkkb": "基本信息",
-    "k_zzipuh": "电子档"
+    "k_zzipuh": "电子档",
+    "statusInProgress": "In Progress",
+    "statConfirming": "Confirming",
+    "basicInfo": "Basic Info",
+    "statMonthlyCount": "Monthly Samples",
+    "statusDraft": "Draft",
+    "statusPending": "Pending Sampling",
+    "statusCompleted": "Completed",
+    "statusConfirmed": "Confirmed",
+    "statusConverted": "Converted",
+    "statusCancelled": "Cancelled"
+  
   },
   "SampleOrders": {
     "k_signrec_title": "Sign-off Record",
@@ -10645,7 +10791,13 @@
     "dateInfo": "Dates",
     "orderDate": "Order Date",
     "deliveryDate": "Delivery Date",
-    "specification": "Specification"
+    "specification": "Specification",
+    "statProducing": "Producing",
+    "statShipping": "Shipping",
+    "statCompleted": "Completed",
+    "statMonthlyOrders": "Monthly Orders",
+    "statPending": "Pending Confirmation"
+  
   },
   "Reports": {
     "title": "Reports Center",
@@ -10880,7 +11032,11 @@
       "export_pdf": "Export PDF Report",
       "export_success": "PDF exported",
       "loading": "Loading trace data...",
-      "back_to_query": "Back to query"
+      "back_to_query": "Back to query",
+      "totalRecords": "Total Records",
+      "materialTypes": "Material Types",
+      "warehouseCount": "Warehouse Count",
+      "timeSpan": "Time Span"
     },
     "timeline": {
       "title": "追溯时间线",
@@ -11355,7 +11511,11 @@
     "scanQueryFailed": "Scan query failed",
     "workOrderNo": "Work Order No",
     "pageInfo": "Page {page} / {total}",
-    "scanBatching": "Scan Batching"
+    "scanBatching": "Scan Batching",
+    "k_anomalyCount": "Anomaly Count",
+    "k_monthUsage": "Monthly Usage",
+    "k_totalUsage": "Total Usage",
+    "k_yoyChange": "YoY Change"
   },
   "Error": {
     "UNAUTHORIZED": "Login expired, please sign in again",
@@ -11573,5 +11733,24 @@
     "saga_view": "View Saga",
     "saga_retry": "Saga Retry",
     "saga_compensate": "Saga Compensation"
+  },
+  "Sample": {
+    "k_fetchFailed": "Failed to fetch data",
+    "k_sampleProgress": "Sample Progress",
+    "k_inProgress": "In Progress",
+    "k_dueToday": "Due Today",
+    "k_dueThisWeek": "Due This Week",
+    "k_atRisk": "At Risk",
+    "k_sampleList": "Sample List",
+    "k_sampleProgressDesc": "Sample progress tracking",
+    "k_searchPlaceholder": "Search sample no...",
+    "k_statusFilter": "Status Filter",
+    "k_noData": "No data",
+    "k_sampleNo": "Sample No",
+    "k_productName": "Product Name",
+    "k_progress": "Progress",
+    "k_responsiblePerson": "Responsible Person",
+    "k_requireDate": "Required Date",
+    "k_viewDetail": "View Details"
   }
 }

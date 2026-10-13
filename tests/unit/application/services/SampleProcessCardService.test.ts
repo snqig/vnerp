@@ -14,7 +14,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => {
-  const mockConn = { execute: vi.fn() };
+  const mockConn = { execute: vi.fn(), query: vi.fn() };
   const mockOutbox = { saveEvents: vi.fn().mockResolvedValue(undefined) };
   const mockLogger = {
     debug: vi.fn(),
@@ -203,6 +203,12 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.transaction.mockImplementation(async (cb) => cb(mocks.mockConn));
   mocks.mockOutbox.saveEvents.mockResolvedValue(undefined);
+  // generateDocumentNo（命名锁取号）走事务连接的 query：GET_LOCK / 取最大流水 / RELEASE_LOCK
+  mocks.mockConn.query.mockImplementation(async (sql: string) => {
+    if (/GET_LOCK/.test(sql)) return [[{ locked: 1 }], []];
+    if (/RELEASE_LOCK/.test(sql)) return [[{ released: 1 }], []];
+    return [[], []]; // LIKE 取最大流水 → 空结果 → serial=1
+  });
 });
 
 // ============================================================
@@ -669,7 +675,8 @@ describe('SampleProcessCardService.convertToFormalWorkOrder', () => {
     );
 
     expect(result.workOrderId).toBe(700);
-    expect(result.workOrderNo).toMatch(/^PWO\d{8}00001$/);
+    // serial_length 默认 6（文档编号 DEFAULT_CONFIG.serial_length=6）
+    expect(result.workOrderNo).toMatch(/^PWO\d{8}000001$/);
 
     // 3 conn.execute: INSERT work_order, INSERT BOM, UPDATE card
     expect(mocks.mockConn.execute).toHaveBeenCalledTimes(3);

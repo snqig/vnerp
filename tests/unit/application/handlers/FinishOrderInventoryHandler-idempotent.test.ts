@@ -85,19 +85,32 @@ function mockResult(affectedRows: number, insertId = 0) {
   ];
 }
 
+/** SQL 首个关键字判定：INSERT ... (SELECT ... FROM inv_material ...) 内嵌子查询不再误入 SELECT 分支 */
+function isSelect(u: string): boolean {
+  return /^\s*SELECT\b/.test(u);
+}
+function isInsert(u: string): boolean {
+  return /^\s*INSERT\b/.test(u);
+}
+function isUpdate(u: string): boolean {
+  return /^\s*UPDATE\b/.test(u);
+}
+function isWrite(u: string): boolean {
+  return isInsert(u) || isUpdate(u);
+}
 /** 默认实现：工单查询返回产品；首次处理（IGNORE affectedRows=1）；无现有批次 → 新建 */
 function defaultImpl(sql: string): unknown {
   const u = sql.toUpperCase();
-  if (u.includes('SELECT') && sql.includes('prod_work_order')) {
+  if (isSelect(u) && sql.includes('prod_work_order')) {
     return mockRows([{ product_id: 1, product_code: 'P001', product_name: 'Product A' }]);
   }
   if (u.includes('INSERT') && u.includes('IGNORE')) {
     return mockResult(1);
   }
-  if (u.includes('SELECT') && sql.includes('inv_inventory_batch')) {
+  if (isSelect(u) && sql.includes('inv_inventory_batch')) {
     return mockRows([]);
   }
-  if ((u.includes('INSERT') || u.includes('UPDATE')) && sql.includes('inv_inventory_batch')) {
+  if (isWrite(u) && sql.includes('inv_inventory_batch')) {
     return mockResult(1);
   }
   return mockResult(1);
@@ -106,7 +119,7 @@ function defaultImpl(sql: string): unknown {
 /** 判断 SQL 是否对 inv_inventory* 表的写操作（排除 IGNORE 与 _transaction 流水表） */
 function isInvWrite(sql: string): boolean {
   const u = sql.toUpperCase();
-  const write = u.includes('UPDATE') || (u.includes('INSERT') && !u.includes('IGNORE'));
+  const write = isUpdate(u) || (isInsert(u) && !u.includes('IGNORE'));
   return write && sql.includes('inv_inventory');
 }
 
@@ -124,7 +137,7 @@ describe('T402: FinishOrderInventoryHandler 幂等性 + 批次回写', () => {
   it('已存在事务时跳过处理（INSERT IGNORE affectedRows=0，幂等）', async () => {
     mockExecute.mockImplementation(async (sql: string) => {
       const u = sql.toUpperCase();
-      if (u.includes('SELECT') && sql.includes('prod_work_order')) {
+      if (isSelect(u) && sql.includes('prod_work_order')) {
         return mockRows([{ product_id: 1, product_code: 'P001', product_name: 'Product A' }]);
       }
       if (u.includes('INSERT') && u.includes('IGNORE')) {
@@ -192,16 +205,16 @@ describe('T402: FinishOrderInventoryHandler 幂等性 + 批次回写', () => {
   it('批次已存在时累加而非重复建批次', async () => {
     mockExecute.mockImplementation(async (sql: string) => {
       const u = sql.toUpperCase();
-      if (u.includes('SELECT') && sql.includes('prod_work_order')) {
+      if (isSelect(u) && sql.includes('prod_work_order')) {
         return mockRows([{ product_id: 1, product_code: 'P001', product_name: 'Product A' }]);
       }
       if (u.includes('INSERT') && u.includes('IGNORE')) {
         return mockResult(1);
       }
-      if (u.includes('SELECT') && sql.includes('inv_inventory_batch')) {
+      if (isSelect(u) && sql.includes('inv_inventory_batch')) {
         return mockRows([{ id: 10, quantity: 50 }]); // 已有批次 → 累加
       }
-      if (u.includes('UPDATE') && sql.includes('inv_inventory_batch')) {
+      if (isUpdate(u) && sql.includes('inv_inventory_batch')) {
         return mockResult(1);
       }
       return mockResult(1);
@@ -235,17 +248,17 @@ describe('T402: FinishOrderInventoryHandler 幂等性 + 批次回写', () => {
     let ignoreCount = 0;
     mockExecute.mockImplementation(async (sql: string) => {
       const u = sql.toUpperCase();
-      if (u.includes('SELECT') && sql.includes('prod_work_order')) {
+      if (isSelect(u) && sql.includes('prod_work_order')) {
         return mockRows([{ product_id: 1, product_code: 'P001', product_name: 'Product A' }]);
       }
       if (u.includes('INSERT') && u.includes('IGNORE')) {
         ignoreCount++;
         return mockResult(ignoreCount === 1 ? 1 : 0); // 仅第一个赢得竞态
       }
-      if (u.includes('SELECT') && sql.includes('inv_inventory_batch')) {
+      if (isSelect(u) && sql.includes('inv_inventory_batch')) {
         return mockRows([]);
       }
-      if ((u.includes('INSERT') || u.includes('UPDATE')) && sql.includes('inv_inventory_batch')) {
+      if (isWrite(u) && sql.includes('inv_inventory_batch')) {
         return mockResult(1);
       }
       return mockResult(1);
@@ -286,7 +299,7 @@ describe('T402: FinishOrderInventoryHandler 幂等性 + 批次回写', () => {
     mockExecute.mockImplementation(async (sql: string) => {
       const u = sql.toUpperCase();
       // 工单查询
-      if (u.includes('SELECT') && sql.includes('prod_work_order')) {
+      if (isSelect(u) && sql.includes('prod_work_order')) {
         return mockRows([{ product_id: 1, product_code: 'P001', product_name: 'Product A' }]);
       }
       // INSERT IGNORE（幂等记录）— 唯一索引保证仅第一个 affectedRows=1
@@ -295,11 +308,11 @@ describe('T402: FinishOrderInventoryHandler 幂等性 + 批次回写', () => {
         return mockResult(ignoreCallCount === 1 ? 1 : 0);
       }
       // 批次查询（排除 inv_inventory_transaction 表）
-      if (u.includes('SELECT') && sql.includes('inv_inventory_batch')) {
+      if (isSelect(u) && sql.includes('inv_inventory_batch')) {
         return mockRows([]);
       }
       // 批次写操作（INSERT 或 UPDATE，非 IGNORE）
-      if ((u.includes('INSERT') || u.includes('UPDATE')) && sql.includes('inv_inventory_batch')) {
+      if (isWrite(u) && sql.includes('inv_inventory_batch')) {
         batchWriteCount++;
         return mockResult(1);
       }
@@ -329,16 +342,16 @@ describe('T402: FinishOrderInventoryHandler 幂等性 + 批次回写', () => {
     let batchWriteCalls = 0;
     mockExecute.mockImplementation(async (sql: string) => {
       const u = sql.toUpperCase();
-      if (u.includes('SELECT') && sql.includes('prod_work_order')) {
+      if (isSelect(u) && sql.includes('prod_work_order')) {
         return mockRows([{ product_id: 1, product_code: 'P001', product_name: 'Product A' }]);
       }
       if (u.includes('INSERT') && u.includes('IGNORE')) {
         return mockResult(1); // 首次（affectedRows=1）
       }
-      if (u.includes('SELECT') && sql.includes('inv_inventory_batch')) {
+      if (isSelect(u) && sql.includes('inv_inventory_batch')) {
         return mockRows([]);
       }
-      if ((u.includes('INSERT') || u.includes('UPDATE')) && sql.includes('inv_inventory_batch')) {
+      if (isWrite(u) && sql.includes('inv_inventory_batch')) {
         batchWriteCalls++;
         if (batchWriteCalls === 1) {
           // 消费者 A 的批次写失败 → 事务回滚
@@ -376,16 +389,16 @@ describe('T402: FinishOrderInventoryHandler 幂等性 + 批次回写', () => {
     let batchWriteCalls = 0;
     mockExecute.mockImplementation(async (sql: string) => {
       const u = sql.toUpperCase();
-      if (u.includes('SELECT') && sql.includes('prod_work_order')) {
+      if (isSelect(u) && sql.includes('prod_work_order')) {
         return mockRows([{ product_id: 1, product_code: 'P001', product_name: 'Product A' }]);
       }
       if (u.includes('INSERT') && u.includes('IGNORE')) {
         return mockResult(1);
       }
-      if (u.includes('SELECT') && sql.includes('inv_inventory_batch')) {
+      if (isSelect(u) && sql.includes('inv_inventory_batch')) {
         return mockRows([]);
       }
-      if ((u.includes('INSERT') || u.includes('UPDATE')) && sql.includes('inv_inventory_batch')) {
+      if (isWrite(u) && sql.includes('inv_inventory_batch')) {
         batchWriteCalls++;
         if (batchWriteCalls === 1) {
           // 第一次尝试批次写失败 → 事务回滚 → 幂等记录被回滚
