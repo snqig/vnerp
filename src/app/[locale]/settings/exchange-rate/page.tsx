@@ -22,6 +22,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus, Trash2, RefreshCw, Coins, CheckCircle, Clock } from 'lucide-react';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { toast } from 'sonner';
@@ -43,7 +50,23 @@ interface ExchangeRate {
 export default function ExchangeRatePage() {
   const ts = useTranslations('Common');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
   const [rates, setRates] = useState<ExchangeRate[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -58,11 +81,14 @@ export default function ExchangeRatePage() {
   const fetchRates = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await authFetch('/api/system/exchange-rate?pageSize=100');
+      const response = await authFetch(`/api/system/exchange-rate?page=${page}&pageSize=${pageSize}`);
       const result = await response.json();
       if (result.success) {
         const data = result.data;
         setRates(Array.isArray(data) ? data : data?.list || []);
+        const totalCount = Array.isArray(data) ? data.length : data?.total || 0;
+        setTotal(totalCount);
+        setTotalPages(Math.ceil(totalCount / pageSize));
       } else {
         toast.error(result.message || tc('fetchFailed'));
       }
@@ -74,7 +100,7 @@ export default function ExchangeRatePage() {
     } finally {
       setLoading(false);
     }
-  }, [tc]);
+  }, [tc, page, pageSize]);
 
   useEffect(() => {
     fetchRates();
@@ -206,6 +232,32 @@ export default function ExchangeRatePage() {
             </Table>
           </CardContent>
         </Card>
+
+        {total > 0 && (
+          <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+            <span className="text-sm text-muted-foreground">
+              {tStd('paginationSummary', { total, pages: totalPages })}
+            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                  <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                  <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+              <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+              <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+              <div className="flex items-center gap-1">
+                <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+              </div>
+            </div>
+          </div>
+        )}
+        {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent>

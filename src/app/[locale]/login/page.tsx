@@ -17,6 +17,7 @@ import { Loader2, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompanyName } from '@/hooks/useCompanyName';
+import { useNextPath } from '@/hooks/useNextPath';
 import { useTranslations } from 'next-intl';
 import { authFetch } from '@/lib/auth-fetch';
 
@@ -166,13 +167,14 @@ export default function LoginPage() {
   const t = useTranslations('Auth');
   const tc = useTranslations('Common');
   const [mounted, setMounted] = useState(false);
+  const getNextPath = useNextPath();
 
   useEffect(() => {
     setMounted(true);
     if (!isLoading && isAuthenticated) {
-      router.replace('/dashboard');
+      router.replace(getNextPath());
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router, getNextPath]);
 
   const [loginForm, setLoginForm] = useState({
     username: '',
@@ -321,7 +323,7 @@ export default function LoginPage() {
           }
         }
         toast.success(t('loginSuccess'));
-        router.replace('/dashboard');
+        router.replace(getNextPath());
       } else {
         setError(result.message || t('loginFailed'));
       }
@@ -365,7 +367,7 @@ export default function LoginPage() {
             JSON.stringify(user)
           );
         }
-        router.replace('/dashboard');
+        router.replace(getNextPath());
       } else {
         toast.error(result.message || ts('k_a7qley'));
       }

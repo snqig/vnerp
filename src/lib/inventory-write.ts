@@ -39,6 +39,7 @@
  */
 
 import type { DbConnection } from '@/types/db';
+import { expireDateFragment } from '@/lib/batch-expiry';
 
 /** 汇总表 inv_inventory 的 UPSERT 入参 */
 export interface UpsertInventorySummaryInput {
@@ -145,8 +146,9 @@ export async function upsertInventoryBatch(
     `INSERT INTO inv_inventory_batch (
        batch_no, material_id, material_name, warehouse_id,
        available_qty, quantity, unit_price, inbound_date, produce_date,
+       expire_date,
        status, deleted, create_time
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ${expireDateFragment()}, ?, 0, NOW())
      ON DUPLICATE KEY UPDATE
        available_qty = available_qty + VALUES(available_qty),
        quantity = quantity + VALUES(quantity),
@@ -161,6 +163,8 @@ export async function upsertInventoryBatch(
       input.unitPrice ?? 0,
       input.inboundDate ?? null,
       input.produceDate ?? null,
+      input.produceDate ?? null,
+      input.materialId,
       input.status ?? 1,
     ]
   );

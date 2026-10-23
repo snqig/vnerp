@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SearchInput } from '@/components/ui/search-input';
@@ -122,6 +123,7 @@ export default function PurchaseOrdersPage() {
   // 翻译钩子
   const t = useTranslations('Purchase');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const STATUS_MAP: Record<number, { label: string; className: string }> = {
     10: {
@@ -167,6 +169,18 @@ export default function PurchaseOrdersPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [stats, setStats] = useState({
@@ -202,7 +216,9 @@ export default function PurchaseOrdersPage() {
         if (data.success) {
           const ordersList = Array.isArray(data.data) ? data.data : data.data?.list || [];
           setOrders(ordersList);
-          setTotal(data.pagination?.total || 0);
+          const totalCount = data.pagination?.total || 0;
+          setTotal(totalCount);
+          setTotalPages(Math.ceil(totalCount / pageSize));
           logger.info({ module: 'Purchase', action: 'fetchOrders' }, ts('k_1fywe87'), {
             count: ordersList.length,
           });
@@ -645,7 +661,7 @@ export default function PurchaseOrdersPage() {
         />
 
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex flex-1 gap-4 items-center w-full md:w-auto">
@@ -757,7 +773,7 @@ export default function PurchaseOrdersPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardHeader>
             <CardTitle>{t('purchaseOrders')}</CardTitle>
             <CardDescription>
@@ -1068,34 +1084,31 @@ export default function PurchaseOrdersPage() {
           </CardContent>
         </Card>
 
-        {total > pageSize && (
-          <div className="flex items-center justify-between mt-4">
+        {total > 0 && (
+          <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
             <span className="text-sm text-muted-foreground">
-              {ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}
+              {tStd('paginationSummary', { total, pages: totalPages })}
             </span>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                {tc('prevPage')}
-              </Button>
-              <span className="flex items-center px-3 text-sm text-muted-foreground">
-                {tc('pageOf', { page, pages: Math.ceil(total / pageSize) })}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page * pageSize >= total}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                {tc('nextPage')}
-              </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                  <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                  <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+              <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+              <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+              <div className="flex items-center gap-1">
+                <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+              </div>
             </div>
           </div>
         )}
+        {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
 
       </div>
     </MainLayout>

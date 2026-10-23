@@ -792,6 +792,21 @@
   background: linear-gradient(135deg, #091637 0%, #010205 100%);
 }
 
+/* ── 全屏模式：防止浏览器 ::backdrop 默认黑色透出 ──
+   requestFullscreen() 会让元素脱离文档流铺满屏幕，
+   但元素尺寸/背景在切换瞬间可能还没撑开，
+   浏览器在这些间隙用默认黑色渲染 ::backdrop。 */
+.dashboard-gradient:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+.dashboard-gradient:fullscreen::backdrop {
+  background: transparent;
+}
+
 /* ============================================================================
    仪表盘浅色模式：暖米白底 + 深赭石强调
    仅浅色生效（html:not(.dark)），深色模式保持原「科技蓝」外观完全不变。
@@ -891,6 +906,42 @@ html:not(.dark) .glass-scope .text-cyan-300,
 html:not(.dark) .glass-scope .text-cyan-400 { color: #0e7490; }
 html:not(.dark) .glass-scope .text-slate-300,
 html:not(.dark) .glass-scope .text-slate-400 { color: #64748b; }
+
+/* ============================================================================
+   仪表盘大屏自适应缩放
+   ---------------------------------------------------------------------------
+   比例由 `useDashboardScale()` 在 JS 里算出（基准视口 1920px），写进内联
+   `style={{ zoom: scale }}`；此处的 `--dash-zoom` 只作为 CSS 侧兜底
+   —— 即 JS 尚未挂载（首帧 / SSR / hydration 前）时也能拿到合理值。
+
+   为什么用 zoom 而不是 transform: scale()：见 hooks/useDashboardScale.ts 注释。
+   简单说：zoom 会真实重排（flex/grid/图表都跟着算），transform 只是拉大画面，
+   父容器高度与 absolute 定位基准都不变 → 大屏下留白 + 错位。
+
+   首帧不闪：1920 及以下 scale=1（与现状像素级一致）；>1920 时 CSS 兜底给
+   1，JS 挂载后立刻纠正 —— 中间只有一帧的偏差，不会出现可见跳动。
+   ========================================================================== */
+.dash-zoom {
+  zoom: var(--dash-zoom, 1);
+  /* zoom 会改变元素自身的布局尺寸，父级 flex/grid 需要它显式参与分配，
+     否则在 `flex-1` 容器里会被压缩。min-width:0 允许 flex 子项收缩到内容以下，
+     配合 zoom 才能算出正确的「缩放后可视高度」。 */
+  min-width: 0;
+}
+
+/* 大屏下的排版微调：宽屏一屏能放更多列，卡片间距略收紧，避免过度留白 */
+@media (min-width: 2200px) {
+  .dash-zoom {
+    letter-spacing: -0.003em;
+  }
+}
+
+/* 尊重系统的「减少动效」设置 —— 缩放本身不是动效，但关闭过渡更稳妥 */
+@media (prefers-reduced-motion: reduce) {
+  .dash-zoom {
+    transition: none !important;
+  }
+}
 
 
 /* 侧边栏深色模式 - 使用企业级蓝色 */

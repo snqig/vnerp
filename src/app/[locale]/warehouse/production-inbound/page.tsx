@@ -3,17 +3,11 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -26,8 +20,12 @@ import { Plus, Search, Edit, Trash2, ArrowRightLeft, CheckCircle, Clock, AlertTr
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
-import { StatusBadge, usePaginatedList } from '@/components/common';
-import { useRowSelection } from '@/lib/useRowSelection';
+import {
+  StandardTable,
+  type StandardTableColumn,
+  StatusBadge,
+  usePaginatedList,
+} from '@/components/common';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
@@ -63,7 +61,7 @@ export default function ProductionInboundPage() {
   };
 
   const { toast } = useToast();
-  const { list, total, page, setPage, search, setSearch, refresh } = usePaginatedList<Item>({
+  const { list, total, page, pageSize, setPage, setPageSize, search, setSearch, refresh } = usePaginatedList<Item>({
     fetchUrl: '/api/warehouse/production-inbound',
     searchKey: 'inboundNo',
   });
@@ -78,12 +76,11 @@ export default function ProductionInboundPage() {
     monthlyQty: 0,
   });
 
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
+  const [selectedRows, setSelectedRows] = useState<Item[]>([]);
   const [deleting, setDeleting] = useState(false);
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => r.id);
     if (ids.length === 0) return;
     if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
     setDeleting(true);
@@ -98,7 +95,7 @@ export default function ProductionInboundPage() {
     setDeleting(false);
     if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
     if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
+    setSelectedRows([]);
     refresh();
   };
 
@@ -175,34 +172,114 @@ export default function ProductionInboundPage() {
     }
   };
 
+  const columns: StandardTableColumn<Item>[] = [
+    {
+      key: 'inbound_no',
+      title: ts('k_8p71nd'),
+      dataIndex: 'inbound_no',
+      width: 140,
+      className: 'text-xs font-mono',
+    },
+    {
+      key: 'work_order_no',
+      title: ts('k_jzt8aw'),
+      width: 140,
+      className: 'text-xs',
+      render: (row) => row.work_order_no || '-',
+    },
+    {
+      key: 'warehouse_name',
+      title: tc('warehouse'),
+      width: 140,
+      className: 'text-xs',
+      render: (row) => row.warehouse_name || '-',
+    },
+    {
+      key: 'inbound_date',
+      title: ts('k_wv7sht'),
+      width: 110,
+      className: 'text-xs',
+      render: (row) => row.inbound_date || '-',
+    },
+    {
+      key: 'qc_status',
+      title: ts('k_p7p4rs'),
+      width: 100,
+      render: (row) => <StatusBadge status={row.qc_status} statusMap={qcMap} />,
+    },
+    {
+      key: 'operator_name',
+      title: ts('k_15sp2wy'),
+      width: 100,
+      className: 'text-xs',
+      render: (row) => row.operator_name || '-',
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      width: 100,
+      render: (row) => <StatusBadge status={row.status} statusMap={statusMap} />,
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      width: 180,
+      align: 'right',
+      render: (row) => (
+        <div className="flex justify-end gap-1">
+          {row.status === 1 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleStatusChange(row.id, 2)}
+            >
+              {ts('k_1jot12v')}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              setEditItem(row);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(row.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t('productionInbound')}</h1>
-          <div className="flex gap-2">
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder={tc('searchOrderNo')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-36 h-8 text-sm"
-              />
-              <Button size="sm" variant="outline" onClick={refresh}>
-                <Search className="h-3 w-3" />
-              </Button>
-            </div>
+        <PageHeroHeader
+          icon={ArrowRightLeft}
+          title={t('productionInbound')}
+          action={
             <Button
               size="sm"
               onClick={() => {
                 setEditItem({});
                 setShowDialog(true);
               }}
+              className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
             >
               <Plus className="h-3 w-3 mr-1" />
               {ts('k_5sawab')}</Button>
-          </div>
-        </div>        <StatsCards
+          }
+        />        <StatsCards
           configs={[
             { key: 'pending', label: '待入库', icon: Clock, ...StatsTheme.orange },
             { key: 'partial', label: '部分入库', icon: PackageOpen, ...StatsTheme.yellow },
@@ -221,107 +298,50 @@ export default function ProductionInboundPage() {
         />
 
 
-        <Card>
-          <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                  </TableHead>
-                  <TableHead className="text-xs">{ts('k_8p71nd')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_jzt8aw')}</TableHead>
-                  <TableHead className="text-xs">{tc('warehouse')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_wv7sht')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_p7p4rs')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_15sp2wy')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(item.id))} onChange={() => toggle(String(item.id))} aria-label={tc('selectRow', { id: item.id })} />
-                    </TableCell>
-                    <TableCell className="text-xs font-mono">{item.inbound_no}</TableCell>
-                    <TableCell className="text-xs">{item.work_order_no || '-'}</TableCell>
-                    <TableCell className="text-xs">{item.warehouse_name || '-'}</TableCell>
-                    <TableCell className="text-xs">{item.inbound_date || '-'}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={item.qc_status} statusMap={qcMap} />
-                    </TableCell>
-                    <TableCell className="text-xs">{item.operator_name || '-'}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={item.status} statusMap={statusMap} />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        {item.status === 1 && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 text-xs px-2"
-                            onClick={() => handleStatusChange(item.id, 2)}
-                          >
-                            {ts('k_1jot12v')}</Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0"
-                          onClick={() => {
-                            setEditItem(item);
-                            setShowDialog(true);
-                          }}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                      {tc('noRecords')}</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{tc('total', { count: total })}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
-            >
-              {tc('previousPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage(page + 1)}
-            >
-              {tc('nextPage')}
+        <ListToolbar>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder={tc('searchOrderNo')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-36 h-8 text-sm"
+            />
+            <Button size="sm" variant="outline" onClick={refresh}>
+              <Search className="h-3 w-3" />
             </Button>
           </div>
-        </div>
+        </ListToolbar>
+
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
+          <CardContent className="p-0">
+            {selectedRows.length > 0 && (
+              <BatchDeleteBar
+                count={selectedRows.length}
+                onClear={() => setSelectedRows([])}
+                onDelete={handleBatchDelete}
+                loading={deleting}
+              />
+            )}
+            <StandardTable<Item>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              rowKey="id"
+              emptyText={tc('noRecords')}
+            />
+          </CardContent>
+        </Card>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>

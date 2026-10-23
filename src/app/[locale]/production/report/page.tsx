@@ -1,22 +1,13 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useRowSelection } from '@/lib/useRowSelection';
-import { BatchDeleteBar } from '@/components/BatchDeleteBar';
-import { useEffect, useState, useCallback } from 'react';
+import { nowDateTimeLocal } from '@/lib/date-utils';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import type { ExportColumn } from '@/lib/global-export-service';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { BatchDeleteBar } from '@/components/BatchDeleteBar';
+import { StandardTable } from '@/components/common/standard-table';
 import {
   Dialog,
   DialogContent,
@@ -147,9 +140,7 @@ export default function ProductionReportPage() {
   const locale = useLocale();
 
   const [list, setList] = useState<WorkReport[]>([]);
-
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState('');
@@ -199,12 +190,11 @@ export default function ProductionReportPage() {
   }, [page, keyword]);
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
-    if (ids.length === 0) return;
-    if (!confirm(tc('confirmBatchDelete', { count: ids.length }))) return;
+    if (selectedRows.length === 0) return;
+    if (!confirm(tc('confirmBatchDelete', { count: selectedRows.length }))) return;
     let okCount = 0;
     let failMsg = '';
-    for (const id of ids) {
+    for (const id of selectedRows) {
       try {
         const res = await authFetch(`/api/production/work-report?id=${id}`, { method: 'DELETE' });
         const data = await res.json();
@@ -217,7 +207,7 @@ export default function ProductionReportPage() {
     if (okCount > 0)
       toast.success(tc('batchDeleteSuccess', { count: okCount }));
     if (failMsg) toast.error(failMsg);
-    clear();
+    setSelectedRows([]);
     fetchData();
   };
 
@@ -329,7 +319,7 @@ export default function ProductionReportPage() {
         equipment_id: equipmentList.find((e) => e.equipment_code === scannedCodes.equipment)?.id,
         work_order_id: wo?.id,
         work_order_no: code,
-        start_time: new Date().toISOString().slice(0, 16),
+        start_time: nowDateTimeLocal(),
       });
     }
   };
@@ -353,7 +343,7 @@ export default function ProductionReportPage() {
   const handleFinishWork = () => {
     setForm((prev: Loose) => ({
       ...prev,
-      end_time: new Date().toISOString().slice(0, 16),
+      end_time: nowDateTimeLocal(),
     }));
     setDialogOpen(true);
     setIsWorking(false);
@@ -404,8 +394,7 @@ export default function ProductionReportPage() {
           ]}
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
-
-        <Card className="border-border bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-full bg-primary/10">
@@ -524,38 +513,36 @@ export default function ProductionReportPage() {
               <GlobalExportToolbar
                 filename={t('productionReport')}
                 title={t('productionReport')}
-                columns={
-                  [
-                    { key: 'report_no', label: t('reportNo'), width: 18 },
-                    { key: 'work_order_no', label: t('workOrderNo'), width: 18 },
-                    { key: 'process_name', label: t('process'), width: 15 },
-                    { key: 'operator_name', label: t('operator'), width: 12 },
-                    { key: 'equipment_name', label: t('equipment'), width: 15 },
-                    { key: 'plan_qty', label: t('planQty'), width: 10 },
-                    { key: 'completed_qty', label: t('completedQty'), width: 10 },
-                    { key: 'qualified_qty', label: t('qualifiedQty'), width: 10 },
-                    { key: 'scrap_qty', label: t('scrapQty'), width: 10 },
-                    {
-                      key: 'efficiency',
-                      label: t('efficiency'),
-                      width: 10,
-                      formatter: (v: Loose) => `${Number(v || 0).toFixed(1)}%`,
-                    },
-                    {
-                      key: 'work_hours',
-                      label: t('workHours'),
-                      width: 10,
-                      formatter: (v: Loose) => `${Number(v || 0).toFixed(1)}h`,
-                    },
-                    { key: 'report_time', label: t('reportTime'), width: 18 },
-                  ] as ExportColumn[]
-                }
-                data={list}
+                columns={[
+                  { key: 'report_no', label: t('reportNo'), width: 18 },
+                  { key: 'work_order_no', label: t('workOrderNo'), width: 18 },
+                  { key: 'process_name', label: t('process'), width: 15 },
+                  { key: 'operator_name', label: t('operator'), width: 12 },
+                  { key: 'equipment_name', label: t('equipment'), width: 15 },
+                  { key: 'plan_qty', label: t('planQty'), width: 10 },
+                  { key: 'completed_qty', label: t('completedQty'), width: 10 },
+                  { key: 'qualified_qty', label: t('qualifiedQty'), width: 10 },
+                  { key: 'scrap_qty', label: t('scrapQty'), width: 10 },
+                  {
+                    key: 'efficiency',
+                    label: t('efficiency'),
+                    width: 10,
+                    formatter: (v: number | string | undefined) => `${Number(v || 0).toFixed(1)}%`,
+                  },
+                  {
+                    key: 'work_hours',
+                    label: t('workHours'),
+                    width: 10,
+                    formatter: (v: number | string | undefined) => `${Number(v || 0).toFixed(1)}h`,
+                  },
+                  { key: 'report_time', label: t('reportTime'), width: 18 },
+                ] as ExportColumn[]}
+                data={selectedRows.length > 0 ? list.filter((r) => selectedRows.includes(r.id)) : list}
                 landscape={true}
               />
               <Button
                 onClick={() => {
-                  setForm({ ...form, start_time: new Date().toISOString().slice(0, 16) });
+                  setForm({ ...form, start_time: nowDateTimeLocal() });
                   setDialogOpen(true);
                 }}
               >
@@ -571,99 +558,78 @@ export default function ProductionReportPage() {
               </div>
             ) : (
               <>
-              <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-10">
-                      <input
-                        ref={selectAllRef}
-                        type="checkbox"
-                        className="h-4 w-4 cursor-pointer accent-blue-600"
-                        checked={allSelected}
-                        onChange={toggleAll}
-                        aria-label={tc('selectAll')}
-                      />
-                    </TableHead>
-                    <TableHead>{t('reportNo')}</TableHead>
-                    <TableHead>{t('workOrderNo')}</TableHead>
-                    <TableHead>{t('processName')}</TableHead>
-                    <TableHead>{t('operator')}</TableHead>
-                    <TableHead>{t('equipment')}</TableHead>
-                    <TableHead className="text-right">{t('planQty')}</TableHead>
-                    <TableHead className="text-right">{t('completedQty')}</TableHead>
-                    <TableHead className="text-right">{t('qualifiedQty')}</TableHead>
-                    <TableHead className="text-right">{t('scrapQty')}</TableHead>
-                    <TableHead className="text-right">{t('efficiency')}</TableHead>
-                    <TableHead>{t('workHours')}</TableHead>
-                    <TableHead className="text-right">{tc('actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {list.map((r) => {
-                    const eff = getEfficiency(r);
-                    return (
-                      <TableRow key={r.id}>
-                        <TableCell>
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 cursor-pointer accent-blue-600"
-                            checked={isSelected(String(r.id))}
-                            onChange={() => toggle(String(r.id))}
-                            aria-label={tc('selectRow', { id: r.id })}
-                          />
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">{r.report_no}</TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {r.work_order_no || '-'}
-                        </TableCell>
-                        <TableCell>{r.process_name}</TableCell>
-                        <TableCell>{r.operator_name || '-'}</TableCell>
-                        <TableCell>{r.equipment_name || '-'}</TableCell>
-                        <TableCell className="text-right">{r.plan_qty || 0}</TableCell>
-                        <TableCell className="text-right font-medium text-green-600 dark:text-green-400">
-                          {r.completed_qty || 0}
-                        </TableCell>
-                        <TableCell className="text-right text-blue-600 dark:text-blue-400">
-                          {r.qualified_qty || 0}
-                        </TableCell>
-                        <TableCell className="text-right text-red-500 dark:text-red-400">
-                          {r.scrap_qty > 0 ? r.scrap_qty : '-'}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span
-                            className={
-                              eff < 80
-                                ? 'text-red-600 dark:text-red-400 font-bold'
-                                : 'text-green-600 dark:text-green-400 font-medium'
-                            }
-                          >
-                            {eff}%
-                          </span>
-                        </TableCell>
-                        <TableCell>{r.work_hours || 0}h</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0 text-red-500 dark:text-red-400"
-                            onClick={() => handleDelete(r.id)}
-                          >
-                            <AlertTriangle className="w-3 h-3" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  {list.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
-                        {t('noReportRecords')}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} />
+              <StandardTable<WorkReport>
+                rowSelectable={true}
+                selectedRows={list.filter((r) => selectedRows.includes(r.id))}
+                onRowSelectedChange={(selectedWorkReports) => {
+                  setSelectedRows(selectedWorkReports.map((r) => r.id));
+                }}
+                dataSource={list}
+                columns={[
+                  { key: 'select', title: '', width: 10, align: 'center' },
+                  { key: 'report_no', title: t('reportNo'), width: 150 },
+                  { key: 'work_order_no', title: t('workOrderNo'), width: 150 },
+                  { key: 'process_name', title: t('processName'), width: 120 },
+                  { key: 'operator_name', title: t('operator'), width: 100 },
+                  { key: 'equipment_name', title: t('equipment'), width: 120 },
+                  { key: 'plan_qty', title: t('planQty'), width: 80, align: 'right' },
+                  { key: 'completed_qty', title: t('completedQty'), width: 80, align: 'right' },
+                  { key: 'qualified_qty', title: t('qualifiedQty'), width: 80, align: 'right' },
+                  { key: 'scrap_qty', title: t('scrapQty'), width: 80, align: 'right' },
+                  {
+                    key: 'efficiency',
+                    title: t('efficiency'),
+                    width: 80,
+                    align: 'right',
+                    render: (row: WorkReport) => {
+                      const eff = getEfficiency(row);
+                      return (
+                        <span
+                          className={
+                            eff < 80
+                              ? 'text-red-600 dark:text-red-400 font-bold'
+                              : 'text-green-600 dark:text-green-400 font-medium'
+                          }
+                        >
+                          {eff}%
+                        </span>
+                      );
+                    },
+                  },
+                  {
+                    key: 'work_hours',
+                    title: t('workHours'),
+                    width: 80,
+                    align: 'right',
+                    render: (row: WorkReport) => {
+                      return <span>{row.work_hours || 0}h</span>;
+                    },
+                  },
+                  { key: 'report_time', title: t('reportTime'), width: 150 },
+                  {
+                    key: 'actions',
+                    title: tc('actions'),
+                    width: 100,
+                    align: 'right',
+                    render: (row: WorkReport) => {
+                      return (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-red-500 dark:text-red-400"
+                          onClick={() => handleDelete(row.id)}
+                        >
+                          <AlertTriangle className="w-3 h-3" />
+                        </Button>
+                      );
+                    },
+                  },
+                ]}
+                total={total}
+                page={page}
+                pageSize={20}
+              />
               </>
             )}
             <div className="flex items-center justify-between mt-4">

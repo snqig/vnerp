@@ -59,6 +59,42 @@ interface SampleOrder {
   update_time: string;
 }
 
+// 签样登记：色样行（表单编辑态，Lab 值为字符串输入）
+interface SignColorRow {
+  color_name: string;
+  l_value: string;
+  a_value: string;
+  b_value: string;
+  measure_device: string;
+  measure_date: string;
+  color_sample_url: string;
+  de_threshold: string;
+}
+
+// 签样登记查看数据（GET /api/sample/sign-records）
+interface SignRecordView {
+  record: {
+    sign_no: string;
+    sign_date: string;
+    customer_rep: string | null;
+    retained_qty: number;
+    retained_location: string | null;
+    remark: string | null;
+  };
+  colors: Array<{
+    id: number;
+    color_no: string;
+    color_name: string;
+    l_value: string;
+    a_value: string;
+    b_value: string;
+    measure_device: string | null;
+    measure_date: string | null;
+    color_sample_url: string | null;
+    de_threshold: string;
+  }>;
+}
+
 const lifecycleStatusMap: Record<string, { label: string; color: string }> = {
   draft: { label: 'draft', color: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200' },
   pending: { label: 'pending', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' },
@@ -75,6 +111,7 @@ export default function SampleOrdersPage() {
   // 翻译钩子
   const t = useTranslations('SampleOrders');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -94,6 +131,33 @@ export default function SampleOrdersPage() {
     total: 0,
     totalPages: 0,
   });
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  // 签样登记（签样标准管理闭环）
+  const [signDialogOpen, setSignDialogOpen] = useState(false);
+  const [signTargetOrder, setSignTargetOrder] = useState<SampleOrder | null>(null);
+  const [signForm, setSignForm] = useState({
+    sign_date: '',
+    customer_rep: '',
+    retained_qty: '',
+    retained_location: '',
+    remark: '',
+  });
+  const [signColors, setSignColors] = useState<SignColorRow[]>([]);
+  const [signSubmitting, setSignSubmitting] = useState(false);
+  const [viewSignOpen, setViewSignOpen] = useState(false);
+  const [viewSignData, setViewSignData] = useState<SignRecordView | null>(null);
+  const [viewSignLoading, setViewSignLoading] = useState(false);
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > pagination.totalPages) {
+      setJumpError(tStd('invalidPage', { max: pagination.totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPagination((p) => ({ ...p, page: n }));
+  };
   const [stats, setStats] = useState({
     pending: 0,
     inProgress: 0,
@@ -278,7 +342,7 @@ export default function SampleOrdersPage() {
     }
   };
 
-  const handleDeliveryAction = async (id: number, action: 'deliver' | 'sign') => {
+  const handleDeliveryAction = async (id: number, action: 'deliver') => {
     try {
       const response = await authFetch('/api/sample/orders/linkage', {
         method: 'PUT',
@@ -297,6 +361,84 @@ export default function SampleOrdersPage() {
       }
     } catch {
       toast({ title: t('statusUpdateFailed'), variant: 'destructive' });
+    }
+  };
+
+  // ===== 签样标准管理闭环：签样登记 + 色样档案 =====
+
+  // delivered → 打开签样登记弹窗（登记留样/色样后置为已签样）
+  const openSignDialog = (order: SampleOrder) => {
+    setSignTargetOrder(order);
+    setSignForm({
+      sign_date: new Date().toISOString().split('T')[0],
+      customer_rep: '',
+      retained_qty: '',
+      retained_location: '',
+      remark: '',
+    });
+    setSignColors([]);
+    setSignDialogOpen(true);
+  };
+
+  const updateSignColor = (idx: number, patch: Partial<SignColorRow>) => {
+    setSignColors((rows) => rows.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
+  };
+
+  const handleSignSubmit = async () => {
+    if (!signTargetOrder) return;
+    setSignSubmitting(true);
+    try {
+      const colors = signColors
+        .filter((c) => c.color_name)
+        .map((c) => ({
+          color_name: c.color_name,
+          l_value: Number(c.l_value),
+          a_value: Number(c.a_value),
+          b_value: Number(c.b_value),
+          measure_device: c.measure_device || null,
+          measure_date: c.measure_date || null,
+          color_sample_url: c.color_sample_url || null,
+          de_threshold: c.de_threshold ? Number(c.de_threshold) : null,
+        }));
+      const response = await authFetch('/api/sample/sign-records', {
+        method: 'POST',
+        body: JSON.stringify({
+          sample_order_id: signTargetOrder.id,
+          sign_date: signForm.sign_date || undefined,
+          customer_rep: signForm.customer_rep || undefined,
+          retained_qty: signForm.retained_qty ? Number(signForm.retained_qty) : undefined,
+          retained_location: signForm.retained_location || undefined,
+          remark: signForm.remark || undefined,
+          colors,
+        }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        toast({ title: result.message || t('k_sign_success') });
+        setSignDialogOpen(false);
+        setSignTargetOrder(null);
+        fetchOrders();
+      } else {
+        toast({ title: result.message || t('k_sign_failed'), variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: t('k_sign_failed'), variant: 'destructive' });
+    } finally {
+      setSignSubmitting(false);
+    }
+  };
+
+  // signed → 查看签样登记与色样档案
+  const openViewSign = async (order: SampleOrder) => {
+    setViewSignOpen(true);
+    setViewSignLoading(true);
+    setViewSignData(null);
+    try {
+      const response = await authFetch(`/api/sample/sign-records?sample_order_id=${order.id}`);
+      const result = await response.json();
+      if (result.success) setViewSignData(result.data);
+    } finally {
+      setViewSignLoading(false);
     }
   };
 
@@ -790,11 +932,15 @@ export default function SampleOrdersPage() {
                                   </DropdownMenuItem>
                                 )}
                               {order.delivery_status === 'delivered' && (
-                                <DropdownMenuItem
-                                  onClick={() => handleDeliveryAction(order.id, 'sign')}
-                                >
+                                <DropdownMenuItem onClick={() => openSignDialog(order)}>
                                   <CheckCircle2 className="h-4 w-4 mr-2" />
                                   {t('markSigned')}
+                                </DropdownMenuItem>
+                              )}
+                              {order.delivery_status === 'signed' && (
+                                <DropdownMenuItem onClick={() => openViewSign(order)}>
+                                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                                  {t('k_view_sign')}
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuItem onClick={() => openEditDialog(order)}>
@@ -818,35 +964,31 @@ export default function SampleOrdersPage() {
               </div>
             )}
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
+            {pagination.total > 0 && (
+              <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
                 <span className="text-sm text-muted-foreground">
-                  {t('paginationInfo', {
-                    total: pagination.total,
-                    page: pagination.page,
-                    totalPages: pagination.totalPages,
-                  })}
+                  {tStd('paginationSummary', { total: pagination.total, pages: pagination.totalPages })}
                 </span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={pagination.page === 1}
-                    onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
-                  >
-                    {tc('prevPage')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={pagination.page === pagination.totalPages}
-                    onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
-                  >
-                    {tc('nextPage')}
-                  </Button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={String(pagination.pageSize)} onValueChange={(v) => { setPagination((p) => ({ ...p, pageSize: Number(v), page: 1 })); }}>
+                    <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setPagination((p) => ({ ...p, page: Math.max(1, p.page - 1) }))} disabled={pagination.page <= 1}>{tStd('prevPage')}</Button>
+                  <span className="text-sm">{tStd('pageNumber', { page: pagination.page, pages: pagination.totalPages })}</span>
+                  <Button variant="outline" size="sm" onClick={() => setPagination((p) => ({ ...p, page: Math.min(p.totalPages, p.page + 1) }))} disabled={pagination.page >= pagination.totalPages}>{tStd('nextPage')}</Button>
+                  <div className="flex items-center gap-1">
+                    <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page: pagination.page, pages: pagination.totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                    <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                  </div>
                 </div>
               </div>
             )}
+            {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
           </CardContent>
         </Card>
       </div>
@@ -871,6 +1013,257 @@ export default function SampleOrdersPage() {
             </Button>
             <Button onClick={handleUpdate}>{tc('save')}</Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 签样登记弹窗：登记签样信息 + 留样 + 色样 Lab 基准 */}
+      <Dialog open={signDialogOpen} onOpenChange={setSignDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" resizable>
+          <DialogHeader>
+            <DialogTitle>{t('k_signrec_title')}</DialogTitle>
+            <DialogDescription>
+              {signTargetOrder?.order_no} — {signTargetOrder?.product_name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>{t('k_sign_date')}</Label>
+              <Input
+                type="date"
+                value={signForm.sign_date}
+                onChange={(e) => setSignForm((f) => ({ ...f, sign_date: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('k_customer_rep')}</Label>
+              <Input
+                value={signForm.customer_rep}
+                onChange={(e) => setSignForm((f) => ({ ...f, customer_rep: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('k_retained_qty')}</Label>
+              <Input
+                type="number"
+                min="0"
+                value={signForm.retained_qty}
+                onChange={(e) => setSignForm((f) => ({ ...f, retained_qty: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('k_retained_location')}</Label>
+              <Input
+                value={signForm.retained_location}
+                onChange={(e) => setSignForm((f) => ({ ...f, retained_location: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1 col-span-2">
+              <Label>{tc('remark')}</Label>
+              <Input
+                value={signForm.remark}
+                onChange={(e) => setSignForm((f) => ({ ...f, remark: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>{t('k_color_list')}</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setSignColors((rows) => [
+                    ...rows,
+                    {
+                      color_name: '',
+                      l_value: '',
+                      a_value: '',
+                      b_value: '',
+                      measure_device: '',
+                      measure_date: '',
+                      color_sample_url: '',
+                      de_threshold: '1.5',
+                    },
+                  ])
+                }
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                {t('k_add_color')}
+              </Button>
+            </div>
+            {signColors.map((row, idx) => (
+              <div key={idx} className="grid grid-cols-4 gap-2 items-end border rounded-md p-2">
+                <div className="space-y-1 col-span-2">
+                  <Label className="text-xs">{t('k_color_name')}</Label>
+                  <Input
+                    value={row.color_name}
+                    onChange={(e) => updateSignColor(idx, { color_name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">{t('k_lab_l')}</Label>
+                  <Input
+                    type="number"
+                    step="0.0001"
+                    value={row.l_value}
+                    onChange={(e) => updateSignColor(idx, { l_value: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">{t('k_lab_a')}</Label>
+                  <Input
+                    type="number"
+                    step="0.0001"
+                    value={row.a_value}
+                    onChange={(e) => updateSignColor(idx, { a_value: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">{t('k_lab_b')}</Label>
+                  <Input
+                    type="number"
+                    step="0.0001"
+                    value={row.b_value}
+                    onChange={(e) => updateSignColor(idx, { b_value: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">{t('k_de_threshold')}</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={row.de_threshold}
+                    onChange={(e) => updateSignColor(idx, { de_threshold: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">{t('k_measure_device')}</Label>
+                  <Input
+                    value={row.measure_device}
+                    onChange={(e) => updateSignColor(idx, { measure_device: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">{t('k_measure_date')}</Label>
+                  <Input
+                    type="date"
+                    value={row.measure_date}
+                    onChange={(e) => updateSignColor(idx, { measure_date: e.target.value })}
+                  />
+                </div>
+                <div className="flex items-end gap-2">
+                  <div className="space-y-1 flex-1">
+                    <Label className="text-xs">{t('k_color_url')}</Label>
+                    <Input
+                      value={row.color_sample_url}
+                      onChange={(e) => updateSignColor(idx, { color_sample_url: e.target.value })}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive"
+                    onClick={() => setSignColors((rows) => rows.filter((_, i) => i !== idx))}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setSignDialogOpen(false)}>
+              {tc('cancel')}
+            </Button>
+            <Button onClick={handleSignSubmit} disabled={signSubmitting}>
+              {signSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+              {t('k_sign_submit')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 查看签样登记：签样信息 + 色样档案（Lab 基准） */}
+      <Dialog open={viewSignOpen} onOpenChange={setViewSignOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" resizable>
+          <DialogHeader>
+            <DialogTitle>{t('k_signrec_title')}</DialogTitle>
+            <DialogDescription>{viewSignData?.record.sign_no}</DialogDescription>
+          </DialogHeader>
+          {viewSignLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : !viewSignData ? (
+            <p className="text-sm text-muted-foreground text-center py-6">{t('k_no_sign_record')}</p>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground">{t('k_sign_date')}：</span>
+                  {viewSignData.record.sign_date?.slice(0, 10)}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('k_customer_rep')}：</span>
+                  {viewSignData.record.customer_rep || '-'}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('k_retained_qty')}：</span>
+                  {viewSignData.record.retained_qty ?? 0}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('k_retained_location')}：</span>
+                  {viewSignData.record.retained_location || '-'}
+                </div>
+                {viewSignData.record.remark && (
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">{tc('remark')}：</span>
+                    {viewSignData.record.remark}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>{t('k_color_list')}</Label>
+                {viewSignData.colors.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">{t('k_no_sign_record')}</p>
+                ) : (
+                  <table className="w-full text-sm border">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="p-2 text-left">{t('k_color_name')}</th>
+                        <th className="p-2 text-left">L*</th>
+                        <th className="p-2 text-left">a*</th>
+                        <th className="p-2 text-left">b*</th>
+                        <th className="p-2 text-left">{t('k_de_threshold')}</th>
+                        <th className="p-2 text-left">{t('k_measure_device')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {viewSignData.colors.map((c) => (
+                        <tr key={c.id} className="border-b">
+                          <td className="p-2">
+                            {c.color_name}
+                            <span className="ml-1 font-mono text-xs text-muted-foreground">
+                              {c.color_no}
+                            </span>
+                          </td>
+                          <td className="p-2">{Number(c.l_value)}</td>
+                          <td className="p-2">{Number(c.a_value)}</td>
+                          <td className="p-2">{Number(c.b_value)}</td>
+                          <td className="p-2">{Number(c.de_threshold)}</td>
+                          <td className="p-2">{c.measure_device || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </MainLayout>

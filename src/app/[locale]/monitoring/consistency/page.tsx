@@ -15,6 +15,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   AlertCircle,
   CheckCircle,
@@ -59,8 +67,6 @@ interface SagaStats {
   failed: number;
   compensated: number;
 }
-
-const PAGE_SIZE = 10;
 
 function getStatusColor(status: SagaLog['status']): string {
   switch (status) {
@@ -119,6 +125,7 @@ export default function ConsistencyMonitorPage() {
   const ts = useTranslations('Common');
   const t = useTranslations('Monitoring');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const [allSagas, setAllSagas] = useState<SagaLog[]>([]);
   const [stats, setStats] = useState<SagaStats>({
@@ -133,6 +140,9 @@ export default function ConsistencyMonitorPage() {
   const [selectedSaga, setSelectedSaga] = useState<SagaLog | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
 
   const fetchIdRef = useRef(0);
 
@@ -181,12 +191,22 @@ export default function ConsistencyMonitorPage() {
     : allSagas.filter((s) => s.status === statusFilter);
 
   // 分页后的数据
-  const totalPages = Math.ceil(filteredSagas.length / PAGE_SIZE) || 1;
+  const totalPages = Math.ceil(filteredSagas.length / pageSize) || 1;
   const safePage = Math.min(currentPage, totalPages);
   const paginatedSagas = filteredSagas.slice(
-    (safePage - 1) * PAGE_SIZE,
-    safePage * PAGE_SIZE
+    (safePage - 1) * pageSize,
+    safePage * pageSize
   );
+
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setCurrentPage(n);
+  };
 
   const handleFilterChange = (value: string) => {
     setStatusFilter(value);
@@ -403,31 +423,31 @@ export default function ConsistencyMonitorPage() {
                   </TableBody>
                 </Table>
 
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4">
-                    <span className="text-sm text-gray-500">
-                      {t('consistency.page')} {safePage} / {totalPages}
+                {filteredSagas.length > 0 && (
+                  <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {tStd('paginationSummary', { total: filteredSagas.length, pages: totalPages })}
                     </span>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={safePage <= 1}
-                        onClick={() => setCurrentPage(p => p - 1)}
-                      >
-                        {t('consistency.prevPage')}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={safePage >= totalPages}
-                        onClick={() => setCurrentPage(p => p + 1)}
-                      >
-                        {t('consistency.nextPage')}
-                      </Button>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setCurrentPage(1); }}>
+                        <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                          <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                          <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button variant="outline" size="sm" onClick={() => setCurrentPage(Math.max(1, safePage - 1))} disabled={safePage <= 1}>{tStd('prevPage')}</Button>
+                      <span className="text-sm">{tStd('pageNumber', { page: safePage, pages: totalPages })}</span>
+                      <Button variant="outline" size="sm" onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))} disabled={safePage >= totalPages}>{tStd('nextPage')}</Button>
+                      <div className="flex items-center gap-1">
+                        <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page: safePage, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                        <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                      </div>
                     </div>
                   </div>
                 )}
+                {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
               </>
             )}
           </CardContent>

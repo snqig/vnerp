@@ -6,6 +6,7 @@ import { query, execute, SqlValue } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { numericFilter } from '@/lib/query-filter';
+import { calculateDeltaE, judgeDeltaE } from '@/lib/color-diff';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -44,6 +45,78 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
+/**
+ * 签样色样基准联动（POST/PUT 共用）：
+ * - color_standard_id 为 null/undefined → 清除 detail_data 中的联动信息
+ * - 有 id → 查色样基准 Lab，有 measured_lab 则按 CIE76 算 ΔE 并判定（阈值取色样档案 de_threshold），
+ *   结果 merge 进 detail_data.color_standard
+ * 返回 judge 为 ''（未判定）或 'pass'/'fail'；found=false 表示色样不存在（调用方不更新）。
+ */
+async function resolveColorStandardLink(
+  body: {
+    color_standard_id?: number | string | null;
+    measured_lab?: { l: number; a: number; b: number };
+  },
+  detail_data: unknown
+): Promise<{ detail: SqlValue; judge: '' | 'pass' | 'fail'; found: boolean }> {
+  let baseDetail: Record<string, unknown> = {};
+  if (typeof detail_data === 'string' && detail_data) {
+    try {
+      baseDetail = JSON.parse(detail_data) as Record<string, unknown>;
+    } catch {
+      baseDetail = { raw: detail_data };
+    }
+  } else if (detail_data && typeof detail_data === 'object') {
+    baseDetail = detail_data as Record<string, unknown>;
+  }
+
+  const csId = body.color_standard_id;
+  if (!csId) {
+    const rest = { ...baseDetail };
+    delete rest.color_standard;
+    return {
+      detail: Object.keys(rest).length > 0 ? JSON.stringify(rest) : null,
+      judge: '',
+      found: true,
+    };
+  }
+
+  const stdRows = await query(
+    `SELECT id, color_no, color_name, l_value, a_value, b_value, de_threshold
+     FROM sal_sample_color_standard WHERE id = ? AND deleted = 0`,
+    [Number(csId)]
+  );
+  const std = stdRows[0];
+  if (!std) {
+    return { detail: (detail_data || null) as SqlValue, judge: '', found: false };
+  }
+
+  const baseLab = { l: Number(std.l_value), a: Number(std.a_value), b: Number(std.b_value) };
+  const threshold = Number(std.de_threshold ?? 1.5);
+  const colorInfo: Record<string, unknown> = {
+    color_standard_id: std.id,
+    color_no: std.color_no,
+    color_name: std.color_name,
+    base_lab: baseLab,
+    de_threshold: threshold,
+  };
+  let judge: '' | 'pass' | 'fail' = '';
+  const ml = body.measured_lab;
+  if (
+    ml &&
+    typeof ml.l === 'number' &&
+    typeof ml.a === 'number' &&
+    typeof ml.b === 'number'
+  ) {
+    const deltaE = calculateDeltaE(baseLab, ml);
+    judge = judgeDeltaE(deltaE, threshold);
+    colorInfo.measured_lab = ml;
+    colorInfo.delta_e = deltaE;
+    colorInfo.de_judge = judge;
+  }
+  return { detail: JSON.stringify({ ...baseDetail, color_standard: colorInfo }), judge, found: true };
+}
+
 export const POST = withPermission(
   async (request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
@@ -66,6 +139,19 @@ export const POST = withPermission(
     } = body;
 
     if (!product_name) return errorResponse(ts('k_1bhfx0a'), 400, 400);
+
+    // 签样色样基准联动（与 PUT 共用 resolveColorStandardLink）
+    let finalDetail: SqlValue = detail_data || null;
+    let finalConclusion = conclusion || 'pending';
+    if ('color_standard_id' in body) {
+      const resolved = await resolveColorStandardLink(body, detail_data);
+      if (resolved.found) {
+        finalDetail = resolved.detail;
+        if (resolved.judge && (!conclusion || conclusion === 'pending')) {
+          finalConclusion = resolved.judge;
+        }
+      }
+    }
 
     const now = new Date();
     const testNo =
@@ -91,8 +177,8 @@ export const POST = withPermission(
         tester || null,
         test_date || null,
         result_summary || null,
-        detail_data || null,
-        conclusion || 'pending',
+        finalDetail,
+        finalConclusion,
         remark || null,
       ]
     );
@@ -189,6 +275,29 @@ export const PUT = withPermission(
     if (remark !== undefined) {
       fields.push('remark = ?');
       values.push(remark);
+    }
+
+    // 签样色样基准联动（编辑重算 ΔE）：显式传 color_standard_id（含 null 清除）时重写 detail_data
+    if ('color_standard_id' in body) {
+      const resolved = await resolveColorStandardLink(body, detail_data);
+      if (resolved.found) {
+        const ddIdx = fields.indexOf('detail_data = ?');
+        if (ddIdx >= 0) {
+          fields.splice(ddIdx, 1);
+          values.splice(ddIdx, 1);
+        }
+        fields.push('detail_data = ?');
+        values.push(resolved.detail);
+        if (resolved.judge && (!conclusion || conclusion === 'pending')) {
+          const ccIdx = fields.indexOf('conclusion = ?');
+          if (ccIdx >= 0) {
+            fields.splice(ccIdx, 1);
+            values.splice(ccIdx, 1);
+          }
+          fields.push('conclusion = ?');
+          values.push(resolved.judge);
+        }
+      }
     }
 
     if (fields.length === 0) return errorResponse(ts('k_1kyikfw'), 400, 400);

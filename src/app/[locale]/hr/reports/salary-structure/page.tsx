@@ -4,14 +4,7 @@ import { useState, useEffect } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SalaryStructureChart } from '@/components/hr/charts/SalaryStructureChart';
@@ -75,6 +68,11 @@ export default function SalaryStructurePage() {
     );
   }
 
+  const distributionColumns: StandardTableColumn<{ range: string; count: number }>[] = [
+    { key: 'range', title: t('salaryRange') || ts('k_z8qk4l'), render: (r) => <span className="font-medium">{r.range}</span> },
+    { key: 'count', title: t('headcount') || ts('k_1qpwf8n'), align: 'right', render: (r) => r.count },
+  ];
+
   return (
     <MainLayout>
       <div className="container mx-auto py-6 space-y-6">
@@ -131,22 +129,13 @@ export default function SalaryStructurePage() {
               <CardTitle className="text-lg">{t('salaryDistribution') || ts('k_3s84jw')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('salaryRange') || ts('k_z8qk4l')}</TableHead>
-                    <TableHead className="text-right">{t('headcount') || ts('k_1qpwf8n')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data?.distribution.map((d, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-medium">{d.range}</TableCell>
-                      <TableCell className="text-right">{d.count}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <StandardTable
+                columns={distributionColumns}
+                dataSource={data?.distribution || []}
+                rowKey={(r, i) => String(i)}
+                rowSelectable={false}
+                showPagination={false}
+              />
             </CardContent>
           </Card>
         </div>

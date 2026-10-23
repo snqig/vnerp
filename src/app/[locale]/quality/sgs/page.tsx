@@ -1,8 +1,6 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,9 +37,8 @@ import {
   buildSgsSchema,
   firstZodMessage,
 } from '@/lib/validators/quality-form';
-import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { StandardTable, StandardTableColumn } from '@/components/common';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
@@ -267,11 +264,9 @@ export default function SGSManagementPage() {
     expiring: Cert[];
     total: number;
   }>({ expired: [], expiring: [], total: 0 });
-  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'cert_no');
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    sortedData,
-    (r) => String(r.id)
-  );
+  const [selectedRows, setSelectedRows] = useState<Cert[]>([]);
+  const [pageSize] = useState(20);
+  const sortedList = useMemo(() => list, [list]);
 
   const fetchData = async () => {
     try {
@@ -503,9 +498,9 @@ export default function SGSManagementPage() {
                 { key: 'expire_date', label: t('validUntil'), width: 12 },
               ]}
               data={
-                selectedCount > 0
-                  ? sortedData.filter((i) => i.id && isSelected(String(i.id)))
-                  : sortedData
+                selectedRows.length > 0
+                  ? list.filter((i) => selectedRows.some((sr) => sr.id === i.id))
+                  : list
               }
             />
           </div>
@@ -547,179 +542,117 @@ export default function SGSManagementPage() {
 
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                  </TableHead>
-                  <TableHead className="text-xs w-12 text-center">{tc('serialNo')}</TableHead>
-                  <SortableTableHeader
-                    field="cert_no"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    <span className="text-xs">{t('certNo')}</span>
-                  </SortableTableHeader>
-                  <SortableTableHeader
-                    field="material_name"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    <span className="text-xs">{tc('materialName')}</span>
-                  </SortableTableHeader>
-                  <TableHead className="text-xs">{tc('supplier')}</TableHead>
-                  <TableHead className="text-xs">{t('certType')}</TableHead>
-                  <TableHead className="text-xs">{t('testResult')}</TableHead>
-                  <TableHead className="text-xs">{t('testOrg')}</TableHead>
-                  <TableHead className="text-xs">{t('issueDate')}</TableHead>
-                  <SortableTableHeader
-                    field="expire_date"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    <span className="text-xs">{t('validUntil')}</span>
-                  </SortableTableHeader>
-                  <SortableTableHeader
-                    field="status"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    <span className="text-xs">{tc('status')}</span>
-                  </SortableTableHeader>
-                  <TableHead className="text-xs">{t('testItems')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedData.map((item, index) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={isSelected(String(item.id))}
-                        onCheckedChange={() => toggle(String(item.id))}
-                      />
-                    </TableCell>
-                    <TableCell className="text-xs text-center text-muted-foreground">
-                      {(page - 1) * 20 + index + 1}
-                    </TableCell>
-                    <TableCell className="text-xs font-mono">{item.cert_no}</TableCell>
-                    <TableCell className="text-xs">{item.material_name || '-'}</TableCell>
-                    <TableCell className="text-xs">{item.supplier_name || '-'}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs">
-                        {displayCertType(item.cert_type)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={testResultMap[item.test_result]?.variant || 'outline'}
-                        className="text-xs"
+            <StandardTable<Cert>
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={(rows) => setSelectedRows(rows)}
+              dataSource={sortedList}
+              columns={[
+                {
+                  key: 'serialNo',
+                  title: tc('serialNo'),
+                  width: 60,
+                  align: 'center',
+                  render: (_row, index) => (
+                    <span className="text-muted-foreground">{index + 1}</span>
+                  ),
+                },
+                { key: 'cert_no', title: t('certNo') },
+                { key: 'material_name', title: tc('materialName') },
+                { key: 'supplier_name', title: tc('supplier') },
+                {
+                  key: 'cert_type',
+                  title: t('certType'),
+                  render: (row) => <Badge variant="outline" className="text-xs">{displayCertType(row.cert_type)}</Badge>,
+                },
+                {
+                  key: 'test_result',
+                  title: t('testResult'),
+                  render: (row) => (
+                    <Badge variant={testResultMap[row.test_result]?.variant || 'outline'} className="text-xs">
+                      {t(testResultMap[row.test_result]?.label || 'pendingTest')}
+                    </Badge>
+                  ),
+                },
+                { key: 'test_org', title: t('testOrg') },
+                { key: 'issue_date', title: t('issueDate') },
+                {
+                  key: 'expire_date',
+                  title: t('validUntil'),
+                  render: (row) => (
+                    <span
+                      className={
+                        isExpired(row.expire_date)
+                          ? 'text-red-600 dark:text-red-400 font-medium'
+                          : isExpiring(row.expire_date)
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : ''
+                      }
+                    >
+                      {row.expire_date || '-'}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'status',
+                  title: tc('status'),
+                  render: (row) => (
+                    <Badge variant={statusMap[row.status]?.variant || 'outline'} className="text-xs">
+                      {t(statusMap[row.status]?.label || tc('unknown'))}
+                    </Badge>
+                  ),
+                },
+                { key: 'item_count', title: t('testItems'), render: (row) => <>{row.item_count ?? 0} {t('items')}</> },
+                {
+                  key: 'actions',
+                  title: tc('actions'),
+                  width: 100,
+                  render: (row) => (
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        onClick={() => {
+                          if (row.id) handleViewDetail(row.id);
+                        }}
                       >
-                        {t(testResultMap[item.test_result]?.label || 'pendingTest')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs">{item.test_org || '-'}</TableCell>
-                    <TableCell className="text-xs">{item.issue_date || '-'}</TableCell>
-                    <TableCell className="text-xs">
-                      <span
-                        className={
-                          isExpired(item.expire_date)
-                            ? 'text-red-600 dark:text-red-400 font-medium'
-                            : isExpiring(item.expire_date)
-                              ? 'text-amber-600 dark:text-amber-400'
-                              : ''
-                        }
+                        <FileCheck className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        onClick={() => {
+                          setEditItem(row);
+                          setShowDialog(true);
+                        }}
                       >
-                        {item.expire_date || '-'}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={statusMap[item.status]?.variant || 'outline'}
-                        className="text-xs"
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+                        onClick={() => {
+                          if (row.id) handleDelete(row.id);
+                        }}
                       >
-                        {t(statusMap[item.status]?.label || tc('unknown'))}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {item.item_count ?? 0}
-                      {t('items')}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0"
-                          onClick={() => {
-                            if (item.id) handleViewDetail(item.id);
-                          }}
-                        >
-                          <FileCheck className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0"
-                          onClick={() => {
-                            setEditItem(item);
-                            setShowDialog(true);
-                          }}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                          onClick={() => {
-                            if (item.id) handleDelete(item.id);
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {sortedData.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
-                      {t('noSGSCertRecords')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ),
+                },
+              ]}
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              onPageChange={(p) => setPage(p)}
+              emptyText={t('noSGSCertRecords')}
+            />
           </CardContent>
         </Card>
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{tc('totalRecords', { count: total })}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" resizable>

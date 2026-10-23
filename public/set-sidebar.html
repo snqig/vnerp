@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>切换导航模式为 Sidebar</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background:#0f172a; color:#e2e8f0; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+    .card { background:#1e293b; padding:32px 40px; border-radius:12px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,.4); }
+    .ok { color:#4ade80; font-size:42px; }
+    p { color:#94a3b8; }
+    code { background:#0f172a; padding:2px 6px; border-radius:4px; color:#fbbf24; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="ok">✓</div>
+    <h2>已切换导航模式为 sidebar</h2>
+    <p>正在跳转到控制台……</p>
+  </div>
+  <script>
+    // 与 src/hooks/useSnowAdminTheme.tsx 的 STORAGE_KEY / 默认结构保持一致
+    localStorage.setItem('snow-admin-theme', JSON.stringify({
+      navigationMode: 'sidebar',
+      sidebarDark: false,
+      colorWeak: false,
+      grayMode: false
+    }));
+    setTimeout(function () { location.href = '/dashboard'; }, 900);
+  </script>
+</body>
+</html>

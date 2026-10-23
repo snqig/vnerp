@@ -1,4 +1,4 @@
-﻿import { getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 
 ;
 import { NextRequest } from 'next/server';
@@ -64,7 +64,7 @@ export const GET = withPermission(
     const cached = await cache.get<{ rows: any[]; total: number }>(cacheKey);
     if (cached) {
       const totalPages = Math.ceil(cached.total / pageSize);
-      return paginatedResponse(cached.rows, { page, pageSize, total: cached.total, totalPages, fromCache: true });
+      return paginatedResponse(cached.rows, { page, pageSize, total: cached.total, totalPages });
     }
 
     const countRows = await query(

@@ -1,7 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useRowSelection } from '@/lib/useRowSelection';
+import { toDateTimeLocal } from '@/lib/date-utils';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { EQUIPMENT_PLAN_STATUS_LABEL } from '@/lib/status-labels';
 import { useEffect, useState, useCallback } from 'react';
@@ -12,6 +12,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { useRowSelection } from '@/lib/useRowSelection';
 import {
   Dialog,
   DialogContent,
@@ -27,14 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Edit, Trash2, RefreshCw, Wrench, ClipboardList, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
@@ -140,6 +142,7 @@ export default function EquipmentMaintenancePage() {
   const ts = useTranslations('Equipment');
   // 翻译钩子
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const RECORD_RESULT: Record<string, { label: string; color: string }> = {
     completed: { label: tc('normal'), color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
@@ -154,7 +157,33 @@ export default function EquipmentMaintenancePage() {
   const [planTotal, setPlanTotal] = useState(0);
   const [recordTotal, setRecordTotal] = useState(0);
   const [planPage, setPlanPage] = useState(1);
+  const [planPageSize, setPlanPageSize] = useState(20);
+  const [planTotalPages, setPlanTotalPages] = useState(0);
+  const [planJumpValue, setPlanJumpValue] = useState('');
+  const [planJumpError, setPlanJumpError] = useState<string | null>(null);
+  const planDoJump = () => {
+    const n = Number(planJumpValue);
+    if (!planJumpValue || isNaN(n) || n < 1 || n > planTotalPages) {
+      setPlanJumpError(tStd('invalidPage', { max: planTotalPages }));
+      return;
+    }
+    setPlanJumpError(null);
+    setPlanPage(n);
+  };
   const [recordPage, setRecordPage] = useState(1);
+  const [recordPageSize, setRecordPageSize] = useState(20);
+  const [recordTotalPages, setRecordTotalPages] = useState(0);
+  const [recordJumpValue, setRecordJumpValue] = useState('');
+  const [recordJumpError, setRecordJumpError] = useState<string | null>(null);
+  const recordDoJump = () => {
+    const n = Number(recordJumpValue);
+    if (!recordJumpValue || isNaN(n) || n < 1 || n > recordTotalPages) {
+      setRecordJumpError(tStd('invalidPage', { max: recordTotalPages }));
+      return;
+    }
+    setRecordJumpError(null);
+    setRecordPage(n);
+  };
   const [searchNo, setSearchNo] = useState('');
   const [stats, setStats] = useState({
     pending: 0,
@@ -182,40 +211,42 @@ export default function EquipmentMaintenancePage() {
   const fetchPlans = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(planPage), pageSize: '20' });
+      const params = new URLSearchParams({ page: String(planPage), pageSize: String(planPageSize) });
       if (searchNo) params.append('planNo', searchNo);
       const res = await authFetch('/api/equipment/plan?' + params);
       const result = await res.json();
       if (result.success) {
         setPlans(result.data?.list || []);
         setPlanTotal(result.data?.total || 0);
+        setPlanTotalPages(Math.ceil((result.data?.total || 0) / planPageSize));
       }
     } catch {
       toast({ title: tc('fetchFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [planPage, searchNo, tc, toast]);
+  }, [planPage, planPageSize, searchNo, tc, toast]);
 
   const fetchRecords = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
         page: String(recordPage),
-        pageSize: '20',
+        pageSize: String(recordPageSize),
       });
       const res = await authFetch('/api/equipment/maintenance?' + params);
       const result = await res.json();
       if (result.success) {
         setRecords(result.data?.list || []);
         setRecordTotal(result.data?.total || 0);
+        setRecordTotalPages(Math.ceil((result.data?.total || 0) / recordPageSize));
       }
     } catch {
       toast({ title: tc('fetchFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [recordPage, tc, toast]);
+  }, [recordPage, recordPageSize, tc, toast]);
 
   useEffect(() => {
     fetchEquipment();
@@ -564,25 +595,31 @@ export default function EquipmentMaintenancePage() {
                     </TableBody>
                   </Table>
                 )}
-                <div className="flex items-center justify-between mt-4">
-                  <span className="text-sm text-gray-500">{ts('k_1vsm2qk')}{planTotal}{ts('k_1rfm5gs')}</span>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={planPage <= 1}
-                      onClick={() => setPlanPage((p) => p - 1)}
-                    >
-                      {tc('prevPage')}</Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={planPage * 20 >= planTotal}
-                      onClick={() => setPlanPage((p) => p + 1)}
-                    >
-                      {tc('nextPage')}</Button>
+                {planTotal > 0 && (
+                  <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {tStd('paginationSummary', { total: planTotal, pages: planTotalPages })}
+                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Select value={String(planPageSize)} onValueChange={(v) => { setPlanPageSize(Number(v)); setPlanPage(1); }}>
+                        <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                          <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                          <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button variant="outline" size="sm" onClick={() => setPlanPage(Math.max(1, planPage - 1))} disabled={planPage <= 1}>{tStd('prevPage')}</Button>
+                      <span className="text-sm">{tStd('pageNumber', { page: planPage, pages: planTotalPages })}</span>
+                      <Button variant="outline" size="sm" onClick={() => setPlanPage(Math.min(planTotalPages, planPage + 1))} disabled={planPage >= planTotalPages}>{tStd('nextPage')}</Button>
+                      <div className="flex items-center gap-1">
+                        <Input className="w-[70px]" value={planJumpValue} onChange={(e) => setPlanJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page: planPage, pages: planTotalPages })} onKeyDown={(e) => { if (e.key === 'Enter') planDoJump(); }} />
+                        <Button variant="outline" size="sm" onClick={planDoJump}>{tStd('jump')}</Button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+                {planJumpError && <p className="text-destructive text-sm mt-2">{planJumpError}</p>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -648,7 +685,13 @@ export default function EquipmentMaintenancePage() {
                                   variant="ghost"
                                   className="h-7 w-7 p-0"
                                   onClick={() => {
-                                    setForm(r);
+                                    // start_time/end_time 为 DATETIME 列，UTC ISO 串直塞
+                                    // datetime-local 会回显空白/偏移 8h，统一转本地钟面
+                                    setForm({
+                                      ...r,
+                                      start_time: toDateTimeLocal(r.start_time),
+                                      end_time: toDateTimeLocal(r.end_time),
+                                    });
                                     setDialogType('record');
                                     setDialogOpen(true);
                                   }}
@@ -677,25 +720,31 @@ export default function EquipmentMaintenancePage() {
                     </TableBody>
                   </Table>
                 )}
-                <div className="flex items-center justify-between mt-4">
-                  <span className="text-sm text-gray-500">{ts('k_1vsm2qk')}{recordTotal}{ts('k_1rfm5gs')}</span>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={recordPage <= 1}
-                      onClick={() => setRecordPage((p) => p - 1)}
-                    >
-                      {tc('prevPage')}</Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={recordPage * 20 >= recordTotal}
-                      onClick={() => setRecordPage((p) => p + 1)}
-                    >
-                      {tc('nextPage')}</Button>
+                {recordTotal > 0 && (
+                  <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {tStd('paginationSummary', { total: recordTotal, pages: recordTotalPages })}
+                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Select value={String(recordPageSize)} onValueChange={(v) => { setRecordPageSize(Number(v)); setRecordPage(1); }}>
+                        <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                          <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                          <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button variant="outline" size="sm" onClick={() => setRecordPage(Math.max(1, recordPage - 1))} disabled={recordPage <= 1}>{tStd('prevPage')}</Button>
+                      <span className="text-sm">{tStd('pageNumber', { page: recordPage, pages: recordTotalPages })}</span>
+                      <Button variant="outline" size="sm" onClick={() => setRecordPage(Math.min(recordTotalPages, recordPage + 1))} disabled={recordPage >= recordTotalPages}>{tStd('nextPage')}</Button>
+                      <div className="flex items-center gap-1">
+                        <Input className="w-[70px]" value={recordJumpValue} onChange={(e) => setRecordJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page: recordPage, pages: recordTotalPages })} onKeyDown={(e) => { if (e.key === 'Enter') recordDoJump(); }} />
+                        <Button variant="outline" size="sm" onClick={recordDoJump}>{tStd('jump')}</Button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+                {recordJumpError && <p className="text-destructive text-sm mt-2">{recordJumpError}</p>}
               </CardContent>
             </Card>
           </TabsContent>

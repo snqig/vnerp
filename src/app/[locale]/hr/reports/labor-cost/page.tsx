@@ -115,7 +115,7 @@ export default function LaborCostReportPage() {
       setError(null);
       const res = await authFetch(`/api/hr/reports/labor-cost?month=${month}`);
       const json = await res.json();
-      if (json.success) {
+      if (json.code === 200) {
         setData(json.data);
       }
     } catch (err) {

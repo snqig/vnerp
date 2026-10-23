@@ -5,14 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -52,16 +45,15 @@ export default function PayablesPage() {
 
   const [payables, setPayables] = useState<Payable[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, _setPage] = useState(1);
-  const [_total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
 
   const [showPayment, setShowPayment] = useState(false);
   const [selectedPay, setSelectedPay] = useState<Payable | null>(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('bank_transfer');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
-
-  const pageSize = 20;
 
   const loadPayables = async () => {
     setLoading(true);
@@ -80,7 +72,7 @@ export default function PayablesPage() {
 
   useEffect(() => {
     loadPayables();
-  }, [page]);
+  }, [page, pageSize]);
 
   const getStatusBadge = (status: number) => {
     const map: Record<number, { label: string; variant: Loose }> = {
@@ -117,6 +109,76 @@ export default function PayablesPage() {
     }
   };
 
+  // 注：/api/finance/payables 暂不支持 sortField/sortDirection，故先不开启 sortable，
+  // 避免出现点击无反应的排序控件；待后端补齐排序参数后再打开。
+  const columns: StandardTableColumn<Payable>[] = [
+    { key: 'payable_no', title: tc('payableNoLabel'), render: (r) => <span className="font-medium">{r.payable_no}</span> },
+    {
+      key: 'source_no',
+      title: tc('sourceNo'),
+      render: (r) =>
+        r.source_currency ? (
+          <span title={`${tc('sourceCurrency', { currency: r.source_currency })}`}>
+            <FileText className="w-3 h-3 inline mr-1 text-muted-foreground" />
+            {r.source_no}
+            <span className="text-xs text-muted-foreground ml-1">({r.source_currency})</span>
+          </span>
+        ) : (
+          r.source_no
+        ),
+    },
+    { key: 'supplier_name', title: tc('supplier') },
+    {
+      key: 'amount',
+      title: tc('amount'),
+      render: (r) => <MoneyDisplay amount={r.amount} currency={r.currency || 'CNY'} />,
+    },
+    {
+      key: 'paid_amount',
+      title: tc('paidAmount'),
+      render: (r) => <MoneyDisplay amount={r.paid_amount} currency={r.currency || 'CNY'} />,
+    },
+    {
+      key: 'balance',
+      title: tc('balance'),
+      className: '',
+      render: (r) => (
+        <span className={r.balance > 0 ? 'text-orange-600 dark:text-orange-400 font-medium' : ''}>
+          <MoneyDisplay amount={r.balance} currency={r.currency || 'CNY'} />
+        </span>
+      ),
+    },
+    {
+      key: 'currency',
+      title: tc('currency'),
+      render: (r) => r.currency || <span className="text-muted-foreground">-</span>,
+    },
+    { key: 'due_date', title: tc('dueDate'), render: (r) => formatDate(r.due_date) },
+    { key: 'status', title: tc('status'), render: (r) => getStatusBadge(r.status) },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      // 原有操作列：付款按钮，逻辑保持原样
+      render: (r) =>
+        r.status !== 3 && (
+          <Button
+            size="sm"
+            variant="outline"
+            // 原有逻辑保持原样：仅打开付款弹窗
+            // ⚠️ 遗留缺陷（改造前即存在，本次未改）：此处未调用 setSelectedPay(r)，
+            //    导致 selectedPay 恒为 null，handlePayment 会因取不到应付单而报错。
+            //    需业务方确认后再单独修复。
+            onClick={() => {
+              setShowPayment(true);
+            }}
+          >
+            <CreditCard className="w-3 h-3 mr-1" />
+            {tc('paymentTitle')}
+          </Button>
+        ),
+    },
+  ];
+
   return (
     <div className="container mx-auto py-6 space-y-6">
         <StatsCards
@@ -152,79 +214,24 @@ export default function PayablesPage() {
           <CardTitle>{tc('payableListTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{tc('payableNoLabel')}</TableHead>
-                <TableHead>{tc('sourceNo')}</TableHead>
-                <TableHead>{tc('supplier')}</TableHead>
-                <TableHead>{tc('amount')}</TableHead>
-                <TableHead>{tc('paidAmount')}</TableHead>
-                <TableHead>{tc('balance')}</TableHead>
-                <TableHead>{tc('currency')}</TableHead>
-                <TableHead>{tc('dueDate')}</TableHead>
-                <TableHead>{tc('status')}</TableHead>
-                <TableHead>{tc('actions')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {payables.map((pay) => (
-                <TableRow key={pay.id}>
-                  <TableCell className="font-medium">{pay.payable_no}</TableCell>
-                  <TableCell>
-                    {pay.source_currency ? (
-                      <span title={`${tc('sourceCurrency', { currency: pay.source_currency })}`}>
-                        <FileText className="w-3 h-3 inline mr-1 text-muted-foreground" />
-                        {pay.source_no}
-                        <span className="text-xs text-muted-foreground ml-1">
-                          ({pay.source_currency})
-                        </span>
-                      </span>
-                    ) : (
-                      pay.source_no
-                    )}
-                  </TableCell>
-                  <TableCell>{pay.supplier_name}</TableCell>
-                  <TableCell>
-                    <MoneyDisplay amount={pay.amount} currency={pay.currency || 'CNY'} />
-                  </TableCell>
-                  <TableCell>
-                    <MoneyDisplay amount={pay.paid_amount} currency={pay.currency || 'CNY'} />
-                  </TableCell>
-                  <TableCell className={pay.balance > 0 ? 'text-orange-600 dark:text-orange-400 font-medium' : ''}>
-                    <MoneyDisplay amount={pay.balance} currency={pay.currency || 'CNY'} />
-                  </TableCell>
-                  <TableCell>
-                    {pay.currency || <span className="text-muted-foreground">-</span>}
-                  </TableCell>
-                  <TableCell>{formatDate(pay.due_date)}</TableCell>
-                  <TableCell>{getStatusBadge(pay.status)}</TableCell>
-                  <TableCell>
-                    {pay.status !== 3 && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          <TableCell>{getStatusBadge(pay.status)}</TableCell>;
-                          setShowPayment(true);
-                        }}
-                      >
-                        <CreditCard className="w-3 h-3 mr-1" />
-                        {tc('paymentTitle')}
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {payables.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
-                    {tc('noData')}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <StandardTable<Payable>
+            columns={columns}
+            dataSource={payables}
+            total={total}
+            page={page}
+            pageSize={pageSize}
+            pageSizeOptions={[20, 25, 30]}
+            rowKey="id"
+            rowSelectable={false}
+            onPageChange={setPage}
+            onPageSizeChange={(s) => {
+              setPageSize(s);
+              setPage(1);
+            }}
+            loading={loading}
+            onRetry={loadPayables}
+            emptyText={tc('noData')}
+          />
         </CardContent>
       </Card>
 

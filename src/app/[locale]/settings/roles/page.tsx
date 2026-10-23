@@ -75,6 +75,7 @@ const permissionModules = getPermissionModules();
 export default function RolesPage() {
   // 翻译钩子
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
   // 权限目录本地化：优先取 messages 的 permModule.<id> / perm.<id>，
   // 缺失则回退权限目录内置中文名（zh-CN/vi 未翻译时回退中文，保证不回归）。
   const t = useTranslations();
@@ -99,6 +100,21 @@ export default function RolesPage() {
   const [menus, setMenus] = useState<Menu[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
 
   // 对话框状态
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -118,21 +134,23 @@ export default function RolesPage() {
   const fetchRoles = useCallback(async () => {
     setLoading(true);
     try {
-      const url = search
-        ? `/api/organization/role?keyword=${encodeURIComponent(search)}`
-        : '/api/organization/role';
+      const keywordParam = search ? `&keyword=${encodeURIComponent(search)}` : '';
+      const url = `/api/organization/role?page=${page}&pageSize=${pageSize}${keywordParam}`;
       const response = await authFetch(url);
       if (!response.ok) return;
       const result = await response.json();
       if (result.success) {
         setRoles(Array.isArray(result.data) ? result.data : result.data?.list || []);
+        const totalCount = result.data?.total || 0;
+        setTotal(totalCount);
+        setTotalPages(Math.ceil(totalCount / pageSize));
       }
     } catch {
       toast({ title: tc('fetchRoleListFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [search, page, pageSize]);
 
   // 获取菜单列表
   const fetchMenus = useCallback(async () => {
@@ -470,7 +488,7 @@ export default function RolesPage() {
                   placeholder={tc('searchRolePlaceholder')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && fetchRoles()}
+                  onKeyDown={(e) => e.key === 'Enter' && (setPage(1), fetchRoles())}
                   className="pl-10"
                 />
               </div>
@@ -537,6 +555,31 @@ export default function RolesPage() {
                 </TableBody>
               </Table>
             )}
+            {total > 0 && (
+              <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {tStd('paginationSummary', { total, pages: totalPages })}
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                    <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+                  <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+                  <div className="flex items-center gap-1">
+                    <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                    <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
           </CardContent>
         </Card>
       </div>

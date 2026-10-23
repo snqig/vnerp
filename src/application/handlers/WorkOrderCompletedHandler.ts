@@ -4,6 +4,7 @@ import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { WorkOrderCompletedEvent } from '@/domain/production/events/WorkOrderEvents';
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { expireDateFragment } from '@/lib/batch-expiry';
 import { InventoryCostService } from '@/application/services/InventoryCostService';
 import { appendInventoryTransaction, recomputeInventorySummary } from '@/lib/inventory-ledger';
 
@@ -76,9 +77,9 @@ export class WorkOrderCompletedHandler implements EventHandler<WorkOrderComplete
 
       await conn.execute(
         `INSERT INTO inv_inventory_batch
-           (material_id, material_name, batch_no, quantity, available_qty, warehouse_id, inbound_date, status, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW())`,
-        [productId, productName, batchNo, completedQty, completedQty, warehouseId, today]
+           (material_id, material_name, batch_no, quantity, available_qty, warehouse_id, inbound_date, produce_date, expire_date, status, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ${expireDateFragment()}, 1, NOW())`,
+        [productId, productName, batchNo, completedQty, completedQty, warehouseId, today, today, today, productId]
       );
 
       // 批次明细已新增：派生重算汇总表，杜绝双写漂移。

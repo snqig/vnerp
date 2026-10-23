@@ -10,14 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -32,11 +24,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Plus, RefreshCw, Undo2, CheckCircle, XCircle, Eye, Clipboard, DollarSign } from 'lucide-react';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { MoneyDisplay } from '@/components/ui/money-display';
+import {
+  StandardTable,
+  type StandardTableColumn,
+} from '@/components/common';
 
 interface ReturnItem {
   id?: number;
@@ -295,6 +299,17 @@ export default function PurchaseReturnPage() {
   const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
   const totalTax = items.reduce((sum, item) => sum + item.amount * (item.tax_rate / 100), 0);
 
+  const columns: StandardTableColumn<ReturnOrder>[] = [
+    { key: 'return_no', title: ts('k_nxkls'), render: (o: ReturnOrder) => <span className="font-mono text-sm">{o.return_no}</span> },
+    { key: 'order_no', title: tc('relatedOrder'), render: (o: ReturnOrder) => <span className="text-sm">{o.order_no || '-'}</span> },
+    { key: 'supplier_name', title: tc('supplier'), render: (o: ReturnOrder) => <span className="text-sm">{o.supplier_name}</span> },
+    { key: 'return_date', title: ts('k_k38lmg'), render: (o: ReturnOrder) => <span className="text-sm">{o.return_date}</span> },
+    { key: 'total_amount', title: tc('amount'), render: (o: ReturnOrder) => (<MoneyDisplay amount={Number(o.total_amount || 0)} currency={o.currency || 'CNY'} baseAmount={o.base_total_amount} baseCurrency={o.base_currency} showSymbol={false} />) },
+    { key: 'currency', title: tc('currency'), render: (o: ReturnOrder) => <span className="text-sm">{o.currency || 'CNY'}</span> },
+    { key: 'status', title: tc('status'), render: (o: ReturnOrder) => (<Badge className={statusMap[o.status]?.color || ''}>{statusMap[o.status]?.label || o.status}</Badge>) },
+    { key: 'actions', title: tc('actions'), align: 'right', render: (o: ReturnOrder) => (<div className="flex justify-end gap-1"><Button size="sm" variant="ghost" className="h-7" onClick={() => viewDetail(o)}><Eye className="h-3 w-3 mr-1" />{ts('k_xc5h04')}</Button>{o.status === 1 && <><Button size="sm" variant="ghost" className="h-7 text-blue-600 dark:text-blue-400" onClick={() => handleAction(o.id, 'approve')}><CheckCircle className="h-3 w-3 mr-1" />{ts('k_1ws11do')}</Button><Button size="sm" variant="ghost" className="h-7 text-red-600 dark:text-red-400" onClick={() => handleAction(o.id, 'cancel')}><XCircle className="h-3 w-3 mr-1" />{tc('cancel')}</Button></>}{o.status === 2 && <Button size="sm" variant="ghost" className="h-7 text-green-600 dark:text-green-400" onClick={() => handleAction(o.id, 'complete')}><CheckCircle className="h-3 w-3 mr-1" />{ts('k_17483b0')}</Button>}</div>) },
+  ];
+
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
@@ -350,124 +365,19 @@ export default function PurchaseReturnPage() {
           </div>
         </div>
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{ts('k_nxkls')}</TableHead>
-                  <TableHead>{tc('relatedOrder')}</TableHead>
-                  <TableHead>{tc('supplier')}</TableHead>
-                  <TableHead>{ts('k_k38lmg')}</TableHead>
-                  <TableHead>{tc('amount')}</TableHead>
-                  <TableHead>{tc('currency')}</TableHead>
-                  <TableHead>{tc('status')}</TableHead>
-                  <TableHead className="text-right">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
-                      <RefreshCw className="w-5 h-5 animate-spin mx-auto" />
-                    </TableCell>
-                  </TableRow>
-                ) : list.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                      {ts('k_s6w4nh')}</TableCell>
-                  </TableRow>
-                ) : (
-                  list.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-mono text-sm">{order.return_no}</TableCell>
-                      <TableCell className="text-sm">{order.order_no || '-'}</TableCell>
-                      <TableCell className="text-sm">{order.supplier_name}</TableCell>
-                      <TableCell className="text-sm">{order.return_date}</TableCell>
-                      <TableCell className="text-sm font-mono">
-                        <MoneyDisplay
-                          amount={Number(order.total_amount || 0)}
-                          currency={order.currency || 'CNY'}
-                          baseAmount={order.base_total_amount}
-                          baseCurrency={order.base_currency}
-                          showSymbol={false}
-                        />
-                      </TableCell>
-                      <TableCell className="text-sm">{order.currency || 'CNY'}</TableCell>
-                      <TableCell>
-                        <Badge className={statusMap[order.status]?.color || ''}>
-                          {statusMap[order.status]?.label || order.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7"
-                            onClick={() => viewDetail(order)}
-                          >
-                            <Eye className="h-3 w-3 mr-1" />
-                            {ts('k_xc5h04')}</Button>
-                          {order.status === 1 && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-blue-600 dark:text-blue-400"
-                                onClick={() => handleAction(order.id, 'approve')}
-                              >
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                {ts('k_1ws11do')}</Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-red-600 dark:text-red-400"
-                                onClick={() => handleAction(order.id, 'cancel')}
-                              >
-                                <XCircle className="h-3 w-3 mr-1" />
-                                {tc('cancel')}</Button>
-                            </>
-                          )}
-                          {order.status === 2 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 text-green-600 dark:text-green-400"
-                              onClick={() => handleAction(order.id, 'complete')}
-                            >
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              {ts('k_17483b0')}</Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<ReturnOrder>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={10}
+              loading={loading && list.length === 0}
+              emptyText={ts('k_s6w4nh')}
+            />
           </CardContent>
         </Card>
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}</Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 10 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}</Button>
-          </div>
-        </div>
       </div>
 
       {/* 新建退货对话框 */}

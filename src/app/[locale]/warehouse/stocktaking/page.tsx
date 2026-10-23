@@ -1,22 +1,14 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
 
 import { authFetch } from '@/lib/auth-fetch';
 import { STOCKTAKING_TYPE_LABEL, SPLIT_FLAG_LABEL } from '@/lib/status-labels';
 import { useEffect, useState } from 'react';
-import { MainLayout } from '@/components/layout';
+import { MainLayout, PageHeroHeader, ListToolbar } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -36,7 +28,6 @@ import { Plus, Search, Edit, Trash2, QrCode, CheckCircle, XCircle, Eye, Clipboar
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { WarehouseSelect } from '@/components/ui/warehouse-select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
@@ -105,12 +96,11 @@ export default function StocktakingPage() {
 
   const { toast } = useToast();
   const [list, setList] = useState<InventoryCheck[]>([]);
-  const { selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    list,
-    (r) => String(r.id)
-  );
+  // StandardTable：勾选（服务端分页，排序需后端支持）
+  const [selectedRows, setSelectedRows] = useState<InventoryCheck[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [searchNo, setSearchNo] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<InventoryCheck>>({});
@@ -156,7 +146,11 @@ export default function StocktakingPage() {
 
   const fetchData = async () => {
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: '20', checkNo: searchNo });
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+        checkNo: searchNo,
+      });
       const res = await authFetch('/api/warehouse/stocktaking?' + params);
       const result = await res.json();
       if (result.success) {
@@ -181,7 +175,7 @@ export default function StocktakingPage() {
   useEffect(() => {
     fetchData();
     fetchStats();
-  }, [page]);
+  }, [page, pageSize]);
 
   const handleSave = async () => {
     try {
@@ -310,23 +304,220 @@ export default function StocktakingPage() {
     } catch {}
   };
 
+  const columns: StandardTableColumn<InventoryCheck>[] = [
+    {
+      key: 'check_no',
+      title: t('checkNo'),
+      className: 'text-xs font-mono',
+      render: (item) => item.check_no,
+    },
+    {
+      key: 'warehouse_name',
+      title: tc('warehouse'),
+      className: 'text-xs',
+      render: (item) => item.warehouse_name || '-',
+    },
+    {
+      key: 'taking_type',
+      title: tc('type'),
+      className: 'text-xs',
+      render: (item) => TYPE_MAP[item.taking_type] || '-',
+    },
+    {
+      key: 'total_items',
+      title: t('checkItems'),
+      align: 'center',
+      className: 'text-xs',
+      render: (item) => item.total_items,
+    },
+    {
+      key: 'diff_items',
+      title: t('diffItems'),
+      align: 'center',
+      className: 'text-xs',
+      render: (item) => item.diff_items,
+    },
+    {
+      key: 'diff_amount',
+      title: t('diffAmount'),
+      align: 'center',
+      className: 'text-xs font-mono',
+      render: (item) => `¥${(Number(item.diff_amount) || 0).toFixed(2)}`,
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (item) => {
+        const st = STATUS_MAP[item.status] || STATUS_MAP[0];
+        return (
+          <Badge variant={st.variant} className="text-xs">
+            {st.label}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      // 原有操作列：扫码 / 取消 / 提交 / 审批 / 详情 / 编辑 / 删除，逻辑保持原样
+      render: (item) => (
+        <div className="flex gap-1">
+          {item.status === 1 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => openScanDialog(item)}
+            >
+              <QrCode className="h-3 w-3 mr-1" />
+              {t('scan')}
+            </Button>
+          )}
+          {(item.status === 0 || item.status === 1) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleAction(item.id, 'cancel')}
+            >
+              {tc('cancel')}
+            </Button>
+          )}
+          {item.status === 1 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleAction(item.id, 'submit')}
+            >
+              {tc('submit')}
+            </Button>
+          )}
+          {item.status === 2 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => setShowApproveDialog(true)}
+            >
+              {tc('approve')}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => openDetailDialog(item)}
+          >
+            <Eye className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              setEditItem(item);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          {[0, 4].includes(item.status) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+              onClick={() => handleDelete(item.id)}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const detailColumns: StandardTableColumn<InventoryCheckItem>[] = [
+    {
+      key: 'qr_code',
+      title: t('qrCodeCol'),
+      className: 'font-mono text-xs',
+      render: (item) => item.qr_code || '-',
+    },
+    {
+      key: 'material_name',
+      title: t('materialNameCol'),
+      className: 'text-xs',
+      render: (item) => item.material_name || '-',
+    },
+    {
+      key: 'split_flag',
+      title: tc('type'),
+      className: 'text-xs',
+      render: (item) => SPLIT_FLAG_MAP[item.split_flag] || t('whole'),
+    },
+    {
+      key: 'book_quantity',
+      title: t('bookQtyCol'),
+      align: 'center',
+      className: 'text-xs',
+      render: (item) => item.book_quantity,
+    },
+    {
+      key: 'actual_quantity',
+      title: t('actualQtyCol'),
+      align: 'center',
+      className: 'text-xs',
+      render: (item) => item.actual_quantity || '-',
+    },
+    {
+      key: 'difference',
+      title: t('diffQtyCol'),
+      align: 'center',
+      className: 'text-xs font-bold',
+      render: (item) => (
+        <span className={item.difference !== 0 ? 'text-red-600 dark:text-red-400' : ''}>
+          {item.difference > 0 ? '+' : ''}
+          {item.difference}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (item) => (
+        <Badge variant={item.status === 1 ? 'default' : 'outline'} className="text-xs">
+          {item.status === 0 ? t('unchecked') : item.status === 1 ? t('checked') : t('adjusted')}
+        </Badge>
+      ),
+    },
+  ];
+
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t('stocktaking')}</h1>
-          <div className="flex gap-2">
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder={tc('searchOrderNo')}
-                value={searchNo}
-                onChange={(e) => setSearchNo(e.target.value)}
-                className="w-36 h-8 text-sm"
-              />
-              <Button size="sm" variant="outline" onClick={fetchData}>
-                <Search className="h-3 w-3" />
-              </Button>
-            </div>
+        <PageHeroHeader
+          icon={ClipboardCheck}
+          title={t('stocktaking')}
+          action={
+            <Button size="sm" onClick={() => { setEditItem({}); setShowDialog(true); }}>
+              <Plus className="h-3 w-3 mr-1" />
+              {t('addStocktaking')}
+            </Button>
+          }
+        />
+        <ListToolbar>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder={tc('searchOrderNo')}
+              value={searchNo}
+              onChange={(e) => setSearchNo(e.target.value)}
+              className="w-36 h-8 text-sm"
+            />
+            <Button size="sm" variant="outline" onClick={fetchData}>
+              <Search className="h-3 w-3" />
+            </Button>
+          </div>
             <GlobalExportToolbar
               filename={ts('k_1uyxdj1')}
               title={ts('k_zfkd36')}
@@ -349,7 +540,7 @@ export default function StocktakingPage() {
                   formatter: (v) => STATUS_MAP[v]?.label || '-',
                 },
               ]}
-              data={selectedCount > 0 ? list.filter((i) => isSelected(String(i.id))) : list}
+              data={selectedRows.length > 0 ? selectedRows : list}
             />
             <Button
               size="sm"
@@ -361,8 +552,7 @@ export default function StocktakingPage() {
               <Plus className="h-3 w-3 mr-1" />
               {t('addStocktaking')}
             </Button>
-          </div>
-        </div>        <StatsCards
+        </ListToolbar>        <StatsCards
           configs={[
             { key: 'pending', label: '待盘点', icon: Clock, ...StatsTheme.orange },
             { key: 'counting', label: '盘点中', icon: ClipboardCheck, ...StatsTheme.blue },
@@ -382,158 +572,30 @@ export default function StocktakingPage() {
 
 
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40px]">
-                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                  </TableHead>
-                  <TableHead className="text-xs">{t('checkNo')}</TableHead>
-                  <TableHead className="text-xs">{tc('warehouse')}</TableHead>
-                  <TableHead className="text-xs">{tc('type')}</TableHead>
-                  <TableHead className="text-xs">{t('checkItems')}</TableHead>
-                  <TableHead className="text-xs">{t('diffItems')}</TableHead>
-                  <TableHead className="text-xs">{t('diffAmount')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => {
-                  const st = STATUS_MAP[item.status] || STATUS_MAP[0];
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={isSelected(String(item.id))}
-                          onCheckedChange={() => toggle(String(item.id))}
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">{item.check_no}</TableCell>
-                      <TableCell className="text-xs">{item.warehouse_name || '-'}</TableCell>
-                      <TableCell className="text-xs">{TYPE_MAP[item.taking_type] || '-'}</TableCell>
-                      <TableCell className="text-xs text-center">{item.total_items}</TableCell>
-                      <TableCell className="text-xs text-center">{item.diff_items}</TableCell>
-                      <TableCell className="text-xs text-center font-mono">
-                        ¥{(Number(item.diff_amount) || 0).toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
-                          {st.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {item.status === 1 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => openScanDialog(item)}
-                            >
-                              <QrCode className="h-3 w-3 mr-1" />
-                              {t('scan')}
-                            </Button>
-                          )}
-                          {(item.status === 0 || item.status === 1) && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleAction(item.id, 'cancel')}
-                            >
-                              {tc('cancel')}
-                            </Button>
-                          )}
-                          {item.status === 1 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleAction(item.id, 'submit')}
-                            >
-                              {tc('submit')}
-                            </Button>
-                          )}
-                          {item.status === 2 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => setShowApproveDialog(true)}
-                            >
-                              {tc('approve')}
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => openDetailDialog(item)}
-                          >
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => {
-                              setEditItem(item);
-                              setShowDialog(true);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          {[0, 4].includes(item.status) && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                              onClick={() => handleDelete(item.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                      {t('noStocktakingRecords')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<InventoryCheck>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              onRetry={fetchData}
+              emptyText={t('noStocktakingRecords')}
+              customStyle={{ containerClassName: 'px-2 pb-2' }}
+            />
           </CardContent>
         </Card>
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{t('totalRecordsCount', { count: total })}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('previousPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
@@ -674,52 +736,15 @@ export default function StocktakingPage() {
             <DialogHeader>
               <DialogTitle>{t('checkDetail')}</DialogTitle>
             </DialogHeader>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('qrCodeCol')}</TableHead>
-                  <TableHead>{t('materialNameCol')}</TableHead>
-                  <TableHead>{tc('type')}</TableHead>
-                  <TableHead>{t('bookQtyCol')}</TableHead>
-                  <TableHead>{t('actualQtyCol')}</TableHead>
-                  <TableHead>{t('diffQtyCol')}</TableHead>
-                  <TableHead>{tc('status')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {detailItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-mono text-xs">{item.qr_code || '-'}</TableCell>
-                    <TableCell className="text-xs">{item.material_name || '-'}</TableCell>
-                    <TableCell className="text-xs">
-                      {SPLIT_FLAG_MAP[item.split_flag] || t('whole')}
-                    </TableCell>
-                    <TableCell className="text-xs text-center">{item.book_quantity}</TableCell>
-                    <TableCell className="text-xs text-center">
-                      {item.actual_quantity || '-'}
-                    </TableCell>
-                    <TableCell
-                      className={`text-xs text-center font-bold ${item.difference !== 0 ? 'text-red-600 dark:text-red-400' : ''}`}
-                    >
-                      {item.difference > 0 ? '+' : ''}
-                      {item.difference}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={item.status === 1 ? 'default' : 'outline'}
-                        className="text-xs"
-                      >
-                        {item.status === 0
-                          ? t('unchecked')
-                          : item.status === 1
-                            ? t('checked')
-                            : t('adjusted')}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <StandardTable<InventoryCheckItem>
+              columns={detailColumns}
+              dataSource={detailItems}
+              total={detailItems.length}
+              rowKey="id"
+              rowSelectable={false}
+              showPagination={false}
+              emptyText={t('noStocktakingRecords')}
+            />
           </DialogContent>
         </Dialog>
 

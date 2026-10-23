@@ -33,27 +33,6 @@ interface PayslipData {
   netPay: number;
 }
 
-const mockPayslip: PayslipData = {
-  employeeName: '张三',
-  employeeNo: 'EMP2024001',
-  department: '生产部',
-  position: '生产主管',
-  month: '2024-03',
-  basicSalary: 8000,
-  pieceSalary: 0,
-  overtimeSalary: 800,
-  performanceSalary: 1500,
-  allowances: 2000,
-  grossPay: 12300,
-  socialInsurance: 800,
-  housingFund: 1000,
-  individualTax: 200,
-  attendanceDeduction: 0,
-  otherDeduction: 0,
-  totalDeduction: 2000,
-  netPay: 10300,
-};
-
 export default function PayslipsPage() {
   const ts = useTranslations('Common');
   const t = useTranslations('Hr');
@@ -71,15 +50,22 @@ export default function PayslipsPage() {
     }
     setLoading(true);
     try {
-      const res = await authFetch('/api/salary/payslips/' + employeeId);
+      // 改用支持 month 参数的接口：/api/salary/payslips/[employeeId] 恒返回最新月，
+      // 月份选择器会静默失效；/api/hr/salary/payslip 字段与 PayslipData 一致且路由层已 Number() 强转。
+      const res = await authFetch(
+        `/api/hr/salary/payslip?employeeId=${encodeURIComponent(employeeId)}&month=${encodeURIComponent(month)}`
+      );
       const json = await res.json();
       if (json.code === 200) {
         setData(json.data);
       } else {
-        setData({ ...mockPayslip, month, employeeName: `员工#${employeeId}` });
+        // 不再用 mockPayslip 兜底：假工资条带完整薪资明细，曾会被渲染且可打印
+        setData(null);
+        toast.error(json.message || tc('fetchFailed'));
       }
-    } catch (_error) {
-      setData({ ...mockPayslip, month, employeeName: `员工#${employeeId}` });
+    } catch {
+      setData(null);
+      toast.error(tc('fetchFailed'));
     } finally {
       setLoading(false);
     }

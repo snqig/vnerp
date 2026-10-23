@@ -1,7 +1,6 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
@@ -10,14 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -61,18 +53,19 @@ export default function MaterialReturnPage() {
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [selectedRows, setSelectedRows] = useState<Item[]>([]);
   const [searchNo, setSearchNo] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
 
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (item) => String(item.id));
+  const clear = () => setSelectedRows([]);
 
   const fetchData = async () => {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         returnNo: searchNo,
       });
       const res = await authFetch('/api/production/material-return?' + params);
@@ -85,10 +78,10 @@ export default function MaterialReturnPage() {
   };
   useEffect(() => {
     fetchData();
-  }, [page]);
+  }, [page, pageSize]);
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => String(r.id));
     if (ids.length === 0) return;
     if (!confirm(tc('confirmBatchDelete', { count: ids.length }))) return;
     let okCount = 0;
@@ -158,6 +151,91 @@ export default function MaterialReturnPage() {
     }
   };
 
+  // 注：/api/production/material-return 暂不支持 sortField/sortDirection，故先不开启 sortable。
+  const returnStatusLabels: Record<number, string> = {
+    1: t('pendingReturnStatus'),
+    2: t('returnedStatus'),
+    3: t('cancelledStatus'),
+  };
+
+  const columns: StandardTableColumn<Item>[] = [
+    {
+      key: 'return_no',
+      title: t('returnNo'),
+      render: (r) => <span className="text-xs font-mono">{r.return_no}</span>,
+    },
+    {
+      key: 'work_order_no',
+      title: t('workOrderNo'),
+      render: (r) => <span className="text-xs">{r.work_order_no || '-'}</span>,
+    },
+    {
+      key: 'warehouse_name',
+      title: t('warehouse'),
+      render: (r) => <span className="text-xs">{r.warehouse_name || '-'}</span>,
+    },
+    {
+      key: 'return_date',
+      title: t('returnDate'),
+      render: (r) => <span className="text-xs">{formatDate(r.return_date) || '-'}</span>,
+    },
+    {
+      key: 'operator_name',
+      title: t('operator'),
+      render: (r) => <span className="text-xs">{r.operator_name || '-'}</span>,
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => {
+        const st = RETURN_STATUS_CONFIG[r.status] || RETURN_STATUS_CONFIG[1];
+        return (
+          <Badge variant={st.variant} className="text-xs">
+            {returnStatusLabels[r.status] || tc('unknown')}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      // 原有操作列：确认退料 / 编辑 / 删除，逻辑保持原样
+      render: (r) => (
+        <div className="flex gap-1">
+          {r.status === 1 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleStatusChange(r.id, 2)}
+            >
+              {t('confirmReturn')}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              setEditItem(r);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(r.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
@@ -189,128 +267,29 @@ export default function MaterialReturnPage() {
         </div>
         <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input
-                      ref={selectAllRef}
-                      type="checkbox"
-                      className="h-4 w-4 cursor-pointer accent-blue-600"
-                      checked={allSelected}
-                      onChange={toggleAll}
-                      aria-label={tc('selectAll')}
-                    />
-                  </TableHead>
-                  <TableHead className="text-xs">{t('returnNo')}</TableHead>
-                  <TableHead className="text-xs">{t('workOrderNo')}</TableHead>
-                  <TableHead className="text-xs">{t('warehouse')}</TableHead>
-                  <TableHead className="text-xs">{t('returnDate')}</TableHead>
-                  <TableHead className="text-xs">{t('operator')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => {
-                  const st = RETURN_STATUS_CONFIG[item.status] || RETURN_STATUS_CONFIG[1];
-                  const returnStatusLabels: Record<number, string> = {
-                    1: t('pendingReturnStatus'),
-                    2: t('returnedStatus'),
-                    3: t('cancelledStatus'),
-                  };
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer accent-blue-600"
-                          checked={isSelected(String(item.id))}
-                          onChange={() => toggle(String(item.id))}
-                          aria-label={tc('selectRow', { id: item.id })}
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">{item.return_no}</TableCell>
-                      <TableCell className="text-xs">{item.work_order_no || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.warehouse_name || '-'}</TableCell>
-                      <TableCell className="text-xs">
-                        {formatDate(item.return_date) || '-'}
-                      </TableCell>
-                      <TableCell className="text-xs">{item.operator_name || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
-                          {returnStatusLabels[item.status] || tc('unknown')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {item.status === 1 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 2)}
-                            >
-                              {t('confirmReturn')}
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => {
-                              setEditItem(item);
-                              setShowDialog(true);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-gray-400 py-8">
-                      {tc('noData')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <BatchDeleteBar count={selectedRows.length} onClear={clear} onDelete={handleBatchDelete} />
+            <StandardTable<Item>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              onRetry={fetchData}
+              emptyText={tc('noData')}
+              customStyle={{ containerClassName: 'px-2 pb-2' }}
+            />
           </CardContent>
         </Card>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{tc('total', { count: total })}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>

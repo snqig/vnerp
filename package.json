@@ -12,6 +12,7 @@
     "lint:baseline": "node scripts/lint-gate.mjs --update-baseline",
     "lint:gate": "node scripts/lint-gate.mjs",
     "lint:i18n": "node scripts/lint-gate.mjs",
+    "check:hardcode": "node scripts/check-hardcode.mjs",
     "perm:gate": "node scripts/permission-gate.mjs",
     "validate:sql": "node scripts/validate-api-sql.mjs",
     "validate:sql-ghost": "node scripts/validate-sql-ghost.mjs",
@@ -41,6 +42,7 @@
     "setup:db": "node scripts/setup-db.mjs",
     "db:ci-schema": "node scripts/export-ci-schema.mjs",
     "cleanup:events": "node scripts/cleanup-event-processed.mjs",
+    "db:clean-e2e": "node scripts/cleanup-e2e-garbage.mjs",
     "init": "node scripts/init-project.js",
     "init:full": "node scripts/init-project.js --full",
     "migrate": "npx tsx scripts/migrate.ts up",
@@ -52,7 +54,9 @@
     "backup:restore": "npx tsx scripts/backup-database.ts restore",
     "docs:api": "node scripts/generate-api-docs.js",
     "i18n:check": "node scripts/i18n-key-check.mjs",
-    "i18n:check:strict": "node scripts/i18n-key-check.mjs --strict"
+    "i18n:check:strict": "node scripts/i18n-key-check.mjs --strict",
+    "mcp:decision:build": "cd mcp-decision-server && npm run build",
+    "mcp:decision:dev": "cd mcp-decision-server && npm run dev"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,js,jsx}": [

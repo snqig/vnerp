@@ -348,7 +348,7 @@ describe('SampleOrderApplicationService.createSalesOrderFromSample — T305 自�
     const generatedOrderNo = orderInsertParams[0] as string;
     expect(generatedOrderNo).toMatch(/^SO\d{8}0001$/);
 
-    // 验证 sal_order 参数：customer_id, total_amount
+    // 验证 sal_order 参数：customer_id, total_amount（无报价单时回退 sampleFee）
     expect(orderInsertParams[2]).toBe(200); // customer_id
     expect(orderInsertParams[3]).toBe(500); // total_amount = sampleFee
     expect(orderInsertParams[5]).toBe(5); // create_by = userId
@@ -359,7 +359,7 @@ describe('SampleOrderApplicationService.createSalesOrderFromSample — T305 自�
     expect(detailInsertParams[1]).toBe(30); // material_id 来自 inv_material 查询
     expect(detailInsertParams[2]).toBe('彩色包装盒'); // material_name = productName
     expect(detailInsertParams[3]).toBe(100); // quantity
-    expect(detailInsertParams[4]).toBe(500); // unit_price = sampleFee
+    expect(detailInsertParams[4]).toBe(500); // unit_price = sampleFee（回退）
   });
 
   it('无 materialNo 时：materialId=0，不查询 inv_material', async () => {
@@ -626,6 +626,157 @@ describe('SampleOrderApplicationService.createSalesOrderFromSample — T305 自�
     expect(mocks.transaction).toHaveBeenCalledTimes(1);
     // execute 只调用 1 次
     expect(mocks.mockConn.execute).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ============================================================
+// createSalesOrderFromSample — 金额来源：优先报价单 quoted_price
+// ============================================================
+describe('SampleOrderApplicationService.createSalesOrderFromSample — 金额来源优先报价单', () => {
+  let service: SampleOrderApplicationService;
+  let mockRepo: ISampleOrderRepository;
+
+  beforeEach(() => {
+    mockRepo = createMockRepo();
+    service = new SampleOrderApplicationService(mockRepo);
+  });
+
+  it('工艺卡有报价单时：total_amount 取 quoted_price，unit_price = quoted_price / quote.quantity', async () => {
+    const order = makeOrder({
+      status: SampleOrderStatus.CONFIRMED,
+      customerId: 200,
+      productName: '彩色包装盒',
+      materialNo: 'MAT-001',
+      quantity: 100,
+      sampleFee: 500, // 打样费不应再作为大货金额来源
+      processCardId: 5,
+    });
+    (mockRepo.findById as ReturnType<typeof vi.fn>).mockResolvedValue(order);
+
+    mocks.query
+      .mockResolvedValueOnce([{ cnt: 0 }]) // 序号查询
+      .mockResolvedValueOnce([{ id: 30 }]) // 物料查询
+      .mockResolvedValueOnce([{ quoted_price: 8000, quantity: 100 }]); // 报价查询：100 件报 8000
+
+    mocks.mockConn.execute
+      .mockResolvedValueOnce(mockExecReturn({ insertId: 999 }))
+      .mockResolvedValueOnce(mockExecReturn());
+
+    await service.createSalesOrderFromSample(1, 5);
+
+    // 第 3 次 query 是报价查询，SQL 指向 sal_quote
+    expect(mocks.query).toHaveBeenCalledTimes(3);
+    const [quoteSql, quoteParams] = mocks.query.mock.calls[2];
+    expect(String(quoteSql)).toContain('sal_quote');
+    expect(quoteParams).toEqual([5]); // processCardId
+
+    const orderInsertParams = mocks.mockConn.execute.mock.calls[0][1] as unknown[];
+    expect(orderInsertParams[3]).toBe(8000); // total_amount = quoted_price
+
+    const detailInsertParams = mocks.mockConn.execute.mock.calls[1][1] as unknown[];
+    expect(detailInsertParams[4]).toBe(80); // unit_price = 8000 / 100
+  });
+
+  it('报价数量与打样单数量不一致时：unit_price = quoted_price / quote.quantity，total = 单价 × 打样单数量', async () => {
+    const order = makeOrder({
+      status: SampleOrderStatus.CONFIRMED,
+      quantity: 200,
+      sampleFee: 500,
+      processCardId: 7,
+    });
+    (mockRepo.findById as ReturnType<typeof vi.fn>).mockResolvedValue(order);
+
+    mocks.query
+      .mockResolvedValueOnce([{ cnt: 0 }])
+      .mockResolvedValueOnce([]) // 无物料
+      .mockResolvedValueOnce([{ quoted_price: 4000, quantity: 50 }]); // 50 件报 4000 → 单价 80
+
+    mocks.mockConn.execute
+      .mockResolvedValueOnce(mockExecReturn({ insertId: 1001 }))
+      .mockResolvedValueOnce(mockExecReturn());
+
+    await service.createSalesOrderFromSample(1, 5);
+
+    const orderInsertParams = mocks.mockConn.execute.mock.calls[0][1] as unknown[];
+    expect(orderInsertParams[3]).toBe(16000); // 80 × 200
+
+    const detailInsertParams = mocks.mockConn.execute.mock.calls[1][1] as unknown[];
+    expect(detailInsertParams[4]).toBe(80);
+  });
+
+  it('工艺卡无报价单时：回退 sampleFee（保持原行为）', async () => {
+    const order = makeOrder({
+      status: SampleOrderStatus.CONFIRMED,
+      quantity: 100,
+      sampleFee: 500,
+      processCardId: 5,
+    });
+    (mockRepo.findById as ReturnType<typeof vi.fn>).mockResolvedValue(order);
+
+    mocks.query
+      .mockResolvedValueOnce([{ cnt: 0 }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]); // 报价查询无结果
+
+    mocks.mockConn.execute
+      .mockResolvedValueOnce(mockExecReturn({ insertId: 1002 }))
+      .mockResolvedValueOnce(mockExecReturn());
+
+    await service.createSalesOrderFromSample(1, 5);
+
+    const orderInsertParams = mocks.mockConn.execute.mock.calls[0][1] as unknown[];
+    expect(orderInsertParams[3]).toBe(500); // 回退 total_amount = sampleFee
+
+    const detailInsertParams = mocks.mockConn.execute.mock.calls[1][1] as unknown[];
+    expect(detailInsertParams[4]).toBe(500);
+  });
+
+  it('报价金额为 0 时：回退 sampleFee', async () => {
+    const order = makeOrder({
+      status: SampleOrderStatus.CONFIRMED,
+      quantity: 100,
+      sampleFee: 500,
+      processCardId: 5,
+    });
+    (mockRepo.findById as ReturnType<typeof vi.fn>).mockResolvedValue(order);
+
+    mocks.query
+      .mockResolvedValueOnce([{ cnt: 0 }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ quoted_price: 0, quantity: 100 }]);
+
+    mocks.mockConn.execute
+      .mockResolvedValueOnce(mockExecReturn({ insertId: 1003 }))
+      .mockResolvedValueOnce(mockExecReturn());
+
+    await service.createSalesOrderFromSample(1, 5);
+
+    const orderInsertParams = mocks.mockConn.execute.mock.calls[0][1] as unknown[];
+    expect(orderInsertParams[3]).toBe(500); // 回退 sampleFee
+  });
+
+  it('无 processCardId 时不查询报价', async () => {
+    const order = makeOrder({
+      status: SampleOrderStatus.CONFIRMED,
+      quantity: 100,
+      sampleFee: 500,
+      // processCardId 未设置
+    });
+    (mockRepo.findById as ReturnType<typeof vi.fn>).mockResolvedValue(order);
+
+    mocks.query
+      .mockResolvedValueOnce([{ cnt: 0 }])
+      .mockResolvedValueOnce([]);
+
+    mocks.mockConn.execute
+      .mockResolvedValueOnce(mockExecReturn({ insertId: 1004 }))
+      .mockResolvedValueOnce(mockExecReturn());
+
+    await service.createSalesOrderFromSample(1, 5);
+
+    // 只有序号 + 物料 2 次 query，无报价查询
+    expect(mocks.query).toHaveBeenCalledTimes(2);
+    expect(mocks.query.mock.calls.every(([sql]) => !String(sql).includes('sal_quote'))).toBe(true);
   });
 });
 

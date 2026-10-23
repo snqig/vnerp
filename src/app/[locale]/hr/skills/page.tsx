@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,14 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -33,10 +27,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2, Star, CheckCircle2, XCircle, Award } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/lib/date-utils';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 
 interface Skill {
@@ -55,18 +48,27 @@ interface Skill {
 }
 
 const categoryMap: Record<string, string> = {
+  '印刷技术': 'skillCategoryPrinting',
+  '后加工': 'skillCategoryBinding',
+  '模切技术': 'skillCategoryDieCutting',
+  '质量管理': 'skillCategoryQuality',
+  '模具技术': 'skillCategoryMold',
+  management: 'skillCategoryManagement',
   printing: 'skillCategoryPrinting',
-  binding: 'skillCategoryBinding',
-  finishing: 'skillCategoryFinishing',
+  quality: 'skillCategoryQuality',
   maintenance: 'skillCategoryMaintenance',
+  business: 'skillCategoryBusiness',
 };
 
 const categoryOptions = [
   { value: '_all', label: 'all' },
-  { value: 'printing', label: 'skillCategoryPrinting' },
-  { value: 'binding', label: 'skillCategoryBinding' },
-  { value: 'finishing', label: 'skillCategoryFinishing' },
+  { value: '印刷技术', label: 'skillCategoryPrinting' },
+  { value: '后加工', label: 'skillCategoryBinding' },
+  { value: '模切技术', label: 'skillCategoryDieCutting' },
+  { value: '质量管理', label: 'skillCategoryQuality' },
+  { value: '模具技术', label: 'skillCategoryMold' },
   { value: 'maintenance', label: 'skillCategoryMaintenance' },
+  { value: 'business', label: 'skillCategoryBusiness' },
 ];
 
 const levelLabels = ['', 'skillLevel1', 'skillLevel2', 'skillLevel3', 'skillLevel4', 'skillLevel5'];
@@ -82,12 +84,11 @@ export default function SkillsPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Skill>>({});
 
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [deleting, setDeleting] = useState(false);
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows;
     if (ids.length === 0) return;
     if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
     setDeleting(true);
@@ -100,14 +101,15 @@ export default function SkillsPage() {
       } catch { failMsg = tc('error'); }
     }
     setDeleting(false);
-    if (okCount > 0) toast.success(tc('batchDeleteSuccess', { count: okCount }));
-    if (failMsg) toast.error(failMsg);
-    clear();
+    if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
+    if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
+    setSelectedRows([]);
     fetchData();
   };
 
   const t = useTranslations('Hr');
   const tc = useTranslations('Common');
+  const { toast } = useToast();
 
   const fetchData = async () => {
     try {
@@ -125,7 +127,7 @@ export default function SkillsPage() {
         setTotal(json.data.total || 0);
       }
     } catch {
-      toast.error(tc('fetchFailed'));
+      toast({ title: tc('error'), description: tc('fetchFailed'), variant: 'destructive' });
     }
   };
 
@@ -142,14 +144,14 @@ export default function SkillsPage() {
       });
       const json = await res.json();
       if (json.code === 200) {
-        toast.success(isEdit ? tc('updateSuccess') : tc('createSuccess'));
+        toast({ title: tc('success'), description: isEdit ? tc('updateSuccess') : tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast.error(json.message || tc('error'));
+        toast({ title: tc('error'), description: json.message || tc('error'), variant: 'destructive' });
       }
     } catch {
-      toast.error(tc('error'));
+      toast({ title: tc('error'), description: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -159,13 +161,13 @@ export default function SkillsPage() {
       const res = await authFetch(`/api/hr/skills?id=${id}`, { method: 'DELETE' });
       const json = await res.json();
       if (json.code === 200) {
-        toast.success(tc('deleteSuccess'));
+        toast({ title: tc('success'), description: tc('deleteSuccess') });
         fetchData();
       } else {
-        toast.error(json.message || tc('deleteFailed'));
+        toast({ title: tc('error'), description: json.message || tc('deleteFailed'), variant: 'destructive' });
       }
     } catch {
-      toast.error(tc('deleteFailed'));
+      toast({ title: tc('error'), description: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -183,6 +185,69 @@ export default function SkillsPage() {
   };
 
   const totalPages = Math.ceil(total / pageSize);
+
+  const columns: StandardTableColumn<Skill>[] = [
+    { key: 'employee_name', title: t('employeeName'), render: (row) => row.employee_name },
+    { key: 'skill_name', title: t('skillName'), render: (row) => <span className="font-medium">{row.skill_name}</span> },
+    { key: 'skill_category', title: t('skillCategory'), render: (row) => t(categoryMap[row.skill_category] || row.skill_category) },
+    {
+      key: 'skill_level',
+      title: t('skillLevel'),
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          {renderStars(row.skill_level)}
+          <span className="text-muted-foreground text-xs">{t(levelLabels[row.skill_level])}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'certified',
+      title: t('certified'),
+      render: (row) =>
+        row.certified ? (
+          <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs border-0">
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            {t('certified')}
+          </Badge>
+        ) : (
+          <Badge className="bg-gray-100 dark:bg-gray-700 text-gray-500 text-xs border-0">
+            <XCircle className="h-3 w-3 mr-1" />
+            {tc('no')}
+          </Badge>
+        ),
+    },
+    { key: 'assessor', title: t('assessor'), render: (row) => row.assessor || '-' },
+    { key: 'next_assess_date', title: t('nextAssessDate'), render: (row) => formatDate(row.next_assess_date) },
+    {
+      key: 'actions',
+      title: tc('operation'),
+      align: 'right',
+      width: 100,
+      render: (row) => (
+        <div className="flex gap-1 justify-end">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              setEditItem(row);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(row.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <MainLayout title={t('skillMatrix')}>
@@ -230,10 +295,10 @@ export default function SkillsPage() {
         {/* 统计卡片 */}
         <StatsCards
           configs={[
-            { key: 'total', label: t('totalSkills'), icon: Award, ...StatsTheme.blue },
-            { key: 'level1', label: t('level1'), icon: Star, ...StatsTheme.gray },
-            { key: 'level2', label: t('level2'), icon: Star, ...StatsTheme.cyan },
-            { key: 'level3', label: t('level3'), icon: Star, ...StatsTheme.orange }
+            { key: 'total', label: '技能总数', icon: Award, ...StatsTheme.blue },
+            { key: 'level1', label: '初级', icon: Star, ...StatsTheme.gray },
+            { key: 'level2', label: '中级', icon: Star, ...StatsTheme.cyan },
+            { key: 'level3', label: '高级', icon: Star, ...StatsTheme.orange }
           ]}
           stats={[
             { key: 'total', count: list.length },
@@ -245,120 +310,23 @@ export default function SkillsPage() {
         />
 <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                  </TableHead>
-                  <TableHead className="text-xs">{t('employeeName')}</TableHead>
-                  <TableHead className="text-xs">{t('skillName')}</TableHead>
-                  <TableHead className="text-xs">{t('skillCategory')}</TableHead>
-                  <TableHead className="text-xs">{t('skillLevel')}</TableHead>
-                  <TableHead className="text-xs">{t('certified')}</TableHead>
-                  <TableHead className="text-xs">{t('assessor')}</TableHead>
-                  <TableHead className="text-xs">{t('nextAssessDate')}</TableHead>
-                  <TableHead className="text-xs w-20">{tc('operation')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(item.id))} onChange={() => toggle(String(item.id))} aria-label={tc('selectRow', { id: item.id })} />
-                    </TableCell>
-                    <TableCell className="text-xs">{item.employee_name}</TableCell>
-                    <TableCell className="text-xs font-medium">{item.skill_name}</TableCell>
-                    <TableCell className="text-xs">
-                      {t(categoryMap[item.skill_category] || item.skill_category)}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      <div className="flex items-center gap-2">
-                        {renderStars(item.skill_level)}
-                        <span className="text-muted-foreground text-xs">
-                          {t(levelLabels[item.skill_level])}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {item.certified ? (
-                        <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs border-0">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          {t('certified')}
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-gray-100 dark:bg-gray-700 text-gray-500 text-xs border-0">
-                          <XCircle className="h-3 w-3 mr-1" />
-                          {tc('no')}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs">{item.assessor || '-'}</TableCell>
-                    <TableCell className="text-xs">
-                      {formatDate(item.next_assess_date)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0"
-                          onClick={() => {
-                            setEditItem(item);
-                            setShowDialog(true);
-                      }}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                      {tc('noData')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} loading={deleting} />
+            <StandardTable<Skill>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              showPagination={totalPages > 1}
+              onPageChange={setPage}
+              rowSelectable
+              selectedRows={list.filter((r) => selectedRows.includes(r.id))}
+              onRowSelectedChange={(rows) => setSelectedRows(rows.map((r) => r.id))}
+              rowKey="id"
+              emptyText={tc('noData')}
+            />
           </CardContent>
         </Card>
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{t('totalRecords', { count: total })}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-               {tc('prevPage')}
-            </Button>
-            <span className="flex items-center text-sm text-muted-foreground px-2">
-              {page} / {totalPages || 1}
-            </span>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-               {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
@@ -446,7 +414,7 @@ export default function SkillsPage() {
                 <Label>{t('assessDate')}</Label>
                 <Input
                   type="date"
-                  value={editItem.assess_date || ''}
+                  value={toDateInput(editItem.assess_date)}
                   onChange={(e) => setEditItem({ ...editItem, assess_date: e.target.value })}
                 />
               </div>
@@ -454,7 +422,7 @@ export default function SkillsPage() {
                 <Label>{t('nextAssessDate')}</Label>
                 <Input
                   type="date"
-                  value={editItem.next_assess_date || ''}
+                  value={toDateInput(editItem.next_assess_date)}
                   onChange={(e) => setEditItem({ ...editItem, next_assess_date: e.target.value })}
                 />
               </div>

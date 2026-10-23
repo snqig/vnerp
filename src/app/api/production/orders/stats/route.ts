@@ -15,38 +15,38 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const params: any[] = [];
 
     if (startDate && endDate) {
-      dateFilter = ' AND DATE(created_at) BETWEEN ? AND ?';
+      dateFilter = ' AND DATE(create_time) BETWEEN ? AND ?';
       params.push(startDate, endDate);
     }
 
     // 待开工
     const [pendingResult] = await query(
-      `SELECT COUNT(*) as count FROM prod_work_order WHERE deleted = 0 AND status = 1${dateFilter}`,
+      `SELECT COUNT(*) as count FROM prod_work_order WHERE deleted = 0 AND status = 'pending'${dateFilter}`,
       params
     );
 
     // 生产中
     const [producingResult] = await query(
-      `SELECT COUNT(*) as count FROM prod_work_order WHERE deleted = 0 AND status = 2${dateFilter}`,
+      `SELECT COUNT(*) as count FROM prod_work_order WHERE deleted = 0 AND status = 'in_progress'${dateFilter}`,
       params
     );
 
     // 已完成
     const [completedResult] = await query(
-      `SELECT COUNT(*) as count FROM prod_work_order WHERE deleted = 0 AND status = 3${dateFilter}`,
+      `SELECT COUNT(*) as count FROM prod_work_order WHERE deleted = 0 AND status = 'completed'${dateFilter}`,
       params
     );
 
     // 已延期
     const [delayedResult] = await query(
-      `SELECT COUNT(*) as count FROM prod_work_order WHERE deleted = 0 AND status IN (1, 2) AND plan_end_date < CURDATE()${dateFilter}`,
+      `SELECT COUNT(*) as count FROM prod_work_order WHERE deleted = 0 AND status IN ('pending', 'in_progress') AND plan_end_date < CURDATE()${dateFilter}`,
       params
     );
 
     // 今日产量（今日完成的工单数量）
     const [todayResult] = await query(
       `SELECT COUNT(*) as count FROM prod_work_order
-       WHERE deleted = 0 AND status = 3 AND DATE(update_time) = CURDATE()`
+       WHERE deleted = 0 AND status = 'completed' AND DATE(update_time) = CURDATE()`
     );
 
     return NextResponse.json({

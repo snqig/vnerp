@@ -1,5 +1,6 @@
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { expireDateFragment } from '@/lib/batch-expiry';
 import { appendInventoryTransaction, recomputeInventorySummary } from '@/lib/inventory-ledger';
 import type { DomainEvent } from '@/domain/shared/DomainTypes';
 
@@ -49,8 +50,8 @@ export class ReturnOrderInventoryHandler {
           const today = new Date().toISOString().slice(0, 10);
           await conn.execute(
             `INSERT INTO inv_inventory_batch
-             (material_id, material_name, batch_no, quantity, available_qty, warehouse_id, inbound_date, status, create_time)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW())`,
+             (material_id, material_name, batch_no, quantity, available_qty, warehouse_id, inbound_date, produce_date, expire_date, status, create_time)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ${expireDateFragment()}, 1, NOW())`,
             [
               item.materialId,
               (mat[0]?.material_name as string) || '',
@@ -59,6 +60,9 @@ export class ReturnOrderInventoryHandler {
               item.quantity,
               item.warehouseId,
               today,
+              today,
+              item.materialId,
+              item.materialId,
             ]
           );
         }

@@ -5,13 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+} from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -48,13 +44,12 @@ export default function CostsPage() {
 
   const [costs, setCosts] = useState<CostRecord[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, _setPage] = useState(1);
-  const [_total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
 
   const [showCalc, setShowCalc] = useState(false);
   const [calcWorkOrderId, setCalcWorkOrderId] = useState('');
-
-  const pageSize = 20;
 
   const loadCosts = async () => {
     setLoading(true);
@@ -73,7 +68,56 @@ export default function CostsPage() {
 
   useEffect(() => {
     loadCosts();
-  }, [page]);
+  }, [page, pageSize]);
+
+  const columns: StandardTableColumn<CostRecord>[] = [
+    {
+      key: 'work_order_no',
+      title: tc('workOrderNo'),
+      render: (c) => <span className="font-medium">{c.work_order_no}</span>,
+    },
+    { key: 'plan_qty', title: tc('planQty'), align: 'right' },
+    { key: 'completed_qty', title: tc('completedQty'), align: 'right' },
+    {
+      key: 'material_cost',
+      title: tc('materialCost'),
+      align: 'right',
+      render: (c) => formatAmount(c.material_cost),
+    },
+    {
+      key: 'labor_cost',
+      title: tc('laborCost'),
+      align: 'right',
+      render: (c) => formatAmount(c.labor_cost),
+    },
+    {
+      key: 'manufacturing_cost',
+      title: tc('manufacturingCost'),
+      align: 'right',
+      render: (c) => formatAmount(c.manufacturing_cost),
+    },
+    {
+      key: 'total_cost',
+      title: tc('totalCost'),
+      align: 'right',
+      render: (c) => <span className="font-bold">{formatAmount(c.total_cost)}</span>,
+    },
+    {
+      key: 'unit_cost',
+      title: tc('unitCost'),
+      align: 'right',
+      render: (c) => (
+        <span className="text-blue-600 dark:text-blue-400 font-medium">
+          {formatAmount(c.unit_cost)}
+        </span>
+      ),
+    },
+    {
+      key: 'calculate_time',
+      title: tc('calculateTime'),
+      render: (c) => formatDate(c.calculate_time),
+    },
+  ];
 
   const handleCalculate = async () => {
     if (!calcWorkOrderId) {
@@ -134,45 +178,24 @@ export default function CostsPage() {
           <CardTitle>{tc('costListTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{tc('workOrderNo')}</TableHead>
-                <TableHead>{tc('planQty')}</TableHead>
-                <TableHead>{tc('completedQty')}</TableHead>
-                <TableHead>{tc('materialCost')}</TableHead>
-                <TableHead>{tc('laborCost')}</TableHead>
-                <TableHead>{tc('manufacturingCost')}</TableHead>
-                <TableHead>{tc('totalCost')}</TableHead>
-                <TableHead>{tc('unitCost')}</TableHead>
-                <TableHead>{tc('calculateTime')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {costs.map((cost) => (
-                <TableRow key={cost.id}>
-                  <TableCell className="font-medium">{cost.work_order_no}</TableCell>
-                  <TableCell>{cost.plan_qty}</TableCell>
-                  <TableCell>{cost.completed_qty}</TableCell>
-                  <TableCell>{formatAmount(cost.material_cost)}</TableCell>
-                  <TableCell>{formatAmount(cost.labor_cost)}</TableCell>
-                  <TableCell>{formatAmount(cost.manufacturing_cost)}</TableCell>
-                  <TableCell className="font-bold">{formatAmount(cost.total_cost)}</TableCell>
-                  <TableCell className="text-blue-600 dark:text-blue-400 font-medium">
-                    {formatAmount(cost.unit_cost)}
-                  </TableCell>
-                  <TableCell>{formatDate(cost.calculate_time)}</TableCell>
-                </TableRow>
-              ))}
-              {costs.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                    {tc('noData')}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <StandardTable<CostRecord>
+            columns={columns}
+            dataSource={costs}
+            total={total}
+            page={page}
+            pageSize={pageSize}
+            pageSizeOptions={[20, 25, 30]}
+            rowKey="id"
+            rowSelectable={false}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
+            loading={loading}
+            onRetry={loadCosts}
+            emptyText={tc('noData')}
+          />
         </CardContent>
       </Card>
 

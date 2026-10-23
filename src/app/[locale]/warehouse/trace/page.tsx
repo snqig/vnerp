@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Search, Download, Package, Warehouse, Calendar } from 'lucide-react';
@@ -86,15 +87,13 @@ export default function TraceQueryPage() {
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
 
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Search className="w-6 h-6" />
-            {t('scan.title')}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">{t('scan.subtitle')}</p>
-        </div>
+        <PageHeroHeader
+          icon={Search}
+          title={t('scan.title')}
+          description={t('scan.subtitle')}
+        />
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="pt-6">
             <QrScanner
               onScan={handleScan}
@@ -104,7 +103,7 @@ export default function TraceQueryPage() {
         </Card>
 
         {searched && (
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{t('timeline.title')}</CardTitle>

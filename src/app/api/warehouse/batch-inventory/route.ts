@@ -9,6 +9,7 @@ import { withPermission } from '@/lib/api-permissions';
 import type { DbRow, DbResultSetHeader } from '@/types/db';
 import { INSERT_INTO_INV_PRODUCTION_INBOUND } from '@/lib/db/ddl/warehouse-batch-inventory';
 import { stringFilter } from '@/lib/query-filter';
+import { expireDateFragment } from '@/lib/batch-expiry';
 // 获取批次库存列表
 export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -205,8 +206,8 @@ export const PUT = withPermission(async (request: NextRequest) => {
       } else {
         // 创建新批次
         await conn.execute(
-          `INSERT INTO inv_inventory_batch (batch_no, material_id, material_code, material_name, specification, unit, warehouse_id, inbound_no, inbound_date, inbound_quantity, outbound_quantity, available_quantity, supplier_id, supplier_name, qc_status, status) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, 1, 1)`,
+          `INSERT INTO inv_inventory_batch (batch_no, material_id, material_code, material_name, specification, unit, warehouse_id, inbound_no, inbound_date, produce_date, expire_date, inbound_quantity, outbound_quantity, available_quantity, supplier_id, supplier_name, qc_status, status) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ${expireDateFragment()}, 0, ?, ?, ?, ?, ?, 1, 1)`,
           [
             finalBatchNo,
             material_id,
@@ -217,6 +218,9 @@ export const PUT = withPermission(async (request: NextRequest) => {
             warehouse_id,
             inbound_no,
             inbound_date,
+            inbound_date,
+            inbound_date,
+            material_id,
             quantity,
             quantity,
             supplier_id || null,

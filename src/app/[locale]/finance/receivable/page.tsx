@@ -14,14 +14,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -35,9 +27,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { authFetch } from '@/lib/auth-fetch';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { formatDate } from '@/lib/date-utils';
+import { StandardTable, StandardTableColumn, SortState } from '@/components/common';
 
 interface Receivable {
   id: number;
@@ -96,6 +88,7 @@ export default function ReceivablePage() {
   const [list, setList] = useState<Receivable[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [keyword, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showDialog, setShowDialog] = useState(false);
@@ -108,23 +101,27 @@ export default function ReceivablePage() {
     overdueAmount: 0,
     monthlyReceived: 0,
   });
-
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
+  const [sort, setSort] = useState<SortState>(null);
+  const [selectedRows, setSelectedRows] = useState<Receivable[]>([]);
+  const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
+      setLoading(true);
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         keyword,
         status: statusFilter,
       });
+      if (sort) {
+        params.set('sortField', sort.field);
+        params.set('sortDirection', sort.direction);
+      }
       const res = await authFetch('/api/finance/receivables?' + params);
       const result = await res.json();
       if (result.success) {
-        // 统一处理API返回的数据结构
         const rawData = result.data;
         const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
         const list = rawList.map((item: Loose) => ({
@@ -150,8 +147,10 @@ export default function ReceivablePage() {
     } catch (error) {
       console.error('Failed to fetch receivables:', error);
       setList([]);
+    } finally {
+      setLoading(false);
     }
-  }, [page, keyword, statusFilter]);
+  }, [page, pageSize, keyword, statusFilter, sort]);
 
   const fetchStats = async () => {
     try {
@@ -169,6 +168,11 @@ export default function ReceivablePage() {
     fetchData();
     fetchStats();
   }, [fetchData]);
+
+  const handleSortChange = (next: SortState) => {
+    setSort(next);
+    setPage(1);
+  };
 
   const handleViewDetail = async (id: number) => {
     try {
@@ -210,7 +214,7 @@ export default function ReceivablePage() {
   };
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => r.id);
     if (ids.length === 0) return;
     if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
     setDeleting(true);
@@ -225,12 +229,89 @@ export default function ReceivablePage() {
     setDeleting(false);
     if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
     if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
+    setSelectedRows([]);
     fetchData();
   };
 
   const _formatAmount = (amount: number) => ((amount || 0) / 100).toFixed(2);
   const toAmount = (amount: number) => (amount || 0) / 100;
+
+  const columns: StandardTableColumn<Receivable>[] = [
+    {
+      key: 'receivable_no',
+      title: t('receivableNo'),
+      render: (r) => <span className="font-mono text-sm">{r.receivable_no}</span>,
+    },
+    {
+      key: 'source_no',
+      title: t('sourceNo'),
+      render: (r) =>
+        r.source_currency && r.source_amount != null ? (
+          <span title={`${t('sourceCurrency')}: ${r.source_currency}`}>
+            <FileText className="w-3 h-3 inline mr-1 text-muted-foreground" />
+            {r.source_no}
+            <span className="text-xs text-muted-foreground ml-1">({r.source_currency})</span>
+          </span>
+        ) : (
+          r.source_no
+        ),
+    },
+    {
+      key: 'customer_name',
+      title: t('customerName'),
+      render: (r) => <span>{r.customer_name}</span>,
+    },
+    {
+      key: 'amount',
+      title: t('receivableAmount'),
+      align: 'right',
+      render: (r) => <MoneyDisplay amount={toAmount(r.amount)} currency={r.currency || 'CNY'} />,
+    },
+    {
+      key: 'received_amount',
+      title: t('receivedAmount'),
+      align: 'right',
+      render: (r) => <MoneyDisplay amount={toAmount(r.received_amount)} currency={r.currency || 'CNY'} />,
+    },
+    {
+      key: 'balance',
+      title: tc('balance'),
+      align: 'right',
+      render: (r) => (
+        <span className={Number(r.balance) > 0 ? 'text-red-600 dark:text-red-400 font-medium' : ''}>
+          <MoneyDisplay amount={toAmount(r.balance)} currency={r.currency || 'CNY'} />
+        </span>
+      ),
+    },
+    {
+      key: 'currency',
+      title: tc('currency'),
+      render: (r) => r.currency || <span className="text-muted-foreground">-</span>,
+    },
+    {
+      key: 'due_date',
+      title: t('dueDate'),
+      render: (r) => r.due_date ? formatDate(r.due_date) : '',
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => (
+        <Badge variant={statusMap[r.status]?.variant || 'outline'}>
+          {statusMap[r.status]?.label || tc('unknown')}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      render: (r) => (
+        <Button variant="ghost" size="sm" onClick={() => handleViewDetail(r.id)}>
+          <Eye className="h-4 w-4" />
+        </Button>
+      ),
+    },
+  ];
 
   return (
     <MainLayout>
@@ -269,7 +350,8 @@ export default function ReceivablePage() {
               {tc('refresh')}
             </Button>
           </div>
-        </div>        <StatsCards
+        </div>
+        <StatsCards
           configs={[
             { key: 'totalReceivable', label: '应收总额', icon: Wallet, ...StatsTheme.blue },
             { key: 'receivedAmount', label: '已收金额', icon: CheckCircle, ...StatsTheme.green },
@@ -287,114 +369,29 @@ export default function ReceivablePage() {
           cols={{ mobile: 2, tablet: 3, desktop: 5 }}
         />
 
-
-
         <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                  </TableHead>
-                  <TableHead>{t('receivableNo')}</TableHead>
-                  <TableHead>{t('sourceNo')}</TableHead>
-                  <TableHead>{t('customerName')}</TableHead>
-                  <TableHead className="text-right">{t('receivableAmount')}</TableHead>
-                  <TableHead className="text-right">{t('receivedAmount')}</TableHead>
-                  <TableHead className="text-right">{tc('balance')}</TableHead>
-                  <TableHead>{tc('currency')}</TableHead>
-                  <TableHead>{t('dueDate')}</TableHead>
-                  <TableHead>{tc('status')}</TableHead>
-                  <TableHead>{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                      {t('noData')}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  list.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell>
-                        <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectRow', { id: r.id })} />
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">{r.receivable_no}</TableCell>
-                      <TableCell className="font-mono text-sm">
-                        {r.source_currency && r.source_amount != null ? (
-                          <span title={`${t('sourceCurrency')}: ${r.source_currency}`}>
-                            <FileText className="w-3 h-3 inline mr-1 text-muted-foreground" />
-                            {r.source_no}
-                            <span className="text-xs text-muted-foreground ml-1">
-                              ({r.source_currency})
-                            </span>
-                          </span>
-                        ) : (
-                          r.source_no
-                        )}
-                      </TableCell>
-                      <TableCell>{r.customer_name}</TableCell>
-                      <TableCell className="text-right">
-                        <MoneyDisplay amount={toAmount(r.amount)} currency={r.currency || 'CNY'} />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <MoneyDisplay
-                          amount={toAmount(r.received_amount)}
-                          currency={r.currency || 'CNY'}
-                        />
-                      </TableCell>
-                      <TableCell
-                        className={`text-right ${Number(r.balance) > 0 ? 'text-red-600 dark:text-red-400 font-medium' : ''}`}
-                      >
-                        <MoneyDisplay amount={toAmount(r.balance)} currency={r.currency || 'CNY'} />
-                      </TableCell>
-                      <TableCell>
-                        {r.currency || <span className="text-muted-foreground">-</span>}
-                      </TableCell>
-                      <TableCell>{r.due_date ? formatDate(r.due_date) : ''}</TableCell>
-                      <TableCell>
-                        <Badge variant={statusMap[r.status]?.variant || 'outline'}>
-                          {statusMap[r.status]?.label || tc('unknown')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => handleViewDetail(r.id)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} loading={deleting} />
+            <StandardTable<Receivable>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable={true}
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              sortState={sort}
+              onSortChange={handleSortChange}
+              onPageChange={(p) => setPage(p)}
+              onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+              loading={loading}
+              emptyText={t('noData')}
+            />
           </CardContent>
         </Card>
-
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{tc('totalRecords', { count: total })}</span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {t('previousPage')}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {t('nextPage')}
-            </Button>
-          </div>
-        </div>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>

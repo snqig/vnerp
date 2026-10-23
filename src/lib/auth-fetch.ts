@@ -72,7 +72,14 @@ function clearAuthAndRedirect(): void {
   sessionStorage.removeItem('refreshToken');
   sessionStorage.removeItem('userId');
   if (typeof window !== 'undefined' && !window.location.pathname.endsWith('/login')) {
-    window.location.href = '/login';
+    // 必须透传当前完整路径作为 next，并保留 locale 前缀跳登录页：
+    // 直接跳裸 /login 会丢掉 locale（登录后回落默认语言）。
+    // next 用完整 pathname（中间件会自己识别 locale 段），
+    // 不能用剥掉 locale 的 cleanPath，否则登录后回跳缺语言前缀。
+    const { pathname } = window.location;
+    const localeMatch = /^\/(zh-CN|zh-TW|en|vi)(?=\/|$)/.exec(pathname);
+    const loginUrl = localeMatch ? `/${localeMatch[1]}/login` : '/login';
+    window.location.href = `${loginUrl}?next=${encodeURIComponent(pathname)}`;
   }
 }
 
@@ -121,6 +128,25 @@ export async function authFetch(url: string, options: RequestInit = {}): Promise
 
   const response = await doRequest(url, { ...options, headers });
 
+  // 200 但不是 JSON：Next 对不存在的 API 路径会 fallthrough 到页面渲染，
+  // 返回 200 + text/html。此时 res.ok 是 true，能骗过所有 `if (!res.ok)` 检查，
+  // 错误一直拖到 res.json() 才爆成 `Unexpected token '<'` ——
+  // 看到这条报错根本猜不到真实原因是「请求的 API 路由不存在」。
+  // 这里提前拦下来，把真实 URL 和 content-type 摆到台面上。
+  // 注意：204/205/304 无响应体，以及 FormData 上传后的二进制响应（图片/导出）不适用，
+  // 故只在「明确是 HTML」时拦截，不做泛化的 JSON 断言。
+  if (
+    typeof window !== 'undefined' &&
+    response.status === 200 &&
+    /^text\/html/i.test(response.headers.get('content-type') || '')
+  ) {
+    const htmlSnippet = await response.text().catch(() => '');
+    throw new Error(
+      `请求 ${url} 返回了 HTML 而非 JSON（content-type=${response.headers.get('content-type')}）` +
+        `｜该 API 路由很可能不存在，Next 已回退到页面渲染｜body 前 120 字节=${htmlSnippet.slice(0, 120)}`
+    );
+  }
+
   // 401 and not the refresh endpoint itself: try silent refresh once
   if (
     response.status === 401 &&
@@ -136,7 +162,12 @@ export async function authFetch(url: string, options: RequestInit = {}): Promise
       const retryResponse = await doRequest(url, { ...options, headers: retryHeaders });
       return retryResponse;
     }
+    // 无感刷新失败：登录态已失效，必须把 401 明确交给调用方并结束本次请求。
+    // 原实现只调clearAuthAndRedirect() 就继续往下走，最终 `return response`
+    // 把 401 原样交回——调用方看到的是「数据加载失败」，而真实原因是登录过期，
+    // 两者混在一起极难定位。这里显式抛出，语义上与网络层失败一致。
     clearAuthAndRedirect();
+    throw new Error('HTTP 401 Unauthorized | 登录态已失效，已跳转登录页');
   }
 
   return response;

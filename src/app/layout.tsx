@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
 import { getCompanyProfile, resolveCompanyDisplayName } from '@/lib/company-profile';
@@ -9,8 +9,31 @@ import { getCompanyProfile, resolveCompanyDisplayName } from '@/lib/company-prof
  */
 export async function generateMetadata(): Promise<Metadata> {
   const profile = await getCompanyProfile();
-  return { title: resolveCompanyDisplayName(profile, 'VNERP') };
+  return {
+    title: resolveCompanyDisplayName(profile, 'VNERP'),
+    // PWA：车间平板可安装为独立应用（详见 app/manifest.ts 与 public/sw.js）
+    manifest: '/manifest.webmanifest',
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'default',
+      title: 'Pad 扫码工作站',
+    },
+    icons: {
+      icon: [
+        { url: '/pad-icon-192.png', sizes: '192x192', type: 'image/png' },
+        { url: '/pad-icon-512.png', sizes: '512x512', type: 'image/png' },
+      ],
+      apple: [{ url: '/pad-icon-180.png', sizes: '180x180', type: 'image/png' }],
+    },
+  };
 }
+
+/** 与 globals.css --primary（#3b82f6）一致，作为独立应用状态栏主题色 */
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#3b82f6',
+};
 
 /**
  * 主题初始化脚本（内联 + 同步，必须早于首次绘制）。

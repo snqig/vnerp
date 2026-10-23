@@ -19,32 +19,29 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params.push(startDate, endDate);
     }
 
-    // 油墨记录总数（基于 ink_opening_record）
+    // 油墨记录总数（基于 prd_ink 油墨基础表）
     const [totalResult] = await query(
-      `SELECT COUNT(*) as count FROM ink_opening_record WHERE deleted = 0${dateFilter}`,
-      params
+      `SELECT COUNT(*) as count FROM prd_ink WHERE deleted = 0`
     );
 
-    // 使用中（status=1 且未过期）
+    // 库存充足（stock_qty > safety_stock）
     const [enoughResult] = await query(
-      `SELECT COUNT(*) as count FROM ink_opening_record WHERE deleted = 0 AND status = 1 AND (expire_time IS NULL OR expire_time > NOW())${dateFilter}`,
-      params
+      `SELECT COUNT(*) as count FROM prd_ink WHERE deleted = 0 AND stock_qty > safety_stock`
     );
 
-    // 已过期预警（status=1 但已过期）
+    // 库存预警（stock_qty = safety_stock）
     const [warningResult] = await query(
-      `SELECT COUNT(*) as count FROM ink_opening_record WHERE deleted = 0 AND status = 1 AND expire_time IS NOT NULL AND expire_time < NOW()`
+      `SELECT COUNT(*) as count FROM prd_ink WHERE deleted = 0 AND stock_qty = safety_stock`
     );
 
-    // 已报废（status=3）
+    // 库存不足（stock_qty < safety_stock）
     const [lowResult] = await query(
-      `SELECT COUNT(*) as count FROM ink_opening_record WHERE deleted = 0 AND status = 3`
+      `SELECT COUNT(*) as count FROM prd_ink WHERE deleted = 0 AND stock_qty < safety_stock`
     );
 
-    // 本月开罐量（按开罐时间统计）
+    // 本月入库量（暂时从开罐记录统计，后续可以改成入库单统计）
     const [monthlyResult] = await query(
-      `SELECT COALESCE(COUNT(*), 0) as total FROM ink_opening_record
-       WHERE deleted = 0 AND YEAR(open_time) = YEAR(CURDATE()) AND MONTH(open_time) = MONTH(CURDATE())`
+      `SELECT COALESCE(COUNT(*), 0) as total FROM ink_opening_record WHERE deleted = 0 AND YEAR(open_time) = YEAR(CURDATE()) AND MONTH(open_time) = MONTH(CURDATE())`
     );
 
     return NextResponse.json({

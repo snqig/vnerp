@@ -1,22 +1,14 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useRowSelection } from '@/lib/useRowSelection';
+import { toDateInput } from '@/lib/date-utils';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +28,7 @@ import { Plus, Search, Edit, Trash2, Ruler, CheckCircle, Clock, AlertTriangle, C
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
+import { StandardTable, StandardTableColumn, SortState } from '@/components/common';
 
 interface Item {
   id: number;
@@ -68,6 +61,10 @@ export default function EquipmentCalibrationPage() {
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sort, setSort] = useState<SortState>(null);
+  const [selectedRows, setSelectedRows] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchNo, setSearchNo] = useState('');
   const [stats, setStats] = useState({
     pending: 0,
@@ -79,24 +76,29 @@ export default function EquipmentCalibrationPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<Item>>({});
 
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         calibrationNo: searchNo,
       });
+      if (sort) {
+        params.set('sortField', sort.field);
+        params.set('sortDirection', sort.direction);
+      }
       const res = await authFetch('/api/equipment/calibration?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch {}
-  };
+    } catch {} finally {
+      setLoading(false);
+    }
+  }, [page, pageSize, sort, searchNo]);
+
   const fetchStats = async () => {
     try {
       const res = await authFetch('/api/equipment/calibration/stats');
@@ -112,7 +114,12 @@ export default function EquipmentCalibrationPage() {
   useEffect(() => {
     fetchData();
     fetchStats();
-  }, [page]);
+  }, [fetchData]);
+
+  const handleSortChange = (s: SortState) => {
+    setSort(s);
+    setPage(1);
+  };
 
   const handleSave = async () => {
     // P1-2 前端守卫：与后端同口径（设备身份/校准日期必填，结果限值域）
@@ -185,7 +192,7 @@ export default function EquipmentCalibrationPage() {
   };
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => String(r.id));
     if (ids.length === 0) return;
     if (!confirm(tc('confirmBatchDelete', { count: ids.length }))) return;
     let okCount = 0;
@@ -203,9 +210,102 @@ export default function EquipmentCalibrationPage() {
     if (okCount > 0)
       toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
     if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
+    setSelectedRows([]);
     fetchData();
   };
+
+  const columns: StandardTableColumn<Item>[] = [
+    {
+      key: 'calibration_no',
+      title: ts('k_jko3l7'),
+      render: (r) => <span className="font-mono text-xs">{r.calibration_no}</span>,
+    },
+    {
+      key: 'equipment_code',
+      title: ts('k_17s4qyf'),
+      render: (r) => <span className="text-xs">{r.equipment_code || '-'}</span>,
+    },
+    {
+      key: 'equipment_name',
+      title: ts('k_eb1q6f'),
+      render: (r) => <span className="text-xs">{r.equipment_name || '-'}</span>,
+    },
+    {
+      key: 'calibration_date',
+      title: ts('k_14yjphf'),
+      render: (r) => <span className="text-xs">{r.calibration_date || '-'}</span>,
+    },
+    {
+      key: 'next_calibration_date',
+      title: tc('nextCalibrationDate'),
+      render: (r) => <span className="text-xs">{r.next_calibration_date || '-'}</span>,
+    },
+    {
+      key: 'calibration_org',
+      title: ts('k_tb1ckh'),
+      render: (r) => <span className="text-xs">{r.calibration_org || '-'}</span>,
+    },
+    {
+      key: 'certificate_no',
+      title: tc('certNo'),
+      render: (r) => <span className="text-xs">{r.certificate_no || '-'}</span>,
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => {
+        const st = statusMap[r.status] || statusMap[1];
+        return <Badge variant={st.variant} className="text-xs">{st.label}</Badge>;
+      },
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      render: (r) => (
+        <div className="flex gap-1">
+          {r.status === 1 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleStatusChange(r.id, 2)}
+            >
+              {ts('k_5pu12i')}
+            </Button>
+          )}
+          {r.status === 2 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => handleStatusChange(r.id, 3)}
+            >
+              {ts('k_109sg5t')}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              setEditItem(r);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(r.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <MainLayout>
@@ -255,130 +355,27 @@ export default function EquipmentCalibrationPage() {
 
         <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input
-                      ref={selectAllRef}
-                      type="checkbox"
-                      className="h-4 w-4 cursor-pointer accent-blue-600"
-                      checked={allSelected}
-                      onChange={toggleAll}
-                      aria-label={tc('selectAll')}
-                    />
-                  </TableHead>
-                  <TableHead className="text-xs">{ts('k_jko3l7')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_17s4qyf')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_eb1q6f')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_14yjphf')}</TableHead>
-                  <TableHead className="text-xs">{tc('nextCalibrationDate')}</TableHead>
-                  <TableHead className="text-xs">{ts('k_tb1ckh')}</TableHead>
-                  <TableHead className="text-xs">{tc('certNo')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => {
-                  const st = statusMap[item.status] || statusMap[1];
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer accent-blue-600"
-                          checked={isSelected(String(item.id))}
-                          onChange={() => toggle(String(item.id))}
-                          aria-label={tc('selectRow', { id: item.id })}
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">{item.calibration_no}</TableCell>
-                      <TableCell className="text-xs">{item.equipment_code || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.equipment_name || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.calibration_date || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.next_calibration_date || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.calibration_org || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.certificate_no || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={st.variant} className="text-xs">
-                          {st.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {item.status === 1 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 2)}
-                            >
-                              {ts('k_5pu12i')}</Button>
-                          )}
-                          {item.status === 2 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 3)}
-                            >
-                              {ts('k_109sg5t')}</Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => {
-                              setEditItem(item);
-                              setShowDialog(true);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                      {tc('noRecords')}</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} />
+            <StandardTable<Item>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable={true}
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              sortState={sort}
+              onSortChange={handleSortChange}
+              onPageChange={(p) => setPage(p)}
+              onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+              loading={loading}
+              emptyText={tc('noRecords')}
+            />
           </CardContent>
         </Card>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{ts('k_1vsm2qk')}{total}{ts('k_1rfm5gs')}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}</Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}</Button>
-          </div>
-        </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
@@ -403,7 +400,7 @@ export default function EquipmentCalibrationPage() {
                 <Label>{ts('k_14yjphf')}</Label>
                 <Input
                   type="date"
-                  value={editItem.calibration_date || ''}
+                  value={toDateInput(editItem.calibration_date)}
                   onChange={(e) => setEditItem({ ...editItem, calibration_date: e.target.value })}
                 />
               </div>
@@ -411,7 +408,7 @@ export default function EquipmentCalibrationPage() {
                 <Label>{tc('nextCalibrationDate')}</Label>
                 <Input
                   type="date"
-                  value={editItem.next_calibration_date || ''}
+                  value={toDateInput(editItem.next_calibration_date)}
                   onChange={(e) =>
                     setEditItem({ ...editItem, next_calibration_date: e.target.value })
                   }

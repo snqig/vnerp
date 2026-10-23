@@ -154,6 +154,7 @@ export interface DocumentNumberingConfig {
   sales_order_prefix: string;
   purchase_order_prefix: string;
   work_order_prefix: string;
+  sample_formal_work_order_prefix: string;
   sample_prefix: string;
   purchase_request_prefix: string;
   inbound_prefix: string;
@@ -177,6 +178,7 @@ const DEFAULT_CONFIG: DocumentNumberingConfig = {
   sales_order_prefix: 'SO',
   purchase_order_prefix: 'PO',
   work_order_prefix: 'WO',
+  sample_formal_work_order_prefix: 'PWO',
   sample_prefix: 'SP',
   purchase_request_prefix: 'PR',
   inbound_prefix: 'IN',
@@ -240,6 +242,8 @@ export async function getNumberingConfig(): Promise<DocumentNumberingConfig> {
       purchase_order_prefix:
         configs['purchase_order_prefix'] || DEFAULT_CONFIG.purchase_order_prefix,
       work_order_prefix: configs['work_order_prefix'] || DEFAULT_CONFIG.work_order_prefix,
+      sample_formal_work_order_prefix:
+        configs['sample_formal_work_order_prefix'] || DEFAULT_CONFIG.sample_formal_work_order_prefix,
       sample_prefix: configs['sample_prefix'] || DEFAULT_CONFIG.sample_prefix,
       purchase_request_prefix:
         configs['purchase_request_prefix'] || DEFAULT_CONFIG.purchase_request_prefix,
@@ -271,6 +275,7 @@ export type DocumentType =
   | 'sales_order'
   | 'purchase_order'
   | 'work_order'
+  | 'sample_formal_work_order'
   | 'sample'
   | 'purchase_request'
   | 'inbound'
@@ -310,6 +315,7 @@ const DOCUMENT_PREFIX_MAP: Partial<Record<DocumentType, keyof DocumentNumberingC
   sales_order: 'sales_order_prefix',
   purchase_order: 'purchase_order_prefix',
   work_order: 'work_order_prefix',
+  sample_formal_work_order: 'sample_formal_work_order_prefix',
   sample: 'sample_prefix',
   purchase_request: 'purchase_request_prefix',
   inbound: 'inbound_prefix',
@@ -333,6 +339,7 @@ const DOCUMENT_TABLE_MAP: Partial<Record<DocumentType, { table: string; field: s
   sales_order: { table: 'sal_order', field: 'order_no' },
   purchase_order: { table: 'pur_purchase_order', field: 'po_no' },
   work_order: { table: 'prod_work_order', field: 'work_order_no' },
+  sample_formal_work_order: { table: 'prod_work_order', field: 'work_order_no' },
   sample: { table: 'sal_sample_order', field: 'order_no' },
   purchase_request: { table: 'pur_request', field: 'request_no' },
   inbound: { table: 'inv_inbound_order', field: 'order_no' },

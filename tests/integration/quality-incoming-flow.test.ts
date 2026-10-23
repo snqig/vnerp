@@ -218,12 +218,15 @@ describe('来料检验 IQC 链路', () => {
       expect(p[16]).toBe(233); // material_id（来自物料编码反查）
     });
 
-    it('序号递增：当日已有 IQC20260926003 时取 004', async () => {
-      state.maxNo = 'IQC20260926003';
+    it('序号递增：当日已有 IQC 当日最大序号 时取 下一号', async () => {
+      // 单号按当天日期生成，硬编码日期会使测试每天必挂。改为动态构造今日日期 + '003'。
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+      state.maxNo = `IQC${dateStr}003`;
       const res = await POST(req('POST', baseBody()));
       const json = await res.json();
 
-      expect(json.data.inspectionNo).toBe('IQC20260926004');
+      expect(json.data.inspectionNo).toBe(`IQC${dateStr}004`);
     });
 
     it('结果归一化：reject/不合格/unqualified 一律存 fail', async () => {

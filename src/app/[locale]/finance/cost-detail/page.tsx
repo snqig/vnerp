@@ -7,13 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+} from '@/components/common';
 import {
   Select,
   SelectContent,
@@ -66,6 +62,7 @@ export default function CostDetailPage() {
   const [list, setList] = useState<CostRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [keyword, setSearch] = useState('');
   const [costType, setCostType] = useState('');
   const [workOrderNo, setWorkOrderNo] = useState('');
@@ -80,7 +77,7 @@ export default function CostDetailPage() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         keyword,
         workOrderNo,
       });
@@ -96,13 +93,59 @@ export default function CostDetailPage() {
       console.error('Failed to fetch cost detail:', error);
       setList([]);
     }
-  }, [page, keyword, costType, workOrderNo]);
+  }, [page, pageSize, keyword, costType, workOrderNo]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
   const formatAmount = (amount: number) => Number(amount || 0).toFixed(2);
+
+  const columns: StandardTableColumn<CostRecord>[] = [
+    {
+      key: 'cost_no',
+      title: t('costNo'),
+      render: (c) => <span className="font-mono text-sm">{c.cost_no}</span>,
+    },
+    {
+      key: 'work_order_no',
+      title: tc('workOrderNo'),
+      render: (c) => <span className="font-mono text-sm">{c.work_order_no || '-'}</span>,
+    },
+    {
+      key: 'cost_type',
+      title: t('costType'),
+      render: (c) => (
+        <Badge
+          variant="outline"
+          className={typeColors[c.cost_type] || 'bg-gray-100 text-gray-700'}
+        >
+          {t(costTypeMap[c.cost_type]) || c.cost_type}
+        </Badge>
+      ),
+    },
+    {
+      key: 'amount',
+      title: tc('amount'),
+      align: 'right',
+      render: (c) => <span className="font-medium">¥{formatAmount(c.amount)}</span>,
+    },
+    {
+      key: 'currency',
+      title: tc('currency'),
+      render: (c) => c.currency || 'CNY',
+    },
+    {
+      key: 'cost_date',
+      title: tc('date'),
+      render: (c) => formatDate(c.cost_date),
+    },
+    {
+      key: 'description',
+      title: t('description'),
+      render: (c) => <span className="max-w-xs truncate block">{c.description}</span>,
+    },
+  ];
 
   return (
     <MainLayout>
@@ -169,73 +212,25 @@ export default function CostDetailPage() {
 
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('costNo')}</TableHead>
-                  <TableHead>{tc('workOrderNo')}</TableHead>
-                  <TableHead>{t('costType')}</TableHead>
-                  <TableHead className="text-right">{tc('amount')}</TableHead>
-                  <TableHead>{tc('currency')}</TableHead>
-                  <TableHead>{tc('date')}</TableHead>
-                  <TableHead>{t('description')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      {t('noData')}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  list.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-mono text-sm">{c.cost_no}</TableCell>
-                      <TableCell className="font-mono text-sm">
-                        {c.work_order_no || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={typeColors[c.cost_type] || 'bg-gray-100 text-gray-700'}
-                        >
-                          {t(costTypeMap[c.cost_type]) || c.cost_type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">¥{formatAmount(c.amount)}</TableCell>
-                      <TableCell>{c.currency || 'CNY'}</TableCell>
-                      <TableCell>{formatDate(c.cost_date)}</TableCell>
-                      <TableCell className="max-w-xs truncate">{c.description}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<CostRecord>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable={false}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setPage(1);
+              }}
+              onRetry={fetchData}
+              emptyText={t('noData')}
+            />
           </CardContent>
         </Card>
-
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{tc('totalRecords', { count: total })}</span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {t('previousPage')}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {t('nextPage')}
-            </Button>
-          </div>
-        </div>
       </div>
     </MainLayout>
   );

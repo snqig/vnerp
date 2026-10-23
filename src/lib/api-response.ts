@@ -12,9 +12,28 @@ export function sanitizeInput(input: string): string {
     .replace(/'/g, '&#x27;');
 }
 
+/**
+ * Date → 本地钟面串 'YYYY-MM-DDTHH:mm:ss'（无时区语义，钟面即 DB 存储的业务时间）。
+ *
+ * 背景（全局治理）：原实现 toISOString().slice(0, 10) 把所有 Date 截断成 UTC 纯日期串：
+ * ① DATETIME 时间部分在出参即丢失，前端 datetime-local 编辑回显拿不到时间；
+ * ② 北京 0–8 点的记录 UTC 日期已是前一天（错日）。
+ * 改为按服务器本地时区取钟面 —— mysql2 的 timezone 默认 'local'，本地钟面往返恰好
+ * 还原 DB 存储串（与 dateStrings:['DATE'] 返回的 DATE 串同口径）。
+ * 该格式为 ES 规范的本地时间解析（无偏移即本地），new Date()/formatDate/toDateInput/
+ * toDateTimeLocal/slice(0,10)/slice(0,16) 全部兼容，且无 Safari 空格分隔解析问题。
+ */
+function dateToClockString(d: Date): string {
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 export function sanitizeObject<T>(obj: T): T {
   if (typeof obj === 'string') return sanitizeInput(obj) as T;
-  if (obj instanceof Date) return (obj as Date).toISOString().slice(0, 10) as T;
+  if (obj instanceof Date) return dateToClockString(obj as Date) as T;
   if (Array.isArray(obj)) return obj.map((item) => sanitizeObject(item)) as T;
   if (obj && typeof obj === 'object') {
     const sanitized: Record<string, unknown> = {};

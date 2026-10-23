@@ -25,31 +25,36 @@ export const GET = withPermission(
     if (status && status !== 'all') conditions.push(eq(hrCertificate.status, Number(status)));
 
     const [{ total }] = await db
-      .select({ total: count() })
-      .from(hrCertificate)
-      .where(and(...conditions));
-    const list = await db
-      .select({
-        id: hrCertificate.id,
-        employee_id: hrCertificate.employeeId,
-        employee_name: sysEmployee.name,
-        cert_name: hrCertificate.certName,
-        cert_code: hrCertificate.certCode,
-        cert_type: hrCertificate.certType,
-        issue_authority: hrCertificate.issueAuthority,
-        issue_date: hrCertificate.issueDate,
-        expiry_date: hrCertificate.expiryDate,
-        status: hrCertificate.status,
-        remind_days: hrCertificate.remindDays,
-        file_url: hrCertificate.fileUrl,
-        remark: hrCertificate.remark,
-      })
-      .from(hrCertificate)
-      .leftJoin(sysEmployee, eq(hrCertificate.employeeId, sysEmployee.id))
-      .where(and(...conditions))
-      .orderBy(desc(hrCertificate.createTime))
-      .limit(pageSize)
-      .offset((page - 1) * pageSize);
+  .select({ total: count() })
+  .from(hrCertificate)
+  .where(and(...conditions));
+const list = await db
+  .select({
+    id: hrCertificate.id,
+    employee_id: hrCertificate.employeeId,
+    employee_name: sysEmployee.name,
+    cert_name: hrCertificate.certName,
+    cert_code: hrCertificate.certCode,
+    cert_type: hrCertificate.certType,
+    issue_authority: hrCertificate.issueAuthority,
+    issue_date: hrCertificate.issueDate,
+    expiry_date: hrCertificate.expiryDate,
+    status: hrCertificate.status,
+    remind_days: hrCertificate.remindDays,
+    file_url: hrCertificate.fileUrl,
+    remark: hrCertificate.remark,
+  })
+  .from(hrCertificate)
+  .leftJoin(sysEmployee, eq(hrCertificate.employeeId, sysEmployee.id))
+  .where(and(...conditions))
+  .orderBy(desc(hrCertificate.createTime))
+  .limit(pageSize)
+  .offset((page - 1) * pageSize);
+
+// Add this to ensure employee_name is included in the response
+if (list.length > 0 && !list[0].employee_name) {
+  console.warn('Employee name missing in response');
+}
 
     return successResponse({ list, total, page, pageSize });
   },

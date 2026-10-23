@@ -12,6 +12,7 @@ import { getTranslations } from 'next-intl/server';
  * 依据: docs/打样工艺卡录入页统一完善方案.md
  */
 import { query, execute, transaction } from '@/lib/db';
+import { generateDocumentNo } from '@/lib/document-numbering';
 import { logger, secureLog } from '@/lib/logger';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import {
@@ -873,24 +874,136 @@ export class SampleProcessCardService {
     }
   }
 
-  // ===== 阶段 4: 转正式生产工单 =====
+  // ===== 阶段 3.5: 报价单转销售订单（打通 sal_quote → sal_order 断头路）=====
 
-  /** 生成正式工单号：PWO{YYYYMMDD}{5位序号} */
-  private async generateFormalWorkOrderNo(): Promise<string> {
+  /** 生成销售订单号：SO{YYYYMMDD}{4位序号}（与 createSalesOrderFromSample 同构） */
+  private async generateSalesOrderNo(): Promise<string> {
     const today = new Date();
     const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
-    const prefix = `PWO${ymd}`;
-    const rows = await query(
-      `SELECT work_order_no FROM prod_work_order WHERE work_order_no LIKE ? ORDER BY id DESC LIMIT 1`,
-      [`${prefix}%`]
+    const rows = await query<{ cnt: number }>(
+      `SELECT COUNT(*) AS cnt FROM sal_order WHERE order_no LIKE ?`,
+      [`SO${ymd}%`]
     );
-    let seq = 1;
-    if (rows.length > 0) {
-      const lastSeq = parseInt(rows[0].work_order_no.slice(-5), 10);
-      if (!isNaN(lastSeq)) seq = lastSeq + 1;
-    }
-    return `${prefix}${String(seq).padStart(5, '0')}`;
+    const seq = (rows[0]?.cnt || 0) + 1;
+    return `SO${ymd}${String(seq).padStart(4, '0')}`;
   }
+
+  /**
+   * 报价单转销售订单：sal_quote → sal_order + sal_order_detail
+   * - 仅草稿(1)/已发送(2)可转；已接受(3)且已回写订单时幂等返回既有结果
+   * - 金额来源：quoted_price（单价 = quoted_price / quantity）
+   * - 成功后回写报价 status=3-已接受 + sales_order_id/no + converted_at
+   */
+  async convertQuoteToOrder(
+    quoteId: number,
+    userId: number
+  ): Promise<{ salesOrderId: number; orderNo: string; quotedPrice: number }> {
+    const ctx = { module: 'sample-card', action: 'convert-quote-to-order', quoteId, userId };
+
+    const quoteRows = await query<{
+      id: number;
+      quote_no: string;
+      status: number;
+      quantity: number | string;
+      quoted_price: number | string;
+      customer_id: number | null;
+      customer_name: string | null;
+      product_name: string | null;
+      currency: string | null;
+      sample_card_id: number | null;
+      sales_order_id: number | null;
+      sales_order_no: string | null;
+    }>(
+      `SELECT id, quote_no, status, quantity, quoted_price, customer_id, customer_name,
+              product_name, currency, sample_card_id, sales_order_id, sales_order_no
+         FROM sal_quote WHERE id = ? AND deleted = 0 LIMIT 1`,
+      [quoteId]
+    );
+    const quote = quoteRows[0];
+    if (!quote) {
+      logger.warn(ctx, 'Quote not found');
+      throw new Error('报价单不存在');
+    }
+
+    const quotedPrice = Number(quote.quoted_price || 0);
+    if (quote.status === 3) {
+      if (quote.sales_order_id && quote.sales_order_no) {
+        logger.info(ctx, 'Quote already converted, return existing sales order', {
+          salesOrderId: quote.sales_order_id,
+          orderNo: quote.sales_order_no,
+        });
+        return { salesOrderId: quote.sales_order_id, orderNo: quote.sales_order_no, quotedPrice };
+      }
+      throw new Error('报价单已接受，不可重复转销售订单');
+    }
+    if (quote.status === 4 || quote.status === 5) {
+      logger.warn(ctx, 'Quote rejected or voided, not convertible', { status: quote.status });
+      throw new Error(quote.status === 4 ? '报价单已拒绝，不可转销售订单' : '报价单已作废，不可转销售订单');
+    }
+    if (quotedPrice <= 0) {
+      throw new Error('报价金额无效，不可转销售订单');
+    }
+
+    const quantity = Number(quote.quantity) > 0 ? Number(quote.quantity) : 1;
+    const unitPrice = Math.round((quotedPrice / quantity) * 10000) / 10000;
+
+    // 承印材料（可无 → 0）
+    let materialId = 0;
+    if (quote.sample_card_id) {
+      const cardRows = await query<{ substrate_material_id: number | null }>(
+        `SELECT substrate_material_id FROM dcprint_sample_process_card WHERE id = ? LIMIT 1`,
+        [quote.sample_card_id]
+      );
+      materialId = cardRows[0]?.substrate_material_id || 0;
+    }
+
+    const orderNo = await this.generateSalesOrderNo();
+
+    try {
+      const salesOrderId = await transaction(async (conn) => {
+        const [orderResult] = (await conn.execute(
+          `INSERT INTO sal_order
+           (order_no, customer_name, customer_id, total_amount, total_with_tax, currency, status, create_by, create_time)
+           VALUES (?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
+          [orderNo, quote.customer_name, quote.customer_id || 0, quotedPrice, quotedPrice, quote.currency || 'CNY', userId]
+        )) as [ResultSetHeader, unknown];
+        const newOrderId = orderResult.insertId;
+
+        await conn.execute(
+          `INSERT INTO sal_order_detail
+           (order_id, material_id, material_name, quantity, unit_price, total_amount, create_time)
+           VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+          [newOrderId, materialId, quote.product_name, quantity, unitPrice, quotedPrice]
+        );
+
+        await conn.execute(
+          `UPDATE sal_quote
+              SET status = 3, sales_order_id = ?, sales_order_no = ?, converted_at = NOW(),
+                  update_by = ?, update_time = NOW()
+            WHERE id = ? AND deleted = 0`,
+          [newOrderId, orderNo, userId, quoteId]
+        );
+
+        secureLog('info', 'Quote converted to sales order', {
+          quoteId,
+          quoteNo: quote.quote_no,
+          salesOrderId: newOrderId,
+          orderNo,
+        });
+        return newOrderId;
+      });
+      return { salesOrderId, orderNo, quotedPrice };
+    } catch (err) {
+      logger.error(ctx, 'Convert quote to sales order failed', {
+        quoteId,
+        orderNo,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      throw err;
+    }
+  }
+
+  // ===== 阶段 4: 转正式生产工单 =====
 
   /** 转正式生产工单（已确认工艺卡 → prod_work_order + BOM 明细） */
   async convertToFormalWorkOrder(
@@ -924,7 +1037,6 @@ export class SampleProcessCardService {
     if (options.planQty === undefined) {
       secureLog('warn', ts('k_1nv7aaz'), { cardId });
     }
-    const workOrderNo = await this.generateFormalWorkOrderNo();
     const productName = card.sample_name || card.product_name || `打样产品 ${card.sample_no}`;
     if (!card.sample_name && !card.product_name) {
       secureLog(
@@ -934,19 +1046,22 @@ export class SampleProcessCardService {
       );
     }
 
-    secureLog('info', ts('k_19xms66'), {
-      cardId,
-      sampleNo: card.sample_no,
-      workOrderNo,
-      productName,
-      planQty,
-      itemCount: card.items?.length || 0,
-      stepCount: card.steps?.length || 0,
-    });
-
+    let workOrderNo = '';
     let phase = 'init';
     try {
       return await transaction(async (conn) => {
+        // 工单号走集中式 generateDocumentNo（命名锁串行化 + 含软删行取最大流水），
+        // 杜绝并发重复与已删号复用（uk_work_order_no 唯一约束治理）。
+        workOrderNo = await generateDocumentNo('sample_formal_work_order', conn);
+        secureLog('info', ts('k_19xms66'), {
+          cardId,
+          sampleNo: card.sample_no,
+          workOrderNo,
+          productName,
+          planQty,
+          itemCount: card.items?.length || 0,
+          stepCount: card.steps?.length || 0,
+        });
         phase = 'insert_work_order';
         secureLog('info', ts('k_1s5rzwx'), {
           workOrderNo,

@@ -115,11 +115,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       sc.tolerance,
       sc.quality_manager as quality_manager
     FROM prd_process_card pc
-    LEFT JOIN prd_standard_card sc ON CAST(pc.product_code AS UNSIGNED) = sc.id
-    WHERE pc.deleted = 0 AND pc.burdening_status >= 1
+    LEFT JOIN prd_standard_card sc
+      ON pc.product_code IS NOT NULL AND pc.product_code != ''
+      AND CAST(pc.product_code AS UNSIGNED) = sc.id
+    WHERE pc.deleted = 0 AND pc.burdening_status IN (1, 2, 5, 6)
   `;
 
-  let countSql = `SELECT COUNT(*) as total FROM prd_process_card pc WHERE pc.deleted = 0 AND pc.burdening_status >= 1`;
+  let countSql = `SELECT COUNT(*) as total FROM prd_process_card pc WHERE pc.deleted = 0 AND pc.burdening_status IN (1, 2, 5, 6)`;
   const params: SqlValue[] = [];
 
   if (status) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,14 +9,6 @@ import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -35,8 +28,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, Phone, Users, CheckCircle, Clock, AlertCircle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
+import { StandardTable, StandardTableColumn, SortState } from '@/components/common';
 
 interface FollowRecord {
   id?: number;
@@ -79,7 +72,7 @@ export default function CustomerFollowPage() {
   const [records, setRecords] = useState<FollowRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [_loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [searchName, setSearchName] = useState('');
   const [searchType, setSearchType] = useState('');
   const [stats, setStats] = useState({
@@ -91,8 +84,7 @@ export default function CustomerFollowPage() {
   });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<FollowRecord | null>(null);
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(records, (r) => String(r.id));
+  const [selectedRows, setSelectedRows] = useState<FollowRecord[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [customers, setCustomers] = useState<{ id: number; customer_name: string }[]>([]);
   const [form, setForm] = useState<Partial<FollowRecord>>({
@@ -107,6 +99,7 @@ export default function CustomerFollowPage() {
     status: 1,
     remark: '',
   });
+  const [sort, setSort] = useState<SortState>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -114,6 +107,10 @@ export default function CustomerFollowPage() {
       const params = new URLSearchParams({ page: String(page), pageSize: '20' });
       if (searchName) params.set('customerName', searchName);
       if (searchType) params.set('followType', searchType);
+      if (sort) {
+        params.set('sortField', sort.field);
+        params.set('sortDir', sort.direction);
+      }
       const res = await authFetch('/api/crm/follow?' + params);
       const data = await res.json();
       if (data.code === 200) {
@@ -155,7 +152,73 @@ export default function CustomerFollowPage() {
     fetchData();
     fetchCustomers();
     fetchStats();
-  }, [page]);
+  }, [page, sort]);
+
+  const columns: StandardTableColumn<FollowRecord>[] = [
+    {
+      key: 'customer_name',
+      title: t('customerName'),
+      render: (r) => <span>{r.customer_name}</span>,
+    },
+    {
+      key: 'follow_type',
+      title: t('followType'),
+      render: (r) => (
+        <Badge variant="outline">
+          {followTypeMap[r.follow_type] || r.follow_type}
+        </Badge>
+      ),
+    },
+    {
+      key: 'follow_content',
+      title: t('followContent'),
+      render: (r) => <span className="max-w-48 truncate block">{r.follow_content || '-'}</span>,
+    },
+    {
+      key: 'contact_name',
+      title: t('contactPerson'),
+      render: (r) => <span>{r.contact_name || '-'}</span>,
+    },
+    {
+      key: 'salesman_name',
+      title: t('salesman'),
+      render: (r) => <span>{r.salesman_name || '-'}</span>,
+    },
+    {
+      key: 'next_follow_date',
+      title: t('nextFollow'),
+      render: (r) => <span>{r.next_follow_date || '-'}</span>,
+    },
+    {
+      key: 'opportunity',
+      title: t('opportunity'),
+      render: (r) => <span className="max-w-32 truncate block">{r.opportunity || '-'}</span>,
+    },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => (
+        <Badge variant={followStatusMap[r.status]?.variant || 'outline'}>
+          {followStatusMap[r.status]?.label || '-'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      align: 'right',
+      render: (r) => (
+        <div className="flex gap-1 justify-end">
+          <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => handleDelete(r.id!)}>
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   const handleSave = async () => {
     if (!form.customer_id) {
@@ -198,7 +261,7 @@ export default function CustomerFollowPage() {
   };
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map((r) => r.id).filter(Boolean) as number[];
     if (ids.length === 0) return;
     if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
     setDeleting(true);
@@ -213,7 +276,7 @@ export default function CustomerFollowPage() {
     setDeleting(false);
     if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
     if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
+    setSelectedRows([]);
     fetchData();
   };
 
@@ -300,88 +363,20 @@ export default function CustomerFollowPage() {
               </Button>
             </div>
 
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                  </TableHead>
-                  <TableHead>{t('customerName')}</TableHead>
-                  <TableHead>{t('followType')}</TableHead>
-                  <TableHead>{t('followContent')}</TableHead>
-                  <TableHead>{t('contactPerson')}</TableHead>
-                  <TableHead>{t('salesman')}</TableHead>
-                  <TableHead>{t('nextFollow')}</TableHead>
-                  <TableHead>{t('opportunity')}</TableHead>
-                  <TableHead>{tc("status")}</TableHead>
-                  <TableHead>{tc("actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {records.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell>
-                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(r.id))} onChange={() => toggle(String(r.id))} aria-label={tc('selectRow', { id: String(r.id) })} />
-                    </TableCell>
-                    <TableCell>{r.customer_name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {followTypeMap[r.follow_type] || r.follow_type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-48 truncate">{r.follow_content || '-'}</TableCell>
-                    <TableCell>{r.contact_name || '-'}</TableCell>
-                    <TableCell>{r.salesman_name || '-'}</TableCell>
-                    <TableCell>{r.next_follow_date || '-'}</TableCell>
-                    <TableCell className="max-w-32 truncate">{r.opportunity || '-'}</TableCell>
-                    <TableCell>
-                      <Badge variant={followStatusMap[r.status]?.variant || 'outline'}>
-                        {followStatusMap[r.status]?.label || '-'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => handleDelete(r.id!)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {records.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      {tc('noData')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-            <div className="flex justify-between items-center mt-4 text-sm">
-              <span>{tc('totalRecords', { count: total })}</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  {tc('prevPage')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page * 20 >= total}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {tc('nextPage')}
-                </Button>
-              </div>
-            </div>
+            <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} loading={deleting} />
+            <StandardTable
+              columns={columns}
+              dataSource={records}
+              total={total}
+              page={page}
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              onSortChange={setSort}
+              sortState={sort}
+              onPageChange={(p) => setPage(p)}
+              loading={loading}
+            />
           </CardContent>
         </Card>
 
@@ -461,7 +456,7 @@ export default function CustomerFollowPage() {
                   <Label>{t('nextFollowDate')}</Label>
                   <Input
                     type="date"
-                    value={form.next_follow_date || ''}
+                    value={toDateInput(form.next_follow_date)}
                     onChange={(e) => setForm({ ...form, next_follow_date: e.target.value })}
                   />
                 </div>

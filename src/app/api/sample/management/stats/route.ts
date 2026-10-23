@@ -1,62 +1,73 @@
-import { getTranslations } from 'next-intl/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
+import { SampleOrderStatus } from '@/domain/sample/value-objects/SampleOrderStatus';
 
-// 获取打样管理统计信息
+/**
+ * 打样管理统计卡片逻辑
+ *
+ * DB `sal_sample_order` 字段说明：
+ *   status: VARCHAR(20) — 订单生命周期状态
+ *     draft / pending / in_progress / completed / confirmed / converted / cancelled
+ *
+ * 前端 StatsCards 卡片语义：
+ *   pending     → 待打样 = 'pending'
+ *   sampling    → 打样中 = 'in_progress'
+ *   completed   → 已完成 = IN ('completed','confirmed','converted')
+ *   confirming  → 客户确认中 = 'confirmed'
+ *   monthlyCount → 本月创建数
+ */
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
-  const ts = await getTranslations('Sample');
   try {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
-    let dateFilter = '';
-    const params: any[] = [];
+    const dateFilter =
+      startDate && endDate
+        ? ' AND DATE(create_time) BETWEEN ? AND ?'
+        : '';
+    const dateParams =
+      startDate && endDate ? [startDate, endDate] : [];
 
-    if (startDate && endDate) {
-      dateFilter = ' AND DATE(create_time) BETWEEN ? AND ?';
-      params.push(startDate, endDate);
-    }
+    const baseWhere = `FROM sal_sample_order WHERE deleted = 0${dateFilter}`;
 
-    // 待打样
-    const [pendingResult] = await query(
-      `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND status = 1${dateFilter}`,
-      params
-    );
+    const [[pending], [sampling], [completed], [confirming], [monthly]] =
+      await Promise.all([
+        query(
+          `SELECT COUNT(*) as count ${baseWhere} AND status = ?`,
+          [...dateParams, SampleOrderStatus.PENDING]
+        ),
+        query(
+          `SELECT COUNT(*) as count ${baseWhere} AND status = ?`,
+          [...dateParams, SampleOrderStatus.IN_PROGRESS]
+        ),
+        query(
+          `SELECT COUNT(*) as count ${baseWhere} AND status IN ('completed','confirmed','converted')`,
+          dateParams
+        ),
+        query(
+          `SELECT COUNT(*) as count ${baseWhere} AND status = ?`,
+          [...dateParams, SampleOrderStatus.CONFIRMED]
+        ),
+        query(
+          `SELECT COUNT(*) as count FROM sal_sample_order
+           WHERE deleted = 0
+             AND YEAR(create_time) = YEAR(CURDATE())
+             AND MONTH(create_time) = MONTH(CURDATE())`
+        ),
+      ]);
 
-    // 打样中
-    const [samplingResult] = await query(
-      `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND status = 2${dateFilter}`,
-      params
-    );
-
-    // 已完成
-    const [completedResult] = await query(
-      `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND status = 3${dateFilter}`,
-      params
-    );
-
-    // 客户确认中
-    const [confirmingResult] = await query(
-      `SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0 AND status = 4${dateFilter}`,
-      params
-    );
-
-    // 本月打样数
-    const [monthlyResult] = await query(
-      `SELECT COUNT(*) as count FROM sal_sample_order 
-       WHERE deleted = 0 AND YEAR(create_time) = YEAR(CURDATE()) AND MONTH(create_time) = MONTH(CURDATE())`
-    );
-
+    // 注意：上面解构为 [[pending], ...] —— query() 返回行数组，
+    // 解构已取出首行对象 { count }，此处直接读 .count，不能再 [0]。
     return NextResponse.json({
       success: true,
       data: {
-        pending: pendingResult?.count || 0,
-        sampling: samplingResult?.count || 0,
-        completed: completedResult?.count || 0,
-        confirming: confirmingResult?.count || 0,
-        monthlyCount: monthlyResult?.count || 0,
+        pending: (pending as any)?.count || 0,
+        sampling: (sampling as any)?.count || 0,
+        completed: (completed as any)?.count || 0,
+        confirming: (confirming as any)?.count || 0,
+        monthlyCount: (monthly as any)?.count || 0,
       },
     });
   } catch (error) {

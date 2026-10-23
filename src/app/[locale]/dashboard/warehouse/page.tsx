@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger';
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { useCompanyName } from '@/hooks/useCompanyName';
+import { useDashboardScale } from '@/hooks/useDashboardScale';
 import GlassGauge from '@/components/GlassGauge';
 import VerticalMarquee from '@/components/ui/VerticalMarquee';
 import { ChartPlaceholder } from '@/components/WarehouseCharts';
@@ -125,6 +126,7 @@ export default function WarehouseDashboard() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
+  const dashScale = useDashboardScale();
   const [warehouseHistory] = useState<number[]>([65, 68, 70, 72, 69, 73]);
 
   useEffect(() => {
@@ -149,12 +151,31 @@ export default function WarehouseDashboard() {
     };
   }, []);
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = async () => {
+    const el = dashboardRef.current;
+    if (!el) return;
     if (!document.fullscreenElement) {
-      dashboardRef.current?.requestFullscreen();
+      const isDark = document.documentElement.classList.contains('dark');
+      el.style.background = isDark
+        ? 'linear-gradient(135deg, #091637 0%, #010205 100%)'
+        : 'linear-gradient(135deg, #FDFBF6 0%, #F1E7D6 100%)';
+      // 容器带 zoom：CSS 长度先按缩放前的布局值算，再乘 dashScale 渲染。
+      // 故全屏铺满要除以 dashScale，否则 2560 屏（scale≈1.33）会溢出到 ~3400px。
+      el.style.width = `calc(100vw / ${dashScale})`;
+      el.style.height = `calc(100vh / ${dashScale})`;
+      el.style.minHeight = `calc(100vh / ${dashScale})`;
+      el.style.padding = '1.5rem';
+      el.style.overflowY = 'auto';
+      await el.requestFullscreen();
       setIsFullscreen(true);
     } else {
       document.exitFullscreen();
+      el.style.background = '';
+      el.style.width = '';
+      el.style.height = '';
+      el.style.minHeight = '';
+      el.style.padding = '';
+      el.style.overflowY = '';
       setIsFullscreen(false);
     }
   };
@@ -215,7 +236,8 @@ export default function WarehouseDashboard() {
     <MainLayout>
       <div
         ref={dashboardRef}
-        className="dash-scope dark:bg-[linear-gradient(135deg,#091637_0%,#010205_100%)] min-h-screen text-slate-900 dark:text-gray-200 dark:text-white p-4 relative overflow-hidden"
+        style={{ zoom: dashScale }}
+        className="dash-zoom dash-scope glass-scope dashboard-gradient min-h-full text-slate-900 dark:text-gray-200 dark:text-white p-4 relative overflow-hidden"
       >
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 left-0 w-96 h-96 bg-[#A0522D]/5 rounded-full blur-3xl animate-blob dark:bg-cyan-500/5" />
@@ -384,7 +406,7 @@ export default function WarehouseDashboard() {
             <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-white dark:bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#C2763C] to-[#8A4A22] dark:from-cyan-400 dark:to-blue-600" />
               <BarChart3 className="h-4 w-4 text-[#8A4A22] dark:text-cyan-400" />
-              <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">{t('warehouseUtilization')}</span>
+              <span className="text-sm font-medium text-slate-700 dark:text-gray-200 dark:text-white/80">{t('utilizationGauge')}</span>
             </div>
             <div className="p-4 flex flex-col items-center">
               <div className="relative">

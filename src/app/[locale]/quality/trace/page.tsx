@@ -1,18 +1,13 @@
 'use client';
-import { useRowSelection } from '@/lib/useRowSelection';
-
 import { authFetch } from '@/lib/auth-fetch';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+  type SortState,
+} from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -35,9 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Search, Scan, QrCode, Layers, Package, Factory, CheckCircle, AlertCircle, ArrowRight, RefreshCw, Clock, AlertTriangle, Calendar, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { Checkbox } from '@/components/ui/checkbox';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
 import { StatsCards, StatsTheme } from '@/components/stats-cards';
 
@@ -115,18 +108,20 @@ export default function TracePage() {
   });
   const [_keyword, _setKeyword] = useState('');
   const [traceTypeFilter, setTraceTypeFilter] = useState('all');
-  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(records, 'trace_no');
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll } = useRowSelection(
-    sortedData,
-    (r) => String(r.id)
-  );
+  // StandardTable：服务端分页 / 排序 / 勾选
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [sort, setSort] = useState<SortState>(null);
+  const [selectedRows, setSelectedRows] = useState<TraceRecord[]>([]);
 
   const fetchRecords = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (_keyword) params.set('keyword', _keyword);
       if (traceTypeFilter !== 'all') params.set('traceType', traceTypeFilter);
-      params.set('pageSize', '20');
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
       const res = await authFetch(`/api/dcprint/trace?${params}`);
       const data = await res.json();
       if (data.success) {
@@ -150,9 +145,11 @@ export default function TracePage() {
           remark: item.remark,
         }));
         setRecords(list);
+        const tot = rawData?.pagination?.total || 0;
+        setTotal(tot);
       }
     } catch {}
-  }, [_keyword, traceTypeFilter]);
+  }, [_keyword, page, pageSize, traceTypeFilter]);
 
   const fetchStats = async () => {
     try {
@@ -244,6 +241,162 @@ export default function TracePage() {
       setLoading(false);
     }
   };
+
+  // 客户端排序（服务端分页返回当前页数据，排序在当前页内进行）
+  const sortedData = useMemo(() => {
+    const list = [...records];
+    if (!sort) return list;
+    const dir = sort.direction === 'asc' ? 1 : -1;
+    return list.sort((a, b) => {
+      const av = (a as unknown as Record<string, unknown>)[sort.field];
+      const bv = (b as unknown as Record<string, unknown>)[sort.field];
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+      if (typeof av === 'boolean' && typeof bv === 'boolean') return (Number(av) - Number(bv)) * dir;
+      return String(av ?? '').localeCompare(String(bv ?? '')) * dir;
+    });
+  }, [records, sort]);
+
+  const handleSortChange = (next: SortState) => {
+    setSort(next);
+    setPage(1);
+  };
+
+  // 追溯记录列定义
+  const columns: StandardTableColumn<TraceRecord>[] = [
+    {
+      key: 'serial_no',
+      title: tc('serialNo'),
+      align: 'center',
+      width: 60,
+      render: (_r, i) => (
+        <span className="text-muted-foreground">{(page - 1) * pageSize + i + 1}</span>
+      ),
+    },
+    {
+      key: 'trace_no',
+      title: t('traceNo'),
+      sortable: true,
+      render: (r) => <span className="font-mono">{r.trace_no}</span>,
+    },
+    {
+      key: 'card_no',
+      title: t('cardNo'),
+      sortable: true,
+      render: (r) => r.card_no || '-',
+    },
+    {
+      key: 'work_order_no',
+      title: tc('workOrderNo'),
+      sortable: true,
+      render: (r) => r.work_order_no || '-',
+    },
+    {
+      key: 'product_code',
+      title: t('productCode'),
+      sortable: true,
+      render: (r) => r.product_code || '-',
+    },
+    {
+      key: 'product_name',
+      title: t('productName'),
+      sortable: true,
+      render: (r) => r.product_name || '-',
+    },
+    {
+      key: 'main_material_name',
+      title: t('mainMaterial'),
+      sortable: true,
+      render: (r) => r.main_material_name || '-',
+    },
+    {
+      key: 'trace_type',
+      title: tc('type'),
+      sortable: true,
+      render: (r) => (
+        <Badge className={TRACE_TYPE_MAP[r.trace_type]?.color || 'bg-gray-100 dark:bg-gray-700'}>
+          {t(TRACE_TYPE_MAP[r.trace_type]?.label || String(r.trace_type))}
+        </Badge>
+      ),
+    },
+    {
+      key: 'operator_name',
+      title: tc('operator'),
+      sortable: true,
+      render: (r) => r.operator_name || '-',
+    },
+    {
+      key: 'trace_time',
+      title: t('traceTime'),
+      sortable: true,
+      render: (r) => r.trace_time || '-',
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      // 原有操作列：查看追溯详情，逻辑保持原样
+      render: (r) => (
+        <Button variant="ghost" size="sm" onClick={() => handleViewRecord(r)}>
+          <Search className="h-4 w-4" />
+        </Button>
+      ),
+    },
+  ];
+
+  // 物料批次追溯明细（只读展示，不分页）
+  const materialColumns: StandardTableColumn<TraceDetail['materials'][number]>[] = [
+    {
+      key: 'labelNo',
+      title: t('labelNo'),
+      render: (r) => <span className="font-mono">{r.labelNo}</span>,
+    },
+    {
+      key: 'materialType',
+      title: t('materialType'),
+      render: (r) => (
+        <Badge
+          className={
+            r.materialType === '1' || r.materialType === ts('k_1gqlef2')
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+              : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+          }
+        >
+          {r.materialType === '1' || r.materialType === ts('k_1gqlef2')
+            ? t('mainMaterial')
+            : t('auxiliaryMaterial')}
+        </Badge>
+      ),
+    },
+    {
+      key: 'materialCode',
+      title: t('materialCode'),
+      render: (r) => r.materialCode || '-',
+    },
+    {
+      key: 'materialName',
+      title: tc('name'),
+      render: (r) => <span className="font-medium">{r.materialName || '-'}</span>,
+    },
+    {
+      key: 'specification',
+      title: tc('specification'),
+      render: (r) => r.specification || '-',
+    },
+    {
+      key: 'batchNo',
+      title: tc('batchNo'),
+      render: (r) => <span className="font-mono">{r.batchNo || '-'}</span>,
+    },
+    {
+      key: 'supplierName',
+      title: tc('supplier'),
+      render: (r) => r.supplierName || '-',
+    },
+    {
+      key: 'receiveDate',
+      title: t('receiveDate'),
+      render: (r) => r.receiveDate || '-',
+    },
+  ];
 
   return (
     <MainLayout title={t('traceQuery')}>
@@ -458,54 +611,14 @@ export default function TracePage() {
                   <CardDescription>{t('materialBatchTraceDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t('labelNo')}</TableHead>
-                        <TableHead>{t('materialType')}</TableHead>
-                        <TableHead>{t('materialCode')}</TableHead>
-                        <TableHead>{tc('name')}</TableHead>
-                        <TableHead>{tc('specification')}</TableHead>
-                        <TableHead>{tc('batchNo')}</TableHead>
-                        <TableHead>{tc('supplier')}</TableHead>
-                        <TableHead>{t('receiveDate')}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {!traceResult.materials || traceResult.materials.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                            {t('noMaterialTraceInfo')}
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        traceResult.materials.map((mat, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell className="font-mono">{mat.labelNo}</TableCell>
-                            <TableCell>
-                              <Badge
-                                className={
-                                  mat.materialType === '1' || mat.materialType === ts('k_1gqlef2')
-                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
-                                    : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                                }
-                              >
-                                {mat.materialType === '1' || mat.materialType === ts('k_1gqlef2')
-                                  ? t('mainMaterial')
-                                  : t('auxiliaryMaterial')}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{mat.materialCode || '-'}</TableCell>
-                            <TableCell className="font-medium">{mat.materialName || '-'}</TableCell>
-                            <TableCell>{mat.specification || '-'}</TableCell>
-                            <TableCell className="font-mono">{mat.batchNo || '-'}</TableCell>
-                            <TableCell>{mat.supplierName || '-'}</TableCell>
-                            <TableCell>{mat.receiveDate || '-'}</TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
+                  <StandardTable<TraceDetail['materials'][number]>
+                    columns={materialColumns}
+                    dataSource={traceResult.materials || []}
+                    total={traceResult.materials?.length || 0}
+                    rowKey={(_r, i) => String(i)}
+                    showPagination={false}
+                    emptyText={t('noMaterialTraceInfo')}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -548,105 +661,33 @@ export default function TracePage() {
                     { key: 'operator_name', label: tc('operator'), width: 12 },
                     { key: 'trace_time', label: t('traceTime'), width: 18 },
                   ]}
-                  data={
-                    selectedCount > 0
-                      ? sortedData.filter((r) => isSelected(String(r.id)))
-                      : sortedData
-                  }
+                  data={selectedRows.length > 0 ? selectedRows : sortedData}
                 />
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
-                  </TableHead>
-                  <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
-                  <SortableTableHeader
-                    field="trace_no"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('traceNo')}
-                  </SortableTableHeader>
-                  <SortableTableHeader
-                    field="card_no"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('cardNo')}
-                  </SortableTableHeader>
-                  <TableHead>{tc('workOrderNo')}</TableHead>
-                  <TableHead>{t('productCode')}</TableHead>
-                  <TableHead>{t('productName')}</TableHead>
-                  <TableHead>{t('mainMaterial')}</TableHead>
-                  <SortableTableHeader
-                    field="trace_type"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {tc('type')}
-                  </SortableTableHeader>
-                  <TableHead>{tc('operator')}</TableHead>
-                  <SortableTableHeader
-                    field="trace_time"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('traceTime')}
-                  </SortableTableHeader>
-                  <TableHead>{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
-                      {t('noTraceRecords')}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  sortedData.map((r, index) => (
-                    <TableRow key={r.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={isSelected(String(r.id))}
-                          onCheckedChange={() => toggle(String(r.id))}
-                        />
-                      </TableCell>
-                      <TableCell className="text-center text-muted-foreground">
-                        {index + 1}
-                      </TableCell>
-                      <TableCell className="font-mono">{r.trace_no}</TableCell>
-                      <TableCell>{r.card_no || '-'}</TableCell>
-                      <TableCell>{r.work_order_no || '-'}</TableCell>
-                      <TableCell>{r.product_code || '-'}</TableCell>
-                      <TableCell>{r.product_name || '-'}</TableCell>
-                      <TableCell>{r.main_material_name || '-'}</TableCell>
-                      <TableCell>
-                        <Badge className={TRACE_TYPE_MAP[r.trace_type]?.color || 'bg-gray-100 dark:bg-gray-700'}>
-                          {t(TRACE_TYPE_MAP[r.trace_type]?.label || String(r.trace_type))}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{r.operator_name || '-'}</TableCell>
-                      <TableCell>{r.trace_time || '-'}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => handleViewRecord(r)}>
-                          <Search className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<TraceRecord>
+              columns={columns}
+              dataSource={sortedData}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 50, 100]}
+              rowKey="id"
+              rowSelectable
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              sortState={sort}
+              onSortChange={handleSortChange}
+              onRetry={fetchRecords}
+              emptyText={t('noTraceRecords')}
+            />
           </CardContent>
         </Card>
 

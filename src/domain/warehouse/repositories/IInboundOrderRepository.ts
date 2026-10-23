@@ -47,7 +47,13 @@ export interface IInboundOrderRepository {
   findByStatus(
     status: string,
     pagination: Pagination,
-    filters?: { keyword?: string; startDate?: string; endDate?: string; poId?: number }
+    filters?: {
+      keyword?: string;
+      startDate?: string;
+      endDate?: string;
+      poId?: number;
+      orderType?: string;
+    }
   ): Promise<PaginatedResult<InboundOrder>>;
   save(order: InboundOrder): Promise<{ id: number; orderNo: string }>;
   updateStatus(id: number, status: string, currentStatus: string): Promise<boolean>;

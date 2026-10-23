@@ -4,9 +4,11 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Table,
   TableBody,
@@ -53,6 +55,7 @@ export default function CostPage() {
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<any>({});
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailData, setDetailData] = useState<Loose>(null);
@@ -60,7 +63,7 @@ export default function CostPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await authFetch(`/api/warehouse/cost?page=${page}&pageSize=20`);
+      const res = await authFetch(`/api/warehouse/cost?page=${page}&pageSize=${pageSize}`);
       const result = await res.json();
       if (result.success) {
         setList(result.data?.list || []);
@@ -70,7 +73,7 @@ export default function CostPage() {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, pageSize]);
 
   useEffect(() => {
     fetchData();
@@ -108,6 +111,94 @@ export default function CostPage() {
 
   const totalCostAmount = list.reduce((sum, item) => sum + (item.total_cost_amount || 0), 0);
 
+  // /api/warehouse/cost 未支持 sortField / sortDirection，故不开列排序（需后端补排序参数）
+  const columns: StandardTableColumn<CostItem>[] = [
+    {
+      key: 'material_code',
+      title: tc('materialCode'),
+      render: (r) => <span className="font-mono text-sm">{r.material_code}</span>,
+    },
+    {
+      key: 'material_name',
+      title: tc('materialName'),
+      render: (r) => <span className="text-sm font-medium">{r.material_name}</span>,
+    },
+    {
+      key: 'specification',
+      title: tc('specification'),
+      render: (r) => <span className="text-sm text-muted-foreground">{r.specification || '-'}</span>,
+    },
+    {
+      key: 'unit',
+      title: tc('unit'),
+      render: (r) => <span className="text-sm">{r.unit}</span>,
+    },
+    {
+      key: 'total_quantity',
+      title: tc('totalQuantity'),
+      align: 'right',
+      render: (r) => (
+        <span className="text-sm font-mono">{Number(r.total_quantity).toLocaleString()}</span>
+      ),
+    },
+    {
+      key: 'avg_cost_price',
+      title: tc('avgCostPrice'),
+      align: 'right',
+      render: (r) => (
+        <span className="text-sm font-mono">¥{Number(r.avg_cost_price).toFixed(4)}</span>
+      ),
+    },
+    {
+      key: 'total_cost_amount',
+      title: tc('costAmount'),
+      align: 'right',
+      render: (r) => (
+        <span className="text-sm font-mono font-medium">
+          ¥
+          {Number(r.total_cost_amount).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+          })}
+        </span>
+      ),
+    },
+    {
+      key: 'warehouse_count',
+      title: tc('warehouseCount'),
+      render: (r) => (
+        <Badge variant="outline" className="text-xs">
+          {r.warehouse_count}
+          {tc('warehouseUnitSuffix')}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      align: 'right',
+      render: (r) => (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7"
+            onClick={() => viewDetail(r.material_id)}
+          >
+            <Eye className="h-3 w-3 mr-1" />
+            {ts('k_xc5h04')}</Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-orange-600 dark:text-orange-400"
+            onClick={() => recalculate(r.material_id)}
+          >
+            <Calculator className="h-3 w-3 mr-1" />
+            {ts('k_4mkdr1')}</Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
@@ -127,22 +218,20 @@ export default function CostPage() {
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
 
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Calculator className="w-6 h-6" />
-              {ts('k_13bdco3')}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {ts('k_1gbfxkf')}</p>
-          </div>
-          <Button size="sm" variant="outline" onClick={fetchData}>
-            <RefreshCw className="h-3 w-3 mr-1" />
-            {ts('k_12qo56a')}</Button>
-        </div>
+        <PageHeroHeader
+          icon={Calculator}
+          title={ts('k_13bdco3')}
+          description={ts('k_1gbfxkf')}
+          action={
+            <Button size="sm" variant="outline" onClick={fetchData}>
+              <RefreshCw className="h-3 w-3 mr-1" />
+              {ts('k_12qo56a')}</Button>
+          }
+        />
 
         {/* 汇总卡片 */}
         <div className="grid grid-cols-3 gap-4">
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -159,7 +248,7 @@ export default function CostPage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -170,7 +259,7 @@ export default function CostPage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
                 <Calculator className="w-5 h-5 text-orange-600 dark:text-orange-400" />
@@ -183,111 +272,28 @@ export default function CostPage() {
           </Card>
         </div>
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{tc('materialCode')}</TableHead>
-                  <TableHead>{tc('materialName')}</TableHead>
-                  <TableHead>{tc('specification')}</TableHead>
-                  <TableHead>{tc('unit')}</TableHead>
-                  <TableHead>{tc('totalQuantity')}</TableHead>
-                  <TableHead>{tc('avgCostPrice')}</TableHead>
-                  <TableHead>{tc('costAmount')}</TableHead>
-                  <TableHead>{tc('warehouseCount')}</TableHead>
-                  <TableHead className="text-right">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8">
-                      <RefreshCw className="w-5 h-5 animate-spin mx-auto" />
-                    </TableCell>
-                  </TableRow>
-                ) : list.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                      {ts('k_1mp0dut')}</TableCell>
-                  </TableRow>
-                ) : (
-                  list.map((item) => (
-                    <TableRow key={item.material_id}>
-                      <TableCell className="font-mono text-sm">{item.material_code}</TableCell>
-                      <TableCell className="text-sm font-medium">{item.material_name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {item.specification || '-'}
-                      </TableCell>
-                      <TableCell className="text-sm">{item.unit}</TableCell>
-                      <TableCell className="text-sm font-mono">
-                        {Number(item.total_quantity).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-sm font-mono">
-                        ¥{Number(item.avg_cost_price).toFixed(4)}
-                      </TableCell>
-                      <TableCell className="text-sm font-mono font-medium">
-                        ¥
-                        {Number(item.total_cost_amount).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                        })}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs">
-                          {item.warehouse_count}
-                          {tc('warehouseUnitSuffix')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7"
-                            onClick={() => viewDetail(item.material_id)}
-                          >
-                            <Eye className="h-3 w-3 mr-1" />
-                            {ts('k_xc5h04')}</Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 text-orange-600 dark:text-orange-400"
-                            onClick={() => recalculate(item.material_id)}
-                          >
-                            <Calculator className="h-3 w-3 mr-1" />
-                            {ts('k_4mkdr1')}</Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<CostItem>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="material_id"
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              loading={loading}
+              onRetry={fetchData}
+              emptyText={ts('k_1mp0dut')}
+              customStyle={{ containerClassName: 'px-2 pb-2' }}
+            />
           </CardContent>
         </Card>
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            {ts('k_1vsm2qk')}{total}
-            {tc('costRecordUnit')}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}</Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}</Button>
-          </div>
-        </div>
       </div>
 
       {/* 成本详情对话框 */}

@@ -6,14 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import { Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { authFetch } from '@/lib/auth-fetch';
@@ -39,13 +32,14 @@ export default function LoginLogPage() {
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [searchUser, setSearchUser] = useState('');
 
   const fetchData = async () => {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         userName: searchUser,
       });
       const res = await authFetch('/api/system/login-log?' + params);
@@ -74,6 +68,25 @@ export default function LoginLogPage() {
     }
   };
 
+  const columns: StandardTableColumn<Item>[] = [
+    { key: 'user_name', title: tc('username'), render: (r) => r.user_name },
+    { key: 'login_time', title: tc('loginTime'), render: (r) => r.login_time || '-' },
+    { key: 'ipaddr', title: tc('ipAddress'), render: (r) => <span className="font-mono">{r.ipaddr || '-'}</span> },
+    { key: 'login_location', title: tc('loginLocation'), render: (r) => r.login_location || '-' },
+    { key: 'browser', title: tc('browser'), render: (r) => r.browser || '-' },
+    { key: 'os', title: tc('os'), render: (r) => r.os || '-' },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (r) => (
+        <Badge variant={r.status === 1 ? 'default' : 'destructive'} className="text-xs">
+          {r.status === 1 ? tc('success') : tc('failed')}
+        </Badge>
+      ),
+    },
+    { key: 'msg', title: tc('message'), render: (r) => <span className="max-w-32 truncate">{r.msg || '-'}</span> },
+  ];
+
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
@@ -98,71 +111,24 @@ export default function LoginLogPage() {
         </div>
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">{tc('username')}</TableHead>
-                  <TableHead className="text-xs">{tc('loginTime')}</TableHead>
-                  <TableHead className="text-xs">{tc('ipAddress')}</TableHead>
-                  <TableHead className="text-xs">{tc('loginLocation')}</TableHead>
-                  <TableHead className="text-xs">{tc('browser')}</TableHead>
-                  <TableHead className="text-xs">{tc('os')}</TableHead>
-                  <TableHead className="text-xs">{tc('status')}</TableHead>
-                  <TableHead className="text-xs">{tc('message')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="text-xs">{item.user_name}</TableCell>
-                    <TableCell className="text-xs">{item.login_time || '-'}</TableCell>
-                    <TableCell className="text-xs font-mono">{item.ipaddr || '-'}</TableCell>
-                    <TableCell className="text-xs">{item.login_location || '-'}</TableCell>
-                    <TableCell className="text-xs">{item.browser || '-'}</TableCell>
-                    <TableCell className="text-xs">{item.os || '-'}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={item.status === 1 ? 'default' : 'destructive'}
-                        className="text-xs"
-                      >
-                        {item.status === 1 ? tc('success') : tc('failed')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs max-w-32 truncate">{item.msg || '-'}</TableCell>
-                  </TableRow>
-                ))}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center text-gray-400 py-8">
-                      {tc('noRecords')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<Item>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              rowSelectable={false}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              emptyText={tc('noRecords')}
+            />
           </CardContent>
         </Card>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{tc('totalItems', { count: total })}</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
       </div>
     </MainLayout>
   );

@@ -2,7 +2,6 @@
 
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,14 +9,7 @@ import { StatsCards, StatsTheme } from '@/components/stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -106,8 +98,7 @@ export default function SOPManagementPage() {
   const [uploading, setUploading] = useState(false);
   const _fileInputRef = useState<HTMLInputElement | null>(null);
 
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [deleting, setDeleting] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -177,10 +168,6 @@ export default function SOPManagementPage() {
     fetchStats();
   }, [page]);
 
-  useEffect(() => {
-    clear();
-  }, [page]);
-
   const handleSave = async () => {
     try {
       const method = editItem.id ? 'PUT' : 'POST';
@@ -217,7 +204,7 @@ export default function SOPManagementPage() {
   };
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows;
     if (ids.length === 0) return;
     if (!confirm(tc('batchDeleteConfirm', { count: ids.length }))) return;
     setDeleting(true);
@@ -232,9 +219,90 @@ export default function SOPManagementPage() {
     setDeleting(false);
     if (okCount > 0) toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
     if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
+    setSelectedRows([]);
     fetchData();
   };
+
+  const pageSize = 20;
+  const totalPages = Math.ceil(total / pageSize);
+
+  const columns: StandardTableColumn<SOPRecord>[] = [
+    { key: 'sop_no', title: t('sopNo'), render: (row) => <span className="font-mono text-sm">{row.sop_no}</span> },
+    { key: 'sop_name', title: t('sopName'), render: (row) => row.sop_name },
+    { key: 'product_name', title: t('productName'), render: (row) => row.product_name },
+    { key: 'process_name', title: t('process'), render: (row) => row.process_name || '-' },
+    { key: 'version', title: t('version'), render: (row) => row.version },
+    { key: 'sop_type', title: t('type'), render: (row) => sopTypeMap[row.sop_type] || row.sop_type },
+    { key: 'workshop', title: t('workshop'), render: (row) => workshopMap[row.workshop] || row.workshop || '-' },
+    {
+      key: 'status',
+      title: tc('status'),
+      render: (row) => (
+        <Badge variant={statusMap[row.status]?.variant || 'outline'}>
+          {statusMap[row.status]?.label || tc('unknown')}
+        </Badge>
+      ),
+    },
+    { key: 'effective_date', title: t('effectiveDate'), render: (row) => row.effective_date?.substring(0, 10) || '-' },
+    {
+      key: 'file_url',
+      title: t('sopFile'),
+      render: (row) =>
+        row.file_url ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 text-xs"
+            onClick={() => handleDownload(row.file_url, row.sop_name + '.pdf')}
+          >
+            <FileText className="h-3 w-3 mr-1" />
+            {t('viewPdf')}
+          </Button>
+        ) : (
+          <span className="text-muted-foreground text-xs">{tc('none')}</span>
+        ),
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      align: 'right',
+      width: 120,
+      render: (row) => (
+        <div className="flex gap-1 justify-end">
+          {row.file_url && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0"
+              title={t('downloadSopFile')}
+              onClick={() => handleDownload(row.file_url, row.sop_name + '.pdf')}
+            >
+              <Download className="h-3 w-3" />
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              setEditItem(row);
+              setShowDialog(true);
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={() => handleDelete(row.id!)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <MainLayout title={t('sopManagement')}>
@@ -299,120 +367,21 @@ export default function SOPManagementPage() {
               </Button>
             </div>
 
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} loading={deleting} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input ref={selectAllRef} type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={allSelected} onChange={toggleAll} aria-label={tc('selectAll')} />
-                  </TableHead>
-                  <TableHead>{t('sopNo')}</TableHead>
-                  <TableHead>{t('sopName')}</TableHead>
-                  <TableHead>{t('productName')}</TableHead>
-                  <TableHead>{t('process')}</TableHead>
-                  <TableHead>{t('version')}</TableHead>
-                  <TableHead>{t('type')}</TableHead>
-                  <TableHead>{t('workshop')}</TableHead>
-                  <TableHead>{tc('status')}</TableHead>
-                  <TableHead>{t('effectiveDate')}</TableHead>
-                  <TableHead>{t('sopFile')}</TableHead>
-                  <TableHead>{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <input type="checkbox" className="h-4 w-4 cursor-pointer accent-blue-600" checked={isSelected(String(item.id))} onChange={() => toggle(String(item.id))} aria-label={tc('selectRow', { id: String(item.id) })} />
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{item.sop_no}</TableCell>
-                    <TableCell>{item.sop_name}</TableCell>
-                    <TableCell>{item.product_name}</TableCell>
-                    <TableCell>{item.process_name || '-'}</TableCell>
-                    <TableCell>{item.version}</TableCell>
-                    <TableCell>{sopTypeMap[item.sop_type] || item.sop_type}</TableCell>
-                    <TableCell>{workshopMap[item.workshop] || item.workshop || '-'}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusMap[item.status]?.variant || 'outline'}>
-                        {statusMap[item.status]?.label || tc('unknown')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{item.effective_date?.substring(0, 10) || '-'}</TableCell>
-                    <TableCell>
-                      {item.file_url ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-6 text-xs"
-                          onClick={() => handleDownload(item.file_url, item.sop_name + '.pdf')}
-                        >
-                          <FileText className="h-3 w-3 mr-1" />
-                          {t('viewPdf')}
-                        </Button>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">{tc('none')}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        {item.file_url && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            title={t('downloadSopFile')}
-                            onClick={() => handleDownload(item.file_url, item.sop_name + '.pdf')}
-                          >
-                            <Download className="h-3 w-3" />
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditItem(item);
-                            setShowDialog(true);
-                          }}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id!)}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
-                      {tc('noData')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">{tc('total', { count: total })}</span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  {tc('prevPage')}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page * 20 >= total}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {tc('nextPage')}
-                </Button>
-              </div>
-            </div>
+            <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} loading={deleting} />
+            <StandardTable<SOPRecord>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              showPagination={totalPages > 1}
+              onPageChange={setPage}
+              rowSelectable
+              selectedRows={list.filter((r) => selectedRows.includes(r.id!))}
+              onRowSelectedChange={(rows) => setSelectedRows(rows.map((r) => r.id!))}
+              rowKey="id"
+              emptyText={tc('noData')}
+            />
           </CardContent>
         </Card>
 

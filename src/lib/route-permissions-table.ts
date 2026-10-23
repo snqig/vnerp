@@ -661,6 +661,7 @@ export const ROUTE_PERMISSIONS: Record<
     POST: API_PERMISSIONS.QRCODE_VIEW,
   },
   '/api/qrcode/trace': { GET: API_PERMISSIONS.QRCODE_VIEW },
+  '/api/qrcode/unified-trace': { GET: API_PERMISSIONS.QRCODE_VIEW },
 
   // === 样品 ===
   '/api/sample/orders': {

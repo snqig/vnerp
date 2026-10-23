@@ -33,7 +33,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
     // 已停用（status=0）
     const [inactiveResult] = await query(
-      `SELECT COUNT(*) as count FROM inv_material_label WHERE deleted = 0 AND status = 0${dateFilter}`,
+      `SELECT COUNT(*) as count FROM inv_material_label WHERE deleted = 0 AND status = 4${dateFilter}`,
       params
     );
 

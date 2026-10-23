@@ -1,10 +1,15 @@
 'use client';
 import { useTranslations } from 'next-intl';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { authFetch } from '@/lib/auth-fetch';
+import {
+  StandardTable,
+  type StandardTableColumn,
+  type SortState,
+} from '@/components/common';
 
 interface ProfitRow {
   productId: number | string;
@@ -24,6 +29,10 @@ export default function CostAnalysisPage() {
     B: [],
     C: [],
   });
+  // StandardTable：客户端分页 + 排序
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sort, setSort] = useState<SortState>(null);
 
   useEffect(() => {
     authFetch('/api/advanced/cost-analysis', {
@@ -41,6 +50,82 @@ export default function CostAnalysisPage() {
       if (data.success) setAbcData(data.data);
     });
   }, []);
+
+  const columns: StandardTableColumn<ProfitRow>[] = [
+    { key: 'productId', title: ts('k_1f46wps'), sortable: true, render: (r) => `#${r.productId}` },
+    {
+      key: 'revenue',
+      title: ts('k_bovgck'),
+      align: 'right',
+      sortable: true,
+      render: (r) => `¥${Number(r.revenue).toLocaleString()}`,
+    },
+    {
+      key: 'directCost',
+      title: ts('k_1jm63j2'),
+      align: 'right',
+      sortable: true,
+      render: (r) => `¥${Number(r.directCost).toLocaleString()}`,
+    },
+    {
+      key: 'overhead',
+      title: ts('k_5ux6bf'),
+      align: 'right',
+      sortable: true,
+      render: (r) => `¥${Number(r.overhead).toLocaleString()}`,
+    },
+    {
+      key: 'grossMargin',
+      title: ts('k_v25ve2'),
+      align: 'right',
+      sortable: true,
+      render: (r) => (
+        <span
+          className={
+            r.grossMargin < 20
+              ? 'text-red-500 dark:text-red-400'
+              : 'text-green-500 dark:text-green-400'
+          }
+        >
+          {r.grossMargin.toFixed(1)}%
+        </span>
+      ),
+    },
+    {
+      key: 'netMargin',
+      title: ts('k_anob33'),
+      align: 'right',
+      sortable: true,
+      render: (r) => (
+        <span
+          className={
+            r.netMargin < 10
+              ? 'text-red-500 dark:text-red-400'
+              : 'text-green-500 dark:text-green-400'
+          }
+        >
+          {r.netMargin.toFixed(1)}%
+        </span>
+      ),
+    },
+  ];
+
+  // 客户端排序 + 分页
+  const sorted = useMemo(() => {
+    if (!sort) return profitData;
+    const dir = sort.direction === 'asc' ? 1 : -1;
+    return [...profitData].sort((a, b) => {
+      const av = (a as unknown as Record<string, unknown>)[sort.field];
+      const bv = (b as unknown as Record<string, unknown>)[sort.field];
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+      return String(av ?? '').localeCompare(String(bv ?? '')) * dir;
+    });
+  }, [profitData, sort]);
+
+  const paged = useMemo(
+    () => sorted.slice((page - 1) * pageSize, page * pageSize),
+    [sorted, page, pageSize]
+  );
 
   return (
     <MainLayout title={ts('k_1tht3uv')}>
@@ -77,38 +162,27 @@ export default function CostAnalysisPage() {
             <CardTitle>{ts('k_we5x4g')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">{ts('k_1f46wps')}</th>
-                  <th className="text-right p-2">{ts('k_bovgck')}</th>
-                  <th className="text-right p-2">{ts('k_1jm63j2')}</th>
-                  <th className="text-right p-2">{ts('k_5ux6bf')}</th>
-                  <th className="text-right p-2">{ts('k_v25ve2')}</th>
-                  <th className="text-right p-2">{ts('k_anob33')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {profitData.map((p: ProfitRow) => (
-                  <tr key={p.productId} className="border-b">
-                    <td className="p-2">#{p.productId}</td>
-                    <td className="text-right p-2">¥{Number(p.revenue).toLocaleString()}</td>
-                    <td className="text-right p-2">¥{Number(p.directCost).toLocaleString()}</td>
-                    <td className="text-right p-2">¥{Number(p.overhead).toLocaleString()}</td>
-                    <td
-                      className={`text-right p-2 ${p.grossMargin < 20 ? 'text-red-500 dark:text-red-400' : 'text-green-500 dark:text-green-400'}`}
-                    >
-                      {p.grossMargin.toFixed(1)}%
-                    </td>
-                    <td
-                      className={`text-right p-2 ${p.netMargin < 10 ? 'text-red-500 dark:text-red-400' : 'text-green-500 dark:text-green-400'}`}
-                    >
-                      {p.netMargin.toFixed(1)}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <StandardTable<ProfitRow>
+              columns={columns}
+              dataSource={paged}
+              total={profitData.length}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="productId"
+              rowSelectable={false}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              sortState={sort}
+              onSortChange={(s) => {
+                setSort(s);
+                setPage(1);
+              }}
+              emptyText={ts('noData')}
+            />
           </CardContent>
         </Card>
       </div>

@@ -51,12 +51,11 @@ export const GET = withPermission(
       startDate: startDate || undefined,
       endDate: endDate || undefined,
       poId: poId ? parseInt(poId) : undefined,
+      // 只返回采购入库单（原料入库）——SQL 层下推，保证分页计数与过滤后行数同口径
+      orderType: 'purchase',
     });
 
-    // 只返回采购入库单（原料入库）
-    const filteredData = result.data.filter((order) => order.orderType === 'purchase');
-    
-    const serializedData = filteredData.map((order) => ({
+    const serializedData = result.data.map((order) => ({
       id: order.id,
       order_no: order.orderNo,
       inbound_date: order.inboundDate,

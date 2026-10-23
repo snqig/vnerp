@@ -1,6 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateInput } from '@/lib/date-utils';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -69,6 +70,7 @@ interface Summary {
 export default function CustomerAnalysisPage() {
   const t = useTranslations('Crm');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const periodMap: Record<string, string> = {
     month: t('monthly'),
@@ -89,6 +91,21 @@ export default function CustomerAnalysisPage() {
   const [records, setRecords] = useState<AnalysisRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  const doJump = () => {
+    const n = parseInt(jumpValue, 10);
+    if (!Number.isFinite(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setPage(n);
+    setJumpValue('');
+    setJumpError(null);
+  };
   const [summary, setSummary] = useState<Summary>({
     total_customers: 0,
     total_orders: 0,
@@ -124,7 +141,7 @@ export default function CustomerAnalysisPage() {
 
   const fetchData = async () => {
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: '20' });
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
       if (searchName) params.set('customerName', searchName);
       if (searchLevel) params.set('customerLevel', searchLevel);
       const res = await authFetch('/api/crm/analysis?' + params);
@@ -141,7 +158,9 @@ export default function CustomerAnalysisPage() {
             order_amount: Number(r.order_amount || 0),
           }))
         );
-        setTotal(data.data.total || 0);
+        const tot = data.data.total || 0;
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
         setSummary({
           total_customers: Number(rawSummary.total_customers || 0),
           total_orders: Number(rawSummary.total_orders || 0),
@@ -168,7 +187,7 @@ export default function CustomerAnalysisPage() {
   useEffect(() => {
     fetchData();
     fetchCustomers();
-  }, [page]);
+  }, [page, pageSize]);
 
   const handleSave = async () => {
     if (!form.customer_id) {
@@ -370,27 +389,81 @@ export default function CustomerAnalysisPage() {
                 )}
               </TableBody>
             </Table>
-            <div className="flex justify-between items-center mt-4 text-sm">
-              <span>{t('totalRecords', { total })}</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  {tc('prevPage')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page * 20 >= total}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {tc('nextPage')}
-                </Button>
+            {total > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-3">
+                  <span>
+                    {tStd('paginationSummary', { total, pages: totalPages })}
+                  </span>
+                  <Select
+                    value={String(pageSize)}
+                    onValueChange={(v) => {
+                      setPageSize(Number(v));
+                      setPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-[110px]" aria-label={tStd('pageSize')}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[20, 50, 100].map((opt) => (
+                        <SelectItem key={opt} value={String(opt)}>
+                          {opt} {tStd('pageSizeUnit')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    {tStd('prevPage')}
+                  </Button>
+                  <span className="px-1 tabular-nums">
+                    {page} / {totalPages}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    {tStd('nextPage')}
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={jumpValue}
+                      onChange={(e) => {
+                        setJumpValue(e.target.value);
+                        if (jumpError) setJumpError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') doJump();
+                      }}
+                      className="h-8 w-16"
+                      placeholder={tStd('pageNumber')}
+                      aria-label={tStd('pageNumber')}
+                      inputMode="numeric"
+                    />
+                    <Button size="sm" variant="outline" onClick={doJump}>
+                      {tStd('jump')}
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+
+            {jumpError && (
+              <p className="px-1 pb-2 text-xs text-destructive" role="alert">
+                {jumpError}
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -464,7 +537,7 @@ export default function CustomerAnalysisPage() {
                   <Label>{t('periodStart')}</Label>
                   <Input
                     type="date"
-                    value={form.period_start || ''}
+                    value={toDateInput(form.period_start)}
                     onChange={(e) => setForm({ ...form, period_start: e.target.value })}
                   />
                 </div>
@@ -472,7 +545,7 @@ export default function CustomerAnalysisPage() {
                   <Label>{t('periodEnd')}</Label>
                   <Input
                     type="date"
-                    value={form.period_end || ''}
+                    value={toDateInput(form.period_end)}
                     onChange={(e) => setForm({ ...form, period_end: e.target.value })}
                   />
                 </div>

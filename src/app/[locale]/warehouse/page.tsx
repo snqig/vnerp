@@ -7,13 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  StandardTable,
+  type StandardTableColumn,
+} from '@/components/common';
 import {
   Dialog,
   DialogContent,
@@ -30,7 +26,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Search, RefreshCw, Package, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
+import { Search, RefreshCw, Package, ArrowDownToLine, ArrowUpFromLine, Warehouse } from 'lucide-react';
+import { PageHeroHeader } from '@/components/layout';
 import { useTranslations } from 'next-intl';
 
 interface BatchInventory {
@@ -60,11 +57,11 @@ export default function WarehousePage() {
   const tc = useTranslations('Common');
 
   const [batches, setBatches] = useState<BatchInventory[]>([]);
-  const [_loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(20);
 
   // 入库表单
   const [inboundOpen, setInboundOpen] = useState(false);
@@ -125,7 +122,8 @@ export default function WarehousePage() {
 
   useEffect(() => {
     fetchBatches();
-  }, [page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize]);
 
   const handleInbound = async () => {
     try {
@@ -239,11 +237,69 @@ export default function WarehousePage() {
     }
   };
 
+  // StandardTable 列定义（服务端分页，接口暂不支持 sortField/sortDirection，故不开启 sortable）
+  const columns: StandardTableColumn<BatchInventory>[] = [
+    {
+      key: 'batch_no',
+      title: t('batchNoCol'),
+      render: (r) => <span className="font-mono">{r.batch_no}</span>,
+    },
+    { key: 'material_code', title: t('materialCode') },
+    { key: 'material_name', title: t('materialName') },
+    {
+      key: 'specification',
+      title: t('specification'),
+      render: (r) => r.specification || '-',
+    },
+    {
+      key: 'warehouse_name',
+      title: t('warehouseShort'),
+      render: (r) => r.warehouse_name || '-',
+    },
+    {
+      key: 'inbound_quantity',
+      title: t('inboundQty'),
+      render: (r) => (
+        <>
+          {r.inbound_quantity} {r.unit}
+        </>
+      ),
+    },
+    {
+      key: 'outbound_quantity',
+      title: t('outboundQty'),
+      render: (r) => (
+        <>
+          {r.outbound_quantity} {r.unit}
+        </>
+      ),
+    },
+    {
+      key: 'available_quantity',
+      title: t('availableStock'),
+      render: (r) => (
+        <span className="font-semibold text-green-600 dark:text-green-400">
+          {r.available_quantity} {r.unit}
+        </span>
+      ),
+    },
+    { key: 'inbound_date', title: t('inboundDate') },
+    {
+      key: 'qc_status',
+      title: t('qcStatus'),
+      render: (r) => getQcStatusBadge(r.qc_status),
+    },
+    {
+      key: 'status',
+      title: t('status'),
+      render: (r) => getStatusBadge(r.status),
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
-        <div className="flex gap-2">
+      <PageHeroHeader icon={Warehouse} title={t('title')} />
+      <div className="flex gap-2">
           <Dialog open={inboundOpen} onOpenChange={setInboundOpen}>
             <DialogTrigger asChild>
               <Button className="bg-green-600 hover:bg-green-700">
@@ -530,9 +586,8 @@ export default function WarehousePage() {
             {t('refresh')}
           </Button>
         </div>
-      </div>
 
-      <Card>
+      <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="w-5 h-5" />
@@ -554,72 +609,25 @@ export default function WarehousePage() {
             </div>
             <Button onClick={fetchBatches}>{t('query')}</Button>
           </div>
-
           <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('batchNoCol')}</TableHead>
-                  <TableHead>{t('materialCode')}</TableHead>
-                  <TableHead>{t('materialName')}</TableHead>
-                  <TableHead>{t('specification')}</TableHead>
-                  <TableHead>{t('warehouseShort')}</TableHead>
-                  <TableHead>{t('inboundQty')}</TableHead>
-                  <TableHead>{t('outboundQty')}</TableHead>
-                  <TableHead>{t('availableStock')}</TableHead>
-                  <TableHead>{t('inboundDate')}</TableHead>
-                  <TableHead>{t('qcStatus')}</TableHead>
-                  <TableHead>{t('status')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {batches.map((batch) => (
-                  <TableRow key={batch.id}>
-                    <TableCell className="font-mono">{batch.batch_no}</TableCell>
-                    <TableCell>{batch.material_code}</TableCell>
-                    <TableCell>{batch.material_name}</TableCell>
-                    <TableCell>{batch.specification || '-'}</TableCell>
-                    <TableCell>{batch.warehouse_name || '-'}</TableCell>
-                    <TableCell>
-                      {batch.inbound_quantity} {batch.unit}
-                    </TableCell>
-                    <TableCell>
-                      {batch.outbound_quantity} {batch.unit}
-                    </TableCell>
-                    <TableCell className="font-semibold text-green-600 dark:text-green-400">
-                      {batch.available_quantity} {batch.unit}
-                    </TableCell>
-                    <TableCell>{batch.inbound_date}</TableCell>
-                    <TableCell>{getQcStatusBadge(batch.qc_status)}</TableCell>
-                    <TableCell>{getStatusBadge(batch.status)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          <div className="flex justify-between items-center mt-4">
-            <div className="text-sm text-gray-500">
-              {t('recordCount', { count: total })}，
-              {t('pageOf', { page, pages: Math.ceil(total / pageSize) })}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-              >
-                {tc('prevPage')}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p + 1)}
-                disabled={page * pageSize >= total}
-              >
-                {tc('nextPage')}
-              </Button>
-            </div>
+            <StandardTable<BatchInventory>
+              columns={columns}
+              dataSource={batches}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[20, 25, 30]}
+              rowKey="id"
+              onPageChange={setPage}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+              loading={loading}
+              onRetry={fetchBatches}
+              emptyText={tc('noData')}
+              customStyle={{ containerClassName: 'px-2 pb-2' }}
+            />
           </div>
         </CardContent>
       </Card>

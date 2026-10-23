@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { StandardTable, type StandardTableColumn } from '@/components/common';
 import {
   Table,
   TableBody,
@@ -267,6 +268,24 @@ export default function CreateBOMPage() {
       setLoading(false);
     }
   };
+
+  // 物料选择弹窗（只读展示列表）；BOM 明细表为可编辑表格，保持原样
+  const materialColumns: StandardTableColumn<Loose>[] = [
+    { key: 'material_code', title: t('materialCode') },
+    { key: 'material_name', title: t('materialName') },
+    { key: 'material_spec', title: t('spec') },
+    { key: 'unit', title: t('unit') },
+    { key: 'unit_cost', title: t('unitPrice') },
+    {
+      key: 'actions',
+      title: tc('operation'),
+      render: (r) => (
+        <Button size="sm" type="button" onClick={() => selectMaterial(r)}>
+          {t('select')}
+        </Button>
+      ),
+    },
+  ];
 
   return (
     <MainLayout title={t('createBom')}>
@@ -570,42 +589,15 @@ export default function CreateBOMPage() {
                 {tc('search')}
               </Button>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('materialCode')}</TableHead>
-                  <TableHead>{t('materialName')}</TableHead>
-                  <TableHead>{t('spec')}</TableHead>
-                  <TableHead>{t('unit')}</TableHead>
-                  <TableHead>{t('unitPrice')}</TableHead>
-                  <TableHead>{tc('operation')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {materials.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4 text-gray-500">
-                      {t('searchMaterialHint')}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  materials.map((material) => (
-                    <TableRow key={material.id}>
-                      <TableCell>{material.material_code}</TableCell>
-                      <TableCell>{material.material_name}</TableCell>
-                      <TableCell>{material.material_spec}</TableCell>
-                      <TableCell>{material.unit}</TableCell>
-                      <TableCell>{material.unit_cost}</TableCell>
-                      <TableCell>
-                        <Button size="sm" type="button" onClick={() => selectMaterial(material)}>
-                          {t('select')}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <StandardTable<Loose>
+              columns={materialColumns}
+              dataSource={materials}
+              total={materials.length}
+              rowKey="id"
+              showPagination={false}
+              loading={loading}
+              emptyText={t('searchMaterialHint')}
+            />
           </div>
         </DialogContent>
       </Dialog>

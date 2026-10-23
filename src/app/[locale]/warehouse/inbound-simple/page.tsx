@@ -3,7 +3,8 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 
@@ -68,10 +69,9 @@ export default function SimpleInboundPage() {
   return (
     <MainLayout title={t('inboundSimpleTitle')}>
       <div className="container mx-auto py-6 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('inboundSimpleRecords')}</CardTitle>
-          </CardHeader>
+        <PageHeroHeader title={t('inboundSimpleRecords')} />
+
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent>
             {loading && <p>{t('loading')}</p>}
             {error && (

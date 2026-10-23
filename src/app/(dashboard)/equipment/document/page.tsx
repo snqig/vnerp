@@ -1,22 +1,13 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +26,7 @@ import {
 import { Plus, Search, Edit, Trash2, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { StandardTable, StandardTableColumn } from '@/components/common';
 
 interface DocumentRecord {
   id: number;
@@ -69,21 +61,20 @@ export default function EquipmentDocumentPage() {
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<{ typeStats: Record<string, number> }>({ typeStats: {} });
   const [page, setPage] = useState(1);
+  const pageSize = 20;
   const [filterEquipmentId, setFilterEquipmentId] = useState('');
   const [filterDocType, setFilterDocType] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<DocumentRecord>>({});
   const [saving, setSaving] = useState(false);
   const [equipmentOptions, setEquipmentOptions] = useState<Array<{ id: number; equipment_code: string; equipment_name: string }>>([]);
+  const [selectedRows, setSelectedRows] = useState<DocumentRecord[]>([]);
 
-  const { selected, selectedCount, isSelected, allSelected, toggle, toggleAll, clear, selectAllRef } =
-    useRowSelection(list, (r) => String(r.id));
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         equipmentId: filterEquipmentId,
         docType: filterDocType,
       });
@@ -95,9 +86,9 @@ export default function EquipmentDocumentPage() {
         setStats(result.data.stats || { typeStats: {} });
       }
     } catch {}
-  };
+  }, [page, filterEquipmentId, filterDocType]);
 
-  const fetchEquipmentOptions = async () => {
+  const fetchEquipmentOptions = useCallback(async () => {
     try {
       const res = await authFetch('/api/equipment?page=1&pageSize=1000');
       const result = await res.json();
@@ -111,15 +102,15 @@ export default function EquipmentDocumentPage() {
         );
       }
     } catch {}
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, [page]);
+  }, [fetchData]);
 
   useEffect(() => {
     fetchEquipmentOptions();
-  }, []);
+  }, [fetchEquipmentOptions]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -176,7 +167,7 @@ export default function EquipmentDocumentPage() {
   };
 
   const handleBatchDelete = async () => {
-    const ids = Array.from(selected);
+    const ids = selectedRows.map(r => r.id);
     if (ids.length === 0) return;
     if (!confirm(tc('confirmBatchDelete', { count: ids.length }))) return;
     let okCount = 0;
@@ -194,7 +185,7 @@ export default function EquipmentDocumentPage() {
     if (okCount > 0)
       toast({ title: tc('success'), description: tc('batchDeleteSuccess', { count: okCount }) });
     if (failMsg) toast({ title: tc('error'), description: failMsg, variant: 'destructive' });
-    clear();
+    setSelectedRows([]);
     fetchData();
   };
 
@@ -212,6 +203,86 @@ export default function EquipmentDocumentPage() {
     setEditItem({ ...item });
     setShowDialog(true);
   };
+
+  const columns: StandardTableColumn<DocumentRecord>[] = [
+    {
+      key: 'docNo',
+      title: tc('docNo'),
+      dataIndex: 'doc_no',
+      width: 100,
+    },
+    {
+      key: 'equipment',
+      title: tc('equipment'),
+      render: (row) => row.equipment_code ? `${row.equipment_code} - ${row.equipment_name}` : '-',
+      width: 180,
+    },
+    {
+      key: 'docType',
+      title: tc('docType'),
+      render: (row) => {
+        const dt = docTypeMap[row.doc_type || ''] || docTypeMap['other'];
+        return <Badge variant={dt.variant} className="text-xs">{dt.label}</Badge>;
+      },
+      width: 100,
+    },
+    {
+      key: 'docName',
+      title: tc('docName'),
+      dataIndex: 'doc_name',
+      width: 150,
+    },
+    {
+      key: 'fileName',
+      title: tc('fileName'),
+      dataIndex: 'file_name',
+      width: 150,
+    },
+    {
+      key: 'createTime',
+      title: tc('createTime'),
+      render: (row) => row.create_time?.slice(0, 16) || '-',
+      width: 140,
+    },
+    {
+      key: 'actions',
+      title: tc('actions'),
+      render: (row) => (
+        <div className="flex gap-1">
+          {row.file_path && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs px-2"
+              onClick={() => window.open(row.file_path!, '_blank')}
+            >
+              <Download className="h-3 w-3 mr-1" />
+              {tc('download')}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 text-xs px-2"
+            onClick={() => openEdit(row)}
+          >
+            <Edit className="h-3 w-3 mr-1" />
+            {tc('edit')}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
+            onClick={() => handleDelete(row.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+      width: 180,
+      align: 'right',
+    },
+  ];
 
   return (
     <MainLayout>
@@ -275,124 +346,26 @@ export default function EquipmentDocumentPage() {
 
         <Card>
           <CardContent className="p-0">
-            <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input
-                      ref={selectAllRef}
-                      type="checkbox"
-                      className="h-4 w-4 cursor-pointer accent-blue-600"
-                      checked={allSelected}
-                      onChange={toggleAll}
-                      aria-label={tc('selectAll')}
-                    />
-                  </TableHead>
-                  <TableHead className="text-xs">{tc('docNo')}</TableHead>
-                  <TableHead className="text-xs">{tc('equipment')}</TableHead>
-                  <TableHead className="text-xs">{tc('docType')}</TableHead>
-                  <TableHead className="text-xs">{tc('docName')}</TableHead>
-                  <TableHead className="text-xs">{tc('fileName')}</TableHead>
-                  <TableHead className="text-xs">{tc('createTime')}</TableHead>
-                  <TableHead className="text-xs">{tc('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((item) => {
-                  const dt = docTypeMap[item.doc_type || ''] || docTypeMap['other'];
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer accent-blue-600"
-                          checked={isSelected(String(item.id))}
-                          onChange={() => toggle(String(item.id))}
-                          aria-label={tc('selectRow', { id: item.id })}
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs font-mono">{item.doc_no || '-'}</TableCell>
-                      <TableCell className="text-xs">
-                        {item.equipment_code ? `${item.equipment_code} - ${item.equipment_name}` : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={dt.variant} className="text-xs">
-                          {dt.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs">{item.doc_name}</TableCell>
-                      <TableCell className="text-xs max-w-32 truncate">{item.file_name || '-'}</TableCell>
-                      <TableCell className="text-xs">{item.create_time?.slice(0, 16) || '-'}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {item.file_path && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 text-xs px-2"
-                              onClick={() => window.open(item.file_path!, '_blank')}
-                            >
-                              <Download className="h-3 w-3 mr-1" />
-                              {tc('download')}
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 text-xs px-2"
-                            onClick={() => openEdit(item)}
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            {tc('edit')}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-600 dark:text-red-400"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center text-gray-400 py-8">
-                      {tc('noRecords')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            {selectedRows.length > 0 && (
+              <BatchDeleteBar count={selectedRows.length} onClear={() => setSelectedRows([])} onDelete={handleBatchDelete} />
+            )}
+            <StandardTable<DocumentRecord>
+              columns={columns}
+              dataSource={list}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              rowSelectable={true}
+              selectedRows={selectedRows}
+              onRowSelectedChange={setSelectedRows}
+              rowKey="id"
+              loading={list.length === 0 && total > 0}
+              emptyText={tc('noRecords')}
+              showPagination={total > pageSize}
+            />
           </CardContent>
         </Card>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            {tc('totalRecord')}{total}{tc('records')}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-xl" resizable>
             <DialogHeader>

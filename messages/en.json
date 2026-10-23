@@ -5658,7 +5658,13 @@
     "materialNotFound": "Material code {code} not found, please check and retry",
     "fieldSep": ":",
     "selectEmployee": "Select Employee",
-    "exitDate": "Exit Date"
+    "exitDate": "Exit Date",
+    "inStockCost": "Inventory Cost",
+    "inTransitCost": "In-transit Cost",
+    "shippedCost": "Shipped Cost",
+    "totalBatches": "Total Batches",
+    "expiringSoon": "Expiring Soon",
+    "availableBatches": "Available Batches"
   },
   "Nav": {
     "dashboard_center": "Dashboard Center",
@@ -5669,6 +5675,7 @@
     "dashboard_quality": "Quality Dashboard",
     "dashboard_finance": "Finance Dashboard",
     "dashboard_ceo": "CEO Dashboard",
+    "dashboard_kpi": "KPI Dashboard",
     "orders": "Sales Dept",
     "orders_sales": "Sales Orders",
     "orders_customers": "Customer Management",
@@ -5724,6 +5731,8 @@
     "warehouse_stock_adjust": "Stock Adjustment",
     "warehouse_production_inbound": "Production Inbound",
     "warehouse_sales_outbound": "Sales Outbound",
+    "warehouse_batch": "Batch Inventory",
+    "warehouse_cost": "Inventory Cost",
     "purchase": "Purchase Dept",
     "purchase_orders": "Purchase Orders",
     "purchase_suppliers": "Supplier Management",
@@ -5734,9 +5743,7 @@
     "outsource_receive": "Outsourcing Receipt",
     "outsource_settlement": "Outsourcing Settlement",
     "quality": "Quality Dept",
-    "quality_incoming": "Incoming Inspection",
-    "quality_process": "Process Inspection",
-    "quality_final": "Final Inspection",
+    "quality_process": "Quality Inspection Center",
     "quality_trace": "Quality Traceability",
     "quality_unqualified": "Non-conforming Handling",
     "quality_sgs": "SGS Certification",
@@ -7875,6 +7882,7 @@
     "purchaseOrder": "Purchase Order",
     "purchaseRequest": "Purchase Request",
     "supplierManagement": "Supplier Management",
+    "totalSuppliers": "Total Suppliers",
     "newPurchaseOrder": "New Purchase Order",
     "editPurchaseOrder": "Edit Purchase Order",
     "createPurchaseOrder": "Create Purchase Order",
@@ -8293,6 +8301,7 @@
     "total": "Total"
   },
   "Quality": {
+    "k_center_title": "Quality Inspection Center",
     "k_link_color_std": "Link Sign-off Color Sample",
     "k_link_none": "Not linked",
     "k_base_ref": "Sign-off Reference",
@@ -8499,6 +8508,7 @@
     "printReport": "Print Report",
     "printingQuality": "Printing Quality",
     "problemDesc": "Problem Description",
+    "qualityInspectionCenter": "Quality Inspection Center",
     "processInspection": "Process Inspection",
     "processInspectionReport": "Process Inspection Report",
     "productInfo": "Product Info",
@@ -8750,7 +8760,10 @@
     "testing": "Testing",
     "k_1upxefi": "追溯记录",
     "unknown": "Unknown",
-    "otherSource": "Other"
+    "otherSource": "Other",
+    "unqualifiedInspection": "Rejected",
+    "monthlyInspectionCount": "Inspections This Month",
+    "qualifiedRate": "Qualified Rate"
   },
   "Equipment": {
     "title": "Equipment Management",
@@ -11276,6 +11289,7 @@
     "inkColorList": "Ink Color List",
     "inkFormulaManagement": "Ink Formula Management",
     "inkManagement": "Ink Management",
+    "inkManagementDesc": "Manage ink master data, stock levels and safety-stock alerts",
     "inkName": "Ink Name",
     "isCut": "Slitted",
     "isUsed": "Used",

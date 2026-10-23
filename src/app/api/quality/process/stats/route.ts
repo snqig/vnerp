@@ -9,19 +9,20 @@ import { withPermission } from '@/lib/api-permissions';
 export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   const ts = await getTranslations('Common');
   try {
-    // 待检验数量（已排产和生产的）
+    // 待过程检验数量（burdening_status=1：已配料待过程检）
     const [pendingResult] = await query(
-      `SELECT COUNT(*) as count FROM prd_process_card WHERE deleted = 0 AND burdening_status IN (1, 2)`
+      `SELECT COUNT(*) as count FROM prd_process_card WHERE deleted = 0 AND burdening_status = 1`
     );
 
-    // 检验中数量
+    // 过程检验中数量（过程检无独立「检验中」状态：1=待检 → 2=已通过过程检）
     const [inspectingResult] = await query(
       `SELECT COUNT(*) as count FROM prd_process_card WHERE deleted = 0 AND burdening_status = 2`
     );
 
-    // 检验合格数量
+    // 过程检验合格数量（burdening_status=2 表示过程检已通过）
+    // 注意：status 3 是终检完成，已不属于过程检验范畴，故不计入过程检验「合格」。
     const [passedResult] = await query(
-      `SELECT COUNT(*) as count FROM prd_process_card WHERE deleted = 0 AND burdening_status = 3`
+      `SELECT COUNT(*) as count FROM prd_process_card WHERE deleted = 0 AND burdening_status = 2`
     );
 
     // 今日检验数量

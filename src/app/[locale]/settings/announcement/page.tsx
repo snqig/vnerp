@@ -56,11 +56,25 @@ export default function AnnouncementPage() {
   const ts = useTranslations('Common');
   const t = useTranslations('System');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
   const { toast } = useToast();
 
   const [list, setList] = useState<Announcement[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
   const [loading, setLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
@@ -78,17 +92,19 @@ export default function AnnouncementPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await authFetch(`/api/system/announcement?type=all&page=${page}&pageSize=20`);
+      const res = await authFetch(`/api/system/announcement?type=all&page=${page}&pageSize=${pageSize}`);
       const result = await res.json();
       if (result.success) {
         setList(result.data?.list || []);
-        setTotal(result.data?.total || 0);
+        const totalCount = result.data?.total || 0;
+        setTotal(totalCount);
+        setTotalPages(Math.ceil(totalCount / pageSize));
       }
     } catch {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, pageSize]);
 
   useEffect(() => {
     fetchData();
@@ -291,29 +307,31 @@ export default function AnnouncementPage() {
           </CardContent>
         </Card>
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            {tc('total')} {total}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage') || ts('k_mtyn6e')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage') || ts('k_1yw313l')}
-            </Button>
+        {total > 0 && (
+          <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+            <span className="text-sm text-muted-foreground">
+              {tStd('paginationSummary', { total, pages: totalPages })}
+            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                  <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                  <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+              <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+              <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+              <div className="flex items-center gap-1">
+                <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
+        {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
       </div>
 
       {/* 创建公告对话框 */}

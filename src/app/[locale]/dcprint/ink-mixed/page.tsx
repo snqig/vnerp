@@ -1,10 +1,13 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
+import { toDateTimeLocal, nowDateTimeLocal } from '@/lib/date-utils';
 import { useRowSelection } from '@/lib/useRowSelection';
 import { BatchDeleteBar } from '@/components/BatchDeleteBar';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -88,11 +91,26 @@ export default function InkMixedPage() {
   const ts = useTranslations('Dcprint');
   // 翻译钩子
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const { toast } = useToast();
   const [list, setList] = useState<InkMixedRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
   const [searchNo, setSearchNo] = useState('');
   const [searchColor, setSearchColor] = useState('');
   const [stats, setStats] = useState({
@@ -114,7 +132,7 @@ export default function InkMixedPage() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        pageSize: '20',
+        pageSize: String(pageSize),
         recordNo: searchNo,
         colorName: searchColor,
       });
@@ -125,8 +143,10 @@ export default function InkMixedPage() {
       const res = await authFetch('/api/dcprint/ink-mixed?' + params);
       const result = await res.json();
       if (result.success) {
+        const tot = result.data.total || 0;
         setList(result.data.list || []);
-        setTotal(result.data.total || 0);
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
       }
     } catch {}
   };
@@ -146,7 +166,7 @@ export default function InkMixedPage() {
   useEffect(() => {
     fetchData();
     fetchStats();
-  }, [page, activeStatKey]);
+  }, [page, pageSize, activeStatKey]);
 
   const fetchDialogOptions = async () => {
     try {
@@ -270,38 +290,42 @@ export default function InkMixedPage() {
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{tc('dcInkMixedTitle')}</h1>
-          <div className="flex gap-2">
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder={tc('searchOrderNo')}
-                value={searchNo}
-                onChange={(e) => setSearchNo(e.target.value)}
-                className="w-36 h-8 text-sm"
-              />
-              <Input
-                placeholder={ts('k_138bir9')}
-                value={searchColor}
-                onChange={(e) => setSearchColor(e.target.value)}
-                className="w-36 h-8 text-sm"
-              />
-              <Button size="sm" variant="outline" onClick={fetchData}>
-                <Search className="h-3 w-3" />
-              </Button>
-            </div>
+        <PageHeroHeader
+          icon={Beaker}
+          title={tc('dcInkMixedTitle')}
+          action={
             <Button
               size="sm"
+              className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
               onClick={() => {
-                setEditItem({ mix_time: new Date().toISOString().slice(0, 16), unit: 'kg' });
+                setEditItem({ mix_time: nowDateTimeLocal(), unit: 'kg' });
                 fetchDialogOptions();
                 setShowDialog(true);
               }}
             >
-              <Plus className="h-3 w-3 mr-1" />
-              {ts('k_5sawab')}</Button>
-          </div>
-        </div>
+              <Plus className="h-4 w-4 mr-1" />
+              {ts('k_5sawab')}
+            </Button>
+          }
+        />
+
+        <ListToolbar>
+          <Input
+            placeholder={tc('searchOrderNo')}
+            value={searchNo}
+            onChange={(e) => setSearchNo(e.target.value)}
+            className="w-36 h-8 text-sm"
+          />
+          <Input
+            placeholder={ts('k_138bir9')}
+            value={searchColor}
+            onChange={(e) => setSearchColor(e.target.value)}
+            className="w-36 h-8 text-sm"
+          />
+          <Button size="sm" variant="outline" onClick={fetchData}>
+            <Search className="h-3 w-3" />
+          </Button>
+        </ListToolbar>
 
         <StatsCards
           clickable
@@ -322,7 +346,7 @@ export default function InkMixedPage() {
           cols={{ mobile: 2, tablet: 2, desktop: 4 }}
         />
 
-        <Card>
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent className="p-0">
             <BatchDeleteBar count={selectedCount} onClear={clear} onDelete={handleBatchDelete} />
             <Table>
@@ -453,28 +477,31 @@ export default function InkMixedPage() {
           </CardContent>
         </Card>
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            {ts('k_1vsm2qk')}{total}
-            {tc('dcRecordsSuffix')}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {ts('k_mtyn6e')}</Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {ts('k_1yw313l')}</Button>
+        {total > 0 && (
+          <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+            <span className="text-sm text-muted-foreground">
+              {tStd('paginationSummary', { total, pages: totalPages })}
+            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                  <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                  <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+              <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+              <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+              <div className="flex items-center gap-1">
+                <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
+        {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-2xl" resizable>
@@ -561,7 +588,7 @@ export default function InkMixedPage() {
                 <Label>{ts('k_5ctrcy')}</Label>
                 <Input
                   type="datetime-local"
-                  value={editItem.mix_time || ''}
+                  value={toDateTimeLocal(editItem.mix_time)}
                   onChange={(e) => setEditItem({ ...editItem, mix_time: e.target.value })}
                 />
               </div>
@@ -602,7 +629,7 @@ export default function InkMixedPage() {
                 <Label>{ts('k_1oc35yx')}</Label>
                 <Input
                   type="datetime-local"
-                  value={editItem.expire_time || ''}
+                  value={toDateTimeLocal(editItem.expire_time)}
                   onChange={(e) => setEditItem({ ...editItem, expire_time: e.target.value })}
                 />
               </div>

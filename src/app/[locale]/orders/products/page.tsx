@@ -142,6 +142,7 @@ export default function ProductsPage() {
   const ts = useTranslations('Orders');
   const t = useTranslations('Orders');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -210,6 +211,19 @@ export default function ProductsPage() {
     total: 0,
     totalPages: 0,
   });
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  const doJump = () => {
+    const n = parseInt(jumpValue, 10);
+    if (!Number.isFinite(n) || n < 1 || n > pagination.totalPages) {
+      setJumpError(tStd('invalidPage', { max: pagination.totalPages }));
+      return;
+    }
+    setPagination((p) => ({ ...p, page: n }));
+    setJumpValue('');
+    setJumpError(null);
+  };
 
   const [editForm, setEditForm] = useState({
     product_name: '',
@@ -741,28 +755,82 @@ export default function ProductsPage() {
                 </TableBody>
               </Table>
             )}
-            {pagination.totalPages > 1 && (
-              <div className="flex justify-center gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pagination.page === 1}
-                  onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
-                >
-                  {tc('prevPage')}
-                </Button>
-                <span className="flex items-center px-4 text-sm text-muted-foreground">
-                  {t('pageInfo', { page: pagination.page, total: pagination.totalPages })}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pagination.page === pagination.totalPages}
-                  onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
-                >
-                  {tc('nextPage')}
-                </Button>
+            {pagination.total > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-3">
+                  <span>
+                    {tStd('paginationSummary', {
+                      total: pagination.total,
+                      pages: pagination.totalPages,
+                    })}
+                  </span>
+                  <Select
+                    value={String(pagination.pageSize)}
+                    onValueChange={(v) =>
+                      setPagination((p) => ({ ...p, pageSize: Number(v), page: 1 }))
+                    }
+                  >
+                    <SelectTrigger className="h-8 w-[110px]" aria-label={tStd('pageSize')}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[20, 50, 100].map((opt) => (
+                        <SelectItem key={opt} value={String(opt)}>
+                          {opt} {tStd('pageSizeUnit')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pagination.page === 1}
+                    onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
+                  >
+                    {tStd('prevPage')}
+                  </Button>
+                  <span className="px-1 tabular-nums">
+                    {pagination.page} / {pagination.totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pagination.page === pagination.totalPages}
+                    onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
+                  >
+                    {tStd('nextPage')}
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={jumpValue}
+                      onChange={(e) => {
+                        setJumpValue(e.target.value);
+                        if (jumpError) setJumpError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') doJump();
+                      }}
+                      className="h-8 w-16"
+                      placeholder={tStd('pageNumber')}
+                      aria-label={tStd('pageNumber')}
+                      inputMode="numeric"
+                    />
+                    <Button variant="outline" size="sm" onClick={doJump}>
+                      {tStd('jump')}
+                    </Button>
+                  </div>
+                </div>
               </div>
+            )}
+
+            {jumpError && (
+              <p className="px-1 pb-2 text-xs text-destructive" role="alert">
+                {jumpError}
+              </p>
             )}
           </CardContent>
         </Card>

@@ -8,6 +8,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { recomputeInventorySummary } from '@/lib/inventory-ledger';
 import { INSERT_INTO_INV_INVENTORY_TRANSACTION } from '@/lib/db/ddl/outsource-receive';
 import { numericFilter } from '@/lib/query-filter';
+import { expireDateFragment } from '@/lib/batch-expiry';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
@@ -128,8 +129,8 @@ export const PUT = withPermission(
         const today = new Date().toISOString().slice(0, 10);
         await conn.execute(
           `INSERT INTO inv_inventory_batch
-           (material_id, material_name, batch_no, quantity, available_qty, warehouse_id, inbound_date, status, create_time)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW())`,
+           (material_id, material_name, batch_no, quantity, available_qty, warehouse_id, inbound_date, produce_date, expire_date, status, create_time)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ${expireDateFragment()}, 1, NOW())`,
           [
             order.product_id,
             order.product_name || '',
@@ -138,6 +139,9 @@ export const PUT = withPermission(
             inQty,
             receive.warehouse_id,
             today,
+            today,
+            order.product_id,
+            order.product_id,
           ]
         );
 

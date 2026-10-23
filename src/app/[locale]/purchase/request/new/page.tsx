@@ -209,7 +209,7 @@ export default function NewPurchaseRequestPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 基本信息 */}
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardHeader>
               <CardTitle>{ts('k_z5lkkb')}</CardTitle>
             </CardHeader>
@@ -315,7 +315,7 @@ export default function NewPurchaseRequestPage() {
           </Card>
 
           {/* 采购物料明细 */}
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>{ts('k_1fk0uv7')}</CardTitle>
               <Button type="button" variant="outline" size="sm" onClick={addItem}>
@@ -428,7 +428,7 @@ export default function NewPurchaseRequestPage() {
           </Card>
 
           {/* 备注 */}
-          <Card>
+          <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
             <CardHeader>
               <CardTitle>{tc('remark')}</CardTitle>
             </CardHeader>

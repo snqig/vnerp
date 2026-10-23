@@ -3,6 +3,7 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { MainLayout } from '@/components/layout';
 import { VerticalMarquee } from '@/components/ui/VerticalMarquee';
+import { useDashboardScale } from '@/hooks/useDashboardScale';
 import { useEffect, useState, useRef } from 'react';
 import {
   Package,
@@ -358,6 +359,7 @@ export default function CEODashboard() {
   const [data, setData] = useState<CEOData>(emptyData);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const dashboardRef = useRef<HTMLDivElement>(null);
+  const dashScale = useDashboardScale();
 
   useEffect(() => {
     setCurrentTime(new Date());
@@ -399,8 +401,9 @@ export default function CEODashboard() {
     <MainLayout>
       <div
         ref={dashboardRef}
-        className="w-full h-full overflow-hidden relative flex flex-col"
+        className="dash-zoom w-full h-full overflow-hidden relative flex flex-col"
         style={{
+          zoom: dashScale,
           background: `radial-gradient(ellipse at 50% 30%, #0F2851 0%, ${C.bg} 40%, #050E22 100%)`,
           fontFamily: '-apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif',
         }}

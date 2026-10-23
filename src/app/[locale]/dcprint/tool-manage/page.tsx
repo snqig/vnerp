@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { TOOL_TYPE_LABEL, TOOL_STATUS_LABEL } from '@/lib/status-labels';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout/main-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeroHeader } from '@/components/layout/PageHeroHeader';
+import { ListToolbar } from '@/components/layout/ListToolbar';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -86,8 +88,25 @@ export default function ToolManagePage() {
   const ts = useTranslations('Dcprint');
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
+  const tStd = useTranslations('StandardTable');
 
   const [tools, setTools] = useState<Tool[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [jumpValue, setJumpValue] = useState('');
+  const [jumpError, setJumpError] = useState<string | null>(null);
+
+  const doJump = () => {
+    const n = Number(jumpValue);
+    if (!jumpValue || isNaN(n) || n < 1 || n > totalPages) {
+      setJumpError(tStd('invalidPage', { max: totalPages }));
+      return;
+    }
+    setJumpError(null);
+    setPage(n);
+  };
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
@@ -110,7 +129,7 @@ export default function ToolManagePage() {
   const fetchTools = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: '1', pageSize: '200' });
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
       if (searchKeyword) params.append('keyword', searchKeyword);
       if (filterType !== 'all') params.append('toolType', filterType);
       if (filterStatus !== 'all') params.append('status', filterStatus);
@@ -118,13 +137,16 @@ export default function ToolManagePage() {
       const data = await res.json();
       if (data.success) {
         setTools(data.data?.list || data.data || []);
+        const tot = data.data?.total || 0;
+        setTotal(tot);
+        setTotalPages(Math.ceil(tot / pageSize));
       }
     } catch {
       toast.error(ts('k_qjlczt'));
     } finally {
       setLoading(false);
     }
-  }, [searchKeyword, filterType, filterStatus]);
+  }, [searchKeyword, filterType, filterStatus, page, pageSize]);
 
   useEffect(() => {
     fetchTools();
@@ -202,72 +224,75 @@ export default function ToolManagePage() {
   return (
     <MainLayout title={t('toolManagement')}>
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wrench className="h-5 w-5" />
-              {t('toolList')}
-            </CardTitle>
-          </CardHeader>
+        <PageHeroHeader
+          icon={Wrench}
+          title={t('toolList')}
+          action={
+            <Button
+              onClick={() => {
+                setEditingTool(null);
+                setForm({
+                  tool_type: 1,
+                  tool_code: '',
+                  tool_name: '',
+                  spec: '',
+                  total_life: 0,
+                  original_cost: 0,
+                  mesh_count: '',
+                  mesh_material: '',
+                  size: '',
+                  tension_value: 0,
+                });
+                setIsDialogOpen(true);
+              }}
+              className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20 transition hover:shadow-lg"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {tc('add')}
+            </Button>
+          }
+        />
+
+        <ListToolbar className="gap-4">
+          <div className="flex-1 max-w-sm">
+            <Input
+              placeholder={tc('search')}
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && fetchTools()}
+            />
+          </div>
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder={ts('k_anh4cj')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{ts('k_zao217')}</SelectItem>
+              <SelectItem value="1">{ts('k_1c01k7u')}</SelectItem>
+              <SelectItem value="2">{ts('k_cu41ng')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder={ts('k_1ccx4t4')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{ts('k_igzce8')}</SelectItem>
+              <SelectItem value="1">{ts('k_1nblm48')}</SelectItem>
+              <SelectItem value="2">{ts('k_16d9hd9')}</SelectItem>
+              <SelectItem value="3">{ts('k_v1x3nb')}</SelectItem>
+              <SelectItem value="4">{ts('k_1qswpkf')}</SelectItem>
+              <SelectItem value="5">{ts('k_19qx965')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={() => fetchTools()} variant="outline">
+            <Search className="h-4 w-4 mr-2" />
+            {tc('search')}
+          </Button>
+        </ListToolbar>
+
+        <Card className="overflow-hidden rounded-xl border-slate-200 shadow-sm dark:border-slate-800">
           <CardContent>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex-1 max-w-sm">
-                <Input
-                  placeholder={tc('search')}
-                  value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && fetchTools()}
-                />
-              </div>
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder={ts('k_anh4cj')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{ts('k_zao217')}</SelectItem>
-                  <SelectItem value="1">{ts('k_1c01k7u')}</SelectItem>
-                  <SelectItem value="2">{ts('k_cu41ng')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder={ts('k_1ccx4t4')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{ts('k_igzce8')}</SelectItem>
-                  <SelectItem value="1">{ts('k_1nblm48')}</SelectItem>
-                  <SelectItem value="2">{ts('k_16d9hd9')}</SelectItem>
-                  <SelectItem value="3">{ts('k_v1x3nb')}</SelectItem>
-                  <SelectItem value="4">{ts('k_1qswpkf')}</SelectItem>
-                  <SelectItem value="5">{ts('k_19qx965')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={() => fetchTools()} variant="outline">
-                <Search className="h-4 w-4 mr-2" />
-                {tc('search')}
-              </Button>
-              <Button
-                onClick={() => {
-                  setEditingTool(null);
-                  setForm({
-                    tool_type: 1,
-                    tool_code: '',
-                    tool_name: '',
-                    spec: '',
-                    total_life: 0,
-                    original_cost: 0,
-                    mesh_count: '',
-                    mesh_material: '',
-                    size: '',
-                    tension_value: 0,
-                  });
-                  setIsDialogOpen(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {tc('add')}
-              </Button>
-            </div>
 
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">{tc('loading')}</div>
@@ -369,6 +394,31 @@ export default function ToolManagePage() {
                 </TableBody>
               </Table>
             )}
+            {total > 0 && (
+              <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {tStd('paginationSummary', { total, pages: totalPages })}
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                    <SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20">20{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="50">50{tStd('pageSizeUnit')}</SelectItem>
+                      <SelectItem value="100">100{tStd('pageSizeUnit')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>{tStd('prevPage')}</Button>
+                  <span className="text-sm">{tStd('pageNumber', { page, pages: totalPages })}</span>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>{tStd('nextPage')}</Button>
+                  <div className="flex items-center gap-1">
+                    <Input className="w-[70px]" value={jumpValue} onChange={(e) => setJumpValue(e.target.value)} placeholder={tStd('pageNumber', { page, pages: totalPages })} onKeyDown={(e) => { if (e.key === 'Enter') doJump(); }} />
+                    <Button variant="outline" size="sm" onClick={doJump}>{tStd('jump')}</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {jumpError && <p className="text-destructive text-sm mt-2">{jumpError}</p>}
           </CardContent>
         </Card>
       </div>
