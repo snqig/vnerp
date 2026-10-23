@@ -13,4 +13,10 @@ node scripts/validate-api-sql.mjs &&
 #   ② 语句类型：INSERT / UPDATE / DELETE（后者只抽 ^(SELECT|WITH)，等于不管写操作）
 # 存量缺陷记录在 scripts/baselines/sql-ghost-baseline.json，只拦新增（含 hash 报告）。
 # 基线刷新：node scripts/validate-sql-ghost.mjs --update-baseline
-node scripts/validate-sql-ghost.mjs
+node scripts/validate-sql-ghost.mjs &&
+# 前端硬编码 / Mock 残留门槛：防「接口失败 → mock 兜底」「写死业务 ID/金额」复发
+# （详见 docs/testing-playbook.md）。纯静态扫描，发现违规即阻断（exit 1）。
+node scripts/check-hardcode.mjs &&
+# 四语 i18n key 一致性门槛：以 zh-CN 为权威源，en/vi/zh-TW 任一缺失 key 即阻断，
+# 防止新增文案只写 zh-CN 忘记补其他三语（界面露原始 key）。多余 key 只告警不阻断。
+node scripts/check-i18n-consistency.mjs

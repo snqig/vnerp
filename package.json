@@ -12,6 +12,7 @@
     "lint:baseline": "node scripts/lint-gate.mjs --update-baseline",
     "lint:gate": "node scripts/lint-gate.mjs",
     "lint:i18n": "node scripts/lint-gate.mjs",
+    "check:hardcode": "node scripts/check-hardcode.mjs",
     "perm:gate": "node scripts/permission-gate.mjs",
     "validate:sql": "node scripts/validate-api-sql.mjs",
     "validate:sql-ghost": "node scripts/validate-sql-ghost.mjs",
