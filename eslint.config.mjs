@@ -157,6 +157,12 @@ const eslintConfig = defineConfig([
     // 脚本目录允许 console（Node.js 脚本标准输出）
     'scripts/**',
 
+    // mcp-decision-server：独立子项目（自带 tsconfig.json + package.json），
+    // 根 tsconfig.json 已将其排除。若不在此忽略，类型感知 parser 会按根
+    // tsconfig 去找它 → "Parsing error: ... does not include this file"，
+    // 直接让 `pnpm lint:gate` 的 i18n 红线检查失败（CI Step 9）。
+    'mcp-decision-server/**',
+
     // 忽略测试文件（可选，根据项目需求调整）
     '**/*.test.{ts,tsx,js,jsx}',
     '**/*.spec.{ts,tsx,js,jsx}',
