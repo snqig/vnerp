@@ -252,7 +252,14 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
         const translated = tn(menu.code);
         // 如果翻译存在且不等于翻译键本身，使用翻译
         // next-intl 在找不到翻译时会返回翻译键本身
-        if (translated && translated !== menu.code && translated.trim() !== '') {
+        // 注意：缺 key 时 next-intl 可能返回命名空间全路径（如 'Nav.dashboard_kpi'），
+        // 必须一并识别为缺失，否则原始 key 会直接渲染到界面上
+        const isMissing =
+          !translated ||
+          translated.trim() === '' ||
+          translated === menu.code ||
+          translated === `Nav.${menu.code}`;
+        if (!isMissing) {
           return translated;
         } else {
           // 只在首次缺失时打印一次警告
