@@ -1,5 +1,6 @@
 'use client';
 import { authFetch } from '@/lib/auth-fetch';
+import { toast } from 'sonner';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useEmployeeOptions, employeeLabel } from '@/hooks/useEmployeeOptions';
 import { MainLayout } from '@/components/layout';
@@ -258,37 +259,6 @@ export function QualityProcessPage({ embedded = false }: { embedded?: boolean })
   const [inspectRecords, setInspectRecords] = useState<InspectRecord[]>([]);
   const printRef = useRef<HTMLDivElement>(null);
 
-  // 模拟检验记录数据
-  const mockInspectRecords: InspectRecord[] = [
-    {
-      id: 1,
-      inspectNo: 'QI20240318001',
-      inspectType: ts('k_91d8n7'),
-      result: ts('k_109sg5t'),
-      inspector: ts('k_9zg2wy'),
-      inspectTime: '2024-03-18 10:30:00',
-      remark: ts('k_1u1vobi'),
-    },
-    {
-      id: 2,
-      inspectNo: 'QI20240318002',
-      inspectType: ts('k_7qnq7b'),
-      result: ts('k_109sg5t'),
-      inspector: ts('k_153eri6'),
-      inspectTime: '2024-03-18 11:00:00',
-      remark: ts('k_1c2ekhs'),
-    },
-    {
-      id: 3,
-      inspectNo: 'QI20240319001',
-      inspectType: ts('k_17nj8fx'),
-      result: ts('k_109sg5t'),
-      inspector: ts('k_1i8i0ai'),
-      inspectTime: '2024-03-19 09:30:00',
-      remark: ts('k_16u9ylg'),
-    },
-  ];
-
   // 筛选流程
   const filteredProcesses = processes.filter((process) => {
     if (activeTab !== 'all') {
@@ -384,11 +354,40 @@ export function QualityProcessPage({ embedded = false }: { embedded?: boolean })
     } catch {}
   };
 
-  // 查看检验记录
-  const handleViewRecords = (process: QualityProcess) => {
+  // 查看检验记录：走 /api/quality/process?cardId=（该分支本就是为检验记录弹窗提供的），
+  // inspection_result: 1=合格 2=不合格 3=让步接收；不再用 mockInspectRecords 假数据
+  const handleViewRecords = async (process: QualityProcess) => {
     setSelectedProcess(process);
-    setInspectRecords(mockInspectRecords);
     setIsRecordsOpen(true);
+    try {
+      const res = await authFetch(`/api/quality/process?cardId=${process.id}`);
+      const json = await res.json();
+      if (json.code === 200) {
+        const list = Array.isArray(json.data) ? json.data : [];
+        const resultLabels: Record<number, string> = {
+          1: ts('k_109sg5t'),
+          2: ts('k_1ujsxic'),
+          3: tc('k_m3wj5o'),
+        };
+        setInspectRecords(
+          list.map((r: Record<string, unknown>) => ({
+            id: Number(r.id),
+            inspectNo: String(r.inspection_no ?? ''),
+            inspectType: ts('processInspection'),
+            result: resultLabels[Number(r.inspection_result)] ?? '-',
+            inspector: String(r.inspector ?? '-'),
+            inspectTime: String(r.inspection_date ?? ''),
+            remark: r.remark ? String(r.remark) : '',
+          }))
+        );
+      } else {
+        setInspectRecords([]);
+        toast.error(json.message || tc('fetchFailed'));
+      }
+    } catch {
+      setInspectRecords([]);
+      toast.error(tc('fetchFailed'));
+    }
   };
 
   // 生成检验报告

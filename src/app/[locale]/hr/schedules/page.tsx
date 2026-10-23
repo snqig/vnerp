@@ -38,12 +38,6 @@ interface Employee {
   employee_no: string;
 }
 
-const mockShifts = [
-  { id: 1, shiftName: 'shiftMorning' },
-  { id: 2, shiftName: 'shiftAfternoon' },
-  { id: 3, shiftName: 'shiftNight' },
-];
-
 export default function SchedulesPage() {
   const ts = useTranslations('Common');
   const t = useTranslations('Hr');
@@ -69,6 +63,7 @@ export default function SchedulesPage() {
 
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [_employees, _setEmployees] = useState<Employee[]>([]);
+  const [shifts, setShifts] = useState<{ id: number; shiftName: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -120,9 +115,32 @@ export default function SchedulesPage() {
     }
   };
 
+  const fetchShifts = async () => {
+    // 班次下拉改走真实字典接口 /api/hr/shifts：原 mockShifts 硬编码 id 1/2/3 与库中 hr_shift 不对应，
+    // 且 shiftName 存的是 i18n key 而非真实班次名
+    try {
+      const res = await authFetch('/api/hr/shifts?pageSize=100');
+      const json = await res.json();
+      if (json.code === 200) {
+        const list = Array.isArray(json.data) ? json.data : json.data?.list || [];
+        setShifts(
+          list.map((s: Record<string, unknown>) => ({
+            id: Number(s.id),
+            shiftName: String(s.shiftName ?? ''),
+          }))
+        );
+      } else {
+        setShifts([]);
+      }
+    } catch {
+      setShifts([]);
+    }
+  };
+
   useEffect(() => {
     fetchSchedules();
     fetchStats();
+    fetchShifts();
   }, []);
 
   const changeMonth = (offset: number) => {
@@ -274,8 +292,8 @@ export default function SchedulesPage() {
                     <SelectValue placeholder={t('selectShift')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockShifts.map((s) => (
-                      <SelectItem key={s.id} value={String(s.id)}>{t(s.shiftName)}</SelectItem>
+                    {shifts.map((s) => (
+                      <SelectItem key={s.id} value={String(s.id)}>{s.shiftName}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

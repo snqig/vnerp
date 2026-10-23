@@ -211,42 +211,19 @@ export default function OrganizationPage() {
         if (companyData) {
           setCompany(companyData);
         } else {
-          // 使用模拟数据
-          loadMockCompany();
+          // 无企业数据时不再用模拟公司兜底：假公司可被 saveCompany 原样 PUT 回库，造成脏写
+          toast.error(tc('noCompanyInfo'));
         }
       } else {
-        // 使用模拟数据
-        loadMockCompany();
+        toast.error(tc('fetchFailed'));
       }
     } catch {
-      loadMockCompany();
+      toast.error(tc('fetchFailed'));
     } finally {
       setCompanyLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadMockCompany 是模拟数据兜底函数，仅使用 setState 稳定引用，定义在函数体之后
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅使用 setState 与 next-intl 的稳定引用
   }, []);
-
-  // 模拟企业数据
-  const loadMockCompany = () => {
-    setCompany({
-      id: 1,
-      full_name: ts('k_1pyz0ii'),
-      short_name: ts('k_af493q'),
-      code: 'DCYS2024001',
-      legal_person: ts('k_3vr19c'),
-      reg_address: ts('k_prcoeu'),
-      contact_phone: '0123456789',
-      email: 'info@dachang.com',
-      tax_no: 'VN123456789',
-      bank_name: ts('k_llnw9r'),
-      bank_account: '123456789012345',
-      website: 'www.dachang.com',
-      fax: '0123456780',
-      postcode: '100000',
-      description:
-        ts('k_1oqiy23'),
-    });
-  };
 
   // 保存企业信息
   const saveCompany = async () => {
@@ -406,7 +383,11 @@ export default function OrganizationPage() {
     try {
       const response = await authFetch(`/api/organization/role?page=${page}&pageSize=${pageSize}`);
       if (!response.ok) {
-        loadMockRoles();
+        // 不再用模拟角色兜底：假角色 id 与真实角色同域，编辑/删除会命中真实数据
+        setRoles([]);
+        setTotal(0);
+        setTotalPages(0);
+        toast.error(tc('fetchFailed'));
         return;
       }
       const result = await response.json();
@@ -418,140 +399,27 @@ export default function OrganizationPage() {
         } else if (roleData) {
           roleList = roleData.list || roleData.records || roleData.items || [];
         }
-        if (roleList.length === 0) {
-          loadMockRoles();
-          return;
-        }
+        // 空列表是合法状态（角色表本就可能为空），不再回退到模拟数据
         setRoles(roleList);
         const totalCount = roleData?.total || roleList.length;
         setTotal(totalCount);
         setTotalPages(Math.ceil(totalCount / pageSize));
       } else {
-        loadMockRoles();
+        setRoles([]);
+        setTotal(0);
+        setTotalPages(0);
+        toast.error(tc('fetchFailed'));
       }
     } catch {
-      loadMockRoles();
+      setRoles([]);
+      setTotal(0);
+      setTotalPages(0);
+      toast.error(tc('fetchFailed'));
     } finally {
       setRoleLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadMockRoles 是模拟数据兜底函数，仅使用 setState 稳定引用，定义在函数体之后
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅使用 setState 与 next-intl 的稳定引用
   }, [page, pageSize]);
-
-  // 模拟角色数据
-  const loadMockRoles = () => {
-    setRoles([
-      {
-        id: 1,
-        code: 'SUPER_ADMIN',
-        name: ts('k_1fcdmqa'),
-        role_type: 1,
-        description: ts('k_orh26e'),
-        permissions: [],
-        data_scope: 1,
-        sort_order: 1,
-        status: 1,
-      },
-      {
-        id: 2,
-        code: 'BUSINESS_MANAGER',
-        name: ts('k_ojn305'),
-        role_type: 2,
-        description: ts('k_e47ne6'),
-        permissions: [],
-        data_scope: 2,
-        sort_order: 2,
-        status: 1,
-      },
-      {
-        id: 3,
-        code: 'SALES',
-        name: ts('k_15vw6tw'),
-        role_type: 2,
-        description: ts('k_1n6j229'),
-        permissions: [],
-        data_scope: 3,
-        sort_order: 3,
-        status: 1,
-      },
-      {
-        id: 4,
-        code: 'ENGINEER',
-        name: ts('k_1tyjla3'),
-        role_type: 2,
-        description: ts('k_1wzfx3g'),
-        permissions: [],
-        data_scope: 2,
-        sort_order: 4,
-        status: 1,
-      },
-      {
-        id: 5,
-        code: 'PRODUCTION_MANAGER',
-        name: ts('k_d1s7gj'),
-        role_type: 2,
-        description: ts('k_oksfke'),
-        permissions: [],
-        data_scope: 2,
-        sort_order: 5,
-        status: 1,
-      },
-      {
-        id: 6,
-        code: 'WAREHOUSE_MANAGER',
-        name: ts('k_1bngyff'),
-        role_type: 2,
-        description: ts('k_1wz7ten'),
-        permissions: [],
-        data_scope: 2,
-        sort_order: 6,
-        status: 1,
-      },
-      {
-        id: 7,
-        code: 'WAREHOUSE_KEEPER',
-        name: ts('k_hdkgmr'),
-        role_type: 2,
-        description: ts('k_z6ponl'),
-        permissions: [],
-        data_scope: 2,
-        sort_order: 7,
-        status: 1,
-      },
-      {
-        id: 8,
-        code: 'PURCHASER',
-        name: ts('k_epyr6z'),
-        role_type: 2,
-        description: ts('k_g8bbzm'),
-        permissions: [],
-        data_scope: 3,
-        sort_order: 8,
-        status: 1,
-      },
-      {
-        id: 9,
-        code: 'QC_INSPECTOR',
-        name: ts('k_l5ij28'),
-        role_type: 2,
-        description: ts('k_dnt03f'),
-        permissions: [],
-        data_scope: 3,
-        sort_order: 9,
-        status: 1,
-      },
-      {
-        id: 10,
-        code: 'ACCOUNTANT',
-        name: ts('k_8s57ik'),
-        role_type: 2,
-        description: ts('k_7n2gfq'),
-        permissions: [],
-        data_scope: 2,
-        sort_order: 10,
-        status: 1,
-      },
-    ]);
-  };
 
   // 保存角色
   const saveRole = async () => {

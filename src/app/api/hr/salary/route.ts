@@ -34,6 +34,7 @@ export const GET = withPermission(
       e.position,
       e.entry_date,
       e.status,
+      e.bank_account,
       s.id as salary_id,
       s.month,
       s.basic_salary,

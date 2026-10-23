@@ -313,7 +313,7 @@ export async function transaction<T>(
   callback: (connection: DbConnection) => Promise<T>
 ): Promise<T> {
   if (isDemoMode()) {
-    const mockConnection = {
+    const demoConnection = {
       execute: async (_sql: string, _values?: unknown[]) => [
         [{ affectedRows: 1, insertId: 1 }],
         undefined,
@@ -324,7 +324,7 @@ export async function transaction<T>(
       rollback: async () => {},
       release: () => {},
     } as unknown as DbConnection;
-    return callback(mockConnection);
+    return callback(demoConnection);
   }
   const pool = getPool();
   const connection = await pool.getConnection();
